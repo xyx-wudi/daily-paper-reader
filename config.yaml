@@ -25,3 +25,65 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: MARL
+      description: 多智能体强化学习
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: multi-agent reinforcement learning
+          keyword_cn: 多智能体强化学习
+          query: multi-agent reinforcement learning
+        - keyword: cooperative multi-agent learning
+          keyword_cn: 合作多智能体学习
+          query: cooperative multi-agent reinforcement learning
+        - keyword: decentralized reinforcement learning
+          keyword_cn: 去中心化强化学习
+          query: decentralized multi-agent reinforcement learning
+        - keyword: centralized training
+          keyword_cn: 集中式训练
+          query: centralized training for multi-agent reinforcement learning
+        - keyword: decentralized execution
+          keyword_cn: 去中心化执行
+          query: decentralized execution in multi-agent systems
+        - keyword: Markov game
+          keyword_cn: 马尔可夫博弈
+          query: Markov games in multi-agent reinforcement learning
+      intent_queries:
+        - query: multi agent reinforcement learning algorithms
+          query_cn: 多智能体强化学习算法
+          enabled: true
+          source: manual
+          note: ''
+        - query: cooperative multi agent reinforcement learning applications
+          query_cn: 合作多智能体强化学习应用
+          enabled: true
+          source: manual
+          note: ''
+        - query: decentralized multi agent reinforcement learning methods
+          query_cn: 去中心化多智能体强化学习方法
+          enabled: true
+          source: manual
+          note: ''
+        - query: comparison of value decomposition and actor critic methods
+          query_cn: 价值分解与演员 评论家方法比较
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-05-30T11:32:10.560Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
