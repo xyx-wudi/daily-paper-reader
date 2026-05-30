@@ -1,0 +1,2938 @@
+Title: Self-Play Q-Learners Can Provably Collude in the Iterated Prisoner's Dilemma
+
+URL Source: https://openreview.net/pdf?id=q6zwUeWkZL
+
+Number of Pages: 24
+
+Markdown Content:
+# Self-Play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Quentin Bertrand 1 Juan Agustin Duque 2 Emilio Calvano 3 Gauthier Gidel 2 4 
+
+## Abstract 
+
+A growing body of computational studies shows that simple machine learning agents converge to cooperative behaviors in social dilemmas, such as collusive price-setting in oligopoly markets, raising questions about what drives this outcome. In this work, we provide theoretical foundations for this phenomenon in the context of self-play multi-agent Q-learners in the iterated prisoner’s dilemma. We characterize broad conditions under which such agents provably learn the cooperative Pavlov (win-stay, lose-shift) policy rather than the Pareto-dominated “always defect” policy. We val-idate our theoretical results through additional ex-periments, demonstrating their robustness across a broader class of deep learning algorithms. 
+
+## 1. Introduction 
+
+In recent years, algorithmic pricing has increasingly sup-planted manual pricing, both online—by 2015, one-third of Amazon’s largest third-party sellers were already using such tools (Chen et al., 2016)—and in physical markets, such as gas stations (Schechner, 2017). The growing adoption of machine learning–based pricing systems has raised signifi-cant concerns in both academic (Ezrachi & Stucke, 2015; Mehra, 2015) and institutional (OECD, 2017; Bureau, 2018) circles regarding the potential for tacit collusion. Indeed, if multiple firms competing within the same local market de-ploy learning algorithms to set prices, a natural and pressing question arises: 
+
+Could pricing algorithms autonomously learn to suppress competition, thereby leading to higher prices?                      
+
+> *Equal contribution 1Université Jean Monnet Saint-Etienne, CNRS, Institut d’Optique Graduate School, Inria, Laboratoire Hubert Curien UMR 5516, F-42023, Saint-Étienne, France
+> 2Mila, Université de Montréal 3Università LUISS (Rome), Toulouse School of Economics, EIEF and CEPR 4Canada AI CIFAR Chair. Correspondence to: Quentin Bertrand <quentin.bertrand@inria.fr>.
+> Proceedings of the 42 nd International Conference on Machine Learning , Vancouver, Canada. PMLR 267, 2025. Copyright 2025 by the author(s).
+
+Prior works—based on simulated environments and empiri-cal analyses of real-world pricing—have shown that algorith-mic collusion is a tangible risk, not merely a theoretical con-cern. For instance, Deneckere & Davidson (1985); Waltman & Kaymak (2008); Hansen et al. (2021); Asker et al. (2022) document that even simple algorithms can lead to higher prices in standard models of price competition. Moreover, Calvano et al. (2019; 2020b); Klein (2021) demonstrate that standard machine learning algorithms, such as Q-learning (Watkins & Dayan, 1992), can learn to sustain high prices through reward–punishment mechanisms—patterns com-monly characterized as ‘collusive’ in the antitrust literature; see Calvano et al. 2020a for an in-depth discussion of re-lated policy issues. Assad et al. (2024) go one step further by providing the first empirical evidence of how algorith-mic pricing affects competition: in Germany’s retail gaso-line market, where machine learning pricing tools spread after 2017, adoption increased profit margins only when multiple competitors used them—consistent with concerns over algorithm-driven collusion. More broadly, cooperation among machine learning algorithms has also been observed in general iterated social dilemmas, owing to the sequential nature of the problems (Lanctot et al., 2017; Leibo et al., 2017). Theoretically, the emergence of tacit collusion has been studied in highly simplified settings. Even in minimalist co-operative/competitive games such as the prisoner’s dilemma (Flood, 1958; Kendall et al., 2007), the dynamics induced by standard machine learning algorithms in multi-agent con-texts are often so complex that researchers typically resort to oversimplified versions of these algorithms. In particular, expected-value formulations of ϵ-greedy Q-learning (Seijen et al., 2009; Sutton & Barto, 2018, Sec. 6.10), without memory —that is, without access to previous states—are frequently analyzed (Banchio & Skrzypacz, 2022; Banchio & Mantegazza, 2022). In these prior theoretical results, cooperation does not arise from agents learning equilibrium strategies in the classical game-theoretic sense. Their limited memory prevents them from conditioning on the past actions of others, and thus from learning to implement retaliatory pricing strategies (Calvano et al., 2023). By contrast, learning to sustain high prices through retaliation consistent with a subgame-perfect equilibrium represents a stronger and more strategic form of cooperation: it captures 1Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+equilibrium behavior that is robust to unilateral deviations —unlike the limited-memory scenarios, where cooperation can emerge without credible deterrence mechanisms. In this paper, we aim to fill this gap by studying a richer setting that, in principle, allows for collusion in the game-theoretic sense. More precisely, the proposed project seeks to shed light on the learning dynamics of algorithms as they coordinate to cooperate— in contrast to the learning out-comes , which have been the primary focus of prior work. By analyzing the processes that lead to collusion in a mini-malist self-play setting— i.e., where an agent interacts with a copy of itself—we aim to better inform the development of rules and regulations that ensure fair competition and protect consumer interests. 
+
+Contributions. In this work, we study the dynamics of two agents playing the iterated prisoner’s dilemma and choos-ing their actions according to self-play ϵ-greedy Q-learning policies. Importantly, as opposed to previous work (Banchio & Skrzypacz, 2022; Banchio & Mantegazza, 2022), we the-oretically study the standard stochastic (i.e., not averaged) version of self-play ϵ-greedy Q-learning (Algorithm 1), with a one-step memory . More precisely, • First, we show that without exploration, i.e., self-play 
+
+ϵ-greedy Q-learning with ϵ = 0 , if the initialization of the agent is optimistic enough (Even-Dar & Mansour, 2001), then agents can learn to move from an always defect policy, to a cooperative policy (Theorem 3.2 in Section 3.1), referred to as win-stay, lose-shift 
+
+policy (Nowak & Sigmund, 1993). • Then, we extend the convergence toward a cooperative policy to self-play ϵ-greedy Q-learning with ϵ > 0
+
+(Theorem 3.3 in Section 3.2). This is the main technical difficulty, as one needs to prove the convergence of a stochastic process toward a specific equilibrium. • Finally, we empirically show that the collusion proved for standard Q-learning algorithms is also observed for deep Q-learning algorithms (Section 5). The manuscript is organized as follows: Section 2 provides recalls on the prisoner’s dilemma, multi-agent Q-learning, and fixed points of the self-play multi-agent Bellman equation. Section 3 contains our main results: the conver-gence of Q-learning toward the collusive Pavlov strategy (Theorems 3.2 and 3.3). Previous related works on the dynamics of multi-agent Q-learning are detailed in Section 4. Similar collusive behaviors are also observed for deep Q-learning algorithms in Section 5. 
+
+## 2. Setting and Background 
+
+First, Section 2.1 provides recalls on the iterated prisoner’s dilemma. Then, Section 2.2 provides recalls on reinforce-ment learning, and more specifically, multi-agent Bellman           
+
+> Table 1. Prisoner’s Dilemma Rewards/Payoff Matrix. Typical iter-ated prisoner ´s dilemma rewards satisfy rDC > r CC > r DD >rCD and 2rCC > r CD +rDC .
+
+Cooperate Defect Cooperate rCC 
+
+rCC 
+
+rCD 
+
+rDC 
+
+Defect rDC 
+
+rCD 
+
+rDD 
+
+rDD 
+
+equation and ϵ-greedy Q-learning. In Section 2.3, we recall the fixed-point policies of the multi-agent Bellman equa-tion: always defect , Lose-shift , Pavlov (sum-marized in Table 2). Interestingly, in the iterated prisoner’s dilemma, these policies are also subgame perfect equilib-rium , and might be different from always defect .
+
+2.1. Iterated Prisoner’s Dilemma 
+
+In this work, we consider a two-player iterated prisoner’s dilemma whose players have a one-step memory. At each time step, players choose between cooperate ( C) or defect (D), i.e., each player i choose an action ai ∈ A ≜ {C, D},which yields a reward ria1,a 2 for player i, i ∈ { 1, 2}. Ta-ble 1 describes the rewards r1 
+
+> a1,a 2
+
+and r2 
+
+> a2,a 1
+
+respectively obtained by each player depending on their respective ac-tion a1 and a2. Note that such a game is symmetric :
+
+r1 
+
+> a1,a 2
+
+= r2 
+
+> a2,a 1
+
+:= ra1,a 2 . For simplicity, in the experi-ments (Section 5), we consider simplified rewards, which are parameterized by a single scalar g, 1 < g < 2 (see Table 3 in Appendix E, as in Banchio & Mantegazza 2022). When the prisoner’s dilemma is not repeated, joint defec-tion is the only Nash equilibrium: for a fixed decision of the other prisoner, defecting always reaches better rewards than cooperating. This yields the celebrated paradox: even though the rewards obtained in the “defect defect” state are Pareto dominated by the ones obtained with the “cooperate cooperate” state, the Pareto-suboptimal mutual defection remains the only Nash equilibrium. When the prisoner’s dilemma is infinitely repeated, new equilibria can emerge, and always defect is no longer the dominant strategy (Osborne, 2004). We will refer to “collusive” or “colluding” strategies, any strategy that differs from the always defect strategy. Note that infinitely many time steps are essential for such equilibria to exist 1.
+
+> 1Equivalently, one can consider that the game is finitely repeated with a probability of ending equal to the discount factor at each step (Littman, 1994; Osborne, 2004, Chap. 15.3).
+
+2Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Algorithm 1 Multi-agent Self-Play Q-learning 
+
+init :s0, Q 
+
+param : α, γ, ϵ
+
+for t in 1, . . . , n iter do 
+
+// Compute a1 
+
+> t
+
+and a2 
+
+> t
+
+via Algorithm 2 
+
+a1 
+
+> t
+
+= Algorithm 2( Q, (a1
+
+> t−1
+
+, a 2
+
+> t−1
+
+), ϵ )
+
+a2 
+
+> t
+
+= Algorithm 2( Q, (a2
+
+> t−1
+
+, a 1
+
+> t−1
+
+), ϵ )
+
+st = ( a1
+
+> t−1
+
+, a 2
+
+> t−1
+
+)
+
+// Update the Q-value entry in st, a 1
+
+> t
+
+Qst,a 1 
+
+> t
+
++= α
+
+
+
+ra1  
+
+> t,a 2
+> t
+
++ γ max a Q(a1   
+
+> t,a 2
+> t),a
+
+− Qst,a 1
+
+> t
+
+
+
+return Q
+
+2.2. Q-Learning for Multi-Agent Reinforcement Learning and Self-Play Reinforcement learning . At a given step, the choice of each player to cooperate or defect is conditioned by the actions S ≜ {CC , DD , CD , DC } played at the previous time step, where the first action stands for the action picked by the first player at the previous time-step. ∆SA denotes the space of policies π : S × A → [0 , 1] , such that for all 
+
+s ∈ S , P 
+
+> a∈A
+
+π(a|s) = 1 . Given two policies ( i.e., mixed strategies) π1, π 2 ∈ ∆SA, a discount factor γ ∈ (0 , 1) , and an initial distribution ρ over the state space S, the cumulated reward observed by the agent i ∈ { 1, 2} is given by 
+
+Ji(π1, π 2) ≜ Es0∼ρ,a it∼πi(·| st)
+
+" ∞X
+
+> t=0
+
+γtra1 
+
+> t,a 2
+> t
+
+#
+
+. (1) 
+
+Q-learning . A popular approach to maximize the cumula-tive reward function Equation (1) is to find an action-value function or Q-function , that is a fixed point of the Bellman operator (Sutton & Barto, 2018, Eq. 3.17). Since the reward of the second player is stochastic in the multi-agent case, the fixed-point equation writes, for all (st, a 1 
+
+> t
+
+) ∈ S × A :
+
+Q⋆st,a 1
+
+> t
+
+= Ea2 
+
+> t∼π2(·| st)
+
+
+
+r1 
+
+> a1
+> t,a 2
+> t
+
++ γ max  
+
+> a
+
+Q⋆  
+
+> (a1
+> t,a 2
+> t),a
+
+
+
+. (2) 
+
+Q-learning (Algorithm 1) consists of stochastic fixed-point iterations on the Bellman Equation (4): with a step-size 
+
+α > 0
+
+Qt+1 
+
+> st,a 1
+> t
+
+= Qtst,a 1
+
+> t
+
++ α
+
+
+
+r1 
+
+> a1
+> t,a 2
+> t
+
++ γ max  
+
+> a′
+
+Qt   
+
+> (a1
+> t,a 2
+> t),a ′
+
+− Qtst,a 1
+
+> t
+
+
+
+. (3) 
+
+Self-play . Since the game is symmetric, we study the dynamic of Equation (3), where the second agent is a copy of the first agent, i.e., the actions a1 
+
+> t
+
+and a2 
+
+> t
+
+are sampled according to the same policy π. Such a way to model the opponent is referred to as self-play and has been successfully used to train agents in deep reinforcement learning applications (Lowe et al., 2017; Silver et al., 2018; Baker et al., 2019; Tang, 2019): 
+
+a1 
+
+> t
+
+, a 2 
+
+> t
+
+∼ π(·| st) // same Q-table for a1 
+
+> t
+
+and a2 
+
+> t
+
+.In the self-play setting, the Bellman Equation (2) writes 
+
+Q⋆st,a 1
+
+> t
+
+= Ea2 
+
+> t∼π(·| st)
+
+
+
+ra1  
+
+> t,a 2
+> t
+
++ γ max  
+
+> a
+
+Q⋆  
+
+> (a1
+> t,a 2
+> t),a
+
+
+
+. (4) In addition, we study ϵ-greedy Q-learning policies (Algo-rithm 2, 0 < ϵ < 1/2), i.e., 
+
+π(a|s) = 
+
+(
+
+1 − ϵ if a = arg max aQs,a 
+
+ϵ else , i ∈ { 1, 2},
+
+We say that an ϵ-greedy policy is a fixed point of the self-play multi-agent Bellman Equation (4) if the policy is greedy with respect to its own Q-values. In other words, a fixed point Q⋆ of the self-play multi-agent Bellman Equation (4) must satisfy Equation (4), where the policy π is ϵ-greedy with respect to the Q-table Q⋆. Interestingly, in this setting, there exist multiple fixed-point policies Q⋆ of the self-play multi-agent Bellman Equation (4). In this paper, we study the dynamics of the multi-agent self-play Q-learning (Equation (3)) in the one-step memory 
+
+case, i.e., A = {C, D} and S = {C, D}2. In particular, in Section 3 we show convergence towards a specific cooperative fixed point policy Q⋆ of the multi-agent Bellman Equation (4). In the following Section 2.3, we provide recalls on the fixed-point policies for the multi-agent Bellman equation Equation (4). 
+
+2.3. Fixed Points of the Multi-Agent Bellman Equation 
+
+In the iterated prisoner’s dilemma with one-step memory, multiple symmetric strategy profiles exist. However, only three of them are fixed points of the self-play multi-agent Bellman operator in Equation (4): always defect ,
+
+Pavlov , and grim trigger (Usui & Ueda, 2021). A summary of these policies is provided in Table 2. In Section 3, we show that one can transition from 
+
+always defect to Pavlov , passing through the 
+
+lose-shift policy (defined in Table 2). First, we recall below that fixed-point policies of the multi-agent Bellman Equation (4) can define always defect and Pavlov .
+
+Proposition 2.1 (Always Defect ). The following Q-table Q⋆, Defect is a fixed point of the Bellman Equation (4) 
+
+and yields an always defect policy, ∀s ∈ { C, D}2,Q⋆, Defect  
+
+> s, D
+
+= Ea2∼π(·| s)rD,a 2 /(1 − γ) ,Q⋆, Defect  
+
+> s, C
+
+= Q⋆, Defect  
+
+> s, D
+
+− Ea2∼π(·| s)
+
+ rD,a 2 − rC,a 2
+
+ .
+
+3Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Algorithm 2 ϵ-greedy 
+
+input :Q, s , 0 ≤ ϵ ≤ 1/2
+
+return arg max a′ Qs,a ′ with probability 1 − ϵ and 
+
+arg min a′ Qs,a ′ with probability ϵ
+
+More interestingly, the cooperative Pavlov policy (also referred to as win-stay, lose-shift ) can also be a fixed point of the multi-agent Bellman Equation (4). 
+
+Pavlov can be summarized as cooperate as long as the players are synchronized by playing the same action .
+
+Proposition 2.2 (Pavlov ). If γ > rDC −rCC  
+
+> rCC −rDD
+
+and ϵ is small enough, then there exists a Q-function, Q⋆, Pavlov ,which is a fixed point of the self-play multi-agent Bellman Equation (4) and yields the Pavlov policy, i.e, 
+
+∀s ∈ { CC , DD } Q⋆, Pavlov  
+
+> s, C
+
+> Q ⋆, Pavlov  
+
+> s, D
+
+and 
+
+∀s ∈ { CD , DC } Q⋆, Pavlov  
+
+> s, C
+
+< Q ⋆, Pavlov  
+
+> s, D
+
+.
+
+Proofs of Propositions 2.1 and 2.2, the exact Q-values and condition on ϵ are recalled in Appendices A.1 and A.2 for completeness. In the rest of the manuscript we assume that 
+
+γ > rDC −rCC  
+
+> rCC −rDD
+
+, and the exploration ϵ is small enough such that Pavlov policy exists. The main takeaway from Proposition 2.2 is that there exists a fixed point of the self-play multi-agent Bellman Equa-tion (4) whose associated strategy is cooperative. Interest-ingly, the only other fixed-point strategy is the (coopera-tive) grim trigger policy (Usui & Ueda 2021, Table 1; Meylahn & Janssen 2022). On the opposite, tit-for-tat is not a fixed-point policy of the Bellman Equation (4). Ta-ble 2 summarizes the greedy action of each fixed-point pol-icy. Interestingly, always defect , Pavlov , and grim trigger policies also are subgame perfect equilibrium ,which is a stronger notion of equilibrium than Nash equilib-rium for iterated games (the subgame perfect definition can be found in Sec. 5.5 of Osborne 2004). For completeness, the proofs of the latter statement are recalled in Appendix B. Propositions 2.1 and 2.2 illustrate the challenges of multi-agent reinforcement learning for the prisoner’s dilemma: multiple equilibria exist that yield outcomes with markedly different levels of cooperation. Thus, one should not only care about convergence toward equilibrium, but one should also care about which type of equilibrium the agents con-verge to. The reached equilibrium will depend on the dy-namics of the algorithm used to estimate the policy π⋆: this dynamics is studied in Section 3 for Q-learning. 
+
+Table 2. Summary of the symmetric fixed-point policies of the self-play multi-agent Bellman Equation (4). The table displays the greedy action at of each policy, given the state st = ( a1
+
+> t−1
+
+, a 2
+
+> t−1
+
+).
+
+Policy State st (D , D) (C , C) (C , D) (D , C) Fixed Point 
+
+Always defect D D D D ✓
+
+Lose-shift C D D D ×××
+
+Grim trigger D C D D ✓
+
+Pavlov C C D D ✓
+
+## 3. Q-Learning Dynamic in the Iterated Prisoner’s Dilemma 
+
+The complex structure of the multi-agent Q-learning with memory yields multiple fixed-point policies for the Bell-man Equation (4). In this section, for a specific set of 
+
+Q-value initializations Q0, we show convergence of the dy-namics resulting from ϵ-greedy Q-learning with memory updates ( i.e., Equation (3)) toward the cooperative fixed point Pavlov policy. More precisely, we show that, with an “optimistic enough” initialization, the ϵ-greedy policy with a small enough learn-ing rate α starts from the always defect policy, then moves to the lose-shift policy, and finally converges towards the Pavlov policy. The Q-values at initialization are required to be “optimistic enough” in the sense that they are "set to large values, larger than their optimal values" (Even-Dar & Mansour, 2001). For exposition purposes, the greedy case ( ϵ = 0 in Algo-rithm 2) is presented in Section 3.1, and the general case (0 < ϵ < 1/2) in Section 3.2. 
+
+3.1. Fully Greedy Policy with No Exploration (Algorithm 2 with ϵ = 0 )
+
+We first show the case ϵ = 0 , i.e., with no exploration. We assume that the initial policy is always defect , and we require “optimistic enough” initial Q-values. 
+
+Assumption 3.1 (Q-values Initialization) .
+
+i) rDD  
+
+> 1−γ
+
+< Q t0 
+
+> (D ,D) ,C
+
+,
+
+ii) Qt0 
+
+> (D ,D) ,C
+
+< rCC  
+
+> 1−γ
+
+− rCC −rDD  
+
+> 1−γ2
+
+< Qt0 
+
+> (C ,C) ,C
+
+and 
+
+Qt0 
+
+> (D ,D) ,D
+
+< Q t0 
+
+> (C ,C) ,C
+
+.
+
+iii) Qt0 
+
+> (C ,C) ,C
+
+< rCC  
+
+> 1−γ
+
+.Assumption 3.1 i) ensures that the algorithm moves from always defect to lose-shift policy. As-sumption 3.1 ii) ensure that the algorithm shifts from 
+
+lose-shift to Pavlov policy, and Assumption 3.1 iii) 
+
+ensures that the policy sticks to Pavlov .
+
+Q-values Initialization in Practice . How can we ensure 4Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma s = (D , D) s = (C , C) s = (D , C) 0.5 1.0
+
+## # iterations ×10 3
+
+## −0.20.00.2
+
+> Qs, C − Qs, D
+
+## Always defect policy Lose-shift policy 
+
+## t0 = 0 t1 t2
+
+## Pavlov policy 
+
+Figure 1. From always defect to Pavlov policy, Algorithm 1 with no exploration ( i.e., ϵ = 0 ). Evolution of the Q-learning policy as a function of the number of iterations in the iterated prisoner’s dilemma. With a correct (optimistic) initialization, players go from an always defect policy to the lose-shift policy (at time t1), and then go to the cooperative Pavlov policy (at time t2). The incentive to cooperate and the discount factor are set to g = 1 .8 (see Table 3) and γ = 0 .6.
+
+that Assumptions 3.1 i) to 3.1 iii) are actually satisfied in practice? For standard Q-learning, the initial Q-values are user-defined parameters of the algorithm (see Algorithm 1). Figure 2 illustrates how the initial Q-values—specifically Assumptions 3.1 i) and 3.1 ii) —influence the resulting pol-icy. However, in more complex settings such as deep Q-learning, the initial Q-values are not explicitly controlled, since they result from randomly initialized neural network weights. In such cases, initializing the weights to directly satisfy Assumption 3.1 is non-trivial. To address this, we propose a practical approach to approx-imate initialization toward an always defect policy, which can subsequently shift toward cooperation. Specif-ically, we suggest initializing the Q-values using the out-put of Algorithm 1 executed with an exploration parameter 
+
+ϵ = 1 /2. This corresponds to a uniformly random policy: 
+
+p(C | s) = p(D | s) = 12 , ∀s ∈ { CC , DD , CD , DC }.Under this initialization, the self-play multi-agent Bellman Equation (4) admits a unique fixed-point policy, which cor-responds to the always defect strategy. 
+
+Theorem 3.2. Suppose the initial policy is always defect and the initial state s0 is defect defect :
+
+s0 = DD . Then for all Q-values initializations Qt0 that satisfy Assumption 3.1, Algorithm 1 with no exploration (ϵ = 0 ) moves away from the always defect policy, and learn the cooperative Pavlov policy. 
+
+Figure 1 illustrates Theorem 3.2 and shows the evolution of Equation (4) as a function of the number of iterations. At 
+
+t = t0, Qs, D > Q s, C for all states s ∈ { C, D}2. The greedy action is playing defect, Q(D ,D) ,D − Q(D ,D) ,C increases and agents progressively learn the lose-shift policy. Once the lose-shift policy is learned, the greedy actions are “cooperate” when the state is DD and “defect” when the state is CC . Hence, in this phase, Algorithm 1 successively updates Q(C ,C) ,D and Q(D ,D) ,C entries, until Q(C ,C) ,D
+
+goes below Q(C ,C) ,C. From this moment, the dynamic changes, and agents start to play the Pavlov policy and do not change. 
+
+Proof. (Theorem 3.2) As illustrated in Figure 1, the tra-jectory can be decomposed in 3 phases: first, the pol-icy goes from always defect to lose-shift policy (Phase 1). Then, the policy goes from lose-shift to 
+
+Pavlov (Phase 2). Finally, the policy stays in the 
+
+Pavlov policy (Phase 3). 
+
+• Phase 1 – From always defect to 
+
+lose-shift (0 ≤ t ≤ t1). At t0 we have, s0 = DD ,and for all s ∈ { C, D}2, Qs, D > Q s, C, hence the greedy action is defect, and is always chosen since ϵ = 0 . Then, the Q-learning update Equation (3) writes 
+
+Qt+1 (D ,D) ,D = Qt
+
+> (D ,D) ,D
+
++ α
+
+
+
+rDD + γQ t 
+
+> (D ,D) ,D
+
+− Qt
+
+> (D ,D) ,D
+
+
+
+. (5) Thus, while Q(D ,D) ,D > Q (D ,D) ,C, Q(D ,D) ,D is the only updated entry and converges linearly towards Q⋆, Defect (D ,D) ,D:
+
+Qt+1 (D ,D) ,D − Q⋆, Defect (D ,D) ,D
+
+= (1 − α(1 − γ)) t 
+
+Qt 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
+,
+
+where Q⋆, Defect (D ,D) ,D ≜ rD,D/(1 − γ). Thus, since Qt0 
+
+> (D ,D) ,C
+
+>Q⋆, Defect (D ,D) ,D ≜ rD,D/(1 − γ) (Assumption 3.1 i) ), Q(D ,D) ,D
+
+converges linearly towards Q⋆, Defect (D ,D) ,D < Q t0
+
+> (D ,D) ,C
+
+. Hence there exists t1 such that Qt1 
+
+> (D ,D) ,C
+
+= Qt0 
+
+> (D ,D) ,C
+
+> Q t1
+
+> (D ,D) ,D
+
+.Once this time t1 is reached, the policy switches from 
+
+always defect to lose-shift , and the update in Equation (5) no longer guides the dynamics. 5Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma s = (D , D) s = (C , C) s = (D , C) 0.0 0.5 1.0
+
+## # iterations ×10 3
+
+## −0.50.0
+
+> Qs, C − Qs, D
+
+Always defect policy 
+
+## None of Ass. i) to iii) 
+
+## 0.0 0.5 1.0
+
+## # iterations ×10 3
+
+Always defect policy Lose-shift policy 
+
+## Only Ass. i) 
+
+## 0.0 0.5 1.0
+
+## # iterations ×10 3
+
+Always defect policy Lose-shift policy Pavlov policy 
+
+## All Ass. 3.3 i) to iii) 
+
+Figure 2. Influence of Assumptions 3.1 i) to 3.1 iii) (γ = 0 .6 and g = 1 .8 using the parameterization of Table 3). Evolution of the 
+
+Q-learning policy as a function of the number of iterations in the iterated prisoner’s dilemma, for multiple initializations. If one assumption from Assumptions 3.1 i) to 3.1 iii) is not satisfied, then the Pavlov policy is not achieved. Except for the initialization, the experimental setting is the same as for Figure 1. 
+
+• Phase 2 – From lose-shift to Pavlov (t1 ≤ t ≤
+
+t2). In this phase, players alternate to defect in the CC 
+
+state and cooperate in the DD state. Hence the only entries successively updated are Q(C ,C) ,D and Q(D ,D) ,C. For all 
+
+t ≥ t1, Equation (3) becomes 
+
+Q2t+1 (C ,C) ,D = (1 − α)Q2t 
+
+> (C ,C) ,D
+
++ α
+
+
+
+rDD + γQ 2t
+
+> (D ,D) ,C
+
+
+
+,
+
+(6) 
+
+Q2t+2 (D ,D) ,C = (1 − α)Q2t+1 (D ,D) ,C + α
+
+
+
+rCC + γQ 2t+1 (C ,C) ,D
+
+
+
+.
+
+(7) Similarly to Phase 1, one can show that Q(C ,C) ,D converges linearly towards Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+. Additionally, one can show that, while the dynamic follows Equations (6) and (7), and 
+
+Qt 
+
+> (C ,C) ,D
+
+> Q t
+
+> (C ,C) ,C
+
+, then Qt 
+
+> (D ,D) ,C
+
+> Q t 
+
+> (D ,D) ,D
+
+(see Lemma C.1 in Appendix C.1). Hence, there exists t2 such that Qt2 
+
+> (C ,C) ,D
+
+< Q t2 
+
+> (C ,C) ,C
+
+and Qt2 
+
+> (D ,D) ,C
+
+> Q t2
+
+> (D ,D) ,D
+
+: the 
+
+Pavlov policy is reached. 
+
+• Phase 3 – Staying in Pavlov ( t ≥ t2).In this part of the trajectory, both players cooperate in the state CC , and Equation (3) writes 
+
+Qt+1 (C ,C) ,C = Qt 
+
+> (C ,C) ,C
+
++ α
+
+
+
+rCC + γQ t 
+
+> (C ,C) ,C
+
+− Qt
+
+> (C ,C) ,C
+
+
+
+.
+
+The only updated Q-entry is Q(C ,C) ,C, and Q(C ,C) ,C
+
+converges linearly toward Q⋆, Pavlov (C ,C) ,C
+
+Qt+1 (C ,C) ,C − Q⋆, Pavlov (C ,C) ,C
+
+= (1 − α(1 − γ)) 
+
+
+
+Qt 
+
+> (C ,C) ,C
+
+− Q⋆, Pavlov (C ,C) ,C
+
+
+
+.
+
+Since Q⋆, Pavlov (C ,C) ,C ≜ rCC /(1 − γ) > Q t2 
+
+> (C ,C) ,D
+
+= Qt0
+
+> (C ,C) ,D
+
+(Assumption 3.1 ii) , right), there is no other change of policy. We have shown that the convergence is linear in each phase (from always defect to lose-shift , from 
+
+lose-shift to Pavlov , staying in Pavlov ). In addition, one can show that the time to go from one policy to another varies as O(1 /α ) in each phase (see Appendix C.2 for the proof of this result). In Section 3.1, we showed that agents learned to cooperate with no exploration. In Section 3.2, we investigate coop-eration in the general case, with an exploration parameter 
+
+ϵ > 0.
+
+3.2. ϵ-Greedy Q-Learning with Exploration (Algorithm 2 with ϵ > 0)
+
+In this section, we show that Algorithm 1 with sufficiently small step-size α and exploration parameter ϵ yields a coop-erative policy with high probability. 
+
+Theorem 3.3. Let δ > 0 and 1/2 > ϵ > 0, ϵ sufficiently small such that Pavlov policy is a fixed-point of Equa-tion (4) (as defined in Proposition 2.2). Suppose that As-sumption 3.1 holds, and s0 = DD . Then, for α ≤ C log(1 /ϵ )log(1 /δ ) ,where C is a constant that is independent of the discount factor γ, the step-size α, the rewards and the initialization of the Q-values, we have that with probability 1 − δ, Al-gorithm 1 does achieve a cooperative policy: Pavlov or 
+
+lose-shift policy in O(1 /α ) iterations. 
+
+Theorem 3.3 states that for an arbitrarily large probabil-ity, there exist small enough α > 0 and ϵ > 0 such that agents following Algorithm 1 converge from an always defect policy to a Pavlov policy. The full proof of The-orem 3.3 can be found in Appendix D. A proof sketch is provided below. 
+
+Proof sketch. We give the proof sketch for going from 6Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma s = (D , D) s = (C , C) s = (D , C) 0 1 2
+
+## # iterations ×10 3
+
+## 0.00.5
+
+> Qs, C − Qs, D
+
+##  = 0 .01 0 1 2
+
+## # iterations ×10 3
+
+##  = 0 .05 0 1 2
+
+## # iterations ×10 3
+
+##  = 0 .10 
+
+Figure 3. From always defect to Pavlov policy, Algorithm 1 with exploration (g = 1 .8 and γ = 0 .6). Evolution of the 
+
+Q-learning policy as a function of the number of iterations in the iterated prisoner’s dilemma. With a correct (optimistic) initialization, players go from an always defect policy to the lose-shift policy and then to the cooperative Pavlov policy. 
+
+always defect to lose-shift with high probabil-ity (Step 1). The proof for Theorem 3.3 is three-folded: first, we show that the non-greedy actions are chosen at most k
+
+times. This requires controlling the occurring probability of the event 
+
+Ek,T ≜ {either a1 
+
+> t
+
+or a2 
+
+> t
+
+is a non-greedy action for at most k values of t = 1 , . . . , T } ,
+
+which is done in Lemma 3.4 i) . Using bounds on the Q-entries at each iteration (Lemma 3.4 ii) ), one can control the maximum deviation of the Q-entries of non-greedy (Lemma 3.4 iii) ) and greedy actions (Lemma 3.4 ii) ). Build-ing on Lemmas 3.4 ii) and 3.4 iii) one can find assump-tions on k and T such that Q-learners go from always defect to lose-shift Lemmas 3.4 v) and 3.4 vi) .
+
+Lemma 3.4. Let 0 < ϵ < 1/2, 0 < γ < 1 and 0 ≤
+
+k ≤ T , k ∈ N. Suppose that Assumption 3.1 holds, s0 =DD , and both agents are guided by ϵ-greedy Q-learning (Algorithm 1), then 
+
+i) The probability of the event Ek,T is lower bounded 
+
+P(Ek,T ) ≥ 1 − 2T (2 ϵ)k+1 .
+
+ii) For all state-action pair (s, a ) ∈ S × A |Qt+1  
+
+> s,a
+
+− Qts,a | ≤ ∆r α
+
+1 − γ .
+
+iii) On the event Ek,T , the deviation for the Q-values others than Q(D ,D) ,D is at most 
+
+|Qts,a − Qt0
+
+> s,a
+
+| ≤ 2k∆r α
+
+1 − γ , ∀(s, a )̸ = (DD , D) .
+
+iv) On the event Ek,T , the deviation for the Q-value 
+
+Q(D ,D) ,D is upper-bounded 
+
+Qt+1 (D ,D) ,D − Q⋆, Defect (D ,D) ,D ≤ 2k∆r α
+
+1 − γ
+
++ (1 − α(1 − γ)) T −2k 
+
+Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
+.
+
+v) On the event Ek,T , for k < (1 −γ)∆ Q 
+
+> 2α∆r
+
+, with ∆Q ≜
+
+min s̸=DD Qt0 
+
+> s, D
+
+− Qt0
+
+> s, C
+
+Qts, D > Q ts, C , ∀t ≤ T, s ̸ = DD .
+
+vi) On the event Ek,T , if T > 2k +   
+
+> log
+> 
+> Qt0(D ,D) ,C−Q⋆, Defect (D ,D) ,D−4k∆rα
+> 1−γ
+> 
+> −log
+> 
+> Qt0(D ,D) ,D−Q⋆, Defect (D ,D) ,D
+> 
+> log(1 −α+γα )
+
+,then 
+
+QT 
+
+> (D ,D) ,D
+
+< Q T 
+
+> (D ,D) ,C
+
+.
+
+Combining Lemmas 3.4 i) to 3.4 vi) yields that agents learn the lose-shift policy with high probability. Similar arguments hold for learning the Pavlov policy from the 
+
+lose-shift policy. Figure 3 shows the evolution of the Q-values as a function of the number of iterations for multiple values of ϵ. 100 of runs are averaged, and the standard deviation is displayed in the shaded area. For ϵ = 0 .01 , we almost recover the no exploration case. The larger the exploration parameter ϵ,the less the condition for the Pavlov policy to be a fixed point of the multi-agent Bellman Equation (4) is satisfied (see Proposition 2.2). 
+
+## 4. Related Work 
+
+The question of tacit collusion/cooperation between agents has been studied almost independently in the economics 7Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+and reinforcement learning literature. On the one hand, the economics community perceives collusion/cooperation as a negative feature since collusion between sellers is against the consumer’s interest and remains illegal, violating anti-trust laws. On the other hand, in reinforcement learning, col-lusion/cooperation is considered a desired property, which would potentially yield symbiotic behaviors between decen-tralized agents. 
+
+Q-learning without Memory . The dynamics of Q-learning in the iterated prisoner’s dilemma has previously been stud-ied without memory, i.e., Equation (4) with S = ∅. More precisely, Banchio & Mantegazza (2022) studied the mem-oryless, averaged (Seijen et al., 2009; Sutton & Barto, 2018, 6.10), and time-continuous dynamics of Equation (3) (i.e., no stochasticity nor discreteness), with p(a1) the prob-ability of picking the action a1 ∈ { C, D} writes 
+
+˙Qa1 = p(a1)  Ea2∼π (ra1,a 2
+
+ + γ max  
+
+> a′
+
+Qa′ − Qa1 ) . (8) The main theoretical results from the memoryless case are the following: (i) There is no equilibrium corresponding to a cooperative policy, i.e., no fixed point of Equation (8) such that Q⋆ 
+
+> D
+
+< Q ⋆
+
+> C
+
+. (ii) There is always an equilibrium corresponding to an always defect policy, i.e., a fixed point of Equation (8) such that Q⋆ 
+
+> D
+
+> Q ⋆ 
+
+> C
+
+(iii) Depending on the value of the exploration parameter ϵ and the incentive to cooperate g, an additional equilibrium at the discontinuity of the vector field can appear, i.e., an equilibrium where Q⋆ 
+
+> D
+
+= Q⋆
+
+> C
+
+. This equilibrium can be seen as partial cooperation and is considered to be an artifact of the memoryless setting. 
+
+Multi-agent Reinforcement Learning . The problem of cooperation has also been approached in the multi-agent reinforcement learning community, which tackles the question of multiple agents’ decision-making in a shared 
+
+environment. Depending on the environment and the rewards, agents can either prioritize their interests or promote cooperation. This yielded a vast literature of empirical algorithms aiming at learning cooperative strategies (Whitehead, 1991) in various settings (Lowe et al., 2017; Sunehag et al., 2017; Guan et al., 2023), depending on if the agents can synchronize or not (Arslan & Yüksel, 2016; Yongacoglu et al., 2021; Nekoei et al., 2023; Zhao et al., 2023; Yongacoglu et al., 2023). Multi-agent reinforcement learning has also been ap-proached from the theoretical side: the convergence of al-gorithms has also been analyzed in the case of zero-sum games (Littman, 1994), non-zero-sum with only a single Nash equilibrium (Hu & Wellman, 1998). The main diffi-culty of the multi-agent reinforcement learning theoretical analyses (Zhang et al., 2021, §3) comes from (i) The notion of optimality/learning goal, i.e., what are the desirable prop-erties of the learned policy. (ii) The non-stationary environ-0.02 0.1 0.12 0.15 0.18 0.2 
+
+# 
+
+0.03 0.05 0.1 
+
+> α
+
+0.60.81.0           
+
+> Percentage of runs achieving cooperation
+> Figure 4. Influence of αand ϵon the cooperation. For each pair (α, ϵ ), the probability of learning a cooperative strategy is estimated with 100 runs. As predicted by Theorem 3.3, coopera-tion is achieved with a high probability for smaller values of the exploration parameter ϵ, and of the step-size α.
+
+ment, which yields rewards depending on the other player’s actions. (iii) The existence of multiple equilibria. While the question of convergence towards a Nash has previously been studied (Hu & Wellman, 1998; Wainwright, 2019; Usui & Ueda, 2021; Meylahn & Janssen, 2022), characterizing towards which equilibrium algorithms converge is much harder, and is usually only studied numerically, via simu-lations or by proposing approximation methods to reduce the problem to solving a (prefereably smooth) dynamical system which is then analyzed either theoretically or numeri-cally (Kaisers, 2012; Gupta et al., 2017; Barfuss & Meylahn, 2023; Meylahn, 2023; Ding et al., 2023; Cartea et al., 2022). 
+
+## 5. Experiments 
+
+Experimental Setup . In all the experiments we consider a prisoner’s dilemma with a fixed incentive to cooperate g and a fixed discount factor γ: g = 1 .8 and γ = 0 .6. In Figures 1 to 3 the stepsize α is fixed to α = .1
+
+Influence of Step Size and Exploration . Figure 4 shows the percentage of runs that achieve cooperation for multiple values of the exploration parameter ϵ and the step-size α.For each pair (ϵ, α ), Algorithm 1 is run 100 times, for 2000 
+
+iterations, with an optimistic initialization. The percentage of runs that yields cooperation is displayed as a function of ϵ and α. As predicted by Proposition 2.2, when ϵ is too large ( ϵ = 0 .2), Pavlov policy is no longer a stable point of Equation (4), and no cooperation is achieved. As predicted by Theorem 3.3, smaller values of α and ϵ yield a larger probability of cooperation. The influence of the incentive to cooperate g is explored in Appendix E.1: similar behavior are observed for multiple values of the influence to cooperate g.
+
+Similar Behaviour in Deep Q-learning. We train a deep 
+
+Q-network agent (Mnih et al., 2015) with a Q-function 8Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 01
+
+> s = DD
+
+## Probability of Cooperation p(C |s)01
+
+> s = CC
+
+## 01
+
+> s = DC
+
+## 0 2000 4000 6000 
+
+## # iterations 
+
+## 01         
+
+> s = CD
+> Figure 5. Extension to deep Q-learning. Evolution of the prob-ability to cooperate conditioned on the state, i.e., the previous actions, as a function of the number of iterations in the iterated prisoner’s dilemma. Multiple runs corresponding to multiple seeds are displayed, as well as their mean. Agents are trained against a random agent for the initialization and go from an always defect policy to the cooperative Pavlov policy.
+
+parameterized by a neural network with two linear layers and ReLu activation function to play the iterated prisoner’s dilemma. First, the network is initialized by playing against a random agent for 500 iterations. As discussed in the previous paragraph, this corresponds to Algorithm 2 with an exploration parameter of ϵ = 1 /2. Then the agent is playing against itself, with a decreasing exploration going from ϵ = 1 /2 to ϵ = 10 −2. Details and hyperparameters can be found in Appendix E.2. 
+
+Comments on Figure 5. A batch of actions is drawn at each iteration, and we compute the empirical probability of choos-ing the ‘cooperate’ action given a specific state p(C |s), for all the previous possible states, s ∈ { CC , CD , DC , DD }.The procedure is repeated for multiple seeds and the mean across the seed is displayed as a thick line. Figure 5 displays the probability of cooperation as a function of the number of iterations. Players start to cooperate in the CD states, then successively in the DD and CC states. Finally, around iteration 6000 players start to defect in the CD state and reach the Pavlov policy. 
+
+## 6. Conclusion and Limitation 
+
+To understand the empirical collusion phenomenon of ma-chine learning algorithms observed in the economics com-munity (Calvano et al., 2020b), we theoretically studied multi-agent Q-learning in the minimalist setting of the iter-ated prisoner’s dilemma. We showed that two agents guided by the usual Q-learning Algorithm 1 could learn the coop-erative Pavlov policy, even when both agents start from an always defect policy. In addition, we provided ex-plicit conditions (Assumption 3.1) for convergence towards such a cooperative strategy in the fully greedy case ( ϵ = 0 ,Section 3.1), and in the ϵ-greedy case ( ϵ > 0, Section 3.2). The major limitation of our analysis is the self-play assump-tion, which is currently crucial in the proof of Theorems 3.2 and 3.3. Empirically, relaxing the self-play assumption still yields cooperation “most of the time” (Barfuss & Meylahn, 2023, Fig. 1a): in this setting, players alternate between mul-tiple strategies but on average mostly play the Pavlov strat-egy. Hence, relaxing the self-play assumption would require analyzing the stationary distribution of the process (as done in Xu & Zhao 2024 in the memoryless case), which is sig-nificantly harder and left as future work. Finally, we also plan to study the extension of the emergence of collusion in other reinforcement learning algorithms and more complex environments, such as policy gradient or Bertrand games. 9Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+## Acknowledgements 
+
+Q.B. would like to thank Samsung Electronics Co., Ldt. for partially funding this research. GG is partially funded by a Canada CIFAR AI chair and and NSERC discovery grant. E.C. acknowledges funding by the European Union (ERC grant AI-Comp, 101098332) and PRIN 2022 grant ‘Algo-rithms and economic choices’, codice Cineca 2022S5RC7R, CUP E53D23006420001. This research project was initi-ated during the research program "Learning and Games" semester at the Simons Institute for the Theory of Comput-ing. 
+
+## Impact Statement 
+
+This paper presents work whose goal is mainly theoretical advances in the field of machine learning. The findings stress the importance of proactive ethical considerations and regulatory frameworks for responsible machine learning de-ployment, influencing policy-making and industry practices to ensure fair competition and societal benefit. 
+
+## References 
+
+Arslan, G. and Yüksel, S. Decentralized Q-learning for stochastic teams and games. IEEE Transactions on Auto-matic Control , 62(4):1545–1558, 2016. Asker, J., Fershtman, C., and Pakes, A. Artificial intelli-gence, algorithm design, and pricing. In AEA Papers and Proceedings , volume 112, pp. 452–56, 2022. Assad, S., Clark, R., Ershov, D., and Xu, L. Algorithmic pricing and competition: empirical evidence from the ger-man retail gasoline market. Journal of Political Economy ,132(3):723–771, 2024. Baker, B., Kanitscheider, I., Markov, T., Wu, Y., Pow-ell, G., McGrew, B., and Mordatch, I. Emergent tool use from multi-agent autocurricula. arXiv preprint arXiv:1909.07528 , 2019. Banchio, M. and Mantegazza, G. Adaptive algorithms and collusion via coupling. arXiv preprint arXiv , 2202, 2022. Banchio, M. and Skrzypacz, A. Artificial intelligence and auction design. arXiv preprint arXiv:2202.05947 , 2022. Barfuss, W. and Meylahn, J. M. Intrinsic fluctuations of reinforcement learning promote cooperation. Scientific reports , 13(1):1309, 2023. Bureau, C. Big data and innovation: Implications for com-petition policy in CANADA. https://ised-isd e.canada.ca/site/competition-bureau-c anada/sites/default/files/attachment s/2022/Big-Data-e.pdf , 2018. Calvano, E., G.Calzolari, Denicolò, V., and Pastorello, S. Algorithmic pricing what implications for competition policy? Review of industrial organization , 55:155–171, 2019. Calvano, E., Calzolari, G., Denicolò, V., Harrington Jr, J. E., and Pastorello, S. Protecting consumers from collusive prices due to ai. Science , 370(6520):1040–1042, 2020a. Calvano, E., Calzolari, G., Denicolo, V., and Pastorello, S. Artificial intelligence, algorithmic pricing, and collusion. 
+
+American Economic Review , 110(10):3267–3297, 2020b. Calvano, E., Calzolari, G., Denicolò, V., and Pastorello, S. Algorithmic collusion: Genuine or spurious? Interna-tional Journal of Industrial Organization , pp. 102973, 2023. Cartea, A., Chang, P., Penalva, J., and Waldon, H. The algorithmic learning equations: Evolving strategies in dynamic games. Available at SSRN 4175239 , 2022. Chen, L., Mislove, A., and Wilson, C. An empirical analysis of algorithmic pricing on amazon marketplace. In Pro-ceedings of the 25th international conference on World Wide Web , pp. 1339–1349, 2016. Deneckere, R. and Davidson, C. Incentives to form coali-tions with Bertrand competition. The RAND Journal of economics , pp. 473–486, 1985. Ding, Z.-W., Zheng, G.-Z., Cai, C.-R., Cai, W.-R., Chen, L., Zhang, J.-Q., and Wang, X.-M. Emergence of cooperation in two-agent repeated games with reinforcement learning. 
+
+Chaos, Solitons & Fractals , 2023. Even-Dar, E. and Mansour, Y. Convergence of optimistic and incremental Q-learning. NeurIPS , 14, 2001. Ezrachi, A. and Stucke, M. E. The curious case of competi-tion and quality. Journal of Antitrust Enforcement , 3(2): 227–257, 2015. Flood, M. M. Some experimental games. Management Science , 5(1):5–26, 1958. Guan, C., Chen, F., Yuan, L., Zhang, Z., and Yu, Y. Efficient communication via self-supervised information aggre-gation for online and offline multi-agent reinforcement learning. arXiv preprint arXiv:2302.09605 , 2023. Gupta, J. K., Egorov, M., and Kochenderfer, M. Cooperative multi-agent control using deep reinforcement learning. In Autonomous Agents and Multiagent Systems: AAMAS 2017 Workshops, Best Papers, São Paulo, Brazil, May 8-12, 2017, Revised Selected Papers 16 , 2017. 10 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Hansen, K. T., Misra, K., and Pai, M. Frontiers: Algorith-mic collusion: Supra-competitive prices via independent algorithms. Marketing Science , 40(1):1–12, 2021. Hu, J. and Wellman, M. P. Multiagent reinforcement learn-ing: theoretical framework and an algorithm. In ICML ,volume 98, pp. 242–250, 1998. Kaisers, M. Learning against learning: Evolutionary dy-namics of reinforcement learning algorithms in strategic interactions. 2012. Kendall, G., Yao, X., and Chong, S. Y. The iterated prison-ers’ dilemma: 20 years on , volume 4. World Scientific, 2007. Klein, T. Autonomous algorithmic collusion: Q-learning un-der sequential pricing. The RAND Journal of Economics ,52(3):538–558, 2021. Lanctot, M., Zambaldi, V., Gruslys, A., Lazaridou, A., Tuyls, K., Pérolat, J., Silver, D., and Graepel, . A uni-fied game-theoretic approach to multiagent reinforcement learning. Advances in neural information processing systems , 30, 2017. Leibo, J. Z., Zambaldi, V., Lanctot, M., Marecki, J., and Graepel, T. Multi-agent reinforcement learning in sequen-tial social dilemmas. Conference on Autonomous Agents and Multiagent System , 2017. Littman, M. L. Markov games as a framework for multi-agent reinforcement learning. In Machine learning pro-ceedings 1994 , pp. 157–163. Elsevier, 1994. Lowe, R., Wu, Y., Tamar, A., Harb, J., Abbeel, O. P., and Mordatch, I. Multi-agent actor-critic for mixed cooperative-competitive environments. NeurIPS , 2017. Mehra, S. K. Antitrust and the robo-seller: Competition in the time of algorithms. Minn. L. Rev. , 100:1323, 2015. Meylahn, J. M. Does an intermediate price facilitate algo-rithmic collusion? Available at SSRN 4594415 , 2023. Meylahn, J. M. and Janssen, L. Limiting dynamics for 
+
+Q-learning with memory one in symmetric two-player, two-action games. Complexity , 2022(1):4830491, 2022. Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Ve-ness, J., Bellemare, M. G., Graves, A., Riedmiller, M., Fidjeland, A. K., Ostrovski, G., Petersen, S., Beattie, C., Sadik, A., Antonoglou, I., King, H., Kumaran, D., Wier-stra, D., Legg, S., and Hassabis, D. Human-level control through deep reinforcement learning. Nature , 518(7540): 529–533, 2015. Nekoei, H., Badrinaaraayanan, A., Sinha, A., Amini, M., Rajendran, J., Mahajan, A., and Chandar, S. Dealing with non-stationarity in decentralized cooperative multi-agent deep reinforcement learning via multi-timescale learning. 
+
+arXiv preprint arXiv:2302.02792 , 2023. Nowak, M. and Sigmund, K. A strategy of win-stay, lose-shift that outperforms tit-for-tat in the prisoner’s dilemma game. Nature , 364:56–58, 1993. OECD. Collusion: Competition policy in the digital age. 
+
+https://www.oecd.org/daf/competition /Algorithms-and-colllusion-competiti on-policy-in-the-digital-age.pdf , 2017. Osborne, M. J. An introduction to game theory , volume 3. Oxford university press New York, 2004. Schechner, S. Why do gas station prices constantly change? blame the algorithm. Wall Street Journal , 8, 2017. Seijen, H. V., Hasselt, H. V., Whiteson, S., and Wiering, M. A theoretical and empirical analysis of expected sarsa. In 
+
+2009 ieee symposium on adaptive dynamic programming and reinforcement learning , pp. 177–184. IEEE, 2009. Silver, D., Hubert, T., Schrittwieser, J., Antonoglou, I., Lai, M., Guez, A., Lanctot, M., Sifre, L., Kumaran, D., and Graepel, T. A general reinforcement learning algorithm that masters chess, shogi, and go through self-play. Sci-ence , 362(6419):1140–1144, 2018. Sunehag, P., Gruslys, G. L. A., Czarnecki, W. M., Zam-baldi, V., Jaderberg, M., Lanctot, M., Sonnerat, N., Leibo, J. Z., Tuyls, K., and Graepel, T. Value-decomposition networks for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 , 2017. Sutton, R. S. and Barto, A. G. Reinforcement learning: An introduction . MIT press, 2018. Tang, Y. Towards learning multi-agent negotiations via self-play. In Proceedings of the IEEE/CVF International Conference on Computer Vision Workshops , 2019. Usui, Y. and Ueda, M. Symmetric equilibrium of multi-agent reinforcement learning in repeated prisoner’s dilemma. Applied Mathematics and Computation , 409: 126370, 2021. Wainwright, M. J. . Stochastic approximation with cone-contractive operators: Sharp ℓ∞-bounds for Q-learning. 
+
+arXiv preprint arXiv:1905.06265 , 2019. Waltman, L. and Kaymak, U. Q-learning agents in a Cournot oligopoly model. Journal of Economic Dynamics and Control , 32(10):3275–3293, 2008. 11 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Watkins, C. and Dayan, P. Q-learning. Machine learning , 8: 279–292, 1992. Whitehead, S. D. A complexity analysis of cooperative mechanisms in reinforcement learning. In AAAI , pp. 607– 613, 1991. Xu, Z. and Zhao, W. On mechanism underlying algorithmic collusion. arXiv preprint arXiv:2409.01147 , 2024. Yongacoglu, B., Arslan, G., and Yüksel, S. Decentralized learning for optimality in stochastic dynamic teams and games with local control and global state information. 
+
+IEEE Transactions on Automatic Control , 67(10):5230– 5245, 2021. Yongacoglu, B., Arslan, G., and Yüksel, S. Asynchronous decentralized Q-learning: Two timescale analysis by per-sistence. arXiv preprint arXiv:2308.03239 , 2023. Zhang, K., Yang, Z., and Ba¸ sar, T. Multi-agent reinforce-ment learning: A selective overview of theories and algo-rithms. Handbook of reinforcement learning and control ,pp. 321–384, 2021. Zhao, X., Pan, Y., Xiao, C., Chandar, S., and Rajendran, J. Conditionally optimistic exploration for cooperative deep multi-agent reinforcement learning. arXiv preprint arXiv:2303.09032 , 2023. 12 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+## A. Proofs of Q-values at Convergence 
+
+A.1. Always defect Policy Proposition 2.1 (Always Defect ). The following Q-table Q⋆, Defect is a fixed point of the Bellman Equation (4) and yields an always defect policy, ∀s ∈ { C, D}2,Q⋆, Defect  
+
+> s, D
+
+= Ea2∼π(·| s)rD,a 2 /(1 − γ) ,Q⋆, Defect  
+
+> s, C
+
+= Q⋆, Defect  
+
+> s, D
+
+− Ea2∼π(·| s)
+
+ rD,a 2 − rC,a 2
+
+ .
+
+Proof of Proposition 2.1 ( always defect ). The greedy action of the always defect policy is to defect all the time. For all states st ∈ { C, D}2, a1 
+
+> t
+
+∈ { C, D}, the self-play multi-agent Bellman equation writes 
+
+Q⋆, Defect 
+
+> st,a 1
+> t
+
+= γ(1 − ϵ)Q⋆, Defect (a1  
+
+> t,D) ,D
+
++ γϵQ ⋆, Defect (a1  
+
+> t,C) ,D
+
++ Eara1  
+
+> t,a
+
+, (9) 
+
+i.e., , for all state st ∈ { C, D}2
+
+Q⋆, Defect  
+
+> st,D
+
+− γ(1 − ϵ)Q⋆, Defect (DD) ,D − γϵQ ⋆, Defect (DC) ,D = EarD,a (10) 
+
+Q⋆, Defect  
+
+> st,C
+
+− γ(1 − ϵ)Q⋆, Defect (C ,D) ,D − γϵQ ⋆, Defect (C ,C) ,D = EarC,a . (11) Evaluating Equation (10) in st = (D , C) and st = (DD) yields 
+
+(1 − γϵ )Q⋆, Defect DC ,D − γ(1 − ϵ)Q⋆, Defect (D ,D) ,D = EarD,a (12) 
+
+−γϵQ ⋆, Defect DC ,D + (1 − γ(1 − ϵ)) Q⋆, Defect DD ,D = EarD,a . (13) One can see that 
+
+Q⋆, Defect DC ,D = Q⋆, Defect (D ,D) ,D = EarD,a /(1 − γ) , (14) is a solution to the linear system. Plugging Equation (14) into Equation (10) yields 
+
+Q⋆, Defect CC ,D = Q⋆, Defect CD ,D = EarD,a /(1 − γ) . (15) Plugging Equation (15) into Equation (11) yields 
+
+∀s ∈ { C, D}2, Q ⋆, Defect  
+
+> s, C
+
+= EarC,a + γ
+
+1 − γ EarD,a (16) 
+
+= 11 − γ EarD,a − (EarD,a − EarC,a ) (17) 
+
+= Q⋆, Defect  
+
+> s, D
+
+− (EarD,a − EarC,a ) . (18) This means that these Q values imply a greedy always defect policy if and only if 
+
+EarD,a > EarC,a , i.e., (19) 
+
+(1 − ϵ)rDD + ϵr DC > (1 − ϵ)rCD + ϵr CC , (20) which is always true since rDD > r CD and rDC > r CC .
+
+A.2. Q-values at convergence for the Pavlov Policy Proposition 2.2 (Pavlov ). If γ > rDC −rCC  
+
+> rCC −rDD
+
+and ϵ is small enough, then there exists a Q-function, Q⋆, Pavlov , which is a fixed point of the self-play multi-agent Bellman Equation (4) and yields the Pavlov policy, i.e, 
+
+∀s ∈ { CC , DD } Q⋆, Pavlov  
+
+> s, C
+
+> Q ⋆, Pavlov  
+
+> s, D
+
+and 
+
+∀s ∈ { CD , DC } Q⋆, Pavlov  
+
+> s, C
+
+< Q ⋆, Pavlov  
+
+> s, D
+
+.
+
+13 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Proof of Q-values at convergence for the Pavlov Policy. 
+
+Q⋆, Pavlov 
+
+st,a 1
+
+> t
+
+= γ(1 − ϵ)Q⋆, Pavlov (a1 
+
+> t
+
+,¯a2(st)) ,¯a1(a1 
+
+> t
+
+,¯a2(st)) + γϵQ ⋆, Pavlov (a1 
+
+> t
+
+,a 2(st)) ,¯a1(a1 
+
+> t
+
+,a 2(st)) + Ea∼π(·| st) ra1 
+
+> t
+
+,a (21) 
+
+Q⋆, Pavlov CC ,a 1
+
+> t
+
+= γ(1 − ϵ)Q⋆, Pavlov (a1 
+
+> t
+
+,C ),¯a1(a1 
+
+> t
+
+,C) + γϵQ ⋆, Pavlov (a1 
+
+> t
+
+,D,, ¯a1(a1 
+
+> t
+
+,D) + Ea∼π(·| CC) ra1 
+
+> t
+
+,a (22) 
+
+Q⋆, Pavlov DD ,a 1
+
+> t
+
+= γ(1 − ϵ)Q⋆, Pavlov (a1 
+
+> t
+
+,C) ,¯a1(a1 
+
+> t
+
+,C) + γϵQ ⋆, Pavlov (a1 
+
+> t
+
+,D) ,¯a1(a1 
+
+> t
+
+,D) + Ea∼π(·| DD) ra1 
+
+> t
+
+,a (23) 
+
+Q⋆, Pavlov CD ,a 1
+
+> t
+
+= γ(1 − ϵ)Q⋆, Pavlov (a1 
+
+> t
+
+,D) ,¯a1(a1 
+
+> t
+
+,D) + γϵQ ⋆, Pavlov (a1 
+
+> t
+
+,C) ,¯a1(a1 
+
+> t
+
+,C) + Ea∼π(·| CD) ra1 
+
+> t
+
+,a (24) 
+
+Q⋆, Pavlov DC ,a 1
+
+> t
+
+= γ(1 − ϵ)Q⋆, Pavlov (a1 
+
+> t
+
+,D) ,¯a1(a1 
+
+> t
+
+,D) + γϵQ ⋆, Pavlov (a1 
+
+> t
+
+,C) ,¯a1(a1 
+
+> t
+
+,C) + Ea∼π(·| DC) ra1 
+
+> t
+
+,a (25) Hence 
+
+Q⋆, Pavlov (C ,C) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,C) ,C − γϵQ ⋆, Pavlov (D ,D) ,D = Ea∼π(·| CC) rC,a (26) 
+
+Q⋆, Pavlov (C ,C) ,D − γ(1 − ϵ)Q⋆, Pavlov (D ,C) ,D − γϵQ ⋆, Pavlov (D ,D) ,C = Ea∼π(·| CC) rD,a (27) 
+
+Q⋆, Pavlov (D ,D) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,C) ,C − γϵQ ⋆, Pavlov (C ,D) ,D = Ea∼π(·| DD) rC,a (28) 
+
+Q⋆, Pavlov (D ,D) ,D − γ(1 − ϵ)Q⋆, Pavlov (D ,C) ,D − γϵQ ⋆, Pavlov (D ,D) ,C = Ea∼π(·| DD) rD,a (29) 
+
+Q⋆, Pavlov (C ,D) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,D) ,D − γϵQ ⋆, Pavlov (C ,C) ,C = Ea∼π(·| CD) rC,a (30) 
+
+Q⋆, Pavlov (C ,D) ,D − γ(1 − ϵ)Q⋆, Pavlov (D ,D) ,C − γϵQ ⋆, Pavlov (D ,C) ,D = Ea∼π(·| CD) rD,a (31) 
+
+Q⋆, Pavlov (D ,C) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,D) ,D − γϵQ ⋆, Pavlov (C ,C) ,C = Ea∼π(·| DC) rC,a (32) 
+
+Q⋆, Pavlov (D ,C) ,D − γ(1 − ϵ)Q⋆, Pavlov (D ,D) ,C − γϵQ ⋆, Pavlov (D ,C) ,D = Ea∼π(·| DC) rD,a . (33) One can observe that 
+
+Q⋆, Pavlov (C ,C) ,C = Q⋆, Pavlov (D ,D) ,C
+
+Q⋆, Pavlov (C ,C) ,D = Q⋆, Pavlov (D ,D) ,D
+
+Q⋆, Pavlov (C ,D) ,C = Q⋆, Pavlov (D ,C) ,C
+
+Q⋆, Pavlov (C ,D) ,D = Q⋆, Pavlov (D ,C) ,D ,
+
+(34) (35) (36) (37) and the system of equations rewrites 
+
+Q⋆, Pavlov (C ,C) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,C) ,C − γϵQ ⋆, Pavlov (C ,D) ,D = Ea∼π(·| CC) rC,a (38) 
+
+Q⋆, Pavlov (D ,D) ,D − γ(1 − ϵ)Q⋆, Pavlov (C ,D) ,D − γϵQ ⋆, Pavlov (C ,C) ,C = Ea∼π(·| DD) rD,a (39) 
+
+Q⋆, Pavlov (C ,D) ,C − γ(1 − ϵ)Q⋆, Pavlov (C ,D) ,D − γϵQ ⋆, Pavlov (C ,C) ,C = Ea∼π(·| CD) rC,a (40) 
+
+Q⋆, Pavlov (C ,D) ,D − γ(1 − ϵ)Q⋆, Pavlov (C ,C) ,C − γϵQ ⋆, Pavlov (C ,D) ,D = Ea∼π(·| CD) rD,a (41) For Q⋆, Pavlov (C ,C) ,C and Q⋆, Pavlov (C ,D) ,D on needs to solve the following linear system: 
+
+1 − γ(1 − ϵ) −γϵ 
+
+−γ(1 − ϵ) 1 − γϵ 
+
+ Q⋆, Pavlov (C ,C) ,C
+
+Q⋆, Pavlov (C ,D) ,D
+
+!
+
+=
+
+Ea∼π(·| CC) rC,a 
+
+Ea∼π(·| CD) rD,a 
+
+
+
+, (42) which yields 
+
+Q⋆, Pavlov (D ,D) ,C = Q⋆, Pavlov (C ,C) ,C = (1 − γϵ )Ea∼π(·| CC) rC,a + γϵ Ea∼π(·| CD) rD,a 
+
+1 − γQ⋆, Pavlov (D ,C) ,D = Q⋆, Pavlov (C ,D) ,D = γ(1 − ϵ)Ea∼π(·| CC) rC,a + (1 − γ(1 − ϵ)) Ea∼π(·| CD) rD,a 
+
+1 − γ .
+
+(43) (44) 14 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Q⋆, Pavlov (C ,D) ,D − Q⋆, Pavlov (C ,D) ,C = Q⋆, Pavlov (D ,C) ,D − Q⋆, Pavlov (D ,C) ,C (45) 
+
+= γ(1 − ϵ)Q⋆, Pavlov (C ,C) ,C + γϵQ ⋆, Pavlov (C ,D) ,D + Ea∼π(·| CD) rD,a (46) 
+
+− γ(1 − ϵ)Q⋆, Pavlov (C ,D) ,D − γϵQ ⋆, Pavlov (C ,C) ,C − Ea∼π(·| CD) rC,a (47) 
+
+= γ(1 − 2ϵ)Q⋆, Pavlov (C ,C) ,C − γ(1 − 2ϵ)Q⋆, Pavlov (C ,D) ,D + Ea∼π(·| CD) rD,a − Ea∼π(·| CD) rC,a (48) 
+
+= γ(1 − 2ϵ)( Q⋆, Pavlov (C ,C) ,C − Q⋆, Pavlov (C ,D) ,D ) + Ea∼π(·| CD) rD,a − Ea∼π(·| CD) rC,a (49) 
+
+= γ(1 − 2ϵ) ( Ea∼π(·| CC) rC,a − Ea∼π(·| CD) rD,a )
+
+| {z } 
+
+> depends on ϵ
+
++ Ea∼π(·| CD) rD,a − Ea∼π(·| CD) rC,a 
+
+| {z }
+
+> >0
+
+(50) 
+
+= γ(1 − 2ϵ) ((1 − ϵ)( rCC − rDD ) + ϵ(rCD − rDC )) 
+
+| {z } 
+
+> depends on ϵ
+
++ Ea∼π(·| CD) rD,a − Ea∼π(·| CD) rC,a 
+
+| {z }
+
+> >0
+
+(51) 
+
+= γ(1 − 2ϵ)(2( g − 1) − 2gϵ ) + (2 − g) , (52) Which is positive. In addition 
+
+Q⋆, Pavlov (D ,D) ,C − Q⋆, Pavlov (D ,D) ,D (53) 
+
+= γ(1 − 2ϵ) ( Ea∼π(·| CC) rC,a − Ea∼π(·| CD) rD,a )
+
+| {z }
+
+> depends
+
++ Ea∼π(·| DD) (rC,a − rD,a )
+
+| {z }
+
+> <0
+
+(54) 
+
+= γ(1 − 2ϵ) ((1 − ϵ)( rCC − rDD ) + ϵ(rCD − rDC )) 
+
+| {z } 
+
+> depends on ϵ
+
++ (1 − ϵ)( rCC − rDC ) + ϵ(rCD − rDD )
+
+| {z }
+
+> <0
+
+(55) 
+
+= 2 γ(1 − 2ϵ) ((( g − 1) − gϵ )) 
+
+| {z } 
+
+> depends on ϵ
+
++g , (56) which is positive for ϵ small enough. 
+
+## B. Propositions B.1 and B.2 
+
+Proposition B.1 (Always defect ). For all γ ∈ (0 , 1) , the always defect policy, i.e., πDefect (D |s) = 1 , ∀s ∈ S ,is a subgame perfect equilibrium. Proof. Regardless of the state, given that the opponent is always defecting, the best response at each time step is to defect since r1(C , D) < r 1(D , D) .
+
+Proposition B.2 (Pavlov ). If 1 > γ ≥ 2−g 
+
+> 2( g−1)
+
+, then the Pavlov policy, i.e., πPavlov (D |s) = 1 , ∀s ∈ { CD , DC } and 
+
+πPavlov (C |s) = 1 , ∀s ∈ { DD , CC }, is a subgame perfect equilibrium. Proof. Let us assume that our opponent plays according to Pavlov and show that the best response is to also adopt this strategy. By the one deviation principle (Osborne, 2004, Prop 438.1), one only needs to show that for the four possible starting states the best response against Pavlov is to follow Pavlov .
+
+• If we start in s0 ∈ { CD , DC }, the opponent will defect and the best response is to defect since, if we cooperate, we end up in 
+
+s1 = CD which leads to a worse payoff that going straight to DD by defecting, rCD +γr DD +γ2rCC ≤ rDD +γr CC +γ2rCC ,
+
+which is always the case since rCD < r DD < r CC .
+
+• If we start in s0 = CC , we should show that it is better to cooperate than to defect. It is the case if, 
+
+rCD + γr DD + γ2rCC ≤ rCC + γr CC + γ2rCC , which is true if and only if γ ≥ rDC −rCC  
+
+> rCC −rDD
+
+= 2−g 
+
+> 2( g−1)
+
+.
+
+• Finally, if we start in s0 = DD , it is better to cooperate than to defect as the opponent is cooperating. Hence, the best response to the Pavlov policy is to play according to Pavlov .15 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+## C. Proof the Fully Greedy Case (Theorem 3.2) 
+
+C.1. Lose-shift to Pavlov 
+
+Equations (6) and (7) that govern the dynamics of Q(C ,C) ,D and Q(D ,D) ,C from the Lose-shift policy to Pavlov policy are recalled below: 
+
+Qt+1 (C ,C) ,D = (1 − α)Qt 
+
+> (C ,C) ,D
+
++ α
+
+
+
+rDD + γQ t
+
+> (D ,D) ,C
+
+
+
+, (6) 
+
+Qt+1 (D ,D) ,C = (1 − α)Qt 
+
+> (D ,D) ,C
+
++ α
+
+
+
+rCC + γQ t+1 (C ,C) ,D
+
+
+
+. (7) Plugging Equation (6) in Equation (7) yields: 
+
+Qt+1 (D ,D) ,C = (1 − α)Qt 
+
+> (D ,D) ,C
+
++ α
+
+
+
+rCC + γ(1 − α)Qt 
+
+> (C ,C) ,D
+
++ γα 
+
+
+
+rDD + γQ t
+
+> (D ,D) ,C
+
+ 
+
+, i.e., (57) 
+
+Qt+1 (D ,D) ,C = αγ (1 − α)Qt 
+
+> (C ,C) ,D
+
++ (1 − α + αγ 2)Qt 
+
+> (D ,D) ,C
+
++ α (rCC + γαr DD ) , (58) Following Equations (6) and (58), the dynamics of Q(C ,C) ,D and Q(D ,D) ,C is governed by the linear system 
+
+Qt+1 (C ,C) ,D
+
+−Qt+1 (D ,D) ,C
+
+!
+
+=
+
+ 1 − α −αγ 
+
+−αγ (1 − α) 1 − α + ( αγ )2
+
+ Qt
+
+> (C ,C) ,D
+
+−Qt
+
+> (D ,D) ,C
+
+!
+
++ b , (59) for a given b. Let (−Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+, Q ⋆, lose-shift  
+
+> (D ,D) ,C
+
+) be the fixed point of this linear system, it writes 
+
+Qt+1 (C ,C) ,D − Q⋆, lose-shift 
+
+> (C ,C) ,D
+
+−(Qt+1 (D ,D) ,C − Q⋆, lose-shift  
+
+> (D ,D) ,C
+
+)
+
+!
+
+=
+
+ 1 − α −αγ 
+
+−αγ (1 − α) 1 − α + ( αγ )2
+
+ Qt 
+
+> (C ,C) ,D
+
+− Q⋆, lose-shift 
+
+> (C ,C) ,D
+
+−(Qt 
+
+> (D ,D) ,C
+
+− Q⋆, lose-shift  
+
+> (D ,D) ,C
+
+)
+
+!
+
+, (60) Standard computations yield the eigenvalues of the matrix 
+
+ 1 − α −αγ 
+
+−αγ (1 − α) 1 − α + ( αγ )2
+
+
+
+. (61) are 
+
+λ± = 1 − α + αγ αγ 
+
+2 ±
+
+r
+
+1 − α + (αγ )2
+
+4
+
+!
+
+. (62) Thus for 0 < α < 1 and 0 < γ < 1 we have 0 < λ ± < 1 and thus 
+
+
+
+Qt
+
+> (C ,C) ,D
+
+, Q t
+
+> (D ,D) ,C
+
+
+
+converges linearly towards 
+
+
+
+Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+, Q ⋆, lose-shift 
+
+> (D ,D) ,C
+
+
+
+.Then using Lemma C.1, we have that Qt 
+
+> (C ,C) ,D
+
+will get below Qt0 
+
+> (C ,C) ,C
+
+before Qt 
+
+> (D ,D) ,C
+
+getting below Qt0
+
+> (D ,D) ,D
+
+.
+
+Lemma C.1. In the phase from lose-shift to Pavlov , if rDD +γr CC  
+
+> 1−γ2
+
+≜ Q⋆, lose −shift (C ,C) ,C < Q t0 
+
+> (C ,C) ,C
+
+≤ rCC  
+
+> 1−γ
+
+, then while 
+
+Qt 
+
+> (C ,C) ,D
+
+> Q t0
+
+> (C ,C) ,C
+
+, Qt 
+
+> (D ,D) ,C
+
+> Q t0
+
+> (D ,D) ,D
+
+.Proof. (Lemma C.1) In phase 2, Qt+1 (C ,C) ,D > Q t0 
+
+> (C ,C) ,C
+
+Using Equation (7) 
+
+Qt+1 (D ,D) ,C = (1 − α)Qt 
+
+> (D ,D) ,C
+
++ α( rCC + γ Q t+1 (C ,C) ,D
+
+| {z }
+
+> >Q t+1 (C ,C) ,C
+
+| {z } 
+
+> >Q t0(C ,C) ,C>Q t0(D ,D) ,D=Qt+1 (D ,D) ,DAssumption 3.1 iii)
+
+) , (63) hence 
+
+Qt+1 (D ,D) ,C > Q t+1 (D ,D) ,D . (64) For phases 2 and 3, the convergence is also linear, and similar arguments hold. 16 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+C.2. O(1 /α ) convergence rate 
+
+The convergence of the Q-values is linear in each phase (1 to 3). For instance, in phase 1 the convergence is linear with rate 
+
+(1 − α(1 − γ)) , more specifically, 
+
+Qt 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D = (1 − α(1 − γ)) t(Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D) . (65) With the later decrease, the policy switches, i.e., 
+
+Qt 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D < Q t0 
+
+> (D ,D) ,C
+
+− Q⋆, Defect (D ,D) ,D
+
+will require a number of steps 
+
+T = (log( Qt0 
+
+> (DD ),C
+
+− Q⋆, Defect (D ,D) ,D)) − log( Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D)) / log(1 − α(1 − γ)) (66) 
+
+∼α→0 (log( Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D)) − log( Qt0 
+
+> (DD ),C
+
+− Q⋆, Defect (D ,D) ,D))) /α (1 − γ) (67) 
+
+= O(1 /α ) . (68) For phases 2 and 3, the convergence is also linear, and similar arguments hold. To summarize, the convergence is linear in the three phases (from always defect to Lose-shift , from Lose-shift to Pavlov , staying in Pavlov ), and is done in O(1 /α ) in each phase. 
+
+## D. Proof of the ϵ-Greedy Case (Theorem 3.3) 
+
+Let us start with the proof of Lemma 3.4. 
+
+D.1. Proof of Lemma 3.4: from always defect to lose-shift 
+
+Lemma 3.4. Let 0 < ϵ < 1/2, 0 < γ < 1 and 0 ≤ k ≤ T , k ∈ N. Suppose that Assumption 3.1 holds, s0 = DD , and both agents are guided by ϵ-greedy Q-learning (Algorithm 1), then 
+
+i) The probability of the event Ek,T is lower bounded 
+
+P(Ek,T ) ≥ 1 − 2T (2 ϵ)k+1 .
+
+ii) For all state-action pair (s, a ) ∈ S × A |Qt+1  
+
+> s,a
+
+− Qts,a | ≤ ∆r α
+
+1 − γ .
+
+iii) On the event Ek,T , the deviation for the Q-values others than Q(D ,D) ,D is at most 
+
+|Qts,a − Qt0
+
+> s,a
+
+| ≤ 2k∆r α
+
+1 − γ , ∀(s, a )̸ = (DD , D) .
+
+iv) On the event Ek,T , the deviation for the Q-value Q(D ,D) ,D is upper-bounded 
+
+Qt+1 (D ,D) ,D − Q⋆, Defect (D ,D) ,D ≤ 2k∆r α
+
+1 − γ
+
++ (1 − α(1 − γ)) T −2k 
+
+Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
+.
+
+v) On the event Ek,T , for k < (1 −γ)∆ Q 
+
+> 2α∆r
+
+, with ∆Q ≜ min s̸ =DD Qt0 
+
+> s, D
+
+− Qt0
+
+> s, C
+
+Qts, D > Q ts, C , ∀t ≤ T, s ̸ = DD .
+
+vi) On the event Ek,T , if T > 2k + log    
+
+> 
+> Qt0(D ,D) ,C−Q⋆, Defect (D ,D) ,D−4k∆rα
+> 1−γ
+> 
+> −log
+> 
+> Qt0(D ,D) ,D−Q⋆, Defect (D ,D) ,D
+> 
+> log(1 −α+γα )
+
+, then 
+
+QT 
+
+> (D ,D) ,D
+
+< Q T 
+
+> (D ,D) ,C
+
+.
+
+17 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+D.1.1. P ROOF OF LEMMA 3.4 i) Proof of Lemma 3.4 i) . The proof of this result relies on the fact that • The probability of the greedy action is 1 − ϵ.• Each agent picks their action independently of the other. Thus, either both agents take a greedy action with probability (1 − ϵ)2, or at least one of them picks a non-greedy action with probability 2ϵ − ϵ2.
+
+P(Ek,T ) = 
+
+> k
+
+X
+
+> i=0
+
+P(a non-greedy action has been picked exactly i times in T steps ) (69) 
+
+=
+
+> k
+
+X
+
+> i=0
+
+Ti
+
+
+
+(1 − ϵ)2( T −i)(2 ϵ − ϵ2)i (70) 
+
+= 1 −
+
+> T
+
+X
+
+> i=k+1
+
+Ti
+
+
+
+(1 − ϵ)2( T −i)
+
+> ≤(2 ϵ)i≤(2 ϵ)k+1
+
+z }| {
+
+(2 ϵ − ϵ2)i (because 0 ≤ ϵ ≤ 1/2) (71) 
+
+≥ 1 − (2 ϵ)k+1  
+
+> ≤PTi=0
+
+(Ti )=2 T
+
+z }| {
+
+> T
+
+X
+
+> i=k+1
+
+Ti
+
+
+
+(1 − ϵ)2( T −i) (72) 
+
+≥ 1 − 2T (2 ϵ)k+1 , (73) 
+
+i.e., 
+
+P(Ek,T ) ≥ 1 − 2T (2 ϵ)k+1 . (74) We will then use this lemma in steps 1 and 2. The idea of the proof will be to leverage this lower bound to show that the 
+
+ϵ-greedy dynamic behaves similarly to the fully greedy policy. D.1.2. P ROOF OF LEMMA 3.4 ii) Proof of Lemma 3.4 ii) . For all state, action pair (s, a ) ∈ S × A , the Q-learning update rule writes 
+
+Qt+1  
+
+> s,a
+
+= Qts,a + α
+
+
+
+rt + γ max  
+
+> a′
+
+Qts,a ′ − Qts,a 
+
+
+
+. (75) In addition, since Q = P∞ 
+
+> t=0
+
+γtrt, then the Q values cannot go above (resp. below) the maximal (resp. minimal) reward. In other words 
+
+rmin 
+
+1 − γ ≤Qs,a ≤ rmax 
+
+1 − γ which yields (76) 
+
+rmin + γ rmin 
+
+1 − γ − rmax 
+
+1 − γ ≤rt + γ max  
+
+> a′
+
+Qts,a ′ − Qts,a ≤ rmax + γ rmax 
+
+1 − γ − rmin 
+
+1 − γ (77) 
+
+rmin − rmax 
+
+1 − γ ≤rt + γ max  
+
+> a′
+
+Qts,a ′ − Qts,a ≤ rmax − rmin 
+
+1 − γ . (78) Plugging Equation (78) in Equation (75) yields the desired result 
+
+|Qt+1  
+
+> s,a
+
+− Qts,a | ≤ ∆r α
+
+1 − γ , (79) with ∆r ≜ rmax − rmin the difference between the maximal and the minimal reward. 18 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+D.1.3. P ROOF OF LEMMA 3.4 iii) Proof of Lemma 3.4 iii) . Conditioning on Ek,T , for all state-action pair (s, a )̸ = (DD , D) , Qs,a is updated at most 2k times. Since Qs,a is updated at most 2k times, Lemma 3.4 ii) repeatedly applied 2k times yields 
+
+|Qts,a − Qt0
+
+> s,a
+
+| ≤ 2k∆r α
+
+1 − γ , ∀(s, a )̸ = (DD , D) . (80) D.1.4. P ROOF OF LEMMA 3.4 iv) Proof of Lemma 3.4 iv) . Let us consider the first step, from always defect to lose-shift . We start from the 
+
+always defect region, i.e., the greedy action is to defect regardless of the state. When the greedy action D is picked in the state DD , the entry Q(D ,D) ,D is updated as follows. In other words, conditioning on Ek,T 
+
+• The defect action D in the state DD is played at least T − 2k times. When it is the case, Q(D ,D) ,D is updated at least 
+
+T − 2k times according to 
+
+Qt+1 (D ,D) ,D = Qt 
+
+> (D ,D) ,D
+
++ α
+
+
+
+rDD + γQ t 
+
+> (D ,D) ,D
+
+− Qt
+
+> (D ,D) ,D
+
+
+
+(81) 
+
+Qt+1 (D ,D) ,D − Q⋆, Defect (D ,D) ,D = (1 − α + αγ )
+
+
+
+Qt 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
+, (82) with Q⋆, Defect (D ,D) ,D = rDD  
+
+> 1−γ
+
+.• Otherwise Q(D ,D) ,D update is bounded 2k times using Lemma 3.4 ii) :
+
+Qt+1 (D ,D) ,D − Q⋆, Defect (D ,D) ,D ≤ Qt 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D + ∆r α
+
+1 − γ . (83) Combining Equation (82) for at least T − 2k steps, and Equation (83) for at most 2k steps yields 
+
+QT 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D ≤ (1 − α + αγ )T −2k 
+
+Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
++ 2k∆r α
+
+1 − γ . (84) D.1.5. P ROOF OF LEMMA 3.4 v) Proof. Let s ∈ S\ DD , t ≤ T , on the event Ek,T 
+
+Qts, D − Qts, C = Qts, D − Qt0
+
+> s, D
+
+| {z }   
+
+> ≥− 2k∆r α
+> 1−γ(using Lemma 3.4 iii) )
+
++ Qt0 
+
+> s, C
+
+− Qts, C
+
+| {z }   
+
+> ≥− 2k∆r α
+> 1−γ(using Lemma 3.4 iii) )
+
++ Qt0 
+
+> s, D
+
+− Qt0
+
+> s, C
+
+| {z }  
+
+> ≥min s̸=DD Qt0
+> s, D−Qt0
+> s, C≜∆Qt0
+
+(85) 
+
+≥ − 4k∆r α
+
+1 − γ + ∆ Qt0 . (86) Hence, if 
+
+k > (1 − γ)∆ Qt0
+
+4∆ r , (87) then on the event Ek,T for all s ∈ S\ DD ,
+
+QTs, D − QTs, C ≥ 0 . (88) Note that ∆Qt0 ≜ min s̸=DD Qt0 
+
+> s, D
+
+− Qt0 
+
+> s, C
+
+> 0 since one starts from the always defect policy. 19 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+D.1.6. P ROOF OF LEMMA 3.4 vi) Proof. Using Lemma 3.4 iv) , on the event Ek,T , one has 
+
+QT 
+
+> (D ,D) ,D
+
+≤ (1 − α + αγ )T −2k 
+
+Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
++ 2k∆r α
+
+1 − γ + Q⋆, Defect (D ,D) ,D (89) 
+
+≤ − 2kα ∆r
+
+1 − γ + Qt0 
+
+> DD ,C
+
+if (90) 
+
+T > 2k +log 
+
+
+
+Qt0 
+
+> (D ,D) ,C
+
+− Q⋆, Defect (D ,D) ,D − 4k∆r α
+
+> 1−γ
+
+
+
+− log 
+
+
+
+Qt0 
+
+> (D ,D) ,D
+
+− Q⋆, Defect (D ,D) ,D
+
+
+
+log(1 − α + γα ) . (91) 
+
+Remark D.1 .
+
+
+
+Qt0 
+
+> (D ,D) ,C
+
+− Q⋆, Defect (D ,D) ,D − 4k∆r α
+
+> 1−γ
+
+
+
+needs to be positive. In addition, using Lemma 3.4 iii) on Ek,T yields 
+
+− 2kα ∆r
+
+1 − γ + Qt0 
+
+> DD ,C
+
+≤ QT 
+
+> DD ,C
+
+. (92) Combining Equations (90) and (92), yields that on Ek,T , if 
+
+T > 2k +log 
+
+
+
+Q0(D ,D) ,C − Q⋆, Defect (D ,D) ,D − 4k∆r α
+
+> 1−γ
+
+
+
+− log 
+
+
+
+Q0(D ,D) ,D − Q⋆, Defect (D ,D) ,D
+
+
+
+log(1 − α + γα ) , (93) then 
+
+QT 
+
+> (D ,D) ,D
+
+< Q T 
+
+> (D ,D) ,C
+
+. (94) 
+
+D.2. Proof of Theorem 3.3 
+
+Proof of Theorem 3.3. To conclude, if we set k = O(1 /α ), such that k < ∆Q(1 −γ)2α∆r and the total number of steps T such that T > 2k + log    
+
+> 
+> Qt0(D ,D) ,C−Q⋆, Defect (D ,D) ,D−4k∆rα
+> 1−γ
+> 
+> −log
+> 
+> Q0(D ,D) ,D−Q⋆, Defect (D ,D) ,D
+> 
+> log(1 −α+γα )
+
+, one that with the probability of at least 1 − 2T ϵT −k,there exists t1 < T such that Qt1 
+
+> (D ,D) ,D
+
+< Q t1
+
+> (D ,D) ,C
+
+.The proof can be concluded as follows: in order to hold with probability at least 1 − δ, ϵ must satisfy 
+
+T log(2) + k log 2 ϵ ≤ log δ (95) 
+
+log( ϵ) ≤ 1
+
+k|{z} 
+
+> := C/α
+
+log( δ) − Tk|{z} 
+
+> := C1⊥⊥α
+
+log(2) , (96) where the constant C depends on the constants of T and k but is independent of alpha. Indeed, as both T and k grow as 
+
+1/α , the ration T /k can be chosen independent of α: this ensures that the event holds with high probability, and does not contradict k ≤ ∆Q (1 −γ)2α∆r = O(1 /α ) from Theorem 3.3. More formally, the number of steps needed T , varies as a function of 1/α : T ∼ C1/α , and k ∼ C2/α , for given C1, C 2 ∈ R. The choice of k in Theorem 3.3 requires as well a growth as 
+
+1/α : k ≤ ∆Q(1 − γ)/(2 α∆r ) = O(1 /α ).To summarize, we proved that with high probability, there exists a time step t1 such that 
+
+Qt1 
+
+> (D ,D) ,D
+
+< Q t1 
+
+> (D ,D) ,C
+
+(97) 
+
+Qt1 
+
+> (C ,C) ,D
+
+> Q t1 
+
+> (C ,C) ,C
+
+(98) 
+
+Qt1 
+
+> (D ,C) ,D
+
+> Q t1 
+
+> (D ,C) ,C
+
+(99) 
+
+Qt1 
+
+> (C ,D) ,D
+
+> Q t1 
+
+> (C ,D) ,D
+
+, (100) 20 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+and for all t < t 1
+
+Qt 
+
+> (D ,D) ,D
+
+> Q t 
+
+> (D ,D) ,C
+
+(101) 
+
+Qt 
+
+> (C ,C) ,D
+
+> Q t 
+
+> (C ,C) ,C
+
+(102) 
+
+Qt 
+
+> (D ,C) ,D
+
+> Q t 
+
+> (D ,C) ,C
+
+(103) 
+
+Qt 
+
+> (C ,D) ,D
+
+> Q t 
+
+> (C ,D) ,D
+
+. (104) In plain words, the Q-values went from the always defect to the lose-shift region. 
+
+D.3. From lose-shift to Pavlov 
+
+In this section, we show similar results to Lemma 3.4. For simplicity, we considered that in Equations (6) and (7) one-time step was performing two ϵ-greedy updates. 1. We can lower-bound P(Ek,T )
+
+2. Under the event Ek,T we will observe at least (1 − 4k)/2 pair of updates following Equations (6) and (7) are performed and at most 4k greedy updates. 3. Thus the Q-values for the greedy actions Q(C ,C) ,D and Q(D ,D) ,C will converge linearly and can be bounded. 4. The Q-entries of the non-greedy actions can be bounded. Similarly to Lemma 3.4, one can control the Q-values in the greedy and non-greedy states. 
+
+Lemma D.2. Let us consider Algorithm 1 with ϵ < 1/2, γ > 0 and δ > 0. If both agents act according to an ϵ-greed 
+
+lose-shift policy then, 
+
+i) On the event Ek,T , for all (s, a ) ∈ S × A |Qt+1  
+
+> s,a
+
+− Qts,a | ≤ ∆r α
+
+1 − γ .
+
+ii) On the event Ek,T , for all t ≥ t1 the deviation for the Q-values others than Q(D ,D) ,C and Q(C ,C) ,D is at most 
+
+|Qts,a − Qt1
+
+> s,a
+
+| ≤ 2k∆r α
+
+1 − γ , ∀(s, a ) /∈ { (DD , C) , (CC , D) } .
+
+iii) On the event Ek,T , the deviation for the Q-value Q(C ,C) ,D is upper-bounded 
+
+Qt 
+
+> (C ,C) ,D
+
+− Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+≤ C1λt−k 
+
+> 1
+
++ C2λt−k 
+
+> 2
+
++ 2k∆r α
+
+1 − γ . (105) 
+
+where C1 and C2 are defined in Equation (123) .
+
+iv) On the event Ek,T , for k < (1 −γ)∆ Q 
+
+> 2α∆r
+
+, with ∆Q ≜ min s / ∈{ DD ,CC } Qt0 
+
+> s, D
+
+− Qt0
+
+> s, C
+
+Qts, D > Q ts, C , ∀t ≤ T, s ̸ = {DD , CC } .
+
+v) If Qt0 
+
+> (C ,C) ,D
+
+− Qt0 
+
+> (C ,C) ,C
+
+≥ 4k∆r α 
+
+> 1−γ
+
+then, for all t1 ≤ t ≤ t2
+
+Qt 
+
+> (D ,D) ,C
+
+− Qt 
+
+> (D ,D) ,D
+
++ Qt 
+
+> (C ,C) ,D
+
+− Qt 
+
+> (C ,C) ,C
+
+≥ k∆r α
+
+1 − γ . (106) 
+
+In other words, this ensures that the agents either go to the Pavlov policy or oscillate between always defect and 
+
+lose-shift , but do not directly go from always defect to Pavlov .
+
+The proof of Lemmas D.2 i) to D.2 iv) are the same as for Lemma 3.4. 21 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+Final proof of Theorem 3.3. Once we reached the lose-shift policy, using Lemmas D.2 iii) and D.2 iv) , either • Qt 
+
+> (C ,C) ,D
+
+< Q t
+
+> (C ,C) ,C
+
+, and the policy changes for the Pavlov policy. • Either non-greedy actions are taken, and we go to the always always defect policy, i.e., we back to the previous situation, Lemma 3.4, but at this time-step, Qt 
+
+> (C ,C) ,D
+
+might be closer to Qt
+
+> (C ,C) ,C
+
+. In this situation 
+
+– Either greedy actions are taken and we achieve again the lose-shift region 
+
+– Either non-greedy actions are taken, and Qt 
+
+> (C ,C) ,D
+
+might become smaller than Qt
+
+> (C ,C) ,C
+
+, which yield a win-stay 
+
+policy. 
+
+Proof of Lemma D.2 v) .
+
+Qt+1 (C ,C) ,D − Q⋆, lose-shift 
+
+> (C ,C) ,D
+
+Qt+1 (D ,D) ,C − Q⋆, lose-shift 
+
+> (D ,D) ,C
+
+!
+
+=
+
+ 1 − α αγ αγ (1 − α) 1 − α + ( αγ )2
+
+ Qt 
+
+> (C ,C) ,D
+
+− Q⋆, lose-shift 
+
+> (C ,C) ,D
+
+Qt 
+
+> (D ,D) ,C
+
+− Q⋆, lose-shift 
+
+> (D ,D) ,C
+
+!
+
+, (107) which yields 
+
+ut
+
+vt
+
+
+
+= M t
+
+u0
+
+v0
+
+
+
+, (108) with 
+
+M =
+
+ a −b
+
+−ab a + b2
+
+
+
+(109) 
+
+a = 1 − α (110) 
+
+b = αγ (111) 
+
+ut = Qt 
+
+> (C ,C) ,D
+
+− Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+(112) 
+
+vt = −
+
+
+
+Qt 
+
+> (D ,D) ,C
+
+− Q⋆, lose-shift 
+
+> (D ,D) ,C
+
+
+
+. (113) The matrix M can be diagonalized: 
+
+M =
+
+ b2+√4a2+b4
+
+> 2ab b2−√4a2+b4
+> 2ab
+
+1 1
+
+| {z } 
+
+> := P:=( w1|w2)
+
+λ1 00 λ2
+
+ ab √4a2+b4 
+
+> 12
+
+− √4a2+b4 
+
+> 2(4 a+b)
+> −ab √4a2+b4
+> 12
+
++ √4a2+b4
+
+> 2(4 a+b)
+
+!| {z } 
+
+> P−1
+
+, (114) with λ1 = a + b2+√b4+a2 
+
+> 2
+
+, λ2 = a + b2−√b4+a2 
+
+> 2
+
+.Let 
+
+δ01
+
+δ02
+
+
+
+:= P −1
+
+u0
+
+v0
+
+
+
+=
+
+ 
+
+> u0ab √4a2+b4
+
++ v0
+
+ 12 − √4a2+b4
+
+> 2(4 a+b)
+
+ 
+
+> −u0ab √4a2+b4
+
++ v0
+
+ 12 + √4a2+b4
+
+> 2(4 a+b)
+
+ (115) be the decomposition of 
+
+u0
+
+v0
+
+
+
+in the basis w1, w 2:
+
+u0
+
+v0
+
+
+
+= δ01 w1 + δ02 w2 . (116) Combining Equations (108) and (116) yields 
+
+ut
+
+vt
+
+
+
+= δ01 λt
+
+> 1
+
+w1 + δ02 λt
+
+> 2
+
+w2 , (117) 22 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma 
+
+and 
+
+ut − vt = δ01
+
+|{z} 
+
+> >0
+
+λt
+
+> 1
+
+
+
+w1,
+
+ 1
+
+−1
+
+ 
+
++ δ02
+
+|{z} 
+
+> >0
+
+λt
+
+> 2
+
+
+
+w2,
+
+ 1
+
+−1
+
+ 
+
+(118) 
+
+= δ01
+
+|{z} 
+
+> >0
+
+λt
+
+> 1
+
+b2 + √4a2 + b4
+
+2ab − 1
+
+!| {z }
+
+> >0
+
+− δ02
+
+|{z} 
+
+> >0
+
+λt 
+
+> 2
+
+1 − b2 − √4a2 + b4
+
+2ab 
+
+!| {z }
+
+> >0
+
+. (119) Since λ1 > λ 2, then if ut1 − vt1 > 0, then ut − vt > u t1 − vt1 > 0.In other words, in order to show that Qt 
+
+> (C ,C) ,D
+
+− Q⋆ 
+
+> (C ,C) ,D
+
++ Qt 
+
+> (D ,D) ,C
+
+− Q⋆ 
+
+> (D ,D) ,C
+
+:= ut − vt ≥ Cste , then it is sufficient that ut1 − vt1 ≥ Cste 
+
+Hence one only needs to show 
+
+Qt1 
+
+> (D ,D) ,C
+
+− Qt1 
+
+> (D ,D) ,D
+
++ Qt1 
+
+> (C ,C) ,D
+
+− Qt1 
+
+> (C ,C) ,C
+
+≥ k∆r α
+
+1 − γ (120) 
+
+Qt1 
+
+> (C ,C) ,D
+
+− Qt1 
+
+> (C ,C) ,C
+
+≥ 2k∆r α
+
+1 − γ (121) 
+
+Qt0 
+
+> (C ,C) ,D
+
+− Qt0 
+
+> (C ,C) ,C
+
+≥ 4k∆r α
+
+1 − γ , (122) 
+
+Proof. Lemma D.2 iii) . Using Equation (116) one has 
+
+Qt 
+
+> (C ,C) ,D
+
+− Q⋆, lose-shift  
+
+> (C ,C) ,D
+
+≤ δ01
+
+b2 + √4a2 + b4
+
+2ab | {z }
+
+> := C1
+
+λt−k 
+
+> 1
+
++ δ02
+
+b2 − √4a2 + b4
+
+2ab | {z }
+
+> := C2
+
+λt−k 
+
+> 2
+
++ 2k∆r α
+
+1 − γ . (123) 
+
+## E. Additional Experimental Details 
+
+Table 3. Prisoner’s dilemma rewards parameterization used in the experiments, 1 < g < 2.
+
+Cooperate Defect Cooperate 2g
+
+2gg
+
+2 + g
+
+Defect 2 + gg
+
+22
+
+E.1. Influence of the Incentive to Cooperate g
+
+Comments on Figure 6. . Figure 6 displays the evolution of Q-values difference as a function of the number of iterations in the iterated prisoner’s for a self-play evolution of Algorithm 1 in the fully greedy case ϵ = 0 . As the incentive to cooperate g
+
+increase, the time when the lose-shift policy and then the Pavlov policy are reached (green zone) decrease, in other words, cooperation is achieved faster. 
+
+E.2. Hyperparameter for the Deep Q-Learning Experiments 
+
+The hyperparameters used for the deep Q-learning experiments are summarized in Table 4. 5 runs are displayed in Figure 5, each run takes 3 hours to train on a single GPU on RTX8000. 23 Self-play Q-Learners Can Provably Collude in the Iterated Prisoner’s Dilemma s = (D , D) s = (C , C) s = (D , C) −0.2 
+
+> −0.10.00.10.2
+> g = 1 .75
+> Qs, C − Qs, D
+> −0.2
+> −0.10.00.10.2
+> g = 1 .8
+> Qs, C − Qs, D
+> −0.20.00.20.4
+> g = 1 .85
+> Qs, C − Qs, D
+> 0.51.0
+
+# iterations ×10 3
+
+> 0.00.20.4
+> g = 1 .9
+> Qs, C − Qs, D
+
+Figure 6. Influence of the incentive to cooperate g. Evolution of the Q-learning policy as a function of the number of iterations in the iterated prisoner’s dilemma. With a correct (optimistic) initialization, players go from an always defect policy to the 
+
+lose-shift policy (at time t1), and then go to the cooperative Pavlov policy (at time t2). The discount factor is set to γ = 0 .6. The incentive to cooperate g varies from g = 1 .75 to g = 1 .9 (see Table 3). 
+
+Table 4. List of hyperparameters used in the deep Q-learning experiment (Figure 5). 
+
+Hyperparameter Value tau 0.01 seed 8gamma 0.8 buffer_capacity 1000000 decay_eps true eps_decay_steps 600 eps_start 0.5 eps_end 0.01 loss_type Huber Loss optimizer_type SGD hidden_size 32 num_actions 2num_iters 10000 batch_size 16384 do_self_play true pretrain_iters 600 pretrain_vs_random true 24

@@ -1,0 +1,8425 @@
+Title: Gap-Dependent Bounds for Federated Q-Learning
+
+URL Source: https://openreview.net/pdf?id=0n2nXmOxZS
+
+Number of Pages: 45
+
+Markdown Content:
+# Gap-Dependent Bounds for Federated Q-Learning 
+
+Haochen Zhang 1 * Zhong Zheng 1 * Lingzhou Xue 1
+
+## Abstract 
+
+We present the first gap-dependent analysis of regret and communication cost for online feder-ated Q-Learning in tabular episodic finite-horizon Markov decision processes (MDPs). Existing fed-erated reinforcement learning (FRL) methods fo-cus on worst-case scenarios, leading to √T -type regret bounds and communication cost bounds with a log T term scaling with the number of agents M , states S, and actions A, where T is the average total number of steps per agent. In contrast, our novel framework leverages the be-nign structures of MDPs, such as a strictly pos-itive suboptimality gap, to achieve a log T -type regret bound and a refined communication cost bound that disentangles exploration and exploita-tion. Our gap-dependent regret bound reveals a distinct multi-agent speedup pattern, and our gap-dependent communication cost bound removes the dependence on M SA from the log T term. Notably, our gap-dependent communication cost bound also yields a better global switching cost when M = 1 , removing SA from the log T term. 
+
+## 1. Introduction 
+
+Federated reinforcement learning (FRL) is a distributed learning framework that combines the principles of rein-forcement learning (RL) (Sutton & Barto, 2018) and fed-erated learning (FL) (McMahan et al., 2017). Focusing on sequential decision-making, FRL aims to learn an optimal policy through parallel explorations by multiple agents un-der the coordination of a central server. Often modeled as a Markov decision process (MDP), multiple agents inde-pendently interact with an initially unknown environment and collaboratively train their decision-making models with limited information exchange between the agents. This      
+
+> *Equal contribution 1Department of Statistics, The Pennsylva-nia State University, University Park, PA 16802, USA. Correspon-dence to: Lingzhou Xue <lzxue@psu.edu >.
+> Proceedings of the 42 nd International Conference on Machine Learning , Vancouver, Canada. PMLR 267, 2025. Copyright 2025 by the author(s).
+
+approach accelerates the learning process with low commu-nication costs. In this paper, we focus on the online FRL tailored for episodic tabular MDPs with inhomogeneous transition kernels. Specifically, we assume the presence of a central server and M local agents in the system. Each agent interacts independently with an episodic MDP consisting of 
+
+S states, A actions, and H steps per episode. Multiple recent works studied the online FRL for tabu-lar MDPs. Zheng et al. (2024) proposed model-free al-gorithms FedQ-Hoeffding and FedQ-Bernstein that show the regret bounds ˜O(√M H 4SAT ) and ˜O(√M H 3SAT )
+
+respectively under O(M H 3SA log T ) rounds of commu-nications. Here, T is the average total number of steps for each agent, and ˜O hides logarithmic factors. Zheng et al. (2025a) proposed FedQ-Advantage that improved the regret to ˜O(√M H 2SAT ) under a reduced com-munication rounds of O(fM H2SA (log H) log T ) where 
+
+fM ∈ { 1, M } reflects the optional forced synchroniza-tion scheme. Chen et al. (2022) and Labbi et al. (2024) proposed model-based algorithms that extend the single-agent algorithm UCBVI (Azar et al., 2017). Byzan-UCBVI (Chen et al., 2022) reaches regret ˜O(√M H 3S2AT ) under 
+
+O(M HSA log T ) rounds of communications. Fed-UCBVI (Labbi et al., 2024) reaches the regret ˜O(√M H 2SAT ) un-der O(HSA log T + M HSA log log T ) rounds of commu-nications. Here, model-based methods require estimating the transition kernel so that their memory requirements scale quadratically with the number of states S. Model-free meth-ods, which are also called Q-Learning methods (Watkins, 1989), directly learn the action-value function, and their memory requirements only scale linearly with S. The re-gret ˜O(√M H 2SAT ) reached by both FedQ-Advantage and Fed-UCBVI is almost optimal compared to the regret lower bound ˜O(√M H 2SAT ) (Jin et al., 2018; Domingues et al., 2021). In summary, all the works above provided worst-case guarantees for all possible MDPs and proved √T -type regret bounds and communication cost bounds that linearly depend on M SA log T or SA log T . The re-sults of these works are also summarized in Table 1. In practice, RL algorithms often perform better than their worst-case guarantees, as they can be significantly improved under MDPs with benign structures (Zanette & Brunskill, 2019). This motivates the problem-dependent analysis ex-ploiting benign MDPs (Wagenmaker et al., 2022a; Zhou 1Gap-Dependent Bounds for Federated Q-Learning  
+
+> Table 1. Comparison of online FRL algorithms
+
+Algorithm Gap-dependent Regret Number of rounds Byzan-UCBVI (Chen et al., 2022) × ˜O(√M H 3S2AT ) O(M HSA log T )
+
+FedQ-Hoeffding (Zheng et al., 2024) × ˜O(√M H 4SAT ) O(M H 3SA log T )
+
+FedQ-Bernstein (Zheng et al., 2024) × ˜O(√M H 3SAT ) O(M H 3SA log T )
+
+FedQ-Advantage (Zheng et al., 2025a) × ˜O(√M H 2SAT ) O(fM H2SA (log H) log T )
+
+Fed-UCBVI (Labbi et al., 2024) × ˜O(√M H 2SAT ) O∗(HSA log T )
+
+Our work ✓ O∗
+
+ H6SA log( M SAT )∆min 
+
+
+
+O∗(H2 log T )              
+
+> In this table, ˜Ohides logarithmic factors and O∗hides logarithmic lower-order terms, such as log log Tand √log T, as well as constants. Parameter fM∈ { 1, M }indicates the optional forced synchronization scheme.
+
+et al., 2023; Zhang et al., 2024b). One of the benign struc-tures is based on the dependency on the positive subop-timality gap: for every state, the best actions outperform others by a margin. It is important because nearly all non-degenerate environments with finite action sets satisfy some sub-optimality gap conditions (Yang et al., 2021). For single-agent algorithms, Simchowitz & Jamieson (2019); Dann et al. (2021) analyzed gap-dependent regret for model-based methods, and Yang et al. (2021); Xu et al. (2021); Zheng et al. (2025b) analyzed model-free methods. Here, Yang et al. (2021) focused on UCB-Hoeffding proposed by Jin et al. (2018), while Xu et al. (2021) proposed an algorithm that did not use upper confidence bounds (UCB). Zheng et al. (2025b) analyzed UCB-Advantage (Zhang et al., 2020) and Q-EarlySettled-Advantage (Li et al., 2021), which used variance reduction techniques. All of these works reached regrets that logarithmically depend on T , which is much better than the worst-case √T -type regrets. However, no literature works on the gap-dependent regret for online FRL. This motivates the following open question: 
+
+Is it possible to establish gap-dependent regret bounds for online FRL algorithms that are logarithmic in T ?
+
+Meanwhile, recent works have proposed FRL algorithms for tabular episodic MDPs in various settings, such as the offline setting (Woo et al., 2024) and scenarios where a simulator is available (Woo et al., 2023; Salgia & Chi, 2024). Differ-ent from the online methods, state-of-the-art algorithms for these settings do not update the implemented behavior poli-cies (exploration) and reach M SA -free logarithmic bounds on communication rounds, whereas the worst-case com-munication cost bounds for online FRL methods require the dependence on M , S, and A in the log T term (e.g., 
+
+O(M H 3SA log T ) in Zheng et al. (2024)). While increased communication for exploration is reasonable, existing on-line FRL methods cannot quantify the communication cost paid for exploring non-optimal actions or exploiting optimal policies under the worst-case MDPs since the suboptimality gaps can be arbitrarily close to 0 (see Section 5.1 for more explanations). This leads to the dependence on M , S, and 
+
+A for the log T term, which motivates the following open question: 
+
+Is it possible to establish gap-dependent communication cost upper bounds for online FRL algorithms that disentangle exploration and exploitation and remove the dependence on M SA from the log T term? 
+
+A closely related evaluation criterion for online RL is the global switching cost, which is defined as the times for policy switching. It is important in applications with restric-tions on policy switching, such as compiler optimization (Ashouri et al., 2018), hardware placements (Mirhoseini et al., 2017), database optimization (Krishnan et al., 2018), and material discovery (Nguyen et al., 2019). Next, we review related literature on single-agent model-free RL al-gorithms. Under the worst-case MDPs, Bai et al. (2019) modified the algorithms in Jin et al. (2018), achieving a switching cost of O(H3SA log T ), and UCB-Advantage (Zhang et al., 2020) reached an improved switching cost of O(H2SA log T ), with both algorithms depending on 
+
+SA log T . In gap-dependent analysis, Zheng et al. (2025b) proved that UCB-Advantage enjoyed a switching cost that linearly depends on S log T . Whether single-agent model-free RL algorithms can avoid the dependence on SA for the 
+
+log T term remains an open question. In addition, multiple technical challenges exist when trying to establish gap-dependent bounds and improve the exist-ing worst-case ones. First, gap-dependent regret analysis often relies on controlling the error in the value function es-timations. However, the techniques for model-free methods (Yang et al., 2021; Xu et al., 2021; Zheng et al., 2025b) can only adapt to instant policy updates in single-agent methods, while FRL often uses delayed policy updates for a low com-munication cost. Second, proving low communication costs for FRL algorithms often requires actively estimating the number of visits to each state-action-step triple (see, e.g., 2Gap-Dependent Bounds for Federated Q-Learning 
+
+Woo et al. (2023)). However, this is challenging for on-line algorithms because the implemented policy is actively updated, and a universal stationary visiting probability is unavailable. Existing online FRL methods reached loga-rithmic communication costs by controlling the visit and synchronization with the event-triggered synchronization conditions. These conditions guaranteed a sufficient in-crease in the number of visits to one state-action-step triple between synchronizations. However, this analysis is insuffi-cient for the estimation of visiting numbers and results in the dependence on SA for the log T term. 
+
+Summary of Our Contributions. We give an affirmative answer to these important open questions by proving the first gap-dependent bounds on both regret and communication cost for online FRL in the literature. We focus on FedQ-Hoeffding (Zheng et al., 2024), an online FRL algorithm designed for tabular episodic finite-horizon MDPs. Our contributions are summarized as follows. 
+
+Gap-Dependent Regret (Theorem 3.1). Denote ∆min as the minimum nonzero suboptimality gap for all the state-action-step triples. We prove that FedQ-Hoeffding guaran-tees a gap-dependent expected regret of 
+
+O
+
+ H6SA log( M SAT )∆min 
+
++ Cf
+
+
+
+(1) where Cf = M √H7SA plog( M SAT ) + M H 5SA pro-vides the gap-free part. This bound is logarithmic in T and better than the worst-case √T -type regret discussed above when T is large enough. When M = 1 , (1) reduces to the single-agent gap-dependent regret upper bound established in Yang et al. (2021) for UCB-Hoeffding (Jin et al., 2018), which is the single-agent counterpart of FedQ-Hoeffding. When T is large enough and ∆min is small enough, (1) shows a better multi-agent speedup in terms of the average regret per episode, compared to the √T -type worst-case regrets shown in Zheng et al. (2024). We will present the theoretical details in Section 3.2 and Section 4. Our nu-merical experiments in Appendix B.1 also demonstrate the 
+
+log T -pattern of the regret for any given MDP. 
+
+Gap-Dependent Communication Cost (Theorem 3.3). 
+
+We prove that under some general uniqueness of optimal policies, for any p ∈ (0 , 1) , with probability at least 1 − p,both the number of communication rounds and the num-ber of different implemented policies required by FedQ-Hoeffding are upper bounded by 
+
+O
+
+
+
+M H 3SA log( M H 2ι0) + H3SA log 
+
+ H5SA 
+
+∆2min 
+
+
+
++ H3S log 
+
+ M H 9SAι 0
+
+∆2min Cst 
+
+
+
++ H2 log 
+
+ THSA 
+
+
+
+. (2) Here, Cst ∈ (0 , 1] represents the minimum of the nonzero visiting probabilities to all state-step pairs under optimal policies, and ι0 = log( M SAT /p ). Since the communica-tion cost of each round is O(M HS ), the total communica-tion cost is (2) multiplied by M HS .Compared to the existing worst-case communication rounds that depend on M SA log T (Zheng et al., 2024; 2025a; Qiao et al., 2022) or SA log T (Zheng et al., 2025a; Labbi et al., 2024), the first three terms in (2) only logarithmically de-pend on 1/∆min and log T , and the last term removes the dependence on M SA from the log T term. This improve-ment is significant since M represents the number of col-laborating agents, and SA represents the complexity of the state-action space that is often the bottleneck of RL methods (Jin et al., 2018). Compared to the SA -free communication rounds for FRL methods that do not update policies, (2) quantifies the cost of multiple components in online FRL: the first two terms represent the cost for exploration, and the last two terms show the cost of implementing the optimal policy (exploitation). Further technical details are provided in Section 3.3 and Section 5. Our numerical experiments, presented in Appendix B.2, demonstrate that the log T term in the communication cost is independent of M , S, and A.When M = 1 , FedQ-Hoeffding becomes a single-agent al-gorithm with low global switching cost shown in (2) (Corol-lary 3.4). It removes the dependence on SA from the log T
+
+term compared to existing model-free methods (Bai et al., 2019; Zhang et al., 2020; Zheng et al., 2025b). 
+
+Technical Novelty and Contributions. We develop a new theoretical framework for the gap-dependent analysis of on-line FRL with delayed policy updates. It provides two fea-tures simultaneously: controlling the error in the estimated value functions (Lemma 4.1) and estimating the number of visits (Lemma 5.2). The first feature helps prove the gap-dependent regret (1) , and the second is key to proving the bound (2) for communication rounds. Here, to overcome the difficulty of estimating visiting numbers, we develop a new technical tool: concentrations on visiting numbers under varying policies. We establish concentration inequalities for visits with the stationary visiting probability of the opti-mal policies via error recursion on episode steps. This step relies on the logarithmic number of visits with suboptimal actions instead of the algorithm settling on the same policy. It provides better estimations of visiting numbers. We also establish the following techniques with the tool and nonzero minimum suboptimality gap: (a) Lemma 5.1: Ex-ploring visiting discrepancies between optimal actions and suboptimal actions. This validates the concentrations above. (b) Lemma 5.3: Showing agent-wise simultaneous sufficient increase of visits. This helps remove the linear dependency on M in the last three terms of (2) . (c) Lemma 5.4: Show-ing state-wise simultaneous sufficient increase of visits for states with unique optimal actions. This helps remove the linear dependence on SA from the last term in (2). 3Gap-Dependent Bounds for Federated Q-Learning 
+
+To the best of our knowledge, these techniques are new to the literature for online model-free FRL methods. They will be of independent interest in the gap-dependent analy-sis of other online RL and FRL methods in controlling or estimating the number of visits. 
+
+## 2. Background and Problem Formulation 
+
+2.1. Preliminaries 
+
+We begin by introducing the mathematical framework of Markov decision processes. In this paper, we assume that 
+
+0/0 = 0 . For any C ∈ N, we use [C] to denote the set 
+
+{1, 2, . . . C }. We use I[x] to denote the indicator function, which equals 1 when the event x is true and 0 otherwise. 
+
+Tabular Episodic Markov Decision Process (MDP). Atabular episodic MDP is denoted as M := ( S, A, H, P, r ),where S is the set of states with |S| = S, A is the set of actions with |A| = A, H is the number of steps in each episode, P := {Ph}Hh=1 is the transition kernel so that Ph(· | 
+
+s, a ) characterizes the distribution over the next state given the state action pair (s, a ) at step h, and r := {rh}Hh=1 is the collection of reward functions. We assume that rh(s, a ) ∈
+
+[0 , 1] is a deterministic function of (s, a ), while the results can be easily extended to the case when rh is random. In each episode, an initial state s1 is selected arbitrarily by an adversary. Then, at each step h ∈ [H], an agent observes a state sh ∈ S , picks an action ah ∈ A , receives the reward 
+
+rh = rh(sh, a h) and then transits to the next state sh+1 .The episode ends when an absorbing state sH+1 is reached. 
+
+Policies and Value functions. A policy π is a collection of 
+
+H functions πh : S → ∆A
+
+> h∈[H]
+
+, where ∆A is the set of probability distributions over A. A policy is deterministic if for any s ∈ S , πh(s) concentrates all the probability mass on an action a ∈ A . In this case, we denote πh(s) = a. Let 
+
+V πh : S → R and Qπh : S × A → R denote the state value function and the state-action value function at step h under policy π. Mathematically, for any (s, a, h ) ∈ S × A × [H],
+
+V πh (s) := 
+
+> H
+
+X
+
+> t=h
+
+E(st,a t)∼(P,π ) [rt(st, a t) | sh = s]
+
+and 
+
+Qπh (s, a ) := rh(s, a )+ 
+
+> H
+
+X
+
+> t=h+1
+
+E(st,a t)∼(P,π ) [rt(st, a t) | (sh, a h) = ( s, a )] .
+
+Since the state and action spaces and the horizon are all fi-nite, there exists an optimal policy π⋆ that achieves the optimal value V ⋆h (s) = sup π V πh (s) = V π∗ 
+
+> h
+
+(s) for all 
+
+(s, h ) ∈ S × [H] (Azar et al., 2017). The Bellman equation and the Bellman optimality equation can be expressed as 
+
+
+
+V πh (s) = Ea′∼πh(s)[Qπh (s, a ′)] 
+
+Qπh (s, a ) := rh(s, a ) + Es′∼Ph(·| s,a )V πh+1 (s′)
+
+V πH+1 (s) = 0 , ∀(s, a, h ) ∈ S × A × [H],
+
+
+
+V ⋆h (s) = max a′∈A Q⋆h(s, a ′)
+
+Q⋆h(s, a ) := rh(s, a ) + Es′∼Ph(·| s,a )V ∗
+
+> h+1
+
+(s′)
+
+V ⋆H+1 (s) = 0 , ∀(s, a, h ) ∈ S × A × [H].
+
+(3) 
+
+Suboptimality Gap. For any given MDP, we can provide the following formal definition of the suboptimality gap. 
+
+Definition 2.1. For any (s, a, h ) ∈ S × A × [H], the sub-optimality gap is defined as 
+
+∆h(s, a ) := V ⋆h (s) − Q⋆h(s, a ).
+
+(3) implies that for any (s, a, h ), ∆h(s, a ) ≥ 0. Then, it is natural to define the minimum gap, which is the minimum non-zero suboptimality gap. 
+
+Definition 2.2. We define the minimum gap as 
+
+∆min := inf {∆h(s, a ) | ∆h(s, a ) > 0, ∀(s, a, h )} .
+
+We remark that if 
+
+{∆h(s, a ) | ∆h(s, a ) > 0, (s, a, h ) ∈ S × A × [H]} = ∅,
+
+then all policies are optimal, leading to a degenerate MDP. Therefore, we assume that the set is nonempty and ∆min > 0
+
+in the rest of this paper. Definitions 2.1 and 2.2 and the non-degeneration are standard in the literature of gap-dependent analysis (Simchowitz & Jamieson, 2019; Yang et al., 2021; Xu et al., 2020). 
+
+Global Switching Cost. We provide the following defini-tion for any algorithm with U > 1 episodes, which is also used in Bai et al. (2019) and Qiao et al. (2022). 
+
+Definition 2.3. The global switching cost for any learning algorithm with U episodes is defined as 
+
+Nswitch :=  
+
+> U−1
+
+X
+
+> u=1
+
+I[πu+1 ̸ = πu].
+
+Here, πu is the policy implemented in the u-th episode. 
+
+2.2. The Federated RL Framework 
+
+We consider an FRL setting with a central server and M
+
+agents, each interacting with an independent copy of M.The agents communicate with the server periodically: after receiving local information, the central server aggregates it and broadcasts certain information to the agents to coordi-nate their exploration. For agent m, let Um be the number of generated episodes, 
+
+πm,u be the policy in the u-th episode of agent m, and xm,u 
+
+> 1
+
+4Gap-Dependent Bounds for Federated Q-Learning 
+
+be the corresponding initial state. The regret of M agents over ˆT = H PMm=1 Um total steps is Regret (T ) = X 
+
+> m∈[M]
+> Um
+
+X
+
+> u=1
+
+
+
+V ⋆ 
+
+> 1
+
+(sm,u  
+
+> 1
+
+) − V πm,u  
+
+> 1
+
+(sm,u  
+
+> 1
+
+)
+
+
+
+.
+
+Here, T := ˆT /M is the average total steps for M agents. We also define the communication cost of an algorithm as the number of scalars (integers or real numbers) communi-cated between the server and agents. 
+
+## 3. Performance Guarantees 
+
+3.1. FedQ-Hoeffding Algorithm 
+
+In this subsection, we briefly review FedQ-Hoeffding. De-tails are provided in Algorithm 1 and Algorithm 2 in Ap-pendix C.1. FedQ-Hoeffding proceeds in rounds, indexed by k ∈ [K]. Round k consists of nm,k episodes for agent m,where the specific value of nm,k will be determined later. 
+
+Notations. For the j-th ( j ∈ [nm,k ]) episode for agent m
+
+in the k-th round, we use {(sk,j,m h , a k,j,m h , r k,j,m h )}Hh=1 to denote the corresponding trajectory. Denote nm,k h (s, a ) as the number of times that (s, a, h ) has been visited by agent 
+
+m in round k, nkh(s, a ) := PMm=1 nm,k h (s, a ) as the total number of visits in round k for all agents, and N kh (s, a )
+
+as the total number of visits to (s, a, h ) among all agents before the start of round k. We also use {V kh : S → R}Hh=1 
+
+and {Qkh : S × A → R}Hh=1 to denote the global estimates of the state value function and state-action value function at the beginning of round k. Before the first round, both estimates are initialized as H.
+
+Coordinated Exploration. At the beginning of round k,the server decides a deterministic policy πk = {πkh}Hh=1 ,and then broadcasts it along with {N kh (s, π kh(s)) }s,h and 
+
+{V kh (s)}s,h to agents. Here, π1 can be chosen arbitrarily. Then, the agents execute πk and start collecting trajectories. During the exploration in round k, every agent m will moni-tor its number of visits to each (s, a, h ). For any agent m, at the end of each episode, if any (s, a, h ) has been visited by 
+
+ckh(s, a ) = max 
+
+
+
+1,
+
+ N kh (s, a )
+
+M H (H + 1) 
+
+ 
+
+(4) times by agent m, the agent will send a signal to the server, which will then abort all agents’ exploration. Here, we say that (s, a, h ) satisfies the trigger condition in round k.During the exploration, for all (s, a, h ), agent m adaptively calculates nm,k h (s, a ) and the local estimate for the next-step return vm,k h+1 (s, a ) by 
+
+> nm,k
+
+X
+
+> j=1
+
+V kh+1 
+
+ sk,j,m h+1 
+
+I
+
+h
+
+(sk,j,m h , a k,j,m h ) = ( s, a )
+
+i
+
+.
+
+At the end of round k, each agent sends 
+
+n
+
+rh
+
+ s, π kh(s) , n m,k h
+
+ s, π kh(s) , v m,k h+1 
+
+ s, π kh(s)o
+
+> s,h
+
+to the central server for aggregation. 
+
+Updates of Estimated Value Functions. The central server calculates nkh(s, a ), N k+1  
+
+> h
+
+(s, a ) for all triples. While letting 
+
+Qk+1  
+
+> h
+
+(s, a ) = Qkh(s, a ) for triples such that nkh(s, a ) = 0 ,it updates the estimated value functions for each triple with positive nkh(s, a ) as follows. 
+
+Case 1: N kh (s, a ) < 2M H (H +1) =: i0. This case implies that each client can visit each (s, a ) pair at step h at most once. Let Q = Qkh(s, a ). Then the server iteratively update 
+
+Q using the following assignment: 
+
+Q +
+
+← ηt
+
+
+
+rh + V k,t h+1 + bt − Q
+
+
+
+, t = N kh + 1 , . . . , N k+1 
+
+> h
+
+and then assign Qk+1  
+
+> h
+
+(s, a ) with Q. Here, rh, N kh , N k+1 
+
+> h
+
+are abbreviations for their respective values at (s, a ), ηt ∈
+
+(0 , 1] is the learning rate, bt > 0 is a bonus, and V k,t h+1 repre-sents the (t − N kh )-th nonzero value in {vm,k h+1 (s, a )}Mm=1 .
+
+Case 2: N kh (s, a ) ≥ i0. In this case, the central server calcu-lates the global estimate of the expected return vkh+1 (s, a ) = 
+
+PMm=1 vm,k h+1 (s, a )/n kh(s, a ) and updates the Q-estimate as 
+
+Qk+1  
+
+> h
+
+=  1 − ηh,k s,a 
+
+ Qkh + ηh,k s,a 
+
+ rh + vkh+1 
+
+ + βks,a,h .
+
+Here, rh, Q kh, Q k+1  
+
+> h
+
+, v kh+1 are abbreviations for their respec-tive values at (s, a ), ηh,k s,a ∈ (0 , 1] is the learning rate and 
+
+βks,a,h > 0 represents the bonus. After updating the estimated Q-function, the central server updates the estimated V -function and the policy as 
+
+V k+1  
+
+> h
+
+(s) = min 
+
+n
+
+H, max  
+
+> a′∈A
+
+Qk+1  
+
+> h
+
+(s, a ′)
+
+o
+
+and 
+
+πk+1  
+
+> h
+
+(s) = arg max  
+
+> a′∈A
+
+Qk+1  
+
+> h
+
+(s, a ′).
+
+Such update implies that FedQ-Hoeffding is an optimism-based method. It then proceeds to round k + 1 .In FedQ-Hoeffding, agents only send local estimates instead of original trajectories to the central server. This guaran-tees a low communication cost for each round, which is 
+
+O(M HS ). In addition, the event-triggered termination con-dition with the threshold (4) limits the number of new visits in each round, with which Zheng et al. (2024) proved the linear regret speedup under worst-case MDPs. Moreover, it guarantees that the number of visits to the triple that sat-isfies the trigger condition sufficiently increases after this round. This is the key to proving the worst-case logarithmic communication cost in Zheng et al. (2024). 5Gap-Dependent Bounds for Federated Q-Learning 
+
+3.2. Gap-Dependent Regret 
+
+Next, we provide a new gap-dependent regret upper bound for FedQ-Hoeffding algorithm. 
+
+Theorem 3.1. Let ι1 = log( M SAT ). For FedQ-Hoeffding (Algorithms 1 and 2), E (Regret (T )) can be bounded by 
+
+O
+
+ H6SAι 1
+
+∆min 
+
++ M √H7SA √ι1 + M H 5SA 
+
+
+
+. (5) The proof is provided in Appendix F. Theorem 3.1 shows that the regret is logarithmic in T for MDPs with positive minimum gap ∆min . When T is sufficiently large, it is better than the √T -type worst-case regrets in the literature. When M = 1 , the bound reduces to 
+
+O
+
+ H6SA log( SAT )∆min 
+
+
+
+,
+
+which matches the result in Yang et al. (2021) for the single-agent counterpart, UCB-Hoeffding algorithm. Therefore, when T is sufficiently large, for the average regret per episode defined as Regret (T )/(M T ), the ratio between FedQ-Hoeffding and UCB-Hoeffding is ˜O(1 /M ), which serves as our error reduction rate. As a comparison, it is better than the rates under worst-case MDPs for online FRL methods in the literature, which are ˜O(1 /√M ) because of their linear dependency on √M T . We will also demon-strate this ˜O(1 /M ) pattern in the numerical experiments in Appendix B.1. 
+
+3.3. Gap-Dependent Communication Cost 
+
+We first introduce two additional assumptions: (I) Full synchronization. Similar to Zheng et al. (2024), we assume that there is no latency during the communications, and the agents and server are fully synchronized (McMahan et al., 2017). This means nm,k = nk for each agent m.(II) Random initialization. We assume that the initial states 
+
+{sk,j,m  
+
+> 1
+
+}k,j,m are randomly generated following some dis-tribution on S, and the generation is not affected by any result in the learning process. Next, we introduce a new concept: G-MDPs. 
+
+Definition 3.2. A G-MDP satisfies two conditions: (a) The stationary visiting probabilities under optimal poli-cies are unique: if both π∗,1 and π∗,2 are optimal policies, then we have P  sh = s|π∗,1 = P  sh = s|π∗,2 =: P∗
+
+> s,h
+
+.
+
+(b) Let A∗
+
+> h
+
+(s) = {a | a = arg max a′ Q∗
+
+> h
+
+(s, a ′)}. For any 
+
+(s, h ) ∈ S × [H], if P∗ 
+
+> s,h
+
+> 0, then |A ∗
+
+> h
+
+(s)| = 1 , which means that the optimal action is unique. G-MDPs represent MDPs with generally unique optimal policies. (a) and (b) above characterize the general unique-ness, and an MDP with a unique optimal policy is a G-MDP. Compared to requiring a unique optimal policy, G-MDPs allow the optimal actions to vary outside the support under optimal policies, i.e., the state-step pairs with P∗ 
+
+> s,h
+
+= 0 .For a G-MDP, we define Cst = min {P∗ 
+
+> s,h
+
+| s ∈ S , h ∈
+
+[H], P∗ 
+
+> s,h
+
+> 0}. Thus, 0 < C st ≤ 1 reflects the minimum visiting probability on the support of optimal policies. Next, we provide gap-dependent upper bound for the number com-munication rounds and communication costs. 
+
+Theorem 3.3. For any p ∈ (0 , 1) , define ι0 = log( M SAT p ).Then under the full synchronization and random initializa-tion assumptions, with probability at least 1 − p, FedQ-Hoeffding (Algorithm 1 and Algorithm 2) satisfies the fol-lowing relationship for any given G-MDP: 
+
+K ≤ O
+
+
+
+M H 3SA log( M H 2ι0) + H3SA log 
+
+ H5SA 
+
+∆2min 
+
+
+
++ H3S log 
+
+ M H 9SAι 0
+
+∆2min Cst 
+
+
+
++ H2 log 
+
+ THSA 
+
+
+
+. (6) We can get the upper bound of total communication cost by multiplying the upper bound in (6) and O(M HS ), the com-munication cost of each round in FedQ-Hoeffding. We will highlight the key technical tools for proving Theorem 3.3 in Section 5.1, provide a sketch of proof in Section 5.2, and give a complete proof in Appendix G. Compared to existing worst-case costs that depend on SA 
+
+(Zheng et al., 2025a; Labbi et al., 2024) or M SA (Zheng et al., 2024; 2025a; Qiao et al., 2022) for log T , (6) is better when T is sufficiently large since the first three terms only logarithmically depend on 1/∆min and log T , and the last term that is logarithmic in T removes the dependency on 
+
+M SA . Moreover, (6) highlights the cost for different proce-dures in FedQ-Hoeffding: the first two terms represent the cost for exploration, and the last two terms show the cost when exploiting the optimal policies. We will provide more theoretical explanations in Section 5. Our numerical experi-ments in Appendix B.2 also demonstrate that the log T term in the communication cost is independent of M , S, and A.Since FedQ-Hoeffding implements a fixed policy in each round, when M = 1 , the algorithm reduces to a single-agent algorithm with a low global switching cost. The result is formally shown in Corollary 3.4. 
+
+Corollary 3.4. For any p ∈ (0 , 1) , define ι2 = log( SAT p ).Then under the random initialization assumption, for any given G-MDP, with probability at least 1 − p, the global switching cost for FedQ-Hoeffding algorithm (Algorithm 1 and Algorithm 2 with M = 1 ) can be bounded by 
+
+O
+
+
+
+H3SA log 
+
+ H5SAι 2
+
+∆2min 
+
+
+
++ H3S log 
+
+ 1
+
+Cst 
+
+
+
++ H2 log 
+
+ THSA 
+
+
+
+.
+
+6Gap-Dependent Bounds for Federated Q-Learning 
+
+Given that the switching costs of existing single-agent model-free algorithms depend on SA (Bai et al., 2019; Zhang et al., 2020) or S (Zheng et al., 2025b) for log T 1,our log T -dependency is better by removing the factor SA .At the end of this section, we briefly discuss FedQ-Bernstein, another online FRL algorithm in Zheng et al. (2024). Com-pared to FedQ-Hoeffding, FedQ-Bernstein uses different bonuses ( bt and βks,a,h ) that incorporate variance estimators. Although FedQ-Bernstein achieves a √H factor improve-ment in worst-case regret while maintaining identical worst-case communication costs (Zheng et al., 2024), our analysis in Appendix F and Appendix G shows both algorithms share the same gap-dependent bounds ( (5) , (6) ). Whether FedQ-Bernstein can achieve tighter gap-dependent regret bounds remains an open question. 
+
+## 4. Bounding the Regret with (5) 
+
+In this section, we bound the gap-dependent regret by con-trolling the error in value function estimations. Define clip [x | y] := x · I[x ≥ y]. Let ι = log( 2SAHT 1 
+
+> δ
+
+) where 
+
+δ ∈ (0 , 1) and T1 ≤ 2 ˆT + M HSA is an known upper bound of the total steps ˆT as defined in (e) of Lemma E.1. We provide Lemma 4.1 to control the total error in the value function estimations (Qkh − Q∗
+
+> h
+
+)( s, a ).
+
+Lemma 4.1. For FedQ-Hoeffding (Algorithm 1 and Algo-rithm 2), for any δ ∈ (0 , 1) , with probability at least 1 − δ,the following two conclusions hold for any ϵ ∈ (0 , H ]:
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I(Qkh − Q∗
+
+> h
+
+)( sk,j,m h , a k,j,m h ) ≥ ϵ ≤ Cϵ. (7) 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip (Qkh − Q∗
+
+> h
+
+)( sk,j,m h , a k,j,m h ) | ϵ ≤ ϵC ϵ. (8) 
+
+Here 
+
+Cϵ = c0
+
+ H6SAι ϵ2 + M H 5SA + M √H7SA √ιϵ
+
+
+
+,
+
+where c0 > 0 is a sufficiently large constant. 
+
+The proof of Lemma 4.1 is in Appendix F.2. Both bounds depend on log T when ϵ is fixed. Compared to the methods for single-agents algorithms (see, e.g., Yang et al. (2021)), Lemma 4.1 also accommodates the delayed policy updates, and its dependency on M reflects the cost of collaborating multiple agents. We will let ϵ = ∆ min later. 
+
+> 1
+
+In the literature, these bounds are for local switching cost that counts the state-step pairs where the policy switches. The local switching cost is greater than or equal to the global switching cost, but these works didn’t find tighter bounds for the global switching cost. We refer readers to Bai et al. (2019) for more information. 
+
+Next, Lemma 4.2 characterizes the relationship between the expected regret and the total error (Qkh − Q∗
+
+> h
+
+)( s, a ).
+
+Lemma 4.2. For FedQ-Hoeffding (Algorithm 1 and Algo-rithm 2), the expected regret E(Regret (T )) is bounded by 
+
+E
+
+" HX
+
+> h=1
+
+X
+
+> k,j,m
+
+clip[( Qkh − Q∗
+
+> h
+
+)( sk,j,m h , a k,j,m h ) | ∆min ]
+
+#
+
+.
+
+The proof of Lemma 4.2 is provided in Appendix F.3. By combining Equation (8) in Lemma 4.1 and Lemma 4.2 and using the definition of expectation, we can bound the expected regret and finish the proof of Theorem 3.1. Further details can be found in Appendix F.4. 
+
+## 5. Bounding the Communication Cost with (6) 
+
+5.1. Bounding the Number of Visits 
+
+In this subsection, we introduce the new technical tool for estimating visiting numbers. We first provide Lemma 5.1 that quantifies the frequency and the probability of imple-menting non-optimal actions. 
+
+Lemma 5.1. For any δ ∈ (0 , 1) and any given deterministic optimal policy π∗, with probability at least 1 − 3δ, we have 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+≤ Cmin (9) 
+
+X
+
+> k,j,m
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 4Cmin , ∀h ∈ [H].
+
+(10) 
+
+Here Cmin equals Cϵ in Lemma 4.1 with ϵ = ∆ min .
+
+For each ak,j,m h /∈ A∗
+
+> h
+
+(sk,j,m h ), the optimism of FedQ-Hoeffding ensures that 
+
+ Qkh − Q∗
+
+> h
+
+   sk,j,m h , a k,j,m h
+
+ ≥ ∆min 
+
+with high probability. Therefore, by taking ϵ = ∆ min in (7) ,we can bound 
+
+I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+in (9) and its conditional expectation in (10) . See Ap-pendix G.2 for details of the proof. Since Cmin scales logarithmically with T , (9) shows that the frequency of non-optimal action selections becomes negli-gible compared to T asymptotically. This means that most states in the learning process are generated under optimal actions and reveals the visiting discrepancy between optimal and non-optimal actions in the gap-dependent analysis. Such discrepancy helps us quantify the communication cost paid for exploring non-optimal actions. The threshold of 7Gap-Dependent Bounds for Federated Q-Learning 
+
+the synchronization condition (4) implies that the number of visits to the triple (s, a, h ) that satisfies the trigger condi-tion increases by at least 1/(2 M H (H + 1)) times. Conse-quently, the logarithmic upper bound for non-optimal visits, as provided in (9) , implies a log log( T )-type communica-tion cost for exploration, which is reflected in the first two terms of (6) . These two terms depend on SA because FedQ-Hoeffding only ensures a sufficient increase in the number of visits for one triple in a round. We remove the depen-dency on M from the second term by proving agent-wise simultaneous sufficient increase of visits (Lemma 5.3), lever-aging the stationary visiting probability under their common policy in a round. Next, we bound the number of visits to the optimal visits. For any k′ ∈ [K], let Rk′ = Pk′
+
+> k=1
+
+P 
+
+> j,m
+
+1 be the number of episodes in the first k′ rounds. Lemma 5.2 quantifies the difference between the number of visits to any (s, a, h ) with 
+
+a ∈ A ∗
+
+> h
+
+(s) in the first k′ rounds and the expected number of visits Rk′ P∗ 
+
+> s,h
+
+under the optimal policy. 
+
+Lemma 5.2. For any δ ∈ (0 , 1) , with probability at least 
+
+1 − 5δ, the following conclusion holds simultaneously for any (s, h, k ′) ∈ S × [H] × [K]:
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h ∈ A ∗
+
+> h
+
+(s)
+
+i
+
+− Rk′ P∗
+
+> s,h
+
+≤ 5
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι + 32 HC min .
+
+Lemma 5.2 establishes that the average number of visits to (s, a, h ) with a ∈ A ∗
+
+> h
+
+(s) per episode will converge to the stationary visiting probability P∗ 
+
+> s,h
+
+under the optimal policies. Furthermore, it implies that for any (s, a, h, k )
+
+such that P⋆s,h > 0 and a = π∗
+
+> h
+
+(s),
+
+N k+1  
+
+> h
+
+(s, a ) ∈
+
+h
+
+RkP∗ 
+
+> s,h
+
+− 5
+
+q
+
+RkP∗
+
+> s,h
+
+ι − 32 HC min ,RkP∗ 
+
+> s,h
+
++ 5 
+
+q
+
+RkP∗
+
+> s,h
+
+ι + 32 HC min 
+
+i
+
+.
+
+Therefore, when N kh (s, a ) is sufficiently large (ensuring that both Rk−1P∗ 
+
+> s,h
+
+and RkP∗ 
+
+> s,h
+
+are sufficiently large), the ratio N k+1  
+
+> h
+
+(s, a )/N kh (s, a ) approximates Rk/R k−1. Since 
+
+Rk/R k−1 is independent of (s, a, h ), the number of visits to each optimal (s, a, h ) (P∗ 
+
+> s,h
+
+> 0 and a is the optimal action) increases at similar speed. This explains why the communication cost for exploiting the unique optimal action after sufficient visits (the last term of (6) ) does not depend on the factor SA . The dependence on M is also removed due to the agent-wise simultaneous sufficient increase. Ad-ditionally, we remark that the third term of (6) accounts for cost with insufficient visit counts. Finally, we provide the intuition for the proof of Lemma 5.2. Standard concentration inequalities typically relate the num-ber of visits of (s, h ) to the policy-dependent probability 
+
+P(sh = s | πk). However, the varying policies employed by FedQ-Hoeffding across different rounds prevent direct alignment between the executed policy πk and the optimal policy π⋆. To overcome this challenge, our proof establishes a relationship between P(sh = s | πk) and the optimal stationary visiting probabilities P∗ 
+
+> s,h
+
+through error recur-sion over the step h. This analysis exploits the discrepancy in visit counts between optimal and non-optimal actions, which is a distinctive feature enabled by the gap-dependent structure. Especially, we prove that for any h′ ∈ [H],
+
+X
+
+> s
+
+P sk,j,m h′ = s | πk − P∗
+
+> s,h ′
+
+≤ 2
+
+> h′−1
+
+X
+
+> h=1
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+,
+
+which is further bounded by (10) in Lemma 5.1 and helps complete the proof of Lemma 5.2. See Appendix G.3 for more details of the proof. 
+
+5.2. Proof Sketch of Theorem 3.3 
+
+With the tools introduced in Section 5.1, we outline the key steps in proving the gap-dependent bound (6) for the number of communication rounds. Let ι′ = log   2M SAHT 1
+
+> δ
+
+, i1 = 200 M H (H + 1) ι′, i2 =6500 H3Cmin /C st and ˜C = 1 /(H(H + 1)) . In this subsec-tion, for any (s, h ) ∈ S × [H] such that P∗ 
+
+> s,h
+
+> 0, we use 
+
+π⋆h(s) to denote its unique optimal action. Lemma 5.3 shows agent-wise simultaneous sufficient in-crease of visits for the triple (s, a, h ) that satisfies the trigger condition in round k when N kh (s, a ) > i 1.
+
+Lemma 5.3. For any δ ∈ (0 , 1) , with probability at least 
+
+1 − δ,
+
+N k+1  
+
+> h
+
+(s, a ) ≥  1 + ˜C/ 3N kh (s, a )
+
+holds simultaneously for any (s, a, h, k ) ∈ S × A × [H] ×
+
+[K] such that N kh (s, a ) > i 1 and the triple (s, a, h ) satisfies the trigger condition (4) in round k.
+
+The proof of Lemma 5.3 can be found in Appendix G.4. Lemma 5.4 shows the state-wise simultaneous sufficient increase of visits for states with unique optimal actions, which is proved based on Lemma 5.2. 
+
+Lemma 5.4. For any δ ∈ (0 , 1) , with probability at least 
+
+1 − 5δ, the following events hold simultaneously for any 
+
+k ∈ [K]: If there exists (s0, a 0, h 0) ∈ S × A × [H], such that it satisfies the trigger condition (4) in round k and 
+
+N kh0 (s0, a 0) > i 1 + i2, then a0 ∈ A ∗ 
+
+> h0
+
+(s0).
+
+Furthermore, if the state-action-step triple (s0, a 0, h 0) also satisfies that P∗ 
+
+> s0,h 0
+
+> 0, then for any (s′, h ′) ∈ S × [H]
+
+8Gap-Dependent Bounds for Federated Q-Learning 
+
+such that P∗ 
+
+> s′,h ′
+
+> 0, we have 
+
+N k+1  
+
+> h′
+
+(s′, π ∗ 
+
+> h′
+
+(s′)) ≥  1 + ˜C/ 6N kh′ (s′, π ∗ 
+
+> h′
+
+(s′)) 
+
+The complete proof of Lemma 5.4 is in Appendix G.5. We now analyze the number of rounds in which the trigger condition is satisfied, categorized according to the four cases corresponding to the terms in (6) . A detailed discussion can be found in Appendix G.6. 
+
+Type-I Trigger : It occurs when a triple (s, a, h ) satisfies the trigger condition in round k with N kh (s, a ) ≤ i1.For each time the trigger condition is met by a triple (s, a, h ),the number of visits to it increases by at least ˜C/ 2M times. Therefore, the maximum number of Type-I triggers for any triple (s, a, h ) is 
+
+O
+
+ log( i1)log(1 + ˜C/ (2 M )) 
+
+
+
+= O  M H 2 log( i1) .
+
+Thus, the number of rounds with Type-I triggers is no more than O  M H 3SA log ( i1).
+
+Type-II Trigger : It occurs when a triple (s, a, h ) satisfies the trigger condition in round k with i1 < N kh (s, a ) ≤
+
+i1 + i2 and either a / ∈ A ∗
+
+> h
+
+(s) or a ∈ A ∗
+
+> h
+
+(s) and P∗ 
+
+> s,h
+
+= 0 .By Lemma 5.3, which establishes the agent-wise simulta-neous sufficient increase, the number of visits to the triple 
+
+(s, a, h ) increases by at least ˜C/ 3 times each time the trigger condition is satisfied. Furthermore, as shown in (9) of Lemma 5.1 and Lemma 5.2 with P∗ 
+
+> s,h
+
+= 0 , for state-action-step triple (s, a, h ) where 
+
+a / ∈ A ∗
+
+> h
+
+(s) or a ∈ A ∗
+
+> h
+
+(s) and P∗ 
+
+> s,h
+
+= 0 , the total number of visits is bounded by 32 HC min with high probability. Conse-quently, the maximum number of Type-II triggers for any such triple is 
+
+O
+
+ log(32 HC min /i 1)log(1 + ˜C/ 3) 
+
+
+
+≤ O
+
+
+
+H2 log 
+
+ H5SA 
+
+∆2min 
+
+ 
+
+.
+
+Then the upper bound for the number of rounds with Type-II triggers is 
+
+O
+
+
+
+H3SA log 
+
+ H5SA 
+
+∆2min 
+
+ 
+
+.
+
+Type-III Trigger : It occurs when a triple (s, a, h ) satisfies the trigger condition in round k with i1 < N kh (s, a ) ≤
+
+i1 + i2, a ∈ A ∗
+
+> h
+
+(s) and P∗ 
+
+> s,h
+
+> 0.For any triple (s, a, h ) that satisfies Type-III triggers, condi-tion (b) of Definition 3.2 ensures that a is the unique optimal action π∗
+
+> h
+
+(s). Therefore, at most HS different triples can satisfy Type-III trigger conditions. When such a trigger occurs, we have N kh (s, a ) > i 1, and Lemma 5.3 implies that the number of visits to the triple 
+
+(s, a, h ) increases by at least ˜C/ 3 times. Therefore, the maximum number of Type-III triggers for any such triple is 
+
+O
+
+ log( i2/i 1 + 1) log(1 + ˜C/ 3) 
+
+
+
+≤ O  H2 log( i2) .
+
+Then the number of rounds with Type-III triggers is no more than O(H3S log( i2)) .
+
+Type-IV Trigger : It occurs when a triple (s, a, h ) satisfies the trigger condition in round k with N kh (s, a ) > i 1 + i2.In this case, whenever the trigger condition is satisfied by 
+
+(s, a, h ) in round k, we have N kh (s, a ) > i 2 > 32 HC min 
+
+and a ∈ A∗
+
+> h
+
+(s) by Lemma 5.4. Furthermore, since Lemma 5.2 establish an upper bound of 32 HC min on the number of visits to triples (s′, a ′, h ′) where P∗ 
+
+> s′,h ′
+
+= 0 ,we can conclude that with high probability, P∗ 
+
+> s,h
+
+> 0 and 
+
+a = π⋆h(s) holds. By Lemma 5.4, for any state-step pair (s′, h ) ∈ S × [H]
+
+such that P∗ 
+
+> s′,h ′
+
+> 0, the number of visits to (s′, π ∗ 
+
+> h′
+
+(s′), h ′)
+
+simultaneously increases by at least ˜C/ 6 times. Therefore, the maximum number of rounds with Type-IV triggers is 
+
+O log( ˆT / (i1 + i2)) log(1 + ˜C/ 6) 
+
+!
+
+≤ O
+
+
+
+H2 log 
+
+ THSA 
+
+ 
+
+.
+
+By aggregating the bounds on the number of communication rounds across all four cases, we derive the gap-dependent upper bound presented in (6). 
+
+## 6. Conclusion 
+
+In this paper, we establish the first gap-dependent bounds on regret and communication cost for online federated Q-Learning in tabular episodic finite-horizon MDPs, address-ing two important open questions in the literature. While existing FRL methods focus on worst-case MDPs, we show that when MDPs exhibit benign structures, such as a strictly positive suboptimality gap, the worst-case bounds can be significantly improved. Specifically, we prove that both FedQ-Hoeffding and FedQ-Bernstein can achieve logarith-mic regret. Additionally, we derive a gap-dependent com-munication cost upper bound that disentangles exploration and exploitation, with the log T term in the bound being independent of M , S, and A. This makes our work the first result in the online FRL literature to achieve such a low communication cost. When M = 1 , our gap-dependent communication cost upper bound also yields a tighter global switching cost upper bound, removing the dependence on 
+
+SA from the log T term. 9Gap-Dependent Bounds for Federated Q-Learning 
+
+## Acknowledgment 
+
+The work of H. Zhang, Z. Zheng, and L. Xue was supported by the U.S. National Science Foundation under the grants DMS-1953189 and CCF-2007823 and by the U.S. National Institutes of Health under the grant 1R01GM152812. 
+
+## Impact Statement 
+
+This work significantly advances federated reinforcement learning (FRL) by improving regret and communication efficiency. Federated reinforcement learning has privacy-preserving properties by design, as it enables agents to learn collaboratively without sharing raw data. This feature is in-strumental in various areas, such as healthcare, finance, and education, where sensitive information must be protected. 
+
+## References 
+
+Agarwal, A., Kakade, S., and Yang, L. F. Model-based rein-forcement learning with a generative model is minimax optimal. In Conference on Learning Theory , pp. 67–83. PMLR, 2020. Agarwal, M., Ganguly, B., and Aggarwal, V. Communi-cation efficient parallel reinforcement learning. In Un-certainty in Artificial Intelligence , pp. 247–256. PMLR, 2021. Agrawal, S. and Jia, R. Optimistic posterior sampling for reinforcement learning: worst-case regret bounds. Ad-vances in Neural Information Processing Systems , 30, 2017. Al Marjani, A., Garivier, A., and Proutiere, A. Navigating to the best policy in markov decision processes. In Advances in Neural Information Processing Systems , pp. 25852– 25864, 2021. Anwar, A. and Raychowdhury, A. Multi-task federated reinforcement learning with adversaries. arXiv preprint arXiv:2103.06473 , 2021. Ashouri, A. H., Killian, W., Cavazos, J., Palermo, G., and Silvano, C. A survey on compiler autotuning using ma-chine learning. ACM Computing Surveys (CSUR) , 51(5): 1–42, 2018. Assran, M., Romoff, J., Ballas, N., Pineau, J., and Rabbat, M. Gossip-based actor-learner architectures for deep reinforcement learning. Advances in Neural Information Processing Systems , 32, 2019. Auer, P. and Ortner, R. Logarithmic online regret bounds for undiscounted reinforcement learning. In Advances in Neural Information Processing Systems , pp. 49–56. MIT Press, 2007. Auer, P., Jaksch, T., and Ortner, R. Near-optimal regret bounds for reinforcement learning. Advances in Neural Information Processing Systems , 21, 2008. Azar, M. G., Osband, I., and Munos, R. Minimax regret bounds for reinforcement learning. In International Con-ference on Machine Learning , pp. 263–272. PMLR, 2017. Bai, Y., Xie, T., Jiang, N., and Wang, Y.-X. Provably ef-ficient q-learning with low switching cost. Advances in Neural Information Processing Systems , 32, 2019. Banerjee, S., Bouzefrane, S., and Abane, A. Identity man-agement with hybrid blockchain approach: A deliberate extension with federated-inverse-reinforcement learning. In 2021 IEEE 22nd International Conference on High Performance Switching and Routing (HPSR) , pp. 1–6. IEEE, 2021. Beikmohammadi, A., Khirirat, S., and Magn ´usson, S. Com-pressed federated reinforcement learning with a genera-tive model. arXiv preprint arXiv:2404.10635 , 2024. Chen, T., Zhang, K., Giannakis, G. B., and Ba s¸ ar, T. Communication-efficient policy gradient methods for dis-tributed reinforcement learning. IEEE Transactions on Control of Network Systems , 9(2):917–929, 2021a. Chen, Y., Zhang, X., Zhang, K., Wang, M., and Zhu, X. Byzantine-robust online and offline distributed reinforce-ment learning. In International Conference on Artificial Intelligence and Statistics , pp. 3230–3269. PMLR, 2023. Chen, Z., Zhou, Y., and Chen, R. Multi-agent off-policy tdc with near-optimal sample and communication complexity. In 2021 55th Asilomar Conference on Signals, Systems, and Computers , pp. 504–508. IEEE, 2021b. Chen, Z., Zhou, Y., Chen, R.-R., and Zou, S. Sample and communication-efficient decentralized actor-critic algo-rithms with finite-time analysis. In International Con-ference on Machine Learning , pp. 3794–3834. PMLR, 2022. Dann, C., Li, L., Wei, W., and Brunskill, E. Policy cer-tificates: Towards accountable reinforcement learning. In International Conference on Machine Learning , pp. 1507–1516. PMLR, 2019. Dann, C., Marinov, T. V., Mohri, M., and Zimmert, J. Be-yond value-function gaps: Improved instance-dependent regret bounds for episodic reinforcement learning. In 
+
+Advances in Neural Information Processing Systems , pp. 1–12, 2021. Doan, T., Maguluri, S., and Romberg, J. Finite-time analysis of distributed td (0) with linear function approximation on 10 Gap-Dependent Bounds for Federated Q-Learning 
+
+multi-agent reinforcement learning. In International Con-ference on Machine Learning , pp. 1626–1635. PMLR, 2019. Doan, T. T., Maguluri, S. T., and Romberg, J. Finite-time performance of distributed temporal-difference learning with linear function approximation. SIAM Journal on Mathematics of Data Science , 3(1):298–320, 2021. Domingues, O. D., M ´enard, P., Kaufmann, E., and Valko, M. Episodic reinforcement learning in finite mdps: Minimax lower bounds revisited. In Algorithmic Learning Theory ,pp. 578–598. PMLR, 2021. Dubey, A. and Pentland, A. Provably efficient cooperative multi-agent reinforcement learning with function approx-imation. arXiv preprint arXiv:2103.04972 , 2021. Espeholt, L., Soyer, H., Munos, R., Simonyan, K., Mnih, V., Ward, T., Doron, Y., Firoiu, V., Harley, T., Dunning, I., et al. Impala: Scalable distributed deep-rl with im-portance weighted actor-learner architectures. In Interna-tional Conference on Machine Learning , pp. 1407–1416. PMLR, 2018. Fan, F. X., Ma, Y., Dai, Z., Jing, W., Tan, C., and Low, B. K. H. Fault-tolerant federated reinforcement learning with theoretical guarantee. Advances in Neural Informa-tion Processing Systems , 34:1007–1021, 2021. Fan, F. X., Ma, Y., Dai, Z., Tan, C., and Low, B. K. H. Fed-hql: Federated heterogeneous q-learning. In Proceedings of the 2023 International Conference on Autonomous Agents and Multiagent Systems , pp. 2810–2812, 2023. Ganesh, S., Chen, J., Thoppe, G., and Aggarwal, V. Global convergence guarantees for federated policy gradient methods with adversaries. arXiv preprint arXiv:2403.09940 , 2024. Gao, Z., Han, Y., Ren, Z., and Zhou, Z. Batched multi-armed bandits problem. Advances in Neural Information Processing Systems , 32, 2019. Gong, W., Cao, L., Zhu, Y., Zuo, F., He, X., and Zhou, H. Federated inverse reinforcement learning for smart icus with differential privacy. IEEE Internet of Things Journal ,10(21):19117–19124, 2023. Guo, Z. and Brunskill, E. Concurrent pac rl. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 29, pp. 2624–2630, 2015. Hanzely, F. and Richt ´arik, P. Federated learning of a mixture of global and local models. arXiv preprint arXiv:2002.05516 , 2020. He, J., Zhou, D., and Gu, Q. Logarithmic regret for rein-forcement learning with linear function approximation. In International Conference on Machine Learning , pp. 4171–4180. PMLR, 2021. He, J., Wang, T., Min, Y., and Gu, Q. A simple and provably efficient algorithm for asynchronous federated contextual linear bandits. Advances in neural information processing systems , 35:4762–4775, 2022. Hsu, H.-L., Wang, W., Pajic, M., and Xu, P. Random-ized exploration in cooperative multi-agent reinforcement learning. arXiv preprint arXiv:2404.10728 , 2024. Jaksch, T., Ortner, R., and Auer, P. Near-optimal regret bounds for reinforcement learning. Journal of Machine Learning Research , 11:1563–1600, 2010. Jin, C., Allen-Zhu, Z., Bubeck, S., and Jordan, M. I. Is q-learning provably efficient? Advances in Neural Infor-mation Processing Systems , 31, 2018. Jin, C., Yang, Z., Wang, Z., and Jordan, M. I. Provably effi-cient reinforcement learning with linear function approxi-mation. In Conference on learning theory , pp. 2137–2143. PMLR, 2020. Jin, H., Peng, Y., Yang, W., Wang, S., and Zhang, Z. Feder-ated reinforcement learning with environment heterogene-ity. In International Conference on Artificial Intelligence and Statistics , pp. 18–37. PMLR, 2022. Jonsson, A., Kaufmann, E., M ´enard, P., Dar-wiche Domingues, O., Leurent, E., and Valko, M. Planning in markov decision processes with gap-dependent sample complexity. In Advances in Neural Information Processing Systems , pp. 1253–1263, 2020. Kakade, S., Wang, M., and Yang, L. F. Variance reduc-tion methods for sublinear reinforcement learning. arXiv preprint arXiv:1802.09184 , 2018. Khodadadian, S., Sharma, P., Joshi, G., and Maguluri, S. T. Federated reinforcement learning: Linear speedup under markovian sampling. In International Conference on Machine Learning , pp. 10997–11057. PMLR, 2022. Krishnan, S., Yang, Z., Goldberg, K., Hellerstein, J., and Stoica, I. Learning to optimize join queries with deep reinforcement learning. arXiv preprint arXiv:1808.03196 ,2018. Labbi, S., Tiapkin, D., Mancini, L., Mangold, P., and Moulines, E. Federated ucbvi: Communication-efficient federated regret minimization with heterogeneous agents. 
+
+arXiv preprint arXiv:2410.22908 , 2024. 11 Gap-Dependent Bounds for Federated Q-Learning 
+
+Lan, G., Wang, H., Anderson, J., Brinton, C., and Aggarwal, V. Improved communication efficiency in federated natu-ral policy gradient via admm-based gradient updates. In 
+
+Proceedings of the 37th International Conference on Neu-ral Information Processing Systems , pp. 59873–59885, 2023. Lan, G., Han, D.-J., Hashemi, A., Aggarwal, V., and Brin-ton, C. G. Asynchronous federated reinforcement learn-ing with policy gradient updates: Algorithm design and convergence analysis. arXiv preprint arXiv:2404.08003 ,2024. Li, G., Shi, L., Chen, Y., Gu, Y., and Chi, Y. Breaking the sample complexity barrier to regret-optimal model-free reinforcement learning. Advances in Neural Information Processing Systems , 34:17762–17776, 2021. Li, G., Cai, C., Chen, Y., Wei, Y., and Chi, Y. Is q-learning minimax optimal? a tight sample complexity analysis. 
+
+Operations Research , 72(1):222–236, 2024. Li, T., Song, L., and Fragouli, C. Federated recommen-dation system via differential privacy. In 2020 IEEE International Symposium on Information Theory (ISIT) ,pp. 2592–2597. IEEE, 2020. Liu, R. and Olshevsky, A. Distributed td (0) with almost no communication. IEEE Control Systems Letters , 2023. Liu, S. and Zhu, M. Distributed inverse constrained rein-forcement learning for multi-agent systems. Advances in Neural Information Processing Systems , 35:33444– 33456, 2022. Liu, S. and Zhu, M. Meta inverse constrained reinforce-ment learning: Convergence guarantee and generaliza-tion analysis. In The Twelfth International Conference on Learning Representations , 2023. Liu, S. and Zhu, M. Learning multi-agent behaviors from distributed and streaming demonstrations. Advances in Neural Information Processing Systems , 36, 2024. Liu, S. and Zhu, M. In-trajectory inverse reinforcement learning: Learn incrementally before an ongoing trajec-tory terminates. In The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2025. Marjani, A. and Proutiere, A. Best policy identification in discounted mdps: Problem-specific sample complexity. 
+
+arXiv preprint arXiv:2009.13405 , 2020. McMahan, B., Moore, E., Ramage, D., Hampson, S., and y Arcas, B. A. Communication-efficient learning of deep networks from decentralized data. In Proceedings of the 20th International Conference on Artificial Intelligence and Statistics , volume 54, pp. 1273–1282. PMLR, 2017. M ´enard, P., Domingues, O. D., Shang, X., and Valko, M. Ucb momentum q-learning: Correcting the bias with-out forgetting. In International Conference on Machine Learning , pp. 7609–7618. PMLR, 2021. Min, Y., He, J., Wang, T., and Gu, Q. Cooperative multi-agent reinforcement learning: Asynchronous commu-nication and linear function approximation. In Inter-national Conference on Machine Learning , pp. 24785– 24811. PMLR, 2023. Mirhoseini, A., Pham, H., Le, Q. V., Steiner, B., Larsen, R., Zhou, Y., Kumar, N., Norouzi, M., Bengio, S., and Dean, J. Device placement optimization with reinforce-ment learning. In International Conference on Machine Learning , pp. 2430–2439. PMLR, 2017. Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., and Kavukcuoglu, K. Asyn-chronous methods for deep reinforcement learning. In 
+
+International Conference on Machine Learning , pp. 1928– 1937. PMLR, 2016. Nguyen, P., Tran, T., Gupta, S., Rana, S., Barnett, M., and Venkatesh, S. Incomplete conditional density estimation for fast materials discovery. In Proceedings of the 2019 SIAM International Conference on Data Mining , pp. 549– 557. SIAM, 2019. Nguyen-Tang, T., Yin, M., Gupta, S., Venkatesh, S., and Arora, R. On instance-dependent bounds for offline re-inforcement learning with linear function approximation. In Proceedings of the AAAI Conference on Artificial In-telligence , pp. 9310–9318, 2023. Ok, J., Proutiere, A., and Tranos, D. Exploration in struc-tured reinforcement learning. Advances in Neural Infor-mation Processing Systems , 31, 2018. Perchet, V., Rigollet, P., Chassang, S., and Snowberg, E. Batched bandit problems. The Annals of Statistics , 44(2): 660 – 681, 2016. Qiao, D., Yin, M., Min, M., and Wang, Y.-X. Sample-efficient reinforcement learning with loglog (t) switching cost. In International Conference on Machine Learning ,pp. 18031–18061. PMLR, 2022. Salgia, S. and Chi, Y. The sample-communication com-plexity trade-off in federated q-learning. In Advances in Neural Information Processing Systems , 2024. Shen, H., Zhang, K., Hong, M., and Chen, T. Towards un-derstanding asynchronous advantage actor-critic: Conver-gence and linear speedup. IEEE Transactions on Signal Processing , 2023. 12 Gap-Dependent Bounds for Federated Q-Learning 
+
+Simchowitz, M. and Jamieson, K. G. Non-asymptotic gap-dependent regret bounds for tabular mdps. In Advances in Neural Information Processing Systems , 2019. Smith, V., Chiang, C.-K., Sanjabi, M., and Talwalkar, A. S. Federated multi-task learning. Advances in neural infor-mation processing systems , 30, 2017. Sun, J., Wang, G., Giannakis, G. B., Yang, Q., and Yang, Z. Finite-time analysis of decentralized temporal-difference learning with linear function approximation. In Interna-tional Conference on Artificial Intelligence and Statistics ,pp. 4485–4495. PMLR, 2020. Sutton, R. and Barto, A. Reinforcement Learning: An Introduction . MIT Press, 2018. Tewari, A. and Bartlett, P. Optimistic linear programming gives logarithmic regret for irreducible mdps. In Ad-vances in Neural Information Processing Systems , pp. 1505–1512, 2008. Tirinzoni, A., Al Marjani, A., and Kaufmann, E. Near instance-optimal pac reinforcement learning for determin-istic mdps. In Advances in Neural Information Processing Systems , pp. 8785–8798, 2022. Tirinzoni, A., Al-Marjani, A., and Kaufmann, E. Optimistic pac reinforcement learning: the instance-dependent view. In International Conference on Algorithmic Learning Theory , pp. 1460–1480. PMLR, 2023. Wagenmaker, A. and Jamieson, K. G. Instance-dependent near-optimal policy identification in linear mdps via on-line experiment design. Advances in Neural Information Processing Systems , 35:5968–5981, 2022. Wagenmaker, A. J., Chen, Y., Simchowitz, M., Du, S., and Jamieson, K. First-order regret in reinforcement learning with linear function approximation: A robust estimation approach. In International Conference on Machine Learn-ing , pp. 22384–22429. PMLR, 2022a. Wagenmaker, A. J., Simchowitz, M., and Jamieson, K. Be-yond no regret: Instance-dependent pac reinforcement learning. In Conference on Learning Theory , pp. 358– 418. PMLR, 2022b. Wai, H.-T. On the convergence of consensus algorithms with markovian noise and gradient bias. In 2020 59th IEEE Conference on Decision and Control (CDC) , pp. 4897–4902. IEEE, 2020. Wang, G., Lu, S., Giannakis, G., Tesauro, G., and Sun, J. Decentralized td tracking with linear function approxi-mation and its finite-time analysis. Advances in Neural Information Processing Systems , 33:13762–13772, 2020. Wang, T., Zhou, D., and Gu, Q. Provably efficient reinforce-ment learning with linear function approximation under adaptivity constraints. Advances in Neural Information Processing Systems , 34:13524–13536, 2021. Wang, X., Cui, Q., and Du, S. S. On gap-dependent bounds for offline reinforcement learning. Advances in Neural Information Processing Systems , 35:14865–14877, 2022. Watkins, C. J. C. H. Learning from Delayed Rewards . PhD thesis, King’s College, Oxford, 1989. Woo, J., Joshi, G., and Chi, Y. The blessing of heterogene-ity in federated q-learning: Linear speedup and beyond. In International Conference on Machine Learning , pp. 37157–37216, 2023. Woo, J., Shi, L., Joshi, G., and Chi, Y. Federated offline reinforcement learning: Collaborative single-policy cov-erage suffices. In International Conference on Machine Learning , pp. 53165–53201, 2024. Wu, Z., Shen, H., Chen, T., and Ling, Q. Byzantine-resilient decentralized policy evaluation with linear function ap-proximation. IEEE Transactions on Signal Processing ,69:3839–3853, 2021. Xu, H., Ma, T., and Du, S. Fine-grained gap-dependent bounds for tabular mdps via adaptive multi-step boot-strap. In Conference on Learning Theory , pp. 4438–4472. PMLR, 2021. Xu, T., Wang, Z., Zhou, Y., and Liang, Y. Reanalysis of variance reduced temporal difference learning. In 
+
+International Conference on Learning Representations ,2020. Yang, K., Yang, L., and Du, S. Q-learning with logarithmic regret. In International Conference on Artificial Intelli-gence and Statistics , pp. 1576–1584. PMLR, 2021. Yang, T., Cen, S., Wei, Y., Chen, Y., and Chi, Y. Fed-erated natural policy gradient and actor critic methods for multi-task reinforcement learning. Advances in Neu-ral Information Processing Systems , 37:121304–121375, 2024. Yu, X., He, Z., Sun, Y., Xue, L., and Li, R. The effect of personalization in fedprox: A fine-grained analysis on statistical accuracy and communication efficiency. arXiv preprint arXiv:2410.08934 , 2024. Zanette, A. and Brunskill, E. Tighter problem-dependent regret bounds in reinforcement learning without domain knowledge using value function bounds. In Interna-tional Conference on Machine Learning , pp. 7304–7312. PMLR, 2019. 13 Gap-Dependent Bounds for Federated Q-Learning 
+
+Zeng, S., Doan, T. T., and Romberg, J. Finite-time analysis of decentralized stochastic approximation with applica-tions in multi-agent and multi-task learning. In 2021 60th IEEE Conference on Decision and Control (CDC) , pp. 2641–2646. IEEE, 2021. Zhang, C., Wang, H., Mitra, A., and Anderson, J. Finite-time analysis of on-policy heterogeneous federated rein-forcement learning. In ICLR , 2024a. Zhang, Z., Zhou, Y., and Ji, X. Almost optimal model-free reinforcement learning via reference-advantage decom-position. Advances in Neural Information Processing Systems , 33:15198–15207, 2020. Zhang, Z., Ji, X., and Du, S. Is reinforcement learning more difficult than bandits? a near-optimal algorithm escaping the curse of horizon. In Conference on Learning Theory ,pp. 4528–4531. PMLR, 2021. Zhang, Z., Ji, X., and Du, S. Horizon-free reinforcement learning in polynomial time: the power of stationary policies. In Conference on Learning Theory , pp. 3858– 3904. PMLR, 2022a. Zhang, Z., Jiang, Y., Zhou, Y., and Ji, X. Near-optimal regret bounds for multi-batch reinforcement learning. Advances in Neural Information Processing Systems , 35:24586– 24596, 2022b. Zhang, Z., Chen, Y., Lee, J. D., and Du, S. S. Settling the sample complexity of online reinforcement learning. In 
+
+Conference on Learning Theory , pp. 5213–5219. PMLR, 2024b. Zhao, F., Ren, X., Yang, S., Zhao, P., Zhang, R., and Xu, X. Federated multi-objective reinforcement learning. Infor-mation Sciences , 624:811–832, 2023. Zheng, Z., Gao, F., Xue, L., and Yang, J. Federated q-learning: Linear regret speedup with low communication cost. In The Twelfth International Conference on Learn-ing Representations , 2024. Zheng, Z., Zhang, H., and Xue, L. Federated q-learning with reference-advantage decomposition: Almost opti-mal regret and logarithmic communication cost. In The Thirteenth International Conference on Learning Repre-sentations , 2025a. Zheng, Z., Zhang, H., and Xue, L. Gap-dependent bounds for q-learning using reference-advantage decomposition. In The Thirteenth International Conference on Learning Representations , 2025b. Zhou, R., Zihan, Z., and Du, S. S. Sharp variance-dependent bounds in reinforcement learning: Best of both worlds in stochastic and deterministic environments. In Inter-national Conference on Machine Learning , pp. 42878– 42914. PMLR, 2023. 14 Gap-Dependent Bounds for Federated Q-Learning 
+
+Organization of the appendix. In the appendix, Appendix A reviews related works. Appendix B presents the results of our numerical experiments, demonstrating a log T -type regret and showing that the log T term of the communication cost is independent of M , S, and A. Appendix C provides algorithmic details for both the FedQ-Hoeffding and FedQ-Bernstein algorithms. Appendix D and Appendix E include some useful lemmas. Appendix F contains the proof of the gap-dependent regret bound (Theorem 3.1). Appendix G presents the proof of the gap-dependent communication cost bound (Theorem 3.3). 
+
+## A. Related Work 
+
+online RL for Single Agent RL with Worst-Case Regret. There are mainly two types of algorithms for reinforcement learning: model-based and model-free learning. Model-based algorithms learn a model from past experience and make decisions based on this model, while model-free algorithms only maintain a group of value functions and take the induced optimal actions. Due to these differences, model-free algorithms are usually more space-efficient and time-efficient compared to model-based algorithms. However, model-based algorithms may achieve better learning performance by leveraging the learned model. Next, we discuss the literature on model-based and model-free algorithms for finite-horizon tabular MDPs with worst-case regret. Auer et al. (2008), Agrawal & Jia (2017), Azar et al. (2017), Kakade et al. (2018), Agarwal et al. (2020), Dann et al. (2019), Zanette & Brunskill (2019), Zhang et al. (2021), Zhou et al. (2023) and Zhang et al. (2024b) worked on model-based algorithms. Notably, Zhang et al. (2024b) provided an algorithm that achieves a regret of ˜O(min {√SAH 2T , T }), which matches the information lower bound. Jin et al. (2018), Yang et al. (2021), Zhang et al. (2020), Li et al. (2021) and M ´enard et al. (2021) work on model-free algorithms. The latter three works achieved the minimax regret of ˜O(√SAH 2T ).
+
+Suboptimality Gap. When there is a strictly positive suboptimality gap, it is possible to achieve logarithmic regret bounds. In RL, earlier work obtained asymptotic logarithmic regret bounds (Auer & Ortner, 2007; Tewari & Bartlett, 2008). Recently, non-asymptotic logarithmic regret bounds were obtained (Jaksch et al., 2010; Ok et al., 2018; Simchowitz & Jamieson, 2019; He et al., 2021). Specifically, Jaksch et al. (2010) developed a model-based algorithm, and their bound depends on the policy gap instead of the action gap studied in this paper. Ok et al. (2018) derived problem-specific logarithmic type lower bounds for both structured and unstructured MDPs. Simchowitz & Jamieson (2019) extended the model-based algorithm in Zanette & Brunskill (2019) and obtained logarithmic regret bounds. Logarithmic regret bounds are also derived in linear function approximation settings He et al. (2021). Additionally, Nguyen-Tang et al. (2023) provides a gap-dependent regret bounds for offline RL with linear funciton approximation. Specifically, for model free algorithm, Yang et al. (2021) showed that the optimistic Q-learning algorithm by Jin et al. (2018) enjoyed a logarithmic regret O( H6SAT  
+
+> ∆min
+
+), which was subsequently refined by Xu et al. (2021). In their work, Xu et al. (2021) introduced the Adaptive Multi-step Bootstrap (AMB) algorithm. Zheng et al. (2025b) further improved the logarithmic regret bound by leveraging the analysis of the UCB-Advantage algorithm (Zhang et al., 2020) and Q-EarlySettled-Advantage algorithm (Li et al., 2021). There are also some other works focusing on gap-dependent sample complexity bounds (Jonsson et al., 2020; Marjani & Proutiere, 2020; Al Marjani et al., 2021; Tirinzoni et al., 2022; Wagenmaker et al., 2022b; Wagenmaker & Jamieson, 2022; Wang et al., 2022; Tirinzoni et al., 2023). 
+
+RL with Low Switching Cost and Batched RL . Research in RL with low-switching cost aims to minimize the number of policy switches while maintaining comparable regret bounds to fully adaptive counterparts, and it can be applied to federated RL. In batched RL (Perchet et al., 2016; Gao et al., 2019), the agent sets the number of batches and the length of each batch upfront, implementing an unchanged policy in a batch and aiming for fewer batches and lower regret. Bai et al. (2019) first introduced the problem of RL with low-switching cost and proposed a Q-learning algorithm with lazy updates, achieving ˜O(SAH 3 log T ) switching cost. This work was advanced by Zhang et al. (2020), which improved the regret upper bound and the switching cost. Additionally, Wang et al. (2021) studied RL under the adaptivity constraint. Recently, Qiao et al. (2022) proposed a model-based algorithm with ˜O(log log T ) switching cost. Zhang et al. (2022b) proposed a batched RL algorithm that is well-suited for the federated setting. 
+
+Multi-Agent RL (MARL) with Event-Triggered Communications. We review a few recent works for online MARL with linear function approximations. Dubey & Pentland (2021) introduced Coop-LSVI for cooperative MARL. Min et al. (2023) proposed an asynchronous version of LSVI-UCB that originates from Jin et al. (2020), matching the same regret bound with improved communication complexity compared to Dubey & Pentland (2021). Hsu et al. (2024) developed two algorithms that incorporate randomized exploration, achieving the same regret and communication complexity as Min et al. (2023). 15 Gap-Dependent Bounds for Federated Q-Learning 
+
+Dubey & Pentland (2021), Min et al. (2023) and Hsu et al. (2024) employed event-triggered communication conditions based on determinants of certain quantities. Different from our federated algorithm, during the synchronization in Dubey & Pentland (2021) and Min et al. (2023), local agents share original rewards or trajectories with the server. On the other hand, Hsu et al. (2024) reduces communication cost by sharing compressed statistics in the non-tabular setting with linear function approximation. 
+
+Federated and Distributed RL . Existing literature on federated and distributed RL algorithms highlights various aspects. For value-based algorithms, Guo & Brunskill (2015), Zheng et al. (2024), and Woo et al. (2023) focused on linear speed up. Agarwal et al. (2021) proposed a parallel RL algorithm with low communication cost. Woo et al. (2023) and Woo et al. (2024) discussed the improved covering power of heterogeneity. Wu et al. (2021) and Chen et al. (2023) worked on robustness. Particularly, Chen et al. (2023) proposed algorithms in both offline and online settings, obtaining near-optimal sample complexities and achieving superior robustness guarantees. In addition, several works have investigated value-based algorithms such as Q-learning in different settings, including Beikmohammadi et al. (2024), Jin et al. (2022), Khodadadian et al. (2022), Fan et al. (2023), Woo et al. (2023), Woo et al. (2024); Anwar & Raychowdhury (2021) Zhao et al. (2023), He et al. (2022), Yang et al. (2024) and Zhang et al. (2024a). The convergence of decentralized temporal difference algorithms has been analyzed by Doan et al. (2019), Doan et al. (2021), Chen et al. (2021b), Sun et al. (2020), Wai (2020), Wang et al. (2020), Zeng et al. (2021), and Liu & Olshevsky (2023). Some other works focus on policy gradient-based algorithms. Communication-efficient policy gradient algorithms have been studied by Chen et al. (2021a) and Fan et al. (2021). Lan et al. (2023) further reduces the communication complexity and also demonstrates a linear speedup in the synchronous setting. Optimal sample complexity for global convergence in federated RL, even in the presence of adversaries, is studied in Ganesh et al. (2024). Lan et al. (2024) proposes an algorithm to address the challenge of lagged policies in asynchronous settings. The convergence of distributed actor-critic algorithms has been analyzed by Shen et al. (2023) and Chen et al. (2022). Federated actor-learner architectures have been explored by Assran et al. (2019), Espeholt et al. (2018) and Mnih et al. (2016). Distributed inverse reinforcement learning has been examined by Banerjee et al. (2021), Gong et al. (2023), and Liu & Zhu (2022; 2023; 2024; 2025). Personalized federated learning has been discussed in (Hanzely & Richt ´arik, 2020; Li et al., 2020; Smith et al., 2017; Yu et al., 2024) 
+
+## B. Numerical Experiments 
+
+In this section, we conduct experiments 2. All the experiments are conducted in a synthetic environment to demonstrate the 
+
+log T -type regret and reduced communication cost bound with the coefficient of the main term O(log T ) being independent of M, S, A in FedQ-Hoeffding algorithm (Zheng et al., 2024). We follow Zheng et al. (2024) and generate a synthetic environment to evaluate the proposed algorithms on a tabular episodic MDP. After setting H, S, A , the reward rh(s, a ) for each (s, a, h ) is generated independently and uniformly at random from [0 , 1] . Ph(· | s, a ) is generated on the S-dimensional simplex independently and uniformly at random for (s, a, h ). We also set the constant c in the bonus term bt to be 2 and 
+
+ι = 1 . We will first demonstrate the log T -type regret of FedQ-Hoeffding algorithm. 
+
+B.1. Logarithmic Regret and Speedup 
+
+In this section, we show that the regret for any given MDP follows a log T pattern. We consider two different values for the triple (H, S, A ): (2 , 2, 2) and (5 , 3, 2) . For FedQ-Hoeffding algorithm, we set the agent number M = 10 and generate 
+
+T /H = 10 7 episodes for each agent, resulting in a total of 10 8 episodes. Additionally, to show the linear speedup effect, we conduct experiments with its single-agent version, the UCB-Hoeffding algorithm (Jin et al., 2018), where all the conditions except M = 1 remain the same. To show error bars, we also collect 10 sample paths for each algorithm under the same MDP environment. The regret results are shown in Figure 1 and Figure 2. Both figures display performance metrics through two visualization panels: the left showing raw regret Regret( T ) versus the normalized horizon T /H , and the right plotting adjusted regret 
+
+Regret( T )/ log( T /H +1) versus T /H . All solid lines represent median values across 10 trials, with shaded areas indicating the 10th-90th percentile ranges. Specifically: the yellow lines show the regret results of FedQ-Hoeffding, the red lines represent the regret results UCB-Hoeffding, and the blue line displays the FedQ-Hoeffding regret scaled by 1/√M to 
+
+> 2All the experiments are run on a server with Intel Xeon E5-2650v4 (2.2GHz) and 100 cores. Each replication is limited to a single core and 50GB RAM. The code for the numerical experiments is included in the supplementary materials along with the submission.
+
+16 Gap-Dependent Bounds for Federated Q-Learning 
+
+demonstrate its regret error reduction speedup pattern.                                     
+
+> Figure 1. Regret results for H= 2 ,S= 2 , and A= 2 . The left panel directly shows the plot of Regret (T)versus T /H , while the right panel illustrates the relationship between Regret (T)/log( T /H + 1) and T /H . In both plots, the yellow line represents the regret results of the FedQ-Hoeffding algorithm, while the red line represents the results of the UCB-Hoeffding algorithm. The blue line in each plot denotes the adjusted regret of the FedQ-Hoeffding algorithm, which is obtained by dividing the regret results of the yellow line by √M.
+> Figure 2. Regret results for H= 5 ,S= 3 , and A= 2 . The left panel directly shows the plot of Regret (T)versus T /H , while the right panel illustrates the relationship between Regret (T)/log( T /H + 1) and T /H . In both plots, the yellow line represents the regret results of the FedQ-Hoeffding algorithm, while the red line represents the results of the UCB-Hoeffding algorithm. The blue line in each plot denotes the adjusted regret of the FedQ-Hoeffding algorithm, which is obtained by dividing the regret results of the yellow line by √M.
+
+From the two groups of plots, we observe that the two yellow lines in the plots on the right side of Figure 1 and Figure 2 tend to approach horizontal lines as T /H becomes sufficiently large. Since the y-axis represents Regret (T )/ log( T /H + 1) 
+
+in these two plots, we can conclude that the regret of the FedQ-Hoeffding algorithm follows a log T -type pattern for any given MDP, rather than the √M T pattern shown in the Theorem 4.1 of Zheng et al. (2024). This is consistent with the logarithmic regret result presented in Theorem 3.1. Furthermore, as T /H becomes sufficiently large, we observe that the adjusted regret of FedQ-Hoeffding (represented by the blue lines) for both groups of (H, S, A ) is significantly lower than the corresponding regret of the single-agent version, UCB-Hoeffding (represented by the red lines). This further supports the conclusion that the regret of FedQ-Hoeffding does not follow a √M T pattern, or else the blue lines and the red lines would be close to each other. Finally, as T /H grows larger, we notice that the yellow lines and the red lines become close, confirming that the regret of FedQ-Hoeffding approaches that of UCB-Hoeffding as T becomes sufficiently large. This also supports the error reduction rate ˜O(1 /M ) for the gap-dependent regret. 17 Gap-Dependent Bounds for Federated Q-Learning 
+
+B.2. Dependency of Communication Cost on M , S, and A
+
+In this section, we will demonstrate that the coefficient of the log T term in the communication cost is independent of M , S
+
+and A. To eliminate the influence of terms with lower orders of log T , such as log(log T ) and √log T in Theorem 3.3, we will focus exclusively on the communication cost for sufficiently large values of T .B.2.1. D EPENDENCY ON M
+
+To explore the dependency of communication cost on M , we set (H, S, A ) = (2 , 2, 2) and let M take values in {2, 4, 6, 8}.We generate 10 7 episodes for each agent and only consider the communication cost after 5 × 10 5 episodes. The Figure 3 shows the communication cost results for each M after 5 × 10 5 episodes.                       
+
+> Figure 3. Number of communication rounds vs Log-number of Episodes for different MValues with H= 2 ,S= 2 and A= 2 . Each solid line represents the number of communication rounds for each value of M∈ { 2,4,6,8}after 5×10 5episodes, while the dashed line represents the fitted line for each M.
+
+In Figure 3, each solid line represents the communication cost for each value of M ∈ { 2, 4, 6, 8} after 5 × 10 5 episodes, while the dashed line represents the corresponding fitted line. Since the x-axis represents the log-number of episodes, 
+
+log( T /H ), the slope of the fitted line is very close to the coefficient of the log T -term in the communication cost when 
+
+log T is sufficently large. We observe that the slopes of these fitted lines are very similar, which indicates that for any given MDP, the coefficient of the log T -term in the communication cost is independent of M . If the coefficient were linearly dependent on M , as shown in Zheng et al. (2024), then for M = 8 , the slope of the fitted line should be nearly four times the value of the slope of the fitted line for M = 2 .B.2.2. D EPENDENCY ON S
+
+To explore the dependency of communication cost on S, we set (H, A, M ) = (2 , 2, 2) and let S take values in {2, 4, 6, 8}.We generate 10 7 episodes for each agent and only consider the communication cost after 5 × 10 5 episodes. The Figure 4 shows the communication cost results for each S after 5 × 10 5 episodes. In Figure 4, each solid line represents the communication cost for each value of S ∈ { 2, 4, 6, 8} after 5 × 10 5 episodes, while the dashed line represents the corresponding fitted line. Since the x-axis represents the log-number of episodes, 
+
+log( T /H ), the slope of the fitted line is very close to the coefficient of the log T -term in the communication cost when 
+
+log T is sufficently large. We observe that the slopes of these fitted lines are very similar, which indicates that for any given MDP, the coefficient of the log T -term in the communication cost is independent of S.18 Gap-Dependent Bounds for Federated Q-Learning 
+
+Figure 4. Number of communication rounds vs Log-number of Episodes for different S Values with H = 2 , A = 2 and M = 2 . Each solid line represents the number of communication rounds for each value of S ∈ { 2, 4, 6, 8} after 5 × 10 5 episodes, while the dashed line represents the fitted line for each S.
+
+B.2.3. D EPENDENCY ON A
+
+Figure 5. Number of communication rounds vs Log-number of Episodes for different A Values with H = 2 , S = 2 and M = 2 . Each solid line represents the number of communication rounds for each value of A ∈ { 2, 4, 6, 8} after 5 × 10 5 episodes, while the dashed line represents the fitted line for each A.
+
+To explore the dependency of communication cost on A, we set (H, S, M ) = (2 , 2, 2) and let A take values in {2, 4, 6, 8}.We generate 10 7 episodes for each agent and only consider the communication cost after 5 × 10 5 episodes. The Figure 5 shows the communication cost results for each A after 5 × 10 5 episodes. 19 Gap-Dependent Bounds for Federated Q-Learning 
+
+In Figure 5, each solid line represents the communication cost for each value of A ∈ { 2, 4, 6, 8} after 5 × 10 5 episodes, while the dashed line represents the corresponding fitted line. Since the x-axis represents the log-number of episodes, 
+
+log( T /H ), the slope of the fitted line is very close to the coefficient of the log T -term in the communication cost when 
+
+log T is sufficently large. We observe that the slopes of these fitted lines are very similar, which indicates that for any given MDP, the coefficient of the log T -term in the communication cost is independent of A.
+
+## C. Algorithm Review 
+
+C.1. FedQ-Hoeffding Algorithm 
+
+In this section, we present more details for Section 3.1. Denote ηt = H+1  
+
+> H+t
+
+, η00 = 1 , ηt 
+
+> 0
+
+= 0 for t ≥ 1, and ηti =
+
+ηi
+
+Qti′=i+1 (1 − ηi′ ), ∀ 1 ≤ i ≤ t. We also denote ηc(t1, t 2) = Qt2 
+
+> t=t1
+
+(1 − ηt) for any positive integers t1 < t 2.After receiving the information from each agent m, for each triple (s, a, h ) visited by the agents, the server sets ηh,k s,a =1 − ηc N kh (s, a ) + 1 , N k+1  
+
+> h
+
+(s, a ) and βks,a,h = Ptk 
+
+> t=tk−1+1
+
+ηtk 
+
+> t
+
+bt, where the confidence bound is given by bt = c
+
+q H3ιt
+
+for some sufficiently large constant c > 0. Then the server updates the Q-estimate according to the following two cases. 
+
+Case 1: N kh (s, a ) < 2M H (H + 1) =: i0. This case implies that each client can visit each (s, a ) pair at step h at most once. Then, we denote 1 ≤ mN kh < m N kh +1 . . . < m N k+1 
+
+> h
+
+≤ M as the agent indices with nm,k h (s, a ) > 0. The server then updates the global estimate of action values sequentially as follows: 
+
+Qk+1  
+
+> h
+
+(s, a ) = (1 − ηt)Qkh(s, a ) + ηt
+
+ rh(x, a ) + vmt,k h+1 (s, a ) + bt
+
+, t = N kh (s, a ) + 1 , . . . N k+1  
+
+> h
+
+(s, a ). (11) 
+
+Case 2: N kh (s, a ) ≥ i0. In this case, the central server calculates vkh+1 (s, a ) = PMm=1 vm,k h+1 (s, a )/n kh(s, a ) and updates 
+
+Qk+1  
+
+> h
+
+(s, a ) = (1 − ηh,k s,a )Qkh(s, a ) + ηh,k s,a 
+
+ rh(s, a ) + vkh+1 (s, a ) + βks,a,h . (12) After finishing updating the estimated Q function, the server updates the estimated value function and the policy as follows: 
+
+V k+1  
+
+> h
+
+(s) = min 
+
+n
+
+H, max  
+
+> a′∈A
+
+Qk+1  
+
+> h
+
+(s, a ′)
+
+o
+
+, π k+1  
+
+> h
+
+(s) = arg max  
+
+> a′∈A
+
+Qk+1  
+
+> h
+
+(s, a ′) , ∀(s, h ) ∈ S × [H]. (13) The details of the FedQ-Hoeffding algorithm are presented below. 
+
+Algorithm 1 FedQ-Hoeffding (Central Server) 
+
+1: Input: T0 ∈ N+.
+
+2: Initialization: k = 1 , N 1 
+
+> h
+
+(s, a ) = 0 , Q1
+
+> h
+
+(s, a ) = V 1 
+
+> h
+
+(s) = H, ∀(s, a, h ) ∈ S ×A× [H] and π1 = π1 
+
+> h
+
+: S → A h∈[H]
+
+is an arbitrary deterministic policy. 
+
+3: while PHh=1 
+
+P 
+
+> s,a
+
+N kh (s, a ) < T 0 do 
+
+4: Broadcast πk, {N kh (s, π kh(s)) }s,h and {V kh (s)}s,h to all clients. 
+
+5: Wait until receiving an abortion signal and send the signal to all agents. 
+
+6: Receive {rh(s, π kh(s)) }s,h , {nm,k h (s, π kh(s)) }s,h,m and {vm,k h+1 (s, π kh(s)) }s,h,m from clients. 
+
+7: Calculate N k+1  
+
+> h
+
+(s, a ), n kh(s, a ), v kh+1 (s, a ), ∀(s, h ) ∈ S × [H] with a = πkh(s).
+
+8: for (s, a, h ) ∈ S × A × [H] do 
+
+9: if a̸ = πkh(s) or nkh(s, a ) = 0 then 
+
+10: Qk+1  
+
+> h
+
+(s, a ) ← Qkh(s, a ).
+
+11: else if N kh (s, a ) < i 0 then 
+
+12: Update Qk+1  
+
+> h
+
+(s, a ) according to Equation (11). 
+
+13: else 
+
+14: Update Qk+1  
+
+> h
+
+(s, a ) according to Equation (12). 
+
+15: end if 
+
+16: end for 
+
+17: Update V k+1  
+
+> h
+
+and πk+1 by Equation (13). 
+
+18: k ← k + 1 .
+
+19: end while 
+
+20 Gap-Dependent Bounds for Federated Q-Learning 
+
+Algorithm 2 FedQ-Hoeffding (Agent m in round k)
+
+1: Initialize nmh (s, a ) = vmh+1 (s, a ) = rh(s, a ) = 0 , ∀(s, a, h ) ∈ S × A × [H].
+
+2: Receive πk, {N kh (s, π kh(s)) }s,h and {V kh (s)}s,h from the central server. 
+
+3: while no abortion signal from the central server do 
+
+4: while nmh (sh, a h) < max 
+
+n
+
+1, ⌊ 1 
+
+> M H (H+1)
+
+N kh (sh, a h)⌋
+
+o
+
+, ∀(s, a, h ) ∈ S × A × [H] do 
+
+5: Collect a new trajectory {(sh, a h, r h)}Hh=1 with ah = πkh(sh).
+
+6: nmh (sh, a h) ← nmh (sh, a h) + 1 , v mh+1 (sh, a h) ← vmh+1 (sh, a h) + V kh+1 (sh+1 ), and rh(sh, a h) ← rh, ∀h ∈ [H].
+
+7: end while 
+
+8: Send an abortion signal to the central server. 
+
+9: end while 
+
+10: nm,k h (s, a ) ← nmh (s, a ), v m,k h+1 (s, a ) ← vmh+1 (s, a ), ∀(s, h ) ∈ S × [H] with a = πkh(s).
+
+11: Send {rh(s, π kh(s)) }s,h ,{nm,k h (s, π kh(s)) }s,h and {vm,k h+1 (s, π kh(s)) }s,h to the central server. 
+
+C.2. FedQ-Bernstein Algorithm 
+
+The Bernstein-type algorithm differs from the Hoeffding-type algorithm Algorithms 1 and 2, in that it selects the upper confidence bound based on a variance estimator, akin to the approach used in the Bernstein-type algorithm in Jin et al. (2018). In this subsection, we first review the algorithm design in Zheng et al. (2024). To facilitate understanding, we introduce additional notations exclusive to Bernstein-type algorithms, supplementing the already provided notations for the Hoeffding-type algorithm. 
+
+μm,k h (s, a ) = 1
+
+nm,k h (s, a )
+
+> nm,k
+
+X
+
+> j=1
+
+h
+
+V kh+1 
+
+
+
+sk,j,m h+1 
+
+i 2
+
+I[( sk,j,m h , a k,j,m h ) = ( s, a )] .μkh(s, a ) = 1
+
+N k+1  
+
+> h
+
+(s, a ) − N kh (s, a )
+
+> M
+
+X
+
+> m=1
+
+μm,k h (s, a )nm,k h (s, a ).
+
+Here, μm,k h (s, a ) is the sample mean of [V kh+1 (sk,j,m h+1 )] 2 for all the visits of (s, a, h ) for the m-th agent during the k-th round and μkh(s, a ) corresponds to the mean for all the visits during the k-th round. We define Wk(s, a, h ) to denote the sample variance of all the visits before the k-th round, i.e. 
+
+Wk(s, a, h ) = 1
+
+N kh (s, a )  
+
+> Nkh(s,a )
+
+X
+
+> i=1
+
+V ki
+
+> h+1
+
+(ski,j i,m i 
+
+> h+1
+
+) − 1
+
+N kh (s, a )  
+
+> Nkh(s,a )
+
+X
+
+> i′=1
+
+V ki
+
+> h+1
+
+(ski,j i,m i 
+
+> h+1
+
+)
+
+
+
+> 2
+
+.
+
+Here, (ki, j i, m i) is the (round, episode, agent) index for the i-th visit to (s, a, h ) defined in Appendix E. Using the expressions of μkh and vm,k h+1 , we further find that 
+
+Wk(s, a, h ) = 1
+
+N kh (s, a )
+
+> k−1
+
+X
+
+> k′=1
+
+μk′ 
+
+> h
+
+(s, a )nk′ 
+
+> h
+
+(s, a ) −
+
+"
+
+1
+
+N kh (s, a )
+
+> k−1
+
+X
+
+> k′=1
+
+vk′
+
+> h+1
+
+(s, a )nk′ 
+
+> h
+
+(s, a )
+
+#2
+
+.
+
+Therefore, the quantity Wk(s, a, h ) can be calculated efficiently in the following way. Define 
+
+W1,k (s, a, h ) = 
+
+> k−1
+
+X
+
+> k′=1
+
+μk′ 
+
+> h
+
+(s, a )nk′ 
+
+> h
+
+(s, a ), W 2,k (s, a, h ) = 
+
+> k−1
+
+X
+
+> k′=1
+
+vk′
+
+> h+1
+
+(s, a )nk′ 
+
+> h
+
+(s, a ), (14) then we have 
+
+W1,k +1 (s, a, h ) = W1,k (s, a, h ) + μkh(s, a )nkh(s, a ), W 2,k +1 (s, a, h ) = W2,k (s, a, h ) + vkh+1 (s, a )nkh(s, a ) (15) and 
+
+Wk+1 (s, a, h ) = W1,k +1 (s, a, h )
+
+N k+1  
+
+> h
+
+(s, a ) −
+
+"
+
+W2,k +1 (s, a, h )
+
+N k+1  
+
+> h
+
+(s, a )
+
+#2
+
+. (16) 21 Gap-Dependent Bounds for Federated Q-Learning 
+
+This indicates that the central server, by actively maintaining and updating the quantities W1,k and W2,k and systematically collecting nm,k h s, μm,k h s and vm,k h+1 s, is able to compute Wk+1 .Next, we define 
+
+βB 
+
+> t
+
+(s, a, h ) = c′ min 
+
+(r Hι t (Wkt+1 (s, a, h ) + H) + ι
+
+√H7SA + √M SAH 6
+
+t ,
+
+r H3ιt
+
+)! 
+
+, (17) in which c′ > 0 is a positive constant. With this, the upper confidence bound bt(s, a, h ) for a single visit is determined by 
+
+βB 
+
+> t
+
+(s, a, h ) = 2 Pti=1 ηti bt(s, a, h ), which can be calculated as follows: 
+
+b1(s, a, h ) := βB 
+
+> 1
+
+(s, a, h )2 , b t(s, a, h ) := βB 
+
+> t
+
+(s, a, h ) − (1 − ηt) βB
+
+> t−1
+
+(s, a, h )2ηt
+
+.
+
+When there is no ambiguity, we use the simplified notation ˜bt = bt(s, a, h ). In the FedQ-Bernstein algorithm, let 
+
+˜β = βB 
+
+> tk
+
+(s, a, h ) − ηc(tk−1 + 1 , t k)βB 
+
+> tk−1
+
+(s, a, h ). Then similar to the FedQ-Hoeffding, we can updates the global estimate of the value functions according to the following two cases. • Case 1: N kh (s, a ) < i 0. This case implies that each client can visit each (s, a ) pair at step h at most once. Then, we denote 1 ≤ m1 < m 2 . . . < m tk −tk−1 ≤ M as the agent indices with nm,k h (s, a ) > 0. The server then updates the global estimate of action values as follows: 
+
+Qk+1  
+
+> h
+
+(s, a ) = (1 − ηt)Qkh(s, a ) + ηt
+
+
+
+rh(x, a ) + vmt,k h+1 (s, a ) + ˜bt
+
+
+
+, t = tk−1 + 1 , . . . t k. (18) • Case 2: N kh (s, a ) ≥ i0. In this case, the central server calculates vkh+1 (s, a ) = PMm=1 vm,k h+1 (s, a )/n kh(s, a ) and updates the Q-estimate as 
+
+Qk+1  
+
+> h
+
+(s, a ) = (1 − ηh,k s,a )Qkh(s, a ) + ηh,k s,a 
+
+ rh(s, a ) + vkh+1 (s, a ) + ˜β/ 2. (19) Then we can present the FedQ-Bernstein Algorithm in Zheng et al. (2024). 
+
+Algorithm 3 FedQ-Bernstein (Central Server) 
+
+1: Input: T0 ∈ N+.
+
+2: Initialization: k = 1 , N 1 
+
+> h
+
+(s, a ) = W1,k (s, a, h ) = W2,k (s, a, h ) = 0 , Q 1
+
+> h
+
+(s, a ) = V 1 
+
+> h
+
+(s) = H, ∀(s, a, h ) ∈S × A × [H] and π1 = π1 
+
+> h
+
+: S → A h∈[H] is an arbitrary deterministic policy. 
+
+3: while PHh=1 
+
+P 
+
+> s,a
+
+N kh (s, a ) < T 0 do 
+
+4: Broadcast πk, {N kh (s, π kh(s)) }s,h and {V kh (s)}s,h to all clients. 
+
+5: Wait until receiving an abortion signal and send the signal to all agents. 
+
+6: Receive {rh(s, π kh(s)) }s,h , {nm,k h (s, π kh(s)) }s,h,m , {vm,k h+1 (s, π kh(s)) }s,h,m and {μm,k h (s, π kh(s)) }s,h,m from clients. 
+
+7: Calculate N k+1  
+
+> h
+
+(s, a ), n kh(s, a ), v kh+1 (s, a ), μ kh(s, a ), ∀(s, h ) ∈ S × [H] with a = πkh(s).
+
+8: Calculate Wk(s, a, h ), W k+1 (s, a, h ), W 1,k +1 (s, a, h ), W 2,k +1 (s, a, h ), ∀(s, h ) ∈ S × [H] with a = πkh(s) based on Equation (14), Equation (15) and Equation (16). 
+
+9: for (s, a, h ) ∈ S × A × [H] do 
+
+10: if a̸ = πkh(s) or nkh(s, a ) = 0 then 
+
+11: Qk+1  
+
+> h
+
+(s, a ) ← Qkh(s, a ).
+
+12: else if N kh (s, a ) < i 0 then 
+
+13: Update Qk+1  
+
+> h
+
+(s, a ) according to Equation (18). 
+
+14: else 
+
+15: Update Qk+1  
+
+> h
+
+(s, a ) according to Equation (19). 
+
+16: end if 
+
+17: end for 
+
+18: Update V k+1  
+
+> h
+
+and πk+1 by Equation (13). 
+
+19: k ← k + 1 .
+
+20: end while 
+
+22 Gap-Dependent Bounds for Federated Q-Learning 
+
+Algorithm 4 FedQ-Bernstein (Agent m in round k)
+
+1: nmh (s, a ) = vmh+1 (s, a ) = rh(s, a ) = μmh (s, a ) = 0 , ∀(s, a, h ) ∈ S × A × [H].
+
+2: Receive πk, {N kh (s, π kh(s)) }s,h and {V kh (s)}s,h from the central server. 
+
+3: while no abortion signal from the central server do 
+
+4: while nmh (sh, a h) < max 
+
+n
+
+1, ⌊ 1 
+
+> M H (H+1)
+
+N kh (sh, a h)⌋
+
+o
+
+, ∀(s, a, h ) ∈ S × A × [H] do 
+
+5: Collect a new trajectory {(sh, a h, r h)}Hh=1 with ah = πkh(sh).
+
+6: nmh (sh, a h) ← nmh (sh, a h) + 1 , v mh+1 (sh, a h) ← vmh+1 (sh, a h) + V kh+1 (sh+1 ), μmh (sh, a h) ← μmh (sh, a h) + 
+
+V kh+1 (sh+1 )2, and rh(sh, a h) ← rh, ∀h ∈ [H].
+
+7: end while 
+
+8: Send an abortion signal to the central server. 
+
+9: end while 
+
+10: nm,k h (s, a ) ← nmh (s, a ), v m,k h+1 (s, a ) ← vmh+1 (s, a ) and μm,k h (s, a ) ← μmh (s, a )/n mh (s, a ), ∀(s, h ) ∈ S × [H] with 
+
+a = πkh(s).
+
+11: Send {rh(s, π kh(s)) }s,h ,{nm,k h (s, π kh(s)) }s,h , {μm,k h (s, π kh(s)) }s,h and {vm,k h+1 (s, π kh(s)) }s,h to the central server. 
+
+## D. Technical Lemmas 
+
+Lemma D.1. (Freedman’s inequality, Theorem EC.1 of Li et al. (2024)) Consider a filtration F0 ⊂ F 1 ⊂ F 2 ⊂ · · · , and let 
+
+Ek stand for the expectation conditioned on Fk. Suppose that 
+
+Yn =
+
+> n
+
+X
+
+> k=1
+
+Xk ∈ R,
+
+where {Xk} is a real-valued scalar sequence obeying 
+
+|Xk| ≤ R and Ek−1[Xk] = 0 for all k ≥ 1
+
+for some quantity R < ∞. We also define 
+
+Wn := 
+
+> n
+
+X
+
+> k=1
+
+Ek−1[X2 
+
+> k
+
+].
+
+In addition, suppose that Wn ≤ σ2 holds deterministically for some given quantity σ2 < ∞. Then for any positive integer 
+
+m ≥ 1, with probability at least 1 − δ, one has 
+
+|Yn| ≤ 
+
+s
+
+8 max 
+
+
+
+Wn, σ2
+
+2m
+
+
+
+log 2mδ + 43 R log 2mδ .
+
+Lemma D.2. (Lemma 10 in Zhang et al. (2022a)) Let X1, X 2, . . . be a sequence of random variables taking value in [0 , l ].Define Fk = σ(X1, X 2, . . . , X k−1) and Yk = E[Xk|F k] for k ≥ 1. For any δ > 0, we have that 
+
+P
+
+"
+
+∃n, 
+
+> n
+
+X
+
+> k=1
+
+Xk ≥ 3
+
+> n
+
+X
+
+> k=1
+
+Yk + l log(1 /δ )
+
+#
+
+≤ δ
+
+and 
+
+P
+
+"
+
+∃n, 
+
+> n
+
+X
+
+> k=1
+
+Yk ≥ 3
+
+> n
+
+X
+
+> k=1
+
+Xk + l log(1 /δ )
+
+#
+
+≤ δ. 
+
+## E. Key Lemmas 
+
+In this section, we introduce some useful lemmas which will be used in the proofs. Before starting, we define ki(s, a, h ),
+
+ji(s, a, h ), and mi(s, a, h ) as the round , episode , and agent indices, respectively, for the i-th visit to the state-action-step triple (s, a, h ) in chronological order. Under the full synchronization assumption, these indices can be constructed as: 
+
+ki(s, a, h ) = sup k ∈ N+ : N kh (s, a ) < i ,
+
+23 Gap-Dependent Bounds for Federated Q-Learning 
+
+ji(s, a, h ) = sup 
+
+j ∈ N+ :
+
+> j−1
+
+X
+
+> j′=1
+> M
+
+X
+
+> m=1
+
+I
+
+h
+
+(s, a ) = ( ski,j ′,m h , a ki,j ′,m h )
+
+i
+
+< i − N ki 
+
+> h
+
+(s, a )
+
+ ,mi(s, a, h ) = sup 
+
+(
+
+m ∈ N+ :
+
+> m−1
+
+X
+
+> m′=1
+
+I
+
+h
+
+(s, a ) = ( ski,j i,m ′ 
+
+> h
+
+, a ki,j i,m ′ 
+
+> h
+
+)
+
+i
+
+< i − N ki 
+
+> h
+
+(s, a ) −
+
+> ji−1
+
+X
+
+> j′=1
+> M
+
+X
+
+> m=1
+
+I
+
+h
+
+(s, a ) = ( ski,j ′,m h , a m,k i,j ′,m h )
+
+i .
+
+When there is no ambiguity, we use ki, mi and ji for short. Next, we begin to introduce the lemmas. First, Lemma E.1 establishes some relationships between some quantities used in Algorithm 1 and Algorithm 2. 
+
+Lemma E.1. (Paraphrased from Lemma B.1 in Zheng et al. (2024)) . The following relationships hold for both algorithms. (a) T0 ≤ ˆT .(b) N Kh (s, a ) ≤ P 
+
+> s,a
+
+N Kh (s, a ) ≤ T0/H .(c) For any (s, a, h, k ) ∈ S × A × [H] × [K], we have 
+
+nm,k h (s, a ) ≤ max 
+
+
+
+1,
+
+ N kh (s, a )
+
+M H (H + 1) 
+
+ 
+
+, ∀m ∈ [M ],
+
+If N kh (s, a ) < i 0,
+
+nm,k h (s, a ) ≤ 1, n kh(s, a ) ≤ M. 
+
+If N kh (s, a ) ≥ i0,
+
+nm,k h (s, a ) ≤ N kh (s, a )
+
+M H (H + 1) , n kh(s, a ) ≤ N kh (s, a )
+
+H(H + 1) .
+
+(d) For any (s, a, h ) ∈ S × A × [H],
+
+N K+1  
+
+> h
+
+(s, a ) ≤ X
+
+> s,a
+
+N K+1  
+
+> h
+
+(s, a ) ≤
+
+
+
+1 + 1
+
+H(H + 1) 
+
+ T0
+
+H + M SA. 
+
+(e) Let 
+
+T1 =
+
+
+
+1 + 1
+
+H(H + 1) 
+
+
+
+T0 + M HSA, 
+
+then we have ˆT ≤ T1 ≤ 2 ˆT + M HSA .(f) K ≤ T1 
+
+> H
+
+.Proof of Lemma E.1. (a), (b), (c) can be directly proved given and Algorithm 1 and Algorithm 2. (d) By property (b) and (c), it holds that 
+
+X
+
+> s,a
+
+N K+1  
+
+> h
+
+(s, a ) ≤ X
+
+> s,a
+
+N Kh (s, a ) + X
+
+> s,a
+
+nKh (s, a ) ≤ T0
+
+H + X
+
+> s,a
+
+
+
+M + N kh (s, a )
+
+H(H + 1) 
+
+
+
+≤
+
+
+
+1 + 1
+
+H(H + 1) 
+
+ T0
+
+H + M SA. 
+
+(e) With conclusion (d), we have ˆT = P 
+
+> s,a,h
+
+N K+1  
+
+> h
+
+(s, a ) ≤ T1. The second inequality is because of (a). (f) It is because K ≤ ˆT /H ≤ T1/H .24 Gap-Dependent Bounds for Federated Q-Learning 
+
+Next, we define new weights ˜ηti . For any (s, a, h, k ) ∈ S × A × [H] × [K], we let t = N kh (s, a ) and i ∈ [t] S{0}. Let 
+
+t′ = N ki 
+
+> h
+
+(s, a ) and t′′ = N ki+1  
+
+> h
+
+(s, a ), we denote 
+
+˜ηti (s, a, h ) = ηti I[t′ < i 0] + 1 − ηc(t′ + 1 , t ′′ )
+
+t′′ − t′ ηc(t′′ + 1 , t )I[t′ ≥ i0],
+
+and we will use the simplified notation ˜ηti when there is no ambiguity. In Lemma E.2, we will present some properties of the new weights and their relationship with the original weights ηti .
+
+Lemma E.2. The following properties holds: (a) For all t ∈ N+, P∞ 
+
+> i=t
+
+ηit = 1 + 1 /H. 
+
+(b) For any k, k ′ ∈ N+ such that t = N k′ 
+
+> h
+
+(s, a ) and k < k ′, we have  
+
+> Nk+1
+> h
+
+X  
+
+> i=Nkh+1
+
+˜ηti′ (s, a, h ) =  
+
+> Nk+1
+> h
+
+X  
+
+> i=Nkh+1
+
+ηti ,
+
+which further indicates that 
+
+> t
+
+X
+
+> i=1
+
+˜ηti = I[t > 0] .
+
+(c) For any t ∈ N+ and any i ∈ [t], we have that 
+
+˜ηti /η ti ≤ exp(1 /H ).
+
+(d) For any t ∈ N+ and any (s, a, h ) ∈ S × A × [H], if t < i , ki(s, a, h ) = k and N kh (s, a ) ≥ i0, we have that 
+
+ηN kh 
+
+> t
+
+/η it ≤ exp(1 /H ).(e) 1/t α ≤ Pti=1 ηti /i α ≤ 2/t α.
+
+Proof. Here (a), (b) and (c) are from Lemma B.2 and B.3 in Zheng et al. (2024) and (e) is from Lemma 1 of Li et al. (2021), so here we only prove the property (d). Note that 
+
+ηN kh
+
+> t
+
+ηit
+
+=
+
+> i
+
+Y  
+
+> q=Nkh+1
+
+(1 − ηq )−1 (I) 
+
+≤
+
+
+
+1 − ηN kh +1 
+
+−(i−N kh ) (II) 
+
+≤
+
+
+
+1 − ηN kh +1 
+
+− N khH(H+1) 
+
+=
+
+
+
+1 + H + 1 
+
+N kh
+
+ N khH(H+1) 
+
+≤ exp(1 /H ).
+
+Here (I) is because ηq is monotonically decreasing. (II) is because i − N kh (s, a ) ≤ nkh(s, a ) ≤ N kh (s,a ) 
+
+> H(H+1)
+
+for N kh (s, a ) ≥ i0
+
+by (c) of Lemma E.1. 
+
+Lemma E.3. For any non-negative weight sequence {ωk,j,m h }h,k,j,m and α ∈ [0 , 1) , it holds for any h ∈ [H] that: 
+
+X  
+
+> k,j,m,N kh>0
+
+ωk,j,m h
+
+N kh (sk,j,m h , a k,j,m h )α ≤ X
+
+> k,j,m
+
+ωk,j,m h
+
+I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < M 
+
+i
+
+N kh (sk,j,m h , a k,j,m h )α + 2α
+
+1 − α (SA ∥ω∥∞,h )α∥ω∥1−α
+
+> 1,h
+
+≤ 2M SA ∥ω∥∞,h + 2α
+
+1 − α (SA ∥ω∥∞,h )α∥ω∥1−α 
+
+> 1,h
+
+.
+
+Here, ∥ω∥∞,h = max 
+
+> k,j,m
+
+{ωk,j,m h } and ∥ω∥1,h = P 
+
+> k,j,m
+
+ωk,j,m h .
+
+25 Gap-Dependent Bounds for Federated Q-Learning 
+
+Proof. We can decompose the summation into two terms 
+
+X  
+
+> k,j,m,N kh>0
+
+ωk,j,m h
+
+N kh (sk,j,m h , a k,j,m h )α
+
+= X
+
+> k,j,m
+
+ωk,j,m h
+
+N kh (sk,j,m h , a k,j,m h )α
+
+
+
+I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < M 
+
+i
+
++ I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ M
+
+i 
+
+= X
+
+> s,a
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )]  I 0 < N kh (s, a ) < M  + I N kh (s, a ) ≥ M  .
+
+Let k0(s, a ) = max {k | 1 ≤ k ≤ K, N kh (s, a ) < M }. Then for the first term, it holds that 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < M 
+
+i
+
+N kh (sk,j,m h , a k,j,m h )α
+
+= X
+
+> s,a
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I 0 < N kh (s, a ) < M 
+
+≤ ∥ ω∥∞,h 
+
+X
+
+> s,a
+
+X
+
+> k,j,m
+
+I[( sk,j,m h , a k,j,m h ) = ( s, a )] I 0 < N kh (s, a ) < M 
+
+= ∥ω∥∞,h 
+
+X
+
+> s,a k0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I 0 < N kh (s, a ) < M 
+
+= ∥ω∥∞,h 
+
+X
+
+> s,a
+
+N k0+1  
+
+> h
+
+(s, a ) ≤ 2M SA ∥ω∥∞,h . (20) The last inequality is because N k0+1  
+
+> h
+
+(s, a ) = N k0 
+
+> h
+
+(s, a ) + nk0 
+
+> h
+
+(s, a ) ≤ 2M by N k0 
+
+> h
+
+(s, a ) < M . For the second term, let 
+
+ch(s, a ) = X
+
+> k,j,m
+
+ωk,j,m h I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M  =
+
+> K
+
+X
+
+> k=k0+1
+
+X
+
+> j,m
+
+ωk,j,m h I[( sk,j,m h , a k,j,m h ) = ( s, a )] .
+
+Then we have P 
+
+> s,a
+
+ch(s, a ) ≤ P 
+
+> k,j,m
+
+ωk,j,m h = ∥ω∥1,h . Given the term 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M  ,
+
+when the weights ωk,j,m h concentrates on smallest round indices with largest values of 1(N kh (s,a )) α , we can obtain the largest value. Let k0(s, a ) < k 1 < k 2 < ... < k t ≤ K be all round indices that satisfy nki 
+
+> h
+
+(s, a ) > 0 and let kt+1 = K + 1 . Then we have: 
+
+ch(s, a ) ≤ ∥ ω∥∞,h KX
+
+> k=k0+1
+
+X
+
+> j,m
+
+I[( sk,j,m h , a k,j,m h ) = ( s, a )] = ∥ω∥∞,h tX
+
+> i=1
+
+nki 
+
+> h
+
+(s, a ).
+
+Let 
+
+q = max 
+
+(
+
+q | 0 ≤ q ≤ t, ∥ω∥∞,h qX
+
+> i=1
+
+nki 
+
+> h
+
+(s, a ) ≤ ch(s, a )
+
+)
+
+,
+
+and 
+
+d = ch(s, a ) − ∥ ω∥∞,h qX
+
+> i=1
+
+nki 
+
+> h
+
+(s, a ).
+
+Then for q ≤ t, we have the following inequality: 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M  ≤
+
+> q
+
+X
+
+> i=1
+
+∥ω∥∞,h 
+
+nki 
+
+> h
+
+(s, a )(N ki 
+
+> h
+
+(s, a )) α + d
+
+(N kq+1  
+
+> h
+
+(s, a )) α . (21) 26 Gap-Dependent Bounds for Federated Q-Learning 
+
+Note that for any 0 < y < x and α ∈ [0 , 1) , we have: 
+
+x − yxα ≤ 11 − α (x1−α − y1−α). (22) Then, for any i ∈ [t], let x = N ki 
+
+> h
+
+(s, a ) and y = N ki+1  
+
+> h
+
+(s, a ), it holds that: 
+
+nki 
+
+> h
+
+(s, a )(N ki 
+
+> h
+
+(s, a )) α ≤ 2α nki 
+
+> h
+
+(s, a )(N ki+1  
+
+> h
+
+(s, a )) α ≤ 2α (N ki+1  
+
+> h
+
+(s, a )) 1−α − (N ki 
+
+> h
+
+(s, a )) 1−α
+
+1 − α
+
+!
+
+. (23) Here the first inequality is because N ki+1  
+
+> h
+
+(s, a ) = N ki 
+
+> h
+
+(s, a ) + nki 
+
+> h
+
+(s, a ) ≤ 2N ki 
+
+> h
+
+(s, a ) by (c) of Lemma E.1. Summing up Equation (23) from 1 to q, we know 
+
+> q
+
+X
+
+> i=1
+
+nki 
+
+> h
+
+(s, a )(N ki 
+
+> h
+
+(s, a )) α ≤ 2αqX
+
+> i=1
+
+(N ki+1  
+
+> h
+
+(s, a )) 1−α − (N ki 
+
+> h
+
+(s, a )) 1−α
+
+1 − α
+
+≤ 2αqX
+
+> i=1
+
+(N ki+1  
+
+> h
+
+(s, a )) 1−α − (N ki 
+
+> h
+
+(s, a )) 1−α
+
+1 − α
+
+= 2 α (N kq+1  
+
+> h
+
+(s, a )) 1−α
+
+1 − α − (N k1 
+
+> h
+
+(s, a )) 1−α
+
+1 − α
+
+!
+
+≤ 2α
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α . (24) The second inequality is because ki + 1 ≤ ki+1 and thus N ki+1  
+
+> h
+
+(s, a ) ≤ N ki+1  
+
+> h
+
+(s, a ). The last inequality is because for any 
+
+x > 1 and 0 ≤ α < 1, we have the following inequality 
+
+x1−α ≤ (x − 1) 1−α + 1 ,
+
+and we can let x = N kq+1  
+
+> h
+
+(s, a )/N k1 
+
+> h
+
+(s, a ). Applying Equation (24) to Equation (21), for q < t , we have 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M 
+
+≤ 2α∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α + d
+
+(N kq+1  
+
+> h
+
+(s, a )) α
+
+≤ 2α
+
+∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α + d
+
+(N kq+1 +1  
+
+> h
+
+(s, a )) α
+
+
+
+= (2 ∥ω∥∞,h )α
+
+
+
+∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α + d
+
+(N kq+1 +1  
+
+> h
+
+(s, a )∥ω∥∞,h )α
+
+
+
+≤ (2 ∥ω∥∞,h )α
+
+
+
+∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α + d
+
+(ch(s, a )) α
+
+
+
+≤ (2 ∥ω∥∞,h )α (ch(s, a )) 1−α
+
+1 − α . (25) Here the second inequality is because N kq+1 +1  
+
+> h
+
+(s, a ) ≤ 2N kq+1  
+
+> h
+
+(s, a ) for q < t . the second last inequality is because 
+
+ch(s, a ) ≤ N kq+1 +1  
+
+> h
+
+(s, a )∥ω∥∞,h by the definition of q. The last inequality is by Equation (22) with x = ch(s, a ) and 
+
+y = ∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a ).27 Gap-Dependent Bounds for Federated Q-Learning 
+
+We can also prove the Equation (25) for q = t with d = 0 . In this case, by applying Equation (24) to Equation (21), it holds that 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M  ≤ 2α∥ω∥∞,h 
+
+Pqi=1 nki 
+
+> h
+
+(s, a )
+
+1−α
+
+1 − α
+
+= (2 ∥ω∥∞,h )α (ch(s, a )) 1−α
+
+1 − α .
+
+Therefore, with Equation (25), we can conclude that 
+
+X
+
+> s,a
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+(N kh (s, a )) α I[( sk,j,m h , a k,j,m h ) = ( s, a )] I N kh (s, a ) ≥ M  ≤ 2α∥ω∥α
+
+> ∞,h
+
+1 − α
+
+X
+
+> s,a
+
+(ch(s, a )) 1−α
+
+≤ 2α
+
+1 − α (SA )α∥ω∥α
+
+> ∞,h
+
+∥ω∥1−α 
+
+> 1,h
+
+. (26) The last inequality is by H ¨older’s inequality, as P 
+
+> s,a
+
+ch(s, a )1−α ≤ (SA )α∥ω∥1−α 
+
+> 1,h
+
+. Combining the results of Equation (20) and Equation (26), we prove the following conclusion: 
+
+X  
+
+> k,j,m,N kh>0
+
+ωk,j,m h
+
+N kh (sk,j,m h , a k,j,m h )α ≤ 2M SA ∥ω∥∞,h + 2α
+
+1 − α (SA )α∥ω∥α
+
+> ∞,h
+
+∥ω∥1−α 
+
+> 1,h
+
+.
+
+## F. Proofs of Theorem 3.1 
+
+F.1. Auxillary Lemmas 
+
+In this section, we provide the proof of the gap-dependent regret bound (Theorem 3.1) for both FedQ-Hoeffding and Fed-Bernstein algorithms together. We first provide several lemmas describing the key properties of Q-estimates Qkh(s, a ).
+
+Lemma F.1. (Lemma C.1 of Zheng et al. (2024)). Using ∀(s, a, h, k ) as the simplified notation for ∀(s, a, h, k ) ∈S × A × [H] × [K]. Then given any δ ∈ (0 , 1) , with probability at least 1 − δ, for FedQ-Hoeffding algorithm (Algorithm 1 and Algorithm 2), the following event holds: 
+
+G1 =
+
+0 ≤ (Qkh − Q⋆h)( s, a ) ≤ ηN kh 
+
+> 0
+
+H + 
+
+> Nkh
+
+X
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+(V ki 
+
+> h+1
+
+− V ∗
+
+> h+1
+
+)( ski,j i,m i 
+
+> h+1
+
+) + βH 
+
+> Nkh
+
+(s, a, h ), ∀(s, a, h, k )
+
+ .
+
+Here, for some sufficiently large constant c > 0,
+
+βH 
+
+> Nkh
+
+(s, a, h ) =  
+
+> Nkh
+
+X
+
+> i=1
+
+ηN kh 
+
+> i
+
+c
+
+r H3ιi .
+
+Lemma F.2. (Lemma E.1 of Zheng et al. (2024)). Given any δ ∈ (0 , 1) , with probability at least 1 − δ, for FedQ-Bernstein algorithm (Algorithm 3 and Algorithm 4), the following event holds: 
+
+G2 =
+
+0 ≤ (Qkh − Q⋆h)( s, a ) ≤ ηN kh 
+
+> 0
+
+H + 
+
+> Nkh
+
+X
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+(V ki 
+
+> h+1
+
+− V ∗
+
+> h+1
+
+)( ski,j i,m i 
+
+> h+1
+
+) + βB 
+
+> Nkh
+
+(s, a, h ), ∀(s, a, h, k )
+
+ .
+
+Here, βB 
+
+> t
+
+(s, a, h ) is the cumulative bonus defined in Equation (17) .
+
+Let X = ( S, A, H, K, T, 1/δ ). The notation f (X ) ≲ g(X ) means that there exists a universal constant C1 > 0 such that 
+
+f (X ) ≤ C1g(X ). Then we have the following lemma. 28 Gap-Dependent Bounds for Federated Q-Learning 
+
+Lemma F.3. For FedQ-Hoeffding algorithm (Algorithm 1 and Algorithm 2), under the event G1 in Lemma F.1, for any non-negative weight sequence {ωk,j,m h }h,k,j,m , it holds for any h ∈ [H] that: 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+ Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) ≲
+
+q
+
+H5SA ∥ω∥∞,h ∥ω∥1,h ι +
+
+> H
+
+X
+
+> h′=h
+
+X
+
+> k,j,m
+
+ωk,j,m h′ (h)Y k,j,m h′ ,
+
+where for any h ≤ h′ ≤ H − 1
+
+ωk,j,m h (h) := ωk,j,m h ,ωk,j,m h′+1 (h) = X
+
+> k′,j ′,m ′
+
+ωk′,j ′,m ′ 
+
+> h′
+
+(h)I
+
+h
+
+N k′ 
+
+> h′
+
+(sk′,j ′,m ′ 
+
+> h′
+
+, a k′,j ′,m ′ 
+
+> h′
+
+) ≥ i0
+
+i N k′
+
+> h′
+
+X
+
+> i=1
+
+˜ηN k′ 
+
+> h′
+> i
+
+I (ki, j i, m i) = ( k, j, m ) ,
+
+with 
+
+Y k,j,m h′ = ηN kh′ 
+
+> 0
+
+H + HI
+
+h
+
+0 < N kh′ (sk,j,m h′ , a k,j,m h′ ) < i 0
+
+i
+
++
+
+s
+
+H3ιN kh′
+
+I
+
+h
+
+0 < N kh′ (sk,j,m h′ , a k,j,m h′ ) < M 
+
+i
+
+.
+
+The same conclusion also holds for FedQ-Bernstein (Algorithm 3 and Algorithm 4) under the event G2 in Lemma F.2. Proof. By Lemma F.1, under the event G1, we have the following relationship 
+
+X
+
+> k,j,m
+
+ωk,j,m h
+
+ Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h )
+
+≤ X
+
+> k,j,m
+
+ωk,j,m h ηN kh 
+
+> 0
+
+H + X
+
+> k,j,m
+
+ωk,j,m hN khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+(V ki 
+
+> h+1
+
+− V ∗
+
+> h+1
+
+)( ski,j i,m i 
+
+> h+1
+
+) + X
+
+> k,j,m
+
+ωk,j,m h βH 
+
+> Nkh
+
+. (27) 
+
+For the third term of Equation (27) , by (e) of Lemma E.2, we have 
+
+βH 
+
+> Nkh
+
+(s, a, h ) =  
+
+> Nkh
+
+X
+
+> i=1
+
+ηN kh 
+
+> i
+
+c
+
+r H3ιi ≤ 2c
+
+s
+
+H3ιN kh
+
+.
+
+Then by Lemma E.3, it holds that 
+
+X
+
+> k,j,m
+
+ωk,j,m h βH 
+
+> Nkh
+
+(sk,j,m h , a k,j,m h , h )
+
+≲ √H3ι X
+
+> k,j,m
+
+ωk,j,m h
+
+s 1
+
+N kh (sk,j,m h , a k,j,m h )
+
+≲ X
+
+> k,j,m
+
+ωk,j,m h
+
+s
+
+H3ιN kh
+
+I 0 < N kh < M  +
+
+q
+
+H3SA ∥ω∥∞,h ∥ω∥1,h ι. (28) Next, we will bound the second term of Equation (27). We can decompose the term into two parts as 
+
+X
+
+> k,j,m
+
+ωk,j,m hN khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+(V ki 
+
+> h+1
+
+− V ∗
+
+> h+1
+
+)( ski,j i,m i 
+
+> h+1
+
+)= X
+
+> k,j,m
+
+ωk,j,m hN khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+(V ki 
+
+> h+1
+
+− V ∗
+
+> h+1
+
+)( ski,j i,m i 
+
+> h+1
+
+)
+
+
+
+I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < i 0
+
+i
+
++ I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i 
+
+29 Gap-Dependent Bounds for Federated Q-Learning 
+
+For the first part of the second term in Equation (27) , we have 
+
+X
+
+k,j,m 
+
+ωk,j,m hN khX
+
+i=1 
+
+˜ηN kh
+
+i (V ki
+
+h+1 − V ∗
+
+h+1 )( ski,j i,m i
+
+h+1 )I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < i 0
+
+i
+
+≤ H X
+
+k,j,m 
+
+ωk,j,m h I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < i 0
+
+i N khX
+
+i=1 
+
+˜ηN kh
+
+i
+
+≤ H X
+
+k,j,m 
+
+ωk,j,m h I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < i 0
+
+i
+
+(29) Here, the second inequality is because PN kh
+
+i=1 ˜ηN kh
+
+i ≤ 1 by (b) of Lemma E.2. 
+
+For the second part of the second term in Equation (27) , we group the summations in a different way. 
+
+X
+
+k,j,m 
+
+ωk,j,m hN khX
+
+i=1 
+
+˜ηN kh
+
+i (V ki
+
+h+1 − V ∗
+
+h+1 )( ski,j i,m i
+
+h+1 )I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i
+
+= X
+
+k,j,m N khX
+
+i=1 
+
+ωk,j,m h ˜ηN kh
+
+i (V ki
+
+h+1 − V ∗
+
+h+1 )( ski,j i,m i
+
+h+1 )I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i  X
+
+k′,j ′,m ′
+
+I (ki, j i, m i) = ( k′, j ′, m ′)
+
+= X
+
+k′,j ′,m ′
+
+˜ωk′,j ′,m ′
+
+h
+
+
+
+V k′
+
+h+1 − V ∗
+
+h+1 
+
+
+
+(sk′,j ′,m ′
+
+h+1 ), (30) where 
+
+˜ωk′,j ′,m ′
+
+h = X
+
+k,j,m 
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i
+
+ωk,j,m hN khX
+
+i=1 
+
+˜ηN kh
+
+i I (ki, j i, m i) = ( k′, j ′, m ′) .
+
+Let ∥˜ω∥∞,h = max 
+
+k,j,m {˜ωk,j,m h } and ∥˜ω∥1,h = P
+
+k,j,m ˜ωk,j,m h . Since PN kh
+
+i=1 ˜ηN kh
+
+i ≤ 1 by (b) of Lemma E.2, we have the following property: 
+
+∥˜ω∥1,h = X
+
+k′,m ′,j ′
+
+˜ωk′,j ′,m ′
+
+h ≤ X
+
+k,j,m 
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i
+
+ωk,j,m h ≤ ∥ ω∥1,h . (31) If we have proved that: 
+
+∥˜ω∥∞,h ≤ exp(3 /H )∥ω∥∞,h , (32) 
+
+then combining the results of Equation (28), Equation (29) and Equation (30) together with Equation (27) , we reach 
+
+X
+
+k,j,m 
+
+ωk,j,m h
+
+ Qkh − Q∗
+
+h
+
+ (sk,j,m h , a k,j,m h )
+
+≲ X
+
+k′,j ′,m ′
+
+˜ωk′,j ′,m ′
+
+h
+
+ V k′
+
+h+1 − V ∗
+
+h+1 
+
+(sk′,j ′,m ′
+
+h+1 ) + 
+
+q
+
+H3SA ∥ω∥∞,h ∥ω∥1,h ι + X
+
+k,j,m 
+
+ωk,j,m h ηN kh
+
+0 H
+
++ X
+
+k,j,m 
+
+ωk,j,m h HI
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) < i 0
+
+i
+
++ X
+
+k,j,m 
+
+ωk,j,m h
+
+s
+
+H3ιN kh
+
+I
+
+h
+
+0 < N kh (sk,j,m h , a k,j,m h ) < M 
+
+i
+
+≲ X
+
+k′,j ′,m ′
+
+˜ωk′,j ′,m ′
+
+h
+
+ Qk′
+
+h+1 − Q∗
+
+h+1 
+
+(sk′,j ′,m ′
+
+h+1 , a k′,j ′,m ′
+
+h+1 ) + 
+
+q
+
+H3SA ∥ω∥∞,h ∥ω∥1,h ι + X
+
+k,j,m 
+
+ωk,j,m h Y k,j,m h . (33) with ∥˜ω∥1,h ≤ ∥ ω∥1,h and ∥˜ω∥∞,h ≤ exp(3 /H )∥ω∥∞,h . Here the last inequality is because 
+
+V k′
+
+h+1 (sk′,j ′,m ′
+
+h+1 ) ≤ Qk′
+
+h+1 (sk′,j ′,m ′
+
+h+1 , a k′,j ′,m ′
+
+h+1 ) and V ∗
+
+h+1 (sk′,j ′,m ′
+
+h+1 ) ≥ Q∗
+
+h+1 (sk′,j ′,m ′
+
+h+1 , a k′,j ′,m ′
+
+h+1 ).
+
+30 Gap-Dependent Bounds for Federated Q-Learning 
+
+With Equation (33), we develop a recursive relationship for the weighted sum of Qkh − Q∗ 
+
+> h
+
+between step h and step h + 1 .By recursions with regard to h, h + 1 , ..., H , we finish the proof for Algorithm 1 and Algorithm 2. For Algorithm 3 and Algorithm 4, the only difference lies in the bonus term in Equation (27) and Equation (28). According to Lemma F.2, under the event G2, we have the same relationship for FedQ-Bernstein algorithm as in Equation (27). Moreover, note that βB 
+
+> Nkh
+
+(s, a, h ) ≲
+
+q H3ιN kh
+
+by Equation (17), it is easy to prove the same conclusion as Equation (28). Then the following part remains the same. Now we only need to prove Equation (32). 
+
+Proof of Equation (32): Now we have 
+
+˜ωk′,j ′,m ′ 
+
+> h
+
+= X
+
+> k,j,m
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i
+
+ωk,j,m hN khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+I (ki, j i, m i) = ( k′, j ′, m ′)
+
+≤ ∥ ω∥∞,h 
+
+X
+
+> k,j,m
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i N khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+I (ki, j i, m i) = ( k′, j ′, m ′)
+
+We only need to prove for any triple (k′, j ′, m ′) and any h ∈ [H],
+
+X
+
+> k,j,m
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i N khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+I (ki, j i, m i) = ( k′, j ′, m ′) ≤ exp(3 /H ). (34) For i ∈ [N kh ], by definition of ki, ji and mi, for any given triple (k′, j ′, m ′),
+
+I (ki, j i, m i) = ( k′, j ′, m ′) = 1 
+
+if and only if 
+
+(sk,j,m h , a k,j,m h ) = ( sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+), k ′ < k and i = i′(k′, j ′, m ′),
+
+where i′(k′, j ′, m ′) is the global visiting number for (sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+) at (k′, m ′, j ′). When there is no ambiguity, we will use i′ for short. Therefore 
+
+X
+
+> k,j,m
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i N khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+I (ki, j i, m i) = ( k′, j ′, m ′)
+
+=
+
+> K
+
+X
+
+> k=k′+1
+
+X
+
+> j,m
+
+I
+
+h
+
+N kh (sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+) ≥ i0, (sk,j,m h , a k,j,m h ) = ( sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+)
+
+i ˜ηN kh 
+
+> i′
+
+. (35) Let k′ < k1 < k2 < ... < kt ≤ K be all the round index such that nkq 
+
+> h
+
+(sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+) > 0 and 
+
+N kq 
+
+> h
+
+(sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+) ≥ i0 for any q ∈ [t], then we can simplify Equation (35): 
+
+X
+
+> k,j,m
+
+I
+
+h
+
+N kh (sk,j,m h , a k,j,m h ) ≥ i0
+
+i N khX
+
+> i=1
+
+˜ηN kh 
+
+> i
+
+I (ki, j i, m i) = ( k′, j ′, m ′)
+
+=
+
+> t
+
+X
+
+> q=1
+
+X
+
+> j,m
+
+I
+
+h
+
+(skq ,j,m h , a kq ,j,m h ) = ( sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+)
+
+i ˜ηN kq h
+
+> i′
+
+≤
+
+> t
+
+X
+
+> q=1
+
+nkq 
+
+> h
+
+(sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+)˜ ηN kq h 
+
+> i′
+
+(36) For any q ∈ [t] and n ∈ [nkq 
+
+> h
+
+], by (d) of Lemma E.2, the following relationship holds 
+
+ηN kq h
+
+> i′
+
+ηN kq h +ni′
+
+≤ exp(1 /H ). (37) 31 Gap-Dependent Bounds for Federated Q-Learning 
+
+Combining Equation (37) with the property (c) of Lemma E.2, for any p ∈ [nkq 
+
+> h
+
+], we have 
+
+˜ηN kq h 
+
+> i′
+
+≤ exp(1 /H )ηN kq h 
+
+> i′
+
+≤ exp(2 /H )ηN kq h +ni′ ,
+
+and thus 
+
+> t
+
+X
+
+> q=1
+
+nkq 
+
+> h
+
+(sk′,j ′,m ′ 
+
+> h
+
+, a k′,j ′,m ′ 
+
+> h
+
+)˜ ηN kq h 
+
+> i′
+
+≤ exp(2 /H )
+
+> t
+
+X
+
+> q=1
+> nkq h
+
+X
+
+> n=1
+
+ηN kq h +ni′
+
+> (I)
+
+≤ exp(2 /H )
+
+> ∞
+
+X
+
+> r=i′
+
+ηri′ ≤ exp(3 /H ).
+
+Here (I) is because k′ < k 1 < k 2 < ... < k t ≤ K and N k1 
+
+> h
+
+≥ N k′+1  
+
+> h
+
+≥ i′. The last inequality is by (a) of Lemma E.2. Applying this inequality to Equation (36), we complete the proof of Equation (34), and consequently, Equation (32). 
+
+F.2. Proof of Lemma 4.1 
+
+Proof. The following proof holds for both FedQ-Hoeffding algorithm and FedQ-Bernstein algorithm. Let N = ⌈log 2(H/ϵ )⌉. For any i < N , k ∈ [K] and given h ∈ [H], let: 
+
+ωk,j,m h,i = I
+
+h
+
+Qkh(sk,j,m h , a k,j,m h ) − Q∗
+
+> h
+
+(sk,j,m h , a k,j,m h ) ∈ 2i−1ϵ, 2iϵi
+
+,
+
+and 
+
+ωk,j,m h,N = I
+
+h
+
+Qkh(sk,j,m h , a k,j,m h ) − Q∗
+
+> h
+
+(sk,j,m h , a k,j,m h ) ∈ 2N −1ϵ, H i
+
+.
+
+Then 
+
+∥ω∥(i) 
+
+> ∞,h
+
+= max  
+
+> k,j,m
+
+ωk,j,m h,i ≤ 1, ∥ω∥(i)1,h = X
+
+> k,j,m
+
+ωk,j,m h,i .
+
+Now for any i ∈ [N ], we have the following relationship: 
+
+X
+
+> k,j,m
+
+ωk,j,m h,i 
+
+ Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) ≥ 2i−1ϵ∥ω∥(i)1,h . (38) Combining the results of Lemma F.3 and Equation (38), we have: 
+
+2i−1ϵ∥ω∥(i)1,h ≲
+
+q
+
+H5SA ∥ω∥(i)1,h ι +
+
+> H
+
+X
+
+> h′=h
+
+X
+
+> k,j,m
+
+ωk,j,m h′,i (h)Y k,j,m h′ , (39) where 
+
+ωk,j,m h,i (h) := ωk,j,m h,i ,ωk,j,m h′+1 ,i (h) = X
+
+> k′,j ′,m ′
+
+ωk′,j ′,m ′ 
+
+> h′,i
+
+(h)I
+
+h
+
+N k′ 
+
+> h′
+
+(sk′,j ′,m ′ 
+
+> h′
+
+, a k′,j ′,m ′ 
+
+> h′
+
+) ≥ i0
+
+i N k′
+
+> h′
+
+X
+
+> i=1
+
+˜ηN k′ 
+
+> h′
+> i
+
+I (ki, j i, m i) = ( k, j, m ) , h ≤ h′ ≤ H − 1,
+
+Therefore, for any triple (k, j, m ) and h ≤ h′ ≤ H − 1, we have 
+
+> N
+
+X
+
+> i=1
+
+ωk,j,m h′+1 ,i (h) = X
+
+> k′,j ′,m ′
+> N
+
+X
+
+> i=1
+
+ωk′,j ′,m ′ 
+
+> h′,i
+
+(h)
+
+!
+
+I
+
+h
+
+N k′ 
+
+> h′
+
+(sk′,j ′,m ′ 
+
+> h′
+
+, a k′,j ′,m ′ 
+
+> h′
+
+) ≥ i0
+
+i N k′
+
+> h′
+
+X
+
+> i=1
+
+˜ηN k′ 
+
+> h′
+> i
+
+I (ki, j i, m i) = ( k, j, m )
+
+Then by mathematical induction on h′ ∈ [h, H ], it is straightforward to prove that for any j ∈ [K],
+
+> N
+
+X
+
+> i=1
+
+ωk,j,m h′,i (h) ≤ (exp(3 /H )) h′−h < 27 , (40) given Equation (34) and the base case PNi=1 ωk,j,m h,i (h) = PNi=1 ωk,j,m h,i ≤ 1.32 Gap-Dependent Bounds for Federated Q-Learning 
+
+Solving Equation (39), we can derive the following relationship: 
+
+∥ω∥(i)1,h ≲ H5SAι 
+
+4iϵ2 +
+
+PHh′=h
+
+P 
+
+> k,j,m
+
+ωk,j,m h′,i (h)Y k,j,m h′
+
+2iϵ . (41) We claim that HX
+
+> h′=1
+
+X
+
+> k,j,m
+
+Y k,j,m h′ ≲ M H 4SA + M √H5SA √ι, (42) which will be proved later. Therefore, by 
+
+I
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) ≥ ϵ
+
+i
+
+=
+
+> N
+
+X
+
+> i=1
+
+ωk,j,m h,i ,
+
+we have 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+Qkh(sk,j,m h , a k,j,m h ) − Q∗
+
+> h
+
+(sk,j,m h , a k,j,m h ) ≥ ϵ
+
+i
+
+≤
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m N
+
+X
+
+> i=1
+
+ωk,j,m h,i =
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> i=1
+
+∥ω∥(i)1,h . (43) By Equation (41), it holds that 
+
+> N
+
+X
+
+> i=1
+
+∥ω∥(i)1,h ≲
+
+> N
+
+X
+
+> i=1
+
+H5SAι 
+
+4iϵ2 +
+
+> N
+
+X
+
+> i=1
+
+PHh′=h
+
+P 
+
+> k,j,m
+
+ωk,j,m h′,i (h)Y k,j,m h′
+
+2iϵ
+
+≲ H5SAι ϵ2 +
+
+> N
+
+X
+
+> i=1
+
+PHh′=1 
+
+P 
+
+> k,j,m
+
+Y k,j,m h′
+
+2iϵ
+
+≲ H5SAι ϵ2 + M H 4SA + M √H5SA √ιϵ . (44) Here, the second inequality is because 0 ≤ ωk,j,m h′,i (h) < 27 by Equation (40) and Y k,j,m h′ ≥ 0. The last inequality is because of Equation (42). Combing the results of Equation (43) and Equation (44), we reach 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+Qkh(sk,j,m h , a k,j,m h ) − Q∗
+
+> h
+
+(sk,j,m h , a k,j,m h ) ≥ ϵ
+
+i
+
+≲ H6SAι ϵ2 + M H 5SA + M √H7SA √ιϵ .
+
+Now we finish the proof of the first conclusion. Further, we can prove the second conclusion by noting that 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+ Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h )I
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) ≥ ϵ
+
+i
+
+≤
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> i=1
+
+2iϵ∥ω∥(i)1,h 
+
+≲
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> i=1
+
+H5SAι 
+
+2iϵ +
+
+> H
+
+X
+
+> h=1
+> H
+
+X
+
+> h′=h
+
+X
+
+> k,j,m
+> N
+
+X
+
+> i=1
+
+ωk,j,m h′,i (h)
+
+!
+
+Y k,j,m h′
+
+≲ H6SAι ϵ +
+
+> H
+
+X
+
+> h=1
+> H
+
+X
+
+> h′=h
+
+X
+
+> k,j,m
+
+Y k,j,m h′
+
+≲ H6SAι ϵ + M H 5SA + M √H7SA √ι. 
+
+Here, the second inequality is by Equation (41). The second last inequality is because PNi=1 ωk,j,m h′,i (h) < 27 by Equation (40) and the last inequality is because of Equation (42). Next, we only need to prove Equation (42). 33 Gap-Dependent Bounds for Federated Q-Learning 
+
+Proof of Equation (42): By definition of Y k,m,j h′ , we have the following equation 
+
+X
+
+> k,m,j
+
+Y k,j,m h′ = X
+
+> k,j,m
+
+ηN kh′ 
+
+> 0
+
+H + H X
+
+> k,m,j
+
+I
+
+h
+
+N kh′ (sk,j,m h′ , a k,j,m h′ ) < i 0
+
+i
+
++ X
+
+> k,m,j
+
+s
+
+H3ιN kh′
+
+I
+
+h
+
+0 < N kh′ (sk,j,m h′ , a k,j,m h′ ) < M 
+
+i
+
+.
+
+(45) For the first term of Equation (45), we have 
+
+X
+
+> k,j,m
+
+ηN kh′ 
+
+> 0
+
+H ≤ H X
+
+> s,a
+
+X
+
+> k,j,m
+
+I[N kh′ (s, a ) = 0 , (sk,j,m h′ , a k,j,m h′ ) = ( s, a )] ≤ M HSA. (46) The inequality here is because if we let k0(s, a ) be the round index such that N k0 
+
+> h′
+
+(s, a ) = 0 and N k0+1  
+
+> h′
+
+(s, a ) > 0, then 
+
+X
+
+> k,j,m
+
+I[N kh′ (s, a ) = 0 , (sk,j,m h′ , a k,j,m h′ ) = ( s, a )] = X
+
+> j,m
+
+I[( sk0,j,m h′ , a k0,j,m h′ ) = ( s, a )] = nk0 
+
+> h′
+
+(s, a ) ≤ M. 
+
+Let k1(s, a ) = max {k | 1 ≤ k ≤ K, N kh′ (s, a ) < i 0}. Then for the second term of Equation (45), it holds that 
+
+X
+
+> k,j,m
+
+HI
+
+h
+
+0 < N kh′ (sk,j,m h′ , a k,j,m h′ ) < i 0
+
+i
+
+= H X
+
+> s,a
+
+X
+
+> k,j,m
+
+I
+
+h
+
+0 < N kh′ (s, a ) < i 0, (sk,j,m h′ , a k,j,m h′ ) = ( s, a )
+
+i
+
+= H X
+
+> s,a k1
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+(sk,j,m h′ , a k,j,m h′ ) = ( s, a )
+
+i
+
+= H X
+
+> s,a
+
+N k1+1  
+
+> h′
+
+(s, a )= H
+
+ X 
+
+> s,a
+
+N k1 
+
+> h′
+
+(s, a ) + X
+
+> s,a
+
+nk1 
+
+> h′
+
+(s, a )
+
+
+
+≤ HSAi 0 + M HSA ≤ 5M H 3SA. (47) Here, the first inequality is because N k1 
+
+> h′
+
+(s, a ) < i 0 and then nk1 
+
+> h′
+
+(s, a ) ≤ M by (c) of Lemma E.1. Finally, for the last term of Equation (45), by Equation (20) with α = 1 /2 and ωk,j,m h = 1 , we have 
+
+X
+
+> k,m,j
+
+s
+
+H3ιN kh′
+
+I
+
+h
+
+0 < N kh′ (sk,j,m h′ , a k,j,m h′ ) < M 
+
+i
+
+≤ 2M √H3SA √ι. (48) Applying Equation (46), Equation (47) and Equation (48) to Equation (45), we know 
+
+> H
+
+X
+
+> h′=1
+
+X
+
+> k,m,j
+
+Y k,j,m h′ ≲
+
+> H
+
+X
+
+> h′=1
+
+(M H 3SA + M √H3SA √ι) = M H 4SA + M √H5SA √ι. 
+
+F.3. Proof of Lemma 4.2 
+
+Proof. The following proof holds for both FedQ-Hoeffding algorithm and FedQ-Bernstein algorithm. To begin, note that 
+
+
+
+V ∗ 
+
+> 1
+
+− V πk
+
+> 1
+
+
+
+(sk,j,m  
+
+> 1
+
+) = V ∗ 
+
+> 1
+
+(sk,j,m  
+
+> 1
+
+) − Q∗
+
+> 1
+
+(sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+) + 
+
+
+
+Q∗ 
+
+> 1
+
+− Qπk
+
+> 1
+
+
+
+(sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+)= ∆ 1(sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+) + E
+
+h 
+
+V ∗ 
+
+> 2
+
+− V πk
+
+> 2
+
+
+
+(sk,j,m  
+
+> 2
+
+) | sk,j,m  
+
+> 2
+
+∼ P1(· | sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+)
+
+i
+
+= E
+
+h
+
+∆1(sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+) + ∆ 2(sk,j,m  
+
+> 2
+
+, a k,j,m  
+
+> 2
+
+) | sk,j,m  
+
+> 2
+
+∼ P1(· | sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+)
+
+i
+
++ E
+
+h 
+
+Q∗ 
+
+> 2
+
+− Qπk
+
+> 2
+
+
+
+(sk,j,m  
+
+> 2
+
+, a k,j,m  
+
+> 2
+
+) | sk,j,m  
+
+> 2
+
+∼ P1(· | sk,j,m  
+
+> 1
+
+, a k,j,m  
+
+> 1
+
+)
+
+i
+
+= · · · = E
+
+" HX
+
+> h=1
+
+∆h
+
+
+
+sk,j,m h , a k,j,m h
+
+
+
+sk,j,m h+1 ∼ Ph(· | sk,j,m h , a k,j,m h ), h ∈ [H − 1] 
+
+#
+
+.
+
+34 Gap-Dependent Bounds for Federated Q-Learning 
+
+Here the second equation is by Bellman equation and Bellman optimality equation Equation (3). Therefore, we can get another expression of the regret 
+
+E (Regret (T )) = E
+
+ X
+
+> k,j,m
+
+
+
+V ∗ 
+
+> 1
+
+− V πk
+
+> 1
+
+
+
+(sk,j,m  
+
+> 1
+
+)
+
+ = E
+
+ X
+
+> k,j,m H
+
+X
+
+> h=1
+
+∆h(sk,j,m h , a k,j,m h )
+
+ .
+
+By event G1 in Lemma F.1 (or G2 in Lemma F.2 for FedQ-Bernstein algorithm), 
+
+Qkh(sk,j,m h , a k,j,m h ) = max  
+
+> a
+
+{Qkh(sk,j,m h , a )} ≥ max  
+
+> a
+
+{Q∗
+
+> h
+
+(sk,j,m h , a )} = V ∗ 
+
+> h
+
+(sk,j,m h ).
+
+Thus, for any episode-step pair (k, h )∆h(sk,j,m h , a k,j,m h ) = clip 
+
+h
+
+V ∗ 
+
+> h
+
+(sk,j,m h ) − Q∗
+
+> h
+
+(sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+≤ clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+.
+
+which further implies 
+
+E (Regret (T )) ≤ E
+
+
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i .
+
+F.4. Bounding the Gap-Dependent Regret 
+
+The following proof holds for both FedQ-Hoeffding algorithm and FedQ-Bernstein algorithm (substituting G1 by G2). Let δ = 1 /T 1, we have: 
+
+E (Regret (T )) ≤ E
+
+
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+G1
+
+ P(G1)+ E
+
+
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+Gc
+
+> 1
+
+ P(Gc
+
+> 1
+
+)
+
+≤ O
+
+ H6SAι 
+
+∆min 
+
++ M √H7SA √ι + M H 5SA 
+
+
+
++ 1
+
+T1
+
+· HT 1
+
+= O
+
+ H6SAι 
+
+∆min 
+
++ M √H7SA √ι + M H 5SA 
+
+
+
+.
+
+The last inequality is because under the event G1 , we have 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+≤ O
+
+ H6SAι 
+
+∆min 
+
++ M H 5SA + M √H7SA √ι
+
+
+
+.
+
+by Lemma 4.1 with ϵ = ∆ min and under the event Gc
+
+> 1
+
+,
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+clip 
+
+h Qkh − Q∗
+
+> h
+
+ (sk,j,m h , a k,j,m h ) | ∆min 
+
+i
+
+≤ HT 1.
+
+Since ι = log( 2SAHT 1 
+
+> δ
+
+) = log(2 SAHT 21 ), by (e) of Lemma E.1, we have 
+
+ι ≤ 2 log(2 SAHT 1) ≤ 2 log 
+
+
+
+2SAH (2 ˆT + M HSA )
+
+
+
+≤ O
+
+
+
+log( SAH ˆT ) + log( M HSA )
+
+
+
+= O
+
+
+
+log( SA ˆT )
+
+
+
+. (49) 35 Gap-Dependent Bounds for Federated Q-Learning 
+
+The last inequality is because M, H ≤ ˆT . Therefore, applying Equation (49), we have 
+
+E (Regret (T )) ≤ O
+
+ H6SAι 
+
+∆min 
+
++ M √H7SA √ι + M H 5SA 
+
+
+
+≤ O
+
+ H6SA log( M SAT )∆min 
+
++ M √H7SA plog( M SAT ) + M H 5SA 
+
+
+
+.
+
+## G. Proofs of Theorem 3.3 
+
+G.1. Probability Events Lemma G.1. Let ι′ = log( 2M SAHT 1 
+
+> δ
+
+) with δ ∈ (0 , 1) . Then we have the following conclusion: (a) With probability at least 1 − δ, the following event holds: 
+
+E1 =
+
+
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+(Qkh − Q⋆h)( sk,m,j h , a k,m,j h ) ≥ ∆min 
+
+i
+
+≲ Cmin 
+
+ .
+
+(b) For any given deterministic optimal policy π∗, with probability at least 1 − δ, the following event holds: 
+
+E2 =
+
+
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 3
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )
+
+i
+
++ 2 ι, ∀h ∈ [H], k ′ ∈ [K]
+
+ .
+
+(c) For any k′ ∈ [K], let Rk′ = Pk′
+
+> k=1
+
+P 
+
+> j,m
+
+1, which is the total number of episodes in the first k′ rounds. Then with probability at least 1 − δ, the following event holds: 
+
+E3 =
+
+
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+n
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− P
+
+
+
+sk,j,m h = s|πko 
+
+≤
+
+vuuut24 
+
+
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s|πk
+
+ ι + 9 ι, ∀s′ ∈ S , h ∈ [H], k ′ ∈ [K]
+
+ .
+
+(d) With probability at least 1 − δ, the following event holds: 
+
+E4 =
+
+
+
+> Jk
+
+X
+
+> j=1
+
+n
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− P
+
+
+
+sk,j,m h = s|πko 
+
+≤
+
+vuuut24 
+
+
+
+> Jk
+
+X
+
+> j=1
+
+P
+
+
+
+sk,j,m h = s|πk
+
+ ι′ + 9 ι′, ∀s ∈ S , h ∈ [H], k ∈ [K], m ∈ [M ]
+
+ .
+
+Here, under the full synchronization assumption, we can assume in k-th round, each agent will generate Jk episodes. Note that given the round k and the policy πk, the probability P(sk,j,m h = s|πk) is independent of the index m, j . Let 
+
+Pks,h = P(sk,j,m h = s|πk), then E4 can be written as 
+
+E4 =
+
+
+
+> Jk
+
+X
+
+> j=1
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− JkPks,h ≤
+
+q
+
+24 JkPks,h ι′ + 9 ι′, ∀s ∈ S , h ∈ [H], k ∈ [K], m ∈ [M ]
+
+ .
+
+36 Gap-Dependent Bounds for Federated Q-Learning 
+
+Proof. (a) It is proved by Lemma 4.1. (b) We order all the episodes in the sequence following the rule: first by round index, second by episode index, and third by agent index. Let n(k, j, m ) denote the position of the j-th episode of the m-th agent in the k-th round of the sequence. The filtration Fn(k,j,m ) is the σ-field generated by all the random variables until the first n(k, j, m ) − 1 episodes. When there is no ambiguity, we will abbreviate n(k, j, m ) as n and Fn(k,j,m ) as Fn. Then we have: 
+
+P
+
+
+
+ak,j,m h′̸ = π∗ 
+
+> h′
+
+(sk,j,m h′ ) | πk
+
+= P
+
+
+
+ak,j,m h′̸ = π∗ 
+
+> h′
+
+(sk,j,m h′ ) | F n
+
+
+
+.
+
+According to Lemma D.2, with probability at least 1 − δ/T 21 , the following inequality holds for any given h = h′ ∈ [H],
+
+k′ = k′ 
+
+> 0
+
+∈ [ T1 
+
+> H
+
+] and Rk′ 
+
+> 0
+
+= Pk′
+
+> 0
+> k=1
+
+P 
+
+> j,m
+
+1 ∈ [T1] :
+
+> k′
+> 0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+ak,j,m h′̸ = π∗ 
+
+> h′
+
+(sk,j,m h′ ) | πk
+
+≤ 3I
+
+
+
+ak,j,m h′̸ = π∗ 
+
+> h′
+
+(sk,j,m h′ )
+
+
+
++ 2 ι, ∀k′ ∈ [K].
+
+Considering all the possible values of h = h′ ∈ [H], k′ = k′ 
+
+> 0
+
+∈ [ T1 
+
+> H
+
+] and Rk′ 
+
+> 0
+
+= Pk′
+
+> 0
+> k=1
+
+P 
+
+> j,m
+
+1 ∈ [T1], with probability at least 1 − δ, it holds simultaneously for all h ∈ [H], k′ ∈ [ T1 
+
+> H
+
+] and Rk′ = Pk′
+
+> k=1
+
+P 
+
+> j,m
+
+1 ∈ [T1] that 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 3
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )
+
+
+
++ 2 ι. 
+
+(c) According to Lemma D.1, with probability at least 1 − δ/ST 21 , the following inequality holds for any given s′ ∈ S ,
+
+h = h′ ∈ [H], k′ = k′ 
+
+> 0
+
+∈ [ T1 
+
+> H
+
+] and Rk′ 
+
+> 0
+
+= Pk′
+
+> 0
+> k=1
+
+P 
+
+> j,m
+
+1 ∈ [T1] :
+
+> k′
+> 0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+n
+
+I
+
+h
+
+sk,j,m h′ = s′i
+
+− P
+
+
+
+sk,j,m h′ = s′|πko 
+
+≤
+
+vuuut24 
+
+
+
+> k′
+> 0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h′ = s′|πk
+
+ ι + 9 ι. 
+
+Here, we let σ2 = T1, m = ⌈log 2(T1)⌉ in Lemma D.1 and 
+
+Wn =
+
+> k′
+> 0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h′ = s′|πk  
+
+1 − P
+
+
+
+sk,j,m h′ = s′|πk 
+
+≤
+
+> k′
+> 0
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h′ = s′|πk
+
+.
+
+Considering all the possible values of s = s′ ∈ S , h = h′ ∈ [H], k′ = k′ 
+
+> 0
+
+∈ [ T1 
+
+> H
+
+], ˆT = T ′ ∈ [T1], with probability at least 
+
+1 − δ, it holds simultaneously for all s ∈ S , h ∈ [H], k′ ∈ [ T1 
+
+> H
+
+] and ˆT ∈ [T1] that 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+n
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− P
+
+
+
+sk,j,m h = s|πko 
+
+≤
+
+vuuut24 
+
+
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s|πk
+
+ ι + 9 ι. 
+
+(d) The proof is similar to (c) by considering all the combinations of (s, h, m, k, R k) ∈ S × [H] × [M ] × [ T1 
+
+> H
+
+] × [T1].
+
+G.2. Proof of Lemma 5.1 
+
+Proof. The event G1 ∩ E 1 ∩ E 2 holds with probability at least 1 − 3δ. Next we will prove Lemma 5.1 under the event 
+
+G1 ∩ E 1 ∩ E 2. (For FedQ-Bernstein algorithm, we will prove Lemma 5.1 under the event G2 ∩ E 1 ∩ E 2.) For any h ∈ [H], let set Dh be all triples of (s, a, h ) such that a / ∈ A ⋆h(s), that is: 
+
+Dh = {(s, a, h )|a / ∈ A ⋆h(s)}.
+
+37 Gap-Dependent Bounds for Federated Q-Learning 
+
+We also let the set D = SHh=1 Dh and the set 
+
+Dopt = {(s, a, h )|a ∈ A ⋆h(s)}.
+
+Then we have |D| + |Dopt | = SAH .If for given (h, k, j, m ), (sk,m,j h , a k,m,j h , h ) ∈ Dh, we have ∆h(sk,m,j h , a k,m,j h ) ≥ ∆min . By event G1 in Lemma F.1 (or G2
+
+in Lemma F.2 for FedQ-Bernstein algorithm), 
+
+Qkh(sk,j,m h , a k,j,m h ) = max  
+
+> a
+
+{Qkh(sk,j,m h , a )} ≥ max  
+
+> a
+
+{Q∗
+
+> h
+
+(sk,j,m h , a )} = V ∗ 
+
+> h
+
+(sk,j,m h ).
+
+Therefore, it holds that 
+
+Qkh(sk,m,j h , a k,m,j h ) − Q⋆h(sk,m,j h , a k,m,j h ) ≥ ∆h(sk,m,j h , a k,m,j h ) ≥ ∆min .
+
+Then we have 
+
+I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+= I
+
+h
+
+(sk,m,j h , a k,m,j h , h ) ∈ Dh
+
+i
+
+≤ I
+
+h
+
+Qkh(sk,m,j h , a k,m,j h ) − Q⋆h(sk,m,j h , a k,m,j h ) ≥ ∆min 
+
+i
+
+,
+
+and thus by the event E1 in Lemma G.1, it holds that 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+≤
+
+> H
+
+X
+
+> h=1
+
+X
+
+> k,j,m
+
+I
+
+h
+
+Qkh(sk,m,j h , a k,m,j h ) − Q⋆h(sk,m,j h , a k,m,j h ) ≥ ∆min 
+
+i
+
+≤ Cmin . (50) Next we prove the second conclusion. Let S0 
+
+> h
+
+= {s | P∗ 
+
+> s,h
+
+= 0 }. For any given deterministic optimal policy π∗, we have 
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+= I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ), s k,j,m h /∈ S 0
+
+> h
+
+i
+
++ I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ), s k,j,m h ∈ S 0
+
+> h
+
+i
+
+. (51) For sk,j,m h /∈ S 0
+
+> h
+
+, we have P∗  
+
+> sk,j,m h,h
+
+> 0 and |A ∗
+
+> h
+
+(sk,j,m h )| = 1 by condition (b) of Definition 3.2. This means π∗
+
+> h
+
+(sk,j,m h ) is the only element in A∗
+
+> h
+
+(sk,j,m h ). Therefore, we have 
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ), s k,j,m h /∈ S 0
+
+> h
+
+i
+
+≤ I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+. (52) For the second term in Equation (51), if h = 1 , because of the randomness of the selection of sk,j,m  
+
+> 1
+
+, we have P(s1 =
+
+sk,j,m  
+
+> 1
+
+|π∗) = P(s1 = sk,j,m  
+
+> 1
+
+) > 0 and then 
+
+I
+
+h
+
+ak,j,m 
+
+> 1
+
+̸ = π∗ 
+
+> 1
+
+(sk,j,m  
+
+> 1
+
+), s k,j,m  
+
+> 1
+
+∈ S 01
+
+i
+
+= 0 . (53) To bound the second term in Equation (51) for h > 1, we first prove a lemma. 
+
+Lemma G.2. For any h ∈ [H] and the trajectory {(sk,j,m h , a k,j,m h , r k,j,m h )}Hh=1 in j-th episode of agent m in round k, if 
+
+P∗  
+
+> sk,j,m h,h
+
+> 0 and ak,j,m h is the unique optimal action for state sk,j,m h at step h, then P∗  
+
+> sk,j,m h+1 ,h +1
+
+> 0
+
+Proof. For any given optimal policy π∗, it holds that 
+
+P∗  
+
+> sk,j,m h+1 ,h +1
+
+= P
+
+
+
+sh+1 = sk,j,m h+1 | π∗
+
+≥ P
+
+
+
+sh+1 = sk,j,m h+1 | sh = sk,j,m h , a h = ak,j,m h , π ∗
+
+× P
+
+
+
+sh = sk,j,m h , a h = ak,j,m h | π∗
+
+> (I)
+
+= P
+
+
+
+sh+1 = sk,j,m h+1 | sh = sk,j,m h , a h = ak,j,m h
+
+
+
+× P∗  
+
+> sk,j,m h,h
+
+> 0
+
+The equation (I) is by Markov property and P(sh = sk,j,m h , a h = ak,j,m h | π∗) = P(sh = sk,j,m h | π∗) = P∗ 
+
+> sk,j,m h,h
+
+.38 Gap-Dependent Bounds for Federated Q-Learning 
+
+For every initial state sk,j,m  
+
+> 1
+
+, we know P∗  
+
+> sk,j,m
+> 1,1
+
+> 0. Therefore, if for h > 1, P∗  
+
+> sk,j,m h,h
+
+= 0 and sk,j,m h ∈ S 0
+
+> h
+
+, by Lemma G.2, we know there exists h′ < h such that ak,m,j h′ is not an optimal action for state sk,m,j h′ at step h′, otherwise we have P∗  
+
+> sk,j,m h,h
+
+> 0. Therefore, for the second term in Equation (51), we have 
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ), s k,j,m h ∈ S 0
+
+> h
+
+i
+
+≤ I
+
+h
+
+sk,j,m h ∈ S 0
+
+> h
+
+i
+
+≤
+
+> h−1
+
+X
+
+> h′=1
+
+I
+
+h
+
+ak,j,m h′ /∈ A ∗ 
+
+> h′
+
+(sk,j,m h′ )
+
+i
+
+. (54) By combining the results of Equation (52), Equation (53) and Equation (54), we can bound the Equation (51) as follows: 
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+≤
+
+> h
+
+X
+
+> h′=1
+
+I
+
+h
+
+ak,j,m h′ /∈ A ∗ 
+
+> h′
+
+(sk,j,m h′ )
+
+i
+
+≤
+
+> H
+
+X
+
+> h′=1
+
+I
+
+h
+
+ak,j,m h′ /∈ A ∗ 
+
+> h′
+
+(sk,j,m h′ )
+
+i
+
+.
+
+Therefore, using the first conclusion, Equation (50), we reach 
+
+X
+
+> k,j,m
+
+I
+
+h
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+≤ X
+
+> k,j,m H
+
+X
+
+> h′=1
+
+I
+
+h
+
+ak,j,m h′ /∈ A ∗ 
+
+> h′
+
+(sk,j,m h′ )
+
+i
+
+≤ Cmin 
+
+By combining this inequality with the event E2 in Lemma G.1, we can conclude that for any h ∈ [H] and k′ ∈ [K],
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 4Cmin .
+
+G.3. Proof of Lemma 5.2 
+
+Proof. The event G1 ∩ (T4 
+
+> i=1
+
+Ei) holds with probability at least 1 − 5δ. Next we will prove Lemma 5.1 under the event 
+
+G1 ∩ (T4 
+
+> i=1
+
+Ei). (For FedQ-Bernstein algorithm, we will prove Lemma 5.1 under the event G2 ∩ (T4 
+
+> i=1
+
+Ei).) Under the event G1 ∩ (T4 
+
+> i=1
+
+Ei) (or G2 ∩ (T4 
+
+> i=1
+
+Ei)), we have already proved the Lemma 5.1 in Appendix G.2. Because N kh (s0, a 0) > i 1 + i2 > C min , by Lemma 5.1, we know a0 ∈ A ∗
+
+> h
+
+(s0). Next we prove the second conclusion. Using the law of total probability, for any 0 ≤ h ≤ H − 1, s ∈ S and any given deterministic optimal policy π∗, we have the following relationship 
+
+P sk,j,m h+1 = s | πk = X
+
+> s′
+
+P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′), π k
+
+P
+
+
+
+sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′) | πk
+
++ P
+
+
+
+sk,j,m h+1 = s, a k,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+= X
+
+> s′
+
+Pk,j,m s,s ′,h · P
+
+
+
+sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′) | πk
+
++ P
+
+
+
+sk,j,m h+1 = s, a k,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+,
+
+(55) where 
+
+Pk,j,m s,s ′,h = P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′), π k
+
+= P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′)
+
+
+
+.
+
+The last equality is because of Markov property. We also have 
+
+P
+
+
+
+sk,j,m h+1 = s|π∗
+
+= X
+
+> s′
+
+P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, π ∗
+
+P
+
+
+
+sk,j,m h = s′|π∗
+
+= X
+
+> s′
+
+Pk,j,m s,s ′,h · P
+
+
+
+sk,j,m h = s′|π∗
+
+, (56) where the last equation is because 
+
+P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, π ∗
+
+= P
+
+
+
+sk,j,m h+1 = s|sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′)
+
+
+
+= Pk,j,m s,s ′,h .
+
+39 Gap-Dependent Bounds for Federated Q-Learning 
+
+Combining the results of Equation (55) and Equation (56), then it holds 
+
+P
+
+
+
+sk,j,m h+1 = s|πk
+
+− P
+
+
+
+sk,j,m h+1 = s|π∗
+
+= X
+
+> s′
+
+Pk,j,m s,s ′,h 
+
+h
+
+P
+
+
+
+sk,j,m h = s′, a k,j,m h = π∗
+
+> h
+
+(s′)|πk
+
+− P
+
+
+
+sk,j,m h = s′|π∗i 
+
++ P
+
+
+
+sk,j,m h+1 = s, a k,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h )|πk
+
+= X
+
+> s′
+
+Pk,j,m s,s ′,h 
+
+h
+
+P
+
+
+
+sk,j,m h = s′ | πk
+
+− P
+
+
+
+sk,j,m h = s′|π∗i 
+
+− X
+
+> s′
+
+Pk,j,m s,s ′,h · P
+
+
+
+sk,j,m h = s′, a k,j,m h̸ = π∗
+
+> h
+
+(s′) | πk
+
++ P
+
+
+
+sk,j,m h+1 = s, a k,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+.
+
+Therefore for any 0 ≤ h ≤ H − 1 and s ∈ S , by the triangle inequality, it holds that 
+
+P
+
+
+
+sk,j,m h+1 = s | πk
+
+− P
+
+
+
+sk,j,m h+1 = s|π∗
+
+≤ X
+
+> s′
+
+Pk,j,m s,s ′,h P
+
+
+
+sk,j,m h = s′ | πk
+
+− P
+
+
+
+sk,j,m h = s′|π∗
+
++ X
+
+> s′
+
+Pk,j,m s,s ′,h · P
+
+
+
+sk,j,m h = s′, a k,j,m h̸ = π∗
+
+> h
+
+(s′) | πk
+
++ P
+
+
+
+sk,j,m h+1 = s, a k,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+. (57) Summing Equation (57) for all s ∈ S , since P 
+
+> s
+
+Ps,s ′,h = 1 , then we can derive the following recursive relationship: 
+
+X
+
+> s
+
+P
+
+
+
+sk,j,m h+1 = s | πk
+
+− P
+
+
+
+sk,j,m h+1 = s|π∗
+
+≤ X
+
+> s′
+
+P
+
+
+
+sk,j,m h = s′ | πk
+
+− P
+
+
+
+sk,j,m h = s′|π∗
+
++ 2 P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+.
+
+Since P(sk,j,m  
+
+> 1
+
+= s | πk) − P(sk,j,m  
+
+> 1
+
+= s|π∗) = 0 , by recursion, for any h′ ∈ [H] we can get the following conclusion 
+
+X
+
+> s
+
+P
+
+
+
+sk,j,m h′ = s | πk
+
+− P
+
+
+
+sk,j,m h′ = s|π∗
+
+≤ 2
+
+> h′−1
+
+X
+
+> h=1
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 2
+
+> H
+
+X
+
+> h=1
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+. (58) Applying Equation (10) in Lemma 5.1 to Equation (58), then for any h ∈ [H] and k′ ∈ [K], it holds that: 
+
+X
+
+> sk′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s | πk
+
+− P
+
+
+
+sk,j,m h = s|π∗
+
+≤ 2
+
+> H
+
+X
+
+> h=1
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+ak,j,m h̸ = π∗
+
+> h
+
+(sk,j,m h ) | πk
+
+≤ 8HC min .
+
+Based on the property (b) of Definition 3.2, we have P(sk,j,m h = s|π∗) = P∗
+
+> s,h
+
+, then for any s ∈ S , h ∈ [H] and k′ ∈ [K],we also have 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s | πk
+
+− Rk′ P∗ 
+
+> s,h
+
+≤
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s | πk
+
+− P
+
+
+
+sk,j,m h = s|π∗
+
+≤ 8HC min . (59) and thus by the triangle inequality 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+P
+
+
+
+sk,j,m h = s | πk
+
+≤ Rk′ P∗ 
+
+> s,h
+
++ 8 HC min . (60) Applying Equation (60) to E3 in Lemma G.1, for any s ∈ S , h ∈ [H] and k′ ∈ [K], we have 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+n
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− P
+
+
+
+sk,j,m h = s|πko 
+
+≤
+
+r
+
+24 
+
+
+
+Rk′ P∗ 
+
+> s,h
+
++ 8 HC min 
+
+
+
+ι + 9 ι
+
+≤ 5
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι + 23 HC min . (61) 40 Gap-Dependent Bounds for Federated Q-Learning 
+
+Combining the results of Equation (59) and Equation (61), by triangle inequality, we can derive the following relationship for any s ∈ S , h ∈ [H] and k′ ∈ [K]
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− Rk′ P∗ 
+
+> s,h
+
+≤ 5
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι + 31 HC min . (62) Then by triangle inequality, it holds for any s ∈ S , h ∈ [H] and k′ ∈ [K] that 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h ∈ A ∗
+
+> h
+
+(s)
+
+i
+
+− Rk′ P∗
+
+> s,h
+
+≤
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+− Rk′ P∗ 
+
+> s,h
+
++
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h /∈ A ∗
+
+> h
+
+(s)
+
+i
+
+≤ 5
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι + 32 HC min .
+
+Here, the last inequality is by Equation (62) and also the fact that 
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h /∈ A ∗
+
+> h
+
+(s)
+
+i
+
+≤
+
+> k′
+
+X
+
+> k=1
+
+X
+
+> j,m
+
+I
+
+h
+
+ak,j,m h /∈ A ∗
+
+> h
+
+(sk,j,m h )
+
+i
+
+≤ Cmin 
+
+due to Equation (9) in Lemma 5.1. 
+
+G.4. Proof of Lemma 5.3 
+
+Proof. The event E4 holds with probability at least 1 − δ. Next we will prove Lemma 5.3 under the event E4.If the trigger condition is met by the triple (s, a, h ) in round k, then we have a = πkh(s). For such (s, a, h ), by E4 in Lemma G.1, it holds for any s ∈ S , h ∈ [H], k ∈ [K] and m ∈ [M ] that 
+
+> Jk
+
+X
+
+> j=1
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h = a
+
+i
+
+=
+
+> Jk
+
+X
+
+> j=1
+
+I
+
+h
+
+sk,j,m h = s
+
+i
+
+∈
+
+h
+
+JkPks,h −
+
+q
+
+24 JkPks,h ι′ − 9ι′, J kPks,h +
+
+q
+
+24 JkPks,h ι′ + 9 ι′i
+
+.
+
+(63) Since (s, a, h ) satisfies the trigger condition in round k, there exists an agent m0 such that nk,m 0 
+
+> h
+
+(s, a ) = ckh(s, a ). Then we reach 
+
+JkPks,h +
+
+q
+
+24 JkPks,h ι′ + 9 ι′ (I) 
+
+≥ N kh (s, a )
+
+M H (H + 1) − 1 △
+
+= CN > 199 ι′.
+
+The last inequality is because N kh (s, a ) > i 1. Solving the inequality (I) , we can get the following relationship 
+
+q
+
+JkPks,h ≥ pCN − 3ι′ − √6ι′.
+
+Then by Equation (63), for any other agent m,
+
+> Jk
+
+X
+
+> j=1
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h = a
+
+i
+
+≥ JkPks,h −
+
+q
+
+24 JkPks,h ι′ − 9ι′ =
+
+q 
+
+JkPks,h − √6ι′
+
+2
+
+− 15 ι′
+
+≥
+
+p CN − 3ι′ − 2√6ι′
+
+2
+
+− 15 ι′ ≥ CN + 1 3 .
+
+The last inequality is because CN > 199 ι′. Therefore, we have 
+
+nkh(s, a ) = 
+
+> M
+
+X
+
+> m=1
+
+nm,k h (s, a ) = 
+
+> M
+
+X
+
+> m=1
+> Jk
+
+X
+
+> j=1
+
+I
+
+h
+
+sk,j,m h = s, a k,j,m h = a
+
+i
+
+≥ M (CN + 1) 3 = N kh (s, a )3H(H + 1) ,
+
+41 Gap-Dependent Bounds for Federated Q-Learning 
+
+and thus 
+
+N k+1  
+
+> h
+
+(s, a ) = N kh (s, a ) + nkh(s, a ) ≥
+
+
+
+1 + 13H(H + 1) 
+
+
+
+N kh (s, a ).
+
+G.5. Proof of Lemma 5.4 
+
+Proof. The event G1 ∩ (T4 
+
+> i=1
+
+Ei) holds with probability at least 1 − 5δ. Next we will prove Lemma 5.4 under the event 
+
+G1 ∩ (T4 
+
+> i=1
+
+Ei). (For FedQ-Bernstein algorithm, we will prove Lemma 5.4 under the event G2 ∩ (T4 
+
+> i=1
+
+Ei).) Under the event G1 ∩ (T4 
+
+> i=1
+
+Ei) (or G2 ∩ (T4 
+
+> i=1
+
+Ei)), we have already proved the Lemma 5.1, Lemma 5.2 and Lemma 5.3. For P ∗ 
+
+> s,h
+
+> 0, the optimal action is unique. Then for any (s, a, h ) such that a = π∗
+
+> h
+
+(s) and P ∗ 
+
+> s,h
+
+> 0, we can simplify the results of Lemma 5.2 to the following equation 
+
+Rk′ P∗ 
+
+> s,h
+
+− 5
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι − 32 HC min ≤ N k′+1  
+
+> h
+
+(s, a ) ≤ Rk′ P∗ 
+
+> s,h
+
++ 5 
+
+q
+
+Rk′ P∗
+
+> s,h
+
+ι + 32 HC min . (64) By Equation (64), for any s′ ∈ S and h′ ∈ [H] such that P∗ 
+
+> s′,h ′
+
+> 0, we have 
+
+RkP∗ 
+
+> s′,h ′
+
+− 5
+
+q
+
+RkP∗ 
+
+> s′,h ′
+
+ι − 32 HC min 
+
+Rk−1P∗ 
+
+> s′,h ′
+
++ 5 
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+ι + 32 HC min 
+
+≤ N k+1  
+
+> h′
+
+(s′, π ∗ 
+
+> h′
+
+(s′)) 
+
+N kh′ (s′, π ∗ 
+
+> h′
+
+(s′)) .
+
+To prove the second conclusion, we only need to prove that, for any s′ ∈ S and h′ ∈ [H] such that P∗ 
+
+> s′,h ′
+
+> 0,
+
+RkP∗ 
+
+> s′,h ′
+
+− 5
+
+q
+
+RkP∗ 
+
+> s′,h ′
+
+ι − 32 HC min 
+
+Rk−1P∗ 
+
+> s′,h ′
+
++ 5 
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+ι + 32 HC min 
+
+≥ 1 + 16H(H + 1) . (65) Next, we will prove the Equation (65). For the triple (s0, a 0, h 0), by Equation (64), we know that 
+
+6500 H3Cmin 
+
+Cst 
+
+< N kh0 (s0, a 0) ≤ Rk−1P∗ 
+
+> s0,h 0
+
++ 5 
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+ι + 32 HC min .
+
+Solving the inequality, we have 
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+>
+
+s
+
+6500 H3Cmin 
+
+Cst 
+
+− 32 HC min + 25 ι
+
+4 − 5√ι
+
+2
+
+> (I)
+
+>
+
+s
+
+6468 H3Cmin 
+
+Cst 
+
+−
+
+s
+
+H3Cmin 
+
+Cst 
+
+> 79 
+
+s
+
+H3Cmin 
+
+Cst 
+
+> 79 pH3Cmin . (66) and then 
+
+q
+
+RkP∗ 
+
+> s0,h 0
+
+>
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+> 79 pH3Cmin . (67) Here, the inequality (I) is because 25 ι 
+
+> 4
+
+< H 3Cmin for H ≥ 2 and 0 < C st ≤ 1. Therefore, for any s′ ∈ S and h′ ∈ [H]
+
+such that P∗ 
+
+> s′,h ′
+
+, we have 
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+=
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+·
+
+s P∗
+
+> s′,h ′
+
+P∗
+
+> s0,h 0
+
+≥
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+· pCst = 79 pH3Cmin , (68) 42 Gap-Dependent Bounds for Federated Q-Learning 
+
+and thus q
+
+RkP∗ 
+
+> s′,h ′
+
+>
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+> 79 pH3Cmin . (69) For X > 6241 H3Cmin = 79 2H3Cmin , note that 
+
+5√Xι + 32 HC min ≤
+
+r Cmin XH + 32 HC min ≤ X
+
+56 H2 . (70) Here, the first inequality is because 5√ι < 
+
+q Cmin  
+
+> H
+
+for H ≥ 2. Therefore, based on Equation (66), Equation (67), Equation (68) and Equation (69), we can apply Equation (70) for Rk−1P∗ 
+
+> s0,h
+
+and RkP∗
+
+> s0,h
+
+, Rk−1P∗ 
+
+> s′,h
+
+and RkP∗
+
+> s′,h
+
+respectively: 
+
+5
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+ι + 32 HC min ≤ Rk−1P∗
+
+> s0,h 0
+
+56 H2 , 5
+
+q
+
+RkP∗ 
+
+> s0,h 0
+
+ι + 32 HC min ≤ RkP∗
+
+> s0,h 0
+
+56 H2 . (71) and 
+
+5
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+ι + 32 HC min ≤ Rk−1P∗
+
+> s′,h ′
+
+56 H2 , 5
+
+q
+
+RkP∗ 
+
+> s′,h ′
+
+ι + 32 HC min ≤ RkP∗
+
+> s′,h ′
+
+56 H2 (72) Since N kh (s0, a 0) > i 1 and the trigger condition is satisfied by (s, a, h ) in round k, by Lemma 5.3, we have: 
+
+N k+1  
+
+> h0
+
+(s0, a 0)
+
+N kh0 (s0, a 0) ≥ 1 + 13H(H + 1) .
+
+Together with Equation (64), it holds that 
+
+RkP∗ 
+
+> s0,h 0
+
++ 5 
+
+q
+
+RkP∗ 
+
+> s0,h 0
+
+ι + 32 HC min 
+
+Rk−1P∗ 
+
+> s0,h 0
+
+− 5
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+ι − 32 HC min 
+
+≥ N k+1  
+
+> h0
+
+(s0, a 0)
+
+N kh0 (s0, a 0) ≥ 1 + 13H(H + 1) . (73) Applying Equation (71) to Equation (73), we have 
+
+1 + 13H(H + 1) ≤
+
+RkP∗ 
+
+> s0,h 0
+
++ 5 
+
+q
+
+RkP∗ 
+
+> s0,h 0
+
+ι + 32 HC min 
+
+Rk−1P∗ 
+
+> s0,h 0
+
+− 5
+
+q
+
+Rk−1P∗ 
+
+> s0,h 0
+
+ι − 32 HC min 
+
+≤ (1 + 156 H2 )Rk
+
+(1 − 156 H2 )Rk−1
+
+.
+
+Therefore, we know 
+
+Rk
+
+Rk−1
+
+≥
+
+
+
+1 + 13H(H + 1) 
+
+ 1 − 156 H2
+
+1 + 156 H2
+
+. (74) Using Equation (72), we have 
+
+RkP∗ 
+
+> s′,h ′
+
+− 5
+
+q
+
+RkP∗ 
+
+> s′,h ′
+
+ι − 32 HC min 
+
+Rk−1P∗ 
+
+> s′,h ′
+
++ 5 
+
+q
+
+Rk−1P∗ 
+
+> s′,h ′
+
+ι + 32 HC min 
+
+≥ (1 − 156 H2 )Rk
+
+(1 + 156 H2 )Rk−1
+
+≥
+
+
+
+1 + 13H(H + 1) 
+
+  1 − 156 H2
+
+1 + 156 H2
+
+2
+
+. (75) The last inequality is by Equation (74). Let 
+
+c =1 −
+
+q 6H2+6 H+1 6H2+6 H+2 
+
+1 + 
+
+q 6H2+6 H+1 6H2+6 H+2 
+
+.
+
+Then we have 
+
+c = 16H2 + 6 H + 2 ·
+
+ 11 + 
+
+q 6H2+6 H+1 6H2+6 H+2 
+
+
+
+> 2
+
+> 14(6 H2 + 6 H + 2) ≥ 156 H2 ,
+
+43 Gap-Dependent Bounds for Federated Q-Learning 
+
+and thus 1 + 16H(H+1) 
+
+1 + 13H(H+1) 
+
+= 6H2 + 6 H + 1 6H2 + 6 H + 2 =
+
+ 1 − c
+
+1 + c
+
+2
+
+≤
+
+ 1 − 156 H2
+
+1 + 156 H2
+
+2
+
+.
+
+Applying this inequality to Equation (75) completes the proof of Equation (65), thereby proving the second conclusion. 
+
+G.6. Details of Final Discussion 
+
+The event G1 ∩ (T4 
+
+> i=1
+
+Ei) (or G2 ∩ (T4 
+
+> i=1
+
+Ei)) holds with probability at least 1 − 5δ. Under the event G1 ∩ (T4 
+
+> i=1
+
+Ei) (or 
+
+G2 ∩ (T4 
+
+> i=1
+
+Ei)), we have proved Lemma 5.3 and Lemma 5.4. Next, we will discuss the number of communication rounds and consider four different situations: 1. In round k, the trigger condition is satisfied by (s, a, h ) when N kh (s, a ) ≤ i1. We will refer to this as a Type-I trigger. For each time the trigger condition is met for (s, a, h ) , the number of visits to (s, a, h ) increases by at least 
+
+1/(2 M H (H + 1)) times. Specifically, when the trigger condition is first satisfied, the visit number increases from 0 to at least 1. Therefore, the maximum number of Type-I triggers for each triple (s, a, h ), denoted t2(s, a, h ), satisfies 
+
+
+
+1 + 12M H (H + 1) 
+
+t1(s,a,h )−2
+
+≤ i1.
+
+Therefore, we have 
+
+t1(s, a, h ) ≤ log( i1)log(1 + 12M H (H+1) ) + 2 = O(M H 2 log( i1)) .
+
+and thus the number of rounds with Type-I triggers is bounded by 
+
+X
+
+> s,a,h
+
+t1(s, a, h ) ≤ O  M H 3SA log ( i1) . (76) 2. In round k, the triple (s, a, h ) satisfies the trigger condition when i1 < N kh (s, a ) < i 1 + i2. We will refer to this as a Type-II trigger if a / ∈ A ∗
+
+> h
+
+(s) or a ∈ A ∗
+
+> h
+
+(s) and P∗ 
+
+> s,h
+
+= 0 , and as a Type-III trigger if a ∈ A ∗
+
+> h
+
+(s) and P∗ 
+
+> s,h
+
+> 0.By Lemma 5.3, for each time the trigger condition is satisfied by (s, a, h ) , the number of visits to (s, a, h ) increases by at least 1/3H(H + 1) times. For (s, a, h ) satisfying the type-II trigger, by Equation (9) in Lemma 5.1 and Lemma 5.2, we know that the maximum visit number to (s, a, h ) is 32 HC min . Therefore, the maximum number of Type-II triggers for each triple (s, π ∗
+
+> h
+
+(s), h ),denoted t2(s, a, h ), satisfies 
+
+
+
+1 + 13H(H + 1) 
+
+t2(s,a,h )−1
+
+≤ 32 HC min 
+
+i1
+
+≤ O
+
+ M H 7SAι M H 2ι′∆2min 
+
+
+
+= O
+
+ H5SA 
+
+∆2min 
+
+
+
+.
+
+Therefore, we have 
+
+t2(s, a, h ) ≤
+
+log 
+
+ H5SA 
+
+> ∆2min
+
+
+
+log 
+
+
+
+1 + 13H(H+1) 
+
+ + 1 = O
+
+
+
+H2 log 
+
+ H5SA 
+
+∆2min 
+
+ 
+
+.
+
+and thus the number of rounds with Type-II triggers is bounded by 
+
+X
+
+> s,a,h
+
+t2(s, a, h ) ≤ O
+
+
+
+H3SA log 
+
+ H5SA 
+
+∆2min 
+
+ 
+
+. (77) 3. By condition (b) of Definition 3.2, we know a = π∗
+
+> h
+
+(s) for a Type-III trigger. Therefore, the maximum number of Type-III triggers for each triple (s, π ∗
+
+> h
+
+(s), h ), denoted t3(s, π ∗
+
+> h
+
+(s), h ), satisfies 
+
+
+
+1 + 13H(H + 1) 
+
+t3(s,π ∗
+
+> h(s),h )−1
+
+≤ i1 + i2
+
+i1
+
+≤ i2.
+
+44 Gap-Dependent Bounds for Federated Q-Learning 
+
+Therefore, we have 
+
+t3(s, π ∗
+
+> h
+
+(s), h ) ≤ log( i2)log 
+
+
+
+1 + 13H(H+1) 
+
+ + 1 = O(H2 log( i2)) .
+
+Because we only have HS triples of (s, π ∗
+
+> h
+
+(s), h ), the number of rounds with Type-III triggers is bounded by 
+
+X
+
+> s, P∗
+> s,h >0
+
+t3(s, π ∗
+
+> h
+
+(s), h ) ≤ O  H3S log ( i2) . (78) 4. The trigger condition is satisfied by (s, a, h ) in round k when N kh (s, a ) > i 1 + i2.By Lemma 5.3, in this case, for each time the trigger condition is satisfied by (s, a, h ) , we have a ∈ A ∗
+
+> h
+
+(s). we will first prove the trigger condition cannot be satisfied by (s, a, h ) in round k when a ∈ A ∗
+
+> h
+
+(s), P∗ 
+
+> s,h
+
+= 0 and 
+
+N kh (s, a ) > i 1 + i2.Let S0 = {(s, a, h ) | a ∈ A ∗
+
+> h
+
+(s), P∗ 
+
+> s,h
+
+= 0 }. By Lemma 5.2, we know for (s, a, h ) ∈ S 0, N K+1  
+
+> h
+
+(s, a ) ≤ 32 HC min <i1 + i2. However, when the trigger condition is satisfied by (s, a, h ) in round k, we have N kh (s, a ) > i 1 + i2, which is contradicts the fact that N K+1  
+
+> h
+
+(s, a ) < i 1 + i2. Therefore the triple (s, a, h ) satisfies that P∗ 
+
+> s,h
+
+> 0. Then by Lemma 5.4, for any s′ ∈ S and h′ ∈ [H] such that P∗ 
+
+> s′,h ′
+
+> 0, it holds that 
+
+N k+1  
+
+> h′
+
+(s′, π ∗ 
+
+> h′
+
+(s′)) ≥
+
+
+
+1 + 16H(H + 1) 
+
+
+
+N kh′ (s′, π ∗ 
+
+> h′
+
+(s′)) ,
+
+indicating that the number of visits to (s′, π ∗
+
+> h
+
+(s′), h ′) with P∗ 
+
+> s′,h ′
+
+> 0 simultaneously increases by at least 1/6H(H + 1) 
+
+times. We refer to this type of trigger as Type-IV trigger. Therefore, the maximum number of Type-IV triggers, denoted 
+
+t4, satisfies 
+
+1 + 16H(H + 1) 
+
+t4
+
+≤ ˆTi1 + i2
+
+≤ THSA .
+
+The last inequality is because i2 > M HSA . Therefore, the number of rounds with Type-III triggers is bounded by 
+
+t4 ≤ log( THSA )log 
+
+
+
+1 + 16H(H+1) 
+
+ = O
+
+
+
+H2 log 
+
+ THSA 
+
+ 
+
+. (79) By Equation (76), Equation (77), Equation (78) and Equation (79), the number of rounds is no more than 
+
+X
+
+> s,a,h
+
+t1(s, a, h ) + X
+
+> s,a,h
+
+t2(s, a, h ) + X
+
+> s, P∗
+> s,h >0
+
+t3(s, π ∗
+
+> h
+
+(s), h ) + t4
+
+≤ O
+
+
+
+M H 3SA log ( i1) + H3SA log 
+
+ H5SA 
+
+∆2min 
+
+
+
++ H3S log ( i2) + H2 log 
+
+ THSA 
+
+ 
+
+≤ O
+
+
+
+M H 3SA log  M H 2ι′ + H3SA log 
+
+ H5SA 
+
+∆2min 
+
+
+
++ H3S log 
+
+ M H 9SAι 
+
+∆2min Cst 
+
+
+
++ H2 log 
+
+ THSA 
+
+ 
+
+.
+
+The last inequality is because i2 ≲ M H 9SAι  
+
+> ∆2min Cst
+
+. By (e) of Lemma E.1, we have 
+
+ι′ = log 
+
+ 2M SAHT 1
+
+δ
+
+
+
+≤ O log 2M SAH ˆTδ
+
+!
+
++ log 
+
+ 2M SAH δ
+
+!
+
+= O log SA ˆTδ
+
+!! 
+
+. (80) Let δ = p/ 5 and ι0 = log 
+
+ M SAT p
+
+
+
+. Since ι ≤ ι′ ≤ O(ι0) by Equation (80), then with probability at least 1 − p, the number of rounds of communication is no more than 
+
+O
+
+
+
+M H 3SA log  M H 2ι0
+
+ + H3SA log 
+
+ H5SA 
+
+∆2min 
+
+
+
++ H3S log 
+
+ M H 9SAι 
+
+∆2min Cst 
+
+
+
++ H2 log 
+
+ THSA 
+
+ 
+
+.
+
+45

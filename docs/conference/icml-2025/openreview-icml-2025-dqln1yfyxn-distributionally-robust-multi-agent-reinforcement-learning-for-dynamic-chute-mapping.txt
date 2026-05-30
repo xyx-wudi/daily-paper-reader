@@ -1,0 +1,1137 @@
+Title: Distributionally Robust Multi-Agent Reinforcement Learning for  Dynamic Chute Mapping
+
+URL Source: https://openreview.net/pdf?id=DqlN1yFyxN
+
+Number of Pages: 22
+
+Markdown Content:
+# Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Guangyi Liu 1 Suzan Iloglu 1 Michael Caldara 1 Joseph W. Durham 1 Michael M. Zavlanos 1 2 
+
+# Abstract 
+
+In Amazon robotic warehouses, the destination-to-chute mapping problem is crucial for efficient package sorting. Often, however, this problem is complicated by uncertain and dynamic package induction rates, which can lead to increased pack-age recirculation. To tackle this challenge, we introduce a Distributionally Robust Multi-Agent Reinforcement Learning (DRMARL) framework that learns a destination-to-chute mapping pol-icy that is resilient to adversarial variations in induction rates. Specifically, DRMARL relies on group distributionally robust optimization (DRO) to learn a policy that performs well not only on av-erage but also on each individual subpopulation of induction rates within the group that capture, for example, different seasonality or operation modes of the system. This approach is then combined with a novel contextual bandit-based estimator of the worst-case induction distribution for each state-action pair, significantly reducing the cost of exploration and thereby increasing the learning efficiency and scalability of our framework. Ex-tensive simulations demonstrate that DRMARL achieves robust chute mapping in the presence of varying induction distributions, reducing package recirculation by an average of 80% in the simula-tion scenario. 
+
+# 1. Introduction 
+
+In Amazon robotic sortation warehouses, mobile robots are deployed to transport and sort packages efficiently to different destinations (Wurman et al., 2008; Azadeh et al., 2019; Amazon, 2022b;a; 2023). The sorting process be-    
+
+> 1Amazon Robotics, North Reading, MA, USA 2Department of Mechanical Engineering and Materials Science, Duke Uni-versity, Durham, NC, USA. Correspondence to: Guangyi Liu
+> <gyliu@amazon.com >.
+> Proceedings of the 42 nd International Conference on Machine Learning , Vancouver, Canada. PMLR 267, 2025. Copyright 2025 by the author(s).
+> Figure 1: Schematic layout of an Amazon robotic sortation ware-house featuring robot drives and eject chutes.
+
+gins at induction stations, where packages are loaded onto mobile robots and subsequently transported to designated eject chutes based on their destinations (Figure 1). A criti-cal factor determining the package throughput capacity of these facilities is the effective allocation of eject chutes to different destinations. Therefore, the destination-to-chute mapping policy plays a crucial role in optimizing the overall throughput performance of the robotic sortation warehouses. Our previous work (Shen et al., 2023) addresses the des-tination assignment problem (DAP) (Boysen & Fliedner, 2010) in robotic sortation systems by developing a dynamic chute mapping policy. This policy determines the optimal allocation of eject chutes to destinations with the objective of minimizing the number of unsorted packages. We pro-posed a model-free reinforcement learning approach that dynamically adjusts the number of chutes assigned to each destination throughout the day. Our solution formulates the chute mapping problem within a Multi-Agent Rein-forcement Learning (MARL) framework (Lowe et al., 2017; Sunehag et al., 2017; Samvelyan et al., 2019; Rashid et al., 2020), where each destination is represented as an agent that controls its chute allocation at each time step. While the MARL policy proposed in our previous work (Shen et al., 2023) demonstrates superior performance com-pared to traditional reactive chute mapping approaches often implemented in Amazon robotic sortation warehouses, its effectiveness assumes that the induction distribution dur-ing deployment matches the training distribution and that the daily induction rate remains close to its average value. 1Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+In practice, however, induction patterns exhibit significant temporal variations, potentially compromising the MARL policy’s performance when confronted with unexpected dis-tribution changes. To enhance robustness against such variations, in this pa-per, we propose a Distributionally Robust Multi-Agent Re-inforcement Learning (DRMARL) framework that learns chute mapping policies capable of maintaining near-optimal performance across diverse induction distributions. Specif-ically, we formulate this problem as group DRO problem, where each group represents a distinct induction distribu-tion pattern extracted from a subset of a historical dataset. Our DRMARL framework optimizes policies for the worst-case induction patterns across these distribution groups. To address the computational cost of exhaustively evaluating all distribution groups during training, we introduce a con-textual bandit (CB)-based worst-case reward estimator for each state-action pair. Through extensive evaluation, we demonstrate that our DRMARL framework yields robust chute mapping policies that not only outperform baseline MARL policies on out-of-distribution (OOD) induction data but also maintain consistent performance across varying in-duction distributions. Our contributions are twofold: First, we introduce group distributionally robust optimization in multi-agent reinforce-ment learning, developing a novel framework to learn poli-cies that are robust to distribution shifts in the reward func-tion. Second, we propose an novel contextual bandit-based method for efficient worst-case reward estimation, signifi-cantly reducing the computational complexity of DRMARL training by eliminating the need for exhaustive group explo-ration to estimate the worst-case reward. To the best of our knowledge, our framework is the first to integrate contextual bandits with group DRO and MARL, addressing a well-known challenge of distributionally robust reinforcement learning related to its computational cost. Our proposed framework has broad applicability to various large-scale industrial applications beyond sortation systems, including resource allocation, collaborative robotics, and warehouse automation, where robustness to distribution shifts is cru-cial. 
+
+1.1. Literature Review 
+
+Destination Assignment Problems : Mathematical program-ming has been used to optimize warehouse systems, in-cluding destination assignment problems (DAP) (Boysen & Fliedner, 2010) for sorting systems. The destination map-ping approach in (Fedtke & Boysen, 2017) optimizes pack-age flow by minimizing travel distances between inbound and outbound stations in conveyor-based sorting systems, which leads to improved throughput. (Novoa et al., 2018) minimizes the worst-case flow imbalance across work sta-tions on the sortation floor, developing a stochastic approach with chance and robust constraints. For robotic sorting sys-tems, (Khir et al., 2021) proposes an integer programming method to solve DAPs that minimize sortation effort and satisfy package deadlines. A robust formulation address-ing demand uncertainty is presented in (Khir et al., 2022). While these approaches effectively optimize destination as-signment in sorting systems, they do not account for distri-butional uncertainty in demand and system dynamics. In contrast, our proposed DRMARL framework explicitly mod-els such uncertainties, ensuring robust performance under varying operational conditions. 
+
+MARL for Resource Allocation : MARL has previously been applied to address resource allocation problems (Nie et al., 2021; Mei & Wang, 2024; Jun-Han et al., 2025). For exam-ple, a MARL framework for ocean transportation networks was proposed in (Li et al., 2019). This framework devel-oped a multi-agent Q-learning algorithm where the local Q-networks depend on the joint states (including the lim-ited shared resources) and the joint actions. However, since the joint state-action space grows exponentially with the number of agents, the local Q-networks are hard to learn and this approach does not scale well in practice. This limitation was addressed in our previous work (Shen et al., 2023), where the local Q-networks are only loosely coupled, enhancing the scalability while still being interconnected enough to capture the impact of robot congestion on the sortation floor. Compared to (Li et al., 2019), the method proposed in (Shen et al., 2023) models resources explicitly as actions and considers budget constraints when taking joint actions. However, these MARL-based approaches do not incorporate distributional robustness, making them sen-sitive to demand fluctuations and uncertainty, which our DRMARL framework explicitly addresses to ensure reliable performance in dynamic sorting environments. 
+
+Robust and Distributionally Robust RL : Robust Reinforce-ment Learning (Robust RL) (Morimoto & Doya, 2005; Wiesemann et al., 2013; Pinto et al., 2017; Panaganti & Kalathil, 2021; Moos et al., 2022; Panaganti et al., 2022; Goyal & Grand-Clement, 2023; Yamagata & Santos-Rodriguez, 2024) develops policies that maintain perfor-mance under worst-case conditions through adversarial per-turbations. Distributionally Robust Reinforcement Learning (DRRL) (Xu & Mannor, 2010; Smirnova et al., 2019; Hou et al., 2020; Wang et al., 2023; Ramesh et al., 2024; Zhang et al., 2024; Lu et al., 2024; Panaganti et al., 2024) extends this by optimizing across environment distributions rather than a single worst-case scenario. While traditional DRRL primarily addresses ambiguity in MDP transition probabili-ties, this approach inadequately captures induction distribu-tion changes in Amazon robotic sortation warehouses. Our problem requires a focus on distributionally robust optimiza-2Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+tion of reward function distributions, building on (Ren & Majumdar, 2022; Liu et al., 2022). Recent advances in (Dis-tributionally) Robust Multi-Agent RL (Zhang et al., 2020; Bukharin et al., 2024; Shi et al., 2024b;a) have introduced frameworks like RMGs, ERNIE, and DRNVI to address en-vironmental uncertainties, adversarial dynamics, and model uncertainties. While existing methods primarily focus on robustness in transition dynamics, adversarial interactions, and general environmental uncertainties, they do not ex-plicitly address distributional shifts in package induction, which is a critical challenge in sortation warehouses. Our ap-proach extends DRMARL to explicitly model and optimize against uncertainties in induction distributions, ensuring ro-bust and consistent performance under varying operational conditions. 
+
+Group DRO: Group Distributionally Robust Optimization aims to enhance model robustness across diverse subpopula-tions by optimizing for the worst-performing groups rather than the average performance (Sagawa et al., 2020). This ap-proach ensures fairness and resilience to distribution shifts, particularly for underrepresented groups. While initial work focused on single-agent supervised learning (Hu et al., 2018; Oren et al., 2019), recent advances have extended these prin-ciples to more complex settings. Notably, (Soma et al., 2022) proposed a soft-weighting method on distribution groups with convergence guarantees, while (Wu & Fu, 2023) and (Xu et al., 2023) demonstrated the applicability of group DRO in multi-agent systems and reinforcement learning, respectively. Our work bridges a critical gap by introduc-ing group DRO principles to DRMARL. We begin by for-mulating the distributionally robust Bellman operator and addressing the computational challenges of exploring all dis-tribution groups during training. To tackle these challenges, we provide a DR Bellman operator specifically designed for MARL and introduce a contextual bandit (CB)-based worst-case distribution group estimator. This estimator enables efficient training by adaptively identifying the worst-case distribution groups. The remainder of the paper is organized as follows. In Section 2, we formulate the dynamic chute mapping prob-lem within a multi-agent reinforcement learning framework. In Section 3, we extend this formulation by incorporat-ing group distributionally robust optimization into MARL, while in Section 4, we present novel contextual bandit-based worst-case reward estimator to enhance training efficiency. Finally, in Section 5, we demonstrate the effectiveness of our proposed framework through extensive simulations. 
+
+# 2. Problem Formulation 
+
+In Amazon robotic sortation warehouses, package flow is modeled using three buffers: induct, laden drive, and recir-culation, as illustrated in Figure 2. The laden drive buffer 
+
+> Figure 2: Flow of packages in the Amazon robotic sortation ware-house.
+
+contains packages actively transported by robots from in-duct stations to assigned eject chutes. Since the total number of chutes is limited, contention occurs when multiple desti-nations require chute capacity simultaneously. When chute availability is insufficient, excess packages are diverted to recirculation chutes, entering the recirculation buffer for another pass through the system. Chutes are reallocated to different destinations when a destination vehicle reaches ca-pacity or when its scheduled departure time is reached. The dynamic chute mapping policy optimizes chute allocations across destinations in real time to minimize recirculation and maximize system throughput. We formulate the dynamic chute mapping problem as a sequential decision-making problem, specifically as a multi-agent reinforcement learning (MARL) problem that deter-mines the optimal chute allocations to minimize package recirculation at each time step. To this end, we define a Markov game over N unique destinations, represented by the tuple  N, S, {O i}Ni=1 , {A i}Ni=1 , P, {ri}Ni=1 , γ, ρ 0
+
+,where S is the joint state space, Oi ⊂ S is the local obser-vation space for destination i, Ai denotes the action space (i.e., the number of new chutes acquired) for destination i,
+
+P is the state transition probability, ri is the reward func-tion, γ ∈ (0 , 1) is the discount factor, and ρ0 is the initial state distribution. While the joint state provides complete system information, each destination’s observation is lim-ited to local features relevant to its decision-making. This partial observability requires destinations to act based on their own experiences and available information. We refer to Appendix C.1 for a detailed MARL formulation. The system operates in discrete time steps, where, at each step t, individual agents (destinations) make chute allo-cation decisions. Each agent i employs a local policy 
+
+πi : Oi × A i → [0 , 1] that maps local observations oi
+
+to probabilities over possible chute allocation actions. Each agent i learns its optimal local policy πi, ∗ by maximizing the expected discounted return E[Rit] = E P ∞ 
+
+> t′=t
+
+γt′−trit′
+
+,
+
+where rit′ denotes the instantaneous reward at time t′ and 
+
+γ is the discount factor. The expectation captures both the stochastic nature of the policy and the environment dy-namics. This formulation naturally aligns individual agent objectives with the global goal of minimizing recirculation 3Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+while maintaining the throughput. The instantaneous reward function for agent i at time step t is defined as: 
+
+rit = −recirc it − 2 ait, (1) where recirc it ≥ 0 represents the number of packages in recirculation for destination i and the action term ait
+
+is included as penalty to prevent the learned policy from over-allocating chutes to only a few destinations. Due to the coupled nature of agent decisions, we utilize the joint action-value function to determine optimal local policies 
+
+πi, ∗:
+
+Qπ (s, a ) = E
+
+h NX
+
+> i=1
+
+Rit|st = s, a t = a
+
+i
+
+, (2) which evaluates the expected return when taking the joint action a = ( a1, . . . , a N ) in state s and following the joint policy π thereafter. To mitigate the exponentially growing policy space, we assume agents execute actions independently, such that 
+
+π = QNi=1 πi. The optimal policy π∗ is learned using the Deep Q-Network (DQN) (Mnih et al., 2015), where a neural network Q(s, a ; θ) with parameters θ approximates the optimal action-value function Qπ∗
+
+(s, a ). The learning process minimizes the loss: 
+
+L(θ; X) = Es,a,r,s ′
+
+h
+
+(Q(s, a ; θ) − y)2i
+
+, (3) where y = EX∼P[r(s, a ; X)] + γ max a′ ¯Q(s′, a ′; ¯θ) ap-proximates the optimal target values EX∼P[r(s, a ; X)] + 
+
+γ max a′ Qπ∗
+
+(s′, a ′). Here, r(s, a ; X) represents the instan-taneous reward under the current state-action pair and in-duction distribution X1. Stability of the learning process is enhanced through two mechanisms: a target network ¯Q with periodic parameter updates using the most recent values of 
+
+θ, and an experience replay buffer D that stores transition tuples (s, a, r, s ′). The resulting optimal policy takes the form: 
+
+π∗(s, a ) = 
+
+( 1 
+
+> |A (s)|
+
+if a ∈ A (s),
+
+0 otherwise (4) where A(s) = arg max a Q(s, a ; θ∗) and θ∗ =arg min L(θ; X).To address the scalability of the state-action space and the computational feasibility of the expectation in (3) , we employ the Value Decomposition Network (VDN) (Shen et al., 2023) with budget constraints for computing feasi-ble joint actions, with implementation details provided in Appendix C.3 and Appendix C.4. While the above MARL-based chute mapping policy demon-strates strong performance under standard operating condi-tions, it exhibits significant performance degradation under 
+
+> 1See Appendix C.2 for details of the induction distribution.
+> Figure 3: Relative degradation of MARL policy (trained on Year 1) on OOD (Years 2-4) induction data, compared to Year 1.
+
+distribution shifts in package induction patterns (see Fig-ure 3). This vulnerability to out-of-distribution scenarios motivates our robust formulation. In this paper, our objective is to introduce robustness to distribution shifts in the learned chute mapping policies. We achieve this by incorporating group DRO into the MARL framework, giving rise to the proposed DRMARL approach. Our proposed framework ensures reliable and robust perfor-mance in Amazon robotic sortation warehouses, even under unforeseen future induction scenarios. 
+
+# 3. Distributionally Robust Multi-Agent Reinforcement Learning with Group DRO 
+
+In this section, we enhance the MARL chute mapping frame-work described in Section 2 by incorporating group DRO to handle uncertainty and variability in package induction distributions. This approach enables us to develop robust policies that perform well across diverse induction scenarios, including previously unseen induction distributions. Unlike traditional stochastic optimization, which assumes that the true data-generating distribution is known and fixed, Distributionally Robust Optimization (DRO) addresses un-certainty in the underlying distribution by optimizing against a family of plausible distributions, i.e., the ambiguity set, constructed from the available data (Delage & Ye, 2010; Shapiro, 2017; Rahimian & Mehrotra, 2022; Zhen et al., 2023; Liu et al., 2024; Kuhn et al., 2024; Konti et al., 2024). Instead of minimizing the expected loss under a single es-timated distribution, DRO seeks solutions that minimize the worst-case expected loss over all distributions within this ambiguity set. This leads to policies that are robust to distributional shifts, such as those encountered in the chute mapping problem, where test-time conditions may deviate from those seen during training. 
+
+3.1. Group DRO 
+
+In DRO, the ambiguity set that captures uncertainty in the data-generating distribution can be defined in various ways. In particular, Group DRO (Hu et al., 2018; Oren et al., 2019) offers an efficient way to define the ambiguity set using a finite collection of known distributions. In the context of 4Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping   
+
+> Figure 4: Ambiguity set Min regular DRO (Rahimian & Mehrotra, 2022) (left) versus group DRO (Sagawa et al., 2020) (right).
+
+robotic sortation warehouses, this approach is especially useful, as the ambiguity set can be constructed from histor-ical induction data that reflects the variability observed in real-world operations. Following (Sagawa et al., 2020), we define the unknown distribution ˜P as a combination of m distributions Pg , each indexed by a group g in the set G = {1, 2, . . . , m }. The ambiguity set M is then defined as a convex combination of these groups: 
+
+M := 
+
+n˜P =
+
+> m
+
+X
+
+> g=1
+
+qg Pg q ∈ ∆m
+
+o
+
+, (5) where ∆m denotes the (m − 1) -dimensional probability simplex (Gr¨ unbaum et al., 1967) (see Figure 4). In the dynamic chute mapping problem, we assume that past years of operational data from sortation warehouses provide sufficiently rich historical induction distributions that can be used to obtain representative distribution groups 
+
+G. With this assumption, it is reasonable to expect that most future induction distributions ˜P can be represented as combinations of the basis distributions Pg with g ∈ G . As shown in (Sagawa et al., 2020), evaluating the worst-case reward over all m groups in G is equivalent to evaluating the reward for the worst-case distribution within the ambiguity set M defined in (5). 
+
+Lemma 3.1. Consider an ambiguity set M formed by Pg sas defined in (5) . For any state-action pair (s, a ) ∈ S × A ,the worst-case expected reward satisfies: 
+
+inf  
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] = inf  
+
+> P∈M
+
+EX∼P [r(s, a ; X)] , (6) 
+
+where G denotes the set of group indices. 
+
+The proof of Lemma 3.1 is provided in Appendix A. The above lemma highlights a key advantage of group DRO: while general DRO problems are infinite-dimensional and computationally challenging, group DRO reduces the opti-mization to a finite-dimensional problem over m groups. This reduction makes training of distributionally robust MARL (DRMARL) computationally tractable. 
+
+3.2. DRMARL with Group DRO 
+
+In the MARL framework described in Section 2, the policy parameters θ are optimized as follows: 
+
+θ∗ := arg min 
+
+> θ∈Θ
+
+EX∼P [L(θ; X)] . (7) Directly applying group DRO to MARL then leads to: 
+
+˜θ := arg min 
+
+> θ∈Θ
+
+
+
+max  
+
+> g∈G
+
+EX∼Pg [L(θ; X)] 
+
+
+
+. (8) However, conventional group DRO approaches are not di-rectly applicable to MARL problems, as minimizing the worst-case Bellman error across groups does not necessar-ily yield a policy that is optimal under worst-case rewards. This disconnect arises because the worst-case Bellman error captures the maximum deviation from the target Q-function across groups, but it does not guarantee convergence to a robust optimal Q-function. To address this limitation, we introduce the distributionally robust Bellman operator, for-mally defined in the following result. 
+
+Lemma 3.2. For an ambiguity set M defined in (5) with group set G, the distributionally robust (DR) Bellman oper-ator is given by: 
+
+˜TG ( ˜Q)( s, a ) = inf  
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] + γ max 
+
+> a′
+
+˜Q(s′, a ′),
+
+where ˜Q is the distributionally robust Q-function. Moreover, the DR Bellman operator ˜TG is also a contraction mapping. 
+
+The proof of Lemma 3.2 is provided in Appendix A. Ac-cordingly, the distributionally robust loss is given by 
+
+˜L(θ; X) := Es,a,r,a ′
+
+  ˜Q(s, a ; θ)
+
+− inf  
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] − γ max 
+
+> a′
+
+¯˜Q(s′, a ′; ¯θ)2, (9) and the distributionally robust parameters ˜θG are obtained by solving ˜θG := arg min 
+
+> θ∈Θ
+
+˜L(θ; X). (10) 
+
+# 4. Contextual Bandit-based Worst-Case Reward Estimator for DRMARL 
+
+Solving the MARL group DRO problem (10) is theoretically feasible since the worst-case reward can be evaluated for each (s, a ) by exhaustively searching over all distribution groups G. However, this approach is inefficient when the number of groups is large and forward simulation in the environment is costly. This is particularly the case in the dynamic chute mapping problem, where millions of pack-ages are sorted across many destinations. Common group DRO techniques, such as soft reweighting (Sagawa et al., 5Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Algorithm 1 CB-based Worst-Case Reward Estimator  
+
+> 1:
+
+Input: Learning rate lCB , initial parameters ψ0, induc-tion distribution groups G, MARL policy with QMARL ,exploration rate εCB  
+
+> 2:
+
+Initialize: ψ ← ψ0, replay buffer DCB ← ∅  
+
+> 3:
+
+for episode = 1 , ..., k CB do  
+
+> 4:
+
+Initialize the environment with random group g′ ∈ G 
+
+and observe initial state s0 
+
+> 5:
+
+for time step t = 0 , ..., T do  
+
+> 6:
+
+Select action at ← arg max a∈A QMARL (st, a ) 
+
+> 7:
+
+With probability εCB , select g′ ∼ Uniform (G);otherwise, g′ ← arg min g∈G QCB (st, a t, g ; ψ) 
+
+> 8:
+
+Execute action at, observe reward rt and next state 
+
+st+1 using group g′ 
+
+> 9:
+
+Store transition (st, a t, g ′, r t, s t+1 ) in DCB  
+
+> 10:
+
+Sample mini-batch from DCB and update ψ: 
+
+> 11:
+
+ψ ← ψ − lCB ∇ψ LCB (ψ) 
+
+> 12:
+
+st ← st+1 , reduce εCB  
+
+> 13:
+
+end for  
+
+> 14:
+
+end for  
+
+> 15:
+
+Output: Optimized CB estimator parameters ψ∗
+
+2020), may not perform well in MARL because, unlike re-gression tasks, the data distribution depends on the agent’s policy. As the policy evolves, the groups that are underrep-resented or perform poorly will change dynamically. This dynamic nature of the problem makes it challenging to apply static or even adaptive reweighting schemes, which assume a relatively stable data distribution. To improve training efficiency, we propose a novel contex-tual bandit-based worst-case reward distribution estima-tor that learns to identify the worst-case distribution group 
+
+g ∈ G for each state-action pair (s, a ) by training a con-textual bandit (CB) model (Li et al., 2010; Russo et al., 2018). 
+
+4.1. CB-based Worst-Case Reward Estimator 
+
+The CB treats the current state-action pair (s, a ) as context, and its arms corresponding to the distribution groups in the set G. The goal is to identify the group g that minimizes the reward EX∼Pg [r(s, a ; X)] , which represents the worst-case reward among all groups. The CB is constructed as follows: 
+
+Context space: S × A , where (s, a ) ∈ S × A represents the state and the chute mapping actions at each step. 
+
+Action space: G = {1, 2, . . . , m }, where g ∈ G denotes a group associated with an induction distribution. 
+
+Reward: A reward function r : ( S × A ) × G → R, where 
+
+r(s, a ; X) represents the observed reward for choosing dis-tribution Pg at the current state-action pair (sa ).
+
+Algorithm 2 DRMARL with CB-based Worst-Case Reward Estimator  
+
+> 1:
+
+Input: Learning rate lr , initial parameters θ0, induction distribution groups G, pre-trained CB-based estimator 
+
+QCB , exploration rate ε 
+
+> 2:
+
+Initialize: θ ← θ0, replay buffer D ← ∅  
+
+> 3:
+
+for episode = 1 , ..., k do  
+
+> 4:
+
+Initialize the environment with random group g′ ∈ G 
+
+and observe initial state s0 
+
+> 5:
+
+for time step t = 0 , ..., T do  
+
+> 6:
+
+With probability ε, select at ∼ Uniform (A); oth-erwise, at ← arg max a∈A ˜Q(st, a ; θ) 
+
+> 7:
+
+Estimate worst-case distribution group using CB: 
+
+g′ ← arg min g∈G QCB (st, a t, g ) 
+
+> 8:
+
+Execute at, observe reward rt and next state st+1 
+
+using group g′ 
+
+> 9:
+
+Store transition (st, a t, g ′, r t, s t+1 ) in D 
+
+> 10:
+
+Sample mini-batch from D and update parameters: 
+
+θ ← θ − lr ∇θ ˜L(θ) 
+
+> 11:
+
+st ← st+1 , reduce ε 
+
+> 12:
+
+end for  
+
+> 13:
+
+end for  
+
+> 14:
+
+Output: Optimized DRMARL policy parameters ˜θG
+
+The CB is represented by a Q-function that approximates the expected reward of choosing distribution Pg given a context 
+
+(s, a ). For this purpose, we use an independent DQN (Mnih et al., 2015): 
+
+QCB (s, a, g ; ψ) = EX∼Pg [r(s, a ; X)] , (11) where the reward function r(s, a ; X) is observed after run-ning a single-step forward simulation with (s, a ) under the distribution Pg . The QCB function is learned by minimiz-ing the following loss (see the detailed training process in Algorithm 1): 
+
+LCB (ψ) := 
+
+Es,a 
+
+  QCB (s, a, g ; ψ) − EX∼Pg [r(s, a ; X)] 2. (12) In Algorithm 1, the exploration of state-action pairs (s, a ) is guided by the existing MARL policy using QMARL , which ensures sufficient exploration of the context space for the chute-mapping problem. For other applications, different exploration policies can be employed, such as random action selection, to ensure adequate coverage of the state-action space. 
+
+4.2. DRMARL with CB-based Worst-Case Reward Estimator 
+
+Once the QCB function has been learned, we can rewrite the 6Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Table 1: Comparison of key sortation metrics across policies, averaged over m = 9 groups, each evaluated over 100 runs. See Appendix D.1 for detailed results.                              
+
+> Policy Recirculation Rate ( ↓)Throughput ( ↑)Recirculation Amount ( ↓)
+> MARL 2.16% ±2.35% 11740 .98 259 .02
+> DRMARL (random) 1.56% ±1.45% 11812 .77 187 .23
+> DRMARL (with QCB )0.56 %±0.18 %11932 .21 67 .79
+> DRMARL (exhaustive) 0.55% ±0.13% 11933 .68 66 .32
+> MARL (group-specific) 0.53% ±0.14% 11936 .60 63 .40
+
+distributionally robust loss (9) as: 
+
+˜L(θ; X) = Es,a,r,a ′
+
+h  ˜Q(s, a ; θ)
+
+− EX∼Pg′ [r(s, a ; X)] − γ max 
+
+> a′
+
+¯˜Q(s′, a ′; ¯θ)2i
+
+,
+
+(13) where g′ = arg min g∈G QCB (s, a, g ) is the index of the distribution group with the estimated worst-case reward. The training procedure of DRMARL is shown in Algo-rithm 2. The key difference compared to MARL training is that DRMARL aims to train a DQN that estimates the worst-case return across all groups, while MARL aims to estimate the observed return only for a specific induction distribution. Moreover, in contrast to traditional group DRO, the index of the worst-case distribution g′ in DRMARL is not obtained via exhaustive search; instead, it is estimated by QCB given the state-action pair (s, a ). The independent Q-network 
+
+QCB is learned beforehand using Algorithm 1 and remains unchanged during DRMARL training. While it may seem counterintuitive that QCB estimates the worst-case group after ˜Q selects an action, this design enables QCB to provide the worst-case expected return for each (s, a ) pair, thereby enabling the learning of a robust policy. 
+
+# 5. Numerical Experiments 
+
+In this section, we demonstrate the effectiveness of the proposed DRMARL policy under OOD induction changes in both a simplified simulation and a large-scale Amazon robotic sortation warehouse simulation environment. 
+
+5.1. Simplified Robotic Sortation Warehouse Simulation 
+
+In the simplified simulation environment, there are 10 eject chutes, one recirculation chute, and 20 unique destinations. Packages arrive at the sortation warehouse according to the induction data X generated from an induction distribution 
+
+P. When packages exceed the capacities of eject chutes, they are sent to the recirculation chute. One training or testing episode consists of 5 hours, with each time step being 30 minutes long, after which the environment is reset. An eject chute can be reallocated at each time step. The implementation details are provided in Appendix B. 0 50 100 150 200 250 300 350 400 
+
+> Training Time (Seconds)
+> 0
+> 250
+> 500
+> 750
+> 1000
+> 1250
+> 1500
+> 1750
+> 2000
+> Recirculation
+> CB-based Predictor
+> Exhaustive Search
+> Random Group Switch
+> MARL on Group #1
+
+Figure 5: Training efficiency comparison in simplified warehouse. 0 50 100 150 200 250 300 350 
+
+> Training Episode
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> Recirc Est. Loss  Average Prediction Loss
+> 1.2
+> 1.3
+> 1.4
+> 1.5
+> 1.6
+> 1.7
+> Max Est. Loss
+> Max Prediction Loss
+
+Figure 6: Training recirculation rate estimation loss (12) for CB in simplified robotic sortation warehouse. 
+
+We train the DRMARL policy over 300 episodes using training data generated from 9 distinct induction distribution groups. Similarly, the regular MARL policies are trained for 300 episodes, each on one of the same groups. Due to the stochastic nature of the induction-generating distributions, the induction data varies across simulation trials. Key metric comparisons are shown in Table 1. DRMARL with QCB achieves the best performance across all met-rics. For reference, the last row shows the theoretical upper bound achieved by group-specific MARL policies, trained and evaluated on the same group. DRMARL performs only marginally below this oracle baseline, highlighting its strong balance between individual performance and robust-ness. Compared to random group selection and exhaustive worst-case search, QCB efficiently identifies challenging groups during training and achieves comparable robustness with significantly lower computational cost. These results demonstrate that QCB enables DRMARL to focus on worst-case distributions effectively, yielding robust policies with-out sacrificing efficiency. We refer to Appendix D.1 for a detailed discussion of these results. Figure 6 shows the training progress of QCB , with clear reductions in both average and maximum recirculation rate estimation errors over time. Training efficiency compar-isons across methods are shown in Figure 5. DRMARL with QCB converges in under 300 seconds, while exhaus-tive worst-case search exceeds 2900 seconds due to its full traversal of all groups. In contrast, QCB achieves compa-rable robustness at significantly lower computational cost, 7Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Table 2: Relative improvement ( ↑) of DRMARL over MARL baseline, averaged across m = 21 groups.        
+
+> Policy Recirc Rate Reduction Throughput Increase Recirc Amount Reduction
+> DRMARL 79 .97% 5.62% 33 .64%
+> MARL (group-specific) 85 .42% 9.80% 40 .50%
+
+validating its ability to efficiently identify worst-case groups. Although DRMARL with random group selection converges faster, it lacks the worst-case guarantees provided by QCB .Group-specific MARL converges fastest overall, reflecting the simplicity of its single-group training setup. 
+
+5.2. Large-Scale Robotic Sortation Warehouse Simulation 
+
+5.2.1. I MPLEMENTATION DETAILS 
+
+In the large-scale simulation environment, there are 187 
+
+eject chutes, one recirculation chute, and 120 unique destina-tions. Packages arrive at the sortation warehouse according to the corresponding induction data X generated from the induction distribution P2. When packages exceed chute ca-pacities or miss departure transportation schedules, they are sent to the recirculation chute and added to the queue of new packages at the next time step. One training/testing episode lasts 11 hours, with each time step lasting five minutes, after which the environment is reset. Every five minutes, des-tinations are assigned to chutes that become available for reallocation We train the DRMARL policy over 200 episodes using training data generated from 21 distinct induction distribu-tion groups spanning several years. Similarly, the regular MARL policy is trained for 200 episodes using induction data from Year 4. For testing, we evaluate both policies on newly generated induction data from 21 distinct distribution groups, conducting five experiments per group. Due to the stochastic nature of the induction-generating distributions, the test induction data remains unseen during training for both policies. 5.2.2. R OBUSTNESS OF THE CHUTE MAPPING POLICY 
+
+Table 2 presents the average relative performance improve-ment of DRMARL across all 21 distribution groups, us-ing MARL as the baseline. DRMARL demonstrates ro-bust performance across all induction groups, consistently outperforming the baseline MARL policy. For reference, 
+
+> 2
+
+Due to common industry confidentiality practices, we cannot disclose the specific data source and report only relative perfor-mance improvements. The data represents realistic package flow patterns typical of Amazon robotic sortation facilities. 
+
+Figure 7: Recirculation rate improvement of DRMARL over two equally-performing MARL policies trained on distributions inside and outside M.Table 3: Relative reduction ( ↑) in CVaR, worst-case recirculation amount, and average recirculation rate across different Robust RL approaches.              
+
+> Method CVaR Reduction Worst-case Recirc Reduction Recirc Rate Reduction
+> Adversarial Agent 61 .11% 53 .57% 66 .19%
+> Adversarial Environment 58 .48% 23 .68% 77 .09%
+> Robustified Reward 58 .97% 60 .23% 70 .43%
+> DRMARL 77 .09 %76 .61 %79 .97 %
+
+the bottom row shows the theoretical optimal performance achieved by training and testing group-specific MARL poli-cies on each individual group. As expected, DRMARL performs marginally below these group-specific MARL policies, illustrating the trade-off between robustness and individual group performance. Detailed results are provided in Appendix D.2. As more production data becomes available, the distribution groups can be expanded to better capture year-to-year shifts without increasing the training complexity of DRMARL. To assess robustness beyond the ambiguity set M, we evaluate the learned policy on induction distributions P′ where P′ /∈
+
+M. As shown in Figure 7, the robust policy generalizes well to these out-of-distribution settings. Notably, the Type-1 Wasserstein distance between P′ and the closest distribution in M is 818 .19 , compared to an average intra-group distance of 542 .96 within M.We also compare DRMARL against three robust RL base-lines, with results summarized in Table 3: (i) an adversarial agent that deliberately blocks available chutes (Mandlekar et al., 2017); (ii) an adversarial environment with perturbed transition dynamics (Pinto et al., 2017); and (iii) a robust MDP formulation that uses a worst-case reward function over an uncertainty set (Wiesemann et al., 2013). We evalu-ate performance using three metrics: cumulative recircula-tion over the 11-hour simulation; worst-case instantaneous recirculation; and Conditional Value-at-Risk (CVaR) at the 
+
+5% level (Rockafellar & Uryasev, 2000). To compute CVaR, we collect instantaneous recirculation values at all time steps and estimate their empirical distribution. CVaR at 
+
+5% corresponds to the expected recirculation conditional on exceeding the 95 th percentile, capturing the expected sever-ity of the worst-case recirculation (higher values are more undesirable). While some robust RL approaches achieve 8Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping   
+
+> Figure 8: QCB estimation loss for recirculation percentage, aver-aged over 25 test simulations.
+
+cumulative recirculation comparable to DRMARL, only DRMARL consistently improves the worst-case recircula-tion performance by explicitly optimizing for it. DRMARL outperforms all robust RL baselines due to its distributional awareness, which yields more accurate worst-case reward estimation and robust action-value functions. This robust-ness is critical in practice, as sudden surges in recirculation can lead to robot congestion and delays in the sorting pro-cess. Since robot congestion is not explicitly modeled in the simulator, the real-world advantage of DRMARL over standard robust RL methods is likely even greater. 5.2.3. CB-BASED WORST -C ASE REWARD ESTIMATOR 
+
+Following Section 4, we train an independent Q-network, 
+
+QCB , to estimate the worst-case recirculation (reward) for all state-action pairs (s, a ) across groups G. The trained 
+
+QCB achieves high accuracy, with estimation errors below 
+
+1% of the recirculation rate, enabling reliable identification of worst-case scenarios among the groups g ∈ G .During each day’s 11 -hour simulation, as illustrated in Fig-ure 8, the estimation accuracy improves substantially after the first hour. Although initially suboptimal, QCB ’s perfor-mance remains sufficient for DRMARL training, since the impact of the worst-case distributions on recirculation be-comes more pronounced in later stages when fewer chutes are available. 5.2.4. E FFICIENT TRAINING WITH CB-BASED 
+
+WORST -C ASE REWARD ESTIMATOR 
+
+The CB-based worst-case reward estimator, QCB , substan-tially improves training efficiency by eliminating the need for exhaustive group evaluation at each time step, reducing the computational complexity of the worst-case group iden-tification from O(m) to O(1) . As demonstrated in Figure 9, training with QCB achieves significantly faster convergence compared to exhaustive evaluation over G, which requires approximately 924 hours on a cloud instance with 64 vCPUs (Intel Xeon Scalable 4th generation) and 128 GB RAM. The lightweight Q-network updates enabled CPU-only training, with most of the computation time spent on environment simulation. This efficiency advantage becomes even more 
+
+> Figure 9: Training computational efficiency comparison in large-scale Amazon robotic sortation warehouse simulation environ-ments.
+
+pronounced when dealing with complex environments or larger group sets. Figure 9 also compares the training efficiency of differ-ent approaches. The group-specific MARL, which trains on group #20 , shows the fastest convergence due to its simplified learning objective. Among distributionally ro-bust approaches, DRMARL with random group selection (g′ ← random (G)) initially converges faster than other ro-bust variants but achieves suboptimal robustness, since it may miss critical worst-case scenarios. DRMARL with QCB 
+
+strikes a balance between training speed and performance, converging significantly faster than exhaustive search while maintaining near-optimal worst-case performance guaran-tees. As expected, DRMARL with exhaustive search over all distribution groups requires the longest training time, though it serves as a valuable baseline for validating the efficiency of our QCB -based approach. 
+
+# 6. Conclusion 
+
+In this paper, we introduced DRMARL, a framework that integrates group DRO into MARL to enhance policy robust-ness against OOD distribution shifts in warehouse sortation systems. To address the computational cost of identifying the worst-case group, we developed a CB-based estima-tor that significantly reduces the complexity of worst-case identification from O(m) to O(1) . Experimental results from both simplified and large-scale warehouse environ-ments demonstrate that DRMARL achieves robust and near-optimal performance across all distribution groups while maintaining computational efficiency. The framework also shows strong generalization to distributions outside the train-ing set, and its design principles can be extended to other MARL applications where distributional robustness is cru-cial. 9Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+# Acknowledgments 
+
+We would like to express our sincere gratitude to our col-leagues at Amazon Robotics for their support and valuable contributions throughout this research. In particular, we extend special thanks to Rahul Chandan and Mouhacine Benosman for their insightful feedback and constructive discussions related to this work. 
+
+# Impact Statement 
+
+This work advances both machine learning research and sustainable warehouse operations. The proposed DRMARL framework reduces package recirculation, directly contribut-ing to lower energy consumption and carbon emissions in e-commerce logistics. From a societal perspective, more efficient package sorting translates to both lower consumer costs and faster delivery times, particularly benefiting those who rely on e-commerce for essential goods. For warehouse operations, the system creates more predictable workflows, potentially reducing physical strain on workers and improv-ing labor conditions. The framework’s robust performance across varying distribution patterns ensures consistent ser-vice levels regardless of package volume or ordering pat-terns, promoting equitable service delivery across different communities. Beyond warehouses, our approach to distri-butional robustness contributes to the broader development of reliable AI systems for real-world applications where performance consistency is crucial. 
+
+# References 
+
+Amazon. 10 years of amazon robotics: how robots help sort packages, move product, and improve safety. https://www.aboutamazon.com/news/operations/10-years-of-amazon-robotics-how-robots-help-sort-packages-move-product-and-improve-safety, 2022a. Accessed: 2023-01-23. Amazon. How amazon robots navigate conges-tion. https://www.amazon.science/latest-news/how-amazon-robots-navigate-congestion, 2022b. Amazon. Tour an amazon fulfillment center. https://www.aboutamazon.com/workplace/tours, 2023. Accessed: 2023-01-23. Amazon.com, Inc. Amazon.com announces fourth quarter results. https://ir. aboutamazon.com/news-release/ news-release-details/2023/Amazon. com-Announces-Fourth-Quarter-Results/ ,2022. Amazon.com, Inc. Amazon.com announces fourth quarter results. https://ir. aboutamazon.com/news-release/ news-release-details/2024/Amazon. com-Announces-Fourth-Quarter-Results/ ,2023. Amazon.com, Inc. Amazon.com announces fourth quarter results. https://ir. aboutamazon.com/news-release/ news-release-details/2025/Amazon. com-Announces-Fourth-Quarter-Results/ ,2024. Azadeh, K., De Koster, R., and Roy, D. Robotized and automated warehouse systems: Review and recent devel-opments. Transportation Science , 53(4):917–945, 2019. Boysen, N. and Fliedner, M. Cross dock scheduling: Classi-fication, literature review and research agenda. Omega ,38(6):413–422, 2010. Bukharin, A., Li, Y., Yu, Y., Zhang, Q., Chen, Z., Zuo, S., Zhang, C., Zhang, S., and Zhao, T. Robust multi-agent re-inforcement learning via adversarial regularization: The-oretical foundation and stable algorithms. Advances in Neural Information Processing Systems , 36, 2024. Delage, E. and Ye, Y. Distributionally robust optimization under moment uncertainty with application to data-driven problems. Operations research , 58(3):595–612, 2010. Fedtke, S. and Boysen, N. Layout planning of sortation conveyors in parcel distribution centers. Transportation Science , 51(1):3–18, 2017. FICO. Xpress optimizer. https://www.fico.com/en/products/fico-xpress-optimization, 2023. Accessed: 2023-01-23. Goyal, V. and Grand-Clement, J. Robust markov decision processes: Beyond rectangularity. Mathematics of Oper-ations Research , 48(1):203–226, 2023. Gr ¨unbaum, B., Klee, V., Perles, M. A., and Shephard, G. C. 
+
+Convex polytopes , volume 16. Springer, 1967. Hou, L., Pang, L., Hong, X., Lan, Y., Ma, Z., and Yin, D. Ro-bust reinforcement learning with wasserstein constraint. 
+
+arXiv preprint arXiv:2006.00945 , 2020. Hu, W., Niu, G., Sato, I., and Sugiyama, M. Does distribu-tionally robust supervised learning give robust classifiers? In International Conference on Machine Learning , pp. 2029–2037. PMLR, 2018. Iyengar, G. N. Robust dynamic programming. Mathematics of Operations Research , 30(2):257–280, 2005. 10 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Jun-Han, W., He, H., Cha, J., Jeong, I., and Chang-Jun, A. Multi-agent reinforcement learning for efficient resource allocation in internet of vehicles. Electronics , 14(1):192, 2025. Khir, R., Erera, A., and Toriello, A. Two-stage sort planning for express parcel delivery. IISE Transactions , 53(12): 1353–1368, 2021. Khir, R., Erera, A., and Toriello, A. Robust planning of sorting operations in express delivery systems. European Journal of Operational Research , 2022. Kim, S., Pasupathy, R., and Henderson, S. G. A guide to sample average approximation. Handbook of simulation optimization , pp. 207–243, 2015. Konti, X., Riess, H., Giannopoulos, M., Shen, Y., Pencina, M. J., Economou-Zavlanos, N. J., and Za-vlanos, M. M. Distributionally robust clustered feder-ated learning: A case study in healthcare. arXiv preprint arXiv:2410.07039 , 2024. Kuhn, D., Shafiee, S., and Wiesemann, W. Distribution-ally robust optimization, 2024. URL https://arxiv. org/abs/2411.02549 .Li, L., Chu, W., Langford, J., and Schapire, R. E. Acontextual-bandit approach to personalized news article recommendation. In Proceedings of the 19th interna-tional conference on World wide web , pp. 661–670, 2010. Li, X., Zhang, J., Bian, J., Tong, Y., and Liu, T.-Y. A co-operative multi-agent reinforcement learning framework for resource balancing in complex logistics network. In 
+
+Proceedings of the 18th International Conference on Au-tonomous Agents and MultiAgent Systems , pp. 980–988, 2019. Liu, G., Amini, A., Pandey, V., and Motee, N. Data-driven distributionally robust mitigation of risk of cascading failures. In 2024 American Control Conference (ACC) ,pp. 3264–3269. IEEE, 2024. Liu, Z., Bai, Q., Blanchet, J., Dong, P., Xu, W., Zhou, Z., and Zhou, Z. Distributionally robust q-learning. In In-ternational Conference on Machine Learning , pp. 13623– 13643. PMLR, 2022. Lowe, R., Wu, Y. I., Tamar, A., Harb, J., Pieter Abbeel, O., and Mordatch, I. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neu-ral information processing systems , 30, 2017. Lu, M., Zhong, H., Zhang, T., and Blanchet, J. Distribu-tionally robust reinforcement learning with interactive data collection: Fundamental hardness and near-optimal algorithm. arXiv preprint arXiv:2404.03578 , 2024. Mandlekar, A., Zhu, Y., Garg, A., Fei-Fei, L., and Savarese, S. Adversarially robust policy learning: Active con-struction of physically-plausible perturbations. In 2017 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) , pp. 3932–3939. IEEE, 2017. Mei, R. and Wang, Z. Multi-agent deep reinforcement learning-based resource allocation for cognitive radio networks. IEEE Transactions on Vehicular Technology ,2024. Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., Graves, A., Riedmiller, M., Fidje-land, A. K., Ostrovski, G., et al. Human-level control through deep reinforcement learning. nature , 518(7540): 529–533, 2015. Moos, J., Hansel, K., Abdulsamad, H., Stark, S., Clever, D., and Peters, J. Robust reinforcement learning: A review of foundations and recent advances. Machine Learning and Knowledge Extraction , 4(1):276–315, 2022. Morimoto, J. and Doya, K. Robust reinforcement learning. 
+
+Neural computation , 17(2):335–359, 2005. Nie, H., Li, S., and Liu, Y. Multi-agent deep reinforcement learning for resource allocation in the multi-objective hetnet. In 2021 International Wireless Communications and Mobile Computing (IWCMC) , pp. 116–121. IEEE, 2021. Novoa, L. J., Jarrah, A. I., and Morton, D. P. Flow balancing with uncertain demand for automated package sorting centers. Transportation Science , 52(1):210–227, 2018. Oren, Y., Sagawa, S., Hashimoto, T. B., and Liang, P. Dis-tributionally robust language modeling. In Proceedings of the 2019 Conference on Empirical Methods in Natu-ral Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) , pp. 4227–4237, 2019. Panaganti, K. and Kalathil, D. Robust reinforcement learn-ing using least squares policy iteration with provable performance guarantees. In International Conference on Machine Learning , pp. 511–520. PMLR, 2021. Panaganti, K., Xu, Z., Kalathil, D., and Ghavamzadeh, M. Robust reinforcement learning using offline data. Ad-vances in neural information processing systems , 35: 32211–32224, 2022. Panaganti, K., Wierman, A., and Mazumdar, E. Model-free robust ϕ-divergence reinforcement learning using both offline and online data. In Proceedings of the 41st Inter-national Conference on Machine Learning , pp. 39324– 39363, 2024. 11 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Perron, L. and Furnon, V. Or-tools. Google ,2024. URL https://developers.google.com/ optimization/ .Pinto, L., Davidson, J., Sukthankar, R., and Gupta, A. Ro-bust adversarial reinforcement learning. In International conference on machine learning , pp. 2817–2826. PMLR, 2017. Rahimian, H. and Mehrotra, S. Distributionally robust op-timization: A review. Open Journal of Mathematical Optimization, Volume 3 , 2022. Ramesh, S. S., Sessa, P. G., Hu, Y., Krause, A., and Bo-gunovic, I. Distributionally robust model-based reinforce-ment learning with large state spaces. In International Conference on Artificial Intelligence and Statistics , pp. 100–108. PMLR, 2024. Rashid, T., Samvelyan, M., De Witt, C. S., Farquhar, G., Foerster, J., and Whiteson, S. Monotonic value function factorisation for deep multi-agent reinforcement learning. 
+
+Journal of Machine Learning Research , 21(178):1–51, 2020. Ren, A. Z. and Majumdar, A. Distributionally robust policy learning via adversarial environment generation. IEEE Robotics and Automation Letters , 7(2):1379–1386, 2022. Rockafellar, R. T. and Uryasev, S. Optimization of con-ditional value-at-risk. The Journal of Risk , 2(3):21–41, 2000. Rudin, W. Principles of mathematical analysis, 2021. Russo, D. J., Van Roy, B., Kazerouni, A., Osband, I., Wen, Z., et al. A tutorial on thompson sampling. Foundations and Trends® in Machine Learning , 11(1):1–96, 2018. Sagawa, S., Koh, P. W., Hashimoto, T. B., and Liang, P. Distributionally robust neural networks. In International Conference on Learning Representations , 2020. Samvelyan, M., Rashid, T., De Witt, C. S., Farquhar, G., Nardelli, N., Rudner, T. G., Hung, C.-M., Torr, P. H., Foerster, J., and Whiteson, S. The starcraft multi-agent challenge. arXiv preprint arXiv:1902.04043 , 2019. Shapiro, A. Distributionally robust stochastic programming. 
+
+SIAM Journal on Optimization , 27(4):2258–2275, 2017. Shen, Y., McClosky, B., Durham, J. W., and Zavlanos, M. M. Multi-agent reinforcement learning for resource alloca-tion in large-scale robotic warehouse sortation centers. In 2023 62nd IEEE Conference on Decision and Control (CDC) , pp. 7137–7143. IEEE, 2023. Shi, L., Gai, J., Mazumdar, E., Chi, Y., and Wierman, A. Breaking the curse of multiagency in robust multi-agent reinforcement learning. arXiv preprint arXiv:2409.20067 ,2024a. Shi, L., Mazumdar, E., Chi, Y., and Wierman, A. Sample-efficient robust multi-agent reinforcement learning in the face of environmental uncertainty. In International Con-ference on Machine Learning , pp. 44909–44959. PMLR, 2024b. Smirnova, E., Dohmatob, E., and Mary, J. Distributionally robust reinforcement learning. In Reinforcement Learning for Real Life, ICML Workshop , 2019. Soma, T., Gatmiry, K., and Jegelka, S. Optimal algorithms for group distributionally robust optimization and beyond. 
+
+arXiv preprint arXiv:2212.13669 , 2022. Sunehag, P., Lever, G., Gruslys, A., Czarnecki, W. M., Zam-baldi, V., Jaderberg, M., Lanctot, M., Sonnerat, N., Leibo, J. Z., Tuyls, K., et al. Value-decomposition networks for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 , 2017. Villani, C. et al. Optimal transport: old and new , volume 338. Springer, 2008. Wang, S., Si, N., Blanchet, J., and Zhou, Z. On the foun-dation of distributionally robust reinforcement learning. 
+
+arXiv preprint arXiv:2311.09018 , 2023. Wiesemann, W., Kuhn, D., and Rustem, B. Robust markov decision processes. Mathematics of Operations Research ,38(1):153–183, 2013. Wu, X. and Fu, J. Distributed robust optimization for multi-agent systems with guaranteed finite-time convergence. 
+
+arXiv preprint arXiv:2309.01201 , 2023. Wurman, P. R., D’Andrea, R., and Mountz, M. Coordi-nating hundreds of cooperative, autonomous vehicles in warehouses. AI magazine , 29(1):9–9, 2008. Xu, H. and Mannor, S. Distributionally robust markov decision processes. Advances in Neural Information Pro-cessing Systems , 23, 2010. Xu, M., Huang, P., Niu, Y., Kumar, V., Qiu, J., Fang, C., Lee, K.-H., Qi, X., Lam, H., Li, B., et al. Group distribu-tionally robust reinforcement learning with hierarchical latent variables. In International Conference on Artificial Intelligence and Statistics , pp. 2677–2703. PMLR, 2023. Yamagata, T. and Santos-Rodriguez, R. Safe and robust reinforcement-learning: Principles and practice. arXiv preprint arXiv:2403.18539 , 2024. 12 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Zhang, K., Sun, T., Tao, Y., Genc, S., Mallya, S., and Basar, T. Robust multi-agent reinforcement learning with model uncertainty. Advances in neural information processing systems , 33:10571–10583, 2020. Zhang, Z., Panaganti, K., Shi, L., Sui, Y., Wierman, A., and Yue, Y. Distributionally robust constrained rein-forcement learning under strong duality. arXiv preprint arXiv:2406.15788 , 2024. Zhen, J., Kuhn, D., and Wiesemann, W. A unified the-ory of robust and distributionally robust optimization via the primal-worst-equals-dual-best principle. Operations Research , 2023. 13 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+# Appendix A. Proofs of Theoretical Results 
+
+A.1. Proof of Lemma 3.1 
+
+Recall the definition of M in (5) and for any probability distribution P ∈ M, we have 
+
+EX∼P
+
+r s, a ; X =
+
+Z
+
+r s, a ; X P(X) dX 
+
+=
+
+Z
+
+r s, a ; X mX
+
+> g=1
+
+qg Pi(X)
+
+!
+
+dX 
+
+=
+
+> m
+
+X
+
+> g=1
+
+qg
+
+Z
+
+r s, a ; X Pi(X) dX =
+
+> m
+
+X
+
+> g=1
+
+qg EX∼Pg
+
+r s, a ; X .
+
+(14) Then, taking the infimum on both sides yields: 
+
+inf  
+
+> P∈M
+
+EX∼P
+
+r s, a ; X = inf 
+
+> q∈∆m
+> m
+
+X
+
+> g=1
+
+qg EX∼Pg
+
+r s, a ; X 
+
+= inf  
+
+> g∈G
+
+EX∼Pg
+
+r s, a ; X ,
+
+(15) since optimum of a linear program over simplex ∆m is obtained at vertices. ■
+
+A.2. Proof of Lemma 3.2 
+
+In order to find the group distributionally robust action-value function ˜Q, we consider the worst-case immediate reward at each state-action pair (s, a ) as: 
+
+˜r(s, a ) = min  
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] ≤ EX∼P [r(s, a ; X)] , (16) for all unknown distribution P ∈ M. Then, the worst-case return is given by: 
+
+˜Rt =
+
+> ∞
+
+X
+
+> k=0
+
+γk ˜r(s, a ) ≤
+
+> ∞
+
+X
+
+> k=0
+
+γk EX∼Pk [rt+k+1 (s, a ; X)] , (17) where γ ∈ [0 , 1] is the discount factor and the inequality holds for all possible sequences {Pk}∞ 
+
+> k=0
+
+with Pk ∈ M. Then, the worst-case action-value function under policy π can be expressed as: 
+
+˜Qπ (s, a ) = Eπ
+
+h
+
+˜r(s, a ) + γ ˜Qπ (st+1 , a t+1 ) st = s, a t = a
+
+i
+
+= Es′∼P (·| s,a )
+
+h
+
+˜r(s, a ) + γEa′∼π(·| s′) ˜Qπ (s′, a ′)
+
+i
+
+,
+
+(18) and the optimal worst-case action-value function satisfies the Bellman optimality equation: 
+
+˜Q∗(s, a ) = ˜ r(s, a ) + γ Es′∼P (·| s,a )
+
+h
+
+max 
+
+> a′
+
+˜Q∗(s′, a ′)
+
+i
+
+. (19) Following the result from (Liu et al., 2022), the distributionally robust Bellman Operator with ambiguity sets P and R is given by 
+
+˜TP,R( ˜Q)( s, a ) = inf 
+
+> ps,a ∈P
+> rs,a ∈R
+
+n
+
+Ers,a [r(s, a )] + γ Eps,a 
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+, (20) where ps,a and rs,a denote the distributions of state transitions probabilities and reward functions respectively, with their corresponding ambiguity sets P and R. Since the distribution shift in the random variable X only affects the reward, i.e., 14 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+the distribution of the reward function rs,a , we have: 
+
+˜TR( ˜Q)( s, a ) = inf 
+
+> rs,a ∈R
+
+n
+
+Ers,a [r(s, a )] + γ
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+= ˜ r(s, a ) + γ max 
+
+> a′
+
+˜Q(s′, a ′)= inf 
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] + γ max 
+
+> a′
+
+˜Q(s′, a ′) = ˜TG ( ˜Q)( s, a ).
+
+(21) We further show the distributionally robust Bellman operator is a contraction mapping under the ℓ∞ norm. Consider two arbitrary robust action-value functions ˜Q1 and ˜Q2 such that 
+
+˜TG ( ˜Q1)( s, a ) = ˜ r(s, a ) + γ max 
+
+> a′
+
+˜Q1(s′, a ′)˜TG ( ˜Q2)( s, a ) = ˜ r(s, a ) + γ max 
+
+> a′
+
+˜Q2(s′, a ′). (22) Finding the difference yields 
+
+| ˜TG ( ˜Q1)( s, a ) − ˜TG ( ˜Q2)( s, a )| ≤ γ max  
+
+> s′,a ′
+
+| ˜Q1(s′, a ′) − ˜Q2(s′, a ′)|, (23) and taking the maximum over all feasible state-action pair (s, a ) implies 
+
+∥ ˜TG ( ˜Q1) − ˜TG ( ˜Q2)∥ℓ∞ ≤ γ∥ ˜Q1 − ˜Q2∥ℓ∞ . (24) Since γ ∈ [0 , 1] , this establishes that DR Bellman operator is a contraction mapping under the ℓ∞ norm. By Banach’s Fixed Point Theorem (Rudin, 2021), there exists a unique fixed point ˜Q∗ such that ˜TG ( ˜Q∗) = ˜Q∗. Consequently, iteratively applying the operator ensures convergence to ˜Q∗, proving the stability of the robust Q-learning algorithm. This contraction property of the DR Bellman operator was also addressed in (Iyengar, 2005) when the ambiguity set is defined for transition probability. ■
+
+# B. Implementation Details for Simplified Robotic Sortation Warehouse 
+
+We define a Markov game for N agents (representing unique destinations) by the tuple  N, S, {O i}Ni=1 , {A i}Ni=1 , P, {ri}Ni=1 , γ, ρ 0
+
+, where: (a) Agents: The set of N agents, each corresponding to a unique destination. (b) State Space: S denotes the joint state space. (c) Observation Space: For each agent i, Oi ⊂ S represents its local observation at each time step, consisting of: 
+
+– The total number of assignable chutes (uniform across all agents) 
+
+– The number of chutes currently assigned to agent i
+
+(d) Action Space: For each agent i, Ai ⊂ [0 , 1] represents its action space, where each action determines if a new chute will be allocated. An action value of 1 indicates the assignment of a new chute to destination i. The joint action space is defined as A = QNi=1 Ai.(e) Transition Probability: P : S × A × S → [0 , 1] specifies the probability of transitioning between states, representing the likelihood of packages being either successfully sorted or diverted to the recirculation buffer. (f) Reward Function: For each agent i, ri : S × A × X → R defines the reward function, which penalizes the number of packages in the recirculation buffer resulting from the current chute allocation. The model is completed with discount factor γ ∈ (0 , 1) and initial state distribution ρ0. In Section 5.1, we employ the Value Decomposition Network (VDN) (Shen et al., 2023) combined with budget constraints in computing joint actions. 15 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+In the simplified robotic sortation environment, we fix the total induction volume at each time step to 1200 packages. The number of incoming packages for each destination i = 1 , . . . , N follows an unknown normal distribution N (μ, σ ). For each destination i, the probability that an incoming package is assigned to destination i is given by: 
+
+P
+
+n
+
+incoming package belongs to i
+
+o
+
+= Φ( i−μσ ) − Φ( i−1−μσ )Φ( N −μσ ) − Φ( −μσ ) , (25) where Φ( z) = 1√2π
+
+R z 
+
+> −∞
+
+e− t22 dt is the cumulative distribution function of the standard normal distribution. This formulation ensures PNi=1 P{incoming package belongs to i} = 1 . The distribution of packages across destinations is then determined by sampling 1200 packages according to the probabilities defined in (25) at each time step. In Section 5.1, we assume the destination transportation vehicle has infinite capacity, meaning packages enter the recirculation buffer only when incoming packages are destined for a location without an assigned eject chute. In this example, we construct the ambiguity set as: 
+
+M := 
+
+n˜P =
+
+> m
+
+X
+
+> g=1
+
+qg Pg | q ∈ ∆m
+
+o
+
+, (26) where each Pg represents a normal distribution N (μg , σ ) with different μg s. For our simulation, we construct the ambiguity set using m = 9 groups with means μg ∈ {− 4, −3, . . . , 0, . . . , 4}, standard deviation σ = 2 , and index set G =
+
+{1, 2, . . . , 9}.
+
+# C. Implementation Details for Large-Scale Robotic Sortation Warehouse 
+
+C.1. MARL Structure 
+
+We define a Markov game over N agents (unique destinations) by the tuple  N, S, {O i}Ni=1 , {A i}Ni=1 , P, {ri}Ni=1 , γ, ρ 0
+
+,where: (a) Agents: N agents, each corresponding to a unique destination. (b) State Space: S denotes the joint state space. (c) Observation Space: For each agent i, Oi ⊂ S represents its local observation at each time step, consisting of: 
+
+– Number of packages recirculated until time t for agent i
+
+– Total number of available chutes that can be assigned (uniform across all agents) 
+
+– Number of chutes currently assigned to agent i
+
+(d) Action Space: For each agent i, Ai represents its action space, determining the number of new chutes required. Actions take values in [0 , 10] , where an action value a indicates the assignment of a new chutes to agent i at that time step. The joint action space is defined as A = QNi=1 Ai.(e) Transition Probability: P : S × A × S × X → [0 , 1] specifies the probability of packages being either sorted by chutes or sent to the recirculation buffer. In the large-scale robotic sortation warehouse setting, the transition probability is a function of the induction distribution P with random variable X ∈ X , which is addressed in detail in Appendix C.5. (f) Reward Function: For each agent i, ri : S × A × X → R defines the reward function, penalizing both the number of allocated chutes and the number of packages in the recirculation buffer. The recirculation is a function of the induction distribution, which is defined in Appendix C.2. The model is completed with discount factor γ ∈ (0 , 1) and initial state distribution ρ0.
+
+C.2. Induction Distribution 
+
+For a given sortation warehouse with D destinations and T time intervals (e.g., hours or minutes) in a day, we consider the random vector X = {X1, . . . , X DT } ∈ RDT , where each Xi ≥ 0 denotes the number of packages inducted for a specific 16 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping  
+
+> Figure 10: A realization of the random variable X. The values are synthetic and do not represent actual Amazon induction volumes.
+
+destination-time pair (d, t ) ∈ { 1, . . . , D } × { 1, . . . , T }. That is, X(d,t ) represents the number of packages inducted for destination d during time interval t. A realization of the random variable X is shown in Figure 10. We model the daily induction pattern as a random variable X drawn from an unknown distribution P, which we refer to as the induction generating distribution. We assume that the total daily induction volume is fixed at V across all days, as the MARL chute mapping policy is primarily influenced by the spatial-temporal distribution pattern rather than variations in total volume. The daily induction is thus generated by sampling a realization of X from P.
+
+Definition C.1 (Induction Generating Distribution) . We define the induction generating distribution as a multinomial distribution 
+
+X = ( X1, . . . , X k) ∼ M  V, p 1, . . . , p k
+
+,
+
+where V ∈ N is the total number of packages inducted in a day, and the probability vector (p1, . . . , p k) satisfies pi ≥ 0 and 
+
+Pki=1 pi = 1 . The support of X is the set 
+
+(
+
+(z1, . . . , z k) ∈ Nk
+
+> 0
+> k
+
+X
+
+> i=1
+
+zi = V
+
+)
+
+.
+
+Its probability mass function is given by 
+
+P(X1 = z1, . . . , X k = zk) = n!
+
+z1!z2! · · · zk! pz1 
+
+> 1
+
+· · · pzk 
+
+> k
+
+,
+
+for all (z1, . . . , z k) in the support. For induction random variables X corresponding to temporally proximate dates (e.g., within the same week), we assume they share a common induction generating distribution P = M(V, p 1, . . . , p DT ). In practice, this distribution is estimated via the Sample Average Approximation (SAA) method (Kim et al., 2015) using historical induction data from the relevant dates. Specifically, we collect historical induction records from Years 1-4 and partition them into 21 groups based on week numbers. For each group g, we construct an empirical induction generating distribution Pg via SAA, modeled as a multinomial distribution using all induction observations within that group. The group ambiguity set M in (5) is then formed from the collection {P1, P2, . . . , P21 }. The probability pj of assigning an incoming package to the j-th destination-time pair is estimated from the corresponding empirical multinomial distribution 
+
+Pg . Given a total volume of V packages, the daily induction is generated by a single sample from this distribution. Amazon has publicly reported double-digit Year-over-Year (YoY) growth in retail sales in its Q4 earnings press releases over multiple consecutive years (Amazon.com, Inc., 2022; 2023; 2024). This sustained growth translates directly to the package sortation context, resulting in significant YoY increases in induction volumes. In practice, package volume and its spatial distribution exhibit substantial variability across both seasonal and annual timescales. Seasonal effects introduce 17 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+> Table 4: Average Type-1 Wasserstein distances for each week compared to Week 1 of the same year.
+
+Year Week 2 Week 3 Week 4 Week 5 
+
+Year 1 76.87 202.96 147.17 241.80 Year 2 36.46 70.47 301.25 123.45 Year 3 25.81 23.87 72.91 78.82 Year 4 72.99 45.04 24.92 62.39 
+
+> Table 5: Average Type-1 Wasserstein distance to Year 1 ( ↓).
+
+Year 2 Year 3 Year 4 
+
+1172.85 585.98 288.86 
+
+predictable fluctuations driven by major sales events and holidays (e.g., Black Friday, Cyber Monday, and year-end gifting), while annual trends reflect more gradual changes due to evolving customer behavior, shifts in logistics strategies, and overall business expansion. We further quantify these distributional changes using the empirical Type-1 Wasserstein distance (Villani et al., 2008), as shown in Table 4 and Table 5. Specifically, Table 4 compares four representative weeks to Week 1 within each year, revealing substantial seasonal variation in induction distributions. Additionally, we find that the Wasserstein distance between consecutive days is typically on the order of 20 , indicating moderate short-term variability. Table 5 illustrates yearly distributional shifts by comparing the same temporal slices across different years to the baseline in Year 1. These results highlight that inter-annual changes tend to be even more pronounced than intra-annual seasonal effects, posing significant challenges for policies that rely on static assumptions or historical averages. 
+
+C.3. Dimension Reduction of the State-Action Space 
+
+To manage the dimensionality of the state-action space, we decompose the joint Q-network into a sum of local Q-networks. Each local network captures the expected return of an individual agent’s chute mapping actions, while the joint network represents the expected return of the complete chute assignment across all agents. Specifically, we express the joint Q-network as: 
+
+Q(s, a, θ ) = XNi=1 Q′(i, s i, a i; θ), (27) where the input space scales linearly with the number of agents. While this decomposition is similar to that proposed in (Shen et al., 2023), our approach learns a single shared Q′ network for all agents, rather than separate networks for each agent, resulting in improved computational efficiency. 
+
+C.4. Feasibility of Joint Actions 
+
+In unconstrained settings, agents would simply select actions that maximize their individual Q-networks, with the joint action being the collection of these individual choices. However, the chute mapping problem introduces resource constraints, as agents must share a limited number of available chutes. This necessitates coordination to allocate resources optimally among the agents based on their state-action values. Given a budget constraint M on the joint actions, such that PNi=1 ai ≤ M , we formulate the following integer program to determine the optimal joint action that maximizes the joint Q-network for any state s:maximize 
+
+> a1,...,a N
+
+XNi=1 Q′(i, s i, a i; θ)
+
+s.t. XNi=1 ai ≤ M, a i ∈ N.
+
+(28) This integer program, which can be efficiently solved using commercial solvers such as Google OR- Tools (Perron & Furnon, 2024) or Xpress (FICO, 2023), serves two purposes: it generates feasible data for the replay buffer to compute the expectation in (3) during training, and it determines the optimal actions once learning has converged. Notably, this optimization step is separate from the Q-learning process. 18 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+Figure 11: Comparison of worst-case returns: estimation using QCB for both immediate rewards and transition probabilities is compared against the actual observed values from extensive state-action space exploration. The close alignment validates our approach of using QCB 
+
+to approximate both components of the worst-case scenario in (30). 
+
+C.5. Distributionally Robust Bellman Operator in Large-Scale Robotic Sortation Warehouses 
+
+In large-scale robotic sortation warehouses, we observe that the transition probability is dependent on the induction random variable X, which violates the assumption in Lemma 3.2. Consequently, we must compute: 
+
+inf  
+
+> P∈M
+
+γ Eps,a (X),X ∼Pg
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+i
+
+for the distributionally robust Bellman operator. This leads to: 
+
+˜TR( ˜Q)( s, a ) = inf 
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] + inf 
+
+> P∈M
+
+n
+
+γ Eps,a (X),X ∼Pg
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+(29) where the computation becomes infinite-dimensional and practically intractable. To address this, during training, we approximate the distributionally robust Bellman operator with: 
+
+˜UR( ˜Q)( s, a ) = inf 
+
+> g∈G
+
+n
+
+EX∼Pg [r(s, a ; X)] + γ Eps,a (X),X ∼Pg
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+, (30) which provides an upper bound for the distributionally robust Bellman operator, as shown by: 
+
+˜UR( ˜Q)( s, a ) ≥ inf 
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] + inf 
+
+> g∈G
+
+n
+
+γ Eps,a (X),X ∼Pg
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+≥ inf 
+
+> g∈G
+
+EX∼Pg [r(s, a ; X)] + inf 
+
+> P∈M
+
+n
+
+γ Eps,a (X),X ∼Pg
+
+h
+
+max 
+
+> a′
+
+˜Q(s′, a ′)
+
+io 
+
+= ˜TR( ˜Q)( s, a ).
+
+(31) During training, we use (30) to construct the loss function (13) for DRMARL, where the optimization problem within (30) is solved using the solution from the CB-based worst-case reward estimator QCB . In practice, this approximation (30) proves highly effective for the worst-case return, with the relative approximation error of ˜UR( ˜Q)( s, a ) to ˜TR( ˜Q)( s, a ) being less than 0.57% (see Figure 11). This small error margin indicates that ˜UR( ˜Q)( s, a ) does not impede DRMARL’s ability to capture the worst-case return. 
+
+# D. Additional Simulation Results and Discussions 
+
+D.1. Simplified Sortation Environments 
+
+As shown in Table 6, the DRMARL policy with QCB outperforms both the MARL policy and the DRMARL policy trained with random group selection across all metrics. Here, random group selection refers to replacing Line 7 of Algorithm 2 with: 
+
+g′ ← Uniform (G),
+
+instead of: 
+
+g′ ← arg min  
+
+> g∈G
+
+QCB (st, a t, g ).
+
+This confirms that QCB effectively enables the DRMARL policy to explore worst-case reward functions during training. Furthermore, when compared to a DRMARL policy trained using exhaustive search over worst-case rewards for each 19 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping    
+
+> Table 6: Comparison of key sortation metrics across policies, averaged over m= 9 groups, each evaluated over 100 runs.
+
+## Policy Recirculation Rate ( ↓) Throughput ( ↑) Recirculation Amount ( ↓)
+
+## MARL 2.16% ± 2.35% 11740 .98 ± 42 .30 259 .02 ± 19 .81 
+
+## DRMARL (random) 1.56% ± 1.45% 11812 .77 ± 30 .14 187 .23 ± 17 .26 
+
+## DRMARL (with QCB ) 0.56 % ± 0.18 % 11932 .21 ± 24 .12 67 .79 ± 5.16 
+
+## DRMARL (exhaustive) 0.55% ± 0.13% 11933 .68 ± 22 .48 66 .32 ± 4.83 
+
+## MARL (group-specific) 0.53% ± 0.14% 11936 .60 ± 23 .11 63 .40 ± 5.02 0 50 100 150 200 250 300 350 400 
+
+> Training Time (Seconds)
+> 0
+> 250
+> 500
+> 750
+> 1000
+> 1250
+> 1500
+> 1750
+> 2000
+> Recirculation
+> CB-based Predictor
+> Exhaustive Search
+> Random Group Switch
+> MARL on Group #1
+> Figure 12: Training efficiency comparison in simplified robotic sortation warehouses.
+
+state-action pair (s, a ), the QCB -based approach achieves equivalent policy performance and robustness while being computationally more efficient. The last row presents the theoretical optimal performance of group-specific MARL policies (trained and tested on the same group). DRMARL performs only marginally below this optimal baseline, demonstrating an effective balance between individual performance and distributional robustness. The training efficiency comparison across different approaches is presented in Figure 12. DRMARL with exhaustive search requires the longest training time due to its comprehensive exploration across all distribution groups. In contrast, DRMARL with QCB converges significantly faster while matching the recirculation performance of the exhaustive search in initial stages, validating QCB ’s ability to identify worst-case groups. DRMARL with random group selection shows faster convergence than the QCB -based approach, but this is because random exploration does not guarantee capturing the worst-case reward functions. The group-specific MARL policy exhibits the fastest convergence due to the relative simplicity of its training task. 
+
+D.2. Large-Scale Robotic Sortation Environments 
+
+D.2.1. D ETAILED EVALUATION RESULTS ACROSS ALL GROUPS 
+
+Table 7 presents detailed validation results comparing MARL and DRMARL chute mapping policies across all induction distribution groups from Years 1-4. The DRMARL policy demonstrates superior performance across most groups, achieving both higher package sortation throughput and lower recirculation rates. The only exceptions are two groups in Year 4, where the MARL policy shows marginally better throughput but at the cost of higher recirculation rates. This is expected behavior since the MARL policy is specifically trained on Year 4 induction data, while DRMARL optimizes for robustness rather than throughput maximization. Overall, DRMARL achieves significant improvements, reducing recirculation by 80% on average while simultaneously increasing throughput by 5.62% on average. 20 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping                                                                                               
+
+> Table 7: Relative key metrics improvements over MARL baseline trained on Year 4 data in large-scale robotic sortation warehouses.
+> GROUP NUMBER YEAR RECIRCULATION RATE
+> REDUCTION (%) PACKAGE THROUGHPUT
+> INCREASE (%) PACKAGE RECIRCULATION
+> AMOUNT REDUCTION (%)
+> 1194.75 31.66 94.21 2193.19 23.47 92.55 3194.62 35.69 94.26 4193.85 25.94 93.85 5195.90 19.50 95.67 6290.47 5.79 90.44 7291.27 5.24 91.11 8277.22 4.13 77.22 9283.34 2.49 83.34 10 285.12 5.07 85.12 11 292.85 6.97 92.82 12 384.22 4.54 84.59 13 383.14 15.89 81.57 14 385.53 4.17 86.04 15 383.63 5.51 83.58 16 384.24 5.52 84.19 17 434.18 -0.99 36.71 18 457.04 -5.85 62.34 19 475.78 4.47 75.73 20 466.59 9.85 64.18 21 475.07 5.64 75.83
+
+D.2.2. A BLATION STUDY 
+
+Ablation studies were conducted across a variety of warehouse layouts, focusing primarily on varying the total number of eject chutes and unique induction destinations. These factors directly influence the action space size and the underlying transition probabilities, thereby significantly affecting policy performance. By systematically modifying these environmental parameters, we assess the adaptability and robustness of DRMARL compared to the standard MARL baseline under diverse operational conditions. In Figure 13, we reduce the total number of eject chutes available in the warehouse to model different warehouse operational conditions. As the number of chutes decreases, competition among destinations for shared eject chute resources intensifies, amplifying the complexity of the allocation problem. Despite this increased challenge, DRMARL consistently outperforms the standard MARL baseline across all tested chute configurations. This superior performance highlights DRMARL’s robust ability to handle both the complexity and uncertainty inherent in real-world resource allocation tasks. Meanwhile, Figure 14 explores the impact of progressively reducing the number of induction destinations on policy effectiveness. DRMARL maintains stable performance throughout most scenarios, demonstrating robustness to changes in destination diversity. However, when only 50% of destinations remain active, MARL surpasses DRMARL in performance. This phenomenon arises because DRMARL adopts a conservative strategy that reserves chutes for potential future destina-tions, including those that may not materialize when half of the destinations are inactive. In contrast, MARL employs a more aggressive allocation approach, prioritizing immediate assignment of chutes to currently active destinations without accounting for the risk of obstructing future inductions. This trade-off underscores DRMARL’s cautious, risk-aware design, which generally yields better performance but can be slightly less optimal in highly reduced destination scenarios. D.2.3. P OTENTIAL LIMITATIONS 
+
+A natural concern with DRMARL’s contextual bandit-based worst-case reward estimator is whether it might induce overly pessimistic learning dynamics. Specifically, whether selecting the most adverse induction distribution at each step could lead to excessively negative reward signals, resulting in instability or premature convergence to suboptimal policies, which is a well-known challenge in robust policy learning. To mitigate such effects, our framework aggregates induction data across multiple operational days rather than evaluating each day in isolation. This aggregation dampens the influence of extreme outliers and stabilizes the worst-case signal used for training. In our experiments, this approach proved effective, as no instability was observed due to extreme worst-case distributions. Nonetheless, we acknowledge that, in practical 21 Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping 
+
+> Figure 13: Relative improvement in recirculation rate ( ↑) over the baseline MARL across different numbers of available chutes.
+> Figure 14: Relative improvement in recirculation rate ( ↑) compared to the baseline MARL, shown across varying percentages of 120 induction destinations remaining active.
+
+deployment, highly anomalous induction patterns could arise. In such cases, extreme outliers can be filtered prior to training, and a fallback to a heuristic policy can be used when necessary. This trade-off reflects a known limitation of distributionally robust methods: while they offer improved resilience under uncertainty, they may become overly conservative in the face of extreme but low-probability events. 22

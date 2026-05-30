@@ -1,0 +1,5281 @@
+Title: Concurrent Reinforcement Learning with Aggregated States  via Randomized Least Squares Value Iteration
+
+URL Source: https://openreview.net/pdf?id=MhYnnDBAJ8
+
+Number of Pages: 33
+
+Markdown Content:
+# Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Yan Chen 1 Qinxun Bai 2 Yiteng Zhang 3 Maria Dimakopoulou 4 Shi Dong 5 Qi Sun 6 Zhengyuan Zhou 6 7 
+
+## Abstract 
+
+Designing learning agents that explore efficiently in a complex environment has been widely recog-nized as a fundamental challenge in reinforcement learning. While a number of works have demon-strated the effectiveness of techniques based on randomized value functions on a single agent, it remains unclear, from a theoretical point of view, whether injecting randomization can help a soci-ety of agents concurently explore an environment. The theoretical results established in this work tender an affirmative answer to this question. We adapt the concurrent learning framework to ran-domized least-squares value iteration (RLSVI) with aggregated state representation . We demon-strate polynomial worst-case regret bounds in both finite- and infinite-horizon environments. In both setups the per-agent regret decreases at an optimal rate of Θ
+
+ 1√N
+
+
+
+, highlighting the advan-tage of concurent learning. Our algorithm exhibits significantly lower space complexity compared to (Russo, 2019) and (Agrawal et al., 2021). We reduce the space complexity by a factor of K
+
+while incurring only a √K increase in the worst-case regret bound, compared to (Agrawal et al., 2021; Russo, 2019). Interestingly, our algorithm improves the worst-case regret bound of (Russo, 2019) by a factor of H1/2, matching the improve-ment in (Agrawal et al., 2021). However, this result is achieved through a fundamentally differ-ent algorithmic enhancement and proof technique. Additionally, we conduct numerical experiments to demonstrate our theoretical findings.         
+
+> 1Duke University 2Horizon Robotics Inc 3UC Berkeley 4Uber
+> 5Google DeepMind 6New York University 7Arena Technologies. Correspondence to: Zhengyuan Zhou <z@arena-ai.com>.
+> Proceedings of the 42 nd International Conference on Machine Learning , Vancouver, Canada. PMLR 267, 2025. Copyright 2025 by the author(s).
+
+## 1. Introduction 
+
+The field of reinforcement learning (RL) is dedicated to de-signing agents that interact with an unknown environment, aiming to maximize the total amount of reward accumu-lated throughout the interactions (Sutton & Barto, 2018). When the environment is complex yet the learning budget is limited, an agent has to efficiently explore the environ-ment, giving rise to the well-known exploration-exploitation trade-off. A large body of works in the RL literature have addressed the challenge related to smartly balancing this trade-off. Among the many proposed methods, algorithms based on randomization are receiving growing attention, both theoretically (Russo & Van Roy, 2014; Fellows et al., 2021) and empirically (Osband et al., 2016; Janz et al., 2019; Dwaracherla et al., 2020), due to their effectiveness and po-tential scalability in large applications. Randomized least-squares value iteration (RLSVI) repre-sents one example of such randomization-based algorithms (Osband et al., 2019). On a high level, RLSVI injects Gaus-sian noise into the rewards in the agent’s previous trajec-tories, and allows the agent to learn a randomized value function from the perturbed dataset. With judicious noise in-jection, the resultant value function approximates the agent’s posterior belief of state values. By acting greedily with respect to such randomized value function, the agent effec-tively executes an approximated version of posterior sam-pling for reinforcement learning (PSRL), whose efficacy has been substantiated in previous works (Osband et al., 2013; Russo & Van Roy, 2014; Xu et al., 2022). Compared with PSRL, RLSVI circumvents the need of maintaining a model of the environment, severing huge computational cost. Since its advent, RLSVI has been studied extensively in theoretical contexts, such as (Russo, 2019) and (Ishfaq et al., 2021). In this work, we look into RLSVI from the perspective of concurrent learning (Silver et al., 2013). Specifically, con-current RL studies the problem where a cohort of agents interact with one common environment, yet are able to share their experience with each other in order to jointly improve their decisions. Such a collaborative setting has useful ap-plications in a variety of realms, such as robotics (Gu et al., 2017), biology (Sinai et al., 2020), and recommendation 1Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+systems (Agarwal et al., 2016). For instance, a team of drones may be cooperatively executing a search and rescue mission in a given terrain, and cooperatively learning to identify the locations of assets requires efficient concurrent RL. Another example is a team of virtual agents conduct-ing circuit design, proceeding in parallel the design-circuit evaluation (via a simulator)-redesign loop. Here, they are cooperatively exploring the vast and complex design space, aiming to quickly identify an optimal design that meets all the sepc requirements 1. Importantly, although all agents share the identical goal, coordination between agents is non-trivial. In fact, as shown in (Dimakopoulou & Van Roy, 2018; Dimakopoulou et al., 2018), a poorly coordinated multi-agent algorithm can drastically undermine the overall learning performance. Results in the existing theoretical literature on concurrent RL have demonstrated that PSRL (Osband & Van Roy, 2017; Kim, 2017; Osband & Van Roy, 2014) in a coordinated style is provably efficient (Chen et al., 2022), compared to the earlier cooperative UCRL type of algorithms 2. As pointed out in (Chen et al., 2022), “these sample-complexity guarantees notwithstanding, concurrent UCRL algorithms suffer from the critical disadvantage of no coordinated exploration: since the upper confidence bounds computed by aggregating all agents’ data are the same the entire team, each agent would follow the exact same pol-icy, thereby yielding no diversity in exploration." However, despite the exploration advantage offered by concurrent Thompson sampling given in a very recent work (Chen et al., 2022), it remains unclear whether the same level of efficiency can be extended to cooperative model-free agents, which are computationally more scalable. 
+
+Our Contributions We model the environment as a Markov decision process (MDP) with Γ aggregated states, and show theoretically that a cohort of N agents, concur-rently running RLSVI and sharing interaction trajectories with each other, are able to efficiently improve their joint            
+
+> 1For instance, Arena, a world leading startup that specializes in applying AI to shorten the hardware design loop, utilizes RL to speed up the circuit design, test and debugging cycles.
+> 2It is perhaps not surprising that UCRL algorithms are the first family of algorithms that have been adapted to the concurrent RL settings (Guo & Brunskill, 2015) and (Pazis & Parr, 2016). In particular, concurrent UCRL has been analyzed for the sam-ple complexity performance measure (i.e. how many samples are needed to learn an ϵ-optimal policy) under both finite action space setting and infinite action space setting. More specifically, (Guo & Brunskill, 2015) provided a high-probability bound of
+> ˜O(S2Aϵ3+SAn ϵ)for the sample complexity with nagents inter-acting in the environment. Their algorithm was extended from MBIE(see (Strehl & Littman, 2008)), with a single agent perform-ing concurrent RL across a set of ninfinite-horizon MDPs. The results there show that with sharing samples from copies of the same MDP a linear speedup in the sample complexity of learn-ing can be achieved. But no regret bound was derived there for concurrent RL.
+
+performance towards the optimal policy in the environment. The efficiency is established through regret analysis. Ad-ditionally, for aggregated state representation setup, the performance typically will not converge to optimal solu-tion if ϵ > 0, and our result establishes that the cumulative performance loss is no greater than O(ϵ) per period per agent. This is consistent with the findings of (Dong et al., 2019b) for single-agent scenario. Our worst-case regret bound improves upon (Russo, 2019) by a factor of H1/2,matching the improvement in (Agrawal et al., 2021) but achieved through a fundamentally different technique and proof approach. One major difference between our algorithm and those from current literature of RLSVI in tabular setup is that, the al-gorithms in (Russo, 2019; Agrawal et al., 2021) require storing the historical trajectories from the very beginning while our algorithm only stores the trajectories from the last episode for the finite-horizon case or the last pseudo-episode (defined in Section 4) for the infinite-horizon case. This is because for concurrent setup, the computational cost of storing all historical data scales at least linear in KHN 
+
+for finite horizon and T N for infintie horizon, which is infeasible for problems of practical scale. In both cases, the regret dependence on the total number of samples is optimal, signaling well-coordinated informa-tion sharing among the agents.To our best knowledge, this work presents the first theoretical analysis of a model-free concurrent RL algorithm with aggregated states. Besides theoretical contributions, our analysis also sheds light on the empirical role of discount factor in RL. In prac-tical applications, a discount factor is usually not subsumed under the environment definition. Rather than prescribing a specific learning target that involves a decaying sequence of rewards, discount factors often simply function as a tuning parameter of the algorithm that keeps the value updates sta-ble. In this work, similar as in (Xu et al., 2022), when the decision horizon is infinite, the discount factor only shows up in the algorithm and does not appear in the learning tar-get. The sole purpose of introducing a discount factor is to decompose the single stream of interactions into “pseudo-episodes” that facilitate decision-making. Such view aligns with the authentic role of discount factor in agent design, and distinguishes this work from earlier RL theory literature on discounted regret such as (Dong et al., 2019a). While (Xu et al., 2022) focuses on PSRL, this paper is the first to extend the same view to a model-free algorithm that enjoys empirical successes. 
+
+Related Work Multi-agent Reinforcement Learning 
+
+(MARL) has been widely studied to address problems in a variety of applications like robotics, telecommunications and e-commerce (Bu¸ soniu et al., 2010). Scenarios of MARL 2Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+include fully cooperative (Abed-alguni et al., 2015; Zhang et al., 2010), fully competitive (Bansal et al., 2017; Wang & Klabjan, 2018) and other more general settings (Ryu et al., 2021; Lowe et al., 2017). Under these settings, a group of agents share and interact with a common random envi-ronment (Shoham & Leyton-Brown, 2008; Vlassis, 2022; Weiss, 1999). There are certain challenges of multi-agent systems as pointed out by (Zhang et al., 2021). For example, the agents may have non-unique learning goals (Shoham et al., 2003). Besides, the concurrent learning structure of MARL problem can cause the environment faced by each individual to be non-stationary. Particularly in some set-tings, the action taken by one agent affects the reward of other opponent agents and the evolution of the state (Zhang et al., 2021). Furthermore, to handle non-stationarity of the problems, the agents may need to form the joint action space, and the dimension the action spaces can increase exponentially with the number of agents (Kulkarni & Tai, 2010). We study the MARL problem under a concurrent learning framework involving homogeneous agents with a common learning goal. The agents interact with the unknown envi-ronment independently in parallel, and draw actions from a commonly shared action space. They communicate and share information according to some strategically devised schedule. All the agents share the same reward functions ac-cording to the states and actions they take. This is different from the Markov game setup (Szepesvári & Littman, 1999; Littman, 2001) where the reward is influenced by the joint action of all the agents in the system. We apply concurrent learning (Min et al., 2023; Dubey & Pentland, 2021) concept with the Randomized Least-Squares Value Iteration (RLSVI) learning framework with aggregated state representations (Dong et al., 2019b; Van Roy, 2006). On the one hand, RLSVI leverages random perturbations to approximate the posterior, applying frequen-tist regret analysis in the tabular MDP setting (Osband et al., 2016), inspiring works that focus on theoretical analyses to improve worst-case regret in tabular MDPs (Russo, 2019; Agrawal et al., 2021) and linear settings (Zanette et al., 2020; Ishfaq et al., 2023; Dann et al., 2021). On the other hand, while a large body of literature is established on tabular rep-resentations (Agarwal et al., 2020; Azar et al., 2011; Auer et al., 2008; Jiang et al., 2017; Jin et al., 2018; Osband et al., 2013; 2016; Strehl & Littman, 2008), aggregated state repre-sentation offers an approach to reduce statistical complexity given the fact that the data requirement and learning time scales with the number of state-action pairs in tabular repre-sentations. In this paper, we present a concurrent version of the randomized least-squared value iteration algorithm with aggregated states in finite-horizon and infinite-horizon set-tings, and we provide their corresponding worst-case regret bounds and numerical performances. As an outline of the rest of the paper, in Section 2, we define the finite-horizon case and introduce a concurrent learning framework with aggregated states. In Section 3, we summarize the finite-horizon concurrent RLSVI algorithm in Algorithm 3 and provide its worst-case regret bound in Theorem 2. Section 4 focuses on the infinite-horizon con-current learning framework with aggregated states, with the infinite-horizon concurrent RLSVI algorithm summarized in Algorithm 4. The corresponding worst-case regret bound is provided in Theorem 7 of Section 5. Numerical results of both algorithms are reported in Section 6. We also include Table 1 in Appendix A comparing our approach with prior work. 
+
+## 2. Finite-Horizon Concurent Learning 
+
+In this section, we consider a finite-horizon Markov De-cision Process (MDP) M = ( H, S, A, P, R ). There are 
+
+N agents interacting with the same environment across K
+
+episodes. Each episode contains H periods. For episode 
+
+k ∈ [K], period h ∈ [H], and agent p ∈ [N ], we use 
+
+spk,h to denote the state that the agent resides in, apk,h the action that the agent takes, and rpk,h = r(spk,h , a pk,h ) the reward that it receives, where r : S × A 7 → [0 , 1] is a deterministic reward function. Let the information set 
+
+Hk = {(spk,h , a pk,h , r pk,h ) : h ∈ [H]} be the trajectory dur-ing episode k for all the agents. The transition kernel P
+
+is defined as Ph,s,a (s′) = P
+
+
+
+sh+1 = s′ ah = a, s h = s
+
+
+
+.
+
+The expected reward that an agent receives in state s when it follows policy π at step h is represented by Rh,s,π (s) =
+
+E P  
+
+> a∈A
+
+πh(a|s) · r(s, a ). We assume that all agents start from a deterministic initial state s1 = {sp
+
+> 1
+
+}p∈[N ] with 
+
+spk, 1 ≡ sp
+
+> 1
+
+, ∀k, p. In this work we consider deterministic rewards, which can be viewed as mappings from S to A,but all our results apply to the environments with bounded rewards without change. We say that agent p ∈ [N ] follows policy π if for all h ∈ [H], aph = πh(sph). We use V πh ∈ RS
+
+to denote the value function associated with policy π in period h ∈ [H], such that 
+
+V πh (s) = E
+
+
+
+> H
+
+X
+
+> j=h
+
+Rj,s j ,π j (sj ) sh = s
+
+ ,
+
+where the expectation is taken over all possible transitions, and we set V πH+1 (s) = 0 for all s ∈ S . The optimal value function is denoted as V ∗ 
+
+> h
+
+(s) = max π∈Π V πh (s), which is the value function associated with the optimal policy. For all s ∈ S , h ∈ [H], and policy π, the value function is the unique solution to the Bellman equations 
+
+V πh (s) = Rh,s,π (s) + X
+
+> s∈S
+
+Ps,h,π (s)(s′)V πh+1 (s′).
+
+3Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+When π is the optimal policy π∗, there should be V π∗ 
+
+> h
+
+(s) = 
+
+V ∗ 
+
+> h
+
+(s), and we have 
+
+V ∗ 
+
+> h
+
+(s) = Rh,s,π ∗(s) + X
+
+> s∈S
+
+Ps,h,π ∗(s)(s′)V ∗
+
+> h+1
+
+(s′).
+
+For each policy π, we also define the state-action value func-tion of Q-function of state-action pair (s, a ) as the expected return when agent takes action a at state s, and then follows policy π, so that 
+
+Qπh (s, a ) = Rh,s,a +E
+
+
+
+> H
+
+X
+
+> j=h
+
+Rj,s j ,π j (sj ) sh = s, a h = a
+
+ .
+
+Correspondingly, we define 
+
+Q∗
+
+> h
+
+(s, a ) = Rh,s,a + PhV ∗
+
+> h+1
+
+(s, a ),
+
+where we use the notation PhV (s, a ) = Es′∼P s,a h [V (s′)] .Thus by definition Q∗
+
+> h
+
+(s, a ) is the maximum realizable ex-pected return when the agent starts from state s and takes action a at period h. From the optimality of V ∗, we have 
+
+V ∗ 
+
+> h
+
+(s) = max  
+
+> a∈A
+
+Q∗
+
+> h
+
+(s, a ), ∀h ∈ [H], s ∈ S .
+
+Furthermore, under the assumption that the reward is bounded between 0 and 1, we have 
+
+0 ≤ V πh ≤ V ∗ 
+
+> h
+
+≤ H, ∀h ∈ [H], π ∈ Π.
+
+Regret under Finite Horizon Case The goal of an RL al-gorithm is for the agents to learn a good policy through con-secutively interacting with the random environment, without prior knowledge about the transition probability P and the reward R. Formally, given π = {πkp }k∈[K],p ∈[N ], with each agent p ∈ [N ] taking policy πkp during each episode 
+
+k ∈ [K], the cumulative expected regret incurred over K
+
+periods and N agents is defined as Regret (M, K, H, N, π ) = 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+V ∗ 
+
+> 1
+
+(sp
+
+> 1
+
+) − Vπkp (sp
+
+> 1
+
+).
+
+(1) 
+
+Empirical Estimation We examine two types of empiri-cal estimation methods below. The first method stores data from a single episode only, meaning the empirical counts used by the agents to evaluate policies are derived from just one episode. We take this limitation into account because, as the number of agents N increases, storing all historical data becomes practically infeasible. For the second method, we store all historical data; specifically, at each episode k,the buffer retains data from all episodes prior to k. This results in a space complexity of O(KHN ).For the first empirical estimation method, define nk,h (s, a )
+
+to be the number of times action a has been sampled in state 
+
+s, period h during episode k by all the agents p ∈ [N ]:
+
+nk,h (s, a ) = 
+
+> N
+
+X
+
+> p=1
+
+1
+
+n
+
+(spk,h , a pk,h ) = ( s, a )
+
+o
+
+.
+
+Define the empirical mean reward for period h during episode k by 
+
+ˆRkh,s,a =
+
+PNp=1 1
+
+n
+
+(spk−1,h , a pk−1,h ) = ( s, a )
+
+o
+
+rpk−1,h 
+
+nk−1,h (s, a ) ,
+
+(2) and ∀s′ ∈ S , define the empirical transition probabilities for period h during episode k as 
+
+ˆP kh,s,a (s′)=
+
+PNp=1 1
+
+n
+
+(spk−1,h , a pk−1,h , s pk−1,h +1 ) = ( s, a, s ′)
+
+o
+
+nk−1,h (s, a ) .
+
+(3) If (h, s, a ) is never sampled during episode k − 1, we set 
+
+ˆRkh,s,a = 0 ∈ R and ˆP kh,s,a = 0 ∈ RS . Note that ˆRk and 
+
+ˆP k are computed from the trajectory from episode k − 1.The second method stores all historical data up to the current episode, with the reward and transition probability estima-tions defined as: 
+
+ˆRk, full  
+
+> h,s,a
+
+=
+
+Pk−1
+
+> i=0
+
+PNp=1 1
+
+n
+
+(spi,h , a pi,h ) = ( s, a )
+
+o
+
+rpi,h 
+
+Pk−1 
+
+> i=0
+
+ni,h (s, a ) ,
+
+ˆP k, full  
+
+> h,s,a
+
+(s′)=
+
+Pk−1
+
+> i=0
+
+PNp=1 1
+
+n
+
+(spi,h , a pi,h , s pi,h +1 ) = ( s, a, s ′)
+
+oPk−1 
+
+> i=0
+
+ni,h (s, a ) .
+
+2.1. Aggregated-state Representations 
+
+Many RL algorithms aim to estimate the value of each state-action pair (e.g. under a tabular representation), but this can be infeasible in some setup where SA is large, since both the required sample size and computational cost will scale up at least linearly in SA . One alternative approach is to consider aggregated-state representations (Dong et al., 2019b; Wen & Van Roy, 2017; Jiang et al., 2017), which reduces complexity and can accelerate learning by focusing on aggregated state-action pairs. This method partitions the space of state-action pairs into Γ blocks, each block can be viewed as an aggregate state, so that the value function representation only needs to maintain one value estimate per aggregated state. Formally, let Φ be the set of all aggregated states, and let ϕh : S × A → Φ be the mapping from state-action pairs to aggregated states at period h. Without loss of generality, we let Φ = [Γ] . We define the aggregated representation as follows: 4Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Definition 1. We say that {ϕh}Hh=1 is an ϵ-error aggregated state-representation (or ϵ-error aggregation) of an MDP, if for all s, s ′ ∈ S , a, a ′ ∈ A and h ∈ [H] such that 
+
+ϕh(s, a ) = ϕh(s′, a ′), we have 
+
+|Q∗
+
+> h
+
+(s, a ) − Q∗
+
+> h
+
+(s′, a ′)| ≤ ϵ. 
+
+When ϵ = 0 in Definition 1, we say that the aggregation is sufficient, and one can guarantee that an algorithm finds the optimal policy as K → ∞ . When ϵ > 0, there exists an MDP such that no RL algorithm with aggregated state representation can find the optimal policy (Van Roy, 2006). In this case, the best we can do is to approximate the optimal policy with the suboptimality bounded by a function of ϵ.
+
+## 3. Finite-horizon Algorithm and Regret Bound 
+
+The concurrent RLSVI algorithms for the finite-horizon case are Algorithm 1 and Algorithm 3. 
+
+Tradeoff: Regret Reduction vs. Sample Complexity Al-gorithm 1 and Algorithm 3 reflect a trade-off between re-ducing the worst-case regret and the consideration for the sample complexity in practice. Algorithm 1 stores all his-torical data, while Algorithm 3 retains only the data from the previous episode. Although Algorithm 1 achieves lower regret due to its larger data storage, it becomes impractical when N is large. Therefore, for practical reasons, we use Algorithm 3 in our numerical experiments. We first describe Algorithm 3, with Algorithm 1 following a similar structure, differing only in the buffer size (i.e. the amount of data stored for policy evaluation). We initialize the all the aggregated state values as H, i.e. 
+
+ˆQph(γ) = H for all h ∈ [H]. At the beginning of each episode, all the agents restart at initial states s1 = {sp
+
+> 1
+
+}, with agent p starting from state sp
+
+> 1
+
+. During pre-round (episode 
+
+0), each agent randomly samples their initial trajectory 
+
+{sp
+
+> 0,1
+
+, a p
+
+> 0,1
+
+, r p
+
+> 0,1
+
+, . . . , s p 
+
+> 0,H
+
+, a p 
+
+> 0,H
+
+, r p 
+
+> 0,H
+
+}Np=1 , with sp 
+
+> 0,1
+
+= sp
+
+> 1
+
+.During each episode k ∈ [K], each agent samples a ran-dom vector with independent components wkp ∈ RHSA ,where wkp (h, s, a ) ∼ N (0 , σ 2
+
+> k
+
+(h, s, a )) and σk(h, s, a ) = q βk 
+
+> Nk−1,h (ϕh(s,a ))+1
+
+, where βk is a tuning parameter, 
+
+Nk−1,h (ϕh(s, a )) is the total number of times that aggre-gated state ϕh(s, a ) is reached at period h across all agents during episode k−1. Given wkp , we construct a randomized perturbation of the empirical MDP for agent p as 
+
+M kp = ( H, S, A, ˆP k, ˆRk + wkp ), (4) where the empirical distributions ˆRk, ˆP k are computed as in (2) and (3). During each episode k ∈ [K], the data set 
+
+˜Dpkh contains perturbation of samples from episode k − 1
+
+for time period h used by agent p.Each agent computes the values for aggregated states us-ing a backward approximation, where during episode k,the uncapped value of aggregated state γ during period h
+
+computed by agent p is 
+
+¯Qpk,h (γ)= arg min 
+
+> Q∈R
+
+L(Q| ˆQpk,h +1 , ˜Dpkh , α Nk−1,h (γ), ξ Nk−1,h (γ))+∥Q − αNk−1,h (γ) ˜Qpkh ∥22,
+
+where ξNk−1,h (γ) is defined as (7) for n = Nk−1,h (γ), and we set terminal values as ˆQpk,H +1 (γ) = 0 , and the reg-ularization noise ˜Qpkh ∈ RS×A is an independently sam-pled random vector, such that for each (s, a ) ∈ S × A ,
+
+˜Qpkh (s, a ) ∼ N 
+
+
+
+0, βk
+
+> 1+ Nk,h (ϕh(s,a ))
+
+
+
+, βk is a tuning param-eter, and 
+
+L(Q | Qnext , D, α, ξ )= P 
+
+> (s,a,r,s ′)∈D
+
+{Q − ξ − (1 − α)Qk−1,h (ϕh(s, a )) 
+
+−α(r + max a′∈A Qnext (s′, a ′)) }2.
+
+(5) Here the regularized loss function defined in (5) is such that Q(γ) as the computed value of aggregated state γ =
+
+ϕh(s, a ) for some pair (s, a ) approximates 
+
+(1 −αNk−1,h (γ))Qk−1,h +αNk−1,h (γ)(r+max  
+
+> a′∈A
+
+Qnext (s′, a ′)) .
+
+And since αNk−1,h (γ) = 11+ Nk−1,h (γ) as defined in Theo-rem 2, we see that when Nk−1,h (γ) increases, the algorithm puts more weight on the value learned from the previous episode. At the end of episode k, after each agent inter-acts with the environment, the algorithm takes a weighted average of the values learned by each agent p ∈ [N ], by taking 
+
+ˆQk,h (γ) = 1
+
+Nk,h (γ)
+
+> N
+
+X
+
+> p=1
+
+1{ϕh(spk,h , a pk,h ) = γ} ˆQpk,h (γ)
+
+(6) for each γ ∈ Γ, where Nk,h (γ) is the total number of times that aggregated state γ appears during episode k period h.Given tuning parameter β = {βk}k∈N, we denote Algo-rithm 3 by RLSVI β . While Algorithm 3 is based on the RLSVI algorithm of (Russo, 2019), there are some notable differences. The algorithm of (Russo, 2019) is with single-agent, and at each time period h during episode k, the agent needs to keep all the trajectory prior to episode k, which can be infeasible for multiple agents, because the space can grow very fast. In our algorithm, we only keep the historical data of the last episode, to make the algorithm computationally feasible. This leverages the fact that with 
+
+N agents interacting with the random environment, the information within one single episode is already rich. Al-gorithm 3 is also related to the aggregated-state algorithm 5Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+proposed by (Dong et al., 2019b), where the authors ap-ply the aggregated-state idea to an optimisitic variant of Q-learning on a fixed-horizon episodic Markov decision process based on the previous UCB-type result by (Jin et al., 2020). Our work incorporates this idea in the concurrent randomized least square value iteration. Algorithm 1 follows a similar structure, with Nk,h (ϕh(s, a )) 
+
+redefined as the total number of times the aggregated state 
+
+ϕh(s, a ) is visited at period h across all agents up to and including episode k. We denote it by RLSVI full  
+
+> β
+
+to indicate that Algorithm 1 uses the full history up to the current episode. With the employment of aggregated state and the modified loss function for the learning process, the result highlights that the per-agent regret decreases at a rate of Θ
+
+ 1√N
+
+
+
+. The concurrent learning algorithm for the finite-horizon case is Algorithm 3. The worst-case regret bound for Algorithm 3 is provided in the next section. 
+
+3.1. Worst-case Regret Bound 
+
+Let M be the set of MDPs with episode number K, horizon 
+
+H, state space size S, action space size A, transition prob-abilities P , and rewards R bounded in [0 , 1] . Let N be the number of agents interacting in the same environment. We use M = ( K, H, S, A, P, R ) to denote an MDP in M.Suppose {ϕh}h∈[H] is an ϵ-error aggregation (defined as in Definition 1) of the underlying MDP. For a tuning parameter sequences β = {βn}n∈N, α = {αn}n∈N, ξ = {ξn}n∈N
+
+where βn = 12 H3 log(2 HΓn), αn = 11+ n , and 
+
+ξn = ϵ + 2αnHplog(2 KHN/δ )
+
+pmax {n, 1}
+
++ 2αn
+
+pβk−1 log(2 KHN/δ )
+
+p(n + 1) max {n, 1}
+
+(7) We now provide our main results for the finite-horizon case. As explained, Algorithm 1 stores all historical data, while Algorithm 3 retains only the previous episode, making it straightforward that Algorithm 1 has a space complexity of 
+
+O( KHN ), while Algorithm 3 has a space complexity of 
+
+O( HN ), and their worst-case regret bounds are 
+
+Theorem 2. Algorithm 1 has a worst-case regret bound 
+
+sup  
+
+> M∈M
+
+Regret( M, K, N, π, RLSVI full  
+
+> β,α,ξ
+
+)
+
+≤ eO(ϵ√KHN + H5/2Γ√KN ). (8) 
+
+Algorithm 3 has a worst-case regret bound 
+
+sup  
+
+> M∈M
+
+Regret( M, K, N, π, RLSVI β,α,ξ )
+
+≤ eO(ϵKHN + KH 5/2Γ√N ), (9) 
+
+where eO(·) hides the dependence on logarithmic factors. 
+
+Since the only difference between the algorithms is the amount of data stored, and their structures are identical, we only prove (9), with (8) following immediately by reducing a factor of √K from the regret bound in (9). We omit the redundant proof for Algorithm 1 and defer the proof for (9) to Appendix C. 
+
+Comparison with worst-case regret bounds from (Russo, 2019; Agrawal et al., 2021) A worst-case regret bound of ˜O(H3S3/2√AK ) was obtained in (Russo, 2019) for a single-agent version of RLSVI algorithm. This bound was improved later by (Agrawal et al., 2021) to 
+
+˜O(H5/2S√AK ). For the single-agent case with N =1, Algorithm 1 results in a worst-case regret bound of 
+
+˜O(√KH 5/2Γ) , which translates into ˜O(H2Γ√T ). So our bound matches that of (Agrawal et al., 2021) if Γ = S × A
+
+and S ≈ √Γ. Algorithm 3 implies a worst-case regret bound of ˜O(KH 5/2Γ) . Here an extra √K compared to that of (Agrawal et al., 2021; Russo, 2019) comes from the fact we only keep the trajectories of the agents from the previous episode rather than all the episodes up to the current period as in (Russo, 2019; Agrawal et al., 2021) to reduce space complexity. The extra ϵ term for both algorithms comes from model misspecification of state-aggregation formula-tion, which is similar to the result in (Dong et al., 2019b). At each time period h, each agent gets N samples of tuples 
+
+(s, a, r, s ′), and they share information by the aggregation of information through the computation of a weighted Q-value (6) at the end of each episode. With this trick, though agents learn their own policies concurrently in parallel within each episode, we are able to obtain a sub-linear worst-case regret bound of O(√N ) with respect to the number of agents. 
+
+## 4. Infinite-horizon Concurrent Learning 
+
+We now turn to the infinite-horizon case. Consider an un-known fixed environment as M = ( T, A, S, P, r, N ), with 
+
+N agents interacting in M . Here A = [ A] is the action space, S = [ S] is the state space, P (s′ | s, a ) is the transi-tion probability from s ∈ S to s′ ∈ S given action a ∈ A .After agent p selects action apt at state spt , the agent observes 
+
+spt+1 and receives a fixed reward rpt+1 = r(spt , a pt ) where 
+
+r ∈ [0 , 1] . A stochastic policy π can be represented by a probability mass function π(·| st) that an agent assigns to actions in A given situation state st. For a policy π, we denote the average reward starting at state s as 
+
+λπ (s) = lim inf   
+
+> T→∞
+
+E
+
+"
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+rt+1 s1 = s
+
+#
+
+. (10) For any state s ∈ S , denote the optimal average reward as 
+
+λ∗(s) = sup π λπ (s). We consider weakly-communicating MDP, which is defined as follows: 6Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Definition 3 (Weakly-communicating MDP) . A MDP is weakly communicating if there exists a closed subset of states, where each state within is reachable from any other state within that set under some deterministic stationary reward. And there exists a transient subset of states (possibly empty) under every policy. 
+
+For any s, s ′ ∈ S and a ∈ A , denote Ps,a,s ′ = P (s′|s, a ).For each policy π define transition probabilities under π
+
+as Ps,π,s ′ = P 
+
+> a∈A
+
+π(a|s)Ps,a,s ′ , and reward as rs,π =P 
+
+> a∈A
+
+π(a|s)r(s, a ).
+
+Pseudo-episodes We extend our concurrent learning framework for the finite-horizon case to the infinite-horizon case by incorporating the idea of pseudo-episodes from (Xu et al., 2022). Suppose time step t is the beginning of a pseudo-episode when we sample a random variable 
+
+H ∼ Geometric(1 − η), where Geometric(1 − η) is geo-metric distribution with parameter 1 − η. In the numerical experiment (section 6), we set η = 0 .99 . The agents com-pute new policies respectively according to the collected trajectories from last pseudo-episode, and sample their own MDPs respectively at time steps t + 1 , . . . , t + H − 1. Now the beginning of the next pseudo-episode is set as t + H.We use Ht1,t 2 = SNp=1 
+
+St2 
+
+> i=t1
+
+{spi , a pi , r pi } to denote the tra-jectories of all agents from time step t1 to time step t2.For policy π, denote the η-discounted value function as 
+
+V ηπ ∈ RS , then we have 
+
+V ηπ := EH
+
+"H−1X
+
+> h=0
+
+P hπ rπ M
+
+#
+
+= E
+
+" ∞X
+
+> h=0
+
+ηhP hπ rπ M
+
+#
+
+,
+
+(11) where the expectation is taken over the random episode length H. A policy is said to be optimal if V ηπ = sup π′ V ηπ′ .For an optimal policy, we also write V η 
+
+> ∗
+
+(s) ≡ V ηπ (s) as the optimal value. Note that V ηπ ∈ RS satisfies the Bell-man equation V ηπ = rπ + ηP π V ηπ . For any (s, a ), define 
+
+Qηπ (s, a ) = r(s, a ) + ηP V ηπ (s), where we use the notation that Pπ V (s) = Es′∼Ps,π (s) [V (s′)] . Correspondingly, define 
+
+Qη 
+
+> ∗
+
+(s, a ) = r(s, a ) + ηP V η 
+
+> ∗
+
+(s′).
+
+By definition, we have V η 
+
+> ∗
+
+(s) = max a∈A Qη 
+
+> ∗
+
+(s, a ).
+
+Discounted Regret To analyze the algorithm over T time steps, consider K = arg max {k : tk ≤ T } as the number of pesudo-episodes until time T . We use the convention that 
+
+tK+1 = T +1 . Given a discount factor η ∈ [0 , 1) , define the 
+
+η-discounted regret up to time T as Regret η (M, T, π ) = 
+
+PKk=1 ∆k, where ∆k is the total regret of all N agents over pseudo-episode k: ∆k = PNp=1 V η 
+
+> ∗
+
+(spk, 1) − V ηπkp (spk, 1),where V η 
+
+> ∗
+
+= V βπ∗ , policy πkp is computed from the trajec-tory Htk −1,t k −1 from pseudo-episode k − 1 by agent p,and apt ∼ πkp (· | spt ), s pt+1 ∼ P (·| spt , a pt ), r pt = r(spt , a pt )
+
+for t ∈ Ek, and Ek denotes the time steps within pseudo-episode k. So the discounted regret is a random variable depending on the algorithm’s random sampling, and the random lengths of the pseudo-episodes, and as a result, 
+
+∆k = EHk
+
+" NX
+
+> p=1
+> Hk
+
+X
+
+> h=0
+
+(P hπ∗ rπ∗ − Pπkp rπkp ) | M
+
+#
+
+= E
+
+" NX
+
+> p=1
+> ∞
+
+X
+
+> h=0
+
+ηh(P hπ∗ rπ∗ − Pπkp rπkp ) | M
+
+#
+
+.
+
+Regret The optimal average reward λ∗ is state-independent under a weakly-communicating MDP. The agent p selects a policy πkp and executes it within the kth 
+
+pseudo-episode. The cumulative expected regret incurred by the collection of policies π = {πkp }k∈[K],p ∈[N ] over T
+
+time steps and across N agents with the fixed environment 
+
+M is 
+
+Regret( M, T, N, π ) := EK
+
+" KX
+
+> k=1
+
+∆k M
+
+#
+
+, (12) where the expectation is taken over the random seeds used by the randomized algorithm, conditioning on the true MDP 
+
+M . In the following, we denote (spk,h , a pk,h , r pk,h ) as the state, action and reward for agent p during pseudo-episode 
+
+k and period h.
+
+Empirical Estimation We let nk(s, a ) be the total num-ber of times that (s, a )-pair appears during the kth pseudo-episode, such that 
+
+nk(s, a ) = 
+
+> N
+
+X
+
+> p=1
+> tk+1 −1
+
+X
+
+> t=tk
+
+1 {(spt , a pt ) = ( s, a )} .
+
+Then ∀s′, the empirical estimate ˆP  s′ s, a  of the transition probability for pseudo-episode k is 
+
+ˆPk
+
+ s′ s, a 
+
+=
+
+PNp=1 
+
+P 
+
+> t∈Ek−1
+
+1 (spt , a pt , s pt+1 ) = ( s, a, s ′)
+
+nk−1(s, a ) .
+
+(13) The empirical estimate of the corresponding reward is 
+
+ˆRk(s, a )=
+
+PNp=1 1{(spt , a pt ) = ( s, a )} P 
+
+> t∈Ek−1
+
+r(spt , a pt )
+
+nk−1(s, a ) .
+
+(14) For the second empirical estimation method, we utilize the full historical data, and similar to the finite-horizon case, the empirical estimates for transition probability and reward are 
+
+ˆP full 
+
+> k
+
+ s′ s, a 
+
+=
+
+Pk−1
+
+> i=0
+
+PNp=1 
+
+P 
+
+> t∈Ei
+
+1 (spt , a pt , s pt+1 ) = ( s, a, s ′)
+
+Pk−1 
+
+> i=0
+
+ni(s, a ) .
+
+7Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+ˆRfull  
+
+> k
+
+(s, a )=
+
+PNp=1 
+
+Pk−1 
+
+> i=0
+
+1{(spt , a pt ) = ( s, a )} P 
+
+> t∈Ei
+
+r(spt , a pt )
+
+Pk−1 
+
+> i=0
+
+ni(s, a ) .
+
+Aggregated States We extend the aggregated states in the finite-horizon case to the infinite horizon case. Let Φ be the set of all aggregated states, and let ϕ : S × A → Φ
+
+be the mapping from state-action pairs to aggregated states. We let Φ = [Γ] . The aggregated representation for the infinite-horizon case is defined as follows: 
+
+Definition 4. We say that ϕ is an ϵ-error aggregated state-representation (or ϵ-error aggregation) of an MDP, if for all 
+
+s, s ′ ∈ S , a, a ′ ∈ A such that ϕ(s, a ) = ϕ(s′, a ′), we have 
+
+|Qη 
+
+> ∗
+
+(s, a ) − Qη 
+
+> ∗
+
+(s′, a ′)| ≤ ϵ.
+
+We are now ready to present the concurrent learning al-gorithm for the infinite-horizon case and the theoretical guarantee, as detailed in the next section. 
+
+## 5. Infinite-Horizon Algorithm and Regret Bound 
+
+The concurrent learning algorithm for the infinite-horizon MDP is summarized as Algorithm 4. Our result is based on the following definition of reward averaging time proposed by (Dong et al., 2022). 
+
+Definition 5. The reward averaging time τπ of a policy π
+
+is the smallest value τ ∈ [0 , ∞) such that ∀T ≥ 0, s ∈ S ,
+
+Eπ
+
+hPT −1 
+
+> t=0
+
+rt+1 s0 = s
+
+i
+
+− T · λπ (s) ≤ τ .
+
+Typically the regret bounds established in the literature re-quires assessing an optimal policy within bounded time. Examples include episode duration (Osband et al., 2013; Jin et al., 2018), diameter (Auer et al., 2008), or span (Bartlett & Tewari, 2012). Policies that require intractably large amount of time are infeasible in practice. So we impose the following assumption: 
+
+Assumption 6. For any weakly communicating MDP M
+
+with state space S and action space A, ∃τ < ∞ such that 
+
+τ∗ ≤ τ .
+
+When π∗ is an optimal policy for M , τ∗ := τπ∗ is equiva-lent to the notion of span in (Bartlett & Tewari, 2012). Let 
+
+M be the set of infinite-horizon weakly-communicating MDPs with state space size S, action space size A, rewards bounded in [0 , 1] that satisfy Assumption 6. Let N be the number of agents interacting in the same environment. Re-call that τ is given by Assumption 6. Suppose {ϕ} is an ϵ-error aggregation (defined as in Definition 4) of the underlying MDP. For a tuning pa-rameter sequences β = {βn}n∈N, α = {αn}n∈N, ξ =
+
+{ξn}n∈N, where for k as the index of pseudo-episode, 
+
+βk = 12 τ 3 log(2 τ Γk), αn = 11+ n , and 
+
+ξn = ϵ + 2αn
+
+plog(2 T N/δ )(1 − η)pmax {n, 1}
+
++ 2αn
+
+pβk−1 log(2 T N/δ )
+
+p(n + 1) max {n, 1}
+
+(15) 
+
+Theorem 7 (Infinite-horizon Worst-case Regret Bound) .
+
+Algorithm 2 has a worst-case regret bound 
+
+sup M ∈M Regret( M, T, N, RLSVI full  
+
+> β,α,ξ
+
+)
+
+≤ eO(ϵ√T N + τ 3/2Γ√T N ). (16) 
+
+Algorithm 4 has a worst-case regret bound 
+
+sup M ∈M Regret( M, T, N, RLSVI β,α,ξ )
+
+≤ eO(ϵT N + τ 3/2T Γ√N ). (17) Note that the bound in (17) matches that of the finite-horizion case (9) by noting that T = KH for the finite-horizon case. And τ 3/2 corresponds to the H3/2 factor in the finite-horizon case bound by noting that taking τ = H
+
+makes the condition holds in Definition 5 in the finite-horizon case with T = KH . Similar to the finite-horizon case, (16) follows directly from (17) with a √T reduction, as Algorithm 2 utilizes the full history, whereas Algorithm 4 retains only the last pseudo-episode. The intuition and worst-case regret comparison follow the discussion after Theorem 2. 
+
+## 6. Numerical Experiments 
+
+We present numerical results for both finite-horizon and infinite-horizon cases in Figure 1. For the finite-horizon case ( S, A, K, H ) or the infinite-horizon case ( S, A, T ), the transition probabilities are drawn from a Dirichlet distribution, and rewards, fixed as deterministic, are uni-formly distributed on [0 , 1] , forming inherent features of the MDP class. The finite-horizon case settings are (i) 
+
+K = 20 , H = 30 , S = 5 , A = 5 ; (ii) K = 25 , H =40 , S = 10 , A = 10 ; (iii) K = 30 , H = 50 , S =20 , A = 20 . The infinite-horizon case settings are with 
+
+T = 300 and (i) S = 5 , A = 5 ; (ii) S = 20 , A = 20 ; (iii) 
+
+S = 30 , A = 30 , where η = 0 .99 in the pseudo-episode sampling. Under each setting, we compare the results for 
+
+N = 1 , 3, 5, 7, 10 , 15 , 20 , 30 , 40 , 50 , with ϵ = 0 . We set 
+
+η = 0 .99 .For each agent number N in the finite-horizon setting, we sample 500 MDPs from the defined class. For each sam-pled MDP, we compute the cumulative regret over time and then identify the maximum regret across all 500 instances, representing the worst-case regret in our analysis. For the infinite-horizon setting, we estimate regret by av-eraging over 50 geometric segmentations of [T ] per MDP, 8Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+consistent with the definition of infinite-horizon regret based on pseudo-episodes in (12). The worst-case regret is then obtained by taking the maximum across 500 sampled MDPs. Figure 1 illustrates a 1/√N decreasing trend in per-agent regret for both settings, consistent with our theoretical predictions. The replication code is available at https: //github.com/yz2/rlsvi_code .        
+
+> Figure 1. Per-agent regret vs number of agents for finite-horizon (top panel) and infinite-horizon (bottom panel) settings. The solid curves represent the per-agent worst-case regret computed from
+> 500 random environments. The dashed ones are the reference curves of constant /√Nfitting the Θ(1 /√N)trend as we show in our theoretical results.
+
+## Acknowledgements 
+
+We gratefully acknowledge the support from the NSF grant CCF-2312205 and the ONR grant ONR 13983263. We would like to thank Pratap Ranade and Engin Ural for in-spiring discussions on society of agents that have helped shape and push an ambitious vision of this research agenda, for which this work is only an initial step. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Abed-alguni, B. H., Chalup, S. K., Henskens, F. A., and Paul, D. J. A multi-agent cooperative reinforcement learn-ing model using a hierarchy of consultants, tutors and workers. Vietnam Journal of Computer Science , 2:213– 226, 2015. Agarwal, A., Bird, S., Cozowicz, M., Hoang, L., Langford, J., Lee, S., Li, J., Melamed, D., Oshri, G., Ribas, O., et al. Making contextual decisions with low technical debt. arXiv preprint arXiv:1606.03966 , 2016. Agarwal, A., Kakade, S. M., Lee, J. D., and Mahajan, G. Op-timality and approximation with policy gradient methods in markov decision processes. In Conference on Learning Theory , pp. 64–66. PMLR, 2020. Agrawal, P., Chen, J., and Jiang, N. Improved worst-case regret bounds for randomized least-squares value itera-tion. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pp. 6566–6573, 2021. Auer, P., Jaksch, T., and Ortner, R. Near-optimal regret bounds for reinforcement learning. Advances in neural information processing systems , 21, 2008. Azar, M. G., Munos, R., Ghavamzadeh, M., and Kappen, H. Speedy q-learning. In Advances in neural information processing systems , 2011. Bansal, T., Pachocki, J., Sidor, S., Sutskever, I., and Mor-datch, I. Emergent complexity via multi-agent competi-tion. arXiv preprint arXiv:1710.03748 , 2017. Bartlett, P. L. and Tewari, A. Regal: A regularization based algorithm for reinforcement learning in weakly commu-nicating mdps. arXiv preprint arXiv:1205.2661 , 2012. Bu¸ soniu, L., Babuška, R., and De Schutter, B. Multi-agent reinforcement learning: An overview. Innovations in multi-agent systems and applications-1 , pp. 183–221, 2010. Chen, Y., Dong, P., Bai, Q., Dimakopoulou, M., Xu, W., and Zhou, Z. Society of agents: Regret bounds of concurrent thompson sampling. In Advances in Neural Information Processing Systems , 2022. Dann, C., Mohri, M., Zhang, T., and Zimmert, J. A prov-ably efficient model-free posterior sampling method for episodic reinforcement learning. Advances in Neural Information Processing Systems , 34:12040–12051, 2021. 9Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Desai, N., Critch, A., and Russell, S. J. Negotiable rein-forcement learning for pareto optimal sequential decision-making. Advances in Neural Information Processing Systems , 31, 2018. Dimakopoulou, M. and Van Roy, B. Coordinated explo-ration in concurrent reinforcement learning. In Interna-tional Conference on Machine Learning , pp. 1271–1279. PMLR, 2018. Dimakopoulou, M., Osband, I., and Van Roy, B. Scal-able coordinated exploration in concurrent reinforcement learning. Advances in Neural Information Processing Systems , 31, 2018. Dong, K., Wang, Y., Chen, X., and Wang, L. Q-learning with UCB exploration is sample efficient for infinite-horizon MDP. arXiv preprint arXiv:1901.09311 , 2019a. Dong, S., Van Roy, B., and Zhou, Z. Provably efficient reinforcement learning with aggregated states. arXiv preprint arXiv:1912.06366 , 2019b. Dong, S., Van Roy, B., and Zhou, Z. Simple agent, complex environment: Efficient reinforcement learning with agent states. Journal of Machine Learning Research , 23(255): 1–54, 2022. Dubey, A. and Pentland, A. Provably efficient cooperative multi-agent reinforcement learning with function approx-imation. arXiv preprint arXiv:2103.04972 , 2021. Dwaracherla, V., Lu, X., Ibrahimi, M., Osband, I., Wen, Z., and Van Roy, B. Hypermodels for exploration. arXiv preprint arXiv:2006.07464 , 2020. Fellows, M., Hartikainen, K., and Whiteson, S. Bayesian bellman operators. Advances in Neural Information Pro-cessing Systems , 34:13641–13656, 2021. Gu, S., Holly, E., Lillicrap, T., and Levine, S. Deep rein-forcement learning for robotic manipulation with asyn-chronous off-policy updates. In 2017 IEEE international conference on robotics and automation (ICRA) , pp. 3389– 3396. IEEE, 2017. Guo, Z. and Brunskill, E. Concurrent pac rl. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 30, 2015. Ishfaq, H., Cui, Q., Nguyen, V., Ayoub, A., Yang, Z., Wang, Z., Precup, D., and Yang, L. Randomized exploration in reinforcement learning with general value function approximation. In International Conference on Machine Learning , pp. 4607–4616. PMLR, 2021. Ishfaq, H., Lan, Q., Xu, P., Mahmood, A. R., Precup, D., Anandkumar, A., and Azizzadenesheli, K. Prov-able and practical: Efficient exploration in reinforce-ment learning via langevin monte carlo. arXiv preprint arXiv:2305.18246 , 2023. Janz, D., Hron, J., Mazur, P., Hofmann, K., Hernández-Lobato, J. M., and Tschiatschek, S. Successor uncertain-ties: exploration and uncertainty in temporal difference learning. Advances in Neural Information Processing Systems , 32, 2019. Jiang, N., Krishnamurthy, A., Agarwal, A., Langford, J., and Schapire, R. E. Contextual decision processes with low bellman rank are pac-learnable. In International Con-ference on Machine Learning , pp. 1704–1713. PMLR, 2017. Jin, C., Allen-Zhu, Z., Bubeck, S., and Jordan, M. I. Is q-learning provably efficient? Advances in neural infor-mation processing systems , 31, 2018. Jin, C., Yang, Z., Wang, Z., and Jordan, M. I. Provably effi-cient reinforcement learning with linear function approxi-mation. In Conference on learning theory , pp. 2137–2143. PMLR, 2020. Kim, M. J. Thompson sampling for stochastic control: The finite parameter case. IEEE Transactions on Automatic Control , 62(12):6415–6422, 2017. Kulkarni, A. J. and Tai, K. Probability collectives: a multi-agent approach for solving combinatorial optimization problems. Applied Soft Computing , 10(3):759–771, 2010. Littman, M. L. Value-function reinforcement learning in markov games. Cognitive systems research , 2(1):55–66, 2001. Lowe, R., Wu, Y. I., Tamar, A., Harb, J., Pieter Abbeel, O., and Mordatch, I. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neu-ral information processing systems , 30, 2017. Min, Y., He, J., Wang, T., and Gu, Q. Cooperative multi-agent reinforcement learning: Asynchronous commu-nication and linear function approximation. In Inter-national Conference on Machine Learning , pp. 24785– 24811. PMLR, 2023. Osband, I. and Van Roy, B. Model-based reinforcement learning and the eluder dimension. Advances in Neural Information Processing Systems , 27, 2014. Osband, I. and Van Roy, B. On optimistic versus randomized exploration in reinforcement learning. arXiv preprint arXiv:1706.04241 , 2017. 10 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Osband, I., Russo, D., and Van Roy, B. (More) efficient reinforcement learning via posterior sampling. Advances in Neural Information Processing Systems , 26, 2013. Osband, I., Blundell, C., Pritzel, A., and Van Roy, B. Deep exploration via bootstrapped DQN. Advances in neural information processing systems , 29, 2016. Osband, I., Van Roy, B., Russo, D. J., Wen, Z., et al. Deep exploration via randomized value functions. J. Mach. Learn. Res. , 20(124):1–62, 2019. Pazis, J. and Parr, R. Efficient pac-optimal exploration in concurrent, continuous state mdps with delayed updates. In Proceedings of the AAAI Conference on Artificial In-telligence , volume 30, 2016. Russo, D. Worst-case regret bounds for exploration via randomized value functions. Advances in Neural Infor-mation Processing Systems , 32, 2019. Russo, D. and Van Roy, B. Learning to optimize via poste-rior sampling. Mathematics of Operations Research , 39 (4):1221–1243, 2014. Ryu, H., Shin, H., and Park, J. Cooperative and competi-tive biases for multi-agent reinforcement learning. arXiv preprint arXiv:2101.06890 , 2021. Shoham, Y. and Leyton-Brown, K. Multiagent systems: Al-gorithmic, game-theoretic, and logical foundations . Cam-bridge University Press, 2008. Shoham, Y., Powers, R., and Grenager, T. Multi-agent reinforcement learning: a critical survey. Technical report, Citeseer, 2003. Silver, D., Newnham, L., Barker, D., Weller, S., and McFall, J. Concurrent reinforcement learning from customer inter-actions. In International conference on machine learning ,pp. 924–932. PMLR, 2013. Sinai, S., Wang, R., Whatley, A., Slocum, S., Locane, E., and Kelsic, E. D. Adalead: A simple and robust adap-tive greedy search algorithm for sequence design. arXiv preprint arXiv:2010.02141 , 2020. Strehl, A. L. and Littman, M. L. An analysis of model-based interval estimation for markov decision processes. 
+
+Journal of Computer and System Sciences , 74(8):1309– 1331, 2008. Sutton, R. S. and Barto, A. G. Reinforcement learning: An introduction . MIT press, 2018. Szepesvári, C. and Littman, M. L. A unified analysis of value-function-based reinforcement-learning algorithms. 
+
+Neural computation , 11(8):2017–2060, 1999. Taiga, A. A., Courville, A., and Bellemare, M. G. Introduc-ing coordination in concurrent reinforcement learning. In 
+
+ICLR 2022 Workshop on Gamification and Multiagent Solutions , 2022. Van Roy, B. Performance loss bounds for approximate value iteration with state aggregation. Mathematics of Operations Research , 31(2):234–244, 2006. Vlassis, N. A concise introduction to multiagent systems and distributed artificial intelligence . Springer Nature, 2022. Wang, X. and Klabjan, D. Competitive multi-agent in-verse reinforcement learning with sub-optimal demonstra-tions. In International conference on machine learning ,pp. 5143–5151. PMLR, 2018. Weiss, G. Multiagent systems: a modern approach to dis-tributed artificial intelligence . MIT press, 1999. Wen, Z. and Van Roy, B. Efficient reinforcement learn-ing in deterministic systems with value function gener-alization. Mathematics of Operations Research , 42(3): 762–782, 2017. Xu, W., Dong, S., and Van Roy, B. Posterior sampling for continuing environments. ArXiv preprint , 2022. URL 
+
+https://arxiv.org/abs/2211.15931 .Zanette, A., Brandfonbrener, D., Brunskill, E., Pirotta, M., and Lazaric, A. Frequentist regret bounds for randomized least-squares value iteration. In International Conference on Artificial Intelligence and Statistics , pp. 1954–1964. PMLR, 2020. Zhang, K., Yang, Z., and Ba¸ sar, T. Multi-agent reinforce-ment learning: A selective overview of theories and algo-rithms. Handbook of reinforcement learning and control ,pp. 321–384, 2021. Zhang, P., Ma, X., Pan, Z., Li, X., and Xie, K. Multi-agent cooperative reinforcement learning in 3d virtual world. In Advances in Swarm Intelligence: First International Conference, ICSI 2010, Beijing, China, June 12-15, 2010, Proceedings, Part I 1 , pp. 731–739. Springer, 2010. 11 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+## A. Comparison Table: Existing Work vs. Our Approach 
+
+Table 1. Comparison of regret bounds for various RLSVI/LSVI algorithms 
+
+Agent Setup Algorithm Regret Bound Regret-Type Data Stored Numerical 
+
+Single Tabular RLSVI (Russo, 2019) ˜O H3S3/2√AK Worst-case All-history N/A Single Tabular RLSVI (Agrawal et al., 2021) ˜O H5/2S√AK  Worst-case All-history N/A Multi Tabular Concurrent RLSVI (Taiga et al., 2022) N/A Bayes All-history Synthetic Multi Linear Functional Approximation Concurrent LSVI (Desai et al., 2018) ˜O H2√d3KN  Worst-case All-history N/A Multi Linear Functional Approximation Concurrent LSVI (Min et al., 2023) ˜O H√dKN  Worst-case All-history N/A Multi Tabular Concurrent RLSVI (ours-1) ˜O H5/2Γ√KN  Worst-case All-history N/A Multi Tabular Concurrent RLSVI (ours-2) ˜O H5/2ΓK√N  Worst-case One episode Synthetic 
+
+We outline several key observations for Table 1 below: • The methods marked as “N/A" in the “numerical" column store all agents’ trajectories at every step, making them computationally infeasible as N grows large. These approaches (including our first finite-horizon algorithm, second-to-last row in the table) provide only theoretical analyses without numerical results. • Although Taiga et al. (2022) stores all data empirically, their RLSVI algorithm assumes a known parametric feature matrix, making it simpler to implement than ours. Also they evaluate only Bayes regret—less stringent than our worst-case regret—and provide empirical results exclusively on synthetic data without theoretical guarantees. • The last row corresponds to storing only the latest episode data, increasing the regret bound by a factor of √K but reduces space complexity by a factor of K, making it computationally feasible. 
+
+## B. Algorithms 
+
+Algorithm 1 and Algorithm 3 are finite-horizon algorithms, where the former stores all historical data, and the latter only keeps one episode in the buffer. Algorithm 2 and Algorithm 4 are infinite-horizon algorithms, where the former stores all historical data and the latter only keeps one pseudo-episode. 12 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Algorithm 1 Concurent RLSVI: Finite-Horizon Storing All Historical Data 
+
+Data: K, H, S, A, N, s1, {ϕh}Hh=1 , Tuning parameters {βk}k∈N
+
+Define constants αt ← 1/(1 + t), t = 1 , 2, . . . 
+
+/* Define squared temporal difference error */ 
+
+L(Q | Qk−1,h , Q next , D, ξ, α ) = P 
+
+> (s,a,r,s ′)∈D
+
+(Q − ξ − (1 − α)Qk−1,h (ϕh(s, a )) − α(r + max a′∈A Qnext (s′, a ′))) 2
+
+Initialize: 
+
+ˆQp
+
+> 0h
+
+(γ) = H, ∀h ∈ [H], γ ∈ [Γ] , p ∈ [N ]
+
+Each agent randomly samples the initial trajectory {sp
+
+> 0,1
+
+, a p
+
+> 0,1
+
+, r p
+
+> 0,1
+
+, . . . , s p 
+
+> 0,H
+
+, a p 
+
+> 0,H
+
+, r H
+
+> 0,1
+
+}Np=1 , with sp 
+
+> 0,1
+
+= sp
+
+> 1
+
+N0,h (γ) = NP
+
+> p=1
+
+1{ϕh(sp
+
+> 0,h
+
+, a p
+
+> 0,h
+
+) = γ}, ∀γ ∈ [Γ] , h ∈ [H]
+
+compute ˆQ0,h by ( 6) 
+
+for episode k = 1 , 2, . . . do 
+
+/*Each agent rollouts in the evironment*/ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+for period h = 1 , . . . , H do 
+
+apk,h ← arg max a∈A ˆQpk−1,h (ϕh(spk,h , a )) 
+
+observe reward rpk,h and next state spk,h +1 
+
+Dh ← D h ∪ { (spk,h , a pk,h , r pk,h , s pk,h +1 )}
+
+end end 
+
+/*Visitation of aggregated-states*/ 
+
+Nk,h (γ) ← Pk−1
+
+> i=1
+
+PNp=1 1{ϕh(spi,h , a pi,h ) = γ}, ∀γ ∈ [Γ] , h ∈ [H]
+
+/*Construct perturbed data sets and sample regularization noise ˜Q*/ 
+
+for p ∈ [N ] and h ∈ [H] do 
+
+/*Executed in parallel*/ 
+
+For any (s, a ) ∈ S × A , sample array 
+
+˜Qpkh (s, a ) ∼ N 
+
+
+
+0, βk
+
+> 1+ Nk,h (ϕh(s,a ))
+
+
+
+,
+
+/* Draw prior sample */ 
+
+˜Dpkh ← {} 
+
+for (s, a, r, s ′) ∈ D kh do 
+
+Sample wp(s, a ) ∼ N 
+
+
+
+0, βk
+
+> 1+ Nk,h (ϕh(s,a ))
+
+
+
+˜Dpkh ← ˜Dpkh ∪ { (s, a, r + wp, s ′)}
+
+end end 
+
+/*Estimate Q on perturbed data*/ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+Define terminal value ˆQpk,H +1 (γ) ← H ∀γ ∈ [Γ] 
+
+for period h = H, . . . , 1 do 
+
+¯Qpk,h (γ) ← arg min Q∈R L(Q| ˆQk−1,h , ˆQpk,h +1 , ˜Dpkh , ξ, α ) + ∥Q − αNk−1,h (γ) ˜Qpkh ∥22, ∀γ ∈ [Γ] ˆQpk,h (γ) ← min { ¯Qpk,h (γ), H }, ∀γ ∈ [Γ] 
+
+end 
+
+spk, 1 ← sp
+
+> 1
+
+end 
+
+Update ˆQk,h (γ), ∀γ ∈ [Γ] by ( 6) 
+
+end 
+
+13 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Algorithm 2 Concurent RLSVI: Infinite-Horizon Storing All Historical Data 
+
+Data: Discount factor η, t0 = 1 , t = 1 , k = 0 , X1 = 0 , S, A, N, T , ϕ, tuning parameters {βk}k∈N,ξ,η
+
+Initialize Nk(γ) ← 0, ∀γ ∈ [Γ] , k ∈ [K]; ˆQ0(γ) ← 0, ∀γ ∈ [Γ] 
+
+Define constants αt ← 1/(1 + t), t = 1 , 2, . . . 
+
+/* Define squared temporal difference error */ 
+
+L(Q | ˆQ, Q next , D, ξ, η, α ) = P 
+
+> (s,a,r,s ′)∈D
+
+(Q − ηξ − η(1 − α) ˆQ(ϕ(s, a )) − αη (r + max a′∈A Qnext (s′, a ′))) 2
+
+Sample H0 ∼ Geometric (1 − η), set H0 ← min {H0, T + 1 − t}
+
+Each agent randomly samples the initial trajectory {sp
+
+> 0,1
+
+, a p
+
+> 0,1
+
+, r p
+
+> 0,1
+
+, . . . , s p 
+
+> 0,H
+
+, a p 
+
+> 0,H
+
+, r p 
+
+> 0,H
+
+}Np=1 , with sp 
+
+> 0,1
+
+= sp
+
+> 1
+
+k ← k + 1 , tk = 1 + H0
+
+tk ←the start time of pseudo-episode k
+
+while t ≤ T do 
+
+Sample H ∼ Geometric (1 − η)
+
+H ← min {H, T + 1 − t}
+
+tk+1 ← tk + H (the start time of pseudo-episode k + 1 )
+
+/*Each agent rollouts in the environment */ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+for t = tk, . . . , t k+1 − 1 do 
+
+apt ← arg max a∈A ˆQpt (ϕ(spt , a )) 
+
+observe reward rpt and next state spt+1 
+
+Dk ← D k ∪ { (spt , a pt , r pt , s pt+1 )}
+
+end 
+
+/* Visitation of aggregated-states */ 
+
+Nk−1(γ) ← PNp=1 
+
+Ptk −1 
+
+> t=0
+
+1{ϕ(spt , a pt ) = γ}, ∀γ ∈ [Γ] 
+
+end 
+
+/* Construct perturbed datasets and sample regularization noise ˜Q */ 
+
+for p ∈ [N ] and t = tk, . . . , t k+1 − 1 do 
+
+/* Executed in parallel */ 
+
+Sample array ˜Qpt (s, a ) ∼ N (0 , βNk−1(ϕ(s,a ))  
+
+> Nk−1(ϕ(s,a ))+1
+
+), ∀(s, a )
+
+/* Draw prior sample */ 
+
+Hpk ← {} 
+
+for (s, a, r, s ′) ∈ D k do 
+
+/* Randomly perturb data */ 
+
+Sample wp(s, a ) ∼ N (0 , βNk−1(ϕ(s,a ))  
+
+> Nk−1(ϕ(s,a ))+1
+
+)
+
+Hpk ← H pk ∪ { (s, a, r + wp, s ′)}
+
+end end 
+
+/* Estimate Q on perturbed data */ 
+
+for p = 1 , . . . , N do 
+
+/* Executed in Parallel */ 
+
+Define terminal value ˆQptk+1 (γ) ← 0 ∀γ ∈ [Γ] 
+
+for t = tk+1 − 1, . . . , t k do 
+
+/* Estimate Q on noisy data */ 
+
+ˆQpt ← arg min Q∈R L(Q | ˆQk−1, ˆQpt+1 , Hpk, ξ, η, α Nk−1(γ)) + ∥Q − ηα Nk−1(γ) ˜Qpt ∥22
+
+ˆQpt ← min { ˆQpt , 11−η }, ∀γ ∈ [Γ] 
+
+end 
+
+sptk = sp
+
+> 1
+
+, ∀p ∈ [N ].
+
+end 
+
+ˆQk(γ) =        
+
+> PNp=1
+> Ptk+1 −1
+> t=tk1{ϕ(spt,a pt)= γ}ˆQptk(γ)
+> Nk(γ)
+
+, ∀γ ∈ Γ
+
+t ← tk+1 , k ← k + 1 
+
+end 
+
+14 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Algorithm 3 Concurent RLSVI: Finite-Horizon (Storing the Data of One Episode) 
+
+Data: K, H, S, A, N, s1, {ϕh}Hh=1 , Tuning parameters {βk}k∈N
+
+Define constants αt ← 1/(1 + t), t = 1 , 2, . . . 
+
+/* Define squared temporal difference error */ 
+
+L(Q | Qk−1,h , Q next , D, ξ, α ) = P 
+
+> (s,a,r,s ′)∈D
+
+(Q − ξ − (1 − α)Qk−1,h (ϕh(s, a )) − α(r + max a′∈A Qnext (s′, a ′))) 2
+
+Initialize: 
+
+ˆQp
+
+> 0h
+
+(γ) = H, ∀h ∈ [H], γ ∈ [Γ] , p ∈ [N ]
+
+Each agent randomly samples the initial trajectory {sp
+
+> 0,1
+
+, a p
+
+> 0,1
+
+, r p
+
+> 0,1
+
+, . . . , s p 
+
+> 0,H
+
+, a p 
+
+> 0,H
+
+, r H
+
+> 0,1
+
+}Np=1 , with sp 
+
+> 0,1
+
+= sp
+
+> 1
+
+N0,h (γ) = NP
+
+> p=1
+
+1{ϕh(sp
+
+> 0,h
+
+, a p
+
+> 0,h
+
+) = γ}, ∀γ ∈ [Γ] , h ∈ [H]
+
+compute ˆQ0,h by ( 6) 
+
+for episode k = 1 , 2, . . . do 
+
+/*Each agent rollouts in the evironment*/ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+for period h = 1 , . . . , H do 
+
+apk,h ← arg max a∈A ˆQpk−1,h (ϕh(spk,h , a )) 
+
+observe reward rpk,h and next state spk,h +1 
+
+Dkh ← D kh ∪ { (spk,h , a pk,h , r pk,h , s pk,h +1 )}
+
+end end 
+
+/*Visitation of aggregated-states*/ 
+
+Nk,h (γ) ← PNp=1 1{ϕh(spk,h , a pk,h ) = γ}, ∀γ ∈ [Γ] , h ∈ [H]
+
+/*Construct perturbed data sets and sample regularization noise ˜Q*/ 
+
+for p ∈ [N ] and h ∈ [H] do 
+
+/*Executed in parallel*/ 
+
+For any (s, a ) ∈ S × A , sample array 
+
+˜Qpkh (s, a ) ∼ N 
+
+
+
+0, βk
+
+> 1+ Nk,h (ϕh(s,a ))
+
+
+
+,
+
+/* Draw prior sample */ 
+
+˜Dpkh ← {} 
+
+for (s, a, r, s ′) ∈ D kh do 
+
+Sample wp(s, a ) ∼ N 
+
+
+
+0, βk
+
+> 1+ Nk,h (ϕh(s,a ))
+
+
+
+˜Dpkh ← ˜Dpkh ∪ { (s, a, r + wp, s ′)}
+
+end end 
+
+/*Estimate Q on perturbed data*/ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+Define terminal value ˆQpk,H +1 (γ) ← H ∀γ ∈ [Γ] 
+
+for period h = H, . . . , 1 do 
+
+¯Qpk,h (γ) ← arg min Q∈R L(Q| ˆQk−1,h , ˆQpk,h +1 , ˜Dpkh , ξ, α ) + ∥Q − αNk−1,h (γ) ˜Qpkh ∥22, ∀γ ∈ [Γ] ˆQpk,h (γ) ← min { ¯Qpk,h (γ), H }, ∀γ ∈ [Γ] 
+
+end 
+
+spk, 1 ← sp
+
+> 1
+
+, Dkh = ∅
+
+end 
+
+Update ˆQk,h (γ), ∀γ ∈ [Γ] by ( 6) 
+
+end 
+
+15 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Algorithm 4 Concurent RLSVI: Infinite-Horizon (Storing the Data of One Pseudo-episode) 
+
+Data: Discount factor η, t0 = 1 , t = 1 , k = 0 , X1 = 0 , S, A, N, T , ϕ, tuning parameters {βk}k∈N,ξ,η
+
+Initialize Nk(γ) ← 0, ∀γ ∈ [Γ] , k ∈ [K]; ˆQ0(γ) ← 0, ∀γ ∈ [Γ] 
+
+Define constants αt ← 1/(1 + t), t = 1 , 2, . . . 
+
+/* Define squared temporal difference error */ 
+
+L(Q | ˆQ, Q next , D, ξ, η, α ) = P 
+
+> (s,a,r,s ′)∈D
+
+(Q − ηξ − η(1 − α) ˆQ(ϕ(s, a )) − αη (r + max a′∈A Qnext (s′, a ′))) 2
+
+Sample H0 ∼ Geometric (1 − η), set H0 ← min {H0, T + 1 − t}
+
+Each agent randomly samples the initial trajectory {sp
+
+> 0,1
+
+, a p
+
+> 0,1
+
+, r p
+
+> 0,1
+
+, . . . , s p 
+
+> 0,H
+
+, a p 
+
+> 0,H
+
+, r p 
+
+> 0,H
+
+}Np=1 , with sp 
+
+> 0,1
+
+= sp
+
+> 1
+
+k ← k + 1 , tk = 1 + H0
+
+tk ←the start time of pseudo-episode k
+
+while t ≤ T do 
+
+Sample H ∼ Geometric (1 − η)
+
+H ← min {H, T + 1 − t}
+
+tk+1 ← tk + H (the start time of pseudo-episode k + 1 )
+
+/*Each agent rollouts in the environment */ 
+
+for p = 1 , . . . , N do 
+
+/*Executed in parallel*/ 
+
+for t = tk, . . . , t k+1 − 1 do 
+
+apt ← arg max a∈A ˆQpt (ϕ(spt , a )) 
+
+observe reward rpt and next state spt+1 
+
+Dk ← D k ∪ { (spt , a pt , r pt , s pt+1 )}
+
+end 
+
+/* Visitation of aggregated-states */ 
+
+Nk−1(γ) ← PNp=1 
+
+Ptk −1 
+
+> t=tk−1
+
+1{ϕ(spt , a pt ) = γ}, ∀γ ∈ [Γ] 
+
+end 
+
+/* Construct perturbed datasets and sample regularization noise ˜Q */ 
+
+for p ∈ [N ] and t = tk, . . . , t k+1 − 1 do 
+
+/* Executed in parallel */ 
+
+Sample array ˜Qpt (s, a ) ∼ N (0 , βNk−1(ϕ(s,a ))  
+
+> Nk−1(ϕ(s,a ))+1
+
+), ∀(s, a )
+
+/* Draw prior sample */ 
+
+Hpk ← {} 
+
+for (s, a, r, s ′) ∈ D k do 
+
+/* Randomly perturb data */ 
+
+Sample wp(s, a ) ∼ N (0 , βNk−1(ϕ(s,a ))  
+
+> Nk−1(ϕ(s,a ))+1
+
+)
+
+Hpk ← H pk ∪ { (s, a, r + wp, s ′)}
+
+end end 
+
+/* Estimate Q on perturbed data */ 
+
+for p = 1 , . . . , N do 
+
+/* Executed in Parallel */ 
+
+Define terminal value ˆQptk+1 (γ) ← 0 ∀γ ∈ [Γ] 
+
+for t = tk+1 − 1, . . . , t k do 
+
+/* Estimate Q on noisy data */ 
+
+ˆQpt ← arg min Q∈R L(Q | ˆQk−1, ˆQpt+1 , Hpk, ξ, η, α Nk−1(γ)) + ∥Q − ηα Nk−1(γ) ˜Qpt ∥22
+
+ˆQpt ← min { ˆQpt , 11−η }, ∀γ ∈ [Γ] 
+
+end 
+
+sptk = sp
+
+> 1
+
+, ∀p ∈ [N ]; Dk ← ∅ .
+
+end 
+
+ˆQk(γ) =        
+
+> PNp=1
+> Ptk+1 −1
+> t=tk1{ϕ(spt,a pt)= γ}ˆQptk(γ)
+> Nk(γ)
+
+,
+
+∀γ ∈ Γ
+
+t ← tk+1 , k ← k + 1 
+
+end 
+
+16 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+## C. Proofs for the Finite-Horizon Case 
+
+In this section, we prove the worst-case regret bound for the finite-horizon case. We use the following notations: • nkh(γ): the number of visits to aggregate state γ at period h from episodes 0 to k − 1.• Nk,h (γ): total number of agents who visit aggregate state γ during episode k and period h.• πkp : the greedy policy with respect to ˆQpk,h , i.e. the policy that the agent p follows to produce the trajectory 
+
+spk, 1, a pk, 1, r pk, 1, . . . , s pk,H , a pk,H , r pk,H .• ˆV pk,h (s): the state value function estimate at period h, induced by ˆQpk,h (γ) through 
+
+ˆV pk,h (s) = max 
+
+> a∈A
+
+ˆQpk,h (ϕh(s, a )) .
+
+• V p(M, π ): the value function corresponding to policy π from the initial state sp
+
+> 1
+
+, where sp 
+
+> 1
+
+is the initial state of agent p
+
+at the beginning of each episode. For the true MDP M we have V π 
+
+> 1
+
+(sp
+
+> 1
+
+) := V p(M, π ).• ˆV πkp  
+
+> k, 1
+
+(sp
+
+> 1
+
+) := V p(M kp , π kp ): the value function corresponding to MDP M kp with initial state sp 
+
+> 1
+
+and policy πkp ,where MDP M kp is defined as (4). For any γ ∈ [Γ] , we define the following events: 
+
+E(γ) := 
+
+ 1
+
+Nk−1,h (γ)
+
+> Nk−1,h (γ)
+
+X
+
+> j=1
+
+1{ϕh(sjk−1,h , a jk−1,h ) = γ}{ V ∗
+
+> h+1
+
+(sjk−1,h ) − PhV ∗
+
+> h+1
+
+(sjk−1,h )}
+
+≤ 2Hplog(2 KHN/δ )
+
+pNk−1,h (γ)
+
+
+
+.
+
+(18) 
+
+G(γ) := 
+
+ 1
+
+Nk−1,h (γ)
+
+> Nk−1,h (γ)
+
+X
+
+> j=1
+
+1{ϕh(sjk−1,h , a jk−1,h ) = γ} ˜Qjk−1,h (sjk−1,h , a jk−1,h )
+
+≤ 2
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−1,h (γ) + 1) Nk−1,h (γ)
+
+
+
+.
+
+(19) 
+
+C.1. Proof of Finite-Horizon Main Result: Theorem 2 
+
+Proof of Theorem 2. Following the derivation of (37) and (38) in Lemma 11, we have 
+
+P
+
+> γ∈[Γ]
+
+PHh=1 
+
+PKk=1 1√Nk−1,h (γ)+1 = PHh=1 
+
+PKk=1 
+
+P
+
+> γ∈[Γ]
+
+PNk−1,h (γ) 
+
+> j=1 1√j
+
+≤ PKk=1 
+
+PHh=1 
+
+P 
+
+> γ∈[Γ]
+
+2pNk,h (γ) ≤ 2
+
+q
+
+KH Γ PKk=1 
+
+PHh=1 
+
+P 
+
+> γ∈[Γ]
+
+Nk,h (γ) = 2 KH √ΓN
+
+(20) and 
+
+PNp=1 
+
+PKk=1 
+
+PHh=1 1√NK−1,h (γpkh ) = PHh=1 
+
+PKk=1 
+
+P
+
+> γ∈[Γ]
+
+PNK−1,h (γ) 
+
+> j=1 1√j
+
+≤ PHh=1 
+
+PKk=1 
+
+P 
+
+> γ∈[Γ]
+
+2pNk−1,h (γ)
+
+≤ 2
+
+q
+
+HK Γ PHh=1 
+
+PKk=1 
+
+P 
+
+> γ∈[Γ]
+
+Nk−1,h (γ)= 2 HK √ΓN . 
+
+Under events E(γpkh ), G(γpkh ), ∀γpkh ∈ [Γ] , we have 17 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Regret( M, K, N, π, RLSVI β,α,ξ ) = PKk=1 
+
+PNp=1 V ∗ 
+
+> 1
+
+(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+) ≤ PKk=1 
+
+PNp=1 ˆVk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+).
+
+Recall from Lemma 11 that when E(γpkh ) and G(γpkh ) hold for all γpkh ∈ [Γ] , with probability 1 − 2δ, we have 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+)
+
+≤ 2ϵKHN + 8 KH 2√ΓN plog(2 KHN/δ ) + 32 H2√KΓN plog( HKN/δ )+2 KH 5/2Γ√N plog(2 KH Γ) plog(2 KHN/δ ).
+
+Note that by (18), (19) and the first statement of Lemma 10, we have 
+
+P(E(γpkh ), G(γpkh ), γ pkh , ∀k ∈ [K], h ∈ [H], p ∈ [N ]) 
+
+≥ 1 − P 
+
+> k∈[K],h ∈[H],p ∈[N]
+
+(P(E(γpkh )c) + P(G(γpkh )c)) 
+
+≥ 1 − 2N KHδ/ (2 KHN ) ≥ 1 − δ. 
+
+(21) Hence with probability 1 − 3δ, we have 
+
+Regret( M, K, N, π, RLSVI β,α,ξ )
+
+≤ 2ϵKHN + 8 KH 2√ΓN plog(2 KHN/δ ) + 32 H2√KΓN plog( HKN/δ )+2 KH 5/2Γ√N plog(2 KH Γ) plog(2 KHN/δ ).
+
+So we obtain (9). 
+
+C.2. Lemmas for State-Aggregation Results Lemma 8 (Concentration Bound) . Conditioning on Dk = ∪p∈[N ]
+
+P
+
+> h∈[H]
+
+{spk−1,h , a pk−1,h } as the trajectories of episode 
+
+k − 1 across all agents, for every possible γpkh = ϕh(spk,h , a pk,h ) in episode k, event E(γpkh ) defined in (18) and event G(γpkh )
+
+both hold with probability 1 − δ/ (2 KHN ).Proof of Lemma 8. By Höeffding’s inequality, conditional on the trajectory during episode k − 1, with probability 1 −
+
+δ/ (2 KHN ), we have 
+
+1
+
+Nk−1,h (γpkh )
+
+> Nk−1,h (γpkh )
+
+X
+
+> j=1
+
+{V ∗
+
+> h+1
+
+(sjk−1,h +1 ) − PhV ∗
+
+> h+1
+
+(sjk−1,h )} ≤ 2Hplog(2 KHN/δ )
+
+pNk−1,h (γpkh ) . (22) Additionally, recall from Algorithm 3 that for k ≥ 2, the random perturbation during episode k − 1 is drawn from normal distribution ˜Qjk−1,h (sjk−1,h , a jk−1,h ) ∼ N (0 , βk−1 
+
+> Nk−2,h (ϕh(sjk−1,h ,a jk−1,h ))+1
+
+), and since ϕh(sjk−1,h , a jk−1,h ) = γpkh in (24), we have ˜Qjk−1,h (sjk−1,h , a jk−1,h ) ∼ N (0 , βk−1 
+
+> Nk−2,h (γpkh )+1
+
+). Also note that the random perturbations ˜Qjk−1,h (sjk−1,h , a jk−1,h )
+
+are i.i.d. across j ∈ [N ], hence by Höeffding bound, conditioning on Dk, with probability 1 − δ/ (2 KHN ), we have 
+
+1
+
+Nk−1,h (γpkh )
+
+> Nk−1,h (γpkh )
+
+X
+
+> j=1
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h ) ≤ 2
+
+s
+
+βk−1
+
+Nk−2,h (γpkh ) + 1 
+
+s
+
+log(2 KHN/δ )
+
+Nk−1,h (γpkh ) .
+
+Thus the result follows. 
+
+Lemma 9 (Optimism) . When events E(γpkh ) and G(γpkh ) hold for all γpkh in episode k and for all k ∈ [K], p ∈ [N ], the on-policy error ˆV pk,h (s) − V ∗ 
+
+> h
+
+(s) is lower bounded by zero for any s ∈ S , k ∈ [K], p ∈ [N ].
+
+18 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Proof of Lemma 9. Recall from Algorithm 3 that the unclipped value function estimates ¯Qpk,h (·) in episode k can be written as 
+
+¯Qpk,h (γ) = arg min Q∈R
+
+P
+
+(s,a ): ϕh(s,a )= γ (Q − ξNk−1,h (γ) − (1 − αNk−1,h (γ)) ˆQk−1,h (γ)
+
+−αNk−1,h (γ){r(s, a ) + max a′∈A ˆQpk,h +1 (s′, a ′)})2 + Q − αNk−1,h (γ) ˜Qpk,h 
+
+22
+
+.
+
+By first-order condition, we have 
+
+0 = 2 P
+
+(s,a ): ϕh(s,a )= γ ( ¯Qpk,h (γ) − ξNk−1,h (γ) − (1 − αNk−1,h (γ)) ˆQk−1,h (γ)
+
+−αNk−1,h (γ){r(s, a ) + max a′∈A ˆQpk,h +1 (s′, a ′)})+2 P
+
+(s,a )∈D kh:ϕh(s,a )= γ ( ¯Qpk,h (γ) − αNk−1,h (γ) ˜Qpk,h (s, a )) ,
+
+so by calculation we have 
+
+¯Qpk,h (γ)= ξNk−1,h (γ) + 1
+
+Nk−1,h (γ)
+
+X
+
+(s,a )∈D kh:ϕh(s,a )= γ
+
+(1 − αNk−1,h (γ)) ˆQk−1,h (γ)+αNk−1,h (γ)(r(s, a ) + max 
+
+a′∈A 
+
+ˆQpk,h +1 (s′, a ′)) + αNk−1,h (γ) ˜Qpk,h (s, a )) = ξNk−1,h (γ) + 1
+
+Nk−1,h (γ)
+
+NX
+
+p=1 
+
+X
+
+(spk−1,h ,a pk−1,h )∈D pkh :ϕh(s,a )= γ
+
+(1 − αNk−1,h (γ)) ˆQk−1,h (γ)+αNk−1,h (γ)(r(spk−1,h , a pk−1,h ) + ˆV pk,h +1 (spk−1,h +1 )) + αNk−1,h (γ) ˜Qpk,h (spk−1,h , a pk−1,h )= ξNk−1,h (γ) + (1 − αNk−1,h (γ)) ˆQk−1,h (γ)+ αNk−1,h (γ)
+
+Nk−1,h (γ)
+
+NX
+
+p=1 
+
+X
+
+(spk−1,h ,a pk−1,h )∈D pk,h :ϕh(s,a )= γ
+
+(r(spk−1,h , a pk−1,h ) + ˆV pk,h +1 (spk−1,h +1 ) + ˜Qpk,h (spk−1,h , a pk−1,h )) = ξNk−1,h (γ) + (1 − αNk−1,h (γ)) ˆQk−1,h (γ)+ αNk−1,h (γ)
+
+Nk−1,h (γ)
+
+Nk−1,h (γ)
+
+X
+
+p=1 
+
+(r(spk−1,h , a pk−1,h ) + ˆV pk,h +1 (spk−1,h +1 ) + ˜Qpk,h (spk−1,h , a pk−1,h )) = ξNk−1,h (γ) + 1
+
+Nk−1,h (γ)
+
+Nk−1,h (γ)
+
+X
+
+p=1 
+
+(1 − αNk−1,h (γ)) ˆQpk−1,h (γ)+αNk−1,h (γ)(r(spk−1,h , a pk−1,h ) + ˆV pk,h +1 (spk−1,h +1 ) + ˜Qpk,h (spk−1,h , a pk−1,h )) ,
+
+where in the above derivation we used the fact that PNp=1 1{ϕh(spk−1,h , a pk−1,h ) = γ} = Nk−1,h (γ).Thus for γpkh = ϕh(spk,h , a pk,h ), with ϕh(sjk−1,h , a jk−1,h ) = γpkh in the following, we have 19 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+¯Qpk,h (spk,h , a pk,h ) − Q∗
+
+h(spk,h , a pk,h )= ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )) +αNk−1,h (γpkh )[{rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )}−Q∗
+
+h(spk,h , a pk,h )] = ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+p=1 
+
+{[rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] 
+
+−Q∗
+
+h(sjk−1,h , a jk−1,h )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{Q∗
+
+h(sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )}
+
+| {z }
+
+≥− ϵ
+
+≥ − ϵ + ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h − Q∗
+
+h(sjk−1,h , a jk−1,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{[rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] 
+
+−Q∗
+
+h(sjk−1,h , a jk−1,h )}
+
+(23) where we use the definition of ϵ-error aggregation as in Definition 1 in the last inequality above, and the right hand side of (23) is equal to RHS of (23) =(1) −ϵ + ξNk−1,h (γ) + (1 − αNk−1,h (γpkh ))
+
+Nk−1,h (γ)
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(sjk−1,h , a jk−1,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )+ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+h+1 (sjk−1,h +1 )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{V ∗
+
+h+1 (sjk−1,h +1 ) − PhV ∗
+
+h+1 (sjk−1,h )}
+
+=(2) −ϵ + ξNk−1,h (γ) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )+ 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+h+1 (sjk−1,h +1 )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{V ∗
+
+h+1 (sjk−1,h +1 ) − PhV ∗
+
+h+1 (sjk−1,h )}
+
+(24) where the equalities (1) and (2) use the fact that 
+
+Qh(s′, a ′) = rh(s′, a ′) + PhV ∗
+
+h+1 (s′, a ′), ∀(s′, a ′) ∈ S × A .
+
+20 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Suppose events E(γpkh ) and G(γpkh ) hold for all γpkh in episode k, then by (18),(19), we have 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+> Nk−1,h (γpkh )
+
+X
+
+> j=1
+
+{V ∗
+
+> h+1
+
+(sjk−1,h +1 ) − PhV ∗
+
+> h+1
+
+(sjk−1,h )} ≥ − 2αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pmax {Nk−1,h (γpkh ), 1} ,
+
+and 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+> Nk−1,h (γpkh )
+
+X
+
+> j=1
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h ) ≥ − 2αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−1,h (γpkh ) + 1) max {Nk−1,h (γpkh ), 1} .
+
+So recall from (7) 
+
+ξNk−1,h (γpkh ) = ϵ + 2αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pmax {Nk−1,h (γpkh ), 1} + 2αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−1,h (γpkh ) + 1) max {Nk−1,h (γpkh ), 1} ,
+
+thus we have 
+
+¯Qpk,h (spk,h , a pk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h ) ≥ 1
+
+> Nk−1,h (γpkh )
+
+PNk−1,h (γpkh ) 
+
+> j=1
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+> h+1
+
+(sjk−1,h +1 )}. (25) Note that when Nk−1,h (γ) = 0 , then ¯Qpk,h (γ) = ˆQpk,h (γ) = H, and we define terminal values as H with ¯Qpk,h +1 (γ) = ˆQpk,h +1 (γ) = H, so by plugging in h = H in (25), for any possible γ ∈ [Γ] , we have ¯Qpk,H (γ) ≥ Q∗ 
+
+> H
+
+(γ). Thus 
+
+ˆV pk,H (s) ≥ V ∗ 
+
+> H
+
+(s), ∀s ∈ S , k ∈ [K], p ∈ [N ].
+
+Furthermore, suppose that at period h, we have 
+
+ˆV pk,h (s) ≥ V ∗ 
+
+> h
+
+(s), ∀s ∈ S , k ∈ [K], p ∈ [N ],
+
+then from (25) we have 
+
+¯Qpk,h −1(s, a ) − Q∗
+
+> h
+
+(s, a ) ≥ 1
+
+Nk−1,h (ϕh(s, a )
+
+> Nk−1,h (ϕh(s,a ))
+
+X
+
+> j=1
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+> h+1
+
+(sjk−1,h +1 )} ≥ 0,
+
+which implies that ¯Qpk,h −1(s, a ) ≥ Q∗
+
+> h
+
+(s, a ), ∀(s, a ) ∈ S × A , k ∈ [K], p ∈ [N ].
+
+By maximizing over a ∈ A on both sides above, we have 
+
+ˆV pk−1,h −1 ≥ V ∗
+
+> h−1
+
+(s), ∀s ∈ S , k ∈ [K].
+
+Thus by induction, we conclude that when events E(γpkh ) and G(γpkh ) hold for all γpkh in episode k for all k ∈ [K], we have 
+
+ˆV pk,h (s) ≥ V ∗ 
+
+> h
+
+(s), ∀s ∈ S , k ∈ [K], p ∈ [N ].
+
+Lemma 10. Suppose events E(γpkh ) and G(γpkh ) hold for all γpkh , for all k ∈ [K] and p ∈ [N ], then we have 
+
+PNp=1 
+
+PKk=1 
+
+h ˆV pk,h (spk,h ) − V ∗ 
+
+> h
+
+(spk,h )
+
+i
+
+≤ 2ϵKN (H − h + 1) +4 Hplog(2 KHN/δ )
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+> H
+
+X
+
+> ℓ=h
+
+1
+
+pNk−1,ℓ (γpkℓ )11 + Nk−1,ℓ (γpkℓ )+4 
+
+> H
+
+X
+
+> ℓ=hN
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+pβk−1 log(2 KHN/δ )
+
+q nhk−1(γpkh ) + 1) Nk−2,h (γpkh 
+
+ 11 + Nk−1,ℓ (γpkℓ ) .
+
+21 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Proof of Lemma 10. By (23) we have 
+
+¯Qpk,h (spk,h , a pk,h ) − Q∗
+
+h(spk,h , a pk,h )= ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )) +αNk−1,h (γpkh )[{rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )}−Q∗
+
+h(spk,h , a pk,h )] = ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+p=1 
+
+{[rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] 
+
+−Q∗
+
+h(sjk−1,h , a jk−1,h )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{Q∗
+
+h(sjk−1,h , a jk−1,h ) − Q∗
+
+h(spk,h , a pk,h )}
+
+| {z }
+
+≤ϵ
+
+≤ ϵ + ξNk−1,h (γ) + 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+(1 − αNk−1,h (γpkh ))( ˆQjk−1,h (sjk−1,h , a jk−1,h − Q∗
+
+h(sjk−1,h , a jk−1,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{[rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1,h +1 (sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] 
+
+−Q∗
+
+h(sjk−1,h , a jk−1,h )}
+
+(26) where we use the definition of ϵ-error aggregation as in Definition 1 in the last inequality above, and the right hand side of (26) is equal to RHS of (26) =(1) ϵ + ξNk−1,h (γ) + (1 − αNk−1,h (γpkh ))
+
+Nk−1,h (γ)
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+( ˆQjk−1,h (sjk−1,h , a jk−1,h ) − Q∗
+
+h(sjk−1,h , a jk−1,h )) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )+ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+h+1 (sjk−1,h +1 )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{V ∗
+
+h+1 (sjk−1,h +1 ) − PhV ∗
+
+h+1 (sjk−1,h )}
+
+=(2) ϵ + ξNk−1,h (γ) + αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )+ 1
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{ ˆV jk−1,h +1 (sjk−1,h +1 ) − V ∗
+
+h+1 (sjk−1,h +1 )}
+
++ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+{V ∗
+
+h+1 (sjk−1,h +1 ) − PhV ∗
+
+h+1 (sjk−1,h )}
+
+(27) where the equalities (1) and (2) above use the fact that 
+
+Qh(s′, a ′) = rh(s′, a ′) + PhV ∗
+
+h+1 (s′, a ′), ∀(s′, a ′) ∈ S × A .
+
+22 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Now suppose E(γpkh ) and G(γpkh ) holds for all aggregated states γpkh during period k for all p ∈ [N ].By definition, note that 
+
+ˆV pk,h (spk,h ) − V ∗
+
+h (spk,h ) ≤ ˆQpk,h (spk,h , a pk,h ) − Q∗
+
+h(spk,h , a pk,h ) ≤ ¯Qpk,h (spk,h , a pk,h ) − Q∗
+
+h(spk,h , a pk,h ), (28) Denote 
+
+∆pk,h = ˆV pk,h (spk,h ) − V ∗
+
+h (spk,h ), (29) then under events E(γpkh ) and G(γpkh ),
+
+¯Qpk,h (spk,h , a pk,h ) − Q∗
+
+h(spk,h , a pk,h ) ≤ ϵ + ξNk−1,h (γ) + 2αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−2,h (γpkh ) + 1) Nk−1,h (γpkh )+ αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+∆jk,h +1 + 2αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pNk−1,h (γpkh ) .
+
+(30) Since E(γpkh ) and G(γpkh ) hold for all γpkh ∈ [Γ] , and recall from (7) 
+
+ξNk−1,h (γpkh ) = ϵ + 2αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pmax {Nk−1,h (γpkh ), 1} + 2αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−1,h (γpkh ) + 1) max {Nk−1,h (γpkh ), 1} ,
+
+so we have 
+
+NX
+
+p=1 
+
+KX
+
+k=1 
+
+∆pk,h (spk,h ) ≤ PNp=1 
+
+PKk=1 Q∗
+
+h(spk,h , a pk,h ) − ¯Qpk,h (spk,h , a pk,h )
+
+≤ 2KN ϵ + 4 
+
+NX
+
+p=1 
+
+KX
+
+k=1 
+
+αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pNk−1,h (γpkh )+4 
+
+NX
+
+p=1 
+
+KX
+
+k=2 
+
+αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−2,h (γpkh ) + 1) Nk−1,h (γpkh )+
+
+NX
+
+p=1 
+
+KX
+
+k=1 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+∆jk,h +1 .
+
+(31) For any γ ∈ [Γ] , for spk,h , a pk,h such that ϕh(spk,h , a pk,h ) = γ, denote 
+
+¯∆k,h +1 (γ) = 1
+
+Nk−1,h (γ)
+
+Nk−1,h (γ)
+
+X
+
+p=1 
+
+∆pk,h +1 .
+
+Note that 
+
+NX
+
+p=1 
+
+KX
+
+k=1 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+∆jk,h +1 
+
+=
+
+KX
+
+k=1 
+
+Nk−1,h (γpkh )αNk−1,h (γpkh ) ¯∆k,h +1 =
+
+KX
+
+k=1 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+p=1 
+
+∆pk,h +1 
+
+≤
+
+KX
+
+k=1 
+
+NX
+
+p=1 
+
+∆pk,h +1 ,
+
+(32) where the last inequality above follows from Lemma 9. Hence by above recursion and (31) we have that when E(γpkh ) and G(γpkh ) hold for all γpkh ∈ [Γ] , we have 23 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+PNp=1 
+
+PKk=1 ∆pk,h ≤ 2ϵKN (H − h + 1) + 4 Hplog(2 KHN/δ )
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+> H
+
+X
+
+> ℓ=h
+
+1
+
+pNk−1,ℓ (γpkℓ )11 + Nk−1,ℓ (γpkℓ )+4 
+
+> H
+
+X
+
+> ℓ=hN
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+pβk−1 log(2 KHN/δ )
+
+q
+
+(Nk−2,h (γpk,h ) + 1) Nk−1,h (γpk,h )11 + Nk−1,ℓ (γpk,ℓ ) .
+
+(33) 
+
+Lemma 11. Suppose E(γpkh ) and G(γpkh ) hold for all γpkh ∈ [Γ] , then with probability 1 − 2δ, we have 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+)
+
+≤ 2ϵKHN + 8 KH 2√ΓN plog(2 KHN/δ ) + 32 H2√KΓN plog( HKN/δ )+2 KH 5/2Γ√N plog(2 KH Γ) plog(2 KHN/δ ).
+
+Proof of Lemma 11. Note that 
+
+ˆV pk,h (spk,h ) − V πkp  
+
+> h
+
+(spk,h )= ˆV pk,h (spk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h ) + Q∗
+
+> h
+
+(spk,h , a pk,h ) − V πkp  
+
+> h
+
+(spk,h )= ˆQπkp  
+
+> h
+
+(spk,h , a pk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h ) + Q∗
+
+> h
+
+(spk,h , a pk,h ) − Qπkp  
+
+> h
+
+(spk,h , a pk,h )= ˆQπkp  
+
+> h
+
+(spk,h , a pk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h ) + PhV ∗
+
+> h+1
+
+(spk,h +1 ) − PhV πkp  
+
+> h+1
+
+(spk,h +1 )= [ ˆQπkp  
+
+> h
+
+(spk,h , a pk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h )] + [ V ∗
+
+> h+1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] +[ PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] + [ V πkp  
+
+> h+1
+
+(spk,h +1 ) − PhV πkp  
+
+> h+1
+
+(spk,h +1 )] = [ ˆQπkp  
+
+> h
+
+(spk,h , a pk,h ) − Q∗
+
+> h
+
+(spk,h , a pk,h )] + [ ˆV πkp 
+
+> k,h +1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] − ∆pk,h +1 
+
++[ PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] + [ V πkp  
+
+> h+1
+
+(spk,h +1 ) − PhV πkp  
+
+> h+1
+
+(spk,h +1 )] .
+
+(34) Summing over k = 1 , 2, . . . , K , by (28), (31), (32) and (33) of Lemma 10 we have 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+ˆV pk,h (spk,h ) − V πkp  
+
+> h
+
+(spk,h )
+
+≤
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+[ ˆV pk,h +1 (spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] −
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+∆pk,h +1 
+
++2 KN ϵ + 4 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+αNk−1,h (γpkh )Hplog(2 KHN/δ )
+
+pNk−1,h (γpkh )+2 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+αNk−1,h (γpkh )
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−2,h (γpkh ) + 1) Nk−1,h (γpkh )11 + Nk−1,h (γpkh ) +
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+∆pk,h +1 
+
++
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] +
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[V πkp  
+
+> h+1
+
+(spk,h +1 ) − PhV πkp  
+
+> h+1
+
+(spk,h +1 )] .
+
+(35) Note that (35) is recursive. Recall that spk, 1 = sp 
+
+> 1
+
+for any k ∈ [K], p ∈ [N ]. Thus by Lemma 10, when E(γpkh ) and G(γpkh )
+
+24 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+hold for all γpkh , for all k ∈ [K], p ∈ [N ], we have 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+)
+
+≤ 2ϵKHN + 4 Hplog(2 KHN/δ )
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+> H
+
+X
+
+> h=1
+
+1
+
+pNk−1,h (γpkh )11 + Nk−1,h (γpkh )+4 
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−2,h (γpkh ) + 1) Nk−1,h (γpkh )11 + Nk−1,h (γpkh )+
+
+> H
+
+X
+
+> h=1
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[V πkp  
+
+> h+1
+
+(spk,h +1 ) − PhV πkp  
+
+> h+1
+
+(spk,h )] .
+
+(36) Further note that 
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[PhV πkp  
+
+> h+1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] = X
+
+> γ∈[Γ]
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+1{ϕh(spk,h , a pk,h ) = γ}[PhV πkp  
+
+> h+1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] 
+
+and 
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] = X
+
+> γ∈[Γ]
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+1{ϕh(spk,h , a pk,h ) = γ}[PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] .
+
+By Azuma-Höeffding’s inequality, with probability ≥ 1 − δ/ Γ,
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+1{ϕh(spk,h , a pk,h ) = γ}[PhV πkp  
+
+> h+1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] ≤ 2H
+
+q
+
+nKh (γ)
+
+r
+
+log Γ
+
+δ ,
+
+and with probability ≥ 1 − δ/ Γ, we have 
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+1{ϕh(spk,h , a pk,h ) = γ}[PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] ≤ 2H
+
+q
+
+nKh (γ)
+
+r
+
+log Γ
+
+δ ,
+
+thus by summing over all the possible γpkh ∈ [Γ] , with probability 1 − 2δ,
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+[PhV πkp  
+
+> h+1
+
+(spk,h +1 ) − V πkp  
+
+> h+1
+
+(spk,h +1 )] + [ PhV ∗
+
+> h+1
+
+(spk,h +1 ) − V ∗
+
+> h+1
+
+(spk,h +1 )] 
+
+≤ 4H X
+
+> γ∈[Γ]
+
+q
+
+nKh (γ)
+
+r
+
+log Γ
+
+δ .
+
+25 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Finally, note that 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+1
+
+pNk−1,h (γpkh )11 + Nk−1,h (γpkh )
+
+≤
+
+> H
+
+X
+
+> h=1
+> K
+
+X
+
+> k=1
+
+X
+
+> γ∈[Γ]
+> Nk−1,h (γ)
+
+X
+
+> j=1
+
+1
+
+j
+
+≤(1) 
+
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+X
+
+> γ∈[Γ]
+
+q
+
+Nk−1,h (γ)
+
+vuut
+
+> ∞
+
+X
+
+> j=1
+
+1/j 2 ≤(2) 
+
+> H
+
+X
+
+> h=1
+> K
+
+X
+
+> k=1
+
+X
+
+> γ∈[Γ]
+
+2
+
+q
+
+Nk−1,h (γ)
+
+≤(3) 2
+
+vuutHK Γ
+
+> H
+
+X
+
+> h=1
+> K
+
+X
+
+> k=1
+
+X
+
+> γ∈[Γ]
+
+Nk−1,h (γ)= 2 HK √ΓN
+
+(37) where (1) and (3) hold by Cauchy’s inequality, and (2) holds because pπ2/6 < 2.Furthermore, we also have 
+
+PHh=1 
+
+P
+
+> γ∈[Γ]
+
+q
+
+nKh (γ) ≤
+
+q
+
+HΓ PHh=1 
+
+P 
+
+> γ∈[Γ]
+
+nKh (γ) = √H2KΓN . (38) Additionally, note that whenever Nk−2,h (γpkh ) ≥ 1, we have 
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+pβk−1 log(2 KHN/δ )
+
+p(Nk−2,h (γpkh ) + 1) Nk−1,h (γpkh )11 + Nk−1,h (γpkh )
+
+≤
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+pβk−1 log(2 KHN/δ )
+
+pNk−2,h (γpkh ) + 1 11 + Nk−1,h (γpkh ) ,
+
+(39) and note that 
+
+> H
+
+X
+
+> h=1
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=2
+
+1
+
+q
+
+Nk−2,h (γpk+1 ,h ) + 1 11 + Nk−1,h (γpk+1 ,h ) =(1) 
+
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+X
+
+> γ∈[Γ]
+
+Nk,h (γ)
+
+pNk−1,h (γ) + 1 11 + Nk,h (γ)
+
+≤
+
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+X
+
+> γ∈[Γ]
+
+1
+
+pNk−1,h (γ) ≤
+
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+X
+
+> γ∈[Γ]
+
+1{Nk,h (γ ≥ 1) }
+
+pNk,h (γ) ≤
+
+vuutKH Γ
+
+> K
+
+X
+
+> k=1
+> H
+
+X
+
+> h=1
+
+X
+
+> γ∈[Γ]
+
+Nk,h (γ) = KH Γ√N , 
+
+(40) where equality (1) holds because Nk,h (γ) is the number of agents that reach aggregated state γ at period h during episode k.And the last inequality holds by Cauchy’s inequality. Recall that βk = 12 H3 log(2 kH Γ) , thus by (39), 
+
+PHh=1 
+
+PNp=1 
+
+PKk=2 
+
+√βk−1 log(2 KHN/δ )
+
+> q
+
+(Nk−2,h (γpkh )+1) Nk−1,h (γpkh ) 
+
+> 11+ Nk−1,h (γpkh )
+
+≤ KH 5/2Γ√N plog(2 KH Γ) plog(2 KHN/δ ).
+
+(41) Thus by (36), when events E(γpkh ) and G(γpkh ) hold for all γpkh ∈ [Γ] , with probability 1 − 2δ, we have 
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+)
+
+≤ 2ϵKHN + 4 KH 2√ΓN plog(2 KHN/δ ) + 32 H2√KΓN plog( HKN/δ )+2 KH 5/2Γ√N plog(2 KH Γ) plog(2 KHN/δ ).
+
+26 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+## D. Proofs for the Infinite-Horizon Case 
+
+Additional notations For true MDP M and policy π we denote the discounted value function under π at state s as. 
+
+V ηπ, 1(s) = V ηπ (s). We denote V η 
+
+> ∗
+
+as the discounted value function under the optimal policy π∗.During each pseudo-episode k ∈ [K], each agent samples a random vector with independent components wkp ∈
+
+RHk SA , where wkp (h, s, a ) ∼ N (0 , σ 2
+
+> k
+
+(h, s, a )) and σk(h, s, a ) = 
+
+q βk 
+
+> Nk−1(ϕ(s,a ))+1
+
+, where βk is a tuning parameter, 
+
+Nk−1,h (ϕ(s, a )) is the total number of times that aggregated state ϕ(s, a ) is reached across all agents during episode k − 1.Given wkp , we construct a randomized perturbation of the empirical MDP for agent p as 
+
+M kp = ( T, S, A, ˆP k, ˆRk + wkp , N ), (42) where the empirical distributions ˆP k and empirical rewards ˆRk are computed as in (13) and (14). During each pseudo-episode 
+
+k ∈ [K], the data set ˜Dpk contains perturbation of samples from pseudo-episode k − 1 used by agent p.We define the following events: 
+
+EI (γ) := 
+
+(
+
+1
+
+Nk−1(γ)
+
+> N
+
+X
+
+> j=1
+
+X
+
+> h∈[Hk−1]
+
+1{ϕ(sjk−1,h , a jk−1,h ) = γ}{ V η 
+
+> ∗
+
+(sjk−1,h ) − P V η 
+
+> ∗
+
+(sjk−1,h )}
+
+≤ 2Hk−1
+
+plog( T N/δ )
+
+pNk−1,h (γ)
+
+)
+
+.
+
+(43) 
+
+GI (γ) := 
+
+(
+
+1
+
+Nk−1(γ)
+
+> N
+
+X
+
+> j=1
+
+X
+
+> h∈[Hk−1]
+
+1{ϕ(sjk−1,h , a jk−1,h ) = γ} ˜Qjk−1,h (sjk−1,h , a jk−1,h )
+
+≤ 2pβk−1 log( T N/δ )
+
+p(Nk−1(γ) + 1) Nk−1(γ)
+
+)
+
+.
+
+(44) 
+
+Lemma 12 (Lemma 2 of (Dong et al., 2022)) . For all π, s ∈ S and η ∈ [0 , 1) , V ηπ (s) − λπ (s)1−η ≤ τπ .
+
+Remark 13. For weakly communicating M , the optimal average reward is state independent, so under Assumption 6, almost surely for any s, s ′ ∈ S , we have |V η 
+
+> ∗
+
+(s) − V η 
+
+> ∗
+
+(s′)| ≤ 2τ∗ ≤ 2τ .
+
+Regret Decomposition Recall that Regret( M, T, N, RLSVI β,α,ξ ) denotes the regret under infinite-horizon case for MDP 
+
+M . Here K = arg max {k : tk ≤ T }. We put K explicitly here to derive the regret bound in a way dependent on the random K. Let Hk be the length of pseudo-episode k. So we can decompose the regret as 
+
+Regret( M, T, N, RLSVI β,α,ξ )= EK,H k
+
+hPNp=1 
+
+PKk=1 
+
+PHk 
+
+> t=1
+
+(λ∗ − Rpt ) M
+
+i
+
+= EK,H k
+
+hPNp=1 
+
+PKk=1 Hkλ∗ − PNp=1 
+
+PKk=1 
+
+PHk 
+
+> t=1
+
+Rpt M
+
+i
+
+= EK,H k
+
+" NX
+
+> p=1
+> K
+
+X
+
+> k=1
+
+{Hkλ∗ − V η 
+
+> ∗
+
+(spk, 1)} M
+
+#| {z }
+
+> (a)
+
++
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+n
+
+V η 
+
+> ∗
+
+(spk, 1) − V ηπkp (spk, 1)
+
+o| {z }
+
+> (b)
+
+(45) Recall from (11) that V η 
+
+> ∗
+
+, V ηπkp ≤ 11−η . Note that (a) in (45) is the difference between the optimal average reward weighted by the pseudo-horizons and the discounted reward, and part (b) is the sum of the differences between the optimal discounted value and cumulative the discounted value of the employed policies throughout K pseudo-episodes by all agents. We provide an upper bound for the worst-case regret by bounding (a) and (b) respectively. 27 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+D.1. Proof for Infinite-Horizon Main Result: Theorem 7 
+
+Proof of Theorem 7. By Azuma-Höeffding inequality, conditional on the trajectory during pseudo-episode k − 1, with probability 1 − δ/ (2 T N ), we have 
+
+1
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+{V η 
+
+> ∗
+
+(sjk−1,h +1 ) − PhV η 
+
+> ∗
+
+(sjk−1,h )} ≤ 2plog(2 T N/δ )(1 − η)pNk−1(γ) .
+
+Additionally, recall from Algorithm 4 that ˜Qjk−1,h (sjk−1,h , a jk−1,h ) ∼ N 
+
+
+
+0, βk−1
+
+> Nk−1(γ)+1
+
+
+
+. Note that conditional on the trajectories during pseudo-episode k − 1, the random perturbations are i.i.d. across j ∈ [p], h ∈ [Hk−1], thus by Höefdding’s inequality, conditional on the trajectory during pseduo-period k − 1, with probability 1 − δ/ (2 T N ), we have 
+
+1
+
+Nk−1(γ)
+
+> N
+
+X
+
+> j=1
+
+X
+
+> h∈[Hk−1]
+
+1{ϕh(spk−1,h , a pk−1,h ) = γ} ˜Qjk−1,h (spk−1,h , a pk−1,h ) ≤ 2
+
+s
+
+βk−1
+
+Nk−1(γ) + 1 
+
+s
+
+log(2 T N/δ )
+
+Nk−1(γ) .
+
+So we have 
+
+P(E(γpkh ), G(γpkh ), γ pkh , ∀k ∈ [K], h ∈ [Hk], p ∈ [N ]) = P(E(γpt ), G(γpt ), γ pt , ∀t ∈ [T ], p ∈ [N ]) 
+
+≥ 1 − X  
+
+> t∈[T],p ∈[N]
+
+(P(E(γpt )c) + P(G(γpt )c)) ≥ 1 − 2N T δ/ (2 N T ) ≥ 1 − δ. (46) By Lemma 15 and Lemma 14, with probability 1 − 3δ, we have 
+
+Regret( M, T, N, RLSVI β,α,ξ ) ≤ τ N [(1 − η)T + 1] 
+
+√N T + [(1 − η)T + 1] τ
+
+
+
+1 + pN log( N T )
+
+
+
++ 8T pΓN log(2 T N/δ )(1 − η)2 + 8Γ τ 3/2T pN log(2 τ ΓT ) log(2 T N/δ )(1 − η)2
+
++ 4K√N Γplog(Γ /δ )1 − η + 2 ηϵT N. 
+
+(47) Recall that τ = max {τ, τ }, so with probability 1 − δ, we have 
+
+Regret( M, T, N, RLSVI β,α,ξ ) ≤ τ N [(1 − η)T + 1] 
+
+√N T + [(1 − η)T + 1] τ
+
+
+
+1 + pN log( N T )
+
+
+
++ 8T pΓN log(6 T N/δ )(1 − η)2 + 8τ 3/2T ΓpN log(2 τ ΓT ) log(6 T N/δ )(1 − η)2
+
++ 4K√N Γplog(3Γ /δ )1 − η + 2 ηϵT N. 
+
+When 1 − η such that 1(1 −η)2 ≤ C for some constant C, is bounded from below, we have 
+
+Regret( M, T, N, RLSVI β,α,ξ ) ≤ 2ϵT N + 2 τ √N T + 4 T τ pN log( N T )+16 C max {τ 3/2, 1}T ΓpΓN log(2 τ T ) log(6 T N/δ )
+
+D.2. Lemmas for bounding (a) and (b) in (45) Lemma 14 (Bound for (a) of (45)) . EHk ,K 
+
+hPNp=1 
+
+PKk=1 Hkλ∗ − V η 
+
+> ∗
+
+(spk, 1)
+
+i
+
+≤ τ N [(1 −η)T +1]  
+
+> √N T
+
++ [(1 − η)T +1] τ
+
+
+
+1 + pN log( N T )
+
+
+
+.
+
+28 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Proof of Lemma 14. Note that the expected length of each pseudo-episode is independent of the policy and is equal to 11−η .Thus for K fixed, EHk
+
+hPNp=1 
+
+PKk=1 Hkλ∗ − V η 
+
+> ∗
+
+(spk, 1)
+
+i
+
+= PNp=1 
+
+PKk=1 
+
+ λ∗ 
+
+> 1−η
+
+− V η 
+
+> ∗
+
+(spk, 1)
+
+
+
+, thus 
+
+E
+
+" NX
+
+> p=1
+> K
+
+X
+
+> k=1
+
+Hkλ∗ − V η 
+
+> ∗
+
+(spk, 1)
+
+#
+
+≤ E
+
+" NX
+
+> p=1
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1)
+
+#
+
+.
+
+By Lemma 12, we know that λ∗ 
+
+> 1−η
+
+− V η 
+
+> ∗
+
+(spk, 1) ≤ τ . So that for any p ∈ [N ], for any fixed K,
+
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1) ≤ Kτ. 
+
+Note that spk, 1 are sampled i.i.d. across p at the beginning of each pseudo-episode k. Höeffding’s inequality shows that for any ϵ > 0,
+
+P
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1) ≥ ϵ + Kτ 
+
+!
+
+≤ exp 
+
+
+
+− 2ϵ2
+
+4N K 2τ 2
+
+
+
+.
+
+Take 
+
+ϵ = Kτ pN log( N T ),
+
+we then have 
+
+P
+
+> N
+
+X
+
+> p=1
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1) ≥ Kτ 
+
+
+
+1 + pN log( N T )
+
+!
+
+≤ 1
+
+√N T .
+
+Thus conditioning on the total number of pseudo-episodes K,
+
+EK
+
+" NX
+
+> p=1
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1)
+
+#
+
+≤ τ KN 
+
+√N T + Kτ 
+
+
+
+1 + pN log( N T )
+
+
+
+.
+
+Further note that since Hk ∼ Geometric (1 − η) and are i.i.d. across k, so 
+
+E[K] ≤ (1 − η)T + 1 .
+
+Hence by taking expectation over K, we have 
+
+E
+
+" NX
+
+> p=1
+> K
+
+X
+
+> k=1
+
+λ∗
+
+1 − η − V η 
+
+> ∗
+
+(spk, 1)
+
+#
+
+≤ τ E[K]N
+
+√N T + E[K]τ
+
+
+
+1 + pN log( N T )
+
+
+
+≤ τ N [(1 − η)T + 1] 
+
+√N T + [(1 − η)T + 1] τ
+
+
+
+1 + pN log( N T )
+
+
+
+.
+
+Lemma 15 (Bound for (b) of (45)) . Suppose events EI (γ) and GI (γ) hold for any γ ∈ [Γ] , then with probability 1 − 2δ, we have 
+
+PNp=1 
+
+PKk=1 
+
+n
+
+V η 
+
+> ∗
+
+(spk, 1) − V ηπkp ,M (spk, 1)
+
+o
+
+≤ 8T pΓN log(2 T N/δ )(1 − η)2 + 8τ 3/2T ΓpN log(2 τ ΓT ) log(2 T N/δ )1 − η
+
++ 4T √N Γplog(Γ /δ )1 − η + 2 ηϵT N. 
+
+29 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Proof of Lemma 15. Recall from Algorithm 4 that the unclipped value function estimates ¯Qpk,h (·) during pseudo-episode k
+
+at time period h ∈ [Hk] (recall that Hk here is random) as 
+
+¯Qpk,h (γ) = arg min Q∈R
+
+P 
+
+> (s,a ): ϕh(s,a )= γ
+
+(Q − ξNk−1(γ) − (1 − αNk−1(γ)) ˆQk−1(γ)
+
+−ηα Nk−1,h (γ){r(s, a ) + max a′∈A ˆQpk,h +1 (s′, a ′)})2 + Q − ηα Nk−1,h (γ) ˜Qpk,h 
+
+> 22
+
+.
+
+So similar to the derivation in the proof of Lemma 10, we have 
+
+¯Qpk,h (γ) = ξNk−1(γ) + 1
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> p=1
+
+(1 − αNk−1(γ)) ˆQpk−1(γ)+αNk−1(γ)η(r(spk−1, a pk−1) + ˆV pk (spk−1,h +1 ) + ˜Qpk,h (spk−1,h , a pk−1,h )) .
+
+By definition, we have ¯Qpk, 1(γ) = ¯Qptk (γ). We denote ¯Qpk(γ) := ¯Qpk, 1(γ) in the following. Thus for any γ = ϕ(spk,h , a pk,h )
+
+during pseudo-episode k, with ϕ(sjk−1,h , a jk−1,h ) = γ in the following, where {(sjk−1,h , a jk−1,h )} come from all the state-action pairs during pseudo-period k − 1 (note that we don’t distinguish between different pseudo periods now), where h ∈ { 1, 2, . . . , H k−1}, and Hk−1 is the random length of pseudo-episode k − 1, and recall that Nk−1(γ) = 
+
+PNp=1 
+
+P 
+
+> h∈[Hk−1]
+
+1{ϕh(spk−1,h , a pk−1,h ) = γ}, so we have 
+
+¯Qpk,h (spk,h , a pk,h ) − Qη 
+
+> ∗
+
+(spk,h , a pk,h )= ηξ Nk−1(γ) + 1
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+(1 − αNk−1(γ))( Qη 
+
+> ∗
+
+(spk,h , a pk,h ) − ˆQjk−1(sjk−1,h , a jk−1,h )) +η αNk−1(γ)
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> p=1
+
+{− [rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1(sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] +Qη 
+
+> ∗
+
+(sjk−1,h , a jk−1,h )}
+
++ αNk−1,h (γ)
+
+Nk−1(γ)
+
+> Nk−1,h (γ)
+
+X
+
+> j=1
+
+{Qη 
+
+> ∗
+
+(spk,h , a pk,h ) − Qη 
+
+> ∗
+
+(sjk−1,h , a jk−1,h )) }
+
+| {z }
+
+> ≤ϵ
+
+≤ ϵ + ηξ Nk−1(γ) + ηNk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+(1 − αNk−1(γ))( Qη 
+
+> ∗
+
+(spk,h , a pk,h ) − ˆQjk−1(sjk−1,h , a jk−1,h )) +η αNk−1(γ)
+
+Nk−1,h (γ)
+
+> Nk−1(γ)
+
+X
+
+> p=1
+
+{− [rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1(sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] = ϵ + ηξ Nk−1(γ) − η αNk−1(γ)
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )
+
+− ηNk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+{ ˆV jk−1(sjk−1,h +1 ) − V η 
+
+> ∗
+
+(sjk−1,h +1 )}−η αNk−1(γ)
+
+Nk−1(γ)
+
+> Nk−1(γ)
+
+X
+
+> j=1
+
+{V η 
+
+> ∗
+
+(sjk−1,h +1 ) − PhV η 
+
+> ∗
+
+(sjk−1,h )},
+
+(48) where we used the fact that under optimal policy π∗ for the true MDP, we have 
+
+Q∗(s′, a ′) = r(s′, a ′) + ηP ∗V∗(s′),
+
+and under the optimal policy πk−1,j under MDP M k−1,j , we have 
+
+ˆQjk−1(s′, a ′) = r(s′, a ′) + η ˆPπkj ˆVk−1(s).
+
+Now suppose that events EI (γpkh ) and GI (γpkh ) hold for all aggregated states γpkh during pseudo-perido k for all k ∈ [K].Then by similar derivation as that for the finite-horion case in Lemma 9, we have 
+
+ˆV pk,h (s) − V∗(s) ≥ 0, ∀s ∈ S , k ∈ [K], p ∈ [N ]. (49) 30 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+We denote 
+
+∆pk,h = ˆV pk,h (spk,h ) − V η
+
+∗ (spk,h ).
+
+Note that 
+
+ˆVk,h (spk,h ) − V∗(spk,h ) ≤ ˆQpk,h (spk,h , a pk,h ) − Qη
+
+∗ (spk,h , a pk,h ) ≤ ¯Qpk,h (spk,h , a pk,h ) − Qη
+
+∗ (spk,h , a pk,h ).
+
+By (48) we have 
+
+¯Qpk,h (spk,h , a pk,h ) − Qη
+
+∗ (spk,h , a pk,h )= ηξ Nk−1(γ) + ηNk−1(γ)
+
+Nk−1(γ)
+
+X
+
+j=1 
+
+(1 − αNk−1(γ))( Qη
+
+∗ (spk,h , a pk,h ) − ˆQjk−1(sjk−1,h , a jk−1,h )) +η αNk−1(γ)
+
+Nk−1(γ)
+
+Nk−1(γ)
+
+X
+
+p=1 
+
+{− [rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1(sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] +Qη
+
+∗ (sjk−1,h , a jk−1,h )}
+
++η αNk−1,h (γ)
+
+Nk−1(γ)
+
+Nk−1,h (γ)
+
+X
+
+j=1 
+
+{Qη
+
+∗ (spk,h , a pk,h ) − Qη
+
+∗ (sjk−1,h , a jk−1,h )) }
+
+| {z }
+
+≤ϵ
+
+≤ ηϵ + ξNk−1(γ) + 1
+
+Nk−1(γ)
+
+Nk−1(γ)
+
+X
+
+j=1 
+
+(1 − αNk−1(γ))( Qη
+
+∗ (spk,h , a pk,h ) − ˆQjk−1(sjk−1,h , a jk−1,h )) +η αNk−1(γ)
+
+Nk−1,h (γ)
+
+Nk−1(γ)
+
+X
+
+p=1 
+
+{− [rjk−1,h (sjk−1,h , a jk−1,h ) + ˆV jk−1(sjk−1,h +1 ) + ˜Qjk−1,h (sjk−1,h , a jk−1,h )] = ηξ Nk−1(γ) + ηϵ − η αNk−1(γ)
+
+Nk−1(γ)
+
+Nk−1(γ)
+
+X
+
+j=1 
+
+˜Qjk−1,h (sjk−1,h , a jk−1,h )
+
+− ηNk−1(γ)
+
+Nk−1(γ)
+
+X
+
+j=1 
+
+{ ˆV jk−1(sjk−1,h +1 ) − V η
+
+∗ (sjk−1,h +1 )}−η αNk−1(γ)
+
+Nk−1(γ)
+
+Nk−1(γ)
+
+X
+
+j=1 
+
+{V η
+
+∗ (sjk−1,h +1 ) − PhV η
+
+∗ (sjk−1,h )},
+
+(50) where the inequality follows by definition of ϵ-error aggregated states as in Definition 4. Then by similar derivation as for (32), by summing from the i-th pseudo-episode to K-th pseudo-episode, we have 
+
+PNp=1 
+
+PKk=i ∆pk,h ≤ 2N η 
+
+KX
+
+k=i
+
+ϵ + 4η
+
+1 − η
+
+NX
+
+p=1 
+
+KX
+
+k=i
+
+αNk−1,h (γpkh )
+
+plog(2 T N/δ )
+
+pNk−1,h (γpkh )+η
+
+NX
+
+p=1 
+
+KX
+
+k=i+1 
+
+αNk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+Nk−1,h (γpkh )
+
+X
+
+j=1 
+
+∆jk,h +1 .
+
+Then by similar derivation as in (33) under events EI (γpkh ) and GI (γpkh ) for all γpkh across K pseudo-episodes and p agents, we have 
+
+PNp=1 
+
+PKk=i ∆pk,h ≤ 2ηϵN 
+
+KX
+
+k=i
+
+Hk + 4η
+
+1 − η
+
+plog(2 T N/δ )
+
+KX
+
+k=iNX
+
+p=1 
+
+HX
+
+ℓ=h
+
+1
+
+pNk−1,ℓ (γpkℓ )11 + Nk−1,ℓ (γpkℓ )+4 η
+
+HX
+
+ℓ=hNX
+
+p=1 
+
+KX
+
+k=i+1 
+
+pβk−1 log(2 T N/δ )
+
+q
+
+(Nk−2,h (γpk,h ) + 1) Nk−1,h (γpk,h )11 + Nk−1,ℓ (γpk,ℓ ) .
+
+31 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+Then following similar steps as in the proof of Lemma 11, we have ∆pk,h = ˆV pk,h (spk,h ) − V η 
+
+> ∗
+
+(spk,h ).
+
+ˆV pk,h (spk,h ) − V ηπkp (spk,h )= [ ˆQπkp  
+
+> h
+
+(spk,h , a pk,h ) − Qη 
+
+> ∗
+
+(spk,h , a pk,h )] + η[ ˆV πkp 
+
+> k,h +1
+
+(spk,h +1 ) − V ηπkp (spk,h +1 )] − η∆pk,h +1 
+
++η[V ηπkp (spk,h +1 ) − PhV ηπkp (spk,h +1 )] .
+
+(51) Note that (51) is recursive, so when events EI (γpkh ) and GI (γpkh ) hold for all aggregated states γpkh during pseudo-perido k
+
+for all k ∈ [K], we have 
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+
+ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+)
+
+≤ 2ηϵT N + 41 − η
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1 1
+
+pNk−1(γpkh )11 + Nk−1(γpkh )+4 
+
+> K
+
+X
+
+> k=2
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+pβk−1 log(2 T N/δ )
+
+p(Nk−2(γpkh ) + 1) Nk−1(γpkh )11 + Nk−1(γpkh )+
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+[PhV η 
+
+> ∗
+
+(spk,h +1 ) − V η 
+
+> ∗
+
+(spk,h +1 )] +
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+[V ηπkp (spk,h +1 ) − P hπkp V ηπkp (spk,h +1 )] .
+
+(52) Note that 
+
+41 − η
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> N
+
+X
+
+> p=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1 1
+
+pNk−1(γpkh )11 + Nk−1(γpkh )
+
+≤ 41 − η
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+1
+
+pNk−1(γpkh )11 + Nk−1(γpkh )
+
+≤ 41 − η
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1 X
+
+> γ∈[Γ]
+> Nk−1(γ)
+
+X
+
+> j=1
+
+1/j 
+
+≤ 41 − η
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1 X
+
+> γ∈[Γ]
+
+2pNk−1(γ)
+
+≤ 8(1 − η)
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+s
+
+Γ X
+
+> γ∈[Γ]
+
+Nk−1(γ)
+
+≤ 8(1 − η)
+
+plog(2 T N/δ )
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1pΓN H k−1 ≤ 8pΓN log(2 T N/δ )(1 − η)
+
+> ∞
+
+X
+
+> h=1
+
+ηh−1
+
+> K
+
+X
+
+> k=1
+
+pHk−1
+
+≤ 8pΓN log(2 T N/δ )(1 − η)2
+
+> K
+
+X
+
+> k=1
+
+Hk−1 ≤ 8T pΓN log(2 T N/δ )(1 − η)2 .
+
+(53) Next, note that βk = 12 τ 3 log(2 τ Γk), following similar steps as (53) and (40) we have 
+
+4
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+pβk−1 log(2 T N/δ )
+
+p(Nk−2(γpkh ) + 1) Nk−1(γpkh )11 + Nk−1(γpkh ) ≤ 8τ 3/2T ΓpN log(2 τ ΓT ) log(2 T N/δ )(1 − η)2 . (54) Additionally, denote Nk,h (γ) as the number of times that aggregated state γ is attained during pseudo-episode k and pseudo 32 Concurrent Reinforcement Learning with Aggregated States via Randomized Least Squares Value Iteration 
+
+period h, then by Azuma-Höeffding’s inequality, with probability 1 − 2δ, we have 
+
+> N
+
+X
+
+> p=1
+
+{[V ηπkp (spk,h +1 ) − P hπkp V ηπkp (spk,h +1 )] + [ PhV η 
+
+> ∗
+
+(spk,h +1 ) − V η 
+
+> ∗
+
+(spk,h +1 )] } ≤ 41 − η
+
+X
+
+> γ∈[Γ]
+
+q
+
+Nk,h (γ)
+
+r
+
+log Γ
+
+δ .
+
+Hence with probability 1 − 2δ,
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+> N
+
+X
+
+> p=1
+
+{[PhV η 
+
+> ∗
+
+(spk,h +1 ) − V η 
+
+> ∗
+
+(spk,h +1 )] + [ V ηπkp (spk,h +1 ) − P hπkp V ηπkp (spk,h +1 )] }≤ 4plog(Γ /δ )1 − η
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1 X
+
+> γ∈[Γ]
+
+pNk(γ) ≤ 4pΓN log(Γ /δ )1 − η
+
+> K
+
+X
+
+> k=1
+> Hk
+
+X
+
+> h=1
+
+ηh−1
+
+≤ 4KpΓN log(Γ /δ )(1 − η)2
+
+(55) Thus by (52), (53), (54), (55), when events EI (γpkh ) and GI (γpkh ) hold for all aggregated states γpkh during pseudo-perido k
+
+for all k ∈ [K], with probability 1 − 2δ, we have 
+
+PKk=1 
+
+PNp=1 ˆV pk, 1(sp
+
+> 1
+
+) − V ηπkp (sp
+
+> 1
+
+) ≤ 8T pΓN log(2 T N/δ )(1 − η)2 + 8τ 3/2T ΓpN log(2 τ ΓT ) log(2 T N/δ )(1 − η)2
+
++ 4KpΓN log(Γ /δ )(1 − η)2 .
+
+(56) Finall, by (49), when events EI (γpkh ) and GI (γpkh ) hold for all aggregated states γpkh during pseudo-perido k for all k ∈ [K],
+
+ˆV pk,h (s) − V∗(s) ≥ 0, ∀s ∈ S , k ∈ [K], p ∈ [N ],
+
+And with probability 1 − 2δ, we have 
+
+PNp=1 
+
+PKk=1 
+
+n
+
+V η 
+
+> ∗
+
+(spk, 1) − V ηπkp ,M (spk, 1)
+
+o
+
+≤ 8T pΓN log(2 T N/δ )(1 − η)2 + 8τ 3/2T ΓpN log(2 τ ΓT ) log(2 T N/δ )1 − η
+
++ 4T √N Γplog(Γ /δ )1 − η .
+
+33

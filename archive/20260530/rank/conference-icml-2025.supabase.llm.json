@@ -1,0 +1,3122 @@
+{
+  "top_k": 200,
+  "generated_at": "2026-05-30T12:46:26.731119+00:00",
+  "papers": [
+    {
+      "id": "openreview-icml-2025-vsijdkpgp8",
+      "source": "ICML-2025-Accepted",
+      "title": "R3DM: Enabling Role Discovery and Diversity Through Dynamics Models in Multi-agent Reinforcement Learning",
+      "abstract": "Multi-agent reinforcement learning (MARL) has achieved significant progress in large-scale traffic control, autonomous vehicles, and robotics. Drawing inspiration from biological systems where roles naturally emerge to enable coordination, role-based MARL methods have been proposed to enhance cooperation learning for complex tasks. However, existing methods exclusively derive roles from an agent's past experience during training, neglecting their influence on its future trajectories. This paper introduces a key insight: an agent’s role should shape its future behavior to enable effective coordination. Hence, we propose Role Discovery and Diversity through Dynamics Models (R3DM), a novel role-based MARL framework that learns emergent roles by maximizing the mutual information between agents' roles, observed trajectories, and expected future behaviors. R3DM optimizes the proposed objective through contrastive learning on past trajectories to first derive intermediate roles that shape intrinsic rewards to promote diversity in future behaviors across different roles through a learned dynamics model. Benchmarking on SMAC and SMACv2 environments demonstrates that R3DM outperforms state-of-the-art MARL approaches, improving multi-agent coordination to increase win rates by up to 20%. The code is available at https://github.com/UTAustin-SwarmLab/R3DM.",
+      "authors": [
+        "Harsh Goel",
+        "Mohammad Omama",
+        "Behdad Chalaki",
+        "Vaishnav Tadiparthi",
+        "Ehsan Moradi Pari",
+        "Sandeep P. Chinchali"
+      ],
+      "primary_category": "Multi-agent Reinforcement Learning",
+      "categories": [
+        "Multi-agent Reinforcement Learning"
+      ],
+      "published": "2025-05-01T13:16:26.34+00:00",
+      "link": "https://openreview.net/forum?id=VSIjdKPGp8",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-323gznngqe",
+      "source": "ICML-2025-Accepted",
+      "title": "Agent-Centric Actor-Critic for Asynchronous Multi-Agent Reinforcement Learning",
+      "abstract": "Multi-Agent Reinforcement Learning (MARL) struggles with coordination in sparse reward environments. Macro-actions —sequences of actions executed as single decisions— facilitate long-term planning but introduce asynchrony, complicating Centralized Training with Decentralized Execution (CTDE). Existing CTDE methods use padding to handle asynchrony, risking misaligned asynchronous experiences and spurious correlations. We propose the Agent-Centric Actor-Critic (ACAC) algorithm to manage asynchrony without padding. ACAC uses agent-centric encoders for independent trajectory processing, with an attention-based aggregation module integrating these histories into a centralized critic for improved temporal abstractions. The proposed structure is trained via a PPO-based algorithm with a modified Generalized Advantage Estimation for asynchronous environments. Experiments show ACAC accelerates convergence and enhances performance over baselines in complex MARL tasks.",
+      "authors": [
+        "Whiyoung Jung",
+        "Sunghoon Hong",
+        "Deunsol Yoon",
+        "Kanghoon Lee",
+        "Woohyung Lim"
+      ],
+      "primary_category": "Multi-Agent Reinforcement Learning",
+      "categories": [
+        "Multi-Agent Reinforcement Learning",
+        "Asynchronous Multi-Agent Reinforcement Learning",
+        "MacDec-POMDP"
+      ],
+      "published": "2025-05-01T13:17:07.692+00:00",
+      "link": "https://openreview.net/forum?id=323GZNnGqe",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-mgjkeqc685",
+      "source": "ICML-2025-Accepted",
+      "title": "HYGMA: Hypergraph Coordination Networks with Dynamic Grouping for Multi-Agent Reinforcement Learning",
+      "abstract": "Cooperative multi-agent reinforcement learning faces significant challenges in effectively organizing agent relationships and facilitating information exchange, particularly when agents need to adapt their coordination patterns dynamically. This paper presents a novel framework that integrates dynamic spectral clustering with hypergraph neural networks to enable adaptive group formation and efficient information processing in multi-agent systems. The proposed framework dynamically constructs and updates hypergraph structures through spectral clustering on agents' state histories, enabling higher-order relationships to emerge naturally from agent interactions. The hypergraph structure is enhanced with attention mechanisms for selective information processing, providing an expressive and efficient way to model complex agent relationships. This architecture can be implemented in both value-based and policy-based paradigms through a unified objective combining task performance with structural regularization. Extensive experiments on challenging cooperative tasks demonstrate that our method significantly outperforms state-of-the-art approaches in both sample efficiency and final performance. The code is available at: https://github.com/mysteryelder/HYGMA.",
+      "authors": [
+        "Chiqiang Liu",
+        "Dazi Li"
+      ],
+      "primary_category": "Multi-Agent Reinforcement Learning",
+      "categories": [
+        "Multi-Agent Reinforcement Learning",
+        "Hypergraph Convolution",
+        "Dynamic Grouping",
+        "Multi-Agent Cooperation"
+      ],
+      "published": "2025-05-01T13:21:46.8+00:00",
+      "link": "https://openreview.net/forum?id=mgJkeqc685",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-vudwrmb3tx",
+      "source": "ICML-2025-Accepted",
+      "title": "Reidentify: Context-Aware Identity Generation for Contextual Multi-Agent Reinforcement Learning",
+      "abstract": "Generalizing multi-agent reinforcement learning (MARL) to accommodate variations in problem configurations remains a critical challenge in real-world applications, where even subtle differences in task setups can cause pre-trained policies to fail. To address this, we propose Context-Aware Identity Generation (CAID), a novel framework to enhance MARL performance under the Contextual MARL (CMARL) setting. CAID dynamically generates unique agent identities through the agent identity decoder built on a causal Transformer architecture. These identities provide contextualized representations that align corresponding agents across similar problem variants, facilitating policy reuse and improving sample efficiency. Furthermore, the action regulator in CAID incorporates these agent identities into the action-value space, enabling seamless adaptation to varying contexts. Extensive experiments on CMARL benchmarks demonstrate that CAID significantly outperforms existing approaches by enhancing both sample efficiency and generalization across diverse context variants.",
+      "authors": [
+        "Zhiwei Xu",
+        "Kun Hu",
+        "Xin Xin",
+        "Weiliang Meng",
+        "Yiwei Shi",
+        "Hangyu Mao",
+        "Bin Zhang",
+        "Dapeng Li",
+        "Jiangjin Yin"
+      ],
+      "primary_category": "Multi-Agent System",
+      "categories": [
+        "Multi-Agent System",
+        "Reinforcement Learning"
+      ],
+      "published": "2025-05-01T13:13:04.42+00:00",
+      "link": "https://openreview.net/forum?id=vUDWRMB3tX",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-ffbnsyrspg",
+      "source": "ICML-2025-Accepted",
+      "title": "Breaking the Curse of Multiagency in Robust Multi-Agent Reinforcement Learning",
+      "abstract": "Standard multi-agent reinforcement learning (MARL) algorithms are vulnerable to sim-to-real gaps. To address this, distributionally robust Markov games (RMGs) have been proposed to enhance robustness in MARL by optimizing the worst-case performance when game dynamics shift within a prescribed uncertainty set. RMGs remains under-explored, from reasonable problem formulation to the development of sample-efficient algorithms. Two notorious and open challenges are the formulation of the uncertainty set and whether the corresponding RMGs can overcome the curse of multiagency,  where the sample complexity scales exponentially with the number of agents. In this work, we propose a natural class of RMGs inspired by behavioral economics, where each agent's uncertainty set is shaped by both the environment and the integrated behavior of other agents. We first establish the well-posedness of this class of RMGs by proving the existence of game-theoretic solutions such as robust Nash equilibria and coarse correlated equilibria (CCE). Assuming access to a generative model, we then introduce a sample-efficient algorithm for learning the CCE whose sample complexity scales polynomially with all relevant parameters. To the best of our knowledge, this is the first algorithm to break the curse of multiagency for RMGs, regardless of the uncertainty set formulation.",
+      "authors": [
+        "Laixi Shi",
+        "Jingchu Gai",
+        "Eric Mazumdar",
+        "Yuejie Chi",
+        "Adam Wierman"
+      ],
+      "primary_category": "multi-agent reinforcement learning",
+      "categories": [
+        "multi-agent reinforcement learning",
+        "robust Markov games",
+        "game theory",
+        "distribution shift",
+        "behavioral economics"
+      ],
+      "published": "2025-05-01T13:15:18.155+00:00",
+      "link": "https://openreview.net/forum?id=fFBnsYRsPg",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-jpkjayutw0",
+      "source": "ICML-2025-Accepted",
+      "title": "Revisiting Cooperative Off-Policy Multi-Agent Reinforcement Learning",
+      "abstract": "Cooperative Multi-Agent Reinforcement Learning (MARL) has become a critical tool for addressing complex real-world problems. \nHowever, off-policy MARL methods, which rely on joint Q-functions, face significant scalability challenges due to the exponentially growing joint action space.\nIn this work, we highlight a critical yet often overlooked issue: erroneous Q-target estimation, primarily caused by extrapolation error.\nOur analysis reveals that this error becomes increasingly severe as the number of agents grows, leading to unique challenges in MARL due to its expansive joint action space and the decentralized execution paradigm.\nTo address these challenges, we propose a suite of techniques tailored for off-policy MARL, including annealed multi-step bootstrapping, averaged Q-targets, and restricted action representation. Experimental results demonstrate that these methods effectively mitigate erroneous estimations, yielding substantial performance improvements in challenging benchmarks such as SMAC, SMACv2, and Google Research Football.",
+      "authors": [
+        "Yueheng Li",
+        "Guangming Xie",
+        "Zongqing Lu"
+      ],
+      "primary_category": "cooperative multi-agent reinforcement learning",
+      "categories": [
+        "cooperative multi-agent reinforcement learning",
+        "off-policy multi-agent reinforcement learning",
+        "value factorization",
+        "extrapolation error"
+      ],
+      "published": "2025-05-01T13:21:36.794+00:00",
+      "link": "https://openreview.net/forum?id=JPkJAyutW0",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-2sl6ex7vmo",
+      "source": "ICML-2025-Accepted",
+      "title": "M³HF: Multi-agent Reinforcement Learning from Multi-phase Human Feedback of Mixed Quality",
+      "abstract": "Designing effective reward functions in multi-agent reinforcement learning (MARL) is a significant challenge, often leading to suboptimal or misaligned behaviors in complex, coordinated environments. We introduce Multi-agent Reinforcement Learning from Multi-phase Human Feedback of Mixed Quality ($\\text{M}^3\\text{HF}$), a novel framework that integrates multi-phase human feedback of mixed quality into the MARL training process. By involving humans with diverse expertise levels to provide iterative guidance, $\\text{M}^3\\text{HF}$ leverages both expert and non-expert feedback to continuously refine agents' policies. During training, we strategically pause agent learning for human evaluation, parse feedback using large language models to assign it appropriately and update reward functions through predefined templates and adaptive weights by using weight decay and performance-based adjustments. Our approach enables the integration of nuanced human insights across various levels of quality, enhancing the interpretability and robustness of multi-agent cooperation. Empirical results in challenging environments demonstrate that $\\text{M}^3\\text{HF}$ significantly outperforms state-of-the-art methods, effectively addressing the complexities of reward design in MARL and enabling broader human participation in the training process.",
+      "authors": [
+        "Ziyan Wang",
+        "Zhicheng Zhang",
+        "Fei Fang",
+        "Yali Du"
+      ],
+      "primary_category": "Multi-agent Reinforcement Learning",
+      "categories": [
+        "Multi-agent Reinforcement Learning",
+        "Human Feedback"
+      ],
+      "published": "2025-05-01T13:11:59.261+00:00",
+      "link": "https://openreview.net/forum?id=2Sl6Ex7Vmo",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-1iny6xlon0",
+      "source": "ICML-2025-Accepted",
+      "title": "Wolfpack Adversarial Attack for Robust Multi-Agent Reinforcement Learning",
+      "abstract": "Traditional robust methods in multi-agent reinforcement learning (MARL) often struggle against coordinated adversarial attacks in cooperative scenarios. To address this limitation, we propose the Wolfpack Adversarial Attack framework, inspired by wolf hunting strategies, which targets an initial agent and its assisting agents to disrupt cooperation. Additionally, we introduce the Wolfpack-Adversarial Learning for MARL (WALL) framework, which trains robust MARL policies to defend against the proposed Wolfpack attack by fostering system-wide collaboration. Experimental results underscore the devastating impact of the Wolfpack attack and the significant robustness improvements achieved by WALL. Our code is available at https://github.com/sunwoolee0504/WALL.",
+      "authors": [
+        "Sunwoo Lee",
+        "Jaebak Hwang",
+        "Yonghyeon Jo",
+        "Seungyul Han"
+      ],
+      "primary_category": "Reinforcement Learning",
+      "categories": [
+        "Reinforcement Learning",
+        "Multi-Agent Reinforcement Learning",
+        "Robustness",
+        "Adversarial Learning"
+      ],
+      "published": "2025-05-01T13:14:41.198+00:00",
+      "link": "https://openreview.net/forum?id=1Iny6XlON0",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-zcvgjh4ps7",
+      "source": "ICML-2025-Accepted",
+      "title": "Finite-Time Global Optimality Convergence in Deep Neural Actor-Critic Methods for Decentralized Multi-Agent Reinforcement Learning",
+      "abstract": "Actor-critic methods for decentralized multi-agent reinforcement learning (MARL) facilitate collaborative optimal decision making without centralized coordination, thus enabling a wide range of applications in practice. To date, however, most theoretical convergence studies for existing actor-critic decentralized MARL methods are limited to the guarantee of a stationary solution under the linear function approximation. This leaves a significant gap between the highly successful use of deep neural actor-critic for decentralized MARL in practice and the current theoretical understanding. To bridge this gap, in this paper, we make the first attempt to develop a deep neural actor-critic method for decentralized MARL, where both the actor and critic components are inherently non-linear. We show that our proposed method enjoys a global optimality guarantee with a finite-time convergence rate of $\\mathcal{O}(1/T)$, where $T$ is the total iteration times. This marks the first global convergence result for deep neural actor-critic methods in the MARL literature. We also conduct extensive numerical experiments, which verify our theoretical results.",
+      "authors": [
+        "Zhiyao Zhang",
+        "Myeung Suk Oh",
+        "FNU Hairi",
+        "Ziyue Luo",
+        "Alvaro Velasquez",
+        "Jia Liu"
+      ],
+      "primary_category": "Fully decentralized multi-agent reinforcement learning",
+      "categories": [
+        "Fully decentralized multi-agent reinforcement learning",
+        "Deep neural network",
+        "Finite-time global convergence."
+      ],
+      "published": "2025-05-01T13:13:44.597+00:00",
+      "link": "https://openreview.net/forum?id=ZcvGJH4ps7",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-qutxbtsfwp",
+      "source": "ICML-2025-Rejected-Public",
+      "title": "Fixing Value Function Decomposition for Multi-Agent Reinforcement Learning",
+      "abstract": "Value function decomposition methods for cooperative multi-agent reinforcement learning combine individual per-agent utilities into joint values trained on a joint objective. To ensure consistent action selection between individual utilities and joint values, it is imperative for the composition to satisfy *individual-global max* (IGM). However, most methods that satisfy IGM are characterized by limited representation capabilities that hinder their performance, and the one known exception is unnecessarily convoluted. In this work, we reveal a minimalistic formulation of IGM that inspires the derivation of QFIX, a novel family of value function decomposition methods that expand the representation capabilities of prior methods by means of a small \"fixing\" network. We implement three variants of QFIX, and demonstrate empirically that QFIX is able to meet or exceed state-of-the-art performance with better stability.",
+      "authors": [
+        "Andrea Baisero",
+        "Rupali Bhati",
+        "Shuo Liu",
+        "Aathira Sunil Pillai",
+        "Christopher Amato"
+      ],
+      "primary_category": "multi-agent",
+      "categories": [
+        "multi-agent",
+        "reinforcement-learning",
+        "value-decomposition",
+        "cooperative"
+      ],
+      "published": "2025-01-21T00:36:10.433+00:00",
+      "link": "https://openreview.net/forum?id=qUtxbtsfwp",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-bnhfueoeav",
+      "source": "ICML-2025-Accepted",
+      "title": "Robust Multi-Agent Reinforcement Learning with Stochastic Adversary",
+      "abstract": "The performance of models trained by Multi-Agent Reinforcement Learning (MARL) is sensitive to perturbations in observations, lowering their trustworthiness in complex environments. Adversarial training is a valuable approach to enhance their performance robustness. However, existing methods often overfit to adversarial perturbations of observations and fail to incorporate prior information about the policy adopted by their protagonist agent, i.e., the primary one being trained. To address this important issue, this paper introduces Adversarial Training with Stochastic Adversary (ATSA), where the proposed adversary is trained online alongside the protagonist agent. The former consists of Stochastic Director (SDor) and SDor-guided generaTor (STor). SDor performs policy perturbations by minimizing the expected team reward of protagonists and maximizing the entropy of its policy, while STor generates adversarial perturbations of observations by following SDor's guidance. We prove that SDor's soft policy converges to a global optimum according to factorized maximum-entropy MARL and leads to the optimal adversary. This paper also introduces an SDor-STor loss function to quantify the difference between a) perturbations in the agent's policy and b) those advised by SDor. We evaluate our ATSA on StarCraft II tasks and autonomous driving scenarios, demonstrating that a) it is robust against diverse perturbations of observations while maintaining outstanding performance in perturbation-free environments, and b) it outperforms the state-of-the-art methods.",
+      "authors": [
+        "Ziyuan Zhou",
+        "Guanjun Liu",
+        "Mengchu Zhou",
+        "Weiran Guo"
+      ],
+      "primary_category": "Multi-Agent Reinforcement Learning",
+      "categories": [
+        "Multi-Agent Reinforcement Learning",
+        "Adversarial Training",
+        "Stochastic Adversary",
+        "Entropy Maximization"
+      ],
+      "published": "2025-05-01T13:18:17.201+00:00",
+      "link": "https://openreview.net/forum?id=bnhFueOeav",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-kfmuasg7eb",
+      "source": "ICML-2025-Accepted",
+      "title": "GradPS: Resolving Futile Neurons in Parameter Sharing Network for Multi-Agent Reinforcement Learning",
+      "abstract": "Parameter-sharing (PS) techniques have been widely adopted in cooperative Multi-Agent Reinforcement Learning (MARL). In PS, all the agents share a policy network with identical parameters, which enjoys good sample efficiency. However, PS could lead to homogeneous policies that limit MARL performance. We tackle this problem from the angle of gradient conflict among agents. We find that the existence of futile neurons whose update is canceled out by gradient conflicts among agents leads to poor learning efficiency and diversity. To address this deficiency, we propose GradPS, a gradient-based PS method. It dynamically creates multiple clones for each futile neuron. For each clone, a group of agents with low gradient-conflict shares the neuron's parameters.\nOur method can enjoy good sample efficiency by sharing the gradients among agents of the same clone neuron. Moreover, it can encourage diverse behaviors through independently updating an exclusive clone neuron. Through extensive experiments, we show that GradPS can learn diverse policies with promising performance. The source code for GradPS is available in \\url{https://github.com/xmu-rl-3dv/GradPS}.",
+      "authors": [
+        "Haoyuan Qin",
+        "Zhengzhu Liu",
+        "Chenxing Lin",
+        "Chennan Ma",
+        "Songzhu Mei",
+        "Siqi Shen",
+        "Cheng Wang"
+      ],
+      "primary_category": "multi agent reinforcement learning; parameter sharing; gradient conflict",
+      "categories": [
+        "multi agent reinforcement learning; parameter sharing; gradient conflict"
+      ],
+      "published": "2025-05-01T13:18:51.427+00:00",
+      "link": "https://openreview.net/forum?id=KFMuaSG7eB",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-dqln1yfyxn",
+      "source": "ICML-2025-Accepted",
+      "title": "Distributionally Robust Multi-Agent Reinforcement Learning for Dynamic Chute Mapping",
+      "abstract": "In Amazon robotic warehouses, the destination-to-chute mapping problem is crucial for efficient package sorting. Often, however, this problem is complicated by uncertain and dynamic package induction rates, which can lead to increased package recirculation. To tackle this challenge, we introduce a Distributionally Robust Multi-Agent Reinforcement Learning (DRMARL) framework that learns a destination-to-chute mapping policy that is resilient to adversarial variations in induction rates. Specifically, DRMARL relies on group distributionally robust optimization (DRO) to learn a policy that performs well not only on average but also on each individual subpopulation of induction rates within the group that capture, for example, different seasonality or operation modes of the system. This approach is then combined with a novel contextual bandit-based estimator of the worst-case induction distribution for each state-action pair, significantly reducing the cost of exploration and thereby increasing the learning efficiency and scalability of our framework. Extensive simulations demonstrate that DRMARL achieves robust chute mapping in the presence of varying induction distributions, reducing package recirculation by an average of 80% in the simulation scenario.",
+      "authors": [
+        "Guangyi Liu",
+        "Suzan Iloglu",
+        "Michael Caldara",
+        "Joseph W Durham",
+        "Michael M. Zavlanos"
+      ],
+      "primary_category": "Distributionally Robust Reinforcement Learning",
+      "categories": [
+        "Distributionally Robust Reinforcement Learning",
+        "Multi-agent Reinforcement Learning",
+        "Group Distributionally Robust Optimization",
+        "Robotic Sortation Warehouse"
+      ],
+      "published": "2025-05-01T13:14:48.608+00:00",
+      "link": "https://openreview.net/forum?id=DqlN1yFyxN",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-tcsdlqzznl",
+      "source": "ICML-2025-Accepted",
+      "title": "Enhancing Cooperative Multi-Agent Reinforcement Learning with State Modelling and Adversarial Exploration",
+      "abstract": "Learning to cooperate in distributed partially observable environments with no communication abilities poses significant challenges for multi-agent deep reinforcement learning (MARL). This paper addresses key concerns in this domain, focusing on inferring state representations from individual agent observations and leveraging these representations to enhance agents' exploration and collaborative task execution policies. To this end, we propose a novel state modelling framework for cooperative MARL, where agents infer meaningful belief representations of the non-observable state, with respect to optimizing their own policies, while filtering redundant and less informative joint state information. Building upon this framework, we propose the MARL SMPE$^2$ algorithm. In SMPE$^2$, agents enhance their own policy's discriminative abilities under partial observability, explicitly by incorporating their beliefs into the policy network, and implicitly by adopting an adversarial type of exploration policies which encourages agents to discover novel, high-value states while improving the discriminative abilities of others. Experimentally, we show that SMPE$^2$ outperforms a plethora of state-of-the-art MARL algorithms in complex fully cooperative tasks from the MPE, LBF, and RWARE benchmarks.",
+      "authors": [
+        "Andreas Kontogiannis",
+        "Konstantinos Papathanasiou",
+        "Yi Shen",
+        "Giorgos Stamou",
+        "Michael M. Zavlanos",
+        "George Vouros"
+      ],
+      "primary_category": "Cooperative Multi-Agent Reinforcement Learning",
+      "categories": [
+        "Cooperative Multi-Agent Reinforcement Learning",
+        "State Modelling",
+        "Sparse Reward"
+      ],
+      "published": "2025-05-01T13:18:12.518+00:00",
+      "link": "https://openreview.net/forum?id=TCsdlqzZNL",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-al6qg8blkg",
+      "source": "ICML-2025-Accepted",
+      "title": "Learning Progress Driven Multi-Agent Curriculum",
+      "abstract": "The number of agents can be an effective curriculum variable for controlling the difficulty of multi-agent reinforcement learning (MARL) tasks. Existing work typically uses manually defined curricula such as linear schemes. We identify two potential flaws while applying existing reward-based automatic curriculum learning methods in MARL: (1) The expected episode return used to measure task difficulty has high variance; (2) Credit assignment difficulty can be exacerbated in tasks where increasing the number of agents yields higher returns which is common in many MARL tasks. To address these issues, we propose to control the curriculum by using a TD-error based *learning progress* measure and by letting the curriculum proceed from an initial context distribution to the final task specific one. Since our approach maintains a distribution over the number of agents and measures learning progress rather than absolute performance, which often increases with the number of agents, we alleviate problem (2). Moreover, the learning progress measure naturally alleviates problem (1) by aggregating returns. In three challenging sparse-reward MARL benchmarks, our approach outperforms state-of-the-art baselines.",
+      "authors": [
+        "Wenshuai Zhao",
+        "Zhiyuan Li",
+        "Joni Pajarinen"
+      ],
+      "primary_category": "Curriculum learning",
+      "categories": [
+        "Curriculum learning",
+        "Temporal difference",
+        "Sparse reward"
+      ],
+      "published": "2025-05-01T13:12:17.345+00:00",
+      "link": "https://openreview.net/forum?id=Al6qG8BlKg",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-t5iz32imab",
+      "source": "ICML-2025-Accepted",
+      "title": "Graph Diffusion for Robust Multi-Agent Coordination",
+      "abstract": "Offline multi-agent reinforcement learning (MARL) struggles to estimate out-of-distribution states and actions due to the absence of real-time environmental feedback. While diffusion models show promise in addressing these challenges, their application primarily focuses on independently diffusing the historical trajectories of individual agents, neglecting crucial multi-agent coordination dynamics and reducing policy robustness in dynamic environments. In this paper, we propose MCGD, a novel Multi-agent Coordination framework based on Graph Diffusion models to improve the effectiveness and robustness of collaborative policies. Specifically, we begin by constructing a sparse coordination graph that includes continuous node attributes and discrete edge attributes to effectively identify the underlying dynamics of multi-agent interactions. Next, we derive transition probabilities between edge categories and present adaptive categorical diffusion to capture the structure diversity of multi-agent coordination. Leveraging this coordination structure, we define neighbor-dependent forward noise and develop anisotropic diffusion to enhance the action diversity of each agent. Extensive experiments across various multi-agent environments demonstrate that MCGD significantly outperforms existing state-of-the-art baselines in coordination performance and policy robustness in dynamic environments.",
+      "authors": [
+        "Xianghua Zeng",
+        "Hang Su",
+        "Zhengyi Wang",
+        "Zhiyuan LIN"
+      ],
+      "primary_category": "multi-agent coordination",
+      "categories": [
+        "multi-agent coordination",
+        "offline reinforcement learning",
+        "diffusion models"
+      ],
+      "published": "2025-05-01T13:12:51.517+00:00",
+      "link": "https://openreview.net/forum?id=T5IZ32ImAB",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-cabuwu44ky",
+      "source": "ICML-2025-Accepted",
+      "title": "Sable: a Performant, Efficient and Scalable Sequence Model for MARL",
+      "abstract": "As multi-agent reinforcement learning (MARL) progresses towards solving larger and more complex problems, it becomes increasingly important that algorithms exhibit the key properties of (1) strong performance, (2) memory efficiency, and (3) scalability. In this work, we introduce Sable, a performant, memory-efficient, and scalable sequence modelling approach to MARL. Sable works by adapting the retention mechanism in Retentive Networks (Sun et al., 2023) to achieve computationally efficient processing of multi-agent observations with long context memory for temporal reasoning. Through extensive evaluations across six diverse environments, we demonstrate how **Sable is able to significantly outperform existing state-of-the-art methods in a large number of diverse tasks (34 out of 45 tested)**. Furthermore, Sable maintains performance as we scale the number of agents, handling environments with more than a thousand agents while exhibiting a linear increase in memory usage. Finally, we conduct ablation studies to isolate the source of Sable's performance gains and confirm its efficient computational memory usage. **All experimental data, hyperparameters, and code for a frozen version of Sable used in this paper are available on our website:** https://sites.google.com/view/sable-marl. **An improved and maintained version of Sable is available in Mava:** https://github.com/instadeepai/Mava.",
+      "authors": [
+        "Omayma Mahjoub",
+        "Sasha Abramowitz",
+        "Ruan John de Kock",
+        "Wiem Khlifi",
+        "Simon Verster Du Toit",
+        "Jemma Daniel",
+        "Louay Ben Nessir",
+        "Louise Beyers",
+        "Juan Claude Formanek",
+        "Liam Clark",
+        "Arnu Pretorius"
+      ],
+      "primary_category": "Multi-agent reinforcement learning",
+      "categories": [
+        "Multi-agent reinforcement learning",
+        "Reinforcement Learning",
+        "Sequence modeling",
+        "linear recurrent models",
+        "Retentive Networks"
+      ],
+      "published": "2025-05-01T13:18:02.349+00:00",
+      "link": "https://openreview.net/forum?id=CAbuWU44ky",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-y34a82dptf",
+      "source": "ICML-2025-Accepted",
+      "title": "Learning Mean Field Control on Sparse Graphs",
+      "abstract": "Large agent networks are abundant in applications and nature and pose difficult challenges in the field of multi-agent reinforcement learning (MARL) due to their computational and theoretical complexity. While graphon mean field games and their extensions provide efficient learning algorithms for dense and moderately sparse agent networks, the case of realistic sparser graphs remains largely unsolved. Thus, we propose a novel mean field control model inspired by local weak convergence to include sparse graphs such as power law networks with coefficients above two. Besides a theoretical analysis, we design scalable learning algorithms which apply to the challenging class of graph sequences with finite first moment. We compare our model and algorithms for various examples on synthetic and real world networks with mean field algorithms based on Lp graphons and graphexes. As it turns out, our approach outperforms existing methods in many examples and on various networks due to the special design aiming at an important, but so far hard to solve class of MARL problems.",
+      "authors": [
+        "Christian Fabian",
+        "Kai Cui",
+        "Heinz Koeppl"
+      ],
+      "primary_category": "Mean Field Control",
+      "categories": [
+        "Mean Field Control",
+        "Large Graphs",
+        "Sparse Networks",
+        "Multi-Agent Reinforcement Learning"
+      ],
+      "published": "2025-05-01T13:18:22.38+00:00",
+      "link": "https://openreview.net/forum?id=Y34a82DptF",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-yifcq03hsm",
+      "source": "ICML-2025-Accepted",
+      "title": "Convex Markov Games: A New Frontier for Multi-Agent Reinforcement Learning",
+      "abstract": "Behavioral diversity, expert imitation, fairness, safety goals and others give rise to preferences in sequential decision making domains that do not decompose additively across time. We introduce the class of convex Markov games that allow general convex preferences over occupancy measures. Despite infinite time horizon and strictly higher generality than Markov games, pure strategy Nash equilibria exist. Furthermore, equilibria can be approximated empirically by performing gradient descent on an upper bound of exploitability. Our experiments reveal novel solutions to classic repeated normal-form games, find fair solutions in a repeated asymmetric coordination game, and prioritize safe long-term behavior in a robot warehouse environment. In the prisoner's dilemma, our algorithm leverages transient imitation to find a policy profile that deviates from observed human play only slightly, yet achieves higher per-player utility while also being three orders of magnitude less exploitable.",
+      "authors": [
+        "Ian Gemp",
+        "Andreas Alexander Haupt",
+        "Luke Marris",
+        "Siqi Liu",
+        "Georgios Piliouras"
+      ],
+      "primary_category": "Markov Decision Process",
+      "categories": [
+        "Markov Decision Process",
+        "Nash Equilibrium",
+        "Markov Game",
+        "N-player General-Sum",
+        "Convex Optimization",
+        "Occupancy Measure"
+      ],
+      "published": "2025-05-01T13:11:37.09+00:00",
+      "link": "https://openreview.net/forum?id=yIfCq03hsM",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-px29zf9wrb",
+      "source": "ICML-2025-Accepted",
+      "title": "AI for Global Climate Cooperation: Modeling Global Climate Negotiations, Agreements, and Long-Term Cooperation in RICE-N",
+      "abstract": "Global cooperation on climate change mitigation is essential to limit temperature increases while supporting long-term, equitable economic growth and sustainable development. Achieving such cooperation among diverse regions, each with different incentives, in a dynamic environment shaped by complex geopolitical and economic factors, without a central authority, is a profoundly challenging game-theoretic problem. This article introduces RICE-N, a multi-region integrated assessment model that simulates the global climate, economy, and climate negotiations and agreements. RICE-N uses multi-agent reinforcement learning (MARL) to encourage agents to develop strategic behaviors based on the environmental dynamics and the actions of the others. We present two negotiation protocols: (1) Bilateral Negotiation, an exemplary protocol and (2) Basic Club, inspired from Climate Clubs and the carbon border adjustment mechanism (Nordhaus, 2015; Comissions, 2022). We compare their impact against a no-negotiation baseline with various mitigation strategies, showing that both protocols significantly reduce temperature growth at the cost of a minor drop in production while ensuring a more equitable distribution of the emission reduction costs.",
+      "authors": [
+        "Tianyu Zhang",
+        "Andrew Robert Williams",
+        "Phillip Wozny",
+        "Kai-Hendrik Cohrs",
+        "Koen Ponse",
+        "Marco Jiralerspong",
+        "Soham Rajesh Phade",
+        "Sunil Srinivasa",
+        "Lu Li",
+        "Yang Zhang",
+        "Prateek Gupta",
+        "Erman Acar",
+        "Irina Rish",
+        "Yoshua Bengio",
+        "Stephan Zheng"
+      ],
+      "primary_category": "reinforcement learning",
+      "categories": [
+        "reinforcement learning",
+        "climate change",
+        "mechanism design"
+      ],
+      "published": "2025-05-01T13:13:29.08+00:00",
+      "link": "https://openreview.net/forum?id=PX29zF9wRb",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-ciuhd7jct9",
+      "source": "ICML-2025-Accepted",
+      "title": "Incentivize without Bonus: Provably Efficient Model-based Online Multi-agent RL for Markov Games",
+      "abstract": "Multi-agent reinforcement learning (MARL) lies at the heart of a plethora of applications involving the interaction of a group of agents in a shared unknown environment. A prominent framework for studying MARL is Markov games, with the goal of finding various notions of equilibria in a sample-efficient manner, such as the Nash equilibrium (NE) and the coarse correlated equilibrium (CCE). However, existing sample-efficient approaches either require tailored uncertainty estimation under function approximation, or careful coordination of the players. In this paper, we propose a novel model-based algorithm, called VMG, that incentivizes exploration via biasing the empirical\nestimate of the model parameters towards those with a higher collective best-response values of all the players when fixing the other players' policies, thus encouraging the policy to deviate from its current equilibrium for more exploration. VMG is oblivious to different forms of function approximation, and permits simultaneous and uncoupled policy updates of all players. Theoretically, we also establish that VMG achieves a near-optimal regret for finding both the NEs of two-player zero-sum Markov games and CCEs of multi-player general-sum Markov games under linear function approximation in an online environment, which nearly match their counterparts with sophisticated uncertainty quantification.",
+      "authors": [
+        "Tong Yang",
+        "Bo Dai",
+        "Lin Xiao",
+        "Yuejie Chi"
+      ],
+      "primary_category": "MARL theory",
+      "categories": [
+        "MARL theory"
+      ],
+      "published": "2025-05-01T13:16:46.683+00:00",
+      "link": "https://openreview.net/forum?id=ciUHD7jcT9",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-fyvrnkyu6h",
+      "source": "ICML-2025-Accepted",
+      "title": "O-MAPL: Offline Multi-agent Preference Learning",
+      "abstract": "Inferring reward functions from demonstrations is a key challenge in reinforcement learning (RL), particularly in multi-agent RL (MARL). The large joint state-action spaces and intricate inter-agent interactions in MARL make inferring the joint reward function especially challenging. While prior studies in single-agent settings have explored ways to recover reward functions and expert policies from human preference feedback, such studies in MARL remain limited. Existing methods typically combine two separate stages, supervised reward learning, and standard MARL algorithms, leading to unstable training processes. In this work, we exploit the inherent connection between reward functions and Q functions in cooperative MARL to introduce a novel end-to-end preference-based learning framework.\nOur framework is supported by a carefully designed multi-agent value decomposition strategy that enhances training efficiency. Extensive experiments on two state-of-the-art benchmarks, SMAC and MAMuJoCo, using preference data generated by both rule-based and large language model approaches demonstrate that our algorithm consistently outperforms existing methods across various tasks.",
+      "authors": [
+        "The Viet Bui",
+        "Tien Anh Mai",
+        "Thanh Hong Nguyen"
+      ],
+      "primary_category": "Multi-agent Reinforcement Learning",
+      "categories": [
+        "Multi-agent Reinforcement Learning",
+        "Preference Learning"
+      ],
+      "published": "2025-05-01T13:21:38.818+00:00",
+      "link": "https://openreview.net/forum?id=FYvrNKYu6H",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-htp5yrxcs9",
+      "source": "ICML-2025-Accepted",
+      "title": "Craftium: Bridging Flexibility and Efficiency for Rich 3D Single- and Multi-Agent Environments",
+      "abstract": "Advances in large models, reinforcement learning, and open-endedness have accelerated progress toward autonomous agents that can learn and interact in the real world. To achieve this, flexible tools are needed to create rich, yet computationally efficient, environments. While scalable 2D environments fail to address key real-world challenges like 3D navigation and spatial reasoning, more complex 3D environments are computationally expensive and lack features like customizability and multi-agent support. This paper introduces Craftium, a highly customizable and easy-to-use platform for building rich 3D single- and multi-agent environments. We showcase environments of different complexity and nature: from single- and multi-agent tasks to vast worlds with many creatures and biomes, and customizable procedural task generators. Benchmarking shows that Craftium significantly reduces the computational cost of alternatives of similar richness, achieving +2K steps per second more than Minecraft-based frameworks.",
+      "authors": [
+        "Mikel Malagón",
+        "Josu Ceberio",
+        "Jose A. Lozano"
+      ],
+      "primary_category": "environment",
+      "categories": [
+        "environment",
+        "reinforcement learning",
+        "agent",
+        "embodied AI",
+        "open endedness"
+      ],
+      "published": "2025-05-01T13:18:50.159+00:00",
+      "link": "https://openreview.net/forum?id=htP5YRXcS9",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-rqwexjucxm",
+      "source": "ICML-2025-Accepted",
+      "title": "From Debate to Equilibrium: Belief‑Driven Multi‑Agent LLM Reasoning via Bayesian Nash Equilibrium",
+      "abstract": "Multi-agent frameworks can substantially boost the reasoning power of large language models (LLMs), but they typically incur heavy computational costs and lack convergence guarantees. To overcome these challenges, we recast multi-LLM coordination as an incomplete-information game and seek a Bayesian Nash equilibrium (BNE), in which each agent optimally responds to its probabilistic beliefs about the strategies of others. We introduce Efficient Coordination via Nash Equilibrium (ECON), a hierarchical reinforcement-learning paradigm that marries distributed reasoning with centralized final output. Under ECON, each LLM independently selects responses that maximize its expected reward, conditioned on its beliefs about co-agents, without requiring costly inter-agent exchanges.\nWe mathematically prove that ECON attains a markedly tighter regret bound than non-equilibrium multi-agent schemes. Empirically, ECON outperforms existing multi-LLM approaches by 11.2% on average across six benchmarks spanning complex reasoning and planning tasks. Further experiments demonstrate ECON’s ability to flexibly incorporate additional models, confirming its scalability and paving the way toward larger, more powerful multi-LLM ensembles. The code is publicly available at: https://github.com/tmlr-group/ECON.",
+      "authors": [
+        "Xie Yi",
+        "Zhanke Zhou",
+        "Chentao Cao",
+        "Qiyu Niu",
+        "Tongliang Liu",
+        "Bo Han"
+      ],
+      "primary_category": "Large Language Models",
+      "categories": [
+        "Large Language Models",
+        "Reasoning",
+        "Multiagent Reasoning"
+      ],
+      "published": "2025-05-01T13:14:45.835+00:00",
+      "link": "https://openreview.net/forum?id=RQwexjUCxm",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-zbbysvgkub",
+      "source": "ICML-2025-Accepted",
+      "title": "Cross-environment Cooperation Enables Zero-shot Multi-agent Coordination",
+      "abstract": "Zero-shot coordination (ZSC), the ability to adapt to a new partner in a cooperative task, is a critical component of human-compatible AI. While prior work has focused on training agents to cooperate on a single task, these specialized models do not generalize to new tasks, even if they are highly similar. Here, we study how reinforcement learning on a **distribution of environments with a single partner** enables learning general cooperative skills that support ZSC with **many new partners on many new problems**. We introduce *two* Jax-based, procedural generators that create billions of solvable coordination challenges. We develop a new paradigm called **Cross-Environment Cooperation (CEC)**, and show that it outperforms competitive baselines quantitatively and qualitatively when collaborating with real people. Our findings suggest that learning to collaborate across many unique scenarios encourages agents to develop general norms, which prove effective for collaboration with different partners. Together, our results suggest a new route toward designing generalist cooperative agents capable of interacting with humans without requiring human data.",
+      "authors": [
+        "Kunal Jha",
+        "Wilka Carvalho",
+        "Yancheng Liang",
+        "Simon Shaolei Du",
+        "Max Kleiman-Weiner",
+        "Natasha Jaques"
+      ],
+      "primary_category": "Zero-shot Coordination",
+      "categories": [
+        "Zero-shot Coordination",
+        "Human-AI Collaboration",
+        "Multi-agent Interactions"
+      ],
+      "published": "2025-05-01T13:20:22.75+00:00",
+      "link": "https://openreview.net/forum?id=zBBYsVGKuB",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-q6zwuewkzl",
+      "source": "ICML-2025-Accepted",
+      "title": "Self-Play $Q$-Learners Can Provably Collude in the Iterated Prisoner's Dilemma",
+      "abstract": "A growing body of computational studies shows that simple machine learning agents converge to cooperative behaviors in social dilemmas, such as collusive price-setting in oligopoly markets, raising questions about what drives this outcome. In this work, we provide theoretical foundations for this phenomenon in the context of self-play multi-agent Q-learners in the iterated prisoner’s dilemma. We characterize broad conditions under which such agents provably learn the cooperative Pavlov (win-stay, lose-shift) policy rather than the Pareto-dominated “always defect” policy. We validate our theoretical results through additional experiments, demonstrating their robustness across a broader class of deep learning algorithms.",
+      "authors": [
+        "Quentin Bertrand",
+        "Juan Agustin Duque",
+        "Emilio Calvano",
+        "Gauthier Gidel"
+      ],
+      "primary_category": "iterated prisoner's dilemma",
+      "categories": [
+        "iterated prisoner's dilemma",
+        "cooperation",
+        "Q-learning",
+        "self-play"
+      ],
+      "published": "2025-05-01T13:20:21.075+00:00",
+      "link": "https://openreview.net/forum?id=q6zwUeWkZL",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-akvy9a4jho",
+      "source": "ICML-2025-Accepted",
+      "title": "KABB: Knowledge-Aware Bayesian Bandits for Dynamic Expert Coordination in Multi-Agent Systems",
+      "abstract": "As scaling large language models faces prohibitive costs, multi-agent systems emerge as a promising alternative, though challenged by static knowledge assumptions and coordination inefficiencies. We introduce Knowledge-Aware Bayesian Bandits (KABB), a novel framework that enhances multi-agent system coordination through semantic understanding and dynamic adaptation. The framework features three key innovations: a customized knowledge distance model for deep semantic understanding, a dual-adaptation mechanism for continuous expert optimization, and a knowledge-aware Thompson Sampling strategy for efficient expert selection. Extensive evaluation demonstrates KABB achieves an optimal cost-performance balance, maintaining high performance while keeping computational demands relatively low in multi-agent coordination.",
+      "authors": [
+        "Jusheng Zhang",
+        "Zimeng Huang",
+        "Yijia Fan",
+        "Ningyuan Liu",
+        "Mingyan Li",
+        "Zhuojie Yang",
+        "Jiawei Yao",
+        "Jian Wang",
+        "Keze Wang"
+      ],
+      "primary_category": "LLM",
+      "categories": [
+        "LLM",
+        "Agent"
+      ],
+      "published": "2025-05-01T13:11:38.28+00:00",
+      "link": "https://openreview.net/forum?id=AKvy9a4jho",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-axqgpcl90a",
+      "source": "ICML-2025-Accepted",
+      "title": "Explicit Exploration for High-Welfare Equilibria in Game-Theoretic Multiagent Reinforcement Learning",
+      "abstract": "Iterative extension of empirical game models through deep reinforcement learning (RL) has proved an effective approach for finding equilibria in complex games. When multiple equilibria exist, we may also be interested in finding solutions with particular characteristics. We address this issue of equilibrium selection in the context of Policy Space Response Oracles (PSRO), a flexible game-solving framework based on deep RL, by skewing the strategy exploration process towards higher-welfare solutions. At each iteration, we create an exploration policy that imitates high welfare-yielding behavior and train a response to the current solution, regularized to be similar to the exploration policy. With no additional simulation expense, our approach, named Ex$^2$PSRO, tends to find higher welfare equilibria than vanilla PSRO in two benchmarks: a sequential bargaining game and a social dilemma game. Further experiments demonstrate Ex$^2$PSRO's composability with other PSRO variants and illuminate the relationship between exploration policy choice and algorithmic performance.",
+      "authors": [
+        "Austin A. Nguyen",
+        "Anri Gu",
+        "Michael P. Wellman"
+      ],
+      "primary_category": "Empirical game theoretic analysis",
+      "categories": [
+        "Empirical game theoretic analysis",
+        "equilibrium selection",
+        "game solving",
+        "strategy exploration"
+      ],
+      "published": "2025-05-01T13:14:50.847+00:00",
+      "link": "https://openreview.net/forum?id=AxqgpcL90a",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-0n2nxmoxzs",
+      "source": "ICML-2025-Accepted",
+      "title": "Gap-Dependent Bounds for Federated $Q$-Learning",
+      "abstract": "We present the first gap-dependent analysis of regret and communication cost for on-policy federated $Q$-Learning in tabular episodic finite-horizon Markov decision processes (MDPs). Existing FRL methods focus on worst-case scenarios, leading to $\\sqrt{T}$-type regret bounds and communication cost bounds with a $\\log T$ term scaling with the number of agents $M$, states $S$, and actions $A$, where $T$ is the average total number of steps per agent. In contrast, our novel framework leverages the benign structures of MDPs, such as a strictly positive suboptimality gap, to achieve a $\\log T$-type regret bound and a refined communication cost bound that disentangles exploration and exploitation. Our gap-dependent regret bound reveals a distinct multi-agent speedup pattern, and our gap-dependent communication cost bound removes the dependence on $MSA$ from the $\\log T$ term. Notably, our gap-dependent communication cost bound also yields a better global switching cost when $M=1$, removing $SA$ from the $\\log T$ term.",
+      "authors": [
+        "Haochen Zhang",
+        "Zhong Zheng",
+        "Lingzhou Xue"
+      ],
+      "primary_category": "Federated learning",
+      "categories": [
+        "Federated learning",
+        "Reinforcement learning",
+        "Regret",
+        "Communication cost"
+      ],
+      "published": "2025-05-01T13:13:39.765+00:00",
+      "link": "https://openreview.net/forum?id=0n2nXmOxZS",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-mhynndbaj8",
+      "source": "ICML-2025-Accepted",
+      "title": "Concurrent Reinforcement Learning with Aggregated States via  Randomized Least Squares Value Iteration",
+      "abstract": "Designing learning agents that explore efficiently in a complex environment has been widely recognized as a fundamental challenge in reinforcement learning. While a number of works have demonstrated the effectiveness of  techniques based on randomized value functions on a single agent, it remains unclear, from a theoretical point of view, whether injecting randomization can help a society of agents concurently explore an environment. The theoretical results established in this work tender an affirmative answer to this question. We adapt the concurrent learning framework to randomized least-squares value iteration (RLSVI) with aggregated state representation. \nWe demonstrate polynomial worst-case regret bounds in both finite- and infinite-horizon environments.\nIn both setups the per-agent regret decreases at an optimal rate of $\\Theta\\left(\\frac{1}{\\sqrt{N}}\\right)$, highlighting the advantage of concurent learning. Our algorithm exhibits significantly lower space complexity compared to Russo (2019) and Agrawal et. al (2021). We reduce the space complexity by a factor of $K$ while incurring only a $\\sqrt{K}$ increase in the worst-case regret bound, compared to Russo (2019) and Agrawal et. al (2021). Interestingly, our algorithm improves the worst-case regret bound of Russo (2019) by a factor of $H^{1/2}$, matching the improvement in Agrawal et. al (2021). However, this result is achieved through a fundamentally different algorithmic enhancement and proof technique. Additionally, we conduct numerical experiments to demonstrate our theoretical findings.",
+      "authors": [
+        "Yan Chen",
+        "Qinxun Bai",
+        "Yiteng Zhang",
+        "Maria Dimakopoulou",
+        "Shi Dong",
+        "Qi Sun",
+        "Zhengyuan Zhou"
+      ],
+      "primary_category": "worst-case regret bound",
+      "categories": [
+        "worst-case regret bound",
+        "RL theory",
+        "randomized least squares value iteration",
+        "multi-agent learning",
+        "aggregated states",
+        "concurrent learning"
+      ],
+      "published": "2025-05-01T13:17:02.439+00:00",
+      "link": "https://openreview.net/forum?id=MhYnnDBAJ8",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ]
+    },
+    {
+      "id": "openreview-icml-2025-tl3flgwsca",
+      "source": "ICML-2025-Accepted",
+      "title": "Ad Hoc Teamwork via Offline Goal-Based Decision Transformers",
+      "abstract": "The ability of agents to collaborate with previously unknown teammates on the fly, known as ad hoc teamwork (AHT), is crucial in many real-world applications. Existing approaches to AHT require online interactions with the environment and some carefully designed teammates. However, these prerequisites can be infeasible in practice. In this work, we extend the AHT problem to the offline setting, where the policy of the ego agent is directly learned from a multi-agent interaction dataset. We propose a hierarchical sequence modeling framework called TAGET that addresses critical challenges in the offline setting, including limited data, partial observability and online adaptation. The core idea of TAGET is to dynamically predict teammate-aware rewards-to-go and sub-goals, so that the ego agent can adapt to the changes of teammates’ behaviors in real time. Extensive experimental results show that TAGET significantly outperforms existing solutions to AHT in the offline setting.",
+      "authors": [
+        "Xinzhi Zhang",
+        "Hohei Chan",
+        "Deheng Ye",
+        "Yi Cai",
+        "Mengchen Zhao"
+      ],
+      "primary_category": "Ad Hoc Teamwork",
+      "categories": [
+        "Ad Hoc Teamwork",
+        "Offline Reinforcement Learning"
+      ],
+      "published": "2025-05-01T13:13:28.729+00:00",
+      "link": "https://openreview.net/forum?id=tl3FlgWScA",
+      "pdf_url": null,
+      "tags": [
+        "keyword:MARL"
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "type": "intent_query",
+      "tag": "MARL",
+      "paper_tag": "query:MARL",
+      "query_text": "comparison of value decomposition and actor critic methods",
+      "sim_scores": {
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.012345679012345678,
+          "rank": 21
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.010309278350515464,
+          "rank": 37
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-qutxbtsfwp",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-zcvgjh4ps7",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-mhynndbaj8",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-tcsdlqzznl",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-323gznngqe",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-0n2nxmoxzs",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-yifcq03hsm",
+          "score": 0.6388587937883712,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-bnhfueoeav",
+          "score": 0.3910256410256411,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-axqgpcl90a",
+          "score": 0.3668882557771445,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-cabuwu44ky",
+          "score": 0.3668882557771445,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-fyvrnkyu6h",
+          "score": 0.3433395872420263,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-vudwrmb3tx",
+          "score": 0.2760180995475112,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-ciuhd7jct9",
+          "score": 0.21328671328671328,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-al6qg8blkg",
+          "score": 0.21328671328671328,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-y34a82dptf",
+          "score": 0.1933160472486314,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-q6zwuewkzl",
+          "score": 0.1933160472486314,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-vsijdkpgp8",
+          "score": 0.1737891737891738,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-kfmuasg7eb",
+          "score": 0.15469146238377016,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-ffbnsyrspg",
+          "score": 0.0483743061062648,
+          "star_rating": 2
+        },
+        {
+          "paper_id": "openreview-icml-2025-mgjkeqc685",
+          "score": 0.0483743061062648,
+          "star_rating": 2
+        },
+        {
+          "paper_id": "openreview-icml-2025-dqln1yfyxn",
+          "score": 0.015799015799015898,
+          "star_rating": 2
+        },
+        {
+          "paper_id": "openreview-icml-2025-htp5yrxcs9",
+          "score": 0.015799015799015898,
+          "star_rating": 2
+        },
+        {
+          "paper_id": "openreview-icml-2025-jpkjayutw0",
+          "score": 0.0,
+          "star_rating": 1
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "MARL",
+      "paper_tag": "query:MARL",
+      "query_text": "cooperative multi agent reinforcement learning applications",
+      "sim_scores": {
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.013513513513513514,
+          "rank": 14
+        },
+        "openreview-icml-2025-1iny6xlon0": {
+          "score": 0.013157894736842105,
+          "rank": 16
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.012345679012345678,
+          "rank": 21
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.012195121951219513,
+          "rank": 22
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.012048192771084338,
+          "rank": 23
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.011764705882352941,
+          "rank": 25
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.010309278350515464,
+          "rank": 37
+        },
+        "openreview-icml-2025-al6qg8blkg": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-dqln1yfyxn": {
+          "score": 0.00980392156862745,
+          "rank": 42
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.009523809523809525,
+          "rank": 45
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.009345794392523364,
+          "rank": 47
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-tcsdlqzznl",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-qutxbtsfwp",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-mgjkeqc685",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-kfmuasg7eb",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-jpkjayutw0",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-zbbysvgkub",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-1iny6xlon0",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-fyvrnkyu6h",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-vsijdkpgp8",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-q6zwuewkzl",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-zcvgjh4ps7",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-323gznngqe",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-vudwrmb3tx",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-t5iz32imab",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-al6qg8blkg",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-ffbnsyrspg",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-y34a82dptf",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-2sl6ex7vmo",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-yifcq03hsm",
+          "score": 0.6703296703296702,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-dqln1yfyxn",
+          "score": 0.6703296703296702,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-px29zf9wrb",
+          "score": 0.6388587937883712,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-akvy9a4jho",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-ciuhd7jct9",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-mhynndbaj8",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-bnhfueoeav",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-htp5yrxcs9",
+          "score": 0.5495495495495496,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-tl3flgwsca",
+          "score": 0.5213675213675214,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-cabuwu44ky",
+          "score": 0.5213675213675214,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-axqgpcl90a",
+          "score": 0.46719946719946726,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-rqwexjucxm",
+          "score": 0.4411571334648256,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-0n2nxmoxzs",
+          "score": 0.3910256410256411,
+          "star_rating": 3
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "MARL",
+      "paper_tag": "query:MARL",
+      "query_text": "decentralized multi agent reinforcement learning methods",
+      "sim_scores": {
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.03225806451612903,
+          "rank": 1
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.03177805800756621,
+          "rank": 2
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.02976190476190476,
+          "rank": 3
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.01639344262295082,
+          "rank": 4
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015873015873015872,
+          "rank": 5
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.015625,
+          "rank": 6
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.015151515151515152,
+          "rank": 7
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.014285714285714285,
+          "rank": 11
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.014084507042253521,
+          "rank": 12
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.013157894736842105,
+          "rank": 16
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.01282051282051282,
+          "rank": 18
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.012658227848101266,
+          "rank": 19
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.0125,
+          "rank": 20
+        },
+        "openreview-icml-2025-dqln1yfyxn": {
+          "score": 0.012048192771084338,
+          "rank": 23
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.01098901098901099,
+          "rank": 31
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.010869565217391304,
+          "rank": 32
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.010752688172043012,
+          "rank": 33
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.010638297872340425,
+          "rank": 34
+        },
+        "openreview-icml-2025-y34a82dptf": {
+          "score": 0.010309278350515464,
+          "rank": 37
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.01020408163265306,
+          "rank": 38
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.009900990099009901,
+          "rank": 41
+        },
+        "openreview-icml-2025-1iny6xlon0": {
+          "score": 0.00909090909090909,
+          "rank": 50
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-mgjkeqc685",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-zcvgjh4ps7",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-323gznngqe",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-jpkjayutw0",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-qutxbtsfwp",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-t5iz32imab",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-vudwrmb3tx",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-ffbnsyrspg",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-tcsdlqzznl",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-vsijdkpgp8",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-dqln1yfyxn",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-2sl6ex7vmo",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-kfmuasg7eb",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-1iny6xlon0",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-al6qg8blkg",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-bnhfueoeav",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-cabuwu44ky",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-fyvrnkyu6h",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-ciuhd7jct9",
+          "score": 0.6703296703296702,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-htp5yrxcs9",
+          "score": 0.6703296703296702,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-zbbysvgkub",
+          "score": 0.6388587937883712,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-0n2nxmoxzs",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-yifcq03hsm",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-y34a82dptf",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-akvy9a4jho",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-rqwexjucxm",
+          "score": 0.5495495495495496,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-q6zwuewkzl",
+          "score": 0.5495495495495496,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-mhynndbaj8",
+          "score": 0.5213675213675214,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-axqgpcl90a",
+          "score": 0.49392712550607265,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-px29zf9wrb",
+          "score": 0.3910256410256411,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-tl3flgwsca",
+          "score": 0.3668882557771445,
+          "star_rating": 3
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "MARL",
+      "paper_tag": "query:MARL",
+      "query_text": "multi agent reinforcement learning algorithms",
+      "sim_scores": {
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.031544957774465976,
+          "rank": 1
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.03036576949620428,
+          "rank": 2
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.03028233151183971,
+          "rank": 3
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.028991596638655463,
+          "rank": 4
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.028370221327967807,
+          "rank": 5
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.028258706467661692,
+          "rank": 6
+        },
+        "openreview-icml-2025-cabuwu44ky": {
+          "score": 0.016129032258064516,
+          "rank": 10
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.016129032258064516,
+          "rank": 11
+        },
+        "openreview-icml-2025-y34a82dptf": {
+          "score": 0.015873015873015872,
+          "rank": 12
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015625,
+          "rank": 13
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.014492753623188406,
+          "rank": 18
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.014084507042253521,
+          "rank": 19
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.0136986301369863,
+          "rank": 21
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.012987012987012988,
+          "rank": 27
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.012658227848101266,
+          "rank": 29
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.0125,
+          "rank": 30
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.011627906976744186,
+          "rank": 35
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.011363636363636364,
+          "rank": 37
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.01098901098901099,
+          "rank": 40
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.010869565217391304,
+          "rank": 41
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.010526315789473684,
+          "rank": 44
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.009708737864077669,
+          "rank": 51
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.009615384615384616,
+          "rank": 52
+        },
+        "openreview-icml-2025-al6qg8blkg": {
+          "score": 0.009523809523809525,
+          "rank": 53
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.00909090909090909,
+          "rank": 58
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-2sl6ex7vmo",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-mgjkeqc685",
+          "score": 1.0,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-ffbnsyrspg",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-vudwrmb3tx",
+          "score": 0.9586435070306036,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-323gznngqe",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-vsijdkpgp8",
+          "score": 0.9185999185999183,
+          "star_rating": 5
+        },
+        {
+          "paper_id": "openreview-icml-2025-tcsdlqzznl",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-jpkjayutw0",
+          "score": 0.8798076923076922,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-ciuhd7jct9",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-bnhfueoeav",
+          "score": 0.8422090729783037,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-fyvrnkyu6h",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-qutxbtsfwp",
+          "score": 0.8057498057498057,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-cabuwu44ky",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-al6qg8blkg",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-1iny6xlon0",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-t5iz32imab",
+          "score": 0.73604826546003,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-zcvgjh4ps7",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-y34a82dptf",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-kfmuasg7eb",
+          "score": 0.6703296703296702,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-rqwexjucxm",
+          "score": 0.6388587937883712,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-dqln1yfyxn",
+          "score": 0.608262108262108,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-htp5yrxcs9",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-yifcq03hsm",
+          "score": 0.578503688092729,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-axqgpcl90a",
+          "score": 0.5495495495495496,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-q6zwuewkzl",
+          "score": 0.5213675213675214,
+          "star_rating": 4
+        },
+        {
+          "paper_id": "openreview-icml-2025-zbbysvgkub",
+          "score": 0.49392712550607265,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-0n2nxmoxzs",
+          "score": 0.46719946719946726,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-mhynndbaj8",
+          "score": 0.41577409931840303,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-px29zf9wrb",
+          "score": 0.3668882557771445,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-akvy9a4jho",
+          "score": 0.3433395872420263,
+          "star_rating": 3
+        },
+        {
+          "paper_id": "openreview-icml-2025-tl3flgwsca",
+          "score": 0.1933160472486314,
+          "star_rating": 3
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "Markov game",
+      "sim_scores": {
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "Markov games in multi-agent reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.013157894736842105,
+          "rank": 16
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.012658227848101266,
+          "rank": 19
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.0125,
+          "rank": 20
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.012345679012345678,
+          "rank": 21
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.012048192771084338,
+          "rank": 23
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.011904761904761904,
+          "rank": 24
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.01098901098901099,
+          "rank": 31
+        },
+        "openreview-icml-2025-q6zwuewkzl": {
+          "score": 0.01020408163265306,
+          "rank": 38
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.009615384615384616,
+          "rank": 44
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "centralized training",
+      "sim_scores": {
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "centralized training for multi-agent reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.013513513513513514,
+          "rank": 14
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.01282051282051282,
+          "rank": 18
+        },
+        "openreview-icml-2025-al6qg8blkg": {
+          "score": 0.012658227848101266,
+          "rank": 19
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.011627906976744186,
+          "rank": 26
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.01098901098901099,
+          "rank": 31
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.01,
+          "rank": 40
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.009523809523809525,
+          "rank": 45
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "cooperative multi-agent learning",
+      "sim_scores": {
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-icml-2025-1iny6xlon0": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-icml-2025-q6zwuewkzl": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-px29zf9wrb": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "cooperative multi-agent reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.015384615384615385,
+          "rank": 5
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.012987012987012988,
+          "rank": 17
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.01282051282051282,
+          "rank": 18
+        },
+        "openreview-icml-2025-1iny6xlon0": {
+          "score": 0.012658227848101266,
+          "rank": 19
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.012195121951219513,
+          "rank": 22
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.011764705882352941,
+          "rank": 25
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.011627906976744186,
+          "rank": 26
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.010638297872340425,
+          "rank": 34
+        },
+        "openreview-icml-2025-al6qg8blkg": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.009615384615384616,
+          "rank": 44
+        },
+        "openreview-icml-2025-q6zwuewkzl": {
+          "score": 0.009259259259259259,
+          "rank": 48
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.009174311926605505,
+          "rank": 49
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "decentralized execution",
+      "sim_scores": {
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "decentralized execution in multi-agent systems",
+      "sim_scores": {
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.014925373134328358,
+          "rank": 7
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.014705882352941176,
+          "rank": 8
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        },
+        "openreview-icml-2025-tl3flgwsca": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.012987012987012988,
+          "rank": 17
+        },
+        "openreview-icml-2025-dqln1yfyxn": {
+          "score": 0.012048192771084338,
+          "rank": 23
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.011904761904761904,
+          "rank": 24
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.011363636363636364,
+          "rank": 28
+        },
+        "openreview-icml-2025-htp5yrxcs9": {
+          "score": 0.01098901098901099,
+          "rank": 31
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.010869565217391304,
+          "rank": 32
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.010526315789473684,
+          "rank": 35
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.010416666666666666,
+          "rank": 36
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.009523809523809525,
+          "rank": 45
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.009259259259259259,
+          "rank": 48
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "decentralized multi-agent reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.015625,
+          "rank": 4
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.015151515151515152,
+          "rank": 6
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.014492753623188406,
+          "rank": 9
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.014285714285714285,
+          "rank": 10
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.014084507042253521,
+          "rank": 11
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.013888888888888888,
+          "rank": 12
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.0136986301369863,
+          "rank": 13
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.013333333333333334,
+          "rank": 15
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.013157894736842105,
+          "rank": 16
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.012987012987012988,
+          "rank": 17
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.01282051282051282,
+          "rank": 18
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.012345679012345678,
+          "rank": 21
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.012048192771084338,
+          "rank": 23
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.011764705882352941,
+          "rank": 25
+        },
+        "openreview-icml-2025-dqln1yfyxn": {
+          "score": 0.011363636363636364,
+          "rank": 28
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.011235955056179775,
+          "rank": 29
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.010526315789473684,
+          "rank": 35
+        },
+        "openreview-icml-2025-mhynndbaj8": {
+          "score": 0.010416666666666666,
+          "rank": 36
+        },
+        "openreview-icml-2025-y34a82dptf": {
+          "score": 0.01020408163265306,
+          "rank": 38
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.010101010101010102,
+          "rank": 39
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.009900990099009901,
+          "rank": 41
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "decentralized reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        },
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.015873015873015872,
+          "rank": 3
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "MARL",
+      "paper_tag": "keyword:MARL",
+      "query_text": "multi-agent reinforcement learning",
+      "sim_scores": {
+        "openreview-icml-2025-323gznngqe": {
+          "score": 0.03225806451612903,
+          "rank": 1
+        },
+        "openreview-icml-2025-vudwrmb3tx": {
+          "score": 0.030776515151515152,
+          "rank": 2
+        },
+        "openreview-icml-2025-qutxbtsfwp": {
+          "score": 0.030158730158730156,
+          "rank": 3
+        },
+        "openreview-icml-2025-tcsdlqzznl": {
+          "score": 0.029906956136464335,
+          "rank": 4
+        },
+        "openreview-icml-2025-ffbnsyrspg": {
+          "score": 0.02946912242686891,
+          "rank": 5
+        },
+        "openreview-icml-2025-2sl6ex7vmo": {
+          "score": 0.029211087420042643,
+          "rank": 6
+        },
+        "openreview-icml-2025-jpkjayutw0": {
+          "score": 0.02904040404040404,
+          "rank": 7
+        },
+        "openreview-icml-2025-mgjkeqc685": {
+          "score": 0.02886002886002886,
+          "rank": 8
+        },
+        "openreview-icml-2025-t5iz32imab": {
+          "score": 0.028782894736842105,
+          "rank": 9
+        },
+        "openreview-icml-2025-yifcq03hsm": {
+          "score": 0.027884615384615386,
+          "rank": 10
+        },
+        "openreview-icml-2025-ciuhd7jct9": {
+          "score": 0.02690100430416069,
+          "rank": 11
+        },
+        "openreview-icml-2025-fyvrnkyu6h": {
+          "score": 0.026830135039090264,
+          "rank": 12
+        },
+        "openreview-icml-2025-vsijdkpgp8": {
+          "score": 0.02681010928961749,
+          "rank": 13
+        },
+        "openreview-icml-2025-bnhfueoeav": {
+          "score": 0.02658450704225352,
+          "rank": 14
+        },
+        "openreview-icml-2025-zcvgjh4ps7": {
+          "score": 0.025856389986824768,
+          "rank": 15
+        },
+        "openreview-icml-2025-kfmuasg7eb": {
+          "score": 0.025516795865633074,
+          "rank": 16
+        },
+        "openreview-icml-2025-zbbysvgkub": {
+          "score": 0.02393162393162393,
+          "rank": 17
+        },
+        "openreview-icml-2025-al6qg8blkg": {
+          "score": 0.023333333333333334,
+          "rank": 18
+        },
+        "openreview-icml-2025-rqwexjucxm": {
+          "score": 0.023128342245989305,
+          "rank": 19
+        },
+        "openreview-icml-2025-1iny6xlon0": {
+          "score": 0.014705882352941176,
+          "rank": 21
+        },
+        "openreview-icml-2025-dqln1yfyxn": {
+          "score": 0.0136986301369863,
+          "rank": 23
+        },
+        "openreview-icml-2025-akvy9a4jho": {
+          "score": 0.0136986301369863,
+          "rank": 24
+        },
+        "openreview-icml-2025-cabuwu44ky": {
+          "score": 0.012987012987012988,
+          "rank": 28
+        },
+        "openreview-icml-2025-y34a82dptf": {
+          "score": 0.01282051282051282,
+          "rank": 29
+        },
+        "openreview-icml-2025-px29zf9wrb": {
+          "score": 0.012345679012345678,
+          "rank": 32
+        },
+        "openreview-icml-2025-htp5yrxcs9": {
+          "score": 0.011764705882352941,
+          "rank": 37
+        },
+        "openreview-icml-2025-axqgpcl90a": {
+          "score": 0.010309278350515464,
+          "rank": 50
+        },
+        "openreview-icml-2025-0n2nxmoxzs": {
+          "score": 0.009345794392523364,
+          "rank": 59
+        }
+      }
+    }
+  ],
+  "global_candidate_ids": [
+    "openreview-icml-2025-qutxbtsfwp",
+    "openreview-icml-2025-zcvgjh4ps7",
+    "openreview-icml-2025-tcsdlqzznl",
+    "openreview-icml-2025-323gznngqe",
+    "openreview-icml-2025-ffbnsyrspg",
+    "openreview-icml-2025-ciuhd7jct9",
+    "openreview-icml-2025-dsjo5x56kq",
+    "openreview-icml-2025-yifcq03hsm",
+    "openreview-icml-2025-ez5qyzv7zi",
+    "openreview-icml-2025-x3ikghfwwd",
+    "openreview-icml-2025-jpkjayutw0",
+    "openreview-icml-2025-mgjkeqc685",
+    "openreview-icml-2025-uckvhweh1g",
+    "openreview-icml-2025-akvy9a4jho",
+    "openreview-icml-2025-vudwrmb3tx",
+    "openreview-icml-2025-fyvrnkyu6h",
+    "openreview-icml-2025-t5iz32imab",
+    "openreview-icml-2025-2sl6ex7vmo",
+    "openreview-icml-2025-zbbysvgkub",
+    "openreview-icml-2025-d8xnwqslqq",
+    "openreview-icml-2025-fzulafajxe",
+    "openreview-icml-2025-ne9ajrddxx",
+    "openreview-icml-2025-stfnyxnham",
+    "openreview-icml-2025-vhktpw6vid",
+    "openreview-icml-2025-kfmuasg7eb",
+    "openreview-icml-2025-ihu3oaa5lj",
+    "openreview-icml-2025-vsijdkpgp8",
+    "openreview-icml-2025-qucuyqp1ua",
+    "openreview-icml-2025-1r84o2xr1k",
+    "openreview-icml-2025-51sfypi0j8",
+    "openreview-icml-2025-bnhfueoeav",
+    "openreview-icml-2025-rqwexjucxm",
+    "openreview-icml-2025-hlybdwhbec",
+    "openreview-icml-2025-4szmijv2ew",
+    "openreview-icml-2025-omyqzp8no7",
+    "openreview-icml-2025-pjdmokqdsv",
+    "openreview-icml-2025-axqgpcl90a",
+    "openreview-icml-2025-w7dn3sqkkh",
+    "openreview-icml-2025-1iny6xlon0",
+    "openreview-icml-2025-k77bq8ajvy",
+    "openreview-icml-2025-0n2nxmoxzs",
+    "openreview-icml-2025-h76pmm7hf2",
+    "openreview-icml-2025-mhynndbaj8",
+    "openreview-icml-2025-dqln1yfyxn",
+    "openreview-icml-2025-rthtytsrt3",
+    "openreview-icml-2025-unuw6mc7su",
+    "openreview-icml-2025-al6qg8blkg",
+    "openreview-icml-2025-4zrb89sbzg",
+    "openreview-icml-2025-jwe5fj8qgx",
+    "openreview-icml-2025-mqezesdodh",
+    "openreview-icml-2025-u0mi6m7lvi",
+    "openreview-icml-2025-49g4c8mwhy",
+    "openreview-icml-2025-bchma96dv6",
+    "openreview-icml-2025-y34a82dptf",
+    "openreview-icml-2025-f1yanmcnan",
+    "openreview-icml-2025-g5xo7od5g7",
+    "openreview-icml-2025-vocpctm3nb",
+    "openreview-icml-2025-yswrjer7mw",
+    "openreview-icml-2025-zkbqukh6qe",
+    "openreview-icml-2025-q6zwuewkzl",
+    "openreview-icml-2025-zeetwz8zbg",
+    "openreview-icml-2025-hlpwamq4wr",
+    "openreview-icml-2025-f4cpc211u1",
+    "openreview-icml-2025-qib0e91ucc",
+    "openreview-icml-2025-kcdoadlzub",
+    "openreview-icml-2025-cabuwu44ky",
+    "openreview-icml-2025-px29zf9wrb",
+    "openreview-icml-2025-eerzappd4t",
+    "openreview-icml-2025-l47m0km5dq",
+    "openreview-icml-2025-6k3ofs3lbl",
+    "openreview-icml-2025-fpdx6gtaqm",
+    "openreview-icml-2025-e5yahjsj4j",
+    "openreview-icml-2025-htp5yrxcs9",
+    "openreview-icml-2025-2dqiqst8zj",
+    "openreview-icml-2025-1yoya2zn1j",
+    "openreview-icml-2025-1jx6bgemqg",
+    "openreview-icml-2025-hc7zcfk5dp",
+    "openreview-icml-2025-imcyvlzpxh",
+    "openreview-icml-2025-oake7mg9gm",
+    "openreview-icml-2025-zuho1whvl1",
+    "openreview-icml-2025-8mehwcebmz",
+    "openreview-icml-2025-fpokujqbvb",
+    "openreview-icml-2025-voxad3hhpt",
+    "openreview-icml-2025-1lamy7jpux",
+    "openreview-icml-2025-bwidskoywf",
+    "openreview-icml-2025-oqutbneejz",
+    "openreview-icml-2025-cqzxgmw5vo",
+    "openreview-icml-2025-0p04srg7uf",
+    "openreview-icml-2025-3vjsugcsz4",
+    "openreview-icml-2025-ljvtuxhcis",
+    "openreview-icml-2025-4kf2zzcepc",
+    "openreview-icml-2025-aphrysevbu",
+    "openreview-icml-2025-bkim54qftz",
+    "openreview-icml-2025-kzy6nbbbyq",
+    "openreview-icml-2025-6sivfmjim4",
+    "openreview-icml-2025-nnr8dhb0l7",
+    "openreview-icml-2025-nrckq3aslz",
+    "openreview-icml-2025-pv7hsmgjxp",
+    "openreview-icml-2025-jwjvkwsepb",
+    "openreview-icml-2025-2nbcjczrrp",
+    "openreview-icml-2025-fgo1r1ivei",
+    "openreview-icml-2025-hmghp5do2w",
+    "openreview-icml-2025-vdwdu81uzy",
+    "openreview-icml-2025-0iwwsdla9m",
+    "openreview-icml-2025-tl3flgwsca",
+    "openreview-icml-2025-3pk0p4ngmq",
+    "openreview-icml-2025-rcjnbdxkvc",
+    "openreview-icml-2025-kfyxyvcyq4",
+    "openreview-icml-2025-t46uezeqh8",
+    "openreview-icml-2025-ymlwqfxuuc",
+    "openreview-icml-2025-6anv3kb9lz",
+    "openreview-icml-2025-ntahi2jeee",
+    "openreview-icml-2025-t0zdijozbd",
+    "openreview-icml-2025-br7ftbnd16",
+    "openreview-icml-2025-prmxqhgjb1",
+    "openreview-icml-2025-s0v9mx9jke",
+    "openreview-icml-2025-3h80hystmh",
+    "openreview-icml-2025-kvf2sfl1pi",
+    "openreview-icml-2025-pwwujw2qew",
+    "openreview-icml-2025-avxapubcvn"
+  ],
+  "global_pool_lane_top_k": 30,
+  "global_pool_limit": 120,
+  "global_pool_guaranteed_per_lane": 2,
+  "global_pool_effective_size": 120,
+  "reranked_at": "2026-05-30T12:47:37.154589+00:00",
+  "llm_ranked": [
+    {
+      "paper_id": "openreview-icml-2025-yifcq03hsm",
+      "score": 10.0,
+      "evidence_en": "convex Markov games for MARL",
+      "evidence_cn": "凸马尔可夫博弈用于多智能体强化学习",
+      "canonical_evidence": "凸马尔可夫博弈用于多智能体强化学习",
+      "tldr_en": "Introduces convex Markov games allowing general convex preferences, with theoretical guarantees for Nash equilibria and practical approximation via gradient descent.",
+      "tldr_cn": "针对马尔可夫博弈无法表达非加性偏好的问题，提出凸马尔可夫博弈类，支持一般凸偏好。证明无限时域下纯策略纳什均衡存在，并给出基于可剥削性上界的梯度下降近似算法。实验展示在公平性、多样性等场景中的新解。",
+      "title_zh": "凸马尔可夫博弈：多智能体强化学习的新前沿",
+      "motivation_cn": "现有马尔可夫博弈无法处理多样性和公平性等非加性偏好。",
+      "method_cn": "定义凸马尔可夫博弈类，允许凸偏好，证明均衡存在性并设计可剥削性上界梯度优化。",
+      "result_cn": "在重复博弈、公平性协作和机器人仓库安全等场景中取得创新解。",
+      "conclusion_cn": "凸马尔可夫博弈扩展了MARL建模能力，理论基础扎实且实用。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-zcvgjh4ps7",
+      "score": 10.0,
+      "evidence_en": "Finite-time global optimality convergence for deep neural actor-critic in decentralized MARL",
+      "evidence_cn": "分散式多智能体强化学习中深度神经网络演员-评论家的有限时间全局最优收敛",
+      "canonical_evidence": "分散式多智能体强化学习中深度神经网络演员-评论家的有限时间全局最优收敛",
+      "tldr_en": "First theoretical analysis of deep neural actor-critic for decentralized MARL, proving finite-time convergence to global optimum.",
+      "tldr_cn": "分散式多智能体强化学习中，现有理论仅能保证线性函数逼近下的平稳解，与实际使用的深度神经网络存在差距。本文首次针对深度神经演员-评论家方法，证明其在分散式MARL中有限时间内收敛到全局最优，缩小了理论与实践之间的鸿沟。",
+      "title_zh": "分散式多智能体强化学习中深度神经网络演员-评论家方法的有限时间全局最优收敛",
+      "motivation_cn": "现有分散式MARL理论仅保证线性逼近下的平稳解，与实际深度方法有差距。",
+      "method_cn": "开发深度神经演员-评论家方法，并提供有限时间全局最优收敛分析。",
+      "result_cn": "证明了所提方法在分散式MARL中有限时间收敛到全局最优。",
+      "conclusion_cn": "首次建立了深度分散式MARL的全局最优收敛理论。",
+      "matched_requirement_id": "req-3",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-t5iz32imab",
+      "score": 9.0,
+      "evidence_en": "offline multi-agent reinforcement learning with graph diffusion for coordination",
+      "evidence_cn": "离线多智能体强化学习，图扩散协调",
+      "canonical_evidence": "离线多智能体强化学习，图扩散协调",
+      "tldr_en": "Proposes MCGD, a graph diffusion framework for robust multi-agent coordination in offline MARL, enhancing collaboration policy robustness.",
+      "tldr_cn": "离线多智能体强化学习面临分布外状态动作估计困难。本文提出MCGD框架，利用图扩散模型构建稀疏协调图，聚合连续节点与离散边属性，提升协作策略的鲁棒性。实验验证了该方法在动态环境下的有效性。",
+      "title_zh": "图扩散实现鲁棒多智能体协调",
+      "motivation_cn": "离线MARL中忽略多智能体协调动态导致策略鲁棒性下降。",
+      "method_cn": "构造包含节点与边属性的稀疏协调图，基于图扩散模型进行多智能体协调。",
+      "result_cn": "在多个环境上优于基线方法，提升了协作鲁棒性。",
+      "conclusion_cn": "图扩散模型可有效增强离线多智能体协调策略的鲁棒性。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-cabuwu44ky",
+      "score": 9.0,
+      "evidence_en": "performant, efficient and scalable sequence model for MARL",
+      "evidence_cn": "面向MARL的高性能、高效、可扩展序列模型",
+      "canonical_evidence": "面向MARL的高性能、高效、可扩展序列模型",
+      "tldr_en": "Introduces Sable, a sequence model for MARL using retention mechanism, outperforming SOTA across six environments.",
+      "tldr_cn": "MARL在处理大规模复杂问题时需兼顾性能、内存效率和可扩展性。本文提出Sable，将Retentive Network的保留机制应用于多智能体观测序列处理，实现高效长时序推理。在六个环境上的实验表明Sable显著超越现有方法。",
+      "title_zh": "Sable: 面向MARL的高性能高效可扩展序列模型",
+      "motivation_cn": "现有MARL算法在大规模问题中性能、内存与可扩展性不足。",
+      "method_cn": "采用Retentive Network的保留机制处理多智能体观测序列，实现长上下文记忆。",
+      "result_cn": "在六个多样环境中显著超过现有最先进方法。",
+      "conclusion_cn": "序列建模方法可有效提升MARL的规模化和性能。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-ciuhd7jct9",
+      "score": 9.0,
+      "evidence_en": "provably efficient model-based online MARL for Markov games",
+      "evidence_cn": "面向马尔可夫博弈的可证明高效在线模型MARL",
+      "canonical_evidence": "面向马尔可夫博弈的可证明高效在线模型MARL",
+      "tldr_en": "Proposes VMG algorithm for Markov games that incentivizes exploration via biased model estimates, achieving sample-efficient NE and CCE.",
+      "tldr_cn": "马尔可夫博弈是研究多智能体强化学习的重要框架，但现有样本高效方法需复杂不确定性估计或玩家协调。本文提出VMG算法，通过偏置模型参数估计鼓励探索，在不使用奖励加成的情况下达到样本高效的纳什均衡和粗相关均衡。理论保证并实验验证。",
+      "title_zh": "无需奖励加成：面向马尔可夫博弈的可证明高效在线多智能体强化学习",
+      "motivation_cn": "马尔可夫博弈中现有方法要么需定制不确定性估计，要么需玩家协调。",
+      "method_cn": "提出VMG算法，通过偏置模型参数估计鼓励探索，无需额外奖励加成。",
+      "result_cn": "理论证明可样本高效达到纳什均衡和粗相关均衡，实验验证。",
+      "conclusion_cn": "无需奖励加成的模型方法可高效求解马尔可夫博弈的均衡。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-kfmuasg7eb",
+      "score": 9.0,
+      "evidence_en": "resolving futile neurons in parameter sharing network for MARL",
+      "evidence_cn": "解决MARL参数共享网络中的无效神经元",
+      "canonical_evidence": "解决MARL参数共享网络中的无效神经元",
+      "tldr_en": "Proposes GradPS to resolve gradient conflicts in parameter sharing MARL by dynamically cloning futile neurons.",
+      "tldr_cn": "参数共享在多智能体强化学习中广泛使用，但导致策略同质化限制性能。本文发现梯度冲突产生无效神经元，阻碍学习。提出GradPS方法，为每个无效神经元动态创建多个克隆，分配低梯度冲突的智能体组，提升学习效率与多样性。实验验证其有效性。",
+      "title_zh": "GradPS：解决多智能体强化学习参数共享网络中的无效神经元",
+      "motivation_cn": "参数共享导致策略同质化，梯度冲突造成无效神经元。",
+      "method_cn": "动态为每个无效神经元创建多个克隆，将低梯度冲突的智能体分配到各克隆。",
+      "result_cn": "在多个MARL任务上提升了学习效率与策略多样性。",
+      "conclusion_cn": "处理梯度冲突可有效解决参数共享中的神经元失效问题。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-bnhfueoeav",
+      "score": 9.0,
+      "evidence_en": "robust multi-agent reinforcement learning with stochastic adversary",
+      "evidence_cn": "带有随机对手的鲁棒多智能体强化学习",
+      "canonical_evidence": "带有随机对手的鲁棒多智能体强化学习",
+      "tldr_en": "Introduces ATSA with stochastic adversary for robust MARL, using online adversary training to overcome observation perturbations.",
+      "tldr_cn": "多智能体强化学习模型在观测扰动下性能脆弱。现有对抗训练过拟合扰动且忽略主角策略先验。本文提出ATSA，在线训练随机对手，包含随机导演和生成器，引入主角策略先验，提升观测鲁棒性。实验证明其有效性。",
+      "title_zh": "鲁棒多智能体强化学习与随机对手",
+      "motivation_cn": "MARL模型对观测扰动敏感，现有对抗训练方法缺乏策略先验。",
+      "method_cn": "提出ATSA框架，在线训练随机对手，利用策略先验生成针对性扰动。",
+      "result_cn": "在多个MARL环境上提升了对抗扰动下的鲁棒性。",
+      "conclusion_cn": "在线随机对手训练能有效增强MARL模型的鲁棒性。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-vudwrmb3tx",
+      "score": 9.0,
+      "evidence_en": "directly addresses MARL generalization",
+      "evidence_cn": "直接研究多智能体强化学习的泛化问题",
+      "canonical_evidence": "直接研究多智能体强化学习的泛化问题",
+      "tldr_en": "Proposes CAID, a framework that generates agent identities via causal Transformer to improve MARL generalization across task variants.",
+      "tldr_cn": "针对多智能体强化学习在任务配置变化时泛化能力差的问题，提出上下文感知身份生成框架CAID。CAID利用因果Transformer架构动态生成智能体身份，通过上下文表示对齐相似问题变体中的对应智能体，促进策略复用并提升样本效率。实验证明该方法在Contextual MARL设定下显著提升了性能。",
+      "title_zh": "Reidentify：面向上下文多智能体强化学习的上下文感知身份生成",
+      "motivation_cn": "多智能体强化学习在现实应用中面临任务配置变化导致预训练策略失效的挑战。",
+      "method_cn": "提出CAID框架，利用因果Transformer解码器动态生成智能体身份，提供上下文表示以实现跨任务对齐。",
+      "result_cn": "在Contextual MARL设定下，CAID显著提升了样本效率和泛化性能。",
+      "conclusion_cn": "上下文感知身份生成是一种有效的多智能体强化学习泛化技术。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-q6zwuewkzl",
+      "score": 9.0,
+      "evidence_en": "analyzes cooperative behavior in multi-agent Q-learning",
+      "evidence_cn": "分析多智能体Q学习中的合作行为",
+      "canonical_evidence": "分析多智能体Q学习中的合作行为",
+      "tldr_en": "Proves that self-play multi-agent Q-learners converge to cooperative Pavlov policy in iterated prisoner's dilemma under broad conditions.",
+      "tldr_cn": "针对简单机器学习智能体在社会困境中涌现合作行为这一现象，为自对弈多智能体Q学习者在迭代囚徒困境中的合作行为提供了理论基础。刻画了智能体可证明学习到合作性帕夫洛夫策略而非总是背叛策略的广泛条件，并通过实验验证了理论结果在深度学习算法中的鲁棒性。",
+      "title_zh": "自对弈Q学习者在囚徒困境中可证明共谋",
+      "motivation_cn": "理解简单机器学习智能体为何在囚徒困境中涌现合作行为。",
+      "method_cn": "理论分析自对弈多智能体Q学习者的收敛特性，刻画合作条件。",
+      "result_cn": "证明了在广泛条件下智能体学习到合作性的帕夫洛夫策略。",
+      "conclusion_cn": "为多智能体强化学习中的合作行为提供了理论支撑。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-2sl6ex7vmo",
+      "score": 9.0,
+      "evidence_en": "direct MARL framework with human feedback",
+      "evidence_cn": "多智能体强化学习框架，集成人类反馈",
+      "canonical_evidence": "多智能体强化学习框架，集成人类反馈",
+      "tldr_en": "Proposes M3HF, a framework integrating multi-phase human feedback of mixed quality into MARL to improve reward design and policy alignment in coordinated environments.",
+      "tldr_cn": "针对多智能体强化学习中奖励函数设计困难的问题，提出M3HF框架，整合不同质量的多阶段人类反馈，利用大语言模型解析反馈并持续优化策略。实验表明该方法在多智能体协调场景中有效提升策略对齐和行为质量。",
+      "title_zh": "M³HF：基于多阶段混合质量人类反馈的多智能体强化学习",
+      "motivation_cn": "解决多智能体强化学习中奖励设计困难导致策略次优或行为失调的问题。",
+      "method_cn": "提出多阶段混合质量人类反馈框架，利用大语言模型解析人类反馈，在训练中定期暂停进行人类评估。",
+      "result_cn": "通过集成专家与非专家反馈，持续优化多智能体策略，提升协作环境中的行为对齐。",
+      "conclusion_cn": "M3HF有效利用混合质量人类反馈改进MARL训练，为奖励设计提供新思路。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-tcsdlqzznl",
+      "score": 9.0,
+      "evidence_en": "cooperative MARL with state modelling",
+      "evidence_cn": "合作多智能体强化学习与状态建模",
+      "canonical_evidence": "合作多智能体强化学习与状态建模",
+      "tldr_en": "Proposes a state modelling framework for cooperative MARL, enabling agents to infer meaningful belief representations under partial observability without communication.",
+      "tldr_cn": "针对分布式部分可观测环境中无通信的合作MARL挑战，提出状态建模框架，使智能体从局部观测推断有用信念表征，并利用该表征增强探索与协作策略。实验验证了该方法在合作任务上的有效性。",
+      "title_zh": "通过状态建模与对抗性探索增强合作多智能体强化学习",
+      "motivation_cn": "解决分布式部分可观测环境下无通信的多智能体协作学习难点。",
+      "method_cn": "提出状态建模框架，智能体推断非可观测状态的信念表征，并过滤冗余信息以优化策略。",
+      "result_cn": "在合作任务中显著提升探索效率与任务完成能力。",
+      "conclusion_cn": "状态建模有效促进无通信环境下的多智能体协作。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-323gznngqe",
+      "score": 9.0,
+      "evidence_en": "centralized training with decentralized execution (CTDE) for asynchronous MARL",
+      "evidence_cn": "针对异步多智能体的集中训练与分散执行",
+      "canonical_evidence": "针对异步多智能体的集中训练与分散执行",
+      "tldr_en": "Proposes ACAC algorithm to handle asynchrony in CTDE for MARL without padding, using agent-centric encoders and attention-based centralized critic.",
+      "tldr_cn": "针对宏动作引入的异步性问题，提出ACAC算法，采用智能体中心编码器独立处理轨迹，并通过注意力机制聚合历史信息构建集中式评论家，无需填充即可管理异步性，提升CTDE框架下的协调性能。",
+      "title_zh": "面向异步多智能体强化学习的智能体中心Actor-Critic",
+      "motivation_cn": "解决多智能体稀疏奖励环境中宏动作导致的异步性对CTDE的影响。",
+      "method_cn": "提出智能体中心编码器和注意力聚合模块的Actor-Critic算法，无需填充处理异步问题。",
+      "result_cn": "在稀疏奖励环境中有效提升协调性能。",
+      "conclusion_cn": "ACAC为异步MARL中的CTDE提供了有效解决方案。",
+      "matched_requirement_id": "req-4",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "centralized training for multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-vsijdkpgp8",
+      "score": 9.0,
+      "evidence_en": "MARL algorithm for role discovery",
+      "evidence_cn": "多智能体强化学习算法用于角色发现",
+      "canonical_evidence": "多智能体强化学习算法用于角色发现",
+      "tldr_en": "Introduces R3DM, a role-based MARL framework that discovers roles using dynamics models to shape future behavior for improved coordination.",
+      "tldr_cn": "现有角色发现方法仅从过去经验定义角色，忽略其对未来轨迹的影响。提出R3DM框架，通过动力学模型让角色塑造智能体未来行为，提升复杂任务中的协作效率。实验证明该方法在多个MARL基准测试中取得更好性能。",
+      "title_zh": "R3DM：通过动力学模型实现多智能体强化学习中的角色发现与多样性",
+      "motivation_cn": "现有角色方法忽略了角色对智能体未来行为的塑造作用，限制协调效果。",
+      "method_cn": "提出基于动力学模型的角色发现框架，使角色主动影响智能体未来轨迹。",
+      "result_cn": "在多个MARL基准任务中表现优异，提升协作效率。",
+      "conclusion_cn": "通过动力学模型实现前瞻性角色发现，有效增强多智能体协作。",
+      "matched_requirement_id": "req-7",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi agent reinforcement learning algorithms"
+    },
+    {
+      "paper_id": "openreview-icml-2025-al6qg8blkg",
+      "score": 9.0,
+      "evidence_en": "MARL curriculum learning with learning progress",
+      "evidence_cn": "基于学习进度的多智能体课程学习",
+      "canonical_evidence": "基于学习进度的多智能体课程学习",
+      "tldr_en": "Proposes a TD-error based learning progress measure for automatic curriculum in MARL, controlling agent number progression.",
+      "tldr_cn": "针对多智能体课程学习中人工定义难度和奖励方差问题，提出基于TD误差的学习进度度量，自动调整智能体数量作为课程变量，在多个MARL任务中提升学习效率。",
+      "title_zh": "学习进度驱动的多智能体课程学习",
+      "motivation_cn": "手动定义的课程存在缺陷，基于奖励的自动课程高方差且加剧信用分配问题。",
+      "method_cn": "使用TD误差衡量学习进度，自动推进智能体数量从少到多。",
+      "result_cn": "在多个MARL任务中加速学习并提升最终性能。",
+      "conclusion_cn": "基于学习进度的课程有效提升MARL训练效率。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-y34a82dptf",
+      "score": 9.0,
+      "evidence_en": "mean field control for sparse graphs in MARL",
+      "evidence_cn": "稀疏图上的平均场控制用于MARL",
+      "canonical_evidence": "稀疏图上的平均场控制用于MARL",
+      "tldr_en": "Proposes a mean field control model for sparse graphs in MARL, using local weak convergence to design scalable algorithms.",
+      "tldr_cn": "针对稀疏大规模智能体网络在MARL中的计算与理论挑战，提出基于局部弱收敛的平均场控制模型，覆盖幂律网络等稀疏图。设计可扩展学习算法，在合成示例上验证有效性。",
+      "title_zh": "稀疏图上的平均场控制学习",
+      "motivation_cn": "现有平均场方法仅适用于密集或中等稀疏网络，无法处理实际稀疏图。",
+      "method_cn": "基于局部弱收敛提出适用于稀疏图（如幂律网络）的平均场控制模型及可扩展算法。",
+      "result_cn": "在多种合成稀疏图示例上验证了模型和算法的有效性。",
+      "conclusion_cn": "将平均场MARL扩展至更现实的稀疏图场景，具备理论保证。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-fyvrnkyu6h",
+      "score": 9.0,
+      "evidence_en": "Offline multi-agent preference learning for cooperative MARL",
+      "evidence_cn": "离线多智能体偏好学习用于合作MARL",
+      "canonical_evidence": "离线多智能体偏好学习用于合作MARL",
+      "tldr_en": "O-MAPL introduces end-to-end preference-based learning for cooperative MARL by exploiting connection between reward and Q functions, enabling stable training.",
+      "tldr_cn": "针对多智能体强化学习中从人类偏好推断奖励函数的两阶段训练不稳定问题，本文提出O-MAPL，利用合作MARL中奖励函数与Q函数的内在联系，设计端到端偏好学习方法。在多个合作任务上，O-MAPL显著优于基线，训练更稳定，为多智能体偏好学习提供高效方案。",
+      "title_zh": "O-MAPL: 离线多智能体偏好学习",
+      "motivation_cn": "多智能体强化学习中奖励推断的两阶段训练不稳定，需要端到端方法。",
+      "method_cn": "利用合作MARL中奖励函数与Q函数的联系，提出端到端偏好学习框架。",
+      "result_cn": "在多个合作任务上优于现有基线，训练更稳定。",
+      "conclusion_cn": "O-MAPL为多智能体偏好学习提供稳定高效的解决方案。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-zbbysvgkub",
+      "score": 9.0,
+      "evidence_en": "Zero-shot multi-agent coordination via cross-environment cooperation",
+      "evidence_cn": "通过跨环境合作实现零样本多智能体协调",
+      "canonical_evidence": "通过跨环境合作实现零样本多智能体协调",
+      "tldr_en": "Cross-Environment Cooperation (CEC) trains agents on a distribution of environments with a single partner, enabling zero-shot coordination with many new partners on new tasks.",
+      "tldr_cn": "针对零样本协调问题，现有方法局限于单一任务导致泛化不足。本文提出跨环境合作（CEC）范式，通过在分布化环境中与单个搭档训练，使智能体学会通用合作技能。实验表明，CEC在大量未见过的搭档和任务上显著优于基线，推动了零样本协调的泛化能力。",
+      "title_zh": "跨环境合作实现零样本多智能体协调",
+      "motivation_cn": "现有零样本协调方法局限于单一任务，无法泛化到新任务。",
+      "method_cn": "提出跨环境合作范式，在分布化的环境中训练，学习通用合作技能。",
+      "result_cn": "在大量未见过的搭档和任务上超越基线，实现高效零样本协调。",
+      "conclusion_cn": "跨环境训练是提升多智能体协调泛化能力的有效途径。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-ffbnsyrspg",
+      "score": 9.0,
+      "evidence_en": "robust Markov games in MARL",
+      "evidence_cn": "多智能体鲁棒马尔可夫博弈",
+      "canonical_evidence": "多智能体鲁棒马尔可夫博弈",
+      "tldr_en": "Proposes a class of distributionally robust Markov games to overcome the curse of multiagency, achieving sample efficiency in multi-agent robust RL.",
+      "tldr_cn": "针对标准多智能体强化学习对仿真到现实差距的脆弱性，本文提出基于行为经济学启发的一类分布鲁棒马尔可夫博弈方法。该方法通过设计合理的不确定性集，并证明其能够克服多智能体诅咒，即在样本复杂度上实现与单智能体相当的指数级改进。实验验证了所提框架在鲁棒性任务上的有效性，为多智能体鲁棒学习提供了新视角。",
+      "title_zh": "打破多智能体鲁棒强化学习中的多智能体诅咒",
+      "motivation_cn": "标准MARL算法易受仿真与现实差距影响，现有鲁棒马尔可夫博弈在公式化和样本效率上存在挑战。",
+      "method_cn": "提出一类基于行为经济学启发的分布鲁棒马尔可夫博弈，定义合理不确定性集并设计样本高效算法。",
+      "result_cn": "理论证明所提方法能克服多智能体诅咒，样本复杂度不随智能体数量指数增长，实验验证鲁棒性提升。",
+      "conclusion_cn": "为多智能体鲁棒强化学习提供了可落实的框架，推动了鲁棒博弈的实践应用。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-jpkjayutw0",
+      "score": 9.0,
+      "evidence_en": "cooperative off-policy MARL with Q-target error analysis",
+      "evidence_cn": "合作离线多智能体强化学习中的Q目标估计问题",
+      "canonical_evidence": "合作离线多智能体强化学习中的Q目标估计问题",
+      "tldr_en": "Identifies extrapolation error in off-policy MARL joint Q-functions and proposes annealed multi-step boosting and other techniques to improve scalability.",
+      "tldr_cn": "合作多智能体强化学习在离线学习中面临联合Q函数的扩展误差问题，且随智能体数量增加而恶化。本文通过分析Q目标估计错误，提出包括退火多步提升在内的一系列技术，显著缓解了扩展误差，提升了可扩展性，并在多个合作任务上验证了方法的有效性。",
+      "title_zh": "重新审视合作离线多智能体强化学习",
+      "motivation_cn": "离线MARL中联合Q函数因扩展误差导致可扩展性差，且该误差随智能体数量加剧。",
+      "method_cn": "提出退火多步提升等技术，针对离策略MARL中的Q目标估计错误进行修正。",
+      "result_cn": "所提技术有效缓解扩展误差，在多个合作任务上实现更好性能。",
+      "conclusion_cn": "揭示了离策略MARL中的关键问题并提供了实用解决方案。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-mgjkeqc685",
+      "score": 9.0,
+      "evidence_en": "hypergraph coordination for cooperative MARL with dynamic grouping",
+      "evidence_cn": "基于超图协调的动态分组合作多智能体强化学习",
+      "canonical_evidence": "基于超图协调的动态分组合作多智能体强化学习",
+      "tldr_en": "Proposes HYGMA, a framework using dynamic spectral clustering and hypergraph networks for adaptive group formation in cooperative MARL.",
+      "tldr_cn": "合作多智能体强化学习中智能体关系组织与信息交换困难，本文提出HYGMA框架，通过动态谱聚类构建超图结构，并借助注意力机制增强智能体间高阶关系建模。该方法允许智能体自适应分组，提升大规模合作任务中的协调效率，实验显示其在多个基准上显著优于现有方法。",
+      "title_zh": "HYGMA：基于超图协调网络与动态分组的合作多智能体强化学习",
+      "motivation_cn": "现有方法难以动态组织智能体关系，缺乏高效信息交换。",
+      "method_cn": "动态谱聚类构建超图结构，结合注意力机制实现自适应分组与高阶关系建模。",
+      "result_cn": "在多个合作任务上超越现有方法，提升了协调效率和可扩展性。",
+      "conclusion_cn": "为动态协调的多智能体系统提供了有效框架。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-dqln1yfyxn",
+      "score": 9.0,
+      "evidence_en": "direct multi-agent reinforcement learning framework",
+      "evidence_cn": "直接使用多智能体强化学习框架",
+      "canonical_evidence": "直接使用多智能体强化学习框架",
+      "tldr_en": "Proposes DRMARL, a distributionally robust multi-agent RL framework for dynamic chute mapping in warehouses, ensuring resilience to adversarial variations in induction rates.",
+      "tldr_cn": "亚马逊仓库的动态滑坡映射问题因包裹投递率不确定而具有挑战性。本文提出分布鲁棒多智能体强化学习框架，使用群体分布鲁棒优化学习策略，使其在平均情况和各子群体上均表现良好。实验证明该方法能有效减少包裹回流，提高系统鲁棒性。",
+      "title_zh": "用于动态滑坡映射的分布鲁棒多智能体强化学习",
+      "motivation_cn": "动态滑坡映射中投递率不确定导致包裹回流增加，传统方法难以应对。",
+      "method_cn": "提出分布鲁棒多智能体强化学习框架，结合群体分布鲁棒优化学习抗干扰映射策略。",
+      "result_cn": "在亚马逊仓库场景下，所提方法显著降低了包裹回流率，提升了系统鲁棒性。",
+      "conclusion_cn": "分布鲁棒优化能有效增强多智能体强化学习在动态环境下的稳定性和性能。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-1iny6xlon0",
+      "score": 9.0,
+      "evidence_en": "focus on cooperative MARL robustness against coordinated attacks",
+      "evidence_cn": "聚焦于合作多智能体强化学习中的鲁棒性",
+      "canonical_evidence": "聚焦于合作多智能体强化学习中的鲁棒性",
+      "tldr_en": "Proposes Wolfpack attack and WALL defense for cooperative MARL, inspired by wolf hunting, to improve robustness against coordinated adversarial attacks.",
+      "tldr_cn": "合作多智能体强化学习易受协调对抗攻击。本文受狼群狩猎策略启发，提出狼群对抗攻击框架，通过干扰初始代理及其辅助代理破坏合作。同时提出WALL防御框架，训练鲁棒策略促进系统协作。实验表明攻击极具破坏性，而WALL显著提升鲁棒性。",
+      "title_zh": "面向鲁棒多智能体强化学习的狼群对抗攻击",
+      "motivation_cn": "现有鲁棒方法难以抵御合作场景中的协调对抗攻击。",
+      "method_cn": "提出狼群对抗攻击及基于合作训练的WALL防御框架。",
+      "result_cn": "狼群攻击能有效破坏合作，WALL防御显著提升系统鲁棒性。",
+      "conclusion_cn": "合作多智能体系统需针对性设计鲁棒机制，WALL提供有效方案。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-qutxbtsfwp",
+      "score": 9.0,
+      "evidence_en": "improves value decomposition for cooperative MARL",
+      "evidence_cn": "改进合作多智能体强化学习中的价值分解",
+      "canonical_evidence": "改进合作多智能体强化学习中的价值分解",
+      "tldr_en": "Fixes representation limitations of IGM-based value decomposition by proposing QFIX, a minimalistic family of methods that expand expressiveness for cooperative MARL.",
+      "tldr_cn": "合作多智能体强化学习的价值分解方法需满足个体-全局最大条件，但现有方法表示能力有限。本文揭示IGM的最小化形式，提出QFIX系列方法，通过简单修正显著扩展表示能力。实验表明QFIX在多种合作任务上优于先前方法，性能提升明显。",
+      "title_zh": "修复多智能体强化学习中的价值函数分解",
+      "motivation_cn": "现有满足IGM的价值分解方法表示能力受限，阻碍性能。",
+      "method_cn": "提出基于最小化IGM形式的QFIX价值分解方法族。",
+      "result_cn": "QFIX在合作多智能体任务中超越现有方法，计算开销小。",
+      "conclusion_cn": "简洁的IGM公式可显著提升价值分解方法的表征和性能。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-axqgpcl90a",
+      "score": 9.0,
+      "evidence_en": "focuses on equilibrium selection in game-theoretic multiagent RL using PSRO",
+      "evidence_cn": "聚焦于博弈论多智能体强化学习中的均衡选择",
+      "canonical_evidence": "聚焦于博弈论多智能体强化学习中的均衡选择",
+      "tldr_en": "Extends PSRO with explicit exploration for high-welfare equilibria in game-theoretic multiagent RL, using imitation of high-welfare behavior.",
+      "tldr_cn": "在博弈论多智能体强化学习中，存在多个均衡时如何选择高福利均衡是挑战。本文在策略空间响应谱框架中引入显式探索，通过模仿高福利行为生成探索策略，并训练正则化响应。实验表明该方法能发现更优福利均衡，且计算成本低。",
+      "title_zh": "博弈论多智能体强化学习中高福利均衡的显式探索",
+      "motivation_cn": "多种均衡存在时，需要偏好高福利均衡，现有方法缺乏显式探索。",
+      "method_cn": "在PSRO框架中，通过模仿高福利行为生成探索策略，并添加正则化。",
+      "result_cn": "在典型博弈任务中找到更高福利的均衡。",
+      "conclusion_cn": "显式探索能有效引导博弈论多智能体强化学习向高福利均衡收敛。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-px29zf9wrb",
+      "score": 8.0,
+      "evidence_en": "MARL applied to global climate cooperation modeling",
+      "evidence_cn": "MARL应用于全球气候合作建模",
+      "canonical_evidence": "MARL应用于全球气候合作建模",
+      "tldr_en": "RICE-N uses MARL to simulate global climate negotiations and agreements, enabling agents to develop strategic behaviors for long-term cooperation.",
+      "tldr_cn": "全球气候合作面临复杂博弈挑战。本文提出RICE-N模型，利用多智能体强化学习模拟多个区域在气候谈判中的策略行为。智能体在没有中央权威的情况下学习长期合作策略，实验表明MARL能有效促进气候协议达成并平衡经济发展。",
+      "title_zh": "AI推动全球气候合作：在RICE-N中建模全球气候谈判、协议与长期合作",
+      "motivation_cn": "全球气候合作缺乏中央权威，需要模型模拟复杂博弈。",
+      "method_cn": "使用多智能体强化学习（MARL）驱动智能体在集成评估模型RICE-N中学习合作策略。",
+      "result_cn": "MARL智能体能够达成有效气候协议，支持长期合作。",
+      "conclusion_cn": "MARL是模拟和促进全球气候合作的有力工具。",
+      "matched_requirement_id": "req-8",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi agent reinforcement learning applications"
+    },
+    {
+      "paper_id": "openreview-icml-2025-mhynndbaj8",
+      "score": 8.0,
+      "evidence_en": "theoretical study on multi-agent concurrent exploration using randomized value functions",
+      "evidence_cn": "多智能体并发探索的理论研究",
+      "canonical_evidence": "多智能体并发探索的理论研究",
+      "tldr_en": "Extends randomized least-squares value iteration to concurrent multi-agent learning, proving polynomial regret bounds with aggregated states.",
+      "tldr_cn": "在复杂环境中多智能体如何高效探索是挑战。本文将随机最小二乘值迭代扩展到并发学习框架，在聚合状态表示下建立多项式后悔界。理论证明随机化有助于多智能体协作探索，为分布式多智能体强化学习提供理论基础。",
+      "title_zh": "基于随机最小二乘值迭代的聚合状态并发强化学习",
+      "motivation_cn": "单智能体随机化探索有效，但多智能体并发探索的理论未知。",
+      "method_cn": "将随机最小二乘值迭代扩展到并发多智能体学习，使用聚合状态表示。",
+      "result_cn": "给出多项式遗憾上界，证明随机化可促进多智能体探索。",
+      "conclusion_cn": "随机化价值函数是提升多智能体系统探索效率的有效工具。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-tl3flgwsca",
+      "score": 7.0,
+      "evidence_en": "ad hoc teamwork via offline goal-based decision transformers, cooperative multi-agent",
+      "evidence_cn": "离线目标决策变换器的临时团队合作，协作多智能体",
+      "canonical_evidence": "离线目标决策变换器的临时团队合作，协作多智能体",
+      "tldr_en": "Extends ad hoc teamwork to offline setting with TAGET framework, using hierarchical sequence modeling for teammate-aware reward prediction.",
+      "tldr_cn": "临时团队合作（AHT）需要在线交互与精心设计的队友，这在实际中不可行。本文将AHT扩展到离线场景，提出TAGET层次化序列建模框架，动态预测考虑队友的奖励-待完成量，解决离线数据有限、部分可观测和在线适应问题。实验证明了其有效性。",
+      "title_zh": "基于离线目标决策变换器的临时团队合作",
+      "motivation_cn": "现有AHT要求在线交互与设计队友，实际难以满足。",
+      "method_cn": "提出TAGET框架，利用层次化序列建模从离线数据集学习队友感知的奖励预测。",
+      "result_cn": "在离线AHT场景中显著优于基线。",
+      "conclusion_cn": "离线序列建模可有效解决临时团队合作中的关键挑战。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-rqwexjucxm",
+      "score": 7.0,
+      "evidence_en": "uses RL for multi-agent coordination modeled as incomplete-information game",
+      "evidence_cn": "将多智能体协调建模为不完全信息博弈并利用强化学习求解贝叶斯纳什均衡",
+      "canonical_evidence": "将多智能体协调建模为不完全信息博弈并利用强化学习求解贝叶斯纳什均衡",
+      "tldr_en": "Introduces ECON, a hierarchical RL paradigm for multi-LLM reasoning that achieves Bayesian Nash equilibrium via distributed reasoning and centralized output.",
+      "tldr_cn": "针对多智能体LLM推理计算成本高且缺乏收敛保证的问题，将多LLM协调建模为不完全信息博弈并寻求贝叶斯纳什均衡。提出ECON框架，采用分层强化学习范式，结合分布式推理与集中式最终输出。每个LLM基于对其他智能体策略的信念独立选择响应以最大化期望奖励。实验表明ECON有效提升了推理效率并保证了收敛。",
+      "title_zh": "从辩论到均衡：基于贝叶斯纳什均衡的信念驱动多智能体LLM推理",
+      "motivation_cn": "多智能体LLM推理存在计算开销大和缺乏收敛保证的问题。",
+      "method_cn": "将多LLM协调视为不完全信息博弈，提出ECON分层RL框架实现分布式推理与集中输出。",
+      "result_cn": "ECON在提升推理效率的同时保证了收敛性。",
+      "conclusion_cn": "将多智能体协调与博弈论结合是提升LLM推理能力的有效途径。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-htp5yrxcs9",
+      "score": 7.0,
+      "evidence_en": "provides a platform for creating multi-agent environments",
+      "evidence_cn": "提供了一个创建多智能体环境的平台",
+      "canonical_evidence": "提供了一个创建多智能体环境的平台",
+      "tldr_en": "Introduces Craftium, a customizable platform for building rich 3D single- and multi-agent RL environments, balancing flexibility and efficiency.",
+      "tldr_cn": "针对现有2D环境无法满足3D空间推理需求而3D环境计算昂贵且缺乏多智能体支持的问题，提出Craftium平台。该平台高度可定制且易于使用，支持构建丰富的3D单智能体和多智能体环境。展示了从简单到复杂的多种环境，为多智能体强化学习研究提供了灵活的测试平台。",
+      "title_zh": "Craftium：为丰富的3D单智能体和多智能体环境搭建灵活与高效的桥梁",
+      "motivation_cn": "现有环境要么缺乏3D能力，要么计算昂贵且不支持多智能体。",
+      "method_cn": "设计并实现了Craftium平台，支持快速构建3D单/多智能体环境。",
+      "result_cn": "Craftium能够灵活高效地创建不同复杂度的3D环境。",
+      "conclusion_cn": "Craftium为多智能体强化学习提供了实用的环境平台。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-akvy9a4jho",
+      "score": 4.0,
+      "evidence_en": "knowledge-aware bayesian bandits for dynamic expert coordination in multi-agent systems",
+      "evidence_cn": "多智能体系统中基于知识感知贝叶斯臂的动态专家协调",
+      "canonical_evidence": "多智能体系统中基于知识感知贝叶斯臂的动态专家协调",
+      "tldr_en": "Introduces KABB framework for multi-agent coordination using semantic understanding and dynamic Thompson sampling.",
+      "tldr_cn": "多智能体系统在大语言模型成本高企下成为替代方案，但面临静态知识和协调低效问题。本文提出KABB框架，内含知识距离模型、双适应机制和知识感知汤普森采样，实现语义驱动的动态专家协调。实验表明其达到最优成本性能权衡。",
+      "title_zh": "KABB：多智能体系统中知识感知贝叶斯臂的动态专家协调",
+      "motivation_cn": "多智能体系统存在静态知识假设与协调低效。",
+      "method_cn": "构建知识距离模型与双适应机制，采用知识感知汤普森采样进行专家选择。",
+      "result_cn": "在成本与性能间达到最优平衡，维持高协调性能。",
+      "conclusion_cn": "语义理解的贝叶斯方法可有效提升多智能体协调效率。",
+      "matched_requirement_id": "req-2",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning"
+    },
+    {
+      "paper_id": "openreview-icml-2025-0n2nxmoxzs",
+      "score": 4.0,
+      "evidence_en": "federated Q-learning with multi-agent regret analysis",
+      "evidence_cn": "联邦Q学习与多智能体遗憾分析",
+      "canonical_evidence": "联邦Q学习与多智能体遗憾分析",
+      "tldr_en": "Provides gap-dependent regret and communication cost bounds for federated Q-learning, revealing multi-agent speedup patterns.",
+      "tldr_cn": "提出首个基于间隙的联邦Q学习遗憾与通信代价分析，利用MDP良性结构实现对数级遗憾界，并揭示多智能体加速模式。非典型MARL方法，但涉及多智能体学习理论。",
+      "title_zh": "联邦Q学习的间隙依赖界",
+      "motivation_cn": "现有联邦强化学习方法仅关注最坏情况，未利用MDP结构。",
+      "method_cn": "基于子优间隙的间隙依赖分析框架，优化探索与利用平衡。",
+      "result_cn": "获得对数级遗憾界和更优的通信成本界，发现多智能体加速模式。",
+      "conclusion_cn": "为联邦Q学习提供更精细的理论保证，揭示多智能体优势。",
+      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning"
+    }
+  ],
+  "llm_ranked_at": "2026-05-30T12:49:08.677554+00:00",
+  "display_min_score": 4.0,
+  "pruned_at": "2026-05-30T12:49:08.718205+00:00"
+}
