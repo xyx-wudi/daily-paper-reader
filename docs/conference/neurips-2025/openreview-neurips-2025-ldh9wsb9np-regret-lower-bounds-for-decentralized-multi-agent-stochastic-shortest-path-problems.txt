@@ -1,0 +1,6588 @@
+Title: 13417_Regret_Lower_Bounds_for_.pdf
+
+URL Source: https://openreview.net/pdf?id=lDh9wSb9nP
+
+Number of Pages: 45
+
+Markdown Content:
+# Regret Lower Bounds for Decentralized Multi-Agent Stochastic Shortest Path Problems 
+
+Utkarsh U. Chavan 
+
+Department of Mechanical Engineering Indian Institute of Technology Bombay Mumbai India 400076 
+
+utkarshuchavan007@gmail.com 
+
+Prashant Trivedi 
+
+Computer Science and Information Systems BITS Pilani, Pilani Campus Rajasthan 333031 
+
+iitb.pt@gmail.com 
+
+Nandyala Hemachandra 
+
+Industrial Engineering and Operations Research Indian Institute of Technology Bombay Mumbai India 400076 
+
+nh@iitb.ac.in 
+
+## Abstract 
+
+Multi-agent systems (MAS) are central to applications such as swarm robotics and traffic routing, where agents must coordinate in a decentralized manner to achieve a common objective. Stochastic Shortest Path (SSP) problems provide a natural framework for modeling decentralized control in such settings. While the problem of learning in SSP has been extensively studied in single-agent settings, the decentralized multi-agent variant remains largely unexplored. In this work, we take a step towards addressing that gap. We study decentralized multi-agent SSPs (Dec-MASSPs) under linear function approximation, where the transition dynamics and costs are represented using linear models. Applying novel symmetry-based arguments, we identify the structure of optimal policies. Our main contribution is the first regret lower bound for this setting based on the construction of hard-to-learn instances for any number of agents, n. Our regret lower bound of Ω( √K),over K episodes, highlights the inherent learning difficulty in Dec-MASSPs. These insights clarify the learning complexity of decentralized control and can further guide the design of efficient learning algorithms in multi-agent systems. 
+
+## 1 Introduction 
+
+The Stochastic Shortest Path (SSP) problem is a foundational model for goal-oriented decision-making under uncertainty, extending classical shortest path formulations by incorporating stochastic transitions and random costs [ 6, 4 ]. In an SSP, an agent sequentially selects actions in a probabilistic environment with the objective of reaching a designated terminal state while minimizing the expected cumulative cost. By explicitly modeling uncertainty in outcomes, SSP serves as a core abstraction in many areas, including robotics, automated planning and reinforcement learning. While planning in fully known SSPs is well understood [ 5], the focus has increasingly shifted to the learning setting, where the agent must learn the optimal policy through interaction with the environment. The quality of learning algorithms is typically measured using the notion of regret , which quantifies the difference between the cost incurred by following a learning algorithm and the optimal policy [11, 3, 2]. Given its broad applicability, the problem of learning optimal policies in tabular SSP environments has garnered significant attention, leading to algorithms with near-optimal regret guarantees [ 20 , 18 , 21 , 7]. However, in many real-world applications, the state and action spaces are humongous, making tabular 
+
+39th Conference on Neural Information Processing Systems (NeurIPS 2025). approaches computationally infeasible. To overcome this, recent works have assumed linear structure in the cost function or transition dynamics [ 25 , 14 , 24 ]. These approaches have led to algorithms that achieve sublinear regret in SSPs with either known or unknown cost settings, along with tight upper and lower bounds on regret [20, 18, 7, 14, 24], making the single-agent SSP well understood. Despite significant progress in single agent SSPs, many real-world applications such as robotics, traffic routing, and distributed control naturally involve multiple agents interacting in a shared environment [ 9, 16 , 1 , 13 ]. These multi-agent systems are often decentralized, meaning agents cannot or choose not to share private information (e.g., their actions or incurred costs). However, they can exchange certain parameters (e.g., cost or transition parameter estimates) over a predefined communication graph. Motivated by this, [ 23 ] introduced the decentralized multi-agent stochastic shortest path (Dec-MASSP) problem with linear function approximations of transition dynamics and costs. They propose a learning algorithm and report a sub-linear regret upper bound of eO(B∗1.5dpnK/c min ),where n is the number of agents, K is the number of episodes, d is the individual feature dimension, 
+
+B∗ is the maximum expected cost-to-go, and cmin > 0 is a lower bound on per-period cost. While it provides the first regret guarantees for Dec-MASSPs, optimality of their algorithm remains open leading us to a central question: 
+
+What are the fundamental limits of learning in Dec-MASSPs with linear function approximations? 
+
+To address this question, we establish tight regret lower bounds for the decentralized MASSP setting by constructing hard-to-learn instances. Extending single-agent SSP lower bound techniques [ 14 , 18 ]to decentralized MASSPs presents several key challenges, which we overcome using novel methods. (i) Exponential state-action space. Even with just two nodes in the network, the global state space grows as 2n with the number of agents n, which complicates both instance construction and lower bound analysis. To address this in the linear setting, we introduce a novel feature design for the transition probabilities specific to our MASSP instances. These features lead to a valid transition probability distribution and can serve as a foundational approach for feature design in other decentralized multi-agent reinforcement learning (MARL) applications. (ii) Coupled costs and dynamics. In the MASSP setting, both transition probabilities and cost functions are inherently coupled across agents, depending on the global state-action space. To construct hard-to-learn instances and establish a meaningful regret lower bound, we first demonstrate that it suffices to restrict the analysis to uniform cost. We derive closed-form expressions for the transition probabilities using our novel feature design. This explicit formulation allows us to identify the structure of optimal actions, making our approach both tractable and novel. (iii) Intractable value functions. Unlike the single-agent setting with two nodes [ 14 ], where a closed-form expression for the optimal value of the non-goal state can be exactly derived, obtaining similar expressions for the many non-goal states in multi-agent systems is significantly challenging due to exponentially many states. To address this, we observe that this huge state space can be partitioned based on the number of agents present at each node. This key insight allows us to establish a monotonicity property of the value function, which in turn is sufficient to derive regret lower bounds without requiring its explicit closed-form. (iv) Bounding KL divergence. A standard approach for deriving regret lower bound relies on information-theoretic techniques, particularly bounding the Kullback–Leibler (KL) divergence be-tween two distributions. In the SSP setting [ 14 ], the KL divergence reduces to just two analytically tractable terms. However, in the MASSP setting, the KL divergence involves an exponential number of terms, making exact analysis intractable. To overcome this, we exploit the non-negativity of the KL divergence and leverage the symmetry in our problem instances, which allows us to bound the KL divergence efficiently depending on the number of agents present at each node. Building on the challenges outlined above and the novel methods we use to address them, we now summarize the major contributions of our work. • Regret lower bounds: We establish the first Ω( √K) regret lower bound for decentralized MASSPs under linear function approximation, which matches the previously reported upper bound up to constant and poly-logarithmic factors [ 23 ], thereby providing a precise characterization of the fundamental limits of learning in these settings. Notably, our result also recovers the lower bound of [14] as a special case of n = 1 , which matches the corresponding upper bound in K.2• Design of hard-to-learn MASSP instances: The above regret bound is based on a proposed family of decentralized MASSP instances with linearly parameterized costs and transitions that are provably hard-to-learn. As scalability with n is a key factor in evaluating the efficiency of MARL algorithms, our increasingly hard-to-learn instances (with respect to n) are suitable to assess the performances of such algorithms. • First analysis of instances with exponential state-action space : Our lower bound analysis is the first to handle exponential state and action space in MASSP settings. These lower bounds are based on the identification of optimal policies and value functions in two-node MASSPs. These optimal policies have the same values for all states with identical number of agents at each node. 
+
+1.1 Related work Stochastic shortest path (SSP) problems and learning in tabular setting. The stochastic shortest path (SSP) problem is a classical framework introduced in early work by [ 8]. [ 6] later extended deterministic shortest path theory to stochastic environments, formalizing the SSP setting within dynamic programming. More recently, the focus has shifted toward learning in SSPs under unknown dynamics, in the tabular settings. Authors in [ 20 ] introduced Upper Confidence SSP (UC-SSP), the first no-regret algorithm for tabular SSPs, with regret eO(DS pADK/c min ), where D is the expected hitting time and cmin the minimum per-period cost, S and A denote the cardinality of state and action space and K is the number of episodes. Follow-up work by [ 18 ] improved this bound by removing the cmin dependence and gave a lower bound of Ω( B∗√SAK ), where B∗ captures the maximum optimal cost-to-go, showing near-optimality. [ 21 ] further refined SSP learning through Exploration Bonus for SSP (EB-SSP), a model-based algorithm with regret eO(B∗√SAK ), that doesn’t require prior knowledge of B∗. [ 7] introduced a minimax-optimal algorithm under stochastic costs with matching bounds by reducing the SSP to a finite-horizon MDP. 
+
+Function approximation in SSPs. To address scalability beyond the tabular regime, recent efforts have explored SSPs under linear function approximation. [ 24 ] designed a model-free algorithm with sub-linear regret and is computationally efficient under minimal assumptions, using stationary policies. Parallelly, [ 14 ] proposed two algorithms, each based on Hoeffding-type and Bernstien-type sets. The Bernstien-type confidence set based algorithm has a better regret upper bound of 
+
+eO(dB ∗pK/c min ). Additionally, the paper provides a lower bound Ω( dB ∗√K) in this setting. 
+
+Decentralized multi-agent SSP. The extension of SSP learning to decentralized multi-agent sys-tems is still in its early stages. Authors in [ 23 ] introduced the MASSP framework with linearly parameterized costs and transitions, and proposed MACCM- a decentralized learning algorithm, reporting a regret upper bound of eO(B∗1.5dpnK/c min ), where n is the number of agents. However, their work does not establish any lower bounds, leaving open the fundamental questions regarding inherent difficulty and optimal regret rates for decentralized MASSP learning. We close this gap by establishing the first regret lower bounds for decentralized MASSPs (with any number of agents, n)under linear transition kernel. Table 1 summarizes the relevant results. 
+
+## 2 Preliminaries and problem formulation 
+
+In this section, we introduce the Multi-Agent Stochastic Shortest Path (MASSP) problem, and also present the formal setup and notations that underpin the decentralized learning framework. 
+
+2.1 Notations and preliminaries 
+
+A MASSP problem is defined by the tuple (V, N , P, A), where V = {v1, v 2, . . . , v q } is the set of nodes and N = {1, 2, . . . , n } is the set of agents. Each agent occupies exactly one node at any given time, leading to a global system state s = ( s1, s 2, . . . , s n) in the global state space 
+
+S = Vn; so |S| = qn. We assume that all agents start at the same node s and aim to reach the common goal node g, resulting in initial and goal states sinit = ( s, . . . , s ) and g = ( g, . . . , g ),respectively. Each agent i ∈ N has a finite action space Ai at every node, leading to a joint action 
+
+a = ( a1, . . . , a n) ∈ A = A1 × · · · × A n. Once an action a is taken in the state s, the system evolves 3Reference Setting Upper Bound Lower Bound                                  
+
+> [20] •eO(DS pADK/c min )–[18] •eO(B∗S√AK )Ω( B∗√SAK )
+> [7] when B∗>1•eO(B∗√SAK )–[7] when B∗<1•eO(√B∗SAK )Ω( √B∗SAK )
+> [14] ⋆eO(dB ∗pK/c min )Ω( dB ∗√K)
+> [24] ⋆eO(dB ∗pdB ∗K/c min +B∗2d3/c min )–[23] ‡eO(B∗1.5dpnK/c min )–
+> This work ‡–Ω
+> d√KB ∗/n
+> 2n
+> 
+
+Table 1: Comparison of related work in SSP learning and decentralized multi-agent SSPs. Here S
+
+and A denote the number of states and actions, respectively; K is the number of episodes; cmin > 0
+
+is a lower bound on the minimum per-period cost to an agent; B∗ is the SSP diameter, defined as the maximum (over all states) of the expected cost to reach goal under the optimal policy; D is the expected hitting time defined, as the maximum over all states, of the minimum (over policies of) expected time to reach goal state starting from this state. Symbols: • = tabular SSP (no function approximation), ⋆ = linear mixture SSP (with linear function approximation), ‡ = decentralized MA-SSP (with linear function approximation). to next state s′ according to a Markovian transition kernel P(· | s, a) and each agent i ∈ N incurs an instantaneous cost ci(s, a) ∈ [cmin , 1] , where cmin > 0.The cost function ci(s, a) captures complex dependencies of individual costs on both the positions and actions of all agents. For example, the cost can be modeled by taking ci(s, a) = xi(s, a) · Ki(s, a)
+
+where xi(s, a) := Pnj=1 1{aj =ai} is the congestion (number of agents choosing the same action) and Ki(s, a) encodes the cost due to private efficiency and all other complex dependencies (except congestion). The global cost is defined as the average of individual costs: c(s, a) = 1
+
+> n
+
+Pni=1 ci(s, a).A stationary Markov deterministic policy is a mapping π : S → A . Given the stationary Markovian dynamics P and cost c, an optimal policy lies in the class ΠMD of Markov deterministic policies [ 17 ]. We further focus on the class of proper policies Πp ⊆ ΠMD , i.e., the policies for which each agent reaches the goal node, g from any initial state with probability one [ 20 , 21 , 7 , 14 ]. Given any proper policy π ∈ Πp, the value function (or cost-to-go function) is defined as V π (s) = 
+
+E
+
+hPτ π (s) 
+
+> t=1
+
+c(st, π (st)) s1 = s
+
+i
+
+, where the expectation is over all sample paths due to interaction of policy π and transition kernel P. τ π (s) is the random time to reach the goal state g under policy π
+
+starting at s. The objective is to find a policy that minimizes the expected cumulative global cost from the initial state sinit to the goal state g. The optimal value function with the corresponding optimal policy π∗ is thus 
+
+V ∗(s) = min 
+
+> π∈Πp
+
+V π (s). (1) We further define the diameter of MASSP as B∗ = max s∈S V ∗(s).
+
+2.2 Problem formulation 
+
+When transition kernel P and cost c(·, ·) are known, the objective of MASSP problem is to find an optimal policy in the space of proper policies, as in Equation (1) . However, in the learning setting with unknown transition kernel P or cost c(·, ·), agents must actively explore to learn an optimal policy. Though the goal is to minimize the cumulative global cost to reach g, agents in our setup act independently and lack knowledge of others’ actions or costs. A natural solution is to employ a central controller that aggregates signals from all agents to coordinate learning [ 26 ]. However, such centralization poses several challenges: (i) poor scalability with the number of agents due to increased communication overhead [ 12 ] (ii) vulnerability to single-point failures and adversarial attacks [ 27 ], and (iii) privacy concerns, as agents may be unwilling to reveal their individual costs. These limitations motivate decentralized learning, where the agents do not explicitly share the actions 4or private costs among themselves via a central controller. This setting falls within the purview of Decentralized Multi-Agent Reinforcement Learning (Dec-MARL). To make decentralized learning tractable, prior works (e.g., [ 27 , 22 ]) adopt linear cost approximations as c(s, a) = ⟨ψ(s, a), w⟩, where ψ(s, a) ∈ Rnd is a known feature map, and w ∈ Rnd is an unknown parameter, with nd << |S||A| . This allows agents to coordinate via shared parameter estimates rather than raw cost values. Given the large state-action space, we also assume a linear model of transitions, commonly used in recent literature. [14, 23] 
+
+Assumption 1. For every (s, a, s′) ∈ S × A × S , there exists known features ϕ(s′|s, a) ∈ Rnd and unknown parameter θ ∈ Rnd with d ≥ 2 such that P(s′|s, a) = ⟨ϕ(s′|s, a), θ ⟩.
+
+We design the features ϕ(s′|s, a) specific to our setting in the next section. We refer to this setting as the Linear Mixture Multi-Agent Stochastic Shortest Path (LM-MASSP). 
+
+Algorithm. Analogous to [ 10 , 15 ], we define a general (possibly randomized) Dec-MARL algorithm as a sequence of deterministic functions π = {πt}∞
+
+> t=1
+
+, where at each time step t, the algorithm specifies a policy πt = ( πt
+
+> 1
+
+, . . . , π tn). Here πti : Hti → ∆( Ai) maps the history observed by agent i
+
+to a distribution over its action space Ai, from which the agent samples its action. Each history Hti
+
+consists of the agent’s past observations- own actions and rewards, along with any information it may have received from other agents in the network. To maintain generality, we do not impose any specific communication protocol; thus, our analysis and results hold for a broad range of settings, from full information sharing to completely communication free (Note that in communication free system, our lower bounds are trivial since the global optimal policy cannot be learned [27]). 
+
+Performance criteria. Let (sk,h , ak,h ) denote the state-action pair encountered at step h of episode 
+
+k under a given algorithm π and model parameter θ. Let hk represent the (random) length of episode 
+
+k. The expected cumulative regret after K episodes is defined as 
+
+Eθ,π [R(K)] = Eθ,π 
+
+" KX
+
+> k=1
+> hk
+
+X
+
+> h=1
+
+c(sk,h , ak,h )
+
+#
+
+− K · V ∗(sinit ). (2) The above regret measures the difference between the total expected cost by following the algorithm π
+
+instead of (unknown) optimal policy. A desirable algorithm achieves sublinear regret in K, indicating that it eventually learns an optimal policy. In the setting described above, [ 23 ] propose an algorithm with expected cumulative regret eO(√K). However, the optimality of this algorithm has not yet been established raising questions such as: Are better learning algorithms possible in this setting? If so, in what aspects can they improve compared to the existing one? To answer these questions, it is essential to derive tight regret lower bounds. Hence, we construct hard-to-learn instances with tractable optimal policies and analyze the regret of any algorithm. Following [ 2], we consider deterministic algorithms, though similar analysis extends to randomized algorithms, only at the expense of notational overhead. 
+
+## 3 Our approach 
+
+In this section, we construct a family of provably hard instances for LM-MASSP. These are designed so that the optimal policy is analytically tractable, where any deviation leads to measurable regret. 
+
+3.1 Construction of hard-to-learn LM-MASSP instances 
+
+We consider a minimal yet expressive network with only two nodes: V = {s, g } with n agents. This induces a global state space S = {s, g }n of size |S| = 2 n, where any agent can either be at s or g. We fix the initial state as sinit = ( s, s, . . . , s ) and the goal state as g = ( g, g, . . . , g ). We assume that once an agent reaches node g, it is impossible to go back to node s. Each agent i ∈ [n] has the same action set Ai = {− 1, 1}d−1, for some d ≥ 2. Consequently, the global action space is A = {− 1, 1}n(d−1) 
+
+with |A| = 2 n(d−1) . We parameterize transition probabilities according to Assumption 1. Next, we define features ϕ(s′|s, a), which may be of independent interest to the MARL community, as it offers practical guidance for designing valid feature representations 1. We represent the concatenation of 
+
+> 1While there are many possible ways to design features, any valid feature construction must satisfy the conditions specified in Lemma 1 below.
+
+5vectors x and y by (x, y ).
+
+ϕ(s′ | s, a) = 
+
+ ϕ1(s′
+
+> 1
+
+|s1, a 1)⊤, . . . , ϕ n(s′
+
+> n
+
+|sn, a n)⊤⊤ , if s̸ = g and s′ 
+
+> i
+
+= g if si = g ∀ i ∈ [n]
+
+0nd , if si = g, s ′ 
+
+> i
+
+= s for any i ∈ [n](0⊤
+
+> nd −1
+
+, 1) ⊤, if s = g, s′ = g
+
+(3) where for every agent i ∈ N the feature map ϕi(s′ 
+
+> i
+
+| si, a i) is defined as follows 
+
+ϕi(s′
+
+> i
+
+|si, a i) = 
+
+ −a⊤ 
+
+> i
+
+, 1−δn·2r−1
+
+⊤ , if si = s′ 
+
+> i
+
+= s
+
+ a⊤ 
+
+> i
+
+, δn·2r−1
+
+⊤ , if si = s, s ′ 
+
+> i
+
+= g
+
+ 0⊤
+
+> d−1
+
+, 1
+
+> n·2r
+
+⊤ , if si = g, s ′ 
+
+> i
+
+= g. 
+
+(4) In the above, r denotes the number of agents at node s in the current global state s ∈ S . The parameters δ and ∆ are chosen such that δ ∈   25 , 12
+
+ and ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+) (details are available in the next section). Furthermore, the transition model is parameterized by a vector θ ∈ Rnd of the form 
+
+θ = ( θ1, 1, θ 2, 1, . . . , θ n, 1) ⊤, where each θi ∈
+
+n
+
+− ∆ 
+
+> n(d−1)
+
+, ∆
+
+> n(d−1)
+
+od−1
+
+. Let the set of all such θ be 
+
+Θ. Thus, |Θ| = 2 n(d−1) . For any i ∈ [n] and p ∈ [d − 1] , we denote the pth component of ai and θi
+
+as ai,p and θi,p , respectively. These parameters along with the features ϕ(.|., . ) define the transition probabilities as in Assumption 1. Observe that the first case in Eqn (3) captures general transitions, the second captures disallowed transitions and the third corresponds to the only certain transition. 
+
+Instances. With the above construction, we define hard-to-learn LM-MASSP instances by varying key problem parameters while maintaining analytical tractability of the optimal policy. In particular, we define each instance by a fixed tuple (n, δ, ∆, θ ) as defined above. 
+
+Lemma 1. For any instance (n, δ, ∆, θ ), features defined in Equations (3) and (4) yield valid transition probabilities, i.e., 1. We have, ⟨ϕ(s′|s, a), θ ⟩ ≥ 0 ∀ (s, a, s′), and P 
+
+> s′∈S
+
+⟨ϕ(s′|s, a), θ ⟩ = 1 ∀ (s, a) ∈ S × A .2. For any (s, a) ∈ S × A , if transition to some s′ ∈ S is impossible, we have ⟨ϕ(s′|s, a), θ ⟩ = 0 ;on the other hand, if the transition is certain, then ⟨ϕ(s′|s, a), θ ⟩ = 1 .
+
+The detailed proof of this lemma is given in Appendix C.1. Analysis of a general SSP instance is complicated due to trade-offs between policies that quickly reach the goal state (minimizing time) and those that take longer but are cost-efficient [ 20 ]. These make optimal policies, in general, intractable. To avoid this, we adopt a uniform cost structure i.e., ∀ a, c (s, a) = 1 ∀ s̸ = g and c(g, a) = 0 . Thus, the optimal policy is the one that minimizes the expected time to reach goal and depends only on transition dynamics. Note that the above cost structure is not merely hypothetical; in our instance design, for all i ∈ [n], a ∈ A , and s̸ = g, we define Ki(s, a) = 1 
+
+> xi(s,a)
+
+and set Ki(g, a) = 0 .
+
+3.2 Transition probabilities 
+
+Using above features and the transition model in Assumption 1, we now derive a general expression for transition probabilities for any instance (n, δ, ∆, θ ) in the lemma below. We partition the state space 
+
+S based on the number of agents at node s. Let Sr be the subset of state space with r agents at node s,i.e., Sr := (s1, s 2, . . . , s n) ∈ S : P 
+
+> i∈N
+
+1{si=s} = r . For any r ∈ { 0}∪ [n], we say that a state s is of type r if s ∈ S r . Clearly, ∪nr=0 Sr = S and Sr1 ∩ S r2 = ∅ for any r1̸ = r2. Thus, {S 0, S1, . . . , Sn}
+
+partitions S. Further, for any s, we define S(s) := {s′ ∈ S : P(s′|s, a) > 0, for some a ∈ A} as the set of all states that are reachable from s in the next step. Also let Sr (s) be the set of all states of type 
+
+r that are reachable in the next step from s, i.e., Sr (s) := Sr ∩ S (s).
+
+Lemma 2. For a given state s ∈ S \ g, let I denote the set of agents at node s. Consider a transition to s′ ∈ S (s) under joint action a ∈ A . Let T ⊆ I be the set of agents moving from s to g. Define 
+
+r = |I| , r′ = |I \ T | and T ′ = N \ T . Then, under our proposed feature construction and Assumption 1 on the instances, we have 
+
+P(s′|s, a) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)
+
+6+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+h X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+i
+
+.
+
+Corollary 1. Following Lemma 2, if each agent i ∈ N selects its action according to ai,j =
+
+sgn (θi,j ) ∀ j ∈ [d − 1] , the resulting transition probability is independent of I and T , and it only depends on r and r′. We denote the corresponding global action by aθ and resulting transition probabilities by p∗ 
+
+> r,r ′
+
+.
+
+We observe the following property regarding behavior of p∗ 
+
+> r,r ′
+
+with r and r′. This helps us identify optimal policies (Theorem 1) as well as derive regret lower bounds (Theorem 2). 
+
+Lemma 3. For every r ∈ [n − 1] , the following holds: (a) for r′ ∈ { 0, . . . , ⌊ r+1 2 ⌋} , we have 
+
+ r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<   rr′
+
+p∗ 
+
+> r,r ′
+
+and (b) for r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+.
+
+Why do we expect tight lower bounds for these instances? In Theorem 1 we will establish that, for any instance (n, δ, ∆, θ ), the optimal policy selects action aθ in every state. Now consider a sub-optimal policy that differs from aθ in only one non-goal state and exactly at one component of global action. Due to the small ∆( < 2−n), the transition probability (from Lemma 2) for any 
+
+(s, a, s′) under this sub-optimal policy is nearly identical to that under optimal policy, implying the value of such a sub-optimal policy is only slightly worse. There are (2 n − 1) × n(d − 1) such policies. Similarly, consider any sub-optimal policy that differs from the optimal at exactly one state but in two different components of global action. Again, due to a small ∆, we can expect the transition probabilities to differ slightly and the value functions for various states to be only marginally worse. At each state, there are  n(d−1) 2
+
+ such sub-optimal policies. Thus, there are  n(d−1) 2
+
+ × (2 n − 1) such policies. We can similarly obtain that the number of policies differing from the optimal in any two states at any one component of global action is even higher  2n−12
+
+ × n(d − 1) × n(d − 1) . So many near-optimal policies make learning the optimal policy extremely challenging for any algorithm. 
+
+## 4 Theoretical results 
+
+We now present our main theoretical findings. Our goals are twofold: (i) to characterize the structure of optimal policies and value functions in our LM-MASSP instances and (ii) to establish a tight regret lower bound for any decentralized learning algorithm in this setting. Intuitively, any state with less agents at the initial node s is expected to be closer to the goal state than any other state with more agents at s. Thus, it is desirable to have the state with less agents at s have a relatively lower cumulative cost-to-go. Such monotonicity allows us to reason about the value function at a coarser level depending on the number of agents at node s. Leveraging this structure, we characterize the optimal policy and value function in the following theorem. 
+
+Theorem 1 (Structure of the optimal value and policy) . For any instance (n, δ, ∆, θ ),(a) the policy that selects action aθ (as given in Corollary 1) in every state s ∈ S is optimal. (b) the optimal value is same for all states of same type, i.e., for every r ∈ [n], we have, V ∗(s) = V ∗
+
+> r
+
+for every s ∈ S r , where V ∗ 
+
+> r
+
+depends only on r. We define V ∗ 
+
+> 0
+
+= 0 .(c) the optimal value function is strictly increasing with r, i.e., 0 = V ∗ 
+
+> 0
+
+< V ∗ 
+
+> 1
+
+< · · · < V ∗ 
+
+> n
+
+= B∗.
+
+The detailed proof is deferred to Appendix A. The theorem reveals that our instances admit a simple optimal policy depending only on a parameter θ. Despite exponential state space, the optimal value function is fully characterized by its type . We emphasize that this result is critical, enabling our regret analysis and may be of independent interest in broader classes of symmetric decentralized multi-agent settings. We now present our main result: regret lower bound for decentralized learning in LM-MASSPs. It matches the upper bound of [ 14 ] (for n = 1 ) and reported upper bound in [ 23 ] for a general n in number of episodes, K.
+
+Theorem 2 (Lower bound on regret) . Let π be any decentralized learning algorithm. For every 
+
+n ≥ 1, δ ∈ (2 /5, 1/2) , and ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+), there exists an LM-MASSP instance (θ ∈ Θ) such 
+
+7that, after K > n(d−1) 2·δ  
+
+> 210 B∗
+> 1−2δ
+> 1+ n+n2
+> 2
+
+episodes, the expected cumulative regret incurred by π satisfies 
+
+Eθ,π [R(K)] ≥ d · √δ · pK · B∗/n 
+
+2n+9 . (29) The proof is provided in Appendix B. This theorem highlights that even with strong structure and symmetry in the instances, any decentralized learning algorithm suffers from fundamental information bottlenecks, and no learning algorithm can escape the fundamental Ω( √K) regret. Moreover, our lower bound recovers the previously established single-agent result [14] as a special case at n = 1 .
+
+Remark 1. The exponential decay of regret lower bound with n may not be misinterpreted as weakening of the bound with increasing n. To analyze regret scaling with n, one must fix parameters 
+
+(δ, ∆, θ ). Since ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+), it inherently fixes the range on n. For any valid instance, there exist exponentially many near-optimal policies (see discussion after Lemma 3). In these instances, as n increases within this range, more suboptimal policies get closer to optimal, making learning significantly harder. The corresponding decay of the lower bound reflects the increased difficulty. 
+
+## 5 Outline of proofs 
+
+5.1 Proof sketch of Theorem 1 
+
+Proof. We use the Mathematical induction on r, the number of agents at node s in any s ∈ S . All the claims trivially hold for r = 0 . So, we consider r = 1 as the base case. 
+
+Base case (r = 1) . For any state s ∈ S 1, the only reachable next state is either s or g. For any action 
+
+a ∈ A , value of the policy πa that always selects action a at s is given by V πa (s) = 11−P(s|s,a) . Using Lemma 2, one observes that the self-transition probability P(s|s, a) is minimized at a = aθ . This establishes the first claim. The above arguments hold for every s ∈ S 1 and using corollary 1, the value is same for every state in S1. This completes the second claim. The third claim holds as V ∗ 
+
+> 1
+
+> 0.
+
+Inductive Step. Assume the three claims of the theorem hold for all r ∈ { 1, 2, . . . , k }. We now show they also hold for r = k + 1 , in the same order. Consider any state s ∈ S k+1 . To prove the first claim, we evaluate the value V πa (s) under a policy πa that always takes action a at s and optimal action aθ
+
+in other reachable states. By the inductive hypothesis, values and optimal actions are known for all states in ∪ki=0 Si. Since all states reachable from s lie in this set, i.e., ∪i∈[k]∪{ 0}Si(s) ⊆ ∪ i∈[k]∪{ 0}Si,the value V πa (s) is given by 
+
+V πa (s) = 1 + P(s|s, a)V πa (s) + P(g|s, a)V ∗(g) + X
+
+> r′∈[k]
+
+X 
+
+> s′∈S r′(s)
+
+P(s′|s, a)V ∗ 
+
+> r′
+
+. (5) Using the inductive hypothesis and Lemma 2, we show that V πa (s) is minimized when a = aθ ∀ s ∈Sk+1 , proving the first claim. The second claim follows directly from Corollary 1 and Eqn (5) . For the third claim, we use Lemma 3 along with the following result (see appendix C.5). 
+
+Lemma 4. Let r ∈ [n − 1] . Suppose that for every r′ ∈ { 0, 1, . . . , ⌊ r+1 2 ⌋} , we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<
+
+  rr′
+
+p∗ 
+
+> r,r ′
+
+, and for every r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+. Further, if 
+
+V ∗ 
+
+> r
+
+> V ∗ 
+
+> r−1
+
+> · · · > V ∗ 
+
+> 1
+
+> V ∗ 
+
+> 0
+
+= 0 , then V ∗ 
+
+> r+1
+
+> V ∗ 
+
+> r
+
+.
+
+This proves the final claim for r = k + 1 . By induction, the claim holds for all r = {0, 1, . . . , n }.
+
+5.2 Proof sketch of Theorem 2 
+
+Proof. Consider instances (n, δ, ∆, θ ) where n ≥ 1, δ ∈ (2 /5, 1/2) and ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+) are fixed, while θ varies across instances with corresponding optimal policy π∗ 
+
+> θ
+
+as described in Theorem 1. Let st and at be the global state and action at time t, respectively. The expected regret of an algorithm π in the first episode is 
+
+Eθ,π [R1] = V π (s1) − V π∗ 
+
+> θ
+
+(s1)
+
+8= Ea1∼π(s1), s2∼P(·| s1,a1)
+
+h
+
+V π (s2) − V π∗ 
+
+> θ
+
+(s2)
+
+i
+
++ Ea1∼π(s1)
+
+h
+
+Qπ∗ 
+
+> θ
+
+(s1, a1)
+
+i
+
+− V π∗ 
+
+> θ
+
+(s1)
+
+(6) where in the second step we add and subtract the expectation of optimal Q-function [ 19 ] and use its definition. We emphasize that unlike the value of a state under any Markov stationary policy, the value of any intermediate state st for any learning algorithm depends, in general, on the past history till t. This implies that the V π (s2) above is not independent of the history for any fixed s2. The first expectation in Eqn (6) suggests a recurrence. Using definition of Qπ∗ 
+
+> θ
+
+(., . ) and Lemma 2, 
+
+Ea1∼π(s1)
+
+h
+
+Qπ∗ 
+
+> θ
+
+(s1, a1)
+
+i
+
+− V π∗ 
+
+> θ
+
+(s1) = Ea1∼π(s1)
+
+( X 
+
+> s2̸=s1
+
+h
+
+P(s2|s1, a1) − P(s2|s1, a1∗
+
+)
+
+i
+
+V π∗ 
+
+> θ
+
+(s2)+ 2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )} · V π∗ 
+
+> θ
+
+(s1)
+
+)
+
+.
+
+We further lower bound the above using the following lemma (see appendix C.6). 
+
+Lemma 5. For any of our instances, ∀ (s, a) ∈ S × A , P 
+
+> s′̸=s
+
+P(s′|s, a) − P(s′|s, a∗) V ∗(s′) ≥ 0.
+
+Further, unrolling the relationship in Eqn (6) recursively over all time steps h in the first episode and applying the third claim in Theorem 1 to lower bound V π∗ 
+
+> θ
+
+(s′) for each non-goal state s′, we get 
+
+Eθ,π [R1] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+> ∞
+
+X
+
+> h=1
+
+Eθ,π 
+
+" X
+
+> i∈I h
+> d−1
+
+X
+
+> p=1
+
+1{sh̸ = goal } · 1{sgn (ahi,p )̸ = sgn (θi,p )}
+
+#
+
+. (7) where Ih denotes the set of agents at node s at time step h. Extending this over all the K episodes, the lower bound can be expressed as 
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+n nX
+
+> i=1
+> d−1
+
+X
+
+> j=1
+
+Ni,j (θ)
+
+o
+
+, (8) where Ni,j (θ) = P∞ 
+
+> t=1
+
+1{sti̸ = g} · 1{sgn (ati,j )̸ = sgn (θi,j )} for each i ∈ [n], j ∈ [d − 1] . It is important to note that we cannot use the standard Pinsker’s inequality here to bound the regret, as Ni,j (θ) can be unbounded for example, in case of trivial algorithms. To handle this, we define the truncated sums up to a predefined T as N − 
+
+> i
+
+= PTt=1 1{sti̸ = g}, N − = max i∈[n] N − 
+
+> i
+
+and 
+
+N − 
+
+> i,j
+
+(θ) = PTt=1 1{sti̸ = g} · 1{sgn (ati,j )̸ = sgn (θi,j )} for any agent i ∈ [n] and j ∈ [d − 1] . Thus, the regret upto K episodes can be further lower bounded as 
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+" nX
+
+> i=1
+> d−1
+
+X
+
+> j=1
+
+N − 
+
+> i,j
+
+(θ)
+
+#
+
+. (9) For every θ = ( θ1, 1, θ 2, 1 . . . , θ n, 1) ∈ Θ and j ∈ [d − 1] , let θj = ( θ′
+
+> 1
+
+, 1, θ ′
+
+> 2
+
+, 1, . . . , θ ′
+
+> n
+
+, 1) , where for every i ∈ [n], θ ′ 
+
+> i
+
+is identical to θi except at the jth coordinate, where θ′ 
+
+> i,j
+
+= −θi,j . Thus, we have 
+
+2 X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> j=1
+
+Eθ,π [N − 
+
+> i,j
+
+(θ)] + Eθj ,π [N − 
+
+> i,j
+
+(θj )]  (10) 
+
+= 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> j=1
+
+Eθ,π [N − 
+
+> i
+
+] + Eθ,π [N − 
+
+> i,j
+
+(θ)] − Eθj ,π [N − 
+
+> i,j
+
+(θ)]  . (11) The first step also uses the fact that V ∗ 
+
+> 1
+
+is independent of θ and the last step follows since N − 
+
+> i
+
+=
+
+N − 
+
+> i,j
+
+(θ) + N − 
+
+> i,j
+
+(θj ) for any i ∈ [n], j ∈ [d − 1] along with noting that the map θ → θj is bijective for any j ∈ [d − 1] . To simplify the first expectation, we generalize Lemma C.2 in [18] as follows 
+
+Lemma 6. For any instance (n, δ, ∆, θ ), algorithm π, and T ≥ 2KV ∗ 
+
+> 1
+
+, we have Eθ,π [N − 
+
+> i
+
+] ≥ KV ∗
+
+> 1
+> 4
+
+for any i ∈ [n].
+
+9This bounds the first term in Eqn (11) . The remaining terms capture the difference in expectations under different model parameters. Applying the Pinsker’s inequality (Lemma E.3 in [14]), we get 
+
+2 X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> j=1
+
+(
+
+KV ∗
+
+> 1
+
+4 − T
+
+r log 2 2 ·
+
+q
+
+KL( Pπθ ∥Pπθj )
+
+)
+
+(12) In the above, Pπθ represents the distribution over T - length state sample paths due to interaction of algorithm π and the transition dynamics described by parameter θ. Bounding KL divergence in the multi-agent setting is challenging due to exponential number of next states and actions. Since existing techniques ( [ 11 ], [ 14 ]) do not directly apply, we leverage symmetries in our instances to derive an appropriate upper bound on the KL divergence. 
+
+Lemma 7. For any instance (n, δ, ∆, θ ) and algorithm π, for any j ∈ [d − 1] , we have, 
+
+KL( Pπθ || Pπθj ) ≤ 3 · 22n · ∆2
+
+δ(d − 1) 2 · Eθ,π [N −]. (64) The proof of this lemma is deferred to Appendix C.8. Using Lemma 7, Eθ,π [N −] ≤ T = 2 KV ∗ 
+
+> 1
+
+and picking ∆ = ∆ ∗ = (d−1) √δ
+
+> 2n+5
+
+√KV ∗
+
+> 1
+
+in Eqn (12) we get 
+
+1
+
+|Θ|
+
+X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ (d − 1) · √δ · pKV ∗
+
+> 1
+
+2n+8 ≥ d · √δ · pKV ∗
+
+> 1
+
+2n+9 ≥ d · √δ · pKB ∗/n 
+
+2n+9 , (13) where the last inequality holds due to the result V ∗ 
+
+> 1
+
+≥ B∗/n (see C.11) for any of our instances. Since this is a lower bound on the average of expected regret over Θ, there must exist at least one instance 
+
+θ ∈ Θ for which the lower bound in Eqn (13) holds. Finally, to ensure that the chosen ∆ = ∆ ∗ is valid, i.e., ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+), we obtain the following sufficient condition K > n(d−1) 2·δ  
+
+> 210 ·B∗·
+> 1−2δ
+> 1+ n+n2
+> 2
+
+.This completes the proof. 
+
+## 6 Discussion 
+
+This work takes a first step towards closing the gap in our understanding of Dec-MASSPs under linear function approximations. We establish the first regret lower bounds for this setting, obtained by carefully constructed hard-to-learn instances whose complexity scales with the number of agents. By leveraging symmetry-based arguments, we identify the structure of optimal policies and their values. Our Ω( √K) regret lower bound over K episodes underscores the fundamental difficulty of decentralized learning in stochastic environments. These findings deepen the theoretical under-standing of decentralized control and can provide a foundation for designing more efficient and scalable algorithms in MARL. It is important to recognize that our instances, created for the purpose of establishing fundamental limits of learning in the broad MASSP setting, may not be ubiquitous in practice. We also remark that, depending on the application, it may be possible to exploit specific information to design learning algorithms (but limited to the particular class of application) with sub-√K regret. We also note that our lower bound theorem is an existence result i.e., Theorem 2 doesn’t help identify which of the exponentially many instances is hard -enough for a given algorithm hence, complicating empirical validations. Furthermore, due to lack of multiple algorithms in this setting, a run-time comparison over the constructed hard instances is currently infeasible but would be an interesting direction to pursue when more algorithms are available in the future. The design of our MASSP instances is based on linear function approximations [ 14 , 24 , 23 ]; thus, an important extension of this work is to obtain suitable regret lower bounds with non-linear function approximations. It would also be interesting to investigate how both the regret upper and lower bounds behave under model mis-specifications. Furthermore, in order to have widely applicable results, we did not restrict to a specific communication protocol among the learning agents. Yet, we managed to close the gap in number of episodes, K. This calls for a study investigating the effect of various levels of communication among the agents. An important open direction is to formally understand the increased complexity of decentralized MASSPs compared to single-agent SSPs. In particular, demonstrating a separation where the regret lower bound for a Dec-MASSP instance exceeds the upper bound for single-agent settings would establish fundamental hardness of MASSPs over single-agent SSPs. 10 Acknowledgments and Disclosure of Funding 
+
+The authors would like to express their sincere gratitude to their institutes for providing the necessary resources. They are grateful to the Reviewers and the Area Chair whose valuable feedback and constructive suggestions have greatly helped improve the quality of this work. Utkarsh acknowledges support from the NeurIPS Foundation for the Travel Award and from IIT Bombay-FedEx ALFA for the partial travel support. He also thanks his home Department of Mechanical Engineering at IIT Bombay for allowing him the flexibility of spending his final undergrad year at the Department of IEOR IIT Bombay as well as accepting this work as his undergraduate thesis. He also acknowledges the Teaching Assistantships provided by IIT Bombay in his final year. A portion of this work was carried out while Prashant was a Postdoctoral Scholar at the University of Central Florida, USA, under the mentorship of Dr. Amrit Singh Bedi. Prashant would like to thank him for providing the flexibility to work on this problem. 
+
+## References 
+
+[1] Gianluca Antonelli. Interconnected dynamic systems: An overview on distributed control. IEEE Control Systems Magazine , 33(1):76–88, 2013. [2] Peter Auer, Nicolo Cesa-Bianchi, Yoav Freund, and Robert E Schapire. The nonstochastic multiarmed bandit problem. SIAM journal on computing , 32(1):48–77, 2002. [3] Peter Auer and Ronald Ortner. Logarithmic online regret bounds for undiscounted reinforcement learning. Advances in neural information processing systems , 19, 2006. [4] Dimitri Bertsekas. Dynamic programming and optimal control , volume 1. Athena scientific, 2012. [5] Dimitri P Bertsekas. Nonlinear Programming . Athena scientific, 3rd edition, 1997. [6] Dimitri P. Bertsekas and John N. Tsitsiklis. An analysis of stochastic shortest path problems. 
+
+Math. Oper. Res. , 16(3):580–595, August 1991. [7] Alon Cohen, Yonathan Efroni, Yishay Mansour, and Aviv Rosenberg. Minimax regret for stochastic shortest path. Advances in Neural Information Processing Systems , 34:28350–28361, 2021. [8] James Eaton and Lofti Zadeh. Optimal pursuit strategies in discrete-state probabilistic systems. 
+
+Journal of Basic Engineering , 84(1):23–29, 03 1962. [9] Jennifer Gielis, Ajay Shankar, and Amanda Prorok. A critical review of communications in multi-robot systems. Current Robotics Reports , 3, 08 2022. [10] Osband Ian, Van Roy Benjamin, and Russo Daniel. (More) efficient reinforcement learning via posterior sampling. In Proceedings of the 27th International Conference on Neural Information Processing Systems - Volume 2 , NIPS’13, page 3003–3011, Red Hook, NY, USA, 2013. Curran Associates Inc. [11] Thomas Jaksch, Ronald Ortner, and Peter Auer. Near-optimal regret bounds for reinforcement learning. Journal of Machine Learning Research , 11(4), 2010. [12] Jingchen Li, Yusen Yang, Ziming He, Huarui Wu, Haobin Shi, and Wenbai Chen. Cournot policy model: Rethinking centralized training in multi-agent reinforcement learning. Information Sciences , 677:120983, 2024. [13] Kai Lin, Chensi Li, Yihui Li, Claudio Savaglio, and Giancarlo Fortino. Distributed learning for vehicle routing decision in software defined internet of vehicles. IEEE Transactions on Intelligent Transportation Systems , 22(6):3730–3741, 2021. [14] Yifei Min, Jiafan He, Tianhao Wang, and Quanquan Gu. Learning stochastic shortest path with linear function approximation. In International Conference on Machine Learning , pages 15584–15629. PMLR, 2022. 11 [15] Ian Osband and Benjamin Van Roy. On lower bounds for regret in reinforcement learning. 
+
+arXiv preprint arXiv:1608.02732 , 2016. [16] Jun Ota. Multi-agent robot systems as distributed autonomous systems. Advances Engineering Informatics , 20(1):59–70, January 2006. [17] Martin L Puterman. Markov decision processes: discrete stochastic dynamic programming .John Wiley & Sons, 2014. [18] Aviv Rosenberg, Alon Cohen, Yishay Mansour, and Haim Kaplan. Near-optimal regret bounds for stochastic shortest path. In International Conference on Machine Learning , pages 8210– 8219. PMLR, 2020. [19] Richard S Sutton and Andrew G Barto. Reinforcement learning: An introduction . MIT press, 2018. [20] Jean Tarbouriech, Evrard Garcelon, Michal Valko, Matteo Pirotta, and Alessandro Lazaric. No-regret exploration in goal-oriented reinforcement learning. In International Conference on Machine Learning , pages 9428–9437. PMLR, 2020. [21] Jean Tarbouriech, Runlong Zhou, Simon S Du, Matteo Pirotta, Michal Valko, and Alessandro Lazaric. Stochastic shortest path: Minimax, parameter-free and towards horizon-free regret. 
+
+Advances in Neural Information Processing Systems , 34:6843–6855, 2021. [22] Prashant Trivedi and Nandyala Hemachandra. Multi-agent natural actor-critic reinforcement learning algorithms. Dynamic Games and Applications, Special Issue on Multi-agent Dynamic Decision Making and Learning, edited by Konstantin Avrachenkov, Vivek S. Borkar and U. Jayakrishnan Nair , pages 1–31, 2022. [23] Prashant Trivedi and Nandyala Hemachandra. Multi-agent congestion cost minimization with linear function approximations. In International Conference on Artificial Intelligence and Statistics , pages 7611–7643. PMLR, 2023. [24] Daniel Vial, Advait Parulekar, Sanjay Shakkottai, and R Srikant. Regret bounds for stochastic shortest path problems with linear function approximation. In International Conference on Machine Learning , pages 22203–22233. PMLR, 2022. [25] Lin Yang and Mengdi Wang. Sample-optimal parametric q-learning using linearly additive features. In International Conference on Machine Learning , pages 6995–7004. PMLR, 2019. [26] Kaiqing Zhang, Zhuoran Yang, and Tamer Ba¸ sar. Multi-agent reinforcement learning: A selective overview of theories and algorithms. Handbook of Reinforcement Learning and Control , pages 321–384, 2021. [27] Kaiqing Zhang, Zhuoran Yang, Han Liu, Tong Zhang, and Tamer Basar. Fully decentralized multi-agent reinforcement learning with networked agents. In International Conference on Machine Learning , pages 5872–5881. PMLR, 2018. 12 NeurIPS Paper Checklist 
+
+1. Claims 
+
+Question: Do the main claims made in the abstract and introduction accurately reflect the paper’s contributions and scope? Answer: [Yes] Justification: The claims are demonstrated in the key results in Lemmas and Theorems, with explanations next to them. Guidelines: • The answer NA means that the abstract and introduction do not include the claims made in the paper. • The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. • The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. • It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 2. Limitations 
+
+Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The assumptions given in the paper give the limitations of this work. Further, future work direction in the conclusions describe another limitation of this work. Guidelines: • The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. • The authors are encouraged to create a separate "Limitations" section in their paper. • The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. • The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. • The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. • The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. • If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. • While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren’t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an impor-tant role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations. 3. Theory Assumptions and Proofs 
+
+Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? 13 Answer: [Yes] Justification: We have provided the assumptions used in this work, that are used in main the results. Guidelines: • The answer NA means that the paper does not include theoretical results. • All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced. • All assumptions should be clearly stated or referenced in the statement of any theorems. • The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. • Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material. • Theorems and Lemmas that the proof relies upon should be properly referenced. 4. Experimental Result Reproducibility 
+
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-perimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)? Answer: [NA] Justification: The experimental results are not provided, since we are providing the regret lower bounds, that require a construction of hard-to-learn instance. Guidelines: • The answer NA means that the paper does not include experiments. • If the paper includes experiments, a No answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not. • If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. • Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed. • While NeurIPS does not require releasing code, the conference does require all submis-sions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example (a) If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm. (b) If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully. (c) If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset). (d) We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results. 5. Open access to data and code 
+
+14 Question: Does the paper provide open access to the data and code, with sufficient instruc-tions to faithfully reproduce the main experimental results, as described in supplemental material? Answer: [NA] Justification: The paper does not include experiments requiring code. Guidelines: • The answer NA means that paper does not include experiments requiring code. • Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ public/guides/CodeSubmissionPolicy ) for more details. • While we encourage the release of code and data, we understand that this might not be possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark). • The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //nips.cc/public/guides/CodeSubmissionPolicy ) for more details. • The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. • The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. • At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). • Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted. 6. Experimental Setting/Details 
+
+Question: Does the paper specify all the training and test details (e.g., data splits, hyper-parameters, how they were chosen, type of optimizer, etc.) necessary to understand the results? Answer: [NA] Justification: Our work is theoretical, and hence there are no computational experiments. Guidelines: • The answer NA means that the paper does not include experiments. • The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. • The full details can be provided either with the code, in appendix, or as supplemental material. 7. Experiment Statistical Significance 
+
+Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [NA] Justification: The paper is theoretical, thus it does not include any experiments. Guidelines: • The answer NA means that the paper does not include experiments. • The authors should answer "Yes" if the results are accompanied by error bars, confi-dence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. • The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). • The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) 15 • The assumptions made should be given (e.g., Normally distributed errors). • It should be clear whether the error bar is the standard deviation or the standard error of the mean. • It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. • For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates). • If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text. 8. Experiments Compute Resources 
+
+Question: For each experiment, does the paper provide sufficient information on the com-puter resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [NA] Justification: The paper does not include experiments. Guidelines: • The answer NA means that the paper does not include experiments. • The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. • The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. • The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn’t make it into the paper). 9. Code Of Ethics 
+
+Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines ?Answer: [Yes] Justification: All the points mentioned in the NeurIPS Code of Ethics are taken into consid-eration. Guidelines: • The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. • If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics. • The authors should make sure to preserve anonymity (e.g., if there is a special consid-eration due to laws or regulations in their jurisdiction). 10. Broader Impacts 
+
+Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [Yes] Justification: Applications of decentralized MASSP are mentioned in introduction with positive societal impacts because of better resource utilization. Guidelines: • The answer NA means that there is no societal impact of the work performed. • If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact. • Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. 16 • The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. • The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. • If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML). 11. Safeguards 
+
+Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)? Answer: [NA] Justification: There is no release of data or models. Guidelines: • The answer NA means that the paper poses no such risks. • Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. • Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. • We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort. 12. Licenses for existing assets 
+
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [NA] Justification: There is no code, data, models, etc. involved. Guidelines: • The answer NA means that the paper does not use existing assets. • The authors should cite the original paper that produced the code package or dataset. • The authors should state which version of the asset is used and, if possible, include a URL. • The name of the license (e.g., CC-BY 4.0) should be included for each asset. • For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided. • If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets 
+
+has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. • For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. 17 • If this information is not available online, the authors are encouraged to reach out to the asset’s creators. 13. New Assets 
+
+Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [NA] Justification: There is no asset, code, data, models, etc. involved in the paper. Guidelines: • The answer NA means that the paper does not release new assets. • Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. • The paper should discuss whether and how consent was obtained from people whose asset is used. • At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file. 14. Crowdsourcing and Research with Human Subjects 
+
+Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [NA] Justification: The paper does neither involve crowdsourcing nor research with human subjects. Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. • Including this information in the supplemental material is fine, but if the main contribu-tion of the paper involves human subjects, then as much detail as possible should be included in the main paper. • According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15. Institutional Review Board (IRB) Approvals or Equivalent for Research with Human Subjects 
+
+Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [NA] Justification: The paper does involve research with human subjects, thus no approvals are required. Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. • Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. • We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. • For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 18 Appendix 
+
+In this appendix, we provide additional notation, definitions, and proofs of the theorems and interme-diate results that support the main findings presented in the paper. More details of proofs of Theorem 1 and Theorem 2 are in Appendix A and Appendix B respectively. Also, proofs of some other intermediate results, used in Appendices A and B, are in Appendix C. We first recall the intermediate results that we use to prove the main results, i.e., Theorem 1 and Theorem 2. 
+
+Lemma 1. For any instance (n, δ, ∆, θ ), features defined in Equations (3) and (4) yield valid transition probabilities, i.e., 1. We have, ⟨ϕ(s′|s, a), θ ⟩ ≥ 0 ∀ (s, a, s′), and P 
+
+> s′∈S
+
+⟨ϕ(s′|s, a), θ ⟩ = 1 ∀ (s, a) ∈ S × A .2. For any (s, a) ∈ S × A , if transition to some s′ ∈ S is impossible, we have ⟨ϕ(s′|s, a), θ ⟩ = 0 ;on the other hand, if the transition is certain, then ⟨ϕ(s′|s, a), θ ⟩ = 1 .
+
+Lemma 2. For a given state s ∈ S \ g, let I denote the set of agents at node s. Consider a transition to s′ ∈ S (s) under joint action a ∈ A . Let T ⊆ I be the set of agents moving from s to g. Define 
+
+r = |I| , r′ = |I \ T | and T ′ = N \ T . Then, under our proposed feature construction and Assumption 1 on the instances, we have 
+
+P(s′|s, a) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+h X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+i
+
+.
+
+Corollary 1. Following Lemma 2, if each agent i ∈ N selects its action according to ai,j =
+
+sgn (θi,j ) ∀ j ∈ [d − 1] , the resulting transition probability is independent of I and T , and it only depends on r and r′. We denote the corresponding global action by aθ and resulting transition probabilities by p∗ 
+
+> r,r ′
+
+.
+
+Lemma 3. For every r ∈ [n − 1] , the following holds: (a) for r′ ∈ { 0, . . . , ⌊ r+1 2 ⌋} , we have 
+
+ r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<   rr′
+
+p∗ 
+
+> r,r ′
+
+and (b) for r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+.
+
+## A Proof of Theorem 1 
+
+Theorem 1 (Structure of the optimal value and policy) . For any instance (n, δ, ∆, θ ),(a) the policy that selects action aθ (as given in Corollary 1) in every state s ∈ S is optimal. (b) the optimal value is same for all states of same type, i.e., for every r ∈ [n], we have, V ∗(s) = V ∗
+
+> r
+
+for every s ∈ S r , where V ∗ 
+
+> r
+
+depends only on r. We define V ∗ 
+
+> 0
+
+= 0 .(c) the optimal value function is strictly increasing with r, i.e., 0 = V ∗ 
+
+> 0
+
+< V ∗ 
+
+> 1
+
+< · · · < V ∗ 
+
+> n
+
+= B∗.Proof. The simplest case is when all the agents are at the goal node, i.e., r = 0 , i.e., s ∈ S 0. Note that in this case |S 0| = 1 , that is when r = 0 , there is only one state g = ( g, g, . . . , g ).For this case, all the actions at goal node are optimal, this is because no matter what action is taken at the goal state g, the cost is same i.e., 0. Moreover, the next state is certainly g (by construction of features). Hence, in particular, the action aθ is also optimal. Hence the claim (a) of the theorem holds. Next, since |S 0| = 1 , the claim (b) also holds trivially. That is, V ∗(s) = V ∗ 
+
+> 0
+
+= 0 for all s ∈ S 0.Finally, the claim (c) also follows by assumption, as V ∗ 
+
+> 0
+
+= 0 < B ∗.Now, we begin to prove the theorem for the interesting states, i.e., states in which at least one agent is at the node s. We will prove all the claims of this theorem using the principle of Mathematical induction on the type of states r = 1 , . . . , n . To this end, first consider the base case of r = 1 .19 Base case, r = 1 . For any state s ∈ S 1, we first find the optimal action in this state. Note that for this state, there are only two possible next global states, s itself and the global goal state g. This may seem very similar to the single agent problem. Suppose P(s|s, a) denotes the transition probability from s to s for any a ∈ A . To determine the optimal action at this state, we consider any policy πa that takes action a ∈ A in the state s and the optimal action at other states that are reachable from s. Note that, above we argued that the action aθ
+
+is optimal at g and hence the value of this policy at s can be expressed as 
+
+V πa (s) = P(s|s, a) · (1 + V πa (s)) + (1 − P(s|s, a)) · (1 + V ∗ 
+
+> 0
+
+) (14) Simplifying the above expression using V ∗ 
+
+> 0
+
+= 0 , we have 
+
+V πa (s) = 11 − P(s|s, a) . (15) Thus, the optimal action at s is the one that minimizes V πa (s) i.e., minimizes P(s|s, a). We now use the following corollary of Lemma 2; the proof of Corollary 2 is given in Appendix C.10. 
+
+Corollary 2. For any non-goal state s ∈ S r of type r, the self-transition probability under action a is 
+
+P(s|s, a) = r(1 − δ)
+
+n · 2r−1 + n − rn · 2r − r · ∆
+
+n + 2∆ 
+
+n(d − 1) 
+
+X
+
+> i∈I
+> d−1
+
+X
+
+> p=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}. (16) 
+
+This is minimized when a = aθ and the resulting probability only depends on r.
+
+Using the above, we have that aθ is optimal action in this state. Notice, we chose s ∈ S 1 arbitrarily. Hence the above holds for all states in S1. This proves claim (a) of the theorem for the base case of 
+
+r = 1 .Now from Corollary 1, we have that 
+
+P(s|s, a∗) = p∗
+
+> 1,1
+
+, ∀ s ∈ S 1 (17) where p∗ 
+
+> 1,1
+
+is the probability that is independent of state itself, rather only depends on the number of agents at s. Thus, from Equation (15) , we have that V ∗(s) = V ∗ 
+
+> 1
+
+, ∀ s ∈ S 1. This implies that value is same for all states in S1. Thus claim (b) of the theorem also holds for the base case. Finally, we have that V ∗ 
+
+> 1
+
+= 11−P(s|s,aθ ) > 0 = V ∗ 
+
+> 0
+
+. This completes claim (c) of the theorem for the base case. Thus, all three claims of Theorem 1 hold for the base case. 
+
+Inductive Step. Next, let us assume that all three claims of the theorem hold for k = 1 , 2, . . . , r 
+
+for any r < n . We will prove that the claims hold for k = r + 1 . In particular, we assume that for all k ∈ { 1, . . . , r }, it holds that 1. The optimal action a∗ = aθ for any state in Sk.This implies from Corollary 1 that, the transition probabilities from any s ∈ S k to any s′ ∈ S (s)
+
+can be expressed as p∗ 
+
+> k,k ′
+
+, for any k′ ∈ { 0, 1, 2, . . . , k } under the optimal policy. 2. V ∗ 
+
+> k
+
+(s) = V ∗ 
+
+> k
+
+for all s ∈ S k
+
+3. V ∗ 
+
+> k
+
+> V ∗
+
+> k−1
+
+We will now show that all the three claims hold for k = r + 1 .Consider any s ∈ S r+1 . We again want to know the optimal action in this state. The optimal action in all the other states that are reachable from s are known. Hence, we consider any policy πa that takes 
+
+a ∈ A at this state and optimal actions at all other states that are reachable from here. The value of this policy can be expressed as follows 
+
+V πa (s) (18) 
+
+= X
+
+> s′∈S (s)\{ s,g}
+
+P(s′|s, a)(1 + V ∗(s′)) + P(s|s, a)(1 + V πa (s)) + P(g|s, a) · (1 + V ∗(g)) (19) 20 = 1 + P(s|s, a)V πa (s) + P(g|s, a)V ∗(g) + 
+
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+P(s′|s, a)V ∗ 
+
+> r′
+
+(20) We will simplify the last term in the above equation using Lemma 2 as follows. 
+
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+P(s′|s, a)V ∗
+
+> r′
+
+=
+
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+"
+
+r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+! # 
+
+V ∗
+
+> r′
+
+(21) 
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"  r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+·
+
+r + 1 
+
+r′
+
+
+
++ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X 
+
+> s′∈S r′(s)
+
+X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )}− X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+!# 
+
+V ∗
+
+> r′
+
+(22) The Equation (22) follows by observing that for fixed r′, the inner summation over s′ in the first line is just the sum of |S r′ (s)| =  r+1 
+
+> r′
+
+ terms of same value. In the below, we alternatively represent the summation over sets I ∩ T ′ and T as an appropriate summation over I and in the next step, we take the V ∗(·) factor inside and take the summation over two terms: 
+
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+P(s′|s, a)V ∗
+
+> r′
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"  r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+·
+
+r + 1 
+
+r′
+
+
+
++ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X 
+
+> s′∈S r′(s)
+
+X
+
+> i∈I
+
+1{i ∈ I ∩ T ′} · 1{sgn (ai,p )̸ = sgn (θi,p )}− 1{i ∈ T } · 1{sgn (ai,p )̸ = sgn (θi,p )}
+
+!# 
+
+V ∗ 
+
+> r′
+
+(23) 
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"
+
+r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+!
+
+·
+
+r + 1 
+
+r′
+
+
+
+V ∗
+
+> r′
+
+#
+
++ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+1{i ∈ I ∩ T ′} · 1{sgn (ai,p )̸ = sgn (θi,p )}− 1{i ∈ T } 1{sgn (ai,p )̸ = sgn (θi,p )}
+
+!
+
+V ∗ 
+
+> r′
+
+(24) 
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"
+
+r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+!
+
+·
+
+r + 1 
+
+r′
+
+
+
+V ∗
+
+> r′
+
+#
+
+21 + 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+" rr′ − 1
+
+
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )}−
+
+ rr′
+
+
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )}
+
+#
+
+V ∗ 
+
+> r′
+
+. (25) In the last step, we identified that for every agent i ∈ I for a fixed r′ the number of states in Sr′ (s) in which the agent i stays at node s itself are   rr′−1
+
+ and those in which it transits to node g are   rr′
+
+.In the immediate below step, we use the following property: for any function f (·) and natural number 
+
+m, we have 2 · P 
+
+> a∈[m]
+
+f (a) = P 
+
+> a∈[m]
+
+f (a) + P 
+
+> a∈[m]
+
+f (1 + m − a). In our case, f is the terms inside the summations over p, i of Equation (25) , a is r′ and m is r. In the next few steps, we simplify the expression using properties of binomial coefficients: 
+
+> r
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+P(s′|s, a)V ∗
+
+> r′
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"  r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+·
+
+r + 1 
+
+r′
+
+
+
+· V ∗
+
+> r′
+
+#
+
++ ∆
+
+n(d − 1) 
+
+" d−1X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+(  rr′ − 1
+
+
+
+−
+
+ rr′
+
+ 
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )} · V ∗
+
+> r′
+
+)
+
++
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+(  rr + 1 − r′ − 1
+
+
+
+−
+
+ rr + 1 − r′
+
+ 
+
+1{sgn (ai,p )̸ = sgn (θi,p )}V ∗
+
+> r+1 −r′
+
+)# 
+
+(26) 
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"  r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+·
+
+r + 1 
+
+r′
+
+
+
+· V ∗
+
+> r′
+
+#
+
++ ∆
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+"  rr′ − 1
+
+
+
+−
+
+ rr′
+
+ 
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )} · V ∗
+
+> r′
+
+#
+
++ ∆
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+"  rr′
+
+
+
+−
+
+ rr′ − 1
+
+ 
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )} · V ∗
+
+> r+1 −r′
+
+#
+
+(27) 
+
+=
+
+> r
+
+X
+
+> r′=1
+
+"  r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+.
+
+r + 1 
+
+r′
+
+
+
+.V ∗
+
+> r′
+
+#
+
++ ∆
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+> r
+
+X
+
+> r′=1
+
+"  rr′ − 1
+
+
+
+−
+
+ rr′
+
+ 
+
+· 1{sgn (ai,p )̸ = sgn (θi,p )} · (V ∗ 
+
+> r′
+
+− V ∗ 
+
+> r+1 −r′
+
+)
+
+#
+
+(28) Observe that the term inside the summation is always non negative since when r′ ≥ r/ 2 the binomial difference   rr′−1
+
+ −   rr′
+
+ ≥ 0 as well as V ∗ 
+
+> r′
+
+≥ V ∗ 
+
+> r+1 −r′
+
+while for r′ ≤ r/ 2,   rr′−1
+
+ −   rr′
+
+ ≤ 0 as well as V ∗ 
+
+> r′
+
+≤ V ∗ 
+
+> r+1 −r′
+
+due to property of Binomial coefficients and the Induction assumption on monotonicity of V ∗ . Note that the above argument is for r′ ∈ [r].To minimize V πa (s), we need to minimize P(s|s, a) as well (can be seen by rearranging Equation (20) along with the fact that V ∗(g) = 0 as it will appear in denominator as 1 − P(s|s, a)). Clearly, the action aθ minimizes P(s|s, a) as well as makes the sum of non-negative terms the minimum i.e., 0. Hence, it minimizes V πa (s). Hence this action aθ is the optimal action at s. Note we had chosen s ∈ S r+1 arbitratily. Hence, the above arguments hold for any s ∈ S r+1 . This proves claim (a) of the theorem for r + 1 .Again, by Corollary 1, for any s ∈ S r+1 and any s′ ∈ S r′ (s), we have P(s′|s, aθ ) = p∗ 
+
+> r+1 ,r ′
+
+for any 
+
+r′ ∈ [r] ∪ { 0}.22 Thus, using a = aθ in Equation (19) , we have V ∗(s) = V ∗ 
+
+> r+1
+
+for any s ∈ S r+1 . This proves the claim (b) for r + 1 .Using the induction assumption combined with the above results, Lemma 3 and the following lemma we have V ∗ 
+
+> r+1
+
+> V ∗ 
+
+> r
+
+, completing the claim (c) for r + 1 .
+
+Lemma 4. Let r ∈ [n − 1] . Suppose that for every r′ ∈ { 0, 1, . . . , ⌊ r+1 2 ⌋} , we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<
+
+  rr′
+
+p∗ 
+
+> r,r ′
+
+, and for every r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+. Further, if 
+
+V ∗ 
+
+> r
+
+> V ∗ 
+
+> r−1
+
+> · · · > V ∗ 
+
+> 1
+
+> V ∗ 
+
+> 0
+
+= 0 , then V ∗ 
+
+> r+1
+
+> V ∗ 
+
+> r
+
+.
+
+The proof of Lemma 4 is given in Appendix C.5. Thus, by induction, all the three claims of theorem hold. Note that V ∗ 
+
+> n
+
+= B∗ as it is the maximum optimal value over all states. 
+
+## B Proof of Theorem 2 
+
+Theorem 2 (Lower bound on regret) . Let π be any decentralized learning algorithm. For every 
+
+n ≥ 1, δ ∈ (2 /5, 1/2) , and ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+), there exists an LM-MASSP instance (θ ∈ Θ) such that, after K > n(d−1) 2·δ  
+
+> 210 B∗
+> 1−2δ
+> 1+ n+n2
+> 2
+
+episodes, the expected cumulative regret incurred by π satisfies 
+
+Eθ,π [R(K)] ≥ d · √δ · pK · B∗/n 
+
+2n+9 . (29) 
+
+Proof. The proof builds on techniques used in the single-agent SSP setting by [ 14 ] and the two-state RL setting in [ 11 ]. However, extending these ideas to the Multi-Agent SSP (MASSP) setting introduces several technical challenges. These include: designing novel features, constructing instances that generalize to any number of agents n while admitting a tractable optimal policy, the intractability of expressing the optimal value function in closed form due to exponential growth of the state space, and deriving tight upper bounds on the KL divergence. Some of these challenges are addressed in Theorem 1, while the remaining ones are tackled in the below analysis. We construct and analyze hard to learn instances based on the discussion in Section 3. In Theorem 1,we characterized the optimal policy. Recall that for our instances, the cost of any global action in any non-goal state is equal to 1 and that in goal state equal to 0 (see discussion at the end of Section 3.1). Consider any instance parameters (n ≥ 1, δ ∈ (2 /5, 1/2) , ∆ < 2−n. 1−2δ 
+
+> 1+ n+n2
+
+). We want to analyze regret of any algorithm π for instances that are defined by fixed parameters (n, δ, ∆) and all θ ∈ Θ.Consider any instance θ ∈ Θ. Let π∗ 
+
+> θ
+
+denote the optimal policy for this instance as in Theorem 1. Suppose in episode k, agents take actions according to π. Let, st represent the global state and at the global action at time t. Note that as we are analyzing any algorithm, it is important to track the time step at which any state is reached and the history till then. Then, the expected regret for this instance in the 1st episode is: 
+
+Eθ,π [R1] = V π (s1) − V π∗ 
+
+> θ
+
+(s1) (30) 
+
+= V π (s1) − Ea1∼π(s1)[Qπ∗ 
+
+> θ
+
+(s1, a1)] + Ea1∼π(s1)[Qπ∗ 
+
+> θ
+
+(s1, a1)] − V π∗ 
+
+> θ
+
+(s1) (31) In the above, we add and subtract Ea1∼π(s1)[Qπ∗ 
+
+> θ
+
+(s1, a1)] . Now using the definitions of V π (·) and 
+
+Qπ∗ 
+
+> θ
+
+(·, ·) and rearranging the terms we have: 
+
+Eθ,π [R1] = Ea1∼π(s1){c(s1, a1) + Es2∼P(.|s1,a1)[V π (s2)] }− Ea1∼π(s1){c(s1, a1) + Es2∼P(.|s1,a1)[V π∗ 
+
+> θ
+
+(s2)] } + Ea1∼π(s1)[Qπ∗ 
+
+> θ
+
+(s1, a1)] − V π∗ 
+
+> θ
+
+(s1)
+
+(32) 
+
+= Ea1∼ π(s1),s2∼ P(.|s1,a1)[V π (s2) − V π∗ 
+
+> θ
+
+(s2)] + Ea1∼π(s1)[Qπ∗ 
+
+> θ
+
+(s1, a1)] − V π∗ 
+
+> θ
+
+(s1) (33) In the above expression, there appears to be a recursive relation for the first term however, it is unclear how to deal with the remaining terms. To this end, we expand the second term below using the definition of Q∗(·, ·) = Qπ∗ 
+
+> θ
+
+, and V ∗(·) = V π∗
+
+> θ
+
+Ea1∼π(s1)[Q∗(s1, a1)] − V ∗(s1) = Ea1∼π(s1)[c(s1, a1) + Es2∼P(.|s1,a1){V ∗(s2)}] − V ∗(s1) (34) 23 Above, we use the definition of Q∗(·, ·). Next, we use the cost c(s, a) ≡ 1, ∀ (s, a) ∈ S\{ g} × A 
+
+and then expand the expectation as 
+
+Ea1∼π(s1)[Q∗(s1, a1)] − V ∗(s1)= Ea1∼π(s1)
+
+1 + Es2∼P(.|s1,a1)[V ∗(s2)] − V ∗(s1) (35) 
+
+= Ea1∼π(s1)
+
+1 + P(s1|s1, a1)V ∗(s1) + X 
+
+> s2̸=s1
+
+P(s2|s1, a1)V ∗(s2) − V ∗(s1)
+
+ (36) To simplify above, we use the general transition probability expression from Lemma 2 with s1 =(s, s, . . . , s ), i.e., r = n, and then rearrange 
+
+Ea1∼π(s1)[Q∗(s1, a1)] − V ∗(s1)= Ea1∼π(s1)
+
+"
+
+1 + 1 − δ
+
+2n−1 − ∆ + 2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}
+
+!
+
+V ∗(s1)+ X 
+
+> s2̸=s1
+
+P(s2|s1, a1)V ∗(s2) − V ∗(s1)
+
+#
+
+(37) 
+
+= Ea1∼π(s1)
+
+1 + 
+
+ 1 − δ
+
+2n−1 − ∆
+
+
+
+V ∗(s1) + X 
+
+> s2̸=s1
+
+P(s2|s1, a1)V ∗(s2) − V ∗(s1)
+
+
+
++ Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )} · V ∗(s1)
+
+#
+
+(38) 
+
+= Ea1∼π(s1)
+
+1 + P(s1|s1, a 1∗)V ∗(s1) + X 
+
+> s2̸=s1
+
+P(s2|s1, a1)V ∗(s2) − V ∗(s1)
+
+
+
++ Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}V ∗(s1)
+
+#
+
+(39) The last step follows from transition probability expression in Lemma 2. Now, we expand V ∗(s1)
+
+and simplify 
+
+Ea1∼π(s1)[Q∗(s1, a1)] − V ∗(s1)= Ea1∼π(s1)
+
+"
+
+1 + P(s1|s1, a1∗)V ∗(s1) + X 
+
+> s2̸=s1
+
+P(s2|s1, a1)V ∗(s2) −
+
+
+
+1 + P(s1|s1, a1∗)V ∗(s1)+ X 
+
+> s2̸=s1
+
+P(s2|s1, a1∗)V ∗(s2)
+
+#
+
++ Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}V ∗(s1)
+
+#
+
+(40) 
+
+= Ea1∼π(s1)
+
+ X 
+
+> s2̸=s1
+
+[P(s2|s1, a1) − P(s2|s1, a1∗)] V ∗(s2)
+
+
+
++ Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}V ∗(s1)
+
+#
+
+. (41) Next, we have the following lemma (proof in Appendix C.6) 
+
+Lemma 5. For any of our instances, ∀ (s, a) ∈ S × A , P 
+
+> s′̸=s
+
+P(s′|s, a) − P(s′|s, a∗) V ∗(s′) ≥ 0.
+
+24 Using the above lemma, we have the following bound: 
+
+Ea1∼π(s1)[Q∗(s1, a1)] − V ∗(s1) ≥ Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}V ∗(s1)
+
+#
+
+(42) Using Equations (30), (42) and (33), we have that 
+
+Eθ,π [R1] = V π (s1) − V π∗ 
+
+> θ
+
+(s1) (43) 
+
+≥ Ea1∼ π(s1),s2∼ P(.|s1,a1)[V π (s2) − V ∗(s2)] + Ea1∼π(s1)
+
+"
+
+2∆ 
+
+n(d − 1) 
+
+> n
+
+X
+
+> i=1
+> d−1
+
+X
+
+> p=1
+
+1{s1̸ = goal }1{sgn (a1
+
+> i,p
+
+)̸ = sgn (θi,p )}V ∗(s1)
+
+#
+
+.
+
+(44) This introduces a recursive structure in the regret: the difference at time 1 is written in terms of the expectation of the same difference at time 2, plus another term. Although s1 is deterministic, 
+
+s2 is stochastic due to transitions under π. Taking any sample path of length H (i.e., global goal g
+
+is reached at step H), and unrolling the recursion across all steps (similar to the analysis between Equations (30) and (44)), we obtain 
+
+V π (s1) − V π∗ 
+
+> θ
+
+(s1) ≥ E1
+
+ HX
+
+> h=1
+
+2∆ 
+
+n(d − 1) × X
+
+> i∈I h
+> d−1
+
+X
+
+> p=1
+
+1{sh̸ = goal }1{sgn (ahi,p )̸ = sgn (θi,p )}V ∗(sh)
+
+
+
+(45) where Ih represents the random set of all agents at node s in global state sh and where the expectation is taken with respect to trajectory induced in the first episode due to the interaction of π and transition kernel Pθ . Note that in Equation (44) , we have the summation over all agents in [n] since I1 = [ n]
+
+as s1 = sinit and, this Ih differs for different times based on sample paths. To fully convince why 
+
+Ih occurs in the above expression, we encourage the reader to try carrying out the steps between Equations (30) and (44) for the second time step and then observe the pattern for arbitrary h.Now, observe that as per our model, once an agent reaches the goal node, it remains there for the rest of the episode. For all h > H in this episode, the global state is thought to be the goal state, by construction, making the indicator term 1{sh̸ = goal } = 0 . This allows us to safely extend the summation to infinity without altering its value. Specifically, we apply the following identity: 
+
+E
+
+" τX
+
+> t=1
+
+xt
+
+#
+
+= E
+
+" ∞X
+
+> t=1
+
+xt1{t ≤ τ }
+
+#
+
+(46) where τ and xt are random variables. Using this, we get 
+
+V π (s1) − V π∗ 
+
+> θ
+
+(s1) ≥ E1
+
+ ∞X
+
+> h=1
+
+2∆ 
+
+n(d − 1) 
+
+X
+
+> i∈I h
+> d−1
+
+X
+
+> p=1
+
+1{sh̸ = goal }1{sgn (ahi,p ̸ = sgn (θi,p )}V ∗(sh)
+
+
+
+(47) Using the fact that V ∗(s) ≥ V ∗ 
+
+> 1
+
+for any s ∈ S\ g, we have that 
+
+Eθ,π [R1] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) E1
+
+" ∞X
+
+> h=1
+
+X
+
+> i∈I h
+> d−1
+
+X
+
+> p=1
+
+1{sh̸ = goal }1{sgn (ahi,p )̸ = sgn (θi,p )}
+
+#
+
+, (48) Now, the total expected regret over K episodes is 
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+" ∞X
+
+> t=1
+
+X
+
+> i∈I t
+> d−1
+
+X
+
+> p=1
+
+1{st̸ = goal }1{sgn (ati,p )̸ = sgn (θi,p )}
+
+#
+
+(49) 25 We get rid of the random set It by introducing an indicator as below, where sti denotes the ith index of state st i.e., node at which agent i is present at t:
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+
+
+> ∞
+
+X
+
+> t=1
+
+X
+
+> i∈[n]
+
+1{sti̸ = g}
+
+> d−1
+
+X
+
+> p=1
+
+1{st̸ = goal }1{sgn (ati,p )̸ = sgn (θi,p )}
+
+
+
+(50) 
+
+= 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+
+
+> ∞
+
+X
+
+> t=1
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> p=1
+
+1{sti̸ = g}1{sgn (ati,p )̸ = sgn (θi,p )}
+
+
+
+(51) where the simplification follows since 1{sti̸ = g} · 1{st̸ = goal } = 1{sti̸ = g} for any i ∈ [n] and 
+
+t ∈ N.For any i ∈ [n], let Ni be the random variable capturing total number of time steps over K episodes in which agent i stays at node s,
+
+Ni =
+
+> ∞
+
+X
+
+> t=1
+
+1{sti̸ = g} (52) Further, for any agent i ∈ [n] and j ∈ [d − 1] , let Ni,j (θ) be the (random) number of times in the entire duration of K episodes that the agent i chose jth component of its action as not the same as that of the optimal action for that instance while being at node s. Formally, it is given by 
+
+Ni,j (θ) = 
+
+> ∞
+
+X
+
+> t=1
+
+1{sti̸ = g}1{sgn (ati,j )̸ = sgn (θi,j )} (53) Using the above notations, we have Equation (51) rewritten as, 
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+ X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+Ni,j (θ)
+
+ . (54) To use the standard Pinsker’s inequality, we need Ni,j (θ) to be bounded almost surely which doesn’t hold (for example, in poorly designed or trivial algorithms) similar to the single agent SSP [ 14 , 7 ]. Hence, we use the capping trick introduced by [ 7] and also used by [ 14 ]. In this trick, we cap the learning process to a predetermined T .For any i ∈ [n], we define the following: 
+
+N − 
+
+> i
+
+=
+
+> T
+
+X
+
+> t=1
+
+1{sti̸ = g}, (55) and for any i ∈ [n] and j ∈ [d − 1] ,N − 
+
+> i,j
+
+(θ) = 
+
+> T
+
+X
+
+> t=1
+
+1{sti̸ = g} · 1{sgn (ati,j )̸ = sgn (θi,j )}. (56) Thus, 
+
+N − = max  
+
+> i∈[n]
+
+N − 
+
+> i
+
+(57) denotes the truncated length over the K episodes. If the learning process (i.e. Kth episode) ends before this T , the agents are taken to continue to remain in the goal state g. In this case, the summations for the actual process and the capped process are the same. On the other hand, when K episodes end beyond T , we have a possibly truncated sum. Due to the non-negativity of indicator functions, the summations for the capped process lower bounds the actual sum. 26 For any i ∈ [n], we observe that (since any component of action, which is either +1 or −1, has to match corresponding sign of θ or θj ) for any j ∈ [d − 1] ,
+
+N − 
+
+> i
+
+= N − 
+
+> i,j
+
+(θ) + N − 
+
+> i,j
+
+(θj ) (58) where for every θ ∈ Θ, θj ∈ Θ for j ∈ [d − 1] represents the vector that only differs from θ only at the jth index of every θi in θ = {θ1, 1, θ 2, 1, . . . , θ n, 1}, where each θi ∈ { −∆ 
+
+> n(d−1)
+
+, ∆ 
+
+> n(d−1)
+
+}d−1.Note that since any component can take only one of the two values 
+
+n ∆ 
+
+> n(d−1)
+
+, − ∆
+
+> n(d−1)
+
+o
+
+, the differing components are exactly negative of each other. Thus, we can further lower bound Equation (54) as: 
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) Eθ,π 
+
+ X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+N − 
+
+> i,j
+
+(θ)
+
+ (59) Notice that for any j ∈ [d − 1] , θ → θj map is bijective. This allows us to write the following 
+
+2 X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ 2∆ 
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+V ∗
+
+> 1
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+Eθ,π [N − 
+
+> i,j
+
+(θ)] + Eθj ,π [N − 
+
+> i,j
+
+(θj )]  (60) 
+
+= 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+Eθ,π [N − 
+
+> i,j
+
+(θ)] + Eθj ,π [N − 
+
+> i
+
+− N − 
+
+> i,j
+
+(θ)]  (61) 
+
+= 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+Eθ,π [N − 
+
+> i
+
+] + Eθ,π [N − 
+
+> i,j
+
+(θ)] − Eθj ,π [N − 
+
+> i,j
+
+(θ)]  (62) The Equation (61) follows from Equation (58) and noticing that V ∗ 
+
+> 1
+
+(= 11−p∗
+
+> 1,1
+
+) only depends on 
+
+(n, δ, ∆) i.e., it is the same for all θ ∈ Θ in this analysis. Also, Equation (62) is due to the fact that for any j ∈ [d − 1] , for any function f (·), we have P 
+
+> θ∈Θ
+
+f (θj ) = P 
+
+> θ∈Θ
+
+f (θ). To deal with the first expectation in the above equation we use the following lemma (proof in Appendix C.7) 
+
+Lemma 6. For any instance (n, δ, ∆, θ ), algorithm π, and T ≥ 2KV ∗ 
+
+> 1
+
+, we have Eθ,π [N − 
+
+> i
+
+] ≥ KV ∗
+
+> 1
+> 4
+
+for any i ∈ [n].
+
+For the remaining terms, we use Lemma E.3 from [ 14 ] which is a standard result using Pinskers’ inequality. We re-iterate the lemma here. 
+
+Lemma E.3 in [ 14 ]. If f : ST −→ [0 , D ] then, EP1 (f (s)) − EP2 (f (s)) ≤ D
+
+q log (2) 2 .pKL( P2|| P1).Using Lemma 6 and Lemma E.3 from [14] in Equation (62), we obtain 
+
+2 X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+h
+
+KV ∗ 
+
+> 1
+
+/4 − { T plog (2) /2
+
+q
+
+KL( Pπθ || Pπθj )}
+
+i
+
+(63) where Pπθ and Pπθj are the distributions over T-length state sample paths generated due to the interaction between π and the transition kernels Pθ and Pθj respectively. Next, to bound the KL-divergence term appearing in Equation (63), we have the following lemma (proof in Appendix C.8) 
+
+Lemma 7. For any instance (n, δ, ∆, θ ) and algorithm π, for any j ∈ [d − 1] , we have, 
+
+KL( Pπθ || Pπθj ) ≤ 3 · 22n · ∆2
+
+δ(d − 1) 2 · Eθ,π [N −]. (64) Using above, we get the following 
+
+2 X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+"
+
+KV ∗ 
+
+> 1
+
+/4 − T
+
+√2
+
+s
+
+3.22n ∆2
+
+δ(d − 1) 2 Eθ,π [N −]
+
+!# 
+
+(65) 27 = 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+
+
+KV ∗ 
+
+> 1
+
+/4 − { T p3/2 2n.∆
+
+√δ(d − 1) .
+
+q
+
+Eθ,π [N −]}
+
+
+
+(66) 
+
+≥ 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+
+
+KV ∗ 
+
+> 1
+
+/4 − { T p3/2 2n.∆
+
+√δ(d − 1) .√T }
+
+
+
+(67) 
+
+= 2∆ V ∗
+
+> 1
+
+n(d − 1) 
+
+X
+
+> θ∈Θ
+
+X
+
+> i∈[n]
+> d−1
+
+X
+
+> j=1
+
+
+
+KV ∗ 
+
+> 1
+
+/4 − (2 KV ∗ 
+
+> 1
+
+)3/2p3/2 2n.∆
+
+√δ(d − 1) 
+
+
+
+(68) where in the last second step we used the fact that N − ≤ T and in the last step, we use T = 2 KV ∗ 
+
+> 1
+
+.Further, notice that the term inside the bracket is independent of θ, i and j. Thus, we have 
+
+X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ ∆V ∗ 
+
+> 1
+
+· | Θ| · 
+
+
+
+KV ∗ 
+
+> 1
+
+/4 − (2 KV ∗ 
+
+> 1
+
+)3/2p3/2 2n.∆
+
+√δ(d − 1) 
+
+
+
+(69) Rearranging and using the fact that √3 < 2 we get 
+
+1
+
+|Θ|
+
+X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ V ∗
+
+> 1
+
+
+
+∆KV ∗ 
+
+> 1
+
+/4 − (KV ∗ 
+
+> 1
+
+)3/2 2n+2 .∆2
+
+√δ(d − 1) 
+
+
+
+. (70) Now choosing 
+
+∆ = (d − 1) √δ
+
+2n+5 pKV ∗
+
+> 1
+
+, (71) we have that 
+
+1
+
+|Θ|
+
+X
+
+> θ∈Θ
+
+Eθ,π [R(K)] ≥ V ∗
+
+> 1
+
+"
+
+(d − 1) √δ
+
+2n+5 pKV ∗
+
+> 1
+
+· KV ∗
+
+> 1
+
+4 − (KV ∗ 
+
+> 1
+
+)3/2 · 2n+2 
+
+√δ(d − 1) ·
+
+n (d − 1) √δ
+
+2n+5 pKV ∗
+
+> 1
+
+o2
+
+#
+
+(72) 
+
+= V ∗
+
+> 1
+
+" (d − 1) pδ · K · V ∗
+
+> 1
+
+2n+7 − (d − 1) pδ · K · V ∗
+
+> 1
+
+2n+8 
+
+#
+
+(73) 
+
+≥ (d − 1) · √δ · pKV ∗
+
+> 1
+
+2n+8 (74) 
+
+≥ d · √δ · pKV ∗
+
+> 1
+
+2n+9 (75) 
+
+≥ d · √δ · pKB ∗/n 
+
+2n+9 , (76) where in the last second line, we use that V ∗ 
+
+> 1
+
+> 1 and in the last line, we use d − 1 ≥ d/ 2 for any natural number d ≥ 2 which holds for our instances. The final step follows from the result 
+
+V ∗ 
+
+> 1
+
+> B ∗/n (details in Appendix C.11). Since the average over entire set is lower bounded by the RHS, there must exist some parameter in the set for which the RHS is definitely a valid lower bound. Now, what remains to check is that the ∆ chosen above is valid. Hence, we need to ensure that 
+
+∆ = (d − 1) √δ
+
+2n+5 pKV ∗
+
+> 1
+
+< 2−n · 1 − 2δ
+
+1 + n + n2 . (77) Thus, we need 
+
+K > (d − 1) 2 · δ
+
+210 · V ∗ 
+
+> 1
+
+·
+
+ 1−2δ
+
+> 1+ n+n2
+
+2 . (78) The condition in the theorem ensures the above because V ∗ 
+
+> 1
+
+> B ∗/n K > n · (d − 1) 2 · δ
+
+210 · B∗ ·
+
+ 1−2δ
+
+> 1+ n+n2
+
+2 > (d − 1) 2 · δ
+
+210 · V ∗ 
+
+> 1
+
+·
+
+ 1−2δ
+
+> 1+ n+n2
+
+2 . (79) So the lower bound is valid and it gives a bound on the number of episodes as well. This completes the proof. 28 C Proof of Intermediate Lemmas 
+
+C.1 Proof of Lemma 1 Lemma 1. For any instance (n, δ, ∆, θ ), features defined in Equations (3) and (4) yield valid transition probabilities, i.e., 1. We have, ⟨ϕ(s′|s, a), θ ⟩ ≥ 0 ∀ (s, a, s′), and P 
+
+> s′∈S
+
+⟨ϕ(s′|s, a), θ ⟩ = 1 ∀ (s, a) ∈ S × A .2. For any (s, a) ∈ S × A , if transition to some s′ ∈ S is impossible, we have ⟨ϕ(s′|s, a), θ ⟩ = 0 ;on the other hand, if the transition is certain, then ⟨ϕ(s′|s, a), θ ⟩ = 1 .Proof. For any instance ( n, δ, ∆, θ ), we prove the lemma through partitions of the set of all global transitions (s, a, s′) ∈ S × A × S .Fix any action a ∈ A . We consider various transitions and argue that the analysis below for this fixed action holds for any action. 
+
+When s = g
+
+All the agents are at the goal node. Using the features, we have, for s′ = g (this corresponds to third case in Equation (3)), 
+
+P(g|g, a) = ⟨ϕ(g|g, a), θ ⟩
+
+= ⟨(0nd −1, 1) , (θ1, 1, . . . , θ n, 1) ⟩
+
+= 1 (80) Again, using the features, for any s′̸ = g (this corresponds to the second case in Equation (3) ), we have, 
+
+P(s′|g, a) = ⟨ϕ(s′|g, a), θ ⟩
+
+= ⟨0nd , (θ1, 1, . . . , θ n, 1) ⟩
+
+= 0 (81) Thus, for the fixed a, for any s′ ∈ S , from above Equations (81) and (80), we have 
+
+⟨ϕ(s′|g, a), θ ⟩ ≥ 0.
+
+Also using Equations (81) and (80) we have 
+
+X
+
+> s′∈S
+
+⟨ϕ(s′|g, a), θ ⟩ = ⟨ϕ(g|g, a), θ ⟩ + X
+
+> s′∈S\{ g}
+
+⟨ϕ(s′|g, a), θ ⟩ = 1 + 0 = 1 (82) Hence, the first part of the lemma is proved for this case. Now, recall from the construction of instances as given in Section 3.1, the impossible transitions in this case are from g to any s′̸ = g and the only certain transition is from g to g. Hence, Equations (80) and (81) ensure that the second part of the lemma is also satisfied for this case. 
+
+When s̸ = g
+
+These represent the most general transitions. For any such s, let I = {i1, i 2, . . . , i r } be the set of all agents that are at node s in state s. Let J = {j1, j 2, . . . , j n−r } be the set of all agents that are at node g in state s. We partition the state space here based on s.Consider the set of all states in S in which at least one of the agents in J is not at node g. We represent this set as ¯S(s). Recall that these are the states not reachable from s. While all the other states that are reachable from s are denoted by S(s).Using the features, for any s′ ∈ ¯S(s) (this corresponds to the second part of the second case in Equation (3)), we have 
+
+P(s′|s, a) = ⟨ϕ(s′|s, a), θ ⟩
+
+= ⟨0nd , (θ1, 1, . . . , θ n, 1) ⟩
+
+= 0 (83) 29 These are the only impossible transitions and there’s no certain transition for s. Thus second part of the lemma holds. For any s′ ∈ S (s), we derive the expression of transition probability in closed form in Appendix C.2. Here, we will just show that second condition of the lemma is also satisfied. From Equation (83) we have 
+
+X
+
+> s′∈S
+
+P(s′|s, a) = X
+
+> s′∈S (s)
+
+P(s′|s, a) + X 
+
+> s′∈¯S(s)
+
+P(s′|s, a) = X
+
+> s′∈S (s)
+
+P(s′|s, a) (84) Using Assumption 1 and features in Equation (3), we have 
+
+X
+
+> s′∈S (s)
+
+P(s′ | s, a) = X
+
+> s′∈S (s)
+
+⟨ϕ(s′ | s, a), (θ1, 1, . . . , θ n, 1) ⟩ (85) 
+
+= X
+
+> s′∈S (s)
+
+⟨ϕ(( s′
+
+> 1
+
+, . . . , s ′
+
+> n
+
+)|(s1, . . . , s n), (a1, . . . , a n)) , (θ1, 1, . . . , θ n, 1) ⟩ (86) 
+
+= X
+
+> s′∈S (s)
+
+⟨(ϕ1(s′ 
+
+> 1
+
+| s1, a 1), . . . , ϕ n(s′ 
+
+> n
+
+| sn, a n)) , (θ1, 1, . . . , θ n, 1) ⟩ (87) 
+
+= X
+
+> s′∈S (s)
+> n
+
+X
+
+> i=1
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩, (88) In the above, Equation (86) is obtained by explicitly expanding the joint state, action, and next-state tuples into their individual components. In Equation (87) we further break down the joint feature vector into a concatenation of per-agent feature vectors ϕi(s′ 
+
+> i
+
+| si, a i) according to features corresponding to first case in Equation (3) . Finally, in Equation (88) we use linearity of the inner product. In the next step, we split the summation into two disjoint sets of agents, based on the nodes they are currently located at. This helps us exploit the properties of nested sums for further simplification. 
+
+X
+
+> s′∈S (s)
+
+P(s′ | s, a) = X
+
+> s′∈S (s)
+> n
+
+X
+
+> i=1
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ (89) 
+
+= X
+
+> s′∈S (s)
+
+X
+
+> i∈I
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + X
+
+> j∈J
+
+⟨ϕj (s′ 
+
+> j
+
+| sj , a j ), (θj , 1) ⟩
+
+ (90) 
+
+= X
+
+> i∈I
+
+X
+
+> s′∈S (s)
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + X
+
+> j∈J
+
+X
+
+> s′∈S (s)
+
+⟨ϕj (s′ 
+
+> j
+
+| sj , a j ), (θj , 1) ⟩ (91) 
+
+= X
+
+> i∈I
+
+ X
+
+> s′
+> 1∈S ′
+> 1
+
+· · · X
+
+> s′
+> n∈S ′
+> n
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩
+
+
+
++ X
+
+> j∈J
+
+ X
+
+> s′
+> 1∈S ′
+> 1
+
+· · · X
+
+> s′
+> n∈S ′
+> n
+
+⟨ϕj (s′ 
+
+> j
+
+| sj , a j ), (θj , 1) ⟩
+
+ (92) where in the Equation (92) we fully unroll the nested sum, making it explicit that we are summing over the Cartesian product of each agent’s next state space (S′ 
+
+> i
+
+= {s, g } if i ∈ I and S′ 
+
+> i
+
+= {g} if 
+
+i ∈ J ). It emphasizes that even though the local inner product depends only on a particular agent fixed in the outer sum, it is repeated across all combinations of other agents’ next states. Since for any j ∈ J , we have s′ 
+
+> j
+
+≡ g, the transition is certain. Moreover, |I| = r, and also note that for each fixed i ∈ I , the term ⟨ϕ(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ does not depend on the values of other agents’ next states in I. Similarly, for each j ∈ J , the corresponding inner product term is independent of the next states of any agents in I. This allows us to factor out these terms from the inner sums. We now refine the expression from Equation (92) by leveraging this structure as follows: 
+
+X
+
+> s′∈S (s)
+
+P(s′ | s, a) = X
+
+> i∈I
+
+{2r−1 · X
+
+> s′
+> i
+
+⟨ϕ(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩} + X
+
+> j∈J
+
+2r · ⟨ ϕ(s′ 
+
+> j
+
+| sj , a j ), (θj , 1) ⟩
+
+(93) 30 Now, substituting the feature representations defined in Equation (4), we have 
+
+X
+
+> s′∈S (s)
+
+P(s′ | s, a) = X
+
+> i∈I
+
+
+
+2r−1 ·
+
+
+
+(0 d−1, 1
+
+n · 2r−1 ), (θi, 1) 
+
+ 
+
++ X
+
+> j∈J
+
+
+
+2r ·
+
+
+
+(0 d−1, 1
+
+n · 2r ), (θj , 1) 
+
+ 
+
+= X
+
+> i∈I
+
+1
+
+n + X
+
+> j∈J
+
+1
+
+n
+
+= rn + n − rn
+
+= 1 
+
+Now, what remains is to verify that all remaining individual transition probabilities are all non-negative i.e., for all s′ ∈ S (s), we have 
+
+P(s′ | s, a) ≥ 0. (94) Recall for any of our instance, n ≥ 1, δ ∈ (2 /5, 1/2) , ∆ < 2−n · 1−2δ 
+
+> 1+ n+n2
+
+and θ ∈ Θ. Suppose s is of type r ∈ [n]. For any r′ ∈ [r] ∪ { 0}, we analyze the non-negativity of the transition probability as follows. For any s′ ∈ S r′ (s), we let T = {t1, t 2, . . . , t r−r′ } ⊆ I represent the set of agents that transit from node s to node g during the global transition s to s′. Those who continue to stay at node s constitute the set I ∩ T ′.First, observe that 
+
+∆ < 2−n(1 − 2δ)1 + n + n2 < 2−n · 2δ
+
+3 , (95) where the second inequality holds because 1 − 2δ < 2δ for δ ∈ (2 /5, 1/2) and 1 + n + n2 ≥ 3 for all n ≥ 1.Next, using r ≤ n, we get 
+
+δ > 3 · 2n−1 · ∆ > 3 · 2r−1 · ∆ =⇒ δ
+
+2r−1 − 3∆ > 0. (96) Observe that the above inequality is equivalent to 
+
+(−0.5n)(1 − 2δ) + 0 .5nn · 2r−1 − 3∆ > 0, (97) Moreover, since 0 ≤ r′ and r ≤ n, and δ ∈ (2 /5, 1/2) , it follows that −0.5r ≥ − 0.5n, and hence 
+
+(r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r−1 − 3∆ > 0. (98) Expanding and rearranging, we have 
+
+r′(1 − 2δ) + r(δ − 0.5) + 0 .5nn · 2r−1 − 3∆ > 0. (99) Since r′ ≤ r ≤ n, we note that ∆ 
+
+> n
+
+(r − 2r′) ≥ − ∆. Hence, we have 
+
+r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′) − 2∆ > 0. (100) Now, note that each indicator 1{sgn (ai,p )̸ = sgn (θi,p )} takes values in 0, 1, so 
+
+X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )} ≥ − (r − r′) (101) 
+
+≥ − r (102) 
+
+≥ − n (103) 31 Using above results (Equations (100) and (103) ) and the expression for general transition probability (from Lemma 2) we obtain 
+
+P(s′|s, a) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+" X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+#
+
+(104) 
+
+> 0. (105) This shows that the constructed probability remains strictly positive for all feasible transitions. Thus, all transition probabilities P(s′ | s, a) are non-negative under the proposed construction. Thus the first condition is also satisfied. This completes the proof that the transition model and proposed feature design defines a valid probability distribution on any instance as defined in Section 3.1. 
+
+C.2 Proof of Lemma 2 Lemma 2. For a given state s ∈ S \ g, let I denote the set of agents at node s. Consider a transition to s′ ∈ S (s) under joint action a ∈ A . Let T ⊆ I be the set of agents moving from s to g. Define 
+
+r = |I| , r′ = |I \ T | and T ′ = N \ T . Then, under our proposed feature construction and Assumption 1 on the instances, we have 
+
+P(s′|s, a) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+h X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+i
+
+.
+
+Proof. Consider any state s ∈ S \ { g} such that the agents in I := {i1, i 2, . . . , i r } are at node s,and the remaining agents in J := {j1, j 2, . . . , j n−r } are already at the node g. For any next state 
+
+s′ ∈ S (s), let T = {t1, t 2, . . . , t r−r′ } ⊆ I be the set of agents transiting from node s to node g in the next state. Others in I that stay at node s form the set I ∩ T ′. Then, s ∈ S r and s′ ∈ S r′ , where 
+
+n ≥ r ≥ r′ ≥ 0 and n ≥ 1.From Assumption 1, the transition probability is given by 
+
+P(s′|s, a) = ⟨ϕ(s′|s, a), θ ⟩ (106) 
+
+= ⟨ϕ (( s′
+
+> 1
+
+, s ′
+
+> 2
+
+, . . . , s ′
+
+> n
+
+)|(s1, s 2, . . . , s n), (a1, a 2, . . . , a n)) , (θ1, 1, θ 2, 1, . . . , θ n, 1) ⟩
+
+(107) 
+
+= X 
+
+> i∈I∩T ′
+
+⟨ϕi(s | s, a i), (θi, 1) ⟩ + X
+
+> j∈J
+
+⟨ϕj (g | g, a j ), (θj , 1) ⟩ + X
+
+> t∈T
+
+⟨ϕt(g | s, a t), (θt, 1) ⟩,
+
+(108) where the last inequality follows by decomposing the agents across sets I ∩ T ′, J , and T .Now, using the feature definition from Equation (4) , we compute the transition probability as follows: 
+
+P(s′|s, a) = X 
+
+> i∈I∩T ′
+
+ 
+
+−ai, 1 − δn · 2r−1
+
+
+
+, (θi, 1) 
+
+
+
++ X
+
+> j∈J
+
+ 
+
+0d−1, 1
+
+n · 2r
+
+
+
+, (θj , 1) 
+
+
+
+(109) 
+
++ X
+
+> t∈T
+
+ 
+
+at, δn · 2r−1
+
+
+
+, (θt, 1) 
+
+
+
+= X 
+
+> i∈I∩T ′
+
+ 1 − δn · 2r−1 + ⟨− ai, θ i⟩
+
+
+
++ X
+
+> j∈J
+
+1
+
+n · 2r + X
+
+> t∈T
+
+
+
+⟨at, θ t⟩ + δn · 2r−1
+
+
+
+(110) 
+
+= r′ · 1 − δn · 2r−1 + X 
+
+> i∈I∩T ′
+
+⟨− ai, θ i⟩ + n − rn · 2r + ( r − r′) · δn · 2r−1 + X
+
+> t∈T
+
+⟨at, θ t⟩ (111) 32 = r′ + ( r − 2r′) δn · 2r−1 + X 
+
+> i∈I∩T ′
+
+⟨− ai, θ i⟩ + n − rn · 2r + X
+
+> t∈T
+
+⟨at, θ t⟩ (112) 
+
+= r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r − X 
+
+> i∈I∩T ′
+> d−1
+
+X
+
+> p=1
+
+ai,p · θi,p + X
+
+> t∈T
+> d−1
+
+X
+
+> p=1
+
+at,p · θt,p (113) 
+
+= r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r
+
+− X 
+
+> i∈I∩T ′
+> d−1
+
+X
+
+> p=1
+
+∆
+
+n(d − 1) 
+
+
+
+1{sgn (ai,p ) = sgn (θi,p )} − 1{sgn (ai,p )̸ = sgn (θi,p )}
+
+
+
++ X
+
+> t∈T
+> d−1
+
+X
+
+> p=1
+
+∆
+
+n(d − 1) 
+
+
+
+1{sgn (at,p ) = sgn (θt,p )} − 1{sgn (at,p )̸ = sgn (θt,p )}
+
+
+
+, (114) where in Equation (111) we use the cardinality of sets I ∩ T ′, J and I. Equation (114) follows from the fact that for any i ∈ [n], ai ∈ {− 1, 1}d−1, and θi ∈
+
+n −∆ 
+
+> n(d−1)
+
+, ∆
+
+> n(d−1)
+
+od−1
+
+.Taking the summation over p inside, 
+
+P(s′|s, a) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r
+
+− X 
+
+> i∈I∩T ′
+
+∆
+
+n(d − 1) 
+
+n
+
+d − 1 − 2
+
+> d−1
+
+X
+
+> p=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+o
+
++ X
+
+> t∈T
+
+∆
+
+n(d − 1) 
+
+n
+
+d − 1 − 2
+
+> d−1
+
+X
+
+> p=1
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+o
+
+(115) 
+
+= r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r
+
+− ∆
+
+n(d − 1) 
+
+n
+
+r′(d − 1) − 2 X 
+
+> i∈I∩T ′
+> d−1
+
+X
+
+> p=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+o
+
++ ∆
+
+n(d − 1) 
+
+n
+
+(r − r′) · (d − 1) − 2 X
+
+> t∈T
+> d−1
+
+X
+
+> p=1
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+o
+
+(116) 
+
+= r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r
+
++ ∆
+
+n(d − 1) 
+
+n
+
+(r − 2r′) · (d − 1) 
+
+o
+
++ 2∆ 
+
+n(d − 1) · X 
+
+> i∈I∩T ′
+> d−1
+
+X
+
+> p=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}− 2∆ 
+
+n(d − 1) · X
+
+> t∈T
+> d−1
+
+X
+
+> p=1
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+o
+
+(117) 
+
+= r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)+ 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+n X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )} − X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+o
+
+(118) where Equation (116) is obtained by using the cardinality of the set I ∩ T ′. Finally, we simplify Equation (117) to obtain the final expression given in Equation (118). This completes the proof. 33 C.3 Proof of Corollary 1 Corollary 1. Following Lemma 2, if each agent i ∈ N selects its action according to ai,j =
+
+sgn (θi,j ) ∀ j ∈ [d − 1] , the resulting transition probability is independent of I and T , and it only depends on r and r′. We denote the corresponding global action by aθ and resulting transition probabilities by p∗ 
+
+> r,r ′
+
+.Proof. Putting a = aθ , all indicators in the final equation from Lemma 2 proof vanish leaving probability only a function of r and r′ for a given instance. 
+
+P(s′|s, aθ ) = r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′) = p∗ 
+
+> r,r ′
+
+(119) 
+
+C.4 Proof of Lemma 3 Lemma 3. For every r ∈ [n − 1] , the following holds: (a) for r′ ∈ { 0, . . . , ⌊ r+1 2 ⌋} , we have 
+
+ r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<   rr′
+
+p∗ 
+
+> r,r ′
+
+and (b) for r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+.Proof. Consider any r ∈ [n − 1] 
+
+Part (a) For any r′ ∈ { 0, 1, . . . , ⌊ r+1 2 ⌋} .For our instances, we have 
+
+∆ < 1 − 2δ
+
+2n(1 + n + n2) < 1 − 2δ
+
+2n  1 + n + n2
+
+> 8
+
+ . (120) Rearranging the above terms, we have 
+
+∆
+
+ n2
+
+8 + n + 1 
+
+
+
+< 1 − 2δ
+
+2n . (121) Since 1 ≤ r ≤ n, it follows that n2 
+
+> 8
+
++ n + 1 ≥ r2 
+
+> 8
+
++ r + 1 , and therefore 
+
+∆
+
+ r2
+
+8 + r + 1 
+
+
+
+< 1 − 2δ
+
+2n . (122) Moreover, using the fact that r+1 2r+1 ≥ 12n for our range of r, we obtain 
+
+∆
+
+n
+
+ r2
+
+8 + r + 1 
+
+
+
+< (r + 1) · 1 − 2δn · 2r+1 . (123) Rewriting the left-hand side, we get 
+
+∆
+
+n · r2
+
+8 + ( r + 1) · ∆
+
+n < (r + 1) · 1 − 2δn · 2r+1 . (124) Next, we use the inequality r′(r − 2r′) ≤ r2 
+
+> 8
+
+, which holds for all 0 ≤ r′ ≤ ⌊ r+1 2 ⌋, to deduce 
+
+∆
+
+n · r′(r − 2r′) + ( r + 1) 
+
+ δ − 0.5
+
+n · 2r + ∆
+
+n
+
+
+
+< 0. (125) Now, since 0 ≤ r′ ≤ ⌊ r+1 2 ⌋, we have that 
+
+2r′ − (r + 1) 2 ≤ 0. (126) Also, since 0 ≤ r′ ≤ r ≤ n, and δ ∈ (2 /5, 1/2) , we have that 
+
+0.5n + (1 − 2δ)( r′ − 0.5r) ≥ 0.5n + (1 − 2δ)( −0.5r) (127) 
+
+≥ 0.5n + (1 − 2δ)( −0.5n) (128) 34 = n · δ > 0. (129) Using Equations (125), (126) and (129), we have 
+
+2r′ − (r + 1) 2 · (r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r−1 + ∆
+
+n r′(r − 2r′) + ( r + 1) 
+
+ δ − 0.5
+
+n · 2r + ∆
+
+n
+
+
+
+< 0.
+
+(130) After appropriate rearrangement of terms in Equation (130), we obtain 
+
+(r + 1) ·
+
+ r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n · 2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+< (r + 1 − r′) ·
+
+ r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)
+
+
+
+. (131) The above inequality is equivalent to 
+
+r + 1 
+
+r + 1 − r′ · p∗ 
+
+> r+1 ,r ′
+
+< p ∗ 
+
+> r,r ′
+
+, (132) which in turn implies r + 1 
+
+r′
+
+
+
+· p∗ 
+
+> r+1 ,r ′
+
+<
+
+ rr′
+
+
+
+· p∗ 
+
+> r,r ′
+
+, (133) where we used the expression of transition probabilities p∗ 
+
+> r+1 ,r ′
+
+and p∗ 
+
+> r,r ′
+
+from Lemma 2. This completes the proof of part (a). We now proceed to the second case, where r′ > ⌊ r+1 2 ⌋.
+
+Part (b): Now consider the case where r ≥ r′ > ⌊ r+1 2 ⌋. Again, recall that for any of our instances, the parameters satisfy 
+
+∆ < 1 − 2δ
+
+2n(n2 + n + 1) < 3δ − 12n(n2 + n + 1) , with δ ∈ (2 /5, 1/2) . (134) The inequality follows because δ ∈ (2 /5, 1/2) and hence we have 1 − 2δ < 3δ − 1.Now, using the above inequality, we have as n ≥ 1 that 
+
+n > 0.5 − δ
+
+2δ − 0.5 + ∆ · 2n(n2 + n + 1) 2δ − 0.5 . (135) Rearranging the above terms we have 
+
+2nδ − 0.5n + δ − 0.5 > ∆ · 2n(n2 + n + 1) . (136) Using the fact that n2 + n + 1 ≥ n2 − n + 1 ≥ r2 − r + 1 for r ≤ n, we get 
+
+0.5n − n + 2 nδ − 0.5 + δ > ∆ · (r2 − r + 1) · 2n (137) Rearranging the terms, we have 
+
+(−n − 0.5)(1 − 2δ) + 0 .5n > ∆ · (r2 − r + 1) · 2n > ∆ · (r2 − r + 1) · 2r (138) Again using n > r , we get 
+
+(−r − 0.5)(1 − 2δ) + 0 .5nn · 2r > ∆
+
+n (r2 − r − 1) (139) Further since r ≥ r′ > ⌊ r+1 2 ⌋, we have r · r′ − 2r′2 ≥ − r2. Using this along with δ ∈ (2 /5, 1/2) 
+
+we get 
+
+(r′ − r − 0.5)(1 − 2δ) + 0 .5nn · 2r + ∆
+
+n (1 + r + r · r′ − 2r′2) > 0 (140) Therefore 
+
+(r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r + ∆
+
+n (1 + r + r · r′ − 2r′2) − 0.5( r + 1) 
+
+ 1 − 2δn · 2r
+
+
+
+> 0 (141) 35 Simplifying this further, we get 
+
+(r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r + ∆
+
+n · r′(r − 2r′) + ( r + 1) 
+
+ δ − 0.5
+
+n · 2r + ∆
+
+n
+
+
+
+> 0. (142) Noting that r′ > ⌊ r+1 2 ⌋ implies 2r′−(r+1) 2 ≥ 1/2. Hence, from the above inequality we get 
+
+2r′ − (r + 1) 2 · (r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r−1 + ∆
+
+n · r′(r − 2r′) + ( r + 1) 
+
+ δ − 0.5
+
+n · 2r + ∆
+
+n
+
+
+
+> 0.
+
+(143) Simplifying this further, we have 
+
+(r + 1) ·
+
+ (r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r
+
+
+
++ ( r + 1) 
+
+ δ − 0.5
+
+n · 2r + ∆
+
+n
+
+
+
++ ( r + 1) ∆
+
+n (r − 2r′)
+
+> (r + 1 − r′)
+
+ (r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r−1
+
+
+
++ ( r + 1 − r′) ∆
+
+n (r − 2r′) (144) The above can be further simplified as 
+
+(r + 1) ·
+
+ (r′ − 0.5r)(1 − 2δ) + δ − 0.5 + 0 .5nn · 2r + ∆
+
+n (r + 1 − 2r′)
+
+
+
+> (r + 1 − r′) ·
+
+ (r′ − 0.5r)(1 − 2δ) + 0 .5nn · 2r−1 + ∆
+
+n (r − 2r′)
+
+
+
+(145) Therefore, we finally have 
+
+(r + 1) ·
+
+ r′ + ( r + 1 − 2r′)δn · 2r + n − r − 1
+
+n2r+1 + ∆
+
+n (r + 1 − 2r′)
+
+
+
+> (r + 1 − r′) ·
+
+ r′ + ( r − 2r′)δn · 2r−1 + n − rn · 2r + ∆
+
+n (r − 2r′)
+
+
+
+(146) The above inequality is equivalent to 
+
+r + 1 
+
+r + 1 − r′ · p∗ 
+
+> r+1 ,r ′
+
+> p ∗ 
+
+> r,r ′
+
+, (147) which in turn implies 
+
+r + 1 
+
+r′
+
+
+
+· p∗ 
+
+> r+1 ,r ′
+
+>
+
+ rr′
+
+
+
+· p∗ 
+
+> r,r ′
+
+, (148) where we used the transition probabilities p∗ 
+
+> r+1 ,r ′
+
+, and p∗ 
+
+> r,r ′
+
+from Lemma 2. This completes the proof. 
+
+C.5 Proof of Lemma 4 Lemma 4. Let r ∈ [n − 1] . Suppose that for every r′ ∈ { 0, 1, . . . , ⌊ r+1 2 ⌋} , we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+<
+
+  rr′
+
+p∗ 
+
+> r,r ′
+
+, and for every r′ ∈ {⌊ r+1 2 ⌋ + 1 , . . . , r }, we have  r+1 
+
+> r′
+
+p∗ 
+
+> r+1 ,r ′
+
+>   rr′
+
+p∗ 
+
+> r,r ′
+
+. Further, if 
+
+V ∗ 
+
+> r
+
+> V ∗ 
+
+> r−1
+
+> · · · > V ∗ 
+
+> 1
+
+> V ∗ 
+
+> 0
+
+= 0 , then V ∗ 
+
+> r+1
+
+> V ∗ 
+
+> r
+
+.Proof. Using the lemma hypothesis for every r′ ∈ { 0, 1, . . . , r }, there exist constants δr,r ′ > 0 such that r + 1 
+
+r′
+
+
+
+p∗ 
+
+> r+1 ,r ′
+
+=
+
+ rr′
+
+
+
+p∗ 
+
+> r,r ′
+
+− δr,r ′ , ∀ r′ ∈
+
+n
+
+0, 1, . . . , ⌊ r + 1 2 ⌋
+
+o
+
+, and (149) 
+
+r + 1 
+
+r′
+
+
+
+p∗ 
+
+> r+1 ,r ′
+
+=
+
+ rr′
+
+
+
+p∗ 
+
+> r,r ′
+
++ δr,r ′ , ∀ r′ ∈
+
+n
+
+⌊ r + 1 2 ⌋ + 1 , . . . , r − 1, r 
+
+o
+
+. (150) 36 Recall that from any state of type r + 1 , there are  r+1 
+
+r′
+
+ reachable states of type r′ for r′ ∈{0, 1, . . . , r + 1 }. Suppose aθ is the action taken in this state, the sum of transition probabilities over the above mentioned states must add up to 1. Thus, 
+
+1 = 
+
+r+1 X
+
+r′=0 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ (151) 
+
+=
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ +
+
+r + 1 
+
+r + 1 
+
+
+
+p∗
+
+r+1 ,r +1 (152) 
+
+=
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ − δr,r ′
+
+
+
++
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ + δr,r ′
+
+
+
++
+
+r + 1 
+
+r + 1 
+
+
+
+p∗
+
+r+1 ,r +1 (153) 
+
+=
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ −
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+δr,r ′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+δr,r ′ +
+
+r + 1 
+
+r + 1 
+
+
+
+p∗
+
+r+1 ,r +1 
+
+(154) This implies 
+
+p∗
+
+r+1 ,r +1 =
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+δr,r ′ −
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+δr,r ′ + 1 − X
+
+0≤r′≤r
+
+ rr′
+
+
+
+p∗
+
+r,r ′ (155) 
+
+=
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+δr,r ′ −
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+δr,r ′ (156) where, the last equation follows because P
+
+0≤r′≤r
+
+  rr′
+
+p∗
+
+r,r ′ = 1 . This can be interpreted as the sum of transition probabilities over all possible next states from a state of type r under action aθ .Next, recall that V ∗
+
+r is given by 
+
+V ∗
+
+r = 1 + 
+
+rX
+
+r′=0 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ V ∗
+
+r′ (157) Using this we have that 
+
+V ∗
+
+r+1 = 1 + p∗
+
+r+1 ,r +1 V ∗
+
+r+1 +
+
+rX
+
+r′=0 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ V ∗
+
+r′ (158) 
+
+= 1 + p∗
+
+r+1 ,r +1 V ∗
+
+r+1 +
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ V ∗
+
+r′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+r + 1 
+
+r′
+
+
+
+p∗
+
+r+1 ,r ′ V ∗
+
+r′ (159) 
+
+= 1 + p∗
+
+r+1 ,r +1 V ∗
+
+r+1 +
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ − δr,r ′
+
+
+
+V ∗
+
+r′
+
++
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ + δr,r ′
+
+
+
+V ∗
+
+r′ (160) 
+
+= 1 + p∗
+
+r+1 ,r +1 V ∗
+
+r+1 +
+
+rX
+
+r′=0 
+
+ rr′
+
+
+
+p∗
+
+r,r ′ V ∗
+
+r′ −
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+δr,r ′ V ∗
+
+r′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+δr,r ′ V ∗
+
+r′ (161) 
+
+= p∗
+
+r+1 ,r +1 V ∗
+
+r+1 + V ∗
+
+r −
+
+⌊ r+1 2 ⌋
+
+X
+
+r′=0 
+
+δr,r ′ V ∗
+
+r′ +
+
+rX
+
+r′=⌊ r+1 2 ⌋+1 
+
+δr,r ′ V ∗
+
+r′ (162) 37 > p ∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r+1
+
++ V ∗ 
+
+> r
+
+−  
+
+> ⌊r+1 2⌋
+
+X
+
+> r′=0
+
+δr,r ′ V ∗⌊ r+1 2 ⌋+1 +
+
+> r
+
+X  
+
+> r′=⌊r+1 2⌋+1
+
+δr,r ′ V ∗⌊ r+1 2 ⌋+1 (163) 
+
+= p∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r+1
+
++ V ∗ 
+
+> r
+
+−
+
+  
+
+> ⌊r+1 2⌋
+
+X
+
+> r′=0
+
+δr,r ′ −
+
+> r
+
+X  
+
+> r′=⌊r+1 2⌋+1
+
+δr,r ′
+
+ V ∗⌊ r+1 2 ⌋+1 (164) 
+
+= p∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r+1
+
++ V ∗ 
+
+> r
+
+− p∗
+
+> r+1 ,r +1
+
+V ∗⌊ r+1 2 ⌋+1 (165) 
+
+> p ∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r+1
+
++ V ∗ 
+
+> r
+
+− p∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r
+
+(166) where in (162) , we use the definition of V ∗ 
+
+> r
+
+from the Equation (157) . (165) follows from Equation (156). In (163) and (166) we utilize the monotonicity assumption of V ∗ with respect to r.Thus, combining above with the fact that for our instances for any r ∈ [n − 1] and p∗ 
+
+> r+1 ,r +1
+
+< 1, we have that 
+
+V ∗ 
+
+> r+1
+
+> p ∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r+1
+
++ V ∗ 
+
+> r
+
+− p∗
+
+> r+1 ,r +1
+
+V ∗ 
+
+> r
+
+(167) This implies that 
+
+(1 − p∗
+
+> r+1 ,r +1
+
+)( V ∗ 
+
+> r+1
+
+− V ∗ 
+
+> r
+
+) > 0 =⇒ V ∗ 
+
+> r+1
+
+> V ∗ 
+
+> r
+
+. (168) This completes the proof. 
+
+C.6 Proof of Lemma 5 Lemma 5. For any of our instances, ∀ (s, a) ∈ S × A , P 
+
+> s′̸=s
+
+P(s′|s, a) − P(s′|s, a∗) V ∗(s′) ≥ 0.Proof. For r = 0 , the statement trivially holds. For any s ∈ S r for any r ∈ [n] and any a ∈ A , we have, 
+
+X 
+
+> s′̸=s
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) = 
+
+> r−1
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) (169) The above follows as there is only one state of type 0 i.e., g and V ∗(g) = 0 . Also, all the other states 
+
+reachable from s (apart from itself) lie in ∪r′∈[r−1] Sr′ (s). For other states that are not reachable, the probability is 0.Using the transition probability obtained in Lemma 2 (along with the notation I, J , T that varies with individual transitions) and Theorem 1, the above can be further written as 
+
+X 
+
+> s′̸=s
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) (170) 
+
+=
+
+> r−1
+
+X
+
+> r′=1
+
+X 
+
+> s′∈S r′(s)
+
+2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+
+X 
+
+> i∈I∩T ′
+
+1{sgn (ai,p )̸ = sgn (θi,p )}− X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+!
+
+V ∗ 
+
+> r′
+
+(171) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+> d−1
+
+X
+
+> p=1
+
+" X 
+
+> s′∈S r′(s)
+
+X 
+
+> i∈I∩T′
+
+1{sgn (ai,p )̸ = sgn (θi,p )}− X
+
+> t∈T
+
+1{sgn (at,p )̸ = sgn (θt,p )}
+
+!# 
+
+(172) In the inner difference of summation of indicators, for any fixed p ∈ [d − 1] we observe that for any agent i ∈ [n] the indicator has positive coefficient if the agent stays at node s itself, whereas it has 38 negative sign if the agent transits to node g. Hence, we write the following along with swapping the summations: 
+
+X 
+
+> s′̸=s
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) (173) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+
+X 
+
+> s′∈S r′(s)
+
+[1{s′ 
+
+> i
+
+= s} − 1{s′ 
+
+> i
+
+= g}]1{sgn (ai,p )̸ = sgn (θi,p )}
+
+
+
+(174) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+
+1{sgn (ai,p )̸ = sgn (θi,p )} X 
+
+> s′∈S r′(s)
+
+(1{s′ 
+
+> i
+
+= s} − 1{s′ 
+
+> i
+
+= g}) (175) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+ r − 1
+
+r′ − 1
+
+
+
+−
+
+r − 1
+
+r′
+
+ 
+
+(176) The final steps follows from calculating how many states of type r′ that are reachable from s are possible with the particular agent at node s or node g in the next state. Simplifying this further, we have that X 
+
+> s′̸=s
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) (177) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+> d−1
+
+X
+
+> p=1
+
+X
+
+> i∈I
+
+
+
+1{sgn (ai,p )̸ = sgn (θi,p )} 2r′ − rr
+
+ rr′
+
+ 
+
+(178) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+> n
+
+X
+
+> i=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+> r−1
+
+X
+
+> r′=1
+
+V ∗
+
+> r′
+
+2r′ − rr
+
+ rr′
+
+!
+
+(179) where, the second equation follows by re-arranging the order of summations. Now, using the fact that for any function f , P 
+
+> a∈[m]
+
+f (a) = 12 [P 
+
+> a∈[m]
+
+f (a) + P 
+
+> a∈[m]
+
+f (m + 1 − a)] , we have 
+
+X 
+
+> s′̸=s
+
+[P(s′|s, a) − P(s′|s, a∗)] V ∗(s′) (180) 
+
+= 2∆ 
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+> n
+
+X
+
+> i=1
+
+"
+
+1{sgn (ai,p )̸ = sgn (θi,p )} (181) 
+
+> r−1
+
+X
+
+> r′=1
+
+12 ·
+
+
+
+V ∗
+
+> r′
+
+2r′ − rr
+
+ rr′
+
+
+
++ V ∗
+
+> r−r′
+
+2( r − r′) − rr
+
+ rr − r′
+
+ #
+
+(182) 
+
+= ∆
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+> n
+
+X
+
+> i=1
+
+"
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+> r−1
+
+X
+
+> r′=1
+
+
+
+V ∗
+
+> r′
+
+2r′ − rr
+
+ rr′
+
+
+
+− V ∗
+
+> r−r′
+
+2r′ − rr
+
+ rr′
+
+ #
+
+(183) 
+
+= ∆
+
+n(d − 1) 
+
+> d−1
+
+X
+
+> p=1
+> n
+
+X
+
+> i=1
+
+"
+
+1{sgn (ai,p )̸ = sgn (θi,p )}
+
+> r−1
+
+X
+
+> r′=1
+
+ V ∗ 
+
+> r′
+
+− V ∗
+
+> r−r′
+
+ 2r′ − rr
+
+ rr′
+
+#
+
+(184) 
+
+≥ 0. (185) where the last step holds because V ∗ 
+
+> r′
+
+≥ V ∗ 
+
+> r−r′
+
+when r′ ≥ r/ 2 and vice-versa due to third claim in Theorem 1. This completes the proof. 
+
+C.7 Proof of Lemma 6 Lemma 6. For any instance (n, δ, ∆, θ ), algorithm π, and T ≥ 2KV ∗ 
+
+> 1
+
+, we have Eθ,π [N − 
+
+> i
+
+] ≥ KV ∗
+
+> 1
+> 4
+
+for any i ∈ [n].
+
+39 Proof. Recall the capped process for any agent from Theorem 2 proof. If capped process for agent 
+
+i ∈ [n] finishes before T , then N − 
+
+> i
+
+= Ni. Else, number of visits to node g for that agent is less than 
+
+K due to which N − 
+
+> i
+
+≥ T − K. Therefore, we have for any i ∈ [n],
+
+Eθ,π [N − 
+
+> i
+
+] ≥ Eθ,π [min {T − K, N i}] ≥ Eθ,π 
+
+" KX
+
+> i=1
+
+min {T /K − 1, N πi,k }
+
+#
+
+(186) In the above, N πi,k is the random variable representing the number of time steps in episode k that the agent i stayed at node s when the global policy being followed was π. Since T ≥ 2KV ∗ 
+
+> 1
+
+, and 
+
+V ∗ 
+
+> 1
+
+≥ 1, we have T /K − 1 > V ∗ 
+
+> 1
+
+. Using this, from Equation (186) , we observe that the statement of lemma holds for any algorithm π if for any agent i, N πi,k ≥ V ∗ 
+
+> 1
+
+with probability at least 1/4. So, it suffices to prove that for any π, the probability that N πi,k ≥ V ∗ 
+
+> 1
+
+is at least 1/4.Firstly, we note from the proof of Theorem 1 that V ∗ 
+
+> 1
+
+= 2nn−1+2( δ+∆) > 2 since 
+
+1
+
+V ∗
+
+> 1
+
+= n − 12n + 2( δ + ∆) 2n (187) 
+
+< n − 12n + 2( δ + 2 −n. 1−2δ 
+
+> 1+ n+n2
+
+)2n (188) 
+
+< n − 12n + 2( δ + 1−2δ 
+
+> 6
+
+)2n (189) 
+
+= n − 12n + ( 1+4 δ 
+
+> 3
+
+)2n (190) 
+
+< 1/2 (191) Above, the first inequality arises because ∆ < 1−2δ 
+
+> 1+ n+n2
+
+for our instances, the second inequality holds because n ≥ 1 and the final step is due to δ < 1/2.Next, we state the following lemma whose proof is available in Appendix C.9. 
+
+Lemma 8. Take any agent ˜i ∈ [n] currently at node s. Then under any global action a ∈ A , the probability that agent ˜i stays in node s in the next step is lower bounded by 1/2. Formally, if s is such that si = s, then P 
+
+> s′|s′
+> ˜i=s
+
+P[s′|s, a] > 1/2 for any a ∈ A .
+
+Now, we observe that, we can express P[N πi,k ≥ x] = P[{(s1, s 2, . . . , s ⌈x⌉)|sti = s ∀ t ∈ [⌈x⌉], s 1 =
+
+sinit }] i.e., starting at initial state, the probability of observing a ⌈x⌉ length sequence with agent i
+
+always at node s. Let the set of all states s with si = s be S(i). We further evaluate the LHS below 
+
+X
+
+> {s1,...,s ⌈x⌉}∈S (i)×⌈ x⌉
+
+P[s1, . . . , s ⌈x⌉] (192) 
+
+= X
+
+> {s1,...,s ⌈x⌉− 1}∈S (i)×⌈ x⌉− 1
+
+P[s1, . . . , s ⌈x⌉− 1] · P[s⌈x⌉ ∈ S (i) | { s1, . . . , s ⌈x⌉− 1} ∈ S (i)⌈x⌉− 1]
+
+(193) 
+
+= X
+
+> {s1,...,s ⌈x⌉− 1}∈S (i)×⌈ x⌉− 1
+
+P[s1, . . . , s ⌈x⌉− 1] · P[s⌈x⌉ ∈ S (i) | s⌈x⌉− 1 ∈ S (i)] (194) 
+
+≥ X
+
+> {s1,...,s ⌈x⌉− 1}∈S (i)×⌈ x⌉− 1
+
+P[s1, . . . , s ⌈x⌉− 1] · (1 /2) (195) ... (196) 
+
+≥ P[s1 ∈ S (i)] · (1 /2) ⌈x⌉− 1 > (1 /2) x (197) Thus, we obtain, P[N πi,k ≥ x] > (1 /2) x.Further, we use 12 > 12n − δ+∆  
+
+> n
+
+= p∗ 
+
+> 1,1
+
+= 1 − p∗ 
+
+> 1,0
+
+= 1 − 1/V ∗ 
+
+> 1
+
+to obtain, 
+
+P[N πi,k ≥ x] > (1 − 1/V ∗ 
+
+> 1
+
+)x (198) 40 Putting x = V ∗ 
+
+> 1
+
+and using that V ∗ 
+
+> 1
+
+> 2, P[N πi,k ≥ V ∗ 
+
+> 1
+
+] > 1/4, noting that for any α ≥ 2, we have 
+
+(1 − 1 
+
+> α
+
+)α ≥ 1/4.
+
+C.8 Proof of Lemma 7 Lemma 7. For any instance (n, δ, ∆, θ ) and algorithm π, for any j ∈ [d − 1] , we have, 
+
+KL( Pπθ || Pπθj ) ≤ 3 · 22n · ∆2
+
+δ(d − 1) 2 · Eθ,π [N −]. (64) 
+
+Proof. We let the t-length tuple consisting of the sequence of states from first to tth time step be denoted by ¯st ∈ S ×t, i.e., t times cross product of state space. Recall that st represents the state at time t.By chain rule of KL divergence for any θ ∈ Θ, and j ∈ [d − 1] ,
+
+KL( Pπθ || Pπθj ) =  
+
+> T−1
+
+X
+
+> t=1
+
+KL[ Pπθ (st+1 |¯st)|| Pπθj (st+1 |¯st)] (199) where, 
+
+KL[ Pπθ (st+1 |¯st)|| Pπθj (st+1 |¯st)] = X
+
+> ¯st∈S ×t
+
+Pπθ (¯ st) X
+
+> st+1 ∈S
+
+Pπθ (st+1 |¯st) · ln 
+
+ Pπθ (st+1 |¯st)
+
+Pπθj (st+1 |¯st)
+
+
+
+(200) 
+
+= X
+
+> ¯st∈S ×t
+
+Pπθ (¯ st). X
+
+> s′∈S
+
+Pπθ (st+1 = s′|¯st) · ln 
+
+ Pπθ (st+1 = s′|¯st)
+
+Pπθj (st+1 = s′|¯st)
+
+
+
+(201) 
+
+= X
+
+> ¯st−1∈S ×t−1
+
+Pπθ (¯ st−1). X
+
+> s∈S ,a∈A
+
+Pπθ (st = s, at = a|¯st−1)
+
+× X
+
+> s′∈S
+
+Pπθ (st+1 = s′|¯st−1, st = s, at = a). ln 
+
+ Pπθ (st+1 = s′|¯st−1, st = s, at = a)
+
+Pπθj (st+1 = s′|¯st−1, st = s, at = a)
+
+
+
+(202) In the above, we just use the laws of conditional divergences and conditional probabilities. Notice that in the above, for any fixed (s, a), the inner summation (last line) is itself a KL-divergence for fixed parameters from outer summations. We will simplify this inner KL term now. 
+
+X
+
+> s′∈S
+
+Pπθ (st+1 = s′|¯st−1, st = s, at = a) · ln 
+
+"
+
+Pπθ (st+1 = s′|¯st−1, st = s, at = a)
+
+Pπθj (st+1 = s′|¯st−1, st = s, at = a)
+
+#
+
+= X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+"
+
+Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+#
+
+(203) where the above equation holds due to Markovian Transitions. We’ll upper bound the inner KL for any (s, a) ∈ S × A .For any probability distributions A, B , due to non-negativity of KL( .|| .), we have KL( A|| B) ≤
+
+KL( A|| B) + KL( B|| A). Thus, 
+
+X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+≤ X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
++ X
+
+> s′∈S
+
+Pπθj (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθj (st+1 = s′|st = s, at = a)
+
+Pπθ (st+1 = s′|st = s, at = a)
+
+
+
+(204) 41 = X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) − Pπθj (st+1 = s′|st = s, at = a)
+
+× ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+(205) 
+
+= X
+
+> s′∈S
+
+[Pπθ (st+1 = s′|st = s, at = a) − Pπθj (st+1 = s′|st = s, at = a)] 
+
+× ln 
+
+
+
+1 + Pπθ (st+1 = s′|st = s, at = a) − Pπθj (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+(206) Since ln(1 + x) < x for any x ∈ R, from above, we have: 
+
+X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+≤ X
+
+> s′∈S
+
+[Pπθ (st+1 = s′|st = s, at = a) − Pπθj (st+1 = s′|st = s, at = a)] 2
+
+Pπθj (st+1 = s′|st = s, at = a) (207) 
+
+≤ 2n · max s,a,s′ (⟨ϕ(s′|s, a), θ − θj ⟩)2
+
+min s,a,s′ Pπθj (st+1 = s′|st = s, at = a) ≤ 2n ·
+
+ 2∆ 
+
+d − 1
+
+2 .  δ
+
+2n−1 − ∆
+
+
+
+(208) In the last step, we upper bound every term in the summation by taking the maximum for the numerator and minimum for the denominator. The 2n appears due to there being maximum of 2n such terms for any s ∈ S . Hence, the 2n appears. Note that the difference θ−θj is nd −dimensional and has non-zero components only at (j+( i·d)) th index and are equal to 2×θi,j where i = {0, 1, . . . , n −1}. The inner product maximizes when each component produces either 2∆  
+
+> n(d−1)
+
+throughout or − 2∆  
+
+> n(d−1)
+
+. Either way, the maximum that the numerator can be is 
+
+n 2∆ (d−1) 
+
+o2
+
+. For the minimum of the denominator, one can verify from general transition probability equation in Lemma 2 that it would be minimum when 
+
+s′ = s = sinit and a = aθ .Since 2/5 < δ < 1/2 and ∆ < 2−n( 1−2δ 
+
+> 1+ n+n2
+
+), we have ∆ < 2−n. 2δ 
+
+> 3
+
+. Thus 
+
+X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+< 2n · 4∆ 2
+
+(d − 1) 2
+
+. 2δ
+
+3 · 2n−1 (209) 
+
+= 3 · 22n ∆2
+
+δ(d − 1) 2 (210) Hence, from Equations (203) and (210) we have 
+
+X
+
+> s′∈S
+
+Pπθ (st+1 = s′|¯st−1, st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|¯st−1, st = s, at = a)
+
+Pπθj (st+1 = s′|¯st−1, st = s, at = a)
+
+
+
+= X
+
+> s′∈S
+
+Pπθ (st+1 = s′|st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|st = s, at = a)
+
+Pπθj (st+1 = s′|st = s, at = a)
+
+
+
+(211) 
+
+< 3 · 22n ∆2
+
+δ(d − 1) 2 . (212) Further, note that we must consider only those cases where st̸ = g since otherwise st+1 = g with probability 1 for both instances θ and θj and corresponding ln terms are all 0. Using this and Equation (212) in Equation (202) 
+
+KL[ Pπθ (st+1 |¯st)|| Pπθj (st+1 |¯st)] = X
+
+> ¯st−1∈S ×t−1
+
+Pπθ (¯ st−1) · X
+
+> s∈S ,a∈A
+
+Pπθ (st = s, at = a|¯st−1)
+
+42 ×
+
+"X
+
+> s′∈S
+
+Pπθ (st+1 = s′|¯st−1, st = s, at = a) · ln 
+
+ Pπθ (st+1 = s′|¯st−1, st = s, at = a)
+
+Pπθj (st+1 = s′|¯st−1, st = s, at = a)
+
+#
+
+(213) 
+
+< X
+
+> ¯st−1∈S ×t−1
+
+Pπθ (¯ st−1) · X
+
+> s∈S ,a∈A
+
+Pπθ (st = s, at = a|¯st−1) · 3 · 22n ∆2
+
+δ(d − 1) 2 (214) 
+
+= Pπθ (st̸ = g) · 3 · 22n ∆2
+
+δ(d − 1) 2 (215) Using above result in Equation (199), we have 
+
+KL( Pπθ || Pπθj ) =  
+
+> T−1
+
+X
+
+> t=1
+
+KL[ Pπθ (st+1 |¯st)|| Pπθj (st+1 || ¯st)] (216) 
+
+< 
+
+> T−1
+
+X
+
+> t=1
+
+Pπθ (st̸ = g) · 3 · 22n ∆2
+
+δ(d − 1) 2 (217) 
+
+≤ 3 · 22n ∆2
+
+δ(d − 1) 2 ·
+
+> T
+
+X
+
+> t=1
+
+Pπθ (st̸ = g) (218) 
+
+= 3 · 22n · ∆2
+
+δ(d − 1) 2 · Eθ,π [N −] (219) where, the final step follows from the definition of N −. This completes the proof. 
+
+C.9 Proof of Lemma 8 Lemma 8. Take any agent ˜i ∈ [n] currently at node s. Then under any global action a ∈ A , the probability that agent ˜i stays in node s in the next step is lower bounded by 1/2. Formally, if s is such that si = s, then P 
+
+> s′|s′
+> ˜i=s
+
+P[s′|s, a] > 1/2 for any a ∈ A .
+
+Proof. Similar to Equation (90) , for any ˜i ∈ [n], s and such that s˜i = s, then for any a ∈ A we have 
+
+X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+P(s′ | s, a) (220) 
+
+= X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+X
+
+> i∈I
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + X
+
+> j∈J
+
+⟨ϕj (s′ 
+
+> j
+
+| sj , a j ), (θj , 1) ⟩
+
+ (221) 
+
+= X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+⟨(−a˜i, 1 − δn · 2r−1 ), (θ˜i, 1) ⟩ + X
+
+> i∈I\{ ˜i}
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + n − rn · 2r
+
+ (222) 
+
+= X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+⟨− a˜i, θ ˜i⟩ + 1 − δn · 2r−1 + X
+
+> i∈I\{ ˜i}
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + n − rn · 2r
+
+ (223) 
+
+=
+
+2r−1 · ⟨− a˜i, θ ˜i⟩ + 1 − δn + 2r−1
+
+2 · (r − 1) X
+
+> s′
+> i∈{ s,g }
+
+⟨ϕi(s′ 
+
+> i
+
+| si, a i), (θi, 1) ⟩ + 2 r−1 · n − rn · 2r
+
+
+
+(224) 
+
+=
+
+
+
+2r−1 · ⟨− a˜i, θ ˜i⟩ + 1 − δn + 2r−1
+
+2 · (r − 1) · 1
+
+n · (2 r−1) + n − r
+
+2n
+
+
+
+(225) 
+
+=
+
+
+
+2r−1 · ⟨− a˜i, θ ˜i⟩ + 1 − δn + n − 12n
+
+
+
+(226) In Equation (222) , we use the features from Equations (3) and (4) . In the next step, we simplify the dot product. To obtain Equation (224) , we observe that there are 2r−1 next states in which agent ˜i
+
+43 stays at node s. To simplify the middle summation, we observe that for any agent i ∈ I \ { ˜i}, it will appear in half of the next states of interest in node s and half times in node g. In rest of the steps, we only rearrange terms and simplify. Note that the above probability is minimized when optimal action a∗ is taken, and hence ⟨− a∗ 
+
+> ˜i
+
+, θ ˜i⟩ =
+
+− ∆ 
+
+> n
+
+. Thus, 
+
+X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+P(s′ | s, a) ≥ X
+
+> s′∈S (s)|s′
+> ˜i=s
+
+P(s′ | s, a∗) (227) 
+
+=
+
+
+
+−2r−1 · ∆
+
+n + 1 − δn + n − 12n
+
+
+
+(228) 
+
+≥
+
+
+
+−2n−1 · ∆
+
+n + 1 − δn + n − 12n
+
+
+
+(229) 
+
+≥
+
+ −1 + 2 δ
+
+6n + 6 − 6δ
+
+6n + 3n − 36n
+
+
+
+(230) 
+
+=
+
+ 3n + 2 − 4δ
+
+6n
+
+
+
+(231) 
+
+> 1/2 (232) In the above, we use our restriction on ∆ and δ.
+
+C.10 Proof of Corollary 2 Corollary 2. For any non-goal state s ∈ S r of type r, the self-transition probability under action a is 
+
+P(s|s, a) = r(1 − δ)
+
+n · 2r−1 + n − rn · 2r − r · ∆
+
+n + 2∆ 
+
+n(d − 1) 
+
+X
+
+> i∈I
+> d−1
+
+X
+
+> p=1
+
+1{sgn (ai,p )̸ = sgn (θi,p )}. (16) 
+
+This is minimized when a = aθ and the resulting probability only depends on r.Proof. Putting r′ = r in the equation from Lemma 2 and using T = ϕ gives the desired expression: 
+
+P(s|s, a) = r(1 − δ)
+
+n · 2r−1 + n − rn. 2r − r. ∆
+
+n + 2∆ 
+
+n(d − 1) 
+
+X
+
+> p∈[d−1]
+
+X
+
+> i∈I
+
+1{sgn (ai,p )̸ = sgn (θi,p )} (233) Fixing any s ∈ S\{ g}, fixes the first 3 terms. Only the summation over indicators varies for various actions a. Since the indicator function can least be 0, the minimum probability for the above transition for any s ∈ S is achieved when for each agent i ∈ I , the signs of each component of its action ai,matches with respective components of θi. This definitely happens at a = aθ .
+
+C.11 Proof for V ∗ 
+
+> 1
+
+> B ∗/n 
+
+By standard evaluation argument, 
+
+V ∗ 
+
+> r
+
+= 1 + p∗ 
+
+> r,r
+
+.V ∗ 
+
+> r
+
++
+
+> r−1
+
+X
+
+> r′=1
+
+ rr′
+
+
+
+p∗ 
+
+> r,r ′
+
+.V ∗ 
+
+> r′
+
+(234) 
+
+< 1 + p∗ 
+
+> r,r
+
+V ∗ 
+
+> r
+
++ (1 − p∗ 
+
+> r,r
+
+)V ∗ 
+
+> r−1
+
+(235) 
+
+⇔ V ∗ 
+
+> r
+
+− V ∗ 
+
+> r−1
+
+< 11 − p∗
+
+> r,r
+
+(236) Thus, 
+
+V ∗ 
+
+> n
+
+− V ∗ 
+
+> n−1
+
+< 11 − p∗
+
+> n,n
+
+(237) 
+
+V ∗ 
+
+> n−1
+
+− V ∗ 
+
+> n−2
+
+< 11 − p∗
+
+> n−1,n −1
+
+(238) 44 ...
+
+V ∗ 
+
+> 2
+
+− V ∗ 
+
+> 1
+
+< 11 − p∗
+
+> 2,2
+
+(239) 
+
+V ∗ 
+
+> 1
+
+− V ∗ 
+
+> 0
+
+= 11 − p∗
+
+> 1,1
+
+(240) Adding the above inequalities, 
+
+V ∗ 
+
+> n
+
+− V ∗ 
+
+> 0
+
+≤
+
+> n
+
+X
+
+> i=1
+
+11 − p∗
+
+> i,i
+
+≤ n
+
+1 − p∗
+
+> 1,1
+
+= nV ∗ 
+
+> 1
+
+=⇒ B∗/n ≤ V ∗ 
+
+> 1
+
+(241) The second inequality above is due to p∗ 
+
+> 1,1
+
+being the maximum over all p∗ 
+
+> i,i
+
+(Using the Equation in Corollary 2, it’s easy to show that p∗ 
+
+> r,r
+
+decreases with r for our instances). Observe that the final equality in Equation (241) holds for n = 1 .45

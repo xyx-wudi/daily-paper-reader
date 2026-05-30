@@ -1,0 +1,2731 @@
+Title: 25768_Heterogeneity_in_Multi_A.pdf
+
+URL Source: https://openreview.net/pdf?id=v7nDKBVRPy
+
+Number of Pages: 26
+
+Markdown Content:
+# Heterogeneity in Multi-Agent Reinforcement Learning 
+
+Anonymous Author(s) 
+
+Affiliation Address 
+
+email 
+
+## Abstract 
+
+Heterogeneity is a fundamental property in multi-agent reinforcement learning 1
+
+(MARL), which is closely related not only to the functional differences of agents, 2
+
+but also to policy diversity and environmental interactions. However, the MARL 3
+
+field currently lacks a rigorous definition and deeper understanding of heterogeneity. 4
+
+This paper systematically discusses heterogeneity in MARL from the perspectives 5
+
+of definition , quantification , and utilization . First, based on an agent-level modeling 6
+
+of MARL, we categorize heterogeneity into five types and provide mathematical 7
+
+definitions. Second, we define the concept of heterogeneity distance and propose 8
+
+a practical quantification method. Third, we design a heterogeneity-based multi-9
+
+agent dynamic parameter sharing algorithm as an example of the application of our 10 
+
+methodology. Case studies demonstrate that our method can effectively identify 11 
+
+and quantify various types of agent heterogeneity. Experimental results show that 12 
+
+the proposed algorithm, compared to other parameter sharing baselines, has better 13 
+
+interpretability and stronger adaptability. The proposed methodology will help the 14 
+
+MARL community gain a more comprehensive and profound understanding of 15 
+
+heterogeneity, and further promote the development of practical algorithms. 16 
+
+## 1 Introduction 17 
+
+Multi-agent reinforcement learning (MARL) has achieved success in various real-world applications, 18 
+
+such as swarm robotic control [Kalashnikov et al., 2018], autonomous driving [Zhou et al., 2021], 19 
+
+and large language model fine-tuning [Ma et al., 2024]. However, most MARL studies focus on 20 
+
+policy learning for homogeneous multi-agent systems (MAS), overlooking in-depth discussions 21 
+
+of heterogeneous multi-agent scenarios [Ning and Xie, 2024]. Heterogeneity is a common phe-22 
+
+nomenon in multi-agent systems. For example, in nature, different species of fish collaborate to 23 
+
+find food [Burns et al., 2019]; in human society, diverse teams demonstrate higher intelligence 24 
+
+and resilience [Dall’Anese et al., 2013, Young, 1993]; and in artificial systems, aerial drones and 25 
+
+ground vehicles cooperate to monitor forest fires [Lwowski et al., 2017]. Heterogeneity can enhance 26 
+
+system functionality, reduce costs, and improve robustness, but effectively leveraging heterogeneity 27 
+
+remains a key challenge in multi-agent system [Bennett, 2024]. As an approach of learning through 28 
+
+environmental interactions, MARL can effectively enable multi-agent systems to learn collabora-29 
+
+tive policies. Hence, exploring heterogeneity from a reinforcement learning perspective would 30 
+
+significantly broaden the applicability of MARL. 31 
+
+In the current MARL field, although some works explicitly or implicitly mention agent hetero-32 
+
+geneity, only a few focus on its definition and identification. Regarding explicit discussion of 33 
+
+heterogeneity, studies have explored communication issues [Seraj et al., 2021], credit assign-34 
+
+ment [Yu et al., 2024], and zero-shot generalization [Guo et al., 2024] in heterogeneous MARL. 35 
+
+However, these works limit their focus to agents with clear functional differences and lack def-36 
+
+initions of agent heterogeneity. On the other hand, many studies explore policy diversity in 37 
+
+MARL. Some encourage agents to learn distinguishable behaviors based on identity or trajec-38 
+
+Submitted to 39th Conference on Neural Information Processing Systems (NeurIPS 2025). Do not distribute. tory information [Jiang and Lu, 2021, Li et al., 2021], some works group agents using specific 39 
+
+metrics [Wang et al., 2021, Christianos et al., 2021], and some quantify policy differences [Bettini 40 
+
+et al., 2023b, Hu et al., 2024] and design algorithms to control policy diversity [Bettini et al., 2024]. 41 Overall                    
+
+> Diversity -based
+> MARL
+> Defining Heterogeneity
+> ·Observation -Het
+> ·Response -Het
+> ·Policy -Het
+> ·Objective -Het
+> ·Effect -Het
+> Het
+> in MARL
+> Quantifying Heterogeneity
+> Utilizing Heterogeneity
+> ·Het -based Dynamic
+> Parameter Sharing
+> ·Heterogeneity
+> Distance
+> ·Model -based /free
+> Measuring
+> ·Representation
+> Learning
+> ·Other Approaches…
+
+Figure 1: Our Philosophy. We aim to system-atically discuss heterogeneity in MARL, es-tablishing methodologies for defining, quanti-fying and utilizing heterogeneity. However, these works do not adequately address 42 
+
+where policy diversity originates or how it fundamen-43 
+
+tally relates to agent differences. In terms of defin-44 
+
+ing and classifying heterogeneity in MARL, [Bettini 45 
+
+et al., 2023a] divides heterogeneity into physical and 46 
+
+behavioral types but lacks a mathematical definition. 47 
+
+[Seraj et al., 2021] provides extended POMDP for 48 
+
+heterogeneous MARL settings, but do not classify or 49 
+
+define heterogeneity. Others introduce the concept 50 
+
+of local transition heterogeneity [Yu et al., 2024], but 51 
+
+does not cover all elements of MARL. Overall, het-52 
+
+erogeneity is not only a characteristic that exists in 53 
+
+MAS with traditional functional differences, but also 54 
+
+a fundamental property across the entire MARL field. 55 
+
+Currently, there is still a lack of systematic analysis 56 
+
+of agent heterogeneity from the MARL perspective .57 
+
+To fill the aforementioned gaps, we conduct a se-58 
+
+ries of studies on defining, quantifying, and utilizing 59 
+
+heterogeneity from the perspective of MARL, the phi-60 
+
+losophy of our study can be found in Figure 1. Our 61 
+
+contributions are summarized as follows: 62 
+
+• Defining Heterogeneity: Based on an agent-level model of MARL, we categorize heterogeneity 63 
+
+into observation heterogeneity, response transition heterogeneity, effect transition heterogeneity, 64 
+
+objective heterogeneity, and policy heterogeneity, and provide corresponding definitions. 65 
+
+• Quantifying Heterogeneity: We define the heterogeneity distance, and propose a quantification 66 
+
+method based on representation learning, applicable to both model-free and model-based settings. 67 
+
+Additionally, we give the concept of meta-transition heterogeneity to quantify agents’ comprehensive 68 
+
+heterogeneity. 69 
+
+• Utilizing Heterogeneity: We develop a multi-agent dynamic parameter-sharing algorithm based on 70 
+
+heterogeneity quantification, which offers better interpretability and fewer task-specific hyperparame-71 
+
+ters compared to other related parameter-sharing algorithms. 72 
+
+In this paper, we adopt a discussion approach that progresses from theory to practice and from 73 
+
+general to specific . The overall structure is organized as follows: Section 2 introduces the agent-level 74 
+
+modeling of the MARL primal problem; Section 3 provides the classification and definition of 75 
+
+heterogeneity in MARL; Section 4 proposes the method for quantifying heterogeneity and presents 76 
+
+case studies; Section 5 describes the dynamic parameter-sharing algorithm; Section 6 provides the 77 
+
+related experimental results; and Section 7 summarizes the entire paper. 78 
+
+## 2 Preliminaries 79 
+
+Primal Problem of MARL. In this paper, we use Partially Observable Markov Game 80 
+
+(POMG) [Littman, 1994, Kochenderfer et al., 2022] as the general model for the primal prob-81 
+
+lem of MARL. 1 To better study agent heterogeneity, we adopt an agent-level modeling approach 82 
+
+similar to that in [Seraj et al., 2021, Gronauer and Diepold, 2022]. A POMG is defined as an 8-tuple, 83 
+
+represented as follows: 84 
+
+POMG := ⟨N, {Si}i∈N , {Oi}i∈N , {Ai}i∈N , {Ωi}i∈N , {T i}i∈N , {ri}i∈N , γ ⟩, (1) Among all elements in equation 1, N is the set of all agents, {Si}i∈N is the global state space which 85 
+
+can be factored as {Si}i∈N = ×i∈N Si × SE , where Si is the state space of an agent i, and SE is the 86 
+
+environmental state space, corresponding to all the non-agent components. {Oi}i∈N = ×i∈N Oi is 87 
+
+> 1
+
+POMG is an extension of POMDP for multi-agent settings, with the basic extension path being MDP →
+
+POMDP → POMG [Sun et al., 2023]. Please refer to Appendix C to see a more detailed explanation of POMG. 
+
+2the joint observation space and {Ai}i∈N = ×i∈N Ai is the joint action space of all agents. {Ωi}i∈N88 
+
+is the set of observation functions. {T i}i∈N = ( T 1, · · · , T |N |, T E ) is the collection of all agents’ 89 
+
+transitions and the environmental transition. Finally, {ri}i∈N is the set of reward functions of all 90 
+
+agents and γ is the discount factor. 91 
+
+Here, we give the independent and dependent variables for each function and their notation. At each 92 
+
+time step t, an agent i receives an observation oit ∼ Ωi(·| ˆst), where ˆst ∈ { Si}i∈N is the global state 93 
+
+at time t. Then, agent i makes a decision based on its observation, resulting in an action ait ∼ πi(·| oit).94 
+
+The environment then collects actions from all agents to form the global action ˆat = ( a1 
+
+> t
+
+, . . . , a |N | 
+
+> t
+
+).95 
+
+We assume that the local state transition of agent i is influenced by the global state and global action, 96 
+
+so its local state transitions to a new state sit+1 ∼ T i(·| ˆst, ˆat). Similarly, the states of other agents 97 
+
+and the environment also transition, yielding the next global state ˆst+1 = ( s1
+
+> t+1
+
+, . . . , s |N |
+
+> t+1
+
+, s Et+1 ) ∼98 
+
+(T 1(·| ˆst, ˆat), . . . , T |N |(·| ˆst, ˆat), T E (·| ˆst, ˆat)) = {T i}i∈N (·| ˆst, ˆat). At the same time, all agents 99 
+
+receive rewards, with the reward for a specific agent i given by rit ∼ ri(·| ˆst, ˆat).100 
+
+The objective of MARL is to solve POMG by finding an optimal joint policy that maximizes the 101 
+
+cumulative reward for all agents. We denote the individual optimal policy for agent i as π∗ 
+
+> i
+
+and the 102 
+
+optimal joint policy as ˆπ∗, which can be expressed as ˆπ∗ = ( π∗ 
+
+> 1
+
+, . . . , π ∗|N |). The optimal joint policy 103 
+
+for a POMG can be obtained through the following equation: 104 
+
+π∗ 
+
+> i
+
+= arg max  
+
+> ˆπ
+
+Eˆπ
+
+" ∞X
+
+> k=0
+
+γk X
+
+> i∈N
+
+rit+k ˆst = ˆ s0
+
+#
+
+, (2) where γ is the discount factor, and the expectation is taken over the trajectories induced by the joint 105 
+
+policy ˆπ starting from the initial global state ˆs0.106 
+
+## 3 Definition and Taxonomy of Heterogeneity in MARL 107 
+
+Heterogeneity in MAS. Our goal is to define agent heterogeneity from the perspective of MARL. 108 
+
+Before achieving this, we need to discuss heterogeneity in MAS across various disciplines. Early 109 
+
+studies [Dudek et al., 1996, Parker, 2000] define heterogeneity as differences in physical structure 110 
+
+or functionality of agents, which aligns with common understanding. Later work [Panait and 111 
+
+Luke, 2005] describes heterogeneity as differences in agent behavior, further expanding its meaning. 112 
+
+Recently, [Bennett, 2024] points out that heterogeneity may be a complex phenomenon, related 113 
+
+not only to the inherent properties of agents, but also to their interactions with environment. Thus, 114 
+
+heterogeneity in MARL should not be limited to inherent functional differences of agents, but should 115 
+
+also fully consider various coupling effects of agents within the environment. 116 
+
+Heterogeneity in MARL. In the context of MARL, the fundamental modeling of MARL and its 117 
+
+primal problem provides considerable convenience for defining heterogeneity. This modeling clearly 118 
+
+specifies all MARL elements, delineating the boundaries of the problem discussion 2 and ensuring 119 
+
+the completeness of the discussion. 120 
+
+We focus on the heterogeneity among agents within a same POMG. As discussed in Section 2, the 121 
+
+function in a POMG can connect agent-level elements. Therefore, we categorize agent heterogeneity 122 
+
+into five types centered around the functions. This approach not only avoids overly redundant 123 
+
+classification but also ensures comprehensive coverage of each agent-level element. Regarding 124 
+
+definition, the condition for heterogeneity is obtained by taking the negation of the necessary and 125 
+
+sufficient conditions for homogeneity. 126 
+
+Specifically, these five types of heterogeneity and their related definitions are as follows: 127 
+
+• Observation heterogeneity describes the differences of agents in observing global information. The 128 
+
+relevant elements include the agent’s observation space and observation function. 129 
+
+Definition 1. Agents i and j are observation heterogeneous if the following conditions do not hold at 130 
+
+the same time: ➀ Oi = Oj ; ➁ ∀ˆs ∈ { Si}i∈N , Ωi(·| ˆs) = Ω j (·| ˆs).131 
+
+> 2
+
+In this paper, we focus on the heterogeneity of MARL under the conventional POMG problem. Additional discussions on unconventional heterogeneity types are provided in Appendix D. 
+
+3• Response transition heterogeneity describes the differences of agents in how their state transitions 132 
+
+are affected by global environment components ( environment-to-self ). The relevant elements include 133 
+
+the agent’s state space and local state transition function. 134 
+
+Definition 2. Agents i and j are response transition heterogeneous if the following conditions do not 135 
+
+hold at the same time: ➀ Si = Sj ; ➁ ∀ˆs ∈ { Si}i∈N , ˆa ∈ { Ai}i∈N , T i(·| ˆs, ˆa) = T j (·| ˆs, ˆa).136 
+
+• Effect transition heterogeneity describes the differences of agents in how their states and actions 137 
+
+impact global state transitions ( self-to-environment ). The relevant elements include the agent’s action 138 
+
+space, state space, and global state transition function. 139 
+
+Definition 3. Agents i and j are effect transition heterogeneous if the following conditions do 140 
+
+not hold at the same time: ➀ Si = Sj ; ➁ Ai = Aj ; ➂ ∀s′ ∈ S−i, a ′ ∈ A−i, s ∈ Si, a ∈ Ai,141 
+
+T −i(·| s′, s, a ′, a ) = T −j (·| s′, s, a ′, a ).142 
+
+In the above definition, S−i = ×k∈N,k ̸ =iSk × SE represents the joint state space of all agents except 143 
+
+agent i, reflecting the influence of the agent on other states. Similarly, A−i denotes the joint action 144 
+
+space excluding agent i, and T −i is the collection of state transitions excluding agent i.145 
+
+• Objective heterogeneity describes the differences of agents in the objective they aim to achieve. The 146 
+
+relevant element is the agent’s reward function. 147 
+
+Definition 4. Agents i and j are objective heterogeneous if the following condition do not hold: 148 
+
+➀ ∀ˆs ∈ { Si}i∈N , ˆa ∈ { Ai}i∈N , ri(·| ˆs, ˆa) = rj (·| ˆs, ˆa).149 
+
+• Policy heterogeneity describes the differences of agents in their autonomous decision-making based 150 
+
+on observations. The relevant elements include the observation space, action space, and policy. 151 
+
+Definition 5. Agents i and j are policy heterogeneous if the following conditions do not hold at the 152 
+
+same time: ➀ Oi = Oj ; ➁ Ai = Aj ; ➂ ∀o ∈ Oi, πi(·| o) = πj (·| o).153 
+
+In the five types of heterogeneity mentioned above, we assume that all functions follow the Markov 154 
+
+property, making them independent of the agent’s trajectory. Therefore, the first four types of 155 
+
+heterogeneity can be considered environment-related, which reflect the heterogeneity in the MARL 156 
+
+primal problem. The last type describes the policy heterogeneity of agents before, during, and after 157 
+
+training, which reflects the heterogeneity of optimization objectives (policies) in the primal problem. 158 
+
+## 4 Quantifying Heterogeneity in MARL 159 
+
+4.1 Heterogeneity Distance Based on Representation Learning 160 
+
+Heterogeneity Distance. In this section, we present the method to quantify the above five types of 161 
+
+heterogeneity. According to the definition, each type of heterogeneity corresponds to a core function 162 
+
+which connects relevant elements in the heterogeneity type. Therefore, we quantify the differences in 163 
+
+these core functions to characterize the degree of heterogeneity. 3 To make the quantification results 164 
+
+simpler and more practical, we propose the concept of heterogeneity distance. 165 
+
+Let the core function corresponding to a certain heterogeneity type F be denoted as y ∼ F (·| x). The 166 
+
+formula for calculating the F -heterogeneous distance between two agents i and j is given by: 167 
+
+dFij =
+
+Z
+
+> x∈X
+
+D[Fi(·| x) ∥ Fj (·| x)] · p(x) dx, (3) where X is the space of independent variables, p(x) is the probability density function, and D[· ∥ · ]168 
+
+is a measure that quantifies the difference between distributions. The core idea of heterogeneity 169 
+
+distance is to examine the cumulative differences between two agents’ functions throughout the space 170 
+
+of independent variables, which captures any potential local differences. When the independent 171 
+
+variables x consist of multiple factors, the above integral becomes a multivariate integral. Based 172 
+
+on Equation 3, we provide the specific expressions for quantifying all heterogeneous distances in 173 
+
+Appendix F and discuss the properties of heterogeneous distance below. 174 
+
+> 3
+
+Quantifying space elements is feasible and even easier to implement. But a space element may appear across multiple heterogeneity types, making it unsuitable as unique identifiers for specific heterogeneity types. 
+
+4Encoder                                                                                  
+
+> 8%
+> 9
+> Sample
+> :$(;|<)
+> Model "<;;
+> 8%(9|;,<)
+> =&(;'|9,<)
+> log A;<≥C(!)|+,-log =&;9,<−E./ [8%9|;,<||A(9|<)]
+> H,<
+> 8%(9|H,<)=&(;|9,H,<)
+> log A;H,<≥C(!)|$,-log =&;9,H,<−E./ [8%9|H,<||A(9|H,<)]
+> Decoder
+> =&
+> <<
+> Sample
+> Pool
+> <
+> Encoder
+> 8%
+> 9
+> Sample
+> :$(;|<)
+> Model "HDecoder
+> =&
+> <
+> Model -Based Case
+> Model -Free Case
+> (II) Learning Representational Distribution
+> <,;
+> Sample
+> Pool
+> (I) Sample Collection
+> Sample
+> Pool
+> Collect
+> Environment
+> Interaction
+> Distance Matrix
+> Sample
+> Pool
+> Encoder
+> 8%
+> <
+> Sample
+> ;$or H
+> Agent "
+> Agent .;0or I
+> A$(9|<)
+> A0(9|<)
+> J$0
+> 1=L
+> -∈3
+> E[A$(9|<),A0(9|<)]A(<)J<
+> Our Goal:
+> (III) Computing Heterogeneity Distance
+> ;
+
+Figure 2: The method of measuring heterogeneity distance based on representation learning. 
+
+Proposition 1 . ( Properties of Heterogeneity Distance ) ➀ Symmetry : dFij = dFji ; ➁ Non-negativity :175 
+
+dFij ≥ 0; ➂ Identity of indiscernibles : dFij = 0 if and only if agents i and j are F -homogeneous; ➃176 
+
+Triangle inequality : dFij ≤ dFik + dFkj (i, j, k ∈ N ). This proposition holds as long as the measure D177 
+
+satisfies ➀➁➂➃ . The proof is provided in Appendix E. 178 
+
+Practical Method. Although the heterogeneity distance has a simple form, some issues may arise dur-179 
+
+ing practical computation. First, computing the distribution distance via sampling is computationally 180 
+
+complex, while computing the distance using analytical solutions requires knowing the distribution 181 
+
+type. In real-world scenarios, the distributions may be unknown or of different types 4. Second, the 182 
+
+independent variable space may be very large, making traversal-based computation infeasible. 183 
+
+For the first issue, our approach is to standardize the original distributions . By learning a rep-184 
+
+resentation mapping, for all independent variables x, a measurable distribution pi(z|x) is used to 185 
+
+capture the characteristics of the original distribution Fi(y|x), replacing the original one for measure 186 
+
+computation. For the second issue, our approach is sampling based on the interaction between 187 
+
+agents and the environment . Instead of simply traversing the space or using random policy explo-188 
+
+ration for sampling, we construct a sample pool using trajectories from the training phase of MARL. 189 
+
+This significantly reduces computational load and filters out excessive marginal spaces that interfere 190 
+
+with MARL, benefiting the use of heterogeneity distance in subsequent MARL tasks (Section 5). 191 
+
+Combining these ideas, we propose a practical method as shown in Figure 2. 192 
+
+In the first step , the agents interact with the environment during MARL training to build a sample 193 
+
+pool. Notably, the sample pool data is shuffled to ensure that the learned function follows the Markov 194 
+
+property (independent of historical information), similar to the original function. 195 
+
+In the second step , the representational distributions are learned. We discuss this in both model-196 
+
+based and model-free settings, corresponding to cases where the function is known and unknown, 197 
+
+respectively. We adopt the conditional variational autoencoder (CVAE) framework [Sohn et al., 2015] 198 
+
+for representation learning. In the model-based case, CVAE performs a reconstruction task [Lopez-199 
+
+Martin et al., 2017]. The optimization goal is to maximize the likelihood of the reconstructed variable 200 
+
+log p(y|x). Through derivation, we obtain the evidence lower bound (ELBO) as: 201 
+
+ELBO model-based = Efϕ(z|y,x ) [log gω (y|z, x )] − DKL [fϕ(z|y, x ) ∥ p(z|x)] , (4) where fϕ and gω represent the encoder and decoder, respectively, and p(z|x) is the prior conditional 202 
+
+latent distribution. We designed the relevant loss based on ELBO, including a reconstruction term 203 
+
+and a prior-matching term. The derivation for this part can be found in Appendix H. 204 
+
+> 4
+
+For example, the action distribution of an agent i is a Gaussian distribution, while that of agent j is a bimodal distribution. 
+
+5LL L               
+
+> Scenario -v1
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> L
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> L
+> Scenario -v2 Scenario -v3
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> Scenario -v4
+> LL
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> Scenario -v5
+> LL
+> Obs -Het Response -Het
+> Effect -Het Objective -Het
+> Meta -Het
+> Scenario -v6
+
+Figure 3: The scenario illustration and heterogeneity distance matrices in our case study. In v1, the observations of agents in different groups are shuffled in different orders. In v2, the max move speed of agents in different groups is different. In v3, one group of agents applies repulsive force to surrounding entities, while the other applies attractive force. In v4, agents in different groups need to move to different landmarks. In v5, both the observations and objectives of agents are heterogeneous. In v6, all the above properties of agents are heterogeneous. Below each scenario illustration, the corresponding heterogeneity distance matrices are shown. Specifically, Obs-Het , Response-Het ,
+
+Effect-Het , Objective-Het , and Meta-Het correspond to observation / response transition / effect transition / objective / meta-transition heterogeneity, respectively. In the model-free case, CVAE essentially performs a prediction task [Zhang et al., 2021], capturing 205 
+
+the model characteristics of each agent. The optimization goal is to maximize the likelihood of 206 
+
+the predicted variable y given conditions i and x, where i is the agent ID. Similarly, we derive the 207 
+
+corresponding ELBO: 208 
+
+ELBO model-free = Efϕ(z|i,x ) [log gω (y|z, i, x )] − DKL [fϕ(z|i, x ) ∥ p(z|i, x )] . (5) 
+
+In the third step , the heterogeneity distances for multi-agents are computed. For each x, we obtain 209 
+
+the distribution representation using the encoder in either the model-based or model-free manner. 210 
+
+The distance under a specific x is computed using the Wasserstein distance [Vaserstein, 1969] of the 211 
+
+prior distribution ( standard Gaussian ). The heterogeneity distance is then calculated via multi-rollout 212 
+
+Monte Carlo sampling. In practice, we parallelize this operation 5, enabling simultaneous computation 213 
+
+of distances between all agents on GPUs, significantly improving computational efficiency. 214 
+
+Meta-Transition. The aforementioned method can quantify the heterogeneity of agents for specific 215 
+
+types. In practical applications, researchers may also want to quantify the comprehensive heterogene-216 
+
+ity of agents to enable operations such as grouping. To this end, we give the Meta-Transition model 217 
+
+(see Appendix G for details). By measuring the differences between meta-transitions, the comprehen-218 
+
+sive heterogeneity related to environment can be quantified. We refer to this as the meta-transition 219 
+
+heterogeneity distance. 220 
+
+4.2 Case Study 221 
+
+We design a multi-agent spread scenario for case study. In the basic scenario, there are two groups, 222 
+
+each with two agents, and their goal is to move close to randomly generated landmarks. Based 223 
+
+on the basic scenario, we create 6 extended versions to show the quantitative results of different 224 
+
+types of heterogeneity and meta-transition heterogeneity. As shown in Figure 3, the first 4 versions 225 
+
+correspond to the 4 environment-related types of heterogeneity, while the last 2 versions represent 226 
+
+> 5
+
+Our code is provided in the supplementary material. 
+
+6cases where multiple types of heterogeneity exist. We use the model-based manner to compute the 227 
+
+four heterogeneity distance matrices mentioned above, and the model-free manner to compute the 228 
+
+meta-heterogeneity distance matrix for the agents. 229 
+
+The results show that for each type of heterogeneity, our method can accurately capture and identify 230 
+
+the differences. For meta-transition heterogeneity, the distance between agents in the same group is 231 
+
+much smaller than that in different groups. Moreover, as the number of heterogeneity types increases, 232 
+
+the distance between different groups also increases. These results demonstrate the effectiveness of 233 
+
+our method for various environment-related heterogeneities. 234 Meta -Het Policy -Het     
+
+> Updates
+> Reward
+> Meta -Het Policy -Het
+> Meta -Het Policy -Het Meta -Het Policy -Het
+
+Figure 4: Meta-transition heterogeneity and pol-icy heterogeneity distance matrices during train-ing in our case study. We further quantify the policy heterogeneity dis-235 
+
+tance ( Policy-Het ) and meta-transition hetero-236 
+
+geneity distance ( Meta-Het ) of agents during the 237 
+
+training process. We select two algorithms at the 238 
+
+extreme ends of parameter sharing: fully parame-239 
+
+ter sharing (FPS) and no parameter sharing (NPS) 240 
+
+for training in the above scenarios. Figure 4 241 
+
+shows the measurement results at 500 and 1500 242 
+
+updates. From the Policy-Het results, the policy 243 
+
+distance can effectively reveal the evolutionary 244 
+
+relationship of agent policy differences in MARL. 245 
+
+From the Meta-Het results, the comprehensive 246 
+
+agent heterogeneity measurement remains con-247 
+
+sistent across different learning algorithms, and 248 
+
+can identify environmental heterogeneous char-249 
+
+acteristics in scenarios more rapidly compared to 250 
+
+policy evolution. 251 
+
+## 5 Multi-Agent Dynamic Parameter 252 
+
+## Sharing Based on Heterogeneity 253 
+
+## Quantification: An Application 254 
+
+Based on the case study in Section 4.2, the pro-255 
+
+posed method can not only accurately quantify all 256 
+
+types of heterogeneity, but also the comprehen-257 
+
+sive heterogeneity among agents. Additionally, the method is independent of the parameter-sharing 258 
+
+type used in MARL and can be deployed online, thereby further enhancing its practicality. In 259 
+
+this section, we provide a practical application of our methodology to demonstrate its potential in 260 
+
+empowering MARL. 261 
+
+We select parameter sharing in MARL as our application context. As a common technique in 262 
+
+MARL, parameter sharing can reduce computational consumption while improving sample utilization 263 
+
+efficiency [KIM and Sung, 2023], but its excessive use may inhibit agents’ policy heterogeneity 264 
+
+expression [Hu et al., 2024]. Many works have attempted to find a balance between parameter sharing 265 
+
+and policy heterogeneity [Li et al., 2024b]. However, existing approaches suffer from two main 266 
+
+problems: poor interpretability , unable to explain why policy heterogeneity is necessary and to what 267 
+
+extent; and poor adaptability , manifested by numerous task-specific hyperparameters and inability 268 
+
+to dynamically adapt policy training. (For a more detailed discussion of these algorithms, see the 269 
+
+experimental section 6.1) 270 
+
+To address these issues, we propose a Heterogeneity-based multi-agent Dynamic Parameter Sharing 271 
+
+algorithm (HetDPS) with two core ideas(More details can be found in Appendix I): 272 
+
+♠ Grouping agents for parameter sharing through heterogeneity distances . We utilize distance-273 
+
+based clustering methods to group agents, thus avoiding the introduction of task-specific hyperpa-274 
+
+rameters like group number [Christianos et al., 2021, Li et al., 2024a] or fusion thresholds [Hu et al., 275 
+
+2024]. The heterogeneity distance matrices also enhance the algorithm’s interpretability. 276 
+
+♣ Periodically quantifying heterogeneity and modifying agents’ parameter sharing paradigm .277 
+
+This can help the sample pool become more aligned with policy training. This approach can also 278 
+
+help policies escape local optima [Lyle et al., 2024], the effectiveness of such a mechanism has been 279 
+
+7verified in the MARL domain [Li et al., 2024b], and even in broader RL areas such as large model 280 
+
+fine-tuning [Noukhovitch et al., 2023, Ma et al., 2024]. 281 
+
+## 6 Experiments 282 
+
+In the experimental section, we conduct comprehensive comparisons between HetDPS and other 283 
+
+parameter sharing algorithms. Beyond performance comparisons, we also analyze the heterogeneity 284 
+
+characteristics of each MARL task with our proposed methodology, to demonstrate the algorithm’s 285 
+
+interpretability. Additionally, we conduct hyperparameter experiments and efficiency and resource 286 
+
+consumption experiments to show the adaptability and practicality of HetDPS. 287 
+
+6.1 Experimental Setups 288 15a_3c 30a_3c 15a_5 c 30a_5c        
+
+> Meta -Het Matrix Meta -Het Matrix Meta -Het Matrix Meta -Het Matrix
+
+Figure 5: Results on Partical-based Multi-agent Spreading. 
+
+Environments. Partical-289 
+
+based Multi-agent Spread-290 
+
+ing [Hu et al., 2024] is a 291 
+
+typical environment in the 292 
+
+policy diversity domain. In 293 
+
+this environment, multiple 294 
+
+agents are randomly gen-295 
+
+erated in the center of the 296 
+
+map, while multiple land-297 
+
+marks are randomly gen-298 
+
+erated near the periphery. 299 
+
+Both agents and landmarks 300 
+
+have various colors, and 301 
+
+agents need to move to land-302 
+
+marks with matching colors. 303 
+
+Additionally, agents need to 304 
+
+form tight formations when 305 
+
+they reach the vicinity of landmarks. We employ 4 typical tasks, corresponding to different 306 
+
+numbers and color distributions, as detailed in Table 1. The StarCraft Multi-Agent Challenge 307 
+
+(SMAC) [Samvelyan et al., 2019] is a popular MARL benchmark, where multiple ally units controlled 308 
+
+by MARL algorithms aim to defeat enemy units controlled by the game’s built-in AI. 309 
+
+Table 1: Task information for particle-based multi-agent spreading. 
+
+Task Agent Type Distribution 
+
+15a_3c 5 − 5 − 5
+
+30a_3c 10 − 10 − 10 
+
+15a_5c 3 − 3 − 3 − 3 − 3
+
+30a_5c 3 − 3 − 3 − 12 − 9
+
+Baselines and training. We compare HetDPS with other 310 
+
+parameter sharing baselines, as listed in Table 2. We 311 
+
+analyze these baselines along three dimensions: parame-312 
+
+ter sharing paradigm, adaptability, and relationship with 313 
+
+heterogeneity utilization. As seen from the table, cur-314 
+
+rent methods can not effectively utilize heterogeneity. Al-315 
+
+though some methods implicitly use certain heterogeneity 316 
+
+quantification results, the elements they involve are not 317 
+
+comprehensive. MADPS, as the only method that explic-318 
+
+itly uses policy distance for dynamic grouping, relies on 319 
+
+the assumption that policy learning can effectively capture 320 
+
+heterogeneity, which lacks practicality. We use official implementations of the baselines where 321 
+
+available. For further discussion on related work and experiments in this paper, see the supplementary 322 
+
+materials. 323 
+
+6.2 Results 324 
+
+Performance and interpretability. We tested the performance of all comparison algorithms in the 325 
+
+two environments mentioned above. The reward curves and corresponding heterogeneity distance 326 
+
+matrices are shown in Figure 5 and Figure 6. From the reward curve results, we can see that HetDPS 327 
+
+achieves either optimal or comparable results in all tasks above. 328 
+
+We quantified the meta-transition heterogeneity distances for all tasks. The results show that our 329 
+
+heterogeneity quantification results in the Multi-agent Spreading scenario are highly consistent with 330 
+
+8Table 2: Comparison of different methods and their properties.                            
+
+> Method Paradigm Adaptive Relation to Heterogeneity Utilization
+> NPS No Sharing No None FPS Full Sharing No None FPS+id Full Sharing No None Kaleidoscope [Li et al., 2024b] Partial Sharing Yes No utilization, increases agent policy heterogeneity as the bias SePS [Christianos et al., 2021] Group Sharing No Implicitly utilizes objective heterogeneity and response transition heterogeneity AdaPS [Li et al., 2024a] Group Sharing Yes Implicitly utilizes objective heterogeneity and response transition heterogeneity MADPS [Hu et al., 2024] Group Sharing Yes Explicitly utilizes policy heterogeneity only HetDPS (ours) Group Sharing Yes Explicitly utilizes heterogeneity, leveraging heterogeneous distance
+
+Table 3: Training efficiency metrics across different methods. Results are normalized with respect to the FPS method, and averaged across all tasks.                
+
+> NPS FPS FPS+id Kaleidoscope SePS AdaPS MADPS HetDPS (ours) Training Speed 0.952x 1.000x 0.992x 0.974x 0.986x 0.614x 0.539x 0.712x
+
+the type distribution in Table 1. This demonstrates the effectiveness of our method in identifying 331 
+
+agent heterogeneity. Additionally, we made some interesting discoveries in the SMAC environment. 332 
+
+We found that in simpler tasks like 3s5z and MMM , the agent heterogeneity quantification results 333 
+
+often do not closely match the original agent types. In MMM , agents even tend toward homogeneous 334 
+
+policies to improve training efficiency. However, in more difficult tasks such as 3s5z_vs_3s6z and 335 
+
+MMM2 , agents’ quantification results closely match their original types to achieve better coordination. 336 
+
+This confirms our view that agent heterogeneity is related not only to the agents’ original functional 337 
+
+attributes but also to how agents interact with the environment. 338 
+
+Cost Analysis. We conducted an experiment to investigate training efficiency. The experimental 339 
+
+results are shown in Table 3. The results indicate that although our method introduces periodic 340 
+
+heterogeneity quantification, it does not significantly reduce algorithm efficiency. 341 
+
+## 7 Conclusion 342 3s5z 3s5z_vs_3s6z MMM MMM2        
+
+> Meta -Het Matrix Meta -Het Matrix Meta -Het Matrix Meta -Het Matrix
+
+Figure 6: Results on StarCraft Multi-Agent Challenge. Heterogeneity manifests in 343 
+
+various aspects of MARL. 344 
+
+It is not only related to 345 
+
+the inherent properties of 346 
+
+agents themselves but also 347 
+
+to the coupling factors aris-348 
+
+ing from agent-environment 349 
+
+interactions. Consequently, 350 
+
+agents that appear homoge-351 
+
+neous may develop hetero-352 
+
+geneity under environmen-353 
+
+tal influences. In this paper, 354 
+
+we categorize heterogene-355 
+
+ity in MARL into five types 356 
+
+and provide respective defi-357 
+
+nitions. Meanwhile, we pro-358 
+
+pose methods for quantify-359 
+
+ing these heterogeneity types and conduct case studies. Under our theoretical framework, policy 360 
+
+diversity is merely a manifestation of policy heterogeneity, fundamentally originating from the 361 
+
+division of labor necessitated by agents’ environmental heterogeneity ( cause ), serving as an inductive 362 
+
+bias ( result ) for solving optimal joint policies. Thus, we introduce the quantification of heterogeneity 363 
+
+as prior knowledge into multi-agent parameter-sharing learning. The result is HetDPS, an algorithm 364 
+
+with strong interpretability and adaptability. HetDPS is not the endpoint of our research, but rather a 365 
+
+starting point for heterogeneity applications. We believe that by systematically studying the definition, 366 
+
+quantification, and application of heterogeneity, future MARL research will more profoundly under-367 
+
+stand the complex collaboration mechanisms between agents, and pave the way for more intelligent 368 
+
+and adaptive collective decision-making systems. 369 
+
+9References 370 
+
+Richard Bellman. A markovian decision process. Journal of mathematics and mechanics , pages 371 
+
+679–684, 1957. 372 
+
+Chris Bennett. Heterogeneity in multi-agent systems . PhD thesis, University of Bristol, 2024. 373 
+
+Daniel S Bernstein, Robert Givan, Neil Immerman, and Shlomo Zilberstein. The complexity of 374 
+
+decentralized control of markov decision processes. Mathematics of operations research , 27(4): 375 
+
+819–840, 2002. 376 
+
+Matteo Bettini, Ajay Shankar, and Amanda Prorok. Heterogeneous multi-robot reinforcement 377 
+
+learning. In AAMAS , 2023a. 378 
+
+Matteo Bettini, Ajay Shankar, and Amanda Prorok. System neural diversity: Measuring behavioral 379 
+
+heterogeneity in multi-agent learning. arXiv preprint arXiv:2305.02128 , 2023b. 380 
+
+Matteo Bettini, Ryan Kortvelesy, and Amanda Prorok. Controlling behavioral diversity in multi-agent 381 
+
+reinforcement learning. In International Conference on Machine Learning , pages 3611–3636. 382 
+
+PMLR, 2024. 383 
+
+Alicia L Burns, Alexander DM Wilson, and Ashley JW Ward. Behavioural interdependence in a 384 
+
+shrimp-goby mutualism. Journal of Zoology , 308(4):274–279, 2019. 385 
+
+Anthony Rocco Cassandra. Exact and approximate algorithms for partially observable Markov 386 
+
+decision processes . Brown University, 1998. 387 
+
+Filippos Christianos, Georgios Papoudakis, Muhammad A Rahman, and Stefano V Albrecht. Scaling 388 
+
+multi-agent reinforcement learning with selective parameter sharing. In International Conference 389 
+
+on Machine Learning , pages 1989–1998. PMLR, 2021. 390 
+
+Emiliano Dall’Anese, Hao Zhu, and Georgios B Giannakis. Distributed optimal power flow for smart 391 
+
+microgrids. IEEE Transactions on Smart Grid , 4(3):1464–1475, 2013. 392 
+
+Gregory Dudek, Michael RM Jenkin, Evangelos Milios, and David Wilkes. A taxonomy for multi-393 
+
+agent robotics. Autonomous Robots , 3:375–397, 1996. 394 
+
+Sven Gronauer and Klaus Diepold. Multi-agent deep reinforcement learning: a survey. Artificial 395 
+
+Intelligence Review , 55(2):895–943, 2022. 396 
+
+Xudong Guo, Daming Shi, Junjie Yu, and Wenhui Fan. Heterogeneous multi-agent reinforcement 397 
+
+learning for zero-shot scalable collaboration. arXiv preprint arXiv:2404.03869 , 2024. 398 
+
+Tianyi Hu, Zhiqiang Pu, Xiaolin Ai, Tenghai Qiu, and Jianqiang Yi. Measuring policy distance 399 
+
+for multi-agent reinforcement learning. In Proceedings of the 23rd International Conference on 400 
+
+Autonomous Agents and Multiagent Systems , pages 834–842, 2024. 401 
+
+Jiechuan Jiang and Zongqing Lu. The emergence of individuality. In International Conference on 402 
+
+Machine Learning , pages 4992–5001. PMLR, 2021. 403 
+
+Leslie Pack Kaelbling, Michael L Littman, and Andrew W Moore. Reinforcement learning: A survey. 404 
+
+Journal of artificial intelligence research , 4:237–285, 1996. 405 
+
+Leslie Pack Kaelbling, Michael L Littman, and Anthony R Cassandra. Planning and acting in partially 406 
+
+observable stochastic domains. Artificial intelligence , 101(1-2):99–134, 1998. 407 
+
+Dmitry Kalashnikov, Alex Irpan, Peter Pastor, Julian Ibarz, Alexander Herzog, Eric Jang, Deirdre 408 
+
+Quillen, Ethan Holly, Mrinal Kalakrishnan, Vincent Vanhoucke, et al. Scalable deep reinforcement 409 
+
+learning for vision-based robotic manipulation. In Conference on robot learning , pages 651–673. 410 
+
+PMLR, 2018. 411 
+
+WOOJUN KIM and Youngchul Sung. Parameter sharing with network pruning for scalable multi-412 
+
+agent deep reinforcement learning. In The 22nd International Conference on Autonomous Agents 413 
+
+and Multiagent Systems (AAMAS) . AAMAS, 2023. 414 
+
+10 Mykel J Kochenderfer, Tim A Wheeler, and Kyle H Wray. Algorithms for decision making . MIT 415 
+
+press, 2022. 416 
+
+Chenghao Li, Tonghan Wang, Chengjie Wu, Qianchuan Zhao, Jun Yang, and Chongjie Zhang. 417 
+
+Celebrating diversity in shared multi-agent reinforcement learning. Advances in Neural Information 418 
+
+Processing Systems , 34:3991–4002, 2021. 419 
+
+Dapeng Li, Na Lou, Bin Zhang, Zhiwei Xu, and Guoliang Fan. Adaptive parameter sharing for 420 
+
+multi-agent reinforcement learning. In ICASSP 2024-2024 IEEE International Conference on 421 
+
+Acoustics, Speech and Signal Processing (ICASSP) , pages 6035–6039. IEEE, 2024a. 422 
+
+Xinran Li, Ling Pan, and Jun Zhang. Kaleidoscope: Learnable masks for heterogeneous multi-agent 423 
+
+reinforcement learning. In The Thirty-eighth Annual Conference on Neural Information Processing 424 
+
+Systems , 2024b. 425 
+
+Michael L Littman. Markov games as a framework for multi-agent reinforcement learning. In 426 
+
+Machine learning proceedings 1994 , pages 157–163. Elsevier, 1994. 427 
+
+Manuel Lopez-Martin, Belen Carro, Antonio Sanchez-Esguevillas, and Jaime Lloret. Conditional 428 
+
+variational autoencoder for prediction and feature recovery applied to intrusion detection in iot. 429 
+
+Sensors , 17(9):1967, 2017. 430 
+
+Jonathan Lwowski, Patrick Benavidez, John J Prevost, and Mo Jamshidi. Task allocation using 431 
+
+parallelized clustering and auctioning algorithms for heterogeneous robotic swarms operating on a 432 
+
+cloud network. Autonomy and artificial intelligence: A threat or savior? , pages 47–69, 2017. 433 
+
+Clare Lyle, Zeyu Zheng, Khimya Khetarpal, James Martens, Hado P van Hasselt, Razvan Pascanu, 434 
+
+and Will Dabney. Normalization and effective learning rates in reinforcement learning. Advances 435 
+
+in Neural Information Processing Systems , 37:106440–106473, 2024. 436 
+
+Hao Ma, Tianyi Hu, Zhiqiang Pu, Liu Boyin, Xiaolin Ai, Yanyan Liang, and Min Chen. Coevolving 437 
+
+with the other you: Fine-tuning llm with sequential cooperative multi-agent reinforcement learning. 438 
+
+Advances in Neural Information Processing Systems , 37:15497–15525, 2024. 439 
+
+Dung Nguyen, Phuoc Nguyen, Svetha Venkatesh, and Truyen Tran. Learning to transfer role 440 
+
+assignment across team sizes. arXiv preprint arXiv:2204.12937 , 2022. 441 
+
+Zepeng Ning and Lihua Xie. A survey on multi-agent reinforcement learning and its application. 442 
+
+Journal of Automation and Intelligence , 3(2):73–91, 2024. 443 
+
+Michael Noukhovitch, Samuel Lavoie, Florian Strub, and Aaron C Courville. Language model 444 
+
+alignment with elastic reset. Advances in Neural Information Processing Systems , 36:3439–3461, 445 
+
+2023. 446 
+
+Frans A Oliehoek, Christopher Amato, et al. A concise introduction to decentralized POMDPs ,447 
+
+volume 1. Springer, 2016. 448 
+
+Liviu Panait and Sean Luke. Cooperative multi-agent learning: The state of the art. Autonomous 449 
+
+agents and multi-agent systems , 11:387–434, 2005. 450 
+
+Lynne E Parker. Lifelong adaptation in heterogeneous multi-robot teams: Response to continual 451 
+
+variation in individual robot performance. Autonomous Robots , 8:239–267, 2000. 452 
+
+Mikayel Samvelyan, Tabish Rashid, Christian Schroeder de Witt, Gregory Farquhar, Nantas Nardelli, 453 
+
+Tim G. J. Rudner, Chia-Man Hung, Philiph H. S. Torr, Jakob Foerster, and Shimon Whiteson. The 454 
+
+StarCraft Multi-Agent Challenge. CoRR , abs/1902.04043, 2019. 455 
+
+Esmaeil Seraj, Zheyuan Wang, Rohan Paleja, Matthew Sklar, Anirudh Patel, and Matthew Gombolay. 456 
+
+Heterogeneous graph attention networks for learning diverse communication. arXiv preprint 457 
+
+arXiv:2108.09568 , 2021. 458 
+
+Kihyuk Sohn, Honglak Lee, and Xinchen Yan. Learning structured output representation using deep 459 
+
+conditional generative models. Advances in neural information processing systems , 28, 2015. 460 
+
+11 Matthijs TJ Spaan. Partially observable markov decision processes. In Reinforcement learning: 461 
+
+State-of-the-art , pages 387–414. Springer, 2012. 462 
+
+Lijun Sun, Yu-Cheng Chang, Chao Lyu, Ye Shi, Yuhui Shi, and Chin-Teng Lin. Toward multi-target 463 
+
+self-organizing pursuit in a partially observable markov game. Information Sciences , 648:119475, 464 
+
+2023. 465 
+
+Leonid Nisonovich Vaserstein. Markov processes over denumerable products of spaces, describing 466 
+
+large systems of automata. Problemy Peredachi Informatsii , 5(3):64–72, 1969. 467 
+
+T Wang, T Gupta, B Peng, A Mahajan, S Whiteson, and C Zhang. Rode: learning roles to decompose 468 
+
+multi- agent tasks. In Proceedings of the International Conference on Learning Representations .469 
+
+OpenReview, 2021. 470 
+
+H Peyton Young. The evolution of conventions. Econometrica: Journal of the Econometric Society ,471 
+
+pages 57–84, 1993. 472 
+
+Xiaoyang Yu, Youfang Lin, Xiangsen Wang, Sheng Han, and Kai Lv. Ghq: grouped hybrid q-learning 473 
+
+for cooperative heterogeneous multi-agent reinforcement learning. Complex & Intelligent Systems ,474 
+
+10(4):5261–5280, 2024. 475 
+
+Chen Zhang, Riccardo Barbano, and Bangti Jin. Conditional variational autoencoder for learned 476 
+
+image reconstruction. Computation , 9(11):114, 2021. 477 
+
+Ming Zhou, Jun Luo, Julian Villella, Yaodong Yang, David Rusu, Jiayu Miao, Weinan Zhang, 478 
+
+Montgomery Alban, Iman Fadakar, Zheng Chen, et al. Smarts: An open-source scalable multi-479 
+
+agent rl training school for autonomous driving. In Conference on robot learning , pages 264–285. 480 
+
+PMLR, 2021. 481 
+
+12 A Limitations 482 
+
+Although our proposed heterogeneity distance can effectively quantify agent heterogeneity and 483 
+
+identify various potential heterogeneities, there remain some limitations in its practical implementa-484 
+
+tion. One limitation is in scaling with the number of agents. Typically, the heterogeneity distance 485 
+
+quantification algorithm outputs a heterogeneity distance matrix for the entire multi-agent system, 486 
+
+with a computational complexity of O(N 2). When the number of agents increases significantly, 487 
+
+matrix computation becomes costly. However, if only studying heterogeneity between specific agents 488 
+
+in the MAS is required, the method remains effective. One only needs to remove data from other 489 
+
+agents during CVAE training and sampling computation. 490 
+
+Additionally, the practical algorithms for heterogeneity quantification are built on the assumption 491 
+
+that agent-related variables are vectors. If certain agent variables, such as observation inputs, are 492 
+
+multimodal, operations like padding in the proposed algorithm become difficult to implement. But 493 
+
+this does not affect the correctness of the theory. As the relevant theory still holds in this situation, 494 
+
+additional tricks are needed for practical calculation implementation. 495 
+
+## B Broader Impacts 496 
+
+Our work systematically analyzes heterogeneity in MARL, which has strong correlations with a 497 
+
+series of works in MARL. Under our theoretical framework, research on agent policy diversity in 498 
+
+MARL can be categorized within the domain of policy heterogeneity. Our work can give a new 499 
+
+perspective for studying policy diversity. Our proposed quantification methods can not only help 500 
+
+these works with policy evolution analysis but also explain the relationship between policy diversity 501 
+
+and agent heterogeneity. Furthermore, our proposed HetDPS, as an application case, can also be 502 
+
+classified among parameter sharing-based works. 503 
+
+Additionally, some traditional heterogeneous MARL works can be categorized within environment-504 
+
+related heterogeneity domains. Our quantification and definition methods are orthogonal to these 505 
+
+works, which can fully utilize our proposed methodology for further advancement. For instance, 506 
+
+observation heterogeneity quantification can be used to enhance agents’ ability to aggregate hetero-507 
+
+geneous observation information; transition heterogeneity quantification can help design intrinsic 508 
+
+rewards to assist heterogeneous multi-agents in learning cooperative policies. 509 
+
+In conclusion, our work not only expands the scope of heterogeneity in MARL but also closely 510 
+
+connects with many current hot topics, contributing to the further development of these works. 511 
+
+## C An introduction to POMG 512 
+
+Partially Observable Markov Game (POMG) is essentially an extension of Partially Observable 513 
+
+Markov Decision Process (POMDP), which in turn extends Markov Decision Process (MDP). 514 
+
+MDP [Bellman, 1957, Kaelbling et al., 1996] is a mathematical framework that describes sequential 515 
+
+decision-making by a single agent in a fully observable environment. In an MDP, the agent can 516 
+
+fully observe the environment’s state, select actions based on the current state, and aim to maximize 517 
+
+cumulative rewards. Compared to MDP, the key extension of POMDP [Kaelbling et al., 1998, 518 
+
+Cassandra, 1998] is the consideration of partial observability, making it suitable for modeling both 519 
+
+single-agent partially observable problems [Spaan, 2012] and multi-agent problems [Bernstein et al., 520 
+
+2002, Oliehoek et al., 2016]. In multi-agent POMDPs, agents typically operate in a fully cooperative 521 
+
+mode, where their rewards are usually team-shared. 522 
+
+The key extension of POMG over POMDP lies in modeling mixed game relationships among multiple 523 
+
+agents. Unlike POMDP, agents in POMG do not share a common reward function; instead, each 524 
+
+agent has its own (agent-level) reward function, making POMG more general [Sun et al., 2023, 525 
+
+Gronauer and Diepold, 2022]. This design enables POMG to handle competitive, cooperative, and 526 
+
+mixed interaction scenarios, better reflecting the complexity of real-world multi-agent systems. The 527 
+
+logical relationships among Markov decision processes and their variants are illustrated in Figure 7 528 
+
+and Figure 8. As shown in these figures, POMG is the most general framework for modeling original 529 
+
+problems in the MARL domain. For these reasons, we chose POMG as the foundation for discussing 530 
+
+heterogeneity in MARL. 531 
+
+13 Figure 7: Common multi-agent problem formulations [Kochenderfer et al., 2022]. 
+
+Figure 8: Common nomenclature for multi-agent models [Sun et al., 2023]. 
+
+## D Other potential types of heterogeneity in MARL 532 
+
+Benefiting from the reinforcement learning modeling based on POMG, we have clearly defined the 533 
+
+boundaries of heterogeneity discussed in this paper. In fact, within the realm of unconventional 534 
+
+multi-agent systems, there might be other types of heterogeneity. 535 
+
+For instance, agents may have different length of decision timesteps, with some agents inclined 536 
+
+towards long-term high-level decisions, while others tend to make short-term low-level decisions. 537 
+
+Agents may also have different discount factors, some works try to assign varying discount factors to 538 
+
+different agents during algorithm training [Nguyen et al., 2022], to encourage agents to develop " my-539 
+
+opic " or " far-sighted " policy behaviors, thereby promoting agent cooperation. However, differences 540 
+
+in discount factors are more reflective of algorithmic design variations rather than environmental 541 
+
+distinctions, and thus fall outside the scope of this paper. Moreover, there may be heterogeneity 542 
+
+among agents regarding communication, agents might have different communication channels due 543 
+
+to hardware variations. However, the establishment of communication protocols aims to enable 544 
+
+agents to receive more information when making decisions, potentially overcoming non-stationarity 545 
+
+and partial observability issues [Gronauer and Diepold, 2022]. These communication messages are 546 
+
+essentially mappings of global information processed in the environment, which are then input into 547 
+
+the action-related network modules. From this perspective, agent communication can be modeled as 548 
+
+a more generalized observation function that maps global information to local observations for agent 549 
+
+decision-making, and communication heterogeneity can be categorized under observation hetero-550 
+
+geneity. From a learning perspective, agents might also have heterogeneous available knowledge, 551 
+
+such as differences in initial basic policies or variations in supplementary knowledge accessible 552 
+
+during execution phase. Moreover, heterogeneity might extend beyond abstract issues, including 553 
+
+computational resource differences among agents during learning. 554 
+
+Overall, even from the perspective of multi-agent reinforcement learning, heterogeneity in multi-agent 555 
+
+systems remains a domain with extensive discussion space, warranting further subsequent research. 556 
+
+14 E Properties of heterogeneity distance 557 
+
+Recap. The heterogeneity distance between two agents in Section 4 can be computed as follows: 558 
+
+dFij =
+
+Z
+
+> x∈X
+
+D[Fi(·| x), F j (·| x)] · p(x) dx, (6) where X is the space of independent variables, p(x) is the probability density function, and D[·, ·] is 559 
+
+a measure that quantifies the difference between distributions. 560 
+
+Proposition 1 . ( Properties of Heterogeneity Distance ) ➀ Symmetry : dFij = dFji ; ➁ Non-negativity :561 
+
+dFij ≥ 0; ➂ Identity of indiscernibles : dFij = 0 if and only if agents i and j are F -homogeneous; ➃562 
+
+Triangle inequality : dFij ≤ dFik + dFkj (i, j, k ∈ N ). This proposition holds as long as the measure D563 
+
+satisfies Property ➀➁➂➃ .564 
+
+Proof. It can be proven that when D satisfies Property ➀➁➂➃ , heterogeneity distance also satisfies 565 
+
+Property ➀➁➂➃ .566 
+
+1) Proof of Symmetry: 567 
+
+dFij =
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F j (·| x)] · p(x)dx =
+
+Z
+
+> x∈X
+
+W [Fj (·| x), F j (·| x)] · p(x)dx = dFji . (7) 
+
+2) Proof of Non-negativity: 568 
+
+dFij =
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F j (·| x)] · p(x)dx ≥
+
+Z
+
+> x∈X
+
+0 · p(x)dx = 0 . (8) 
+
+3) Proof of Identicals of indiscernibility (necessary conditions): 569 
+
+if agent i and agent j are F -homogeneous, then we have: X(i) = X(j), ∀x ∈ X = X(i), Fi(·| x) = 570 
+
+Fj (·| x),571 
+
+dFij =
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F j (·| x)] · p(x)dx 
+
+=
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F i(·| x)] · p(x)dx 
+
+=
+
+Z
+
+> x∈X
+
+0 · p(x)dx 
+
+= 0 .
+
+(9) 
+
+4) Proof of Identicals of indiscernibility (sufficient conditions): 572 
+
+dFij = 0 Prop. ➁
+
+−−−−→ D [Fi(·| x), F i(·| x)] = 0 , ∀x ∈ X(i)orX (j) 
+
+> Prop. ➁of D
+
+−−−−−−→ Fi(·| x) = Fi(·| x), ∀x ∈ X, X = X(i) = X(j),
+
+(10) then we have agent i and agent j are F -homogeneous. 573 
+
+5) Proof of Triangle Inequality: 574 
+
+dFij =
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F j (·| x)] · p(x) dx 
+
+≤
+
+Z
+
+> x∈X
+
+(D [Fi(·| x), F k(·| x)] + D [Fk(·| x), F j (·| x)]) · p(x) dx 
+
+=
+
+Z
+
+> x∈X
+
+D [Fi(·| x), F k(·| x)] · p(x) dx +
+
+Z
+
+> x∈X
+
+D [Fk(·| x), F j (·| x)] · p(x) dx 
+
+= dFik + dFkj .
+
+(11) In this paper, we choose the Wasserstein Distance [Vaserstein, 1969] as the metric to quantify the 575 
+
+distance between distributions, which satisfies the property ➀➁➂➃ [Bettini et al., 2023b]. 576 
+
+15 Discussion. In practical computation, we adopt a representation learning-based approach to find 577 
+
+an alternative latent variable distribution pi(z|x) to replace the original distribution Fi(y|x) for 578 
+
+quantification. It can be easily proved that when using latent variable distributions to compute 579 
+
+heterogeneous distances, these distances still satisfy properties ➀, ➁, and ➃ (following the same 580 
+
+proof method as above). 581 
+
+In the model-based case, pi(z|x) = fϕ(yi, x ), where fϕ represents the encoder of the CVAE. When 582 
+
+two agents have the same independent and dependent variables (identical agent functions), their latent 583 
+
+variable distributions are also identical. In this case, it is straightforward to prove that property ➂ still 584 
+
+holds under the model-based case. 585 
+
+In the model-free case, pi(z|x) = fϕ(i, x ). Due to the lack of an environment model, even agents with 586 
+
+identical mappings may learn different representation distributions through their encoders, thus not 587 
+
+satisfying property ➂. However, as demonstrated in Section 4.2, although we cannot strictly determine 588 
+
+agent homogeneity using dFij = 0 , the heterogeneity distances measured between homogeneous 589 
+
+agents in the model-free case are sufficiently small. Moreover, the model-free manner is adequate 590 
+
+to distinguish between homogeneous and heterogeneous agents, and still maintains the ability to 591 
+
+quantify the degree of heterogeneity (as shown in Sections 4.2 and 6). 592 
+
+## F More details of computing heterogeneity distance 593 
+
+Here, we present five formulas for calculating heterogeneity distances, corresponding to the five types 594 
+
+of heterogeneity discussed in this paper. 595 
+
+Regarding observation heterogeneity , its relevant elements include the agent’s observation space 596 
+
+and observation function. For two agents i and j, let their observation heterogeneity distance be 597 
+
+denoted as dΩ 
+
+> ij
+
+. The corresponding calculation formula is: 598 
+
+dΩ 
+
+> ij
+
+=
+
+Z
+
+> ˆs∈{ Si}i∈N
+
+D [Ω i(·| ˆs), Ωj (·| ˆs)] · p(ˆ s) dˆs, (12) where D[·, ·] represents a measure of distance between two distributions, and p(·) is the probability 599 
+
+density function (this notation applies to subsequent equations). Here, ˆs denotes the global state, 600 
+
+{Si}i∈N represents the global state space, and Ωi and Ωj are the observation functions of agents i601 
+
+and j, respectively. 602 
+
+Regarding response transition heterogeneity , its relevant elements include the agent’s action space, 603 
+
+state space, and global state transition function. For two agents i and j, let their response transition 604 
+
+heterogeneity distance be denoted as dT 
+
+> ij
+
+. The corresponding calculation formula is: 605 
+
+dT 
+
+> ij
+
+=
+
+Z
+
+> ˆs∈{ Si}i∈N
+
+Z
+
+> ˆa∈{ Ai}i∈N
+
+D T i(·| ˆs, ˆa), T j (·| ˆs, ˆa) · p(ˆ s, ˆa) dˆad ˆs, (13) where p(·, ·) represents the joint probability density function. ˆs and ˆa denote the global state and 606 
+
+global action respectively, {Si}i∈N and {Ai}i∈N represent the global state space and global action 607 
+
+space, and Ti and Tj are the local state transition functions of agents i and j, respectively. 608 
+
+Regarding effect transition heterogeneity , its relevant elements include the agent’s action space, state 609 
+
+space, and global state transition function. For convenience, we denote S−i = ×k∈N,k ̸ =iSk × SE
+
+> 610
+
+as the joint state space of all agents except agent i, A−i = ×k∈N,k ̸ =iAk as the joint action space of 611 
+
+all agents except agent i, and T −i as the collection of state transitions excluding agent i. For two 612 
+
+agents i and j, let their effect transition heterogeneity distance be denoted as dT − 
+
+> ij
+
+. The corresponding 613 
+
+calculation formula is: 614 
+
+dT − 
+
+> ij
+
+=
+
+Z
+
+> s′∈S(−i)
+
+Z
+
+> s∈Ai
+
+Z
+
+> a′∈A(−i)
+
+Z
+
+> a∈Ai
+
+D T −i(·| x), T −j (·| x) · p(x)dada ′dsds ′, (14) where for convenience, we denote x = ( s′, s, a ′, a ), and p is the joint probability density function. 615 
+
+The calculation of effect transition heterogeneity distance differs from the previous two types of 616 
+
+heterogeneity distances in two significant ways. The first difference lies in its introduction of agent-617 
+
+16 level elements as variables rather than global variables. When two agents have different agent-level 618 
+
+variable spaces, it becomes challenging to calculate the heterogeneity distance under this definition. 619 
+
+The second difference is that it involves a quadruple integral, making its computational complexity 620 
+
+much higher than the single or double integrals of the previous two distances. 621 
+
+These two differences make the calculation of effect transition heterogeneity distance more chal-622 
+
+lenging. Fortunately, through our proposed meta-transition model, we can simplify the calculation 623 
+
+of effect transition heterogeneity distance to a double integral that only involves the agent’s local 624 
+
+states and actions. Additionally, the distance measurement through representation learning also 625 
+
+reduces the constraints on the similarity of agents’ variable spaces. Even when two agents have 626 
+
+different variable spaces (for example, one agent’s local state space is 10-dimensional while another’s 627 
+
+is 20-dimensional), we can still process the variable inputs through techniques like padding and then 628 
+
+map them to the same dimension using encoder networks. This demonstrates that the approach based 629 
+
+on representation learning and meta-transition significantly extends the applicability of heterogeneity 630 
+
+distance measurement, which also holds true in the quantification of heterogeneous types discussed 631 
+
+below. 632 
+
+Regarding objective heterogeneity , its relevant element is the agent’s reward function. For two 633 
+
+agents i and j, let their objective heterogeneity distance be denoted as drij . The corresponding 634 
+
+calculation formula is: 635 
+
+drij =
+
+Z
+
+> ˆs∈{ Si}i∈N
+
+Z
+
+> ˆa∈{ Ai}i∈N
+
+D ri(·| ˆs, ˆa), r j (·| ˆs, ˆa) · p(ˆ s, ˆa) dˆad ˆs, (15) where p(·, ·) represents the joint probability density function. ˆs and ˆa denote the global state and 636 
+
+global action respectively, {Si}i∈N and {Ai}i∈N represent the global state space and global action 637 
+
+space, and ri and rj are the reward functions of agents i and j, respectively. 638 
+
+Regarding policy heterogeneity distance , its relevant elements include the agent’s observation space, 639 
+
+action space, and policy function. For two agents i and j, let their policy heterogeneous distance be 640 
+
+denoted as dπij . The corresponding calculation formula is: 641 
+
+dπij =
+
+Z
+
+> o∈Oi
+
+D [πi(·| o), π j (·| o)] · p(o) do, (16) where D[·, ·] represents a measure of distance between two distributions, and p(·) is the probability 642 
+
+density function. Here, o denotes the observation, Oi represents the observation space, and πi and πj643 
+
+are the policy functions of agents i and j, respectively. 644 
+
+## G Meta-Transition and its Heterogeneity Distance 645 
+
+To quantify an agent’s comprehensive heterogeneity, we introduce the concept of meta-transition. 646 
+
+Meta-transition is a modeling approach that explores an agent’s own attributes from its perspec-647 
+
+tive. Our goal is to quantify an agent’s comprehensive heterogeneity using only the agent’s local 648 
+
+information (as global information is typically difficult to obtain in practical MARL scenarios). 649 
+
+Based on this, we provide the definition of meta-transition. Let the meta-transition of agent i be 650 
+
+denoted as Mi. It is a mapping Mi : Si × Ai → Si × R × Ωi. At time step t, the inputs of 651 
+
+meta-transition are the agent’s local state sit and local action ait, and the outputs are the next time 652 
+
+step’s local state sit+1 , the next time step’s local observation oit+1 , and the current time step’s reward 653 
+
+rit based on the state and action. 654 
+
+We explain why the above relationship can reflect all agent-level elements in POMG. The input local 655 
+
+state and local action of meta-transition actually correspond to the inverse mapping to the global 656 
+
+state and global action. This inverse mapping potentially restores the local state and action to global 657 
+
+information, and then obtains the next time step’s global state according to the global state transition 658 
+
+function, which is mapped to local observation through the observation function. Therefore, this 659 
+
+process reflects the agent’s effect transition heterogeneity and observation heterogeneity. Additionally, 660 
+
+the potential global state and global action also determine the agent’s local state and corresponding 661 
+
+reward at the next time step, which reflect the agent’s response transition heterogeneity and objective 662 
+
+heterogeneity, respectively. 663 
+
+17 It is worth noting that meta-transition is not a function that actually exists in POMG, but an implicitly 664 
+
+defined mapping. We aim to quantify this mapping difference to capture the agent’s comprehensive 665 
+
+heterogeneity. Therefore, meta-transition heterogeneity is quantified in a model-free manner. 666 
+
+Moreover, meta-transition is not limited to the aforementioned form. It can be transformed into dif-667 
+
+ferent forms according to the modular settings of independent and dependent variables. For example, 668 
+
+by removing the agent’s reward, meta-transition can reflect the agent’s observation heterogeneity, 669 
+
+response transition heterogeneity, and effect transition heterogeneity. 670 
+
+After determining the input and output of meta-transition, the relevant heterogeneity distance can 671 
+
+be calculated using the same model-free method as before. Since meta-transition involves multiple 672 
+
+variables, and the dimensions between these variables may differ significantly (for example, the 673 
+
+dimension of reward is 1, while the dimension of observation might be 100), directly fitting with 674 
+
+deep networks may struggle to capture information corresponding to low-dimensional variables. We 675 
+
+address this issue through a dimension replication trick. In practice, we typically replicate the reward 676 
+
+dimension to be similar to the dimensions of observation or action, ensuring that the autoencoder 677 
+
+network can capture information related to objective heterogeneity during learning. 678 
+
+## H Derivation of ELBO 679 
+
+The Evidence Lower Bound (ELBO) of the likelihood can be derived as follows: 680 
+
+log p(y|x) = log 
+
+Z
+
+p(y, z |x)dz (a) 
+
+= log 
+
+Z p(y, z |x)fϕ(z|y, x )
+
+fϕ(z|y, x ) dz (b) 
+
+= log Efϕ(z|y,x )
+
+ p(y, z |x)
+
+fϕ(z|y, x )
+
+
+
+(c) 
+
+≥ Efϕ(z|y,x )
+
+
+
+log p(y, z |x)
+
+fϕ(z|y, x )
+
+
+
+(d) 
+
+= ELBO model-based ,
+
+(17) where fϕ(z|y, x ) represents the posterior probability distribution of the latent variable generated 681 
+
+by the encoder, and p(y, z |x) denotes a joint probability distribution concerning the customized 682 
+
+feature and latent variable, conditioned on o. Throughout the derivation of the formula, (a) employs 683 
+
+the properties of the joint probability distribution, (b) multiplies both numerator and denominator 684 
+
+by fϕ(z|y, x ), (c) applies the definition of mathematical expectation, and (d) invokes the Jensen’s 685 
+
+inequality. 686 
+
+Considering that the ELBO includes an unknown joint probability distribution, we can further 687 
+
+decompose it by using the posterior probability distributions from the encoder and decoder: 688 
+
+ELBO model-based = Efϕ(z|y,x )
+
+
+
+log p(y, z |x)
+
+fϕ(z|y, x )
+
+
+
+= Efϕ(z|y,x )
+
+
+
+log gω (c|z, x )p(z|x)
+
+fϕ(z|y, x )
+
+
+
+(a) 
+
+= Efϕ(z|y,x ) [log gω (c|z, x )] + Efϕ(z|y,x )
+
+
+
+log p(z|x)
+
+fϕ(z|y, x )
+
+
+
+(b) 
+
+= Efϕ(z|y,x ) [log gω (c|z, x )] 
+
+| {z }
+
+> reconstruction term
+
+− DKL [fϕ(z|y, x )∥p(z|x)] 
+
+| {z }
+
+> prior matching term
+
+, (c) (18) where fϕ(z|y, x ) and gω (c|z, x ) are the posteriors from the encoder and decoder, respectively. The 689 
+
+conditional joint probability distribution p(y, z |x) is a imaginary construct in mathematical terms and 690 
+
+lacks practical significance. It can be formulated using the probability chain rule, constructed from the 691 
+
+18 posterior distribution of the customized feature and the prior distribution of the latent variable (step 692 
+
+(a)). Step (b) decomposes the expectation, and step (c) applies the definition of the KL divergence. 693 
+
+Thus, the ELBO can be decomposed into a reconstruction term of the customized feature, and a prior 694 
+
+matching term of the posterior and the prior. By maximizing the ELBO, the reconstruction likelihood 695 
+
+can be maximized while minimizing the KL divergence between the posterior and the prior. In the 696 
+
+model-free case, the same approach can be used to derive the ELBO and corresponding loss function. 697 
+
+## I Details of HetDPS 698 
+
+HetDPS is a novel algorithm designed to efficiently manage the allocation of neural network parame-699 
+
+ters across multiple agents in MARL. This algorithm leverages the Wasserstein distance matrix to 700 
+
+cluster agents based on their similarities, and subsequently assigns them to suitable neural networks. 701 
+
+The pseudocode of HetDPS is shown in Algorithm 1. 702 
+
+The algorithm begins by computing the affinity matrix from the Wasserstein distance matrix, which 703 
+
+is then used as input to the Affinity Propagation clustering algorithm. This process yields a new 704 
+
+set of cluster assignments for the agents. If it is the first time the algorithm is executed, the cluster 705 
+
+assignments are directly used as network assignments. 706 
+
+In subsequent iterations, the algorithm compares the new cluster assignments with the previous ones 707 
+
+to determine the optimal network assignments. This is achieved by constructing an overlap matrix 708 
+
+that captures the similarity between the old and new cluster assignments. Based on the number of old 709 
+
+and new clusters, the algorithm handles three distinct cases: 710 
+
+1. Equal number of old and new clusters: In this scenario, the algorithm establishes a one-to-one 711 
+
+mapping between the old and new clusters using the Hungarian algorithm. It then constructs a 712 
+
+mapping from old clusters to networks and assigns each agent to a network based on its new cluster 713 
+
+assignment. 714 
+
+2. More new clusters than old clusters: When the number of new clusters exceeds the number of old 715 
+
+clusters, the algorithm handles network splitting. It uses the Hungarian algorithm to find the best 716 
+
+matching between old and new clusters and establishes a mapping from new clusters to old clusters. 717 
+
+For new clusters without a clear match, the algorithm either finds the most similar old cluster or 718 
+
+identifies the closest network. It then executes a splitting operation to copy parameters from the 719 
+
+source network to the new network. 720 
+
+3. More old clusters than new clusters: In this case, the algorithm handles network merging. It uses 721 
+
+the Hungarian algorithm to find the best matching between old and new clusters and establishes a 722 
+
+mapping from old clusters to new clusters. For each new cluster, it identifies the networks to be 723 
+
+merged and executes a merging operation based on the specified merge mode (majority, random, 724 
+
+average, or weighted). The algorithm then assigns each agent to a network based on its new cluster 725 
+
+assignment. 726 
+
+HetDPS offers a flexible and efficient approach to managing neural network parameters in multi-agent 727 
+
+systems. By dynamically adjusting network assignments based on agent similarities, the algorithm 728 
+
+enables effective parameter sharing and reduces the need for redundant computations. 729 
+
+19 Algorithm 1 HetDPS  
+
+> 1:
+
+Initialize policies and parameter sharing paradigm  
+
+> 2:
+
+for episode = 1 to maxEpisodes do  
+
+> 3:
+
+Interact with environment to collect data  
+
+> 4:
+
+Add data to reinforcement learning (RL) sample pool  
+
+> 5:
+
+Add data to heterogeneity distance sample pool  
+
+> 6:
+
+if episode % trainingPeriod = 0 then  
+
+> 7:
+
+Update policies using RL sample pool  
+
+> 8:
+
+end if  
+
+> 9:
+
+if episode % quantizationPeriod = 0 then  
+
+> 10:
+
+Compute heterogeneity distance matrix D (Section 4)  
+
+> 11:
+
+Cluster agents using Affinity Propagation on D 
+
+> 12:
+
+if no previous clustering exists then  
+
+> 13:
+
+Assign networks to agents based on clusters  
+
+> 14:
+
+Copy network parameters as needed  
+
+> 15:
+
+else  
+
+> 16:
+
+Compute maximum overlap matching between current and previous clusters  
+
+> 17:
+
+if number of clusters unchanged then  
+
+> 18:
+
+Map new clusters to previous networks  
+
+> 19:
+
+else if new clusters > previous clusters then  
+
+> 20:
+
+Split networks: copy parameters for unmatched clusters  
+
+> 21:
+
+else  
+
+> 22:
+
+Merge networks: combine parameters based on merge mode  
+
+> 23:
+
+end if  
+
+> 24:
+
+Assign networks to agents  
+
+> 25:
+
+end if  
+
+> 26:
+
+end if  
+
+> 27:
+
+end for 
+
+## NeurIPS Paper Checklist 730 
+
+1. Claims 731 
+
+Question: Do the main claims made in the abstract and introduction accurately reflect the 732 
+
+paper’s contributions and scope? 733 
+
+Answer: [Yes] 734 
+
+Justification: Both the abstract and introduction clearly state that our main contribution and 735 
+
+scope: this work systematically establishes a theoretical framework for heterogeneity in 736 
+
+multi-agent reinforcement learning, advancing both theoretical development and practical 737 
+
+applications in this field. 738 
+
+Guidelines: 739 
+
+• The answer NA means that the abstract and introduction do not include the claims 740 
+
+made in the paper. 741 
+
+• The abstract and/or introduction should clearly state the claims made, including the 742 
+
+contributions made in the paper and important assumptions and limitations. A No or 743 
+
+NA answer to this question will not be perceived well by the reviewers. 744 
+
+• The claims made should match theoretical and experimental results, and reflect how 745 
+
+much the results can be expected to generalize to other settings. 746 
+
+• It is fine to include aspirational goals as motivation as long as it is clear that these goals 747 
+
+are not attained by the paper. 748 
+
+2. Limitations 749 
+
+Question: Does the paper discuss the limitations of the work performed by the authors? 750 
+
+Answer: [Yes] 751 
+
+Justification: We discuss the limitations in Section A. 752 
+
+Guidelines: 753 
+
+20 • The answer NA means that the paper has no limitation while the answer No means that 754 
+
+the paper has limitations, but those are not discussed in the paper. 755 
+
+• The authors are encouraged to create a separate "Limitations" section in their paper. 756 
+
+• The paper should point out any strong assumptions and how robust the results are to 757 
+
+violations of these assumptions (e.g., independence assumptions, noiseless settings, 758 
+
+model well-specification, asymptotic approximations only holding locally). The authors 759 
+
+should reflect on how these assumptions might be violated in practice and what the 760 
+
+implications would be. 761 
+
+• The authors should reflect on the scope of the claims made, e.g., if the approach was 762 
+
+only tested on a few datasets or with a few runs. In general, empirical results often 763 
+
+depend on implicit assumptions, which should be articulated. 764 
+
+• The authors should reflect on the factors that influence the performance of the approach. 765 
+
+For example, a facial recognition algorithm may perform poorly when image resolution 766 
+
+is low or images are taken in low lighting. Or a speech-to-text system might not be 767 
+
+used reliably to provide closed captions for online lectures because it fails to handle 768 
+
+technical jargon. 769 
+
+• The authors should discuss the computational efficiency of the proposed algorithms 770 
+
+and how they scale with dataset size. 771 
+
+• If applicable, the authors should discuss possible limitations of their approach to 772 
+
+address problems of privacy and fairness. 773 
+
+• While the authors might fear that complete honesty about limitations might be used by 774 
+
+reviewers as grounds for rejection, a worse outcome might be that reviewers discover 775 
+
+limitations that aren’t acknowledged in the paper. The authors should use their best 776 
+
+judgment and recognize that individual actions in favor of transparency play an impor-777 
+
+tant role in developing norms that preserve the integrity of the community. Reviewers 778 
+
+will be specifically instructed to not penalize honesty concerning limitations. 779 
+
+3. Theory assumptions and proofs 780 
+
+Question: For each theoretical result, does the paper provide the full set of assumptions and 781 
+
+a complete (and correct) proof? 782 
+
+Answer: [Yes] 783 
+
+Justification: The study meticulously enumerates all underlying assumptions and furnishes a 784 
+
+comprehensive and mathematically rigorous proof for each theoretical result. 785 
+
+Guidelines: 786 
+
+• The answer NA means that the paper does not include theoretical results. 787 
+
+• All the theorems, formulas, and proofs in the paper should be numbered and cross-788 
+
+referenced. 789 
+
+• All assumptions should be clearly stated or referenced in the statement of any theorems. 790 
+
+• The proofs can either appear in the main paper or the supplemental material, but if 791 
+
+they appear in the supplemental material, the authors are encouraged to provide a short 792 
+
+proof sketch to provide intuition. 793 
+
+• Inversely, any informal proof provided in the core of the paper should be complemented 794 
+
+by formal proofs provided in appendix or supplemental material. 795 
+
+• Theorems and Lemmas that the proof relies upon should be properly referenced. 796 
+
+4. Experimental result reproducibility 797 
+
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-798 
+
+perimental results of the paper to the extent that it affects the main claims and/or conclusions 799 
+
+of the paper (regardless of whether the code and data are provided or not)? 800 
+
+Answer: [Yes] 801 
+
+Justification: The paper includes detailed descriptions of the experimental setup, algorithms, 802 
+
+model architectures in Section 6. 803 
+
+Guidelines: 804 
+
+• The answer NA means that the paper does not include experiments. 805 
+
+21 • If the paper includes experiments, a No answer to this question will not be perceived 806 
+
+well by the reviewers: Making the paper reproducible is important, regardless of 807 
+
+whether the code and data are provided or not. 808 
+
+• If the contribution is a dataset and/or model, the authors should describe the steps taken 809 
+
+to make their results reproducible or verifiable. 810 
+
+• Depending on the contribution, reproducibility can be accomplished in various ways. 811 
+
+For example, if the contribution is a novel architecture, describing the architecture fully 812 
+
+might suffice, or if the contribution is a specific model and empirical evaluation, it may 813 
+
+be necessary to either make it possible for others to replicate the model with the same 814 
+
+dataset, or provide access to the model. In general. releasing code and data is often 815 
+
+one good way to accomplish this, but reproducibility can also be provided via detailed 816 
+
+instructions for how to replicate the results, access to a hosted model (e.g., in the case 817 
+
+of a large language model), releasing of a model checkpoint, or other means that are 818 
+
+appropriate to the research performed. 819 
+
+• While NeurIPS does not require releasing code, the conference does require all submis-820 
+
+sions to provide some reasonable avenue for reproducibility, which may depend on the 821 
+
+nature of the contribution. For example 822 
+
+(a) If the contribution is primarily a new algorithm, the paper should make it clear how 823 
+
+to reproduce that algorithm. 824 
+
+(b) If the contribution is primarily a new model architecture, the paper should describe 825 
+
+the architecture clearly and fully. 826 
+
+(c) If the contribution is a new model (e.g., a large language model), then there should 827 
+
+either be a way to access this model for reproducing the results or a way to reproduce 828 
+
+the model (e.g., with an open-source dataset or instructions for how to construct 829 
+
+the dataset). 830 
+
+(d) We recognize that reproducibility may be tricky in some cases, in which case 831 
+
+authors are welcome to describe the particular way they provide for reproducibility. 832 
+
+In the case of closed-source models, it may be that access to the model is limited in 833 
+
+some way (e.g., to registered users), but it should be possible for other researchers 834 
+
+to have some path to reproducing or verifying the results. 835 
+
+5. Open access to data and code 836 
+
+Question: Does the paper provide open access to the data and code, with sufficient instruc-837 
+
+tions to faithfully reproduce the main experimental results, as described in supplemental 838 
+
+material? 839 
+
+Answer: [Yes] 840 
+
+Justification: We have provided open access to both the data and code necessary to reproduce 841 
+
+our main experimental results. 842 
+
+Guidelines: 843 
+
+• The answer NA means that paper does not include experiments requiring code. 844 
+
+• Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ 845 
+
+public/guides/CodeSubmissionPolicy ) for more details. 846 
+
+• While we encourage the release of code and data, we understand that this might not be 847 
+
+possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not 848 
+
+including code, unless this is central to the contribution (e.g., for a new open-source 849 
+
+benchmark). 850 
+
+• The instructions should contain the exact command and environment needed to run to 851 
+
+reproduce the results. See the NeurIPS code and data submission guidelines ( https: 852 
+
+//nips.cc/public/guides/CodeSubmissionPolicy ) for more details. 853 
+
+• The authors should provide instructions on data access and preparation, including how 854 
+
+to access the raw data, preprocessed data, intermediate data, and generated data, etc. 855 
+
+• The authors should provide scripts to reproduce all experimental results for the new 856 
+
+proposed method and baselines. If only a subset of experiments are reproducible, they 857 
+
+should state which ones are omitted from the script and why. 858 
+
+• At submission time, to preserve anonymity, the authors should release anonymized 859 
+
+versions (if applicable). 860 
+
+22 • Providing as much information as possible in supplemental material (appended to the 861 
+
+paper) is recommended, but including URLs to data and code is permitted. 862 
+
+6. Experimental setting/details 863 
+
+Question: Does the paper specify all the training and test details (e.g., data splits, hyper-864 
+
+parameters, how they were chosen, type of optimizer, etc.) necessary to understand the 865 
+
+results? 866 
+
+Answer: [Yes] 867 
+
+Justification: All experimental settings are clearly stated in Section 6. 868 
+
+Guidelines: 869 
+
+• The answer NA means that the paper does not include experiments. 870 
+
+• The experimental setting should be presented in the core of the paper to a level of detail 871 
+
+that is necessary to appreciate the results and make sense of them. 872 
+
+• The full details can be provided either with the code, in appendix, or as supplemental 873 
+
+material. 874 
+
+7. Experiment statistical significance 875 
+
+Question: Does the paper report error bars suitably and correctly defined or other appropriate 876 
+
+information about the statistical significance of the experiments? 877 
+
+Answer: [Yes] 878 
+
+Justification: All training curves in Section 6 are plotted with the mean ± std across two 879 
+
+random seeds. 880 
+
+Guidelines: 881 
+
+• The answer NA means that the paper does not include experiments. 882 
+
+• The authors should answer "Yes" if the results are accompanied by error bars, confi-883 
+
+dence intervals, or statistical significance tests, at least for the experiments that support 884 
+
+the main claims of the paper. 885 
+
+• The factors of variability that the error bars are capturing should be clearly stated (for 886 
+
+example, train/test split, initialization, random drawing of some parameter, or overall 887 
+
+run with given experimental conditions). 888 
+
+• The method for calculating the error bars should be explained (closed form formula, 889 
+
+call to a library function, bootstrap, etc.) 890 
+
+• The assumptions made should be given (e.g., Normally distributed errors). 891 
+
+• It should be clear whether the error bar is the standard deviation or the standard error 892 
+
+of the mean. 893 
+
+• It is OK to report 1-sigma error bars, but one should state it. The authors should 894 
+
+preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis 895 
+
+of Normality of errors is not verified. 896 
+
+• For asymmetric distributions, the authors should be careful not to show in tables or 897 
+
+figures symmetric error bars that would yield results that are out of range (e.g. negative 898 
+
+error rates). 899 
+
+• If error bars are reported in tables or plots, The authors should explain in the text how 900 
+
+they were calculated and reference the corresponding figures or tables in the text. 901 
+
+8. Experiments compute resources 902 
+
+Question: For each experiment, does the paper provide sufficient information on the com-903 
+
+puter resources (type of compute workers, memory, time of execution) needed to reproduce 904 
+
+the experiments? 905 
+
+Answer: [Yes] 906 
+
+Justification: All necessary information are provided in Section 6 . 907 
+
+Guidelines: 908 
+
+• The answer NA means that the paper does not include experiments. 909 
+
+• The paper should indicate the type of compute workers CPU or GPU, internal cluster, 910 
+
+or cloud provider, including relevant memory and storage. 911 
+
+23 • The paper should provide the amount of compute required for each of the individual 912 
+
+experimental runs as well as estimate the total compute. 913 
+
+• The paper should disclose whether the full research project required more compute 914 
+
+than the experiments reported in the paper (e.g., preliminary or failed experiments that 915 
+
+didn’t make it into the paper). 916 
+
+9. Code of ethics 917 
+
+Question: Does the research conducted in the paper conform, in every respect, with the 918 
+
+NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines ?919 
+
+Answer: [Yes] 920 
+
+Justification: Our research fully adheres to the NeurIPS Code of Ethics. 921 
+
+Guidelines: 922 
+
+• The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. 923 
+
+• If the authors answer No, they should explain the special circumstances that require a 924 
+
+deviation from the Code of Ethics. 925 
+
+• The authors should make sure to preserve anonymity (e.g., if there is a special consid-926 
+
+eration due to laws or regulations in their jurisdiction). 927 
+
+10. Broader impacts 928 
+
+Question: Does the paper discuss both potential positive societal impacts and negative 929 
+
+societal impacts of the work performed? 930 
+
+Answer: [Yes] 931 
+
+Justification: Our paper thoroughly discusses both the potential positive and negative societal 932 
+
+impacts. For details, please refer to Appendix B. 933 
+
+Guidelines: 934 
+
+• The answer NA means that there is no societal impact of the work performed. 935 
+
+• If the authors answer NA or No, they should explain why their work has no societal 936 
+
+impact or why the paper does not address societal impact. 937 
+
+• Examples of negative societal impacts include potential malicious or unintended uses 938 
+
+(e.g., disinformation, generating fake profiles, surveillance), fairness considerations 939 
+
+(e.g., deployment of technologies that could make decisions that unfairly impact specific 940 
+
+groups), privacy considerations, and security considerations. 941 
+
+• The conference expects that many papers will be foundational research and not tied 942 
+
+to particular applications, let alone deployments. However, if there is a direct path to 943 
+
+any negative applications, the authors should point it out. For example, it is legitimate 944 
+
+to point out that an improvement in the quality of generative models could be used to 945 
+
+generate deepfakes for disinformation. On the other hand, it is not needed to point out 946 
+
+that a generic algorithm for optimizing neural networks could enable people to train 947 
+
+models that generate Deepfakes faster. 948 
+
+• The authors should consider possible harms that could arise when the technology is 949 
+
+being used as intended and functioning correctly, harms that could arise when the 950 
+
+technology is being used as intended but gives incorrect results, and harms following 951 
+
+from (intentional or unintentional) misuse of the technology. 952 
+
+• If there are negative societal impacts, the authors could also discuss possible mitigation 953 
+
+strategies (e.g., gated release of models, providing defenses in addition to attacks, 954 
+
+mechanisms for monitoring misuse, mechanisms to monitor how a system learns from 955 
+
+feedback over time, improving the efficiency and accessibility of ML). 956 
+
+11. Safeguards 957 
+
+Question: Does the paper describe safeguards that have been put in place for responsible 958 
+
+release of data or models that have a high risk for misuse (e.g., pretrained language models, 959 
+
+image generators, or scraped datasets)? 960 
+
+Answer: [NA] 961 
+
+Justification: Our paper does not involve the release of data or models. 962 
+
+Guidelines: 963 
+
+24 • The answer NA means that the paper poses no such risks. 964 
+
+• Released models that have a high risk for misuse or dual-use should be released with 965 
+
+necessary safeguards to allow for controlled use of the model, for example by requiring 966 
+
+that users adhere to usage guidelines or restrictions to access the model or implementing 967 
+
+safety filters. 968 
+
+• Datasets that have been scraped from the Internet could pose safety risks. The authors 969 
+
+should describe how they avoided releasing unsafe images. 970 
+
+• We recognize that providing effective safeguards is challenging, and many papers do 971 
+
+not require this, but we encourage authors to take this into account and make a best 972 
+
+faith effort. 973 
+
+12. Licenses for existing assets 974 
+
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in 975 
+
+the paper, properly credited and are the license and terms of use explicitly mentioned and 976 
+
+properly respected? 977 
+
+Answer: [Yes] 978 
+
+Justification: All existing assets used in the paper, including code, data, and models, have 979 
+
+been properly credited to their original creators. 980 
+
+Guidelines: 981 
+
+• The answer NA means that the paper does not use existing assets. 982 
+
+• The authors should cite the original paper that produced the code package or dataset. 983 
+
+• The authors should state which version of the asset is used and, if possible, include a 984 
+
+URL. 985 
+
+• The name of the license (e.g., CC-BY 4.0) should be included for each asset. 986 
+
+• For scraped data from a particular source (e.g., website), the copyright and terms of 987 
+
+service of that source should be provided. 988 
+
+• If assets are released, the license, copyright information, and terms of use in the 989 
+
+package should be provided. For popular datasets, paperswithcode.com/datasets 990 
+
+has curated licenses for some datasets. Their licensing guide can help determine the 991 
+
+license of a dataset. 992 
+
+• For existing datasets that are re-packaged, both the original license and the license of 993 
+
+the derived asset (if it has changed) should be provided. 994 
+
+• If this information is not available online, the authors are encouraged to reach out to 995 
+
+the asset’s creators. 996 
+
+13. New assets 997 
+
+Question: Are new assets introduced in the paper well documented and is the documentation 998 
+
+provided alongside the assets? 999 
+
+Answer: [NA] 1000 
+
+Justification: The paper does not release any new assets. 1001 
+
+Guidelines: 1002 
+
+• The answer NA means that the paper does not release new assets. 1003 
+
+• Researchers should communicate the details of the dataset/code/model as part of their 1004 
+
+submissions via structured templates. This includes details about training, license, 1005 
+
+limitations, etc. 1006 
+
+• The paper should discuss whether and how consent was obtained from people whose 1007 
+
+asset is used. 1008 
+
+• At submission time, remember to anonymize your assets (if applicable). You can either 1009 
+
+create an anonymized URL or include an anonymized zip file. 1010 
+
+14. Crowdsourcing and research with human subjects 1011 
+
+Question: For crowdsourcing experiments and research with human subjects, does the paper 1012 
+
+include the full text of instructions given to participants and screenshots, if applicable, as 1013 
+
+well as details about compensation (if any)? 1014 
+
+Answer: [NA] 1015 
+
+25 Justification: The paper does not involve crowdsourcing experiments or research with human 1016 
+
+subjects. 1017 
+
+Guidelines: 1018 
+
+• The answer NA means that the paper does not involve crowdsourcing nor research with 1019 
+
+human subjects. 1020 
+
+• Including this information in the supplemental material is fine, but if the main contribu-1021 
+
+tion of the paper involves human subjects, then as much detail as possible should be 1022 
+
+included in the main paper. 1023 
+
+• According to the NeurIPS Code of Ethics, workers involved in data collection, curation, 1024 
+
+or other labor should be paid at least the minimum wage in the country of the data 1025 
+
+collector. 1026 
+
+15. Institutional review board (IRB) approvals or equivalent for research with human 1027 
+
+subjects 1028 
+
+Question: Does the paper describe potential risks incurred by study participants, whether 1029 
+
+such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) 1030 
+
+approvals (or an equivalent approval/review based on the requirements of your country or 1031 
+
+institution) were obtained? 1032 
+
+Answer: [NA] 1033 
+
+Justification: The paper does not involve research with human subjects. 1034 
+
+Guidelines: 1035 
+
+• The answer NA means that the paper does not involve crowdsourcing nor research with 1036 
+
+human subjects. 1037 
+
+• Depending on the country in which research is conducted, IRB approval (or equivalent) 1038 
+
+may be required for any human subjects research. If you obtained IRB approval, you 1039 
+
+should clearly state this in the paper. 1040 
+
+• We recognize that the procedures for this may vary significantly between institutions 1041 
+
+and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the 1042 
+
+guidelines for their institution. 1043 
+
+• For initial submissions, do not include any information that would break anonymity (if 1044 
+
+applicable), such as the institution conducting the review. 1045 
+
+16. Declaration of LLM usage 1046 
+
+Question: Does the paper describe the usage of LLMs if it is an important, original, or 1047 
+
+non-standard component of the core methods in this research? Note that if the LLM is used 1048 
+
+only for writing, editing, or formatting purposes and does not impact the core methodology, 1049 
+
+scientific rigorousness, or originality of the research, declaration is not required. 1050 
+
+Answer: [NA] 1051 
+
+Justification: The paper does not involve LLMs as any important, original, or non-standard 1052 
+
+components. 1053 
+
+Guidelines: 1054 
+
+• The answer NA means that the core method development in this research does not 1055 
+
+involve LLMs as any important, original, or non-standard components. 1056 
+
+• Please refer to our LLM policy ( https://neurips.cc/Conferences/2025/LLM )1057 
+
+for what should or should not be described. 1058 
+
+26

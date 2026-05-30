@@ -1,0 +1,2576 @@
+Title: 10344_Triple_BERT_Do_We_Really.pdf
+
+URL Source: https://openreview.net/pdf?id=0F924d12FX
+
+Number of Pages: 28
+
+Markdown Content:
+# Triple-BERT: Do We Really Need MARL for Order Dispatch on Ride-Sharing Platforms? 
+
+Anonymous Author(s) 
+
+Affiliation Address 
+
+email 
+
+## Abstract 
+
+On-demand ride-sharing platforms, such as Uber and Lyft, face the intricate real-1
+
+time challenge of bundling and matching passengers—each with distinct origins 2
+
+and destinations—to available vehicles, all while navigating significant system 3
+
+uncertainties. Due to the extensive observation space arising from the large number 4
+
+of drivers and orders, order dispatching, though fundamentally a centralized task, 5
+
+is often addressed using Multi-Agent Reinforcement Learning (MARL). How-6
+
+ever, independent MARL methods fail to capture global information and exhibit 7
+
+poor cooperation among workers, while Centralized Training Decentralized Ex-8
+
+ecution (CTDE) MARL methods suffer from the curse of dimensionality. To 9
+
+overcome these challenges, we propose Triple-BERT, a centralized method de-10 
+
+signed specifically for large-scale order dispatching on ride-sharing platforms. 11 
+
+Built on TD3, our approach addresses the vast action space through an action 12 
+
+decomposition strategy that breaks down the joint action probability into indi-13 
+
+vidual driver action probabilities. To handle the extensive observation space, 14 
+
+we introduce a novel BERT-based network, where parameter reuse mitigates pa-15 
+
+rameter growth as the number of drivers and orders increases, and the attention 16 
+
+mechanism effectively captures the complex relationships among the large pool 17 
+
+of driver and orders. We validate our method using a real-world ride-hailing 18 
+
+dataset from Manhattan. Triple-BERT achieves approximately an 11.95% im-19 
+
+provement over current state-of-the-art methods, with a 4.26% increase in served 20 
+
+orders and a 22.25% reduction in pickup times. Our code, trained model pa-21 
+
+rameters, and processed data are publicly available at the anonymous repository 22 
+
+https://anonymous.4open.science/r/Triple-BERT .23 
+
+## 1 Introduction 24 
+
+Ride-sharing platforms, such as Uber and Lyft, face the complex challenge of dynamically matching 25 
+
+passengers with distinct origins and destinations to available vehicles in real time. This task must 26 
+
+account for significant system uncertainties, including fluctuating demand, varying traffic conditions, 27 
+
+and the availability of drivers. As the volume of concurrent ride requests increases, these platforms 28 
+
+must efficiently allocate resources to minimize detours, reduce waiting times, and maximize customer 29 
+
+satisfaction and platform revenue. However, the inherently large and dynamically changing action and 30 
+
+observation spaces make this problem highly challenging for the operation of ride-sharing platforms. 31 
+
+Recently, Reinforcement Learning (RL) methods have shown great potential in addressing the 32 
+
+order dispatching problem in ride-sharing platforms. Model-free RL, in particular, enables agents 33 
+
+to autonomously learn optimal dispatching policies by interacting with the environment, without 34 
+
+requiring complex system modeling. This approach allows platforms to optimize multiple objectives, 35 
+
+including platform income, driver payments, and customer satisfaction. Despite these advantages, 36 
+
+Submitted to 39th Conference on Neural Information Processing Systems (NeurIPS 2025). Do not distribute. applying RL to large-scale order dispatching introduces significant challenges. The vast action 37 
+
+and observation spaces, stemming from the large number of drivers and orders, make sufficient 38 
+
+exploration and efficient training difficult. Multi-Agent Reinforcement Learning (MARL) methods 39 
+
+have been widely adopted to address these challenges by decomposing the problem into smaller 40 
+
+subproblems for individual agents (drivers). Independent MARL methods, such as IDDQN [ 1; 2; 3 ]41 
+
+and ISAC [ 4], are computationally efficient but fail to capture global information and exhibit limited 42 
+
+cooperation among agents. Graph Neural Networks (GNNs) have been introduced to enable the 43 
+
+network to capture neighboring information for each agent, alleviating this issue to certain extent 44 
+
+[ 5; 6 ]. Meanwhile, Centralized Training with Decentralized Execution (CTDE) methods, such as 45 
+
+QMIX [ 7 ] and CoPO [ 8], struggle with the curse of dimensionality when applied to large-scale 46 
+
+scenarios with thousands of agents, resulting in slow convergence and suboptimal performance. 47 
+
+To address these limitations, this paper proposes a centralized Single-Agent Reinforcement Learning 48 
+
+(SARL) method, named Triple-BERT, tailored for large-scale order dispatching in ride-sharing 49 
+
+platforms. Triple-BERT introduces an action decomposition method that simplifies the joint action 50 
+
+probability into individual driver action probabilities, enabling each driver to make independent 51 
+
+decisions while maintaining global coordination. The method leverages TD3 [ 9 ] for optimization, 52 
+
+with modifications to the actor optimization process via policy gradient [ 10 ] to better suit the ride-53 
+
+sharing context. To handle the extensive observation space, we design a novel BERT-based [ 11 ]54 
+
+neural network architecture. This network employs bi-directional self-attention to effectively capture 55 
+
+complex relationships between drivers and orders, while its parameter reuse mechanism prevents 56 
+
+parameter explosion as the number of drivers and orders increases. Additionally, compared to MARL, 57 
+
+SARL faces a unique challenge of sample scarcity, as the records of multiple agents are merged into 58 
+
+a single training stream. To address this, we propose a two-stage training strategy, where feature 59 
+
+extractors are pre-trained using a MARL approach to learn general embedding capabilities, followed 60 
+
+by centralized fine-tuning. The main contributions of this paper can be summarized as follows: 61 
+
+• We introduce Triple-BERT, which is the first centralized SARL framework for large-scale order 62 
+
+dispatching on ride-sharing platforms. This approach addresses the limitations of the observation 63 
+
+space and the inefficiencies in cooperation among agents present in MARL methods. To tackle 64 
+
+the large action space inherent in the matching problem of order dispatching tasks, we propose an 65 
+
+action decomposition method that breaks down the joint action probability into individual driver 66 
+
+action probabilities. Additionally, we propose a two-stage training method to address the sample 67 
+
+scarcity issue in SARL, where the feature extractors are first trained using a MARL approach. 68 
+
+• To support the proposed RL framework in a large observation space, we develop a novel neural 69 
+
+network architecture based on BERT. This design leverages self-attention mechanisms to effectively 70 
+
+capture the relationships between drivers and orders. Furthermore, we incorporate a QK-attention 71 
+
+module to reduce computational complexity from multiplication to addition in the order dispatching 72 
+
+task, along with a positive normalization method to mitigate parameter redundancy issues. 73 
+
+• We validate the proposed method in the ride sharing scenario, using a real-world dataset of ride-74 
+
+hailing trip records from Manhattan. Our method outperforms the MARL methods reported in 75 
+
+previous works, demonstrating approximately a 11.95% improvement over current state-of-the-art 76 
+
+methods, with a 4.26% increase in served orders and reductions of about 22.25% in pickup time. 77 
+
+## 2 Problem Setup 78 
+
+In this paper, we address the order dispatching task within on-demand logistic systems, such as ride 79 
+
+hailing, food delivery, and express delivery. We consider a platform managing n drivers (hereafter 80 
+
+referred to as workers), represented by the state Wt = {w1,t , w 2,t , . . . , w n,t }, where wi,t denotes 81 
+
+the state of worker i at time t. At each time step, the platform processes a set of orders, including 82 
+
+newly arrived orders and any previously unassigned orders, denoted as Ot = {o1,t , o 2,t , . . . , o mt,t },83 
+
+where mt is the total number of orders at time t. Since real-time performance is crucial in on-demand 84 
+
+systems, the platform aims to bundle and assign orders in a way that minimizes delivery time while 85 
+
+maximizing the number of served orders. Customers are assumed to be impatient; if an order is not 86 
+
+acknowledged within a specified time frame, workers will decline it. Moreover, late deliveries beyond 87 
+
+the scheduled time may result in customer complaints, potentially causing losses for the platform. 88 
+
+The overall workflow is illustrated in Fig. 1, and the Markov Decision Problem (MDP) is formulated 89 
+
+as < S, A, R, P > , encompassing the state, action, reward, and transition function, which will be 90 
+
+detailed below: 91 
+
+2Figure 1: Workflow: At each time step, the worker and order pools update their states based on the assignments made in the previous time step. Specifically, the order pool adds newly arrived orders and removes overdue ones. For IDDQN, the Q-value of each worker-order pair is calculated, and ILP is applied to maximize the global Q-value. For TD3, the probability of each worker-order pair is computed, followed by the application of ILP to maximize the global assignment probability. 
+
+(i) State: At timestep t, the state or observation can be represented as St = [ Wt, O t], consisting of 92 
+
+the states of workers and orders. For the order j to be assigned, the state oi,j includes the order’s 93 
+
+origin and destination, pickup time, and scheduled arrival time. For each worker i, the state wi,t 94 
+
+consists of the onboard orders Hi,t that are still unfinished, the current location, the residual capacity, 95 
+
+and the estimated time when he/she will be available to accept a new order. (Note that we assume if 96 
+
+a worker is en route to pick up a new order or if his/her capacity is full, he/she cannot serve a new 97 
+
+order.) Specifically, Hi,t is a sequence of orders Hi,t = {hi, 1,t , h i, 2,t , . . . , h i,k i,t ,t }, where ki,t is the 98 
+
+number of onboard orders for worker i at time t and each order hi,k,t contains the same information 99 
+
+as the orders to be assigned oj,t .100 
+
+(ii) Action: At each time t, the action can be represented as At = {a1,t , a 2,t , . . . , a n,t }, where each 101 
+
+ai,t is an mt-dimensional vector with at most one element set to 1, indicating which order is assigned 102 
+
+to worker i. The order dispatching task is particularly challenging due to two main factors: (i) the size 103 
+
+of the action space keeps changing over time because the number of orders mt varies dynamically 104 
+
+as new orders arrive and old orders are completed or canceled; (ii) the size of the action space is 105 
+
+extremely large for real systems. For instance, considering n = 1000 workers and mt = 10 orders, 106 
+
+the action space can reach approximately 10 30 . (A detailed proof is provided in Appendix A.) This 107 
+
+combination of an enormous action space and its continuously changing size significantly complicates 108 
+
+sufficient exploration and stable network convergence for standard RL methods. 109 
+
+(iii) Reward Function: We split the reward function for each worker, meaning each worker will 110 
+
+receive a reward ri,t +1 at time step t, and the global reward is the sum of each worker’s reward: 111 
+
+Rt+1 = Pni=1 ri,t +1 . The reward ri,t +1 can be calculated according to the following function: 112 
+
+ri,t +1 = R(si,t , a i,t ) = 
+
+β1 + β2pin i,t − β3pout i,t − β4χi,t − β5ρi,t , |ai,t | = 1 0 , |ai,t | = 0 (1) where β1 to β5 are non-negative weights representing the platform’s valuation of each term, pin i,t and 113 
+
+pout i,t represent the income from customers and the payout to workers, respectively. The variables 114 
+
+χi,t and ρi,t represent the number of en-route orders that will exceed their scheduled time and the 115 
+
+additional travel time of all en-route orders when the assigned order is added to the scheduled route 116 
+
+of worker i at time t, respectively. This reward function is designed to comprehensively consider 117 
+
+the interests of the platform, workers, and customers, mimicking the operation of a real-world food 118 
+
+delivery platform. It is important to emphasize that pin i,t and pout i,t are calculated based on the order 119 
+
+3distance and the additional travel distance for the worker, respectively. When calculating travel time, 120 
+
+we will utilize the Traveling Salesman Problem (TSP) to optimize the worker’s route. 121 
+
+(iv) Transition Function: In our system, the reward is deterministic given the current state and action. 122 
+
+Therefore, the transition function is represented by P (St+1 |St, A t). In this study, the transition 123 
+
+probabilities are not explicitly modeled; instead, they are inferred through the model-free RL. 124 
+
+## 3 Methodology 125 
+
+Figure 2: Proposed Network Architecture: In this figure, the fused sequence (input to Critic-BERT) represents workers 1, 3, 6, and n selecting orders 2, 3, 4, and m, respectively. 
+
+3.1 Overview 126 
+
+In this work, we aim to utilize centralized SARL to address the large-scale order dispatching task, 127 
+
+with the goal of enabling the model to fully leverage global information to enhance cooperation 128 
+
+among workers. To tackle the challenges of large action and observation spaces, we propose a novel 129 
+
+network architecture, as illustrated in Fig. 2. This architecture employs the BERT model [ 11 ] to 130 
+
+effectively extract the relationships between workers and orders using the self-attention mechanism. 131 
+
+Additionally, an improved QK-attention [ 12 ] is implemented to reduce the computational complexity 132 
+
+associated with the order dispatching task. Furthermore, we introduce an action decomposition 133 
+
+method that breaks down the choice probability of each action within the vast action space into 134 
+
+individual action probabilities for each worker selecting each order. Finally, to address the data 135 
+
+scarcity challenge in MARL, we propose a two-stage training method, as shown in Fig. 1. In the 136 
+
+first stage, we train the upstream layers of the network using the IDDQN approach, allowing them 137 
+
+to develop general feature extraction capabilities. Subsequently, we train the entire neural network 138 
+
+using centralized TD3 to realize better cooperation between workers. 139 
+
+3.2 Network Architecture 140 
+
+The proposed network structure is shown as Fig. 2, which constists of three parts: encoders (embed 141 
+
+the worker and order information to a common feature space), actor sub-network (a BERT to 142 
+
+extract the relationship between different workers and orders and a QK-Attention to generate the 143 
+
+utility/probability of each worker-order pair), and critic sub-network (two BERT taking output of 144 
+
+actor BERT as input and output the Q-value respectively). 145 
+
+43.2.1 Feature Extractors 146 
+
+At each time step, the network takes the entire state St = [ Wt, O t] as input. We consider this as a 147 
+
+combination of two sequences: Wt and Ot. For each element wi,t and oj,t , we employ two distinct 148 
+
+encoders, referred to as the "Worker Encoder" and the "Order Encoder", to embed them separately 149 
+
+into a feature space of the same dimension, allowing them to be input into a single BERT model. 150 
+
+Each worker state wi,t consists of two parts: an on-board order sequence and other non-sequence 151 
+
+information. For the order sequence, a bi-directional LSTM [ 13 ] is utilized to extract its features. 152 
+
+This approach effectively encodes variable-length sequences into a uniform dimensional feature 153 
+
+space, addressing the curse of dimensionality associated with conventional MLP encoders, where 154 
+
+the number of parameters increases with sequence length. For non-sequence information, an MLP 155 
+
+is employed for feature extraction. Finally, the two features are combined into a primary feature 156 
+
+˜wi,t . For the orders to be assigned oj,t , an MLP is also used to extract the feature ˜oj,t . Notably, 157 
+
+the dimensions of ˜wi,t and ˜oj,t are identical, and their information is concatenated into a sequence 158 
+
+represented as ˜St = [ ˜ w1,t , ˜w2,t , . . . , ˜wn,t , ˜o1,t , ˜o2,t , . . . , ˜omt,t ].159 
+
+Additionally, to facilitate network convergence and enhance the extraction of input features, we 160 
+
+incorporate a normalization layer and an Adaptive Re-weighting Layer (ARL) [ 14 ]. Given that 161 
+
+different parts of the input may have varying magnitudes, which can impede model training, the 162 
+
+normalization layer effectively addresses this issue. Furthermore, since different parts of the input 163 
+
+carry different levels of importance, we utilize the ARL to enable the model to learn these variations, 164 
+
+represented as: y = x ◦ Ω, where x denotes the input, Ω represents the weight vector, calculated by 165 
+
+Ω = MLP (x), and ◦ indicates the element-wise product. 166 
+
+3.2.2 Actor Sub-Networks 167 
+
+The Actor sub-network consists of a BERT [ 11 ] model for feature extraction and a QK-attention 168 
+
+module [ 12 ] for action decomposition and generation, which we will introduce in turn. In the 169 
+
+feature extractors, we have already extracted the primary features from each worker and order 170 
+
+state separately. To further explore the relationships between workers and orders, we utilize the 171 
+
+BERT model, where the self-attention mechanism can effectively capture these relationships: St =172 
+
+[w1,t , w 2,t , . . . , w n,t , o 1,t , o 2,t , . . . , o mt,t ] = Actor-BERT ( ˜St). Specifically, due to the permutation 173 
+
+invariance of our input sequence, we omit the positional embedding in BERT, ensuring that the order 174 
+
+in S does not influence the encoding result. In contrast to conventional MARL methods like [ 5; 7], 175 
+
+which encode each worker with its neighboring states to gain a broader perspective, our Actor-BERT 176 
+
+directly aggregates global worker information, facilitating more effective cooperative dispatching 177 
+
+between workers. 178 
+
+In conventional order dispatching tasks, the typical approach to address the dynamic action space 179 
+
+(related to the number of orders) involves evaluating each worker-order pair separately and finding the 180 
+
+optimal dispatching solution based on these evaluations. However, this approach has two significant 181 
+
+shortcomings. First, it neglects the relationships between orders, which we address through the 182 
+
+self-attention mechanism in BERT, capturing not only the relationships between workers but also 183 
+
+between orders and between orders and workers. Second, evaluating each worker-order pair is 184 
+
+time-consuming and resource-intensive: F(wi,t , o j,t ; θF ) ∈ R1, where F is the network and θF185 
+
+represents its parameters. The complexity can be represented as O(|F| · n · mt), where |F| denotes 186 
+
+the complexity of the neural network. To mitigate this issue, we employ a QK-attention module [ 12 ], 187 
+
+represented as: 188 
+
+QK-Attention (wi,t , o j,t ) := f(wi,t ; θf ) · g(oj,t ; θg )T ≈ F(wi,t , o j,t ; θF ) , (2) where f and g are two smaller networks, and θf and θg are their parameters. The intuition behind QK-189 
+
+attention is to use two smaller networks to approximate a larger network, similar to the motivation 190 
+
+behind LoRA [ 15 ]. In this way, the complexity of computing all worker-order pairs becomes 191 
+
+O(|f| · n + |g| · mt + d · n · mt), where |f| and |g| are the complexities of the two neural networks, 192 
+
+d is their output dimension, and d · n · mt is the complexity of matrix multiplication. Here, d is 193 
+
+very small, making d · n · mt much smaller than the neural network computation complexity, i.e., 194 
+
+d · n · mt ≪ | f| ≈ | g| < |F|. Thus, we have O(|f| · n + |g| · mt + d · n · mt) < O (|F| · (n + mt)) <195 
+
+O(|F| · n · mt), indicating that the QK-attention successfully transforms the multiplication complexity 196 
+
+of evaluating each worker-order pair into addition complexity. 197 
+
+5However, we observe a parameter redundancy issue in Equation 2, which can lead to potential 198 
+
+instability during training. This redundancy arises because there are actually infinite solutions for f199 
+
+and g, as f ′ = αf and g′ = gα is also a valid solution for any non-zero real vector α. Inspired by 200 
+
+Dueling DQN [16], we propose a positive normalization method: 201 
+
+QK-Attention-Norm (wi,t , o j,t ) := f(wi,t ; θf ) · Softplus (g(oj,t ; θg )) T
+
+|| Softplus (g(oj,t ; θg )) || 2
+
+. (3) This normalization ensures that the elements in Softplus (g(oj,t ;θg )T )   
+
+> || Softplus (g(oj,t ;θg)T)|| 2
+
+are always non-negative, with 202 
+
+an L2 norm of 1. This guarantees a unique solution. In our task, the output of the QK-attention is 203 
+
+a matrix Mt ∈ Rn,m t , representing the utility of each worker choosing each order, which will be 204 
+
+detailed in Section 3.3.2. 205 
+
+3.2.3 Critic Sub-Networks 206 
+
+The role of the critic is to evaluate the quality of actions, with the detailed action generation method 207 
+
+introduced in Section 3.3.2. We first define an action function A:208 
+
+A(wi,t ) = 
+
+(wi,t , o j,t ) if order j is assigned to worker i at time t
+
+∅ if no order is assigned to worker i at time t (4) where wi,t and oj,t are the outputs of Actor-BERT, and (wi,t , o j,t ) represents the combination 209 
+
+of the two vectors into a single feature vector. We then construct a new sequence: ˙St =210 
+
+[A(w1,t ), A(w2,t ), . . . , A(wi,t )] . Another BERT network, referred to as "Critic-BERT", is used 211 
+
+to further extract features from ˙St, represented as ¨St = Critic-BERT ( ˙St). A self-attention mecha-212 
+
+nism and a linear layer (collectively named Critic-MLP) are then utilized to estimate the Q-value 213 
+
+from ¨St (for detailed processing methods, refer to [ 17 ]). Furthermore, as TD3 [ 9 ] requires two critics, 214 
+
+we employ two distinct Critic-BERT and Critic-MLP networks. These share the input features from 215 
+
+Actor-BERT but process them separately. 216 
+
+3.3 Training Process 217 
+
+3.3.1 Stage 1: Decentralized IDDQN Training 218 
+
+In this stage, we aim to first train the feature-extracting capacity of the worker encoder and order 219 
+
+encoder using a substantial number of samples. To obtain sufficient samples, we view the dispatching 220 
+
+problem as a multi-agent scenario, where at each time step, each agent can access its own record. We 221 
+
+adopt the independent assumption that all agents share the same policy, allowing for the sharing of 222 
+
+records between agents and leading to a large experience replay buffer. 223 
+
+Since our goal in this stage is not to train a powerful model but rather to enable the feature extractor 224 
+
+to learn its general feature-extracting capabilities, we select the simplest yet efficient method for 225 
+
+order dispatching, namely, the IDDQN. Each worker is treated as an independent agent with the state 226 
+
+defined as si,t = [ wi,t , O t] at time t. We employ a neural network to estimate the Q-value at each 227 
+
+step as Q DQN πQ
+
+> Φ
+
+(si,t , a i,t ), where Φ represents the network parameters and πQ 
+
+> Φ
+
+denotes the strategy. 228 
+
+To construct the network, we utilize QK-attention to process the outputs of the worker en-229 
+
+coder and order encoders to estimate the Q-value for each worker-order pair, represented as 230 
+
+QK-Attention-Norm ( ˜ wi,t , ˜oj,t ) (denoted as yi,j,t ). Although the state space encompasses the entire 231 
+
+order state from o1,t to omt,t , we focus on a single order oj,t when computing the Q-value for choos-232 
+
+ing order j. This approach aligns with previous work such as [ 5; 18 ], as the entire order state can be 233 
+
+excessively large for a simple network to learn (our Triple-BERT effectively addresses this issue) and 234 
+
+many networks struggle to process variable dimensional inputs (with order amounts varying at each 235 
+
+time step). Consequently, we can compute a Q-matrix Yt ∈ Rn,m t , where the element in the i-th row 236 
+
+and j-th column, yi,j,t , represents the Q-value of assigning order j to worker i at time t. The core 237 
+
+strategy of IDDQN is to maximize the global Q-value, expressed as Q (St, A t) = Pni=1 Q(si,t , a i,t )238 
+
+at each time step. To achieve this, we construct a bipartite graph where each worker and order is 239 
+
+represented as a node. An arbitrary worker i and order j are linked by an edge weighted by the 240 
+
+Q-value of this worker selecting this order at the current time, i.e., yi,j,t . We then utilize Integer 241 
+
+6Linear Programming (ILP) to solve this maximizing bipartite matching problem. (To avoid assigning 242 
+
+orders to unavailable workers—those at full capacity or on their way to pick up an assigned order—we 243 
+
+set the Q-value of all actions for such workers in the Q-matrix Yt to −∞ .) A detailed construction of 244 
+
+the problem is provided in Appendix B.1. For the training of IDDQN, it follows the same process of 245 
+
+previous work [5]. Due to page limitation, we detailed it in Appendix D.1. 246 
+
+3.3.2 Stage 2: Centralized TD3 Training 247 
+
+In the standard AC framework, the process can be summarized as follows: an actor network generates 248 
+
+actions based on the current state, represented as At = Actor (St; θA), while a critic network evaluates 249 
+
+these actions using ˆQt = Critic (St, A t; θC , π TθA ). Here, θA and θC are the parameters of the actor 250 
+
+and critic networks, respectively, and πAθA denotes the strategy of AC. During training, the critic 251 
+
+network is updated using TD-error, similar to Q-learning, and the actor network is updated to 252 
+
+maximize ˆQ. However, a challenge mentioned in Section 2 is that the action space is too large for the 253 
+
+order dispatching scenario. Additionally, the actions in order dispatching are discrete, complicating 254 
+
+optimization using TD3. To address these issues, we propose an action decomposition method along 255 
+
+with a policy gradient-style optimization method. 256 
+
+Before delving into the details, we denote both θA and θC with the parameters Θ, as in our network 257 
+
+(Fig. 2), the actor and critic share the same architecture. The trained network parameters from Stage 258 
+
+1, Φ, are part of Θ. Moreover, the policy of TD3 is represented as πT
+
+> Θ
+
+.259 
+
+(i) Actor: To address the large action space, we propose an action decomposition method that 260 
+
+separates the probability of selecting each worker-order assignment combination into the probabilities 261 
+
+of each worker choosing their respective orders. First, we expand the utility matrix Mt output 262 
+
+by the Actor QK-Attention to Mt = [ Mt, N t] ∈ Rn,m t+1 , where Nt is an n-dimensional vector 263 
+
+representing the utility of each worker choosing no order. This vector can be obtained by processing 264 
+
+the output of Actor-BERT with a MLP, i.e., Nt = MLP ([ w1,t , w 2,t , . . . , w n,t ]) . This allows us to 265 
+
+compute the probability of each worker choosing each action using a logit model [ 19 ], if the actions 266 
+
+among workers are independent , i.e., Pt = Softmax (Mt, dim=-1 ). According to this independent 267 
+
+assumption, the joint action probability can be expressed as: Q 
+
+> i,j ∈h(At)
+
+Pi,j,t , where h() is defined 268 
+
+as the function h(At) = {(i, j )|ai,j,t = 1 }. Similar to stage 1, we set the probability of those 269 
+
+unavailable workers choosing no order to 1 and all other actions to 0 in Pt. (Remark: We consider 270 
+
+this independent assumption can be approximately realized after the network is well-trained, as BERT 271 
+
+has already captured the relationships among workers, including their strategic interactions.) 272 
+
+However, since an order cannot be assigned to different workers repeatedly, the actions among 273 
+
+workers are actually not independent. Intuitively, if a worker is more willing to choose a particular 274 
+
+action, this action should have a higher probability of being selected by this worker in the joint action. 275 
+
+Based on this intuition, the action choosing probability can be defined as: 276 
+
+πT
+
+> Θ
+
+(At|St) = z( Y
+
+> i,j ∈h(At)
+
+Pi,j,t ) , (5) where z(·) is an increasing function that also depends on the current state St (which we omit for 277 
+
+simplicity). This equation implies that if an action At has a higher value of Q 
+
+> i,j ∈h(At)
+
+Pi,j,t , it will 278 
+
+have a higher probability of being chosen. 279 
+
+However, defining and computing such a function z(·) is challenging due to the vast action space, 280 
+
+complicating the sampling of an action from the strategy πT
+
+> Θ
+
+(At|St). We define an efficient approach 281 
+
+to address this. First, during inference, we can greedily select the action with the maximum probability, 282 
+
+as this action should theoretically have the highest utility: 283 
+
+arg max  
+
+> At∈ψ(St)
+
+πT
+
+> Θ
+
+(At|St) = arg max  
+
+> At∈ψ(St)
+
+z( Y
+
+> i,j ∈h(At)
+
+Pi,j,t ) = arg max 
+
+> At∈ψ(St)
+
+X
+
+> i,j ∈h(At)
+
+log Pi,j,t ,
+
+(6) where ψ(St) is the set of all possible actions under the current state St. This holds because both z(·)284 
+
+and log( ·) are increasing functions. We can construct a bipartite graph similar to Stage 1, where each 285 
+
+available worker and order is represented as a node, and the link between each worker i and order j at 286 
+
+time t is weighted by their log probability log Pi,j,t . By utilizing ILP, we can find the action At that 287 
+
+maximizes πT
+
+> Θ
+
+(At|St). The bipartite graph construction process is detailed in Appendix B.2. During 288 
+
+7training, we introduce random noise to the probability matrix Pt and the model selects actions using 289 
+
+the same method as in Eq. 6. When the noise is sufficiently large, the policy degrades to a totally 290 
+
+random policy, and when the noise is zero, the policy converges to a greedy strategy. Although we 291 
+
+cannot directly express the function z(·), it must ensure that the function is a increasing function 292 
+
+(since the noise is totally random). More details about the noise can be found at Appendix C. 293 
+
+Optimizing this probability using vanilla TD3 is challenging due to the variable action space and 294 
+
+the gap between action probabilities and the selected action (the gradient cannot propagate through 295 
+
+them). To address this, we employ an approximate policy gradient optimization method [10]: 296 
+
+∇ΘJ(Θ) ∝ EπT
+
+> Θ
+
+(QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B)∇Θ
+
+X
+
+> i,j ∈h(At)
+
+log Pi,j,t 
+
+ , (7) where J(Θ) is the optimization objective (long-term cumulative reward), B is a baseline independent 297 
+
+of state (we simplify by setting it to 0), and QT D 3
+
+> πT
+> Θ
+
+(St, A t) is the Q-value under the policy πT
+
+> Θ
+
+,298 
+
+which can be estimated by QT D 3  
+
+> πT
+> Θ,i
+
+(St, A t; Θ) using our proposed network ( i = 1 , 2, as there are two 299 
+
+estimated Q-values in TD3). Detailed derivations can be found in Appendix C. We then use gradient 300 
+
+ascent to maximize J (Θ) , thus the loss function for the actor can be expressed as LA = −∇ J(Θ) .301 
+
+(ii) Critic: For the critic, it can be updated in a manner similar to vanilla TD3, where the loss function 302 
+
+can be expressed as: 303 
+
+LC = X
+
+> i=1 ,2
+
+EπT
+
+> Θ
+
+h
+
+QT D 3
+
+> πT
+> Θ−
+
+(St+1 , R t+1 ; Θ −) − QT D 3  
+
+> πT
+> Θ,i
+
+(St, A t; Θ) 
+
+i
+
+,
+
+QT D 3
+
+> πT
+> Θ−
+
+(St+1 , R t+1 ; Θ −) = Rt+1 + γ min  
+
+> i=1 ,2
+
+QT D 3 
+
+> πT
+> Θ−,i
+
+(St+1 , Actor (St+1 ; Θ −, ξ ); Θ −) ,
+
+(8) where QT D 3
+
+> πT
+> Θ−
+
+is the learning target function, Θ− represents the parameters of the target network, 304 
+
+which updates more slowly than the policy network Θ to provide a stable target, and ξ is a small 305 
+
+random noise applied in the probability matrix P. More details can be viewed in Appendix D.2. 306 
+
+## 4 Experiment 307 
+
+Table 1: Comparison of Different Ride Sharing Methods                                                    
+
+> Method DeepPool [1] BMG-Q [5] HIVES [7] Enders et al. [20] CEVD [21] Triple-BERT Type Independent CTDE Centralized
+> RL Algorithm IDDQN [22] IDDQN [22] QMIX [23] MASAC [24] VD 1[25] TD3 [9]
+> Multi-Agent ✓✓✓✓✓×
+> Network Backbone MLP GAT [26] GRU [27] MLP+Attention MLP BERT [11]
+> Model Size 20K 117K 16M 118K 23K 16M
+> GPU Occupation (GB) 3.97 4.28 6.01 8.19 21.45 8.03
+> Average Reward ( 10 3)12.72 13.04 12.37 12.04 13.16 14.73
+
+To validate the proposed method, we evaluate its performance in the ride sharing dispatching task 308 
+
+using real-world yellow ride-hailing data from Manhattan, New York City 2 [ 28 ]. To illustrate the 309 
+
+efficiency and superiority of our proposed Triple-BERT, we compare it with several previous ride 310 
+
+sharing methods of different types, including Independent MARL, CTDE MARL, and Centralized 311 
+
+MARL, as shown in Table 1. Detailed information regarding our experiment configuration, simulator 312 
+
+setup, and a comprehensive description of the comparative experiment can be found in Appendix E. 313 
+
+As shown in Fig. 3, we first illustrate the training process of different models by evaluating their 314 
+
+performance in the training scenario every 10 episodes. The six sub-figures depict the cumulative 315 
+
+reward, the number of orders served, and the average delivery time, detour time, pickup time, and 316 
+
+confirmation time for each order. Additionally, the Greedy method serves as a baseline, where orders 317 
+
+> 1
+
+The original VD is a CTDE method. However, the CEVD variant modifies it to a centralized version. 
+
+> 2
+
+https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page 
+
+8Figure 3: Training Process: Each method is trained three times, and the curve is smoothed using Exponential Moving Average (EMA) with α = 0 .1. The shaded area represents the range of fluctuations, while the solid line indicates the average value. (Here, for delivery time and detour time, only completed orders are counted, as these metrics are uncertain for unfinished orders.) are assigned to the nearest worker. It is evident that our method outperforms the other models in most 318 
+
+metrics, with the cumulative reward exceeding that of the best alternative method by approximately 319 
+
+15%. The highest number of served orders indicates that our method achieves better cooperation 320 
+
+among workers. We then evaluate these methods over different periods, and the average rewards are 321 
+
+shown in Table 1, where our method also demonstrates the best performance. More details about the 322 
+
+experimental results can be found in Appendix E.4. 323 
+
+To further demonstrate the model’s efficiency, we conduct a series of ablation studies. In terms of 324 
+
+model training, we compare the performance of the model with and without stage 1 pre-training. 325 
+
+Regarding the network structure, we primarily compare the QK-Attention mechanism with and 326 
+
+without the proposed positive normalization module. The detailed results are shown in Fig. 3. 327 
+
+We observe that without stage 1 pre-training, the model fails to converge and exhibits significant 328 
+
+fluctuations. Particularly in the later stages, the reward begins to decrease, which can be attributed 329 
+
+to the lack of samples. Additionally, without the proposed normalization in QK-Attention, the 330 
+
+model performs poorly, underperforming compared to all other methods. This is due to parameter 331 
+
+redundancy, which leads to substantial fluctuations and hinders efficient learning. 332 
+
+## 5 Conclusion 333 
+
+In this work, we propose the first centralized SARL method, Triple-BERT, for large-scale order 334 
+
+dispatching in ride-hailing platforms. Our method successfully addresses the challenge of large 335 
+
+action spaces through an action decomposition technique and tackles the issue of sample scarcity 336 
+
+with a proposed two-stage training method. The novel network also addresses the large observation 337 
+
+space challenge by leveraging the self-attention mechanism of BERT. Additionally, we introduce an 338 
+
+improved QK-Attention mechanism to reduce the computational complexity of order dispatching. 339 
+
+Through experiments on real-world ride sharing data, we demonstrate that our method significantly 340 
+
+outperforms conventional MARL methods, achieving better cooperation among drivers. 341 
+
+9References 342 
+
+[1] A. O. Al-Abbasi, A. Ghosh, and V. Aggarwal, “Deeppool: Distributed model-free algorithm for 343 
+
+ride-sharing using deep reinforcement learning,” IEEE Transactions on Intelligent Transporta-344 
+
+tion Systems , vol. 20, no. 12, pp. 4714–4727, 2019. 345 
+
+[2] Y. Liu, F. Wu, C. Lyu, S. Li, J. Ye, and X. Qu, “Deep dispatching: A deep reinforcement learning 346 
+
+approach for vehicle dispatching on online ride-hailing platform,” Transportation Research Part 347 
+
+E: Logistics and Transportation Review , vol. 161, p. 102694, 2022. 348 
+
+[3] D. Wang, Q. Wang, Y. Yin, and T. Cheng, “Optimization of ride-sharing with passenger transfer 349 
+
+via deep reinforcement learning,” Transportation Research Part E: Logistics and Transportation 350 
+
+Review , vol. 172, p. 103080, 2023. 351 
+
+[4] Z. Zhang, L. Yang, J. Yao, C. Ma, and J. Wang, “Joint optimization of pricing, dispatching and 352 
+
+repositioning in ride-hailing with multiple models interplayed reinforcement learning,” IEEE 353 
+
+Transactions on Knowledge and Data Engineering , 2024. 354 
+
+[5] Y. Hu, S. Feng, and S. Li, “Bmg-q: Localized bipartite match graph attention q-learning for 355 
+
+ride-pooling order dispatch,” arXiv preprint arXiv:2501.13448 , 2025. 356 
+
+[6] Y. Wang, J. Wu, H. Sun, Y. Lv, and J. Zhang, “Promoting collaborative dispatching in the ride-357 
+
+sourcing market with a third-party integrator,” IEEE Transactions on Intelligent Transportation 358 
+
+Systems , vol. 25, no. 7, pp. 6889–6901, 2024. 359 
+
+[7] J. Hao and P. Varakantham, “Hierarchical value decomposition for effective on-demand ride-360 
+
+pooling,” in Proceedings of the 21st International Conference on Autonomous Agents and 361 
+
+Multiagent Systems , pp. 580–587, 2022. 362 
+
+[8] J. Wang, Q. Hao, W. Huang, X. Fan, Z. Tang, B. Wang, J. Hao, and Y. Li, “Dyps: Dynamic 363 
+
+parameter sharing in multi-agent reinforcement learning for spatio-temporal resource allocation,” 364 
+
+in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data 365 
+
+Mining , pp. 3128–3139, 2024. 366 
+
+[9] S. Fujimoto, H. Hoof, and D. Meger, “Addressing function approximation error in actor-critic 367 
+
+methods,” in International conference on machine learning , pp. 1587–1596, PMLR, 2018. 368 
+
+[10] R. S. Sutton, D. McAllester, S. Singh, and Y. Mansour, “Policy gradient methods for rein-369 
+
+forcement learning with function approximation,” Advances in neural information processing 370 
+
+systems , vol. 12, 1999. 371 
+
+[11] J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, “Bert: Pre-training of deep bidirectional 372 
+
+transformers for language understanding,” in Proceedings of the 2019 conference of the North 373 
+
+American chapter of the association for computational linguistics: human language technolo-374 
+
+gies, volume 1 (long and short papers) , pp. 4171–4186, 2019. 375 
+
+[12] Z. Zhao, T. Chen, Z. Cai, X. Li, H. Li, Q. Chen, and G. Zhu, “Crossfi: A cross domain wi-fi 376 
+
+sensing framework based on siamese network,” IEEE Internet of Things Journal , 2025. 377 
+
+[13] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural Computation , vol. 9, 378 
+
+no. 8, pp. 1735–1780, 1997. 379 
+
+[14] T. Chen, Y. Wang, H. Chen, Z. Zhao, X. Li, N. Piovesan, G. Zhu, and Q. Shi, “Modelling the 5g 380 
+
+energy consumption using real-world data: Energy fingerprint is all you need,” arXiv preprint 381 
+
+arXiv:2406.16929 , 2024. 382 
+
+[15] E. J. Hu, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, et al. , “Lora: Low-rank 383 
+
+adaptation of large language models,” in International Conference on Learning Representations ,384 
+
+vol. 1, p. 3, 2022. 385 
+
+[16] Z. Wang, T. Schaul, M. Hessel, H. Hasselt, M. Lanctot, and N. Freitas, “Dueling network 386 
+
+architectures for deep reinforcement learning,” in International conference on machine learning ,387 
+
+pp. 1995–2003, PMLR, 2016. 388 
+
+10 [17] Y.-H. Chou, I.-C. Chen, J. Ching, C.-J. Chang, and Y.-H. Yang, “Midibert-piano: Large-scale 389 
+
+pre-training for symbolic music classification tasks,” Journal of Creative Music Systems , vol. 8, 390 
+
+no. 1, 2024. 391 
+
+[18] Y. Hu, T. Dong, and S. Li, “Coordinating ride-pooling with public transit using reward-guided 392 
+
+conservative q-learning: An offline training and online fine-tuning reinforcement learning 393 
+
+framework,” arXiv preprint arXiv:2501.14199 , 2025. 394 
+
+[19] D. McFadden, “Conditional logit analysis of qualitative choice behavior,” 1972. 395 
+
+[20] T. Enders, J. Harrison, M. Pavone, and M. Schiffer, “Hybrid multi-agent deep reinforcement 396 
+
+learning for autonomous mobility on demand systems,” in Learning for Dynamics and Control 397 
+
+Conference , pp. 1284–1296, PMLR, 2023. 398 
+
+[21] A. Bose, H. Jiang, P. Varakantham, and Z. Ge, “On sustainable ride pooling through conditional 399 
+
+expected value decomposition,” in ECAI 2023 , pp. 295–302, IOS Press, 2023. 400 
+
+[22] H. Van Hasselt, A. Guez, and D. Silver, “Deep reinforcement learning with double q-learning,” 401 
+
+in Proceedings of the AAAI conference on artificial intelligence , vol. 30, 2016. 402 
+
+[23] T. Rashid, M. Samvelyan, C. S. De Witt, G. Farquhar, J. Foerster, and S. Whiteson, “Monotonic 403 
+
+value function factorisation for deep multi-agent reinforcement learning,” Journal of Machine 404 
+
+Learning Research , vol. 21, no. 178, pp. 1–51, 2020. 405 
+
+[24] T. Haarnoja, A. Zhou, P. Abbeel, and S. Levine, “Soft actor-critic: Off-policy maximum entropy 406 
+
+deep reinforcement learning with a stochastic actor,” in International conference on machine 407 
+
+learning , pp. 1861–1870, Pmlr, 2018. 408 
+
+[25] P. Sunehag, G. Lever, A. Gruslys, W. M. Czarnecki, V. Zambaldi, M. Jaderberg, M. Lanctot, 409 
+
+N. Sonnerat, J. Z. Leibo, K. Tuyls, et al. , “Value-decomposition networks for cooperative multi-410 
+
+agent learning based on team reward,” in Proceedings of the 17th International Conference on 411 
+
+Autonomous Agents and MultiAgent Systems , pp. 2085–2087, 2018. 412 
+
+[26] P. Velickovic, G. Cucurull, A. Casanova, A. Romero, P. Lio, Y. Bengio, et al. , “Graph attention 413 
+
+networks,” stat , vol. 1050, no. 20, pp. 10–48550, 2017. 414 
+
+[27] K. Cho, B. van Merrienboer, C. Gulcehre, F. Bougares, H. Schwenk, and Y. Bengio, “Learn-415 
+
+ing phrase representations using rnn encoder-decoder for statistical machine translation,” in 416 
+
+Conference on Empirical Methods in Natural Language Processing (EMNLP 2014) , 2014. 417 
+
+[28] N. Y. C. Taxi and L. Commission, “Nyc taxi and limousine commission-trip record data nyc..” 418 
+
+[29] A. Paszke, S. Gross, F. Massa, A. Lerer, J. Bradbury, G. Chanan, T. Killeen, Z. Lin, 419 
+
+N. Gimelshein, L. Antiga, et al. , “Pytorch: An imperative style, high-performance deep learning 420 
+
+library,” Advances in Neural Information Processing Systems , vol. 32, 2019. 421 
+
+[30] D. Luxen and C. Vetter, “Real-time routing with openstreetmap data,” in Proceedings of the 19th 422 
+
+ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems ,423 
+
+GIS ’11, (New York, NY, USA), pp. 513–516, ACM, 2011. 424 
+
+11 Appendix Contents 425 
+
+A Action Space Size 13 426 
+
+B BiParite Graph Construction 13 427 
+
+B.1 IDDQN Bipartite Graph . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 428 
+
+B.2 TD3 Bipartite Graph . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 429 
+
+C Policy Gradient Proof 14 430 
+
+D Training Process 15 431 
+
+D.1 Stage 1: IDDQN Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 432 
+
+D.2 Stage 2: TD3 Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 433 
+
+E Experiment Details 17 434 
+
+E.1 Experiment Configurations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 435 
+
+E.2 Simulation Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 436 
+
+E.3 Introduction of Comparative Methods . . . . . . . . . . . . . . . . . . . . . . . . 18 437 
+
+E.4 Additional Experiment Result . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 438 
+
+F Discussions 19 439 
+
+F.1 Limitations and Future Works . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 440 
+
+F.2 Societal Impacts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20 441 
+
+12 A Action Space Size 442 
+
+The action space in our order dispatching task is given by: 443 
+
+|At| =
+
+> mt
+
+X
+
+> k=0
+
+C(mt, k )P(n, k ) = 
+
+> mt
+
+X
+
+> k=0
+
+mt!
+
+k!( mt − k)! 
+
+n!(n − k)! , (9) where P(n, k ) represents the permutations of assigning k orders to n workers and C(mt, k ) represents 444 
+
+the combinations of selecting k orders from the total mt orders. This equation is based on two 445 
+
+assumptions: (i) the platform will assign an arbitrary number of orders at each step (some orders 446 
+
+yielding negative income will be declined by the platform) and (ii) the number of orders mt is less 447 
+
+than the number of workers n, which can always be satisfied since mt represents the order count at 448 
+
+only one timestep. Then we can derive the lower bound of |At| as: 449 
+
+|At| =
+
+> mt
+
+X
+
+> k=0
+
+C(mt, k ) n!(n − k)! ≥
+
+> mt
+
+X
+
+> k=0
+
+C(mt, k )( n − k + 1) k
+
+≥
+
+> mt
+
+X
+
+> k=0
+
+C(mt, k )( n − mt + 1) k = ( n − mt + 2) mt ≥ 2mt (n ≥ mt ≥ 0) .
+
+(10) As a result, the action space has a lower bound with the exponent to mt. Consider the example in 450 
+
+Section 2 where the number of workers n is 1000 and the number of orders mt is 10. In this case, the 451 
+
+expression (n − mt + 2) mt evaluates to 992 10 ≈ 10 30 .452 
+
+## B BiParite Graph Construction 453 
+
+B.1 IDDQN Bipartite Graph 454 
+
+The bipartite graph in the IDDQN-based order dispatching method is constructed as follows: 455 
+
+max 
+
+> At
+
+X
+
+> i∈I
+
+ai,j,t · yi,j,t , (11a) s.t. X
+
+> i∈I
+
+ai,j,t ≤ 1, ∀j ∈ J t, (11b) 
+
+X
+
+> j∈J t
+
+ai,j,t ≤ 1, ∀i ∈ I , (11c) 
+
+ai,j,t ∈ { 0, 1}, ∀i ∈ I , j ∈ J t, (11d) where ai,j,t is the action representing whether worker i is assigned order j at time t (with 1 indicating 456 
+
+assignment and 0 indicating no assignment), yi,j,t denotes the Q-value of worker i choosing order j457 
+
+at time t (with yi,j,t = −∞ for all unavailable workers at time t), I is defined as {1, 2, . . . , n }, and 458 
+
+the set Jt is defined as {1, 2, . . . , m t}. Constraint 11b ensures that an order can be assigned to at 459 
+
+most one worker, while constraint 11c guarantees that each worker is assigned at most one order. 460 
+
+B.2 TD3 Bipartite Graph 461 
+
+The bipartite graph in our proposed TD3-based order dispatching method is constructed as follows: 462 
+
+max 
+
+> Xt
+
+X
+
+> i∈I wt
+
+xi,j,t · log Pi,j,t , (12a) s.t. X
+
+> i∈I
+
+xi,j,t ≤ 1, ∀j ∈ J t, (12b) 
+
+X
+
+> j∈J t
+
+xi,j,t = 1 , ∀i ∈ I wt , (12c) 
+
+xi,j,t ∈ { 0, 1}, ∀i ∈ I , j ∈ J t ∪ { mt + 1 }, (12d) 13 where Iwt represents the set of available workers at time t. Here, constraint 12b does not apply in 463 
+
+the last column, as it represents declining all orders, an action that can be chosen by any worker. 464 
+
+Constraint 12c requires each row to equal 1, ensuring that each worker must either take an order or 465 
+
+reject all, without other choices. We can then convert Xt to action At as follows: 466 
+
+ai,t =
+
+xi,j,t if i ∈ I wt and xi,m t+1 ,t = 0 
+
+0 otherwise (13) 
+
+## C Policy Gradient Proof 467 
+
+According to the policy gradient theory [10], we have: 468 
+
+∇ΘJ(Θ) 
+
+∝ EπT
+
+> Θ
+
+h 
+
+QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B
+
+
+
+∇Θ log πT
+
+> Θ
+
+(At|St)
+
+i
+
+= EπT
+
+> Θ
+
+
+
+QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B
+
+
+
+∇Θ log z
+
+ Y
+
+> i,j ∈h(At)
+
+Pi,j,t 
+
+
+
+= EπT
+
+> Θ
+
+
+
+QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B
+
+ dz(Q 
+
+> i,j ∈h(At)
+
+Pi,j,t )
+
+d Q 
+
+> i,j ∈h(At)
+
+Pi,j,t 
+
+Q 
+
+> i,j ∈h(At)
+
+Pi,j,t 
+
+z(Q 
+
+> i,j ∈h(At)
+
+Pi,j,t ) ∇Θ log Y
+
+> i,j ∈h(At)
+
+Pi,j,t 
+
+
+
+= EπT
+
+> Θ
+
+
+
+QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B
+
+
+
+Ez(x),x |x=Q  
+
+> i,j ∈h(At)Pi,j,t
+
+∇Θ
+
+X
+
+> i,j ∈h(At)
+
+log Pi,j,t 
+
+ ,
+
+(14) where E denotes elasticity, which measures the sensitivity of one variable to changes in another, and 469 
+
+is defined as: 470 
+
+Ey,x = d log yd log x = dy dx xy . (15) Since z(x) is an increasing function, the elasticity is always non-negative. Here, we assume that the 471 
+
+elasticity of z(x) with respect to x can be approximately viewed as a positive constant. Thus, we 472 
+
+have: ∇ΘJ(Θ) ∝ EπT
+
+> Θ
+
+h 
+
+QT D 3
+
+> πT
+> Θ
+
+(St, A t) − B
+
+
+
+∇Θ
+
+P 
+
+> i,j ∈h(At)
+
+log Pi,j,t 
+
+i
+
+, corresponding to Eq. 7. 473 
+
+We acknowledge that the elasticity may not be a positive constant in practice (this requires that 474 
+
+z(x) has the same form as ax b (a, b > 0) ). However, we consider this a reasonable approximation; 475 
+
+otherwise, optimizing the actor would not be feasible, as obtaining a closed-form solution for z(x) is 476 
+
+impossible. Additionally, the final form of the equation aligns with the intuition that if an action has a 477 
+
+higher Q-value, we should increase its probability, whereas we should decrease its probability if the 478 
+
+Q-value is lower. While this approach may impede the model’s convergence to the optimal solution, 479 
+
+experimental results demonstrate the effectiveness of this formula, showing that it significantly 480 
+
+outperforms other MARL methods. 481 
+
+As mentioned in Section 3.3.2, during training, we add random noise to Pt and then choose the 482 
+
+action that maximizes P 
+
+> i,j ∈h(At)
+
+log Pi,j,t . Currently, the mapping from P 
+
+> i,j ∈h(At)
+
+log Pi,j,t to 483 
+
+the choosing probability πT 
+
+> Θ
+
+corresponds to z(·). To further illustrate the robustness of our method, we 484 
+
+compare the performance of our model using Gaussian noise, uniform noise, and binary symmetric 485 
+
+channel (BSC) noise, where the noise follows a Bernoulli distribution and has been widely utilized 486 
+
+in previous work [ 5; 18 ]. During training, we gradually reduce the noise to make the policy more 487 
+
+deterministic. The experimental results are shown in Fig. 4, where we observe that, despite certain 488 
+
+performance differences between the various types of noise, they all outperform conventional MARL 489 
+
+methods. This suggests the efficiency and high robustness of our proposed method, indicating that 490 
+
+the detailed expression of z(x) does not significantly influence the validation of the method based 491 
+
+on Eq. 7, even if it may cause some performance gaps. The optimal noise for our task may require 492 
+
+further exploration. For fairness, we choose to use BSC noise when comparing with other methods, 493 
+
+even though it appears to perform the worst among the three types of noise. We aim to demonstrate 494 
+
+that our results are robust and superior, not relying on a particular choice of hyper-parameters or 495 
+
+experiment scenarios. 496 
+
+14 Figure 4: Comparison Between Different Noise Methods 
+
+## D Training Process 497 
+
+D.1 Stage 1: IDDQN Algorithm 498 
+
+Figure 5: Network Structure in Stage 1 In stage 1, the network structure is shown as Fig. 5, which is consisted by the encoders and the 499 
+
+QK-Attention module of proposed network in Fig. 2. Remark: Although the model takes the 500 
+
+entire worker and order sequence as input, it primarily aims to utilize parallel computation to 501 
+
+enhance computational efficiency. In the encoders, each worker and order’s information is processed 502 
+
+separately. Similarly, in the QK-Attention module, the Q-value for each worker-order pair is computed 503 
+
+15 independently. It is also feasible to input only a single worker-order pair into this network, computing 504 
+
+the Q-value exclusively for that pair; however, this would increase the computation time. 505 
+
+During IDDQN training, we need to introduce some noise into the Q-matrix Yt to facilitate sufficient 506 
+
+exploration. Specifically, for the ϵ-greedy strategy, we randomly select a proportion ϵ of non-−∞ 507 
+
+elements in Yt and set them to a large positive number Y to enhance their likelihood of being selected. 508 
+
+We then update the neural network by minimizing the TD-error, expressed as: 509 
+
+LQ = EπQ
+
+> Φ
+
+
+
+QDQN πQ
+
+> Φ−
+
+(si,t +1 , r i,t +1 ; Φ −) − QDQN πQ
+
+> Φ
+
+(si,t , a i,t ; Φ) 
+
+
+
+,
+
+QDQN πQ
+
+> Φ−
+
+(si,t +1 , r i,t +1 ; Φ −) = ri,t +1 + γQDQN πQ
+
+> Φ−
+
+(si,t +1 , κ i,t +1 ; Φ −) ,κi,t +1 = arg max 
+
+> κi,t +1 ∈ψi,t +1
+
+QDQN πQ
+
+> Φ
+
+(si,t +1 , κ i,t +1 ; Φ) ,
+
+(16) where QDQN πQ
+
+> Φ−
+
+is the learning target function, γ is the discount factor, ψi,t +1 is the possible action 510 
+
+space for worker i at time t + 1 , and Φ− represents the parameters of the target network, which are 511 
+
+updated at a slower pace compared to the policy network to provide a stable target for training. After 512 
+
+each training iteration, the target network is updated in a soft manner: Φ− := τ Φ + (1 − τ )Φ −,513 
+
+where τ is the update rate. 514 
+
+The detailed process is illustrated in Algorithm 1, where 1j represents the vector that only the jth 
+
+> 515
+
+position is 1 and other positions are 0. 516 
+
+Algorithm 1 IDDQN Training Process 
+
+Require: Number of training episodes E, number of training steps T , mini-batch size m, target update rate τ , exploration noise ϵ, final exploration ϵf , exploration decay δ, discount factor γ,model parameters Φ
+
+1: Initialize target networks Φ− ← Φ
+
+2: Initialize replay buffer B
+
+3: for k = 1 to E do 
+
+4: for t = 1 to T do 
+
+5: Calculate Q-value matrix Yt: yi,j,t = QDQN πQ
+
+> Φ
+
+(si,t , 1j ; Φ) 
+
+6: Select action with exploration noise: At = ILP (Yt, ϵ )
+
+7: Observe reward ri,t +1 and new state si,t +1 for each worker i
+
+8: Store transition (si,t , a i,t , r i,t +1 , s i,t +1 ) in B
+
+9: Sample mini-batch of m transitions (s, a, r, s ′) from B
+
+10: Compute target Q-value: 
+
+11: y ← r + γQDQN πQ
+
+> Φ−
+
+(si,t +1 , arg max κi,t +1 ∈ψi,t +1 QDQN πQ
+
+> Φ
+
+(si,t +1 , κ i,t +1 ; Φ); Φ −)
+
+12: Update critics: Φ ← arg min Φ 1
+
+> m
+
+P(y − QDQN πQ
+
+> Φ
+
+(s, a ; Φ)) 2
+
+13: Update target networks: Φ− ← τ Φ + (1 − τ )Φ −
+
+14: end for 
+
+15: Decay exploration: ϵ ← max( ϵf , ϵδ )
+
+16: end for D.2 Stage 2: TD3 Algorithm 517 
+
+The process of our Stage 2 - TD3 training is illustrated in Algorithm 2. In experiment, we follow the 518 
+
+vanilla TD3 approach of updating the actor once after updating the critic twice. 519 
+
+16 Algorithm 2 TD3 Training Process 
+
+Require: Number of training episodes E, number of training steps T , mini-batch size m, policy delay d, target update rate τ , exploration noise ϵ, final exploration ϵf , exploration decay δ, target policy smoothing noise ξ, discount factor γ, model parameters Θ
+
+1: Initialize target networks Θ− ← Θ
+
+2: Initialize replay buffer B
+
+3: for k = 1 to E do 
+
+4: for t = 1 to T do 
+
+5: Select action with exploration noise: At = Actor (St; Θ , ϵ )
+
+6: Observe reward Rt+1 and new state St+1 
+
+7: Store transition (St, A t, R t+1 , S t+1 ) in B
+
+8: Sample mini-batch of N transitions (S, A, R, S ′) from B
+
+9: Compute target action with smoothing noise: A′ ← Actor (S; Θ −, ξ )
+
+10: Compute target Q-value: y ← r + γ min i=1 ,2 QT D 3 
+
+> πT
+> Θ−,i
+
+(S′, A ′; Θ −)
+
+11: Update critics: Θ ← arg min Θ 1
+
+> m
+
+P[( y − QT D 3 
+
+> πT
+> Θ,1
+
+(S, A ; Θ)) 2 + ( y − QT D 3 
+
+> πT
+> Θ,2
+
+(S, A ; Θ)) 2]
+
+12: if t mod d == 0 then 
+
+13: Update actor using deterministic policy gradient: 
+
+14: ∇J(Θ) = 1
+
+> m
+
+P(QT D 3 
+
+> πT
+> Θ,1
+
+(S, A ; Θ) − B)∇Θ log πT
+
+> Θ
+
+(At|St), (A = Actor (S; Θ)) 
+
+15: Update target networks: Θ− ← τ Θ + (1 − τ )Θ −
+
+16: end if 
+
+17: end for 
+
+18: Decay exploration: ϵ ← max( ϵf , ϵδ )
+
+19: end for 
+
+## E Experiment Details 520 
+
+E.1 Experiment Configurations 521 
+
+Our model was trained using the PyTorch framework [ 29 ] on a workstation running Windows 11, 522 
+
+equipped with an Intel(R) Core(TM) i7-14700KF processor and an NVIDIA RTX 4080 graphics card. 523 
+
+The detailed model configurations are shown as Table 2. During the training phase, the model utilized 524 
+
+approximately 8.03 GB of GPU memory. For optimization, we employed the Adam optimizer with 525 
+
+an initial learning rate of 10 −4 and a decay rate of 0.99. In Stage 1, the batch size was set to 256, 526 
+
+while in Stage 2, it was reduced to 16, due to a sharp decrease in sample amount. Additionally, 527 
+
+optimization was performed once every 4 time steps, and in Stage 2, the actor was updated once for 528 
+
+every two updates of the critic. 529 
+
+Table 2: Model Configurations 
+
+Configuration Our Setting 
+
+Hidden Dimension 64 (Actor) / 128 (Critic) Attention Heads 4BERT Layers 3 for Each Dropout Rate 0.1 Optimizer Adam Learning Rate 10 −4
+
+Scheduler ExponentialLR Learning Rate Decay 0.99 Batch Size 256 (Stage 1) / 16 (Stage 2) Exploration Rate 0.99 → 0.0005 Updating Rate of Target Network 0.005 Discount Factor 0.99 17 E.2 Simulation Setup 530 
+
+In the simulation, we set the total number of drivers to 1,000, with each car having a capacity of 3 531 
+
+passengers. Each episode lasts 30 minutes, divided into 30 time steps, where each step determines 532 
+
+the operations for the subsequent minute. For the TSP route optimization and time estimation, we 533 
+
+utilize the OSRM simulator [ 30 ], with a default traveling speed of 60 km/h. We train the model 534 
+
+using data from 19:00 to 19:30 on July 17, 2024, which includes 3,726 valid orders, and we test the 535 
+
+trained model during other time periods on July 17, 2024, including 14:00-14:30 (2,850 valid orders), 536 
+
+17:00-17:30 (3,577 valid orders), 20:00-20:30 (3,114 valid orders), 21:00-21:30 (4,264 valid orders), 537 
+
+and 22:00-22:30 (4,910 valid orders), where the order amount range from 2,850 to 4,264. 538 
+
+E.3 Introduction of Comparative Methods 539 
+
+The methods using in our comparative experiment can be mainly divided into three categories: 540 
+
+• Independent MARL: The DeepPool [ 1] and BMG-Q [ 5 ] utilize a similar IDDQN method as 541 
+
+described in Section 3.3.1, with BMG-Q employing GAT [ 26 ] to capture the relationships among 542 
+
+neighboring agents. Additionally,in the original paper fo DeepPool, the authors used CNN. 543 
+
+However, due to differences in the observation space of our task, we replaced it with MLP. 544 
+
+• Centralized Training Decentralized Execution (CTDE): The HIVES [ 23 ] framework introduces 545 
+
+a QMIX [ 23 ] based method to address the shortcomings of IDDQN, specifically the inadequacy of 546 
+
+treating the global Q-value as a simple summation of the individual Q-values of each agent. Enders 547 
+
+et al. [ 20 ] propose a MASAC [ 24 ] based approach, allowing each driver to choose whether to 548 
+
+accept an order, thereby preventing low-profit orders from negatively impacting the global income. 549 
+
+• Centralized Training and Centralized Execution (CTCE): CEVD [ 21 ], based on VD [ 25 ], 550 
+
+innovatively combines the Q-values of each agent with those of their neighbors to create a new 551 
+
+type of Q-value, akin to the motivation behind BMG-Q. 552 
+
+Overall, most of these methods attempt various strategies to enhance each agent’s awareness of 553 
+
+the global state, facilitating better cooperation. In contrast, our method directly transforms the 554 
+
+formulation into a centralized single-agent reinforcement learning approach. 555 
+
+It is noteworthy that these Independent and CTDE MARL dispatching methods differ slightly from 556 
+
+general MARL methods. In order dispatching, one order cannot be assigned to multiple workers, 557 
+
+making it necessary to employ some centralized mechanism to achieve this. We refer to them as 558 
+
+independent MARL and CTDE methods because they can directly calculate their own Q-values 559 
+
+or action probabilities using their own or neighboring states. Conversely, CEVD must calculate 560 
+
+the primary Q-value of each agent separately and then combine those primary Q-values with their 561 
+
+neighbors to obtain a final Q-value for each agent. 562 
+
+Through the experimental results in Fig. 3, we observe that DeepPool [ 1 ], serving as one of the 563 
+
+earliest benchmarks, demonstrates relatively stable and good performance, suggesting the simplicity 564 
+
+and effectiveness of IDDQN features. In contrast, BMG-Q [ 5] significantly improves performance by 565 
+
+utilizing FAT to capture neighboring information. As for HIVES [ 23 ] and CEVD [ 21 ], while they 566 
+
+exhibit relatively good performance in the early stages of training—likely due to their hierarchical 567 
+
+structure and centralized training methods—their performance becomes unstable in later stages, with 568 
+
+rewards even starting to decrease. This instability may stem from the hierarchical approach not 569 
+
+adequately addressing the large network input of the mixture network in QMIX and the lazy agent 570 
+
+problem in VD. Additionally, their centralized training approach faces the same data scarcity issues 571 
+
+as our method, making convergence more challenging. For Enders et al. [ 20 ], we note that their 572 
+
+method shows worse performance than others. This may be related to their state processing method 573 
+
+during training, where they replace the next state in the replay buffer with the request state from the 574 
+
+current state to maintain a consistent agent count across two successive time steps, which appears 575 
+
+to be a strong assumption. Finally, for the last three methods, their original papers primarily focus 576 
+
+their reward functions on the serving order amount, without incorporating additional terms like ours 577 
+
+(which also considers income, outcome, and user satisfaction levels). This makes our scenario more 578 
+
+complex and may further reduce the performance of their methods in our setting. 579 
+
+18 E.4 Additional Experiment Result 580 
+
+The detailed experimental results across different time periods are shown in Fig. 6, while the weighted 581 
+
+average numerical results are presented in Table 3. For each model in each scenario, we repeat the 582 
+
+experiment three times, and the error bars in the figure represent the standard deviation. We observe 583 
+
+that our Triple-BERT achieves the highest reward across all scenarios, with the advantage becoming 584 
+
+more pronounced as the order volume increases. Triple-BERT primarily optimizes the service rate 585 
+
+and pickup time, significantly outperforming other methods. 586 
+
+For delivery time and detour time, the figures only account for completed orders, as the status of 587 
+
+unfinished orders is uncertain, which may introduce some bias in the detailed values. In terms of 588 
+
+these two metrics, Triple-BERT clearly performs better in high order volume scenarios, but not in low 589 
+
+order volume scenarios. This may be due to the relatively low conflict caused by MARL in low order 590 
+
+scenarios, while in high order scenarios, both the observation and action spaces increase sharply, 591 
+
+making it challenging for MARL to find optimal solutions. 592 
+
+Lastly, we note that our method and the approach by Enders et al. [ 20 ] exhibit higher confirmation 593 
+
+times. This may be attributed to both methods having an explicit rejection action (i.e., choosing no 594 
+
+order), unlike the other methods. While this mechanism can lead to higher confirmation times, it also 595 
+
+enables the model to discard negative profit orders and reserve some orders for currently unavailable 596 
+
+workers. 597 
+
+Table 3: Average Performance under Multiple Periods                                                            
+
+> Method Reward Service Rate Delivery Time Detour Time Pickup Time Confirmation Time DeepPool [1] 12723.85 0.91 11.53 2.47 7.77 0.06
+> BMG-Q [5] 13036.29 0.92 10.57 1.90 7.61 0.10
+> HIVES [7] 12365.11 0.89 11.04 2.28 7.99 0.03 Enders et al. [20] 12041.62 0.90 12.28 2.90 7.94 0.80
+> CEVD [21] 13157.96 0.94 11.36 2.31 7.37 0.06
+> Triple-BERT 14730.48 0.98 11.53 2.52 5.73 0.13
+> w/o stage 1 10665.02 0.87 11.92 2.72 9.36 0.68
+> w/o normalization 10839.33 0.88 12.50 2.85 9.10 0.24
+
+## F Discussions 598 
+
+F.1 Limitations and Future Works 599 
+
+The limitations of this paper can be mainly categorized into two parts. 600 
+
+First, regarding the theoretical aspect, the current policy gradient formula is an approximation where 601 
+
+we assume that the probability mapping function z(x) has a nearly constant elasticity with respect to 602 
+
+the independent variable x. Since obtaining a closed-form solution or elasticity for z(x) is impossible, 603 
+
+we must make certain assumptions for optimization. Although we have demonstrated the efficiency 604 
+
+of Eq. 7 through intuition and experiments, there may still be a gap between the model’s performance 605 
+
+and the optimal solution. In future work, it would be valuable to explore an action strategy that can 606 
+
+be proven to have elasticity to z (x) close to a constant. 607 
+
+Second, concerning the experimental aspect, due to limitations of the experimental setup, we currently 608 
+
+train and evaluate the model within a 30-minute simulation window. For 1,000 episodes, we can 609 
+
+collect only 30,000 samples in a single-agent setting, which takes about a whole day to train a single 610 
+
+method. This is why we designed the two-stage training method; otherwise, the model would struggle 611 
+
+to converge with the limited samples. Future exploration should address whether stage 1 training is 612 
+
+still necessary when the sample size increases. We also intend to investigate the model’s performance 613 
+
+in more diverse transportation scenarios, such as food delivery. 614 
+
+Finally, to better align with practical application scenarios and conditions, we plan to further develop 615 
+
+the method to jointly optimize repositioning, payment, and price-setting tasks, making it more feasible 616 
+
+for real-world use. 617 
+
+19 F.2 Societal Impacts 618 
+
+This work has potential value for both academic research and practical applications in the transporta-619 
+
+tion field, particularly for large-scale order dispatching tasks. By shifting from the conventional 620 
+
+MARL paradigm to a SARL approach, we significantly improve model performance. This technology 621 
+
+holds promise for enhancing daily travel and logistics transport. 622 
+
+However, the issue of algorithmic discrimination has received widespread attention over time. Closed-623 
+
+box management algorithms, including those for order dispatching, have been shown to create 624 
+
+discriminatory scenarios for workers, as reinforcement learning methods primarily aim to maximize 625 
+
+rewards without considering ethical implications. For example, algorithms may set different payment 626 
+
+structures or order assignment preferences based on individual features or geographical locations of 627 
+
+workers. 628 
+
+We hope that our method will not exacerbate these issues and can be further developed to include 629 
+
+constraints that promote fairness. Our goal is to strike a balance between profit and ethics, fostering a 630 
+
+win-win situation for platforms, workers, and customers. 631 
+
+> (a) Legend
+> (b) Accumulative Reward
+
+Figure 6: Detailed Evaluation Results 20 (c) Service Rate 
+
+(d) Delivery Time 
+
+(e) Detour Time 
+
+Figure 6: Detailed Evaluation Results 21 (f) Pickup Time 
+
+(g) Confirmation Time 
+
+Figure 6: Detailed Evaluation Results 
+
+## NeurIPS Paper Checklist 632 
+
+1. Claims 633 
+
+Question: Do the main claims made in the abstract and introduction accurately reflect the 634 
+
+paper’s contributions and scope? 635 
+
+Answer: [Yes] 636 
+
+Justification: The abstract and introduction accurately reflect the paper’s contributions by 637 
+
+proposing a novel centralized single-agent reinforcement learning framework for large-638 
+
+scale order dispatching (Section 3). The claims of its superior performance compared to 639 
+
+conventional multi-agent methods are substantiated by the experimental results presented in 640 
+
+Section 4. 641 
+
+Guidelines: 642 
+
+• The answer NA means that the abstract and introduction do not include the claims 643 
+
+made in the paper. 644 
+
+• The abstract and/or introduction should clearly state the claims made, including the 645 
+
+contributions made in the paper and important assumptions and limitations. A No or 646 
+
+NA answer to this question will not be perceived well by the reviewers. 647 
+
+• The claims made should match theoretical and experimental results, and reflect how 648 
+
+much the results can be expected to generalize to other settings. 649 
+
+22 • It is fine to include aspirational goals as motivation as long as it is clear that these goals 650 
+
+are not attained by the paper. 651 
+
+2. Limitations 652 
+
+Question: Does the paper discuss the limitations of the work performed by the authors? 653 
+
+Answer: [Yes] 654 
+
+Justification: Please refer to Appendix F.1. 655 
+
+Guidelines: 656 
+
+• The answer NA means that the paper has no limitation while the answer No means that 657 
+
+the paper has limitations, but those are not discussed in the paper. 658 
+
+• The authors are encouraged to create a separate "Limitations" section in their paper. 659 
+
+• The paper should point out any strong assumptions and how robust the results are to 660 
+
+violations of these assumptions (e.g., independence assumptions, noiseless settings, 661 
+
+model well-specification, asymptotic approximations only holding locally). The authors 662 
+
+should reflect on how these assumptions might be violated in practice and what the 663 
+
+implications would be. 664 
+
+• The authors should reflect on the scope of the claims made, e.g., if the approach was 665 
+
+only tested on a few datasets or with a few runs. In general, empirical results often 666 
+
+depend on implicit assumptions, which should be articulated. 667 
+
+• The authors should reflect on the factors that influence the performance of the approach. 668 
+
+For example, a facial recognition algorithm may perform poorly when image resolution 669 
+
+is low or images are taken in low lighting. Or a speech-to-text system might not be 670 
+
+used reliably to provide closed captions for online lectures because it fails to handle 671 
+
+technical jargon. 672 
+
+• The authors should discuss the computational efficiency of the proposed algorithms 673 
+
+and how they scale with dataset size. 674 
+
+• If applicable, the authors should discuss possible limitations of their approach to 675 
+
+address problems of privacy and fairness. 676 
+
+• While the authors might fear that complete honesty about limitations might be used by 677 
+
+reviewers as grounds for rejection, a worse outcome might be that reviewers discover 678 
+
+limitations that aren’t acknowledged in the paper. The authors should use their best 679 
+
+judgment and recognize that individual actions in favor of transparency play an impor-680 
+
+tant role in developing norms that preserve the integrity of the community. Reviewers 681 
+
+will be specifically instructed to not penalize honesty concerning limitations. 682 
+
+3. Theory assumptions and proofs 683 
+
+Question: For each theoretical result, does the paper provide the full set of assumptions and 684 
+
+a complete (and correct) proof? 685 
+
+Answer: [Yes] 686 
+
+Justification: All assumptions and proofs are included in Appendix A and Appendix C. 687 
+
+Guidelines: 688 
+
+• The answer NA means that the paper does not include theoretical results. 689 
+
+• All the theorems, formulas, and proofs in the paper should be numbered and cross-690 
+
+referenced. 691 
+
+• All assumptions should be clearly stated or referenced in the statement of any theorems. 692 
+
+• The proofs can either appear in the main paper or the supplemental material, but if 693 
+
+they appear in the supplemental material, the authors are encouraged to provide a short 694 
+
+proof sketch to provide intuition. 695 
+
+• Inversely, any informal proof provided in the core of the paper should be complemented 696 
+
+by formal proofs provided in appendix or supplemental material. 697 
+
+• Theorems and Lemmas that the proof relies upon should be properly referenced. 698 
+
+4. Experimental result reproducibility 699 
+
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-700 
+
+perimental results of the paper to the extent that it affects the main claims and/or conclusions 701 
+
+of the paper (regardless of whether the code and data are provided or not)? 702 
+
+Answer: [Yes] 703 
+
+23 Justification: The method and implementation details are provided in Section 3, as well 704 
+
+as in Appendix B and Appendix D. The experimental settings and environment details are 705 
+
+described in Appendix E.1 and Appendix E.2. 706 
+
+Guidelines: 707 
+
+• The answer NA means that the paper does not include experiments. 708 
+
+• If the paper includes experiments, a No answer to this question will not be perceived 709 
+
+well by the reviewers: Making the paper reproducible is important, regardless of 710 
+
+whether the code and data are provided or not. 711 
+
+• If the contribution is a dataset and/or model, the authors should describe the steps taken 712 
+
+to make their results reproducible or verifiable. 713 
+
+• Depending on the contribution, reproducibility can be accomplished in various ways. 714 
+
+For example, if the contribution is a novel architecture, describing the architecture fully 715 
+
+might suffice, or if the contribution is a specific model and empirical evaluation, it may 716 
+
+be necessary to either make it possible for others to replicate the model with the same 717 
+
+dataset, or provide access to the model. In general. releasing code and data is often 718 
+
+one good way to accomplish this, but reproducibility can also be provided via detailed 719 
+
+instructions for how to replicate the results, access to a hosted model (e.g., in the case 720 
+
+of a large language model), releasing of a model checkpoint, or other means that are 721 
+
+appropriate to the research performed. 722 
+
+• While NeurIPS does not require releasing code, the conference does require all submis-723 
+
+sions to provide some reasonable avenue for reproducibility, which may depend on the 724 
+
+nature of the contribution. For example 725 
+
+(a) If the contribution is primarily a new algorithm, the paper should make it clear how 726 
+
+to reproduce that algorithm. 727 
+
+(b) If the contribution is primarily a new model architecture, the paper should describe 728 
+
+the architecture clearly and fully. 729 
+
+(c) If the contribution is a new model (e.g., a large language model), then there should 730 
+
+either be a way to access this model for reproducing the results or a way to reproduce 731 
+
+the model (e.g., with an open-source dataset or instructions for how to construct 732 
+
+the dataset). 733 
+
+(d) We recognize that reproducibility may be tricky in some cases, in which case 734 
+
+authors are welcome to describe the particular way they provide for reproducibility. 735 
+
+In the case of closed-source models, it may be that access to the model is limited in 736 
+
+some way (e.g., to registered users), but it should be possible for other researchers 737 
+
+to have some path to reproducing or verifying the results. 738 
+
+5. Open access to data and code 739 
+
+Question: Does the paper provide open access to the data and code, with sufficient instruc-740 
+
+tions to faithfully reproduce the main experimental results, as described in supplemental 741 
+
+material? 742 
+
+Answer: [Yes] 743 
+
+Justification: The code and trained model parameters are provided in an anonymous reposi-744 
+
+tory at https://anonymous.4open.science/r/Triple-BERT . The data used is from 745 
+
+the public New York taxi dataset, available at https://www.nyc.gov/site/tlc/about/ 746 
+
+tlc-trip-record-data.page .747 
+
+Guidelines: 748 
+
+• The answer NA means that paper does not include experiments requiring code. 749 
+
+• Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ 750 
+
+public/guides/CodeSubmissionPolicy ) for more details. 751 
+
+• While we encourage the release of code and data, we understand that this might not be 752 
+
+possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not 753 
+
+including code, unless this is central to the contribution (e.g., for a new open-source 754 
+
+benchmark). 755 
+
+• The instructions should contain the exact command and environment needed to run to 756 
+
+reproduce the results. See the NeurIPS code and data submission guidelines ( https: 757 
+
+//nips.cc/public/guides/CodeSubmissionPolicy ) for more details. 758 
+
+• The authors should provide instructions on data access and preparation, including how 759 
+
+to access the raw data, preprocessed data, intermediate data, and generated data, etc. 760 
+
+24 • The authors should provide scripts to reproduce all experimental results for the new 761 
+
+proposed method and baselines. If only a subset of experiments are reproducible, they 762 
+
+should state which ones are omitted from the script and why. 763 
+
+• At submission time, to preserve anonymity, the authors should release anonymized 764 
+
+versions (if applicable). 765 
+
+• Providing as much information as possible in supplemental material (appended to the 766 
+
+paper) is recommended, but including URLs to data and code is permitted. 767 
+
+6. Experimental setting/details 768 
+
+Question: Does the paper specify all the training and test details (e.g., data splits, hyper-769 
+
+parameters, how they were chosen, type of optimizer, etc.) necessary to understand the 770 
+
+results? 771 
+
+Answer: [Yes] 772 
+
+Justification: The experimental settings and environment details are described in Appendix 773 
+
+E.1 and Appendix E.2. 774 
+
+Guidelines: 775 
+
+• The answer NA means that the paper does not include experiments. 776 
+
+• The experimental setting should be presented in the core of the paper to a level of detail 777 
+
+that is necessary to appreciate the results and make sense of them. 778 
+
+• The full details can be provided either with the code, in appendix, or as supplemental 779 
+
+material. 780 
+
+7. Experiment statistical significance 781 
+
+Question: Does the paper report error bars suitably and correctly defined or other appropriate 782 
+
+information about the statistical significance of the experiments? 783 
+
+Answer: [Yes] 784 
+
+Justification: We repeat the experiment 3 times and report the fluctuations using shadows in 785 
+
+Fig. 3 and Fig. 4, and the error bars in Fig. 6. 786 
+
+Guidelines: 787 
+
+• The answer NA means that the paper does not include experiments. 788 
+
+• The authors should answer "Yes" if the results are accompanied by error bars, confi-789 
+
+dence intervals, or statistical significance tests, at least for the experiments that support 790 
+
+the main claims of the paper. 791 
+
+• The factors of variability that the error bars are capturing should be clearly stated (for 792 
+
+example, train/test split, initialization, random drawing of some parameter, or overall 793 
+
+run with given experimental conditions). 794 
+
+• The method for calculating the error bars should be explained (closed form formula, 795 
+
+call to a library function, bootstrap, etc.) 796 
+
+• The assumptions made should be given (e.g., Normally distributed errors). 797 
+
+• It should be clear whether the error bar is the standard deviation or the standard error 798 
+
+of the mean. 799 
+
+• It is OK to report 1-sigma error bars, but one should state it. The authors should 800 
+
+preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis 801 
+
+of Normality of errors is not verified. 802 
+
+• For asymmetric distributions, the authors should be careful not to show in tables or 803 
+
+figures symmetric error bars that would yield results that are out of range (e.g. negative 804 
+
+error rates). 805 
+
+• If error bars are reported in tables or plots, The authors should explain in the text how 806 
+
+they were calculated and reference the corresponding figures or tables in the text. 807 
+
+8. Experiments compute resources 808 
+
+Question: For each experiment, does the paper provide sufficient information on the com-809 
+
+puter resources (type of compute workers, memory, time of execution) needed to reproduce 810 
+
+the experiments? 811 
+
+Answer: [Yes] 812 
+
+Justification: The compute resources are described in Appendix E.1, and the computation 813 
+
+time and GPU usage are provided in Table 1. 814 
+
+25 Guidelines: 815 
+
+• The answer NA means that the paper does not include experiments. 816 
+
+• The paper should indicate the type of compute workers CPU or GPU, internal cluster, 817 
+
+or cloud provider, including relevant memory and storage. 818 
+
+• The paper should provide the amount of compute required for each of the individual 819 
+
+experimental runs as well as estimate the total compute. 820 
+
+• The paper should disclose whether the full research project required more compute 821 
+
+than the experiments reported in the paper (e.g., preliminary or failed experiments that 822 
+
+didn’t make it into the paper). 823 
+
+9. Code of ethics 824 
+
+Question: Does the research conducted in the paper conform, in every respect, with the 825 
+
+NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines ?826 
+
+Answer: [Yes] 827 
+
+Justification: [NA] 828 
+
+Guidelines: 829 
+
+• The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. 830 
+
+• If the authors answer No, they should explain the special circumstances that require a 831 
+
+deviation from the Code of Ethics. 832 
+
+• The authors should make sure to preserve anonymity (e.g., if there is a special consid-833 
+
+eration due to laws or regulations in their jurisdiction). 834 
+
+10. Broader impacts 835 
+
+Question: Does the paper discuss both potential positive societal impacts and negative 836 
+
+societal impacts of the work performed? 837 
+
+Answer: [Yes] 838 
+
+Justification: Please refer to Appendix F.2. 839 
+
+Guidelines: 840 
+
+• The answer NA means that there is no societal impact of the work performed. 841 
+
+• If the authors answer NA or No, they should explain why their work has no societal 842 
+
+impact or why the paper does not address societal impact. 843 
+
+• Examples of negative societal impacts include potential malicious or unintended uses 844 
+
+(e.g., disinformation, generating fake profiles, surveillance), fairness considerations 845 
+
+(e.g., deployment of technologies that could make decisions that unfairly impact specific 846 
+
+groups), privacy considerations, and security considerations. 847 
+
+• The conference expects that many papers will be foundational research and not tied 848 
+
+to particular applications, let alone deployments. However, if there is a direct path to 849 
+
+any negative applications, the authors should point it out. For example, it is legitimate 850 
+
+to point out that an improvement in the quality of generative models could be used to 851 
+
+generate deepfakes for disinformation. On the other hand, it is not needed to point out 852 
+
+that a generic algorithm for optimizing neural networks could enable people to train 853 
+
+models that generate Deepfakes faster. 854 
+
+• The authors should consider possible harms that could arise when the technology is 855 
+
+being used as intended and functioning correctly, harms that could arise when the 856 
+
+technology is being used as intended but gives incorrect results, and harms following 857 
+
+from (intentional or unintentional) misuse of the technology. 858 
+
+• If there are negative societal impacts, the authors could also discuss possible mitigation 859 
+
+strategies (e.g., gated release of models, providing defenses in addition to attacks, 860 
+
+mechanisms for monitoring misuse, mechanisms to monitor how a system learns from 861 
+
+feedback over time, improving the efficiency and accessibility of ML). 862 
+
+11. Safeguards 863 
+
+Question: Does the paper describe safeguards that have been put in place for responsible 864 
+
+release of data or models that have a high risk for misuse (e.g., pretrained language models, 865 
+
+image generators, or scraped datasets)? 866 
+
+Answer: [NA] 867 
+
+Justification: [NA] 868 
+
+26 Guidelines: 869 
+
+• The answer NA means that the paper poses no such risks. 870 
+
+• Released models that have a high risk for misuse or dual-use should be released with 871 
+
+necessary safeguards to allow for controlled use of the model, for example by requiring 872 
+
+that users adhere to usage guidelines or restrictions to access the model or implementing 873 
+
+safety filters. 874 
+
+• Datasets that have been scraped from the Internet could pose safety risks. The authors 875 
+
+should describe how they avoided releasing unsafe images. 876 
+
+• We recognize that providing effective safeguards is challenging, and many papers do 877 
+
+not require this, but we encourage authors to take this into account and make a best 878 
+
+faith effort. 879 
+
+12. Licenses for existing assets 880 
+
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in 881 
+
+the paper, properly credited and are the license and terms of use explicitly mentioned and 882 
+
+properly respected? 883 
+
+Answer: [Yes] 884 
+
+Justification: The papers corresponding to the environments used are cited in Section 4, and 885 
+
+the toolkit employed is cited in Appendix E.1 and Appendix E.2. 886 
+
+Guidelines: 887 
+
+• The answer NA means that the paper does not use existing assets. 888 
+
+• The authors should cite the original paper that produced the code package or dataset. 889 
+
+• The authors should state which version of the asset is used and, if possible, include a 890 
+
+URL. 891 
+
+• The name of the license (e.g., CC-BY 4.0) should be included for each asset. 892 
+
+• For scraped data from a particular source (e.g., website), the copyright and terms of 893 
+
+service of that source should be provided. 894 
+
+• If assets are released, the license, copyright information, and terms of use in the 895 
+
+package should be provided. For popular datasets, paperswithcode.com/datasets 896 
+
+has curated licenses for some datasets. Their licensing guide can help determine the 897 
+
+license of a dataset. 898 
+
+• For existing datasets that are re-packaged, both the original license and the license of 899 
+
+the derived asset (if it has changed) should be provided. 900 
+
+• If this information is not available online, the authors are encouraged to reach out to 901 
+
+the asset’s creators. 902 
+
+13. New assets 903 
+
+Question: Are new assets introduced in the paper well documented and is the documentation 904 
+
+provided alongside the assets? 905 
+
+Answer: [NA] 906 
+
+Justification: [NA] 907 
+
+Guidelines: 908 
+
+• The answer NA means that the paper does not release new assets. 909 
+
+• Researchers should communicate the details of the dataset/code/model as part of their 910 
+
+submissions via structured templates. This includes details about training, license, 911 
+
+limitations, etc. 912 
+
+• The paper should discuss whether and how consent was obtained from people whose 913 
+
+asset is used. 914 
+
+• At submission time, remember to anonymize your assets (if applicable). You can either 915 
+
+create an anonymized URL or include an anonymized zip file. 916 
+
+14. Crowdsourcing and research with human subjects 917 
+
+Question: For crowdsourcing experiments and research with human subjects, does the paper 918 
+
+include the full text of instructions given to participants and screenshots, if applicable, as 919 
+
+well as details about compensation (if any)? 920 
+
+Answer: [NA] 921 
+
+Justification: [NA] 922 
+
+27 Guidelines: 923 
+
+• The answer NA means that the paper does not involve crowdsourcing nor research with 924 
+
+human subjects. 925 
+
+• Including this information in the supplemental material is fine, but if the main contribu-926 
+
+tion of the paper involves human subjects, then as much detail as possible should be 927 
+
+included in the main paper. 928 
+
+• According to the NeurIPS Code of Ethics, workers involved in data collection, curation, 929 
+
+or other labor should be paid at least the minimum wage in the country of the data 930 
+
+collector. 931 
+
+15. Institutional review board (IRB) approvals or equivalent for research with human 932 
+
+subjects 933 
+
+Question: Does the paper describe potential risks incurred by study participants, whether 934 
+
+such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) 935 
+
+approvals (or an equivalent approval/review based on the requirements of your country or 936 
+
+institution) were obtained? 937 
+
+Answer: [NA] 938 
+
+Justification: [NA] 939 
+
+Guidelines: 940 
+
+• The answer NA means that the paper does not involve crowdsourcing nor research with 941 
+
+human subjects. 942 
+
+• Depending on the country in which research is conducted, IRB approval (or equivalent) 943 
+
+may be required for any human subjects research. If you obtained IRB approval, you 944 
+
+should clearly state this in the paper. 945 
+
+• We recognize that the procedures for this may vary significantly between institutions 946 
+
+and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the 947 
+
+guidelines for their institution. 948 
+
+• For initial submissions, do not include any information that would break anonymity (if 949 
+
+applicable), such as the institution conducting the review. 950 
+
+16. Declaration of LLM usage 951 
+
+Question: Does the paper describe the usage of LLMs if it is an important, original, or 952 
+
+non-standard component of the core methods in this research? Note that if the LLM is used 953 
+
+only for writing, editing, or formatting purposes and does not impact the core methodology, 954 
+
+scientific rigorousness, or originality of the research, declaration is not required. 955 
+
+Answer: [NA] 956 
+
+Justification: This paper uses LLMs solely to check grammar and spelling. 957 
+
+Guidelines: 958 
+
+• The answer NA means that the core method development in this research does not 959 
+
+involve LLMs as any important, original, or non-standard components. 960 
+
+• Please refer to our LLM policy ( https://neurips.cc/Conferences/2025/LLM )961 
+
+for what should or should not be described. 962 
+
+28
