@@ -1,0 +1,24 @@
+{
+  "label": "2026-05-31",
+  "date": "2026-05-31",
+  "generated_at": "2026-05-31T20:40:31",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202605/31/2605.29002v1-fedqhd-closed-form-function-space-federated-reinforcement-learning",
+      "section": "deep",
+      "title_en": "FedQHD: Closed-Form Function-Space Federated Reinforcement Learning",
+      "authors": "Yuchen Hou, Yongshan Chen, Zhuowen Zou, Calvin Yeung, Mohsen Imani, Tian Lan, Mahdi Imani",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.29002v1",
+      "score": "8.0",
+      "evidence": "联邦强化学习使去中心化智能体协作提升策略",
+      "tldr": "联邦强化学习中，FedAvg参数平均在异构网络下导致函数空间不一致。FedQHD采用超维随机特征编码器与线性读出结构，使Q函数在参数上线性，实现闭式聚合，并针对异构编码器通过锚点状态集平均与岭投影实现跨表示编译。在四个连续状态离散动作基准上，FedQHD性能匹配或超越FedAvg与蒸馏方法，计算量显著降低。理论分析了联邦差距的组成，经验结果与理论一致。",
+      "tags": "query:marl",
+      "abstract_en": "Federated reinforcement learning enables decentralized agents to collaboratively improve policies or value estimates without exchanging raw trajectories. However, FedAvg-style parameter averaging is not function-space consistent: when clients use heterogeneous encoders or even identical nonlinear networks, averaged parameters need not correspond to the weighted average of client value functions in any common function space. We propose FedQHD, a federated Q-learning method using hyperdimensional (random-feature) state encoders with a linear readout, so that Q-functions are nonlinear in state yet linear in trainable parameters. This linear structure enables closed-form aggregation. With a shared encoder, the function-space consensus update coincides exactly with weighted averaging of local readout matrices. With heterogeneous encoders, the server constructs a global teacher by averaging client Q-values on a shared anchor-state set, and each client compiles this teacher into its local representation via a single ridge projection. We formalize the federation gap -- the error incurred when compiling a federated teacher into a heterogeneous client representation -- relative to a client-specific oracle projection. We show that this gap decomposes into subspace misalignment, anchor-set conditioning, and regularization bias. We further identify the anchor-to-dimension ratio $m \\geq D_i$ as the well-conditioned regime in which the gap reduces to a multiple of the encoder heterogeneity floor. On four continuous-state, discrete-action control benchmarks, FedQHD matches or outperforms FedAvg-style baselines and distillation-based alternatives while requiring substantially less computation, and the empirical dependence of the federation gap on encoder dimension matches our theoretical analysis.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
