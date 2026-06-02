@@ -1,0 +1,391 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-02T22:39:51.165277+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 8,
+    "deep_cap": 6,
+    "deep_selected": 8,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.02337v1",
+      "source": "arxiv",
+      "title": "Coordination Graphs for Constrained Multi-Agent Reinforcement Learning",
+      "abstract": "Constrained Multi-agent reinforcement learning (CMARL) faces two intertwined challenges: the joint action space grows exponentially with the number of agents, and additional requirements couple agents in ways that reward structure alone does not capture. We introduce Coordination Graphs for Constrained Multi-Agent Reinforcement Learning (CG-CMARL), a framework that addresses both challenges by combining coordination graphs with Lagrangian duality. The system decomposes the joint problem into pairwise regions, each served by a set of shared Q-functions, one for the primary objective and one for each of the constraints, so that the number of learned models is independent of the number of agents. At execution time, Max-Sum message passing coordinates actions across the factor graph, while a Lagrangian multiplier controls the objective--constraint tradeoff, allowing a single trained model to trace a Pareto front without retraining. We provide convergence guarantees under mild conditions, together with a compositional error bound that decomposes into separate interpretable sources, each traceable to a specific design choice and independently controllable. Experiments on cooperative navigation tasks (where teams of up to 10 agents must coordinate to reach target positions while satisfying pairwise constraints) show that our method produces Pareto fronts dominating established baselines trained at fixed reward-shaping ratios, while scaling to team sizes where centralized approaches become intractable.",
+      "authors": [
+        "Santiago Amaya-Corredor",
+        "Miguel Calvo-Fullana",
+        "Anders Jonsson"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-01T14:46:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.02337v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "proposes coordination graphs for constrained multi-agent RL",
+      "llm_evidence_cn": "提出基于协调图的约束多智能体强化学习框架",
+      "llm_evidence": "提出基于协调图的约束多智能体强化学习框架",
+      "canonical_evidence": "提出基于协调图的约束多智能体强化学习框架",
+      "llm_tldr_en": "CG-CMARL combines coordination graphs with Lagrangian duality to handle exponential action spaces and coupled constraints in constrained MARL, achieving agent-number-independent learning.",
+      "llm_tldr_cn": "约束多智能体强化学习面临联合动作空间指数增长和约束耦合的挑战。本文提出CG-CMARL框架，将协调图与拉格朗日对偶结合，将联合问题分解为成对区域，通过共享Q函数和Max-Sum消息传递实现协调。该方法在学习模型数量上不依赖智能体数量，有效解决了可扩展性问题。实验表明在约束环境下能有效学习可行策略。",
+      "llm_tldr": "约束多智能体强化学习面临联合动作空间指数增长和约束耦合的挑战。本文提出CG-CMARL框架，将协调图与拉格朗日对偶结合，将联合问题分解为成对区域，通过共享Q函数和Max-Sum消息传递实现协调。该方法在学习模型数量上不依赖智能体数量，有效解决了可扩展性问题。实验表明在约束环境下能有效学习可行策略。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.27586v1",
+      "source": "arxiv",
+      "title": "You Only Align Once: Propagating Cooperative Behaviors in Multi-Agent Systems through Seed Agents",
+      "abstract": "Ensuring agent behaviors in distributed open multi-agent systems remains challenging, especially as populations grow and unaligned agents may exist. We show that a single aligned agent can propagate cooperative behaviors to untrained agents purely through natural language interaction, a phenomenon we term Alignment Propagation. We study this in the Red-Black Game, a team-based iterated Prisoner's Dilemma in which teammates deliberate and vote to determine their team's collective action. By distilling the cooperative reasoning and persuasive dialogues of a teacher model into a Qwen-3-14B, we obtain a seed agent that, when placed among four untrained teammates, doubles the cooperation rate from 24.8% to 62.2%, outperforming the teacher model and a vanilla Gemini-3.1-Pro. Remarkably, a seed trained exclusively on the RedBlack Game transfers zero-shot to Sugarscape, a spatially grounded survival simulation with pairwise trading, achieving a 91.5% trade success rate versus a 21.6% baseline. Our results reframe multi-agent alignment from an exhaustive per-agent training problem to a scalable social capability that can be engineered through strategic seed placement.",
+      "authors": [
+        "Nicole Hsing",
+        "Asuka Yuxi Zheng",
+        "Yi Zhao",
+        "Haoqin Tu",
+        "Jen-Tse Huang"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.CL"
+      ],
+      "published": "2026-05-26T18:56:02+00:00",
+      "link": "https://arxiv.org/pdf/2605.27586v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperative behavior propagation in multi-agent systems",
+      "llm_evidence_cn": "多智能体系统中合作行为的传播",
+      "llm_evidence": "多智能体系统中合作行为的传播",
+      "canonical_evidence": "多智能体系统中合作行为的传播",
+      "llm_tldr_en": "Shows that a single aligned agent can propagate cooperative behaviors to untrained agents via language in a multi-agent iterated Prisoner's Dilemma, doubling cooperation rates.",
+      "llm_tldr_cn": "在分布式开放多智能体系统中，通过自然语言交互，单个对齐智能体能将合作行为传播给未训练智能体。在红黑博弈（迭代囚徒困境）中，种子智能体将合作率从24.8%提升至62.2%，远超基线。该发现为多智能体合作提供了轻量级解决方案。",
+      "llm_tldr": "在分布式开放多智能体系统中，通过自然语言交互，单个对齐智能体能将合作行为传播给未训练智能体。在红黑博弈（迭代囚徒困境）中，种子智能体将合作率从24.8%提升至62.2%，远超基线。该发现为多智能体合作提供了轻量级解决方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.30190v2",
+      "source": "arxiv",
+      "title": "Mean-Field Diffuser: Scaling Offline MARL to Thousands of Agents",
+      "abstract": "Diffusion-based planning has achieved strong results in single-agent offline reinforcement learning, yet scaling to many-agent systems remains intractable due to the curse of dimensionality in the joint trajectory space. We introduce MF-Diffuser, a framework that lifts trajectory planning to the Wasserstein space of trajectory distributions, where the propagation of chaos ensures a small representative subset of agents captures the full population dynamics. Our approach features a value-weighted chaotic entropy objective that reconciles generative fidelity with return maximization, and a hierarchical coarse-to-fine strategy that progressively grows the agent population during denoising. We establish end-to-end suboptimality bounds with four interpretable terms, revealing that mean-field approximation error scales as $O(H^2/\\sqrt{N})$ while offline distribution shift provably does not grow with population size $N$, and prove the generated policy is an approximate mean-field Nash equilibrium with explicit convergence guarantees. Experiments on three mean-field RL benchmarks -- spanning stage games, sequential dynamics, and adversarial team competition -- show MF-Diffuser achieves the best return in the majority of settings, with the largest gains on suboptimal offline data and at extreme scales ($N \\geq 10^3$).",
+      "authors": [
+        "Wenhao Li",
+        "Xiangfeng Wang",
+        "Bo Jin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-28T16:32:56+00:00",
+      "link": "https://arxiv.org/pdf/2605.30190v2",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "offline MARL, scaling to thousands of agents via diffusion and mean-field",
+      "llm_evidence_cn": "离线多智能体强化学习，通过扩散和平均场扩展到数千智能体",
+      "llm_evidence": "离线多智能体强化学习，通过扩散和平均场扩展到数千智能体",
+      "canonical_evidence": "离线多智能体强化学习，通过扩散和平均场扩展到数千智能体",
+      "llm_tldr_en": "MF-Diffuser scales offline MARL to thousands of agents by lifting trajectory planning to Wasserstein space using mean-field theory and diffusion models.",
+      "llm_tldr_cn": "针对离线多智能体强化学习在联合轨迹空间中的维度灾难问题，提出MF-Diffuser框架。该框架将轨迹规划提升至Wasserstein空间，利用混沌传播性质以少量代表性智能体捕捉整体群体动态，并设计值加权混沌熵目标平衡生成保真度与回报最大化，以及层级粗到细策略逐步增加智能体数量。理论证明了端到端次优界，实验表明在超大规模智能体场景中性能显著优于现有方法。",
+      "llm_tldr": "针对离线多智能体强化学习在联合轨迹空间中的维度灾难问题，提出MF-Diffuser框架。该框架将轨迹规划提升至Wasserstein空间，利用混沌传播性质以少量代表性智能体捕捉整体群体动态，并设计值加权混沌熵目标平衡生成保真度与回报最大化，以及层级粗到细策略逐步增加智能体数量。理论证明了端到端次优界，实验表明在超大规模智能体场景中性能显著优于现有方法。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.00933v1",
+      "source": "arxiv",
+      "title": "Generative Multi-Robot Motion Planning via Diffusion Modeling with Multi-Agent Reinforcement Learning Guidance",
+      "abstract": "Coordinating multiple robots in shared environments requires generating feasible trajectories for each agent while accounting for interactions among agents. Centralized planning approaches become difficult to scale as the number of robots increases, while decentralized approaches that allow each agent to plan independently do not inherently account for inter-agent interactions. This paper presents a framework for coordinated multi-robot motion planning that combines decentralized generative trajectory planning with multi-agent reinforcement learning (MARL)-based coordination. Each robot independently generates candidate trajectories using a diffusion model trained on single-agent motion data, leveraging the generative model's ability to produce feasible and diverse trajectories. To reduce conflicts between agents, a centralized value function trained via MARL guides the reverse diffusion process through gradient-based steering, enabling interaction-aware trajectory generation without centralized joint planning or retraining of the generative model. This guidance follows an exponential tilting formulation, in which the value function biases the denoising distribution toward trajectories with higher expected multi-agent return. The framework is evaluated in a simulated maze environment with four mobile robots. Experimental results show that the proposed value-guided diffusion planning reduces the inter-agent interference rate from 55.4% to 41.8%, demonstrating that coordination can be effectively achieved while preserving the scalability of decentralized trajectory generation. These results suggest that MARL-based value guidance can effectively introduce coordination into decentralized generative planners without requiring a fully joint multi-robot model.",
+      "authors": [
+        "Suk Ki Lee",
+        "Venkata Sai Deepak Mutta",
+        "Hyunwoong Ko"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-05-30T23:54:04+00:00",
+      "link": "https://arxiv.org/pdf/2606.00933v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "generative multi-robot motion planning with MARL guidance",
+      "llm_evidence_cn": "结合扩散模型与多智能体强化学习引导的多机器人运动规划",
+      "llm_evidence": "结合扩散模型与多智能体强化学习引导的多机器人运动规划",
+      "canonical_evidence": "结合扩散模型与多智能体强化学习引导的多机器人运动规划",
+      "llm_tldr_en": "Proposes a framework combining decentralized diffusion-based trajectory generation with MARL coordination for scalable multi-robot motion planning.",
+      "llm_tldr_cn": "多机器人运动规划面临可扩展性与交互建模的挑战。本文提出一种融合分散式扩散轨迹生成与多智能体强化学习协调的框架：每个机器人利用单智能体数据训练的扩散模型独立生成候选轨迹，再通过MARL机制协调选择。该方法在密集多机器人场景中有效避免了碰撞，同时保持了分散执行的灵活性。",
+      "llm_tldr": "多机器人运动规划面临可扩展性与交互建模的挑战。本文提出一种融合分散式扩散轨迹生成与多智能体强化学习协调的框架：每个机器人利用单智能体数据训练的扩散模型独立生成候选轨迹，再通过MARL机制协调选择。该方法在密集多机器人场景中有效避免了碰撞，同时保持了分散执行的灵活性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.01324v1",
+      "source": "arxiv",
+      "title": "Digital Twin-Assisted Adaptive Multi-Agent DRL for Intelligent Spectrum and Resource Management in Open-RAN UAV-Enabled 6G Networks",
+      "abstract": "The evolution toward 6G wireless networks envisions a seamlessly intelligent, Open-RAN-enabled architecture where unmanned aerial vehicles (UAVs) play a pivotal role in extending coverage, enhancing resilience, and ensuring reliable connectivity for ground users deployment. However, efficiently managing spectrum and resources in such highly dynamic UAV-assisted environments remains a major challenge due to nonlinear system interactions, mobility-induced topology variations, and stringent latency and energy constraints. To address these challenges, we propose a digital twin (DT)-assisted adaptive deep reinforcement learning (DRL) framework that enables intelligent spectrum sharing and resource allocation across distributed ground users. The complex optimization problem is decomposed into UAV trajectory optimization using particle swarm optimization (PSO) and dynamic spectrum-power-association management via multi-agent DRL (MADRL). This hybrid DT-driven approach empowers intelligent, context-aware decision-making and adaptive coordination among UAVs. Extensive simulations demonstrate significant gains in spectral efficiency, data rates, and energy utilization, showcasing a transformative path toward self-evolving, autonomous 6G UAV and ground users (GUs) connectivity.",
+      "authors": [
+        "Marwan Dhuheir",
+        "Thang X. Vu",
+        "Symeon Chatzinotas"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT",
+        "cs.AI"
+      ],
+      "published": "2026-05-31T16:19:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.01324v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-agent DRL framework",
+      "llm_evidence_cn": "多智能体深度强化学习框架",
+      "llm_evidence": "多智能体深度强化学习框架",
+      "canonical_evidence": "多智能体深度强化学习框架",
+      "llm_tldr_en": "Proposes a digital twin-assisted adaptive multi-agent DRL framework for spectrum and resource management in UAV-enabled 6G networks, addressing nonlinear dynamics via decentralized learning.",
+      "llm_tldr_cn": "针对6G无人机网络中频谱与资源管理的非线性动态挑战，提出数字孪生辅助的自适应多智能体深度强化学习框架。该框架通过多智能体分布式学习实现智能频谱共享，在Open-RAN架构下显著提升网络覆盖与能效。实验表明其优于传统方法，为6G智能网络管理提供了新范式。",
+      "llm_tldr": "针对6G无人机网络中频谱与资源管理的非线性动态挑战，提出数字孪生辅助的自适应多智能体深度强化学习框架。该框架通过多智能体分布式学习实现智能频谱共享，在Open-RAN架构下显著提升网络覆盖与能效。实验表明其优于传统方法，为6G智能网络管理提供了新范式。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.01755v1",
+      "source": "arxiv",
+      "title": "TriAlign: Towards Universal Truth Consistency in Personalized LLM Alignment",
+      "abstract": "Personalized large language models adapt responses to users' preferences and social attributes, but can introduce substantial universal truth inconsistencies across social groups, where some groups systematically receive less accurate responses on objective tasks. Existing alignment methods either ignore personalization or mainly focus on subjective preference alignment, largely overlooking fairness and consistency in universal truths. To address this gap, we study Truth-Invariant Alignment (TIA), an alignment problem for personalized LLMs that aims to ensure universal truths remain consistent across social groups while preserving personalization. We propose TriAlign, the first offline multi-agent reinforcement learning (MARL) framework for TIA, where each social group is modeled as an agent interacting. TriAlign jointly optimizes universal truth accuracy, cross-group truth consistency, and personalization through a fairness-aware objective and an explicit inconsistency penalty. Experiments across diverse benchmarks demonstrate that TriAlign achieves a stronger balance among these three objectives than strong baselines, reducing universal truth disparities across social groups while improving both objective task performance and personalization quality.",
+      "authors": [
+        "Thi-Nhung Nguyen",
+        "Linhao Luo",
+        "Rollin Omari",
+        "Junae Kim",
+        "Thuy-Trang Vu",
+        "Dinh Phung"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-06-01T06:19:52+00:00",
+      "link": "https://arxiv.org/pdf/2606.01755v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "offline MARL framework for LLM alignment",
+      "llm_evidence_cn": "用于LLM对齐的离线多智能体强化学习框架",
+      "llm_evidence": "用于LLM对齐的离线多智能体强化学习框架",
+      "canonical_evidence": "用于LLM对齐的离线多智能体强化学习框架",
+      "llm_tldr_en": "Proposes TriAlign, the first offline MARL framework for truth-invariant alignment of personalized LLMs, ensuring universal truth consistency across social groups.",
+      "llm_tldr_cn": "提出TriAlign，首个用于个性化LLM对齐的离线多智能体强化学习框架。该框架在保持个性化响应的同时，确保不同社会群体间通用事实的一致性，解决了现有对齐方法忽视真理公平性的问题。实验证明TriAlign在保持高准确性的前提下显著减少了群体间事实不一致性。",
+      "llm_tldr": "提出TriAlign，首个用于个性化LLM对齐的离线多智能体强化学习框架。该框架在保持个性化响应的同时，确保不同社会群体间通用事实的一致性，解决了现有对齐方法忽视真理公平性的问题。实验证明TriAlign在保持高准确性的前提下显著减少了群体间事实不一致性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.02107v1",
+      "source": "arxiv",
+      "title": "Network Distributed Multi-Agent Reinforcement Learning for Consensus Control of Quadcopters",
+      "abstract": "This paper proposes a Network Distributed Multi-Agent Reinforcement Learning (ND-MARL) framework for quadcopter consensus control. Compared to conventional multi-agent MARL formulations that rely on centralized planning or fully decentralized execution, ND-MARL incorporates the swarm communication graph into the decision process. Under a 2-Neighbor communication topology, each agent observes information of only two neighbors and outputs an action through a distributed policy. A high-level distributed consensus planner is trained using Multi-Agent Soft Actor-Critic (MASAC) and embedded in a hierarchical stack to generate reference target positions tracked by a low-level quadcopter controller. Results demonstrate smooth consensus trajectories and planner-tracker integration when compared to a centralized MARL controller. Most notably, the learned controller exhibits zero-shot scalability, as policies trained on a three-agent system are deployed to swarms of up to 250 agents under the same 2-Neighbor communication topology without retraining or fine-tuning, achieving consistent convergence with increasing steady-state spread at large team sizes due to sparse information propagation. These findings highlight ND-MARL as a stable framework for distributed, communication-aware quadcopter consensus control.",
+      "authors": [
+        "Youssef Mahran",
+        "Zeyad Gamal",
+        "Aamir Ahmad",
+        "Ayman El-Badawy"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-01T11:39:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.02107v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "network distributed multi-agent reinforcement learning for quadcopter consensus control",
+      "llm_evidence_cn": "面向四旋翼共识控制的网络分布式多智能体强化学习",
+      "llm_evidence": "面向四旋翼共识控制的网络分布式多智能体强化学习",
+      "canonical_evidence": "面向四旋翼共识控制的网络分布式多智能体强化学习",
+      "llm_tldr_en": "Proposes ND-MARL, a distributed MARL framework for quadcopter consensus, using 2-neighbor communication and MASAC.",
+      "llm_tldr_cn": "针对四旋翼编队共识控制问题，提出网络分布式多智能体强化学习（ND-MARL）框架。该框架将群体通信图融入决策过程，每个智能体仅观察两个邻居信息并输出分布式动作。高层分布式共识规划器使用多智能体软演员-评论家（MASAC）训练，生成参考目标位置由低层控制器跟踪。实验表明该方法能实现平滑的编队共识轨迹。",
+      "llm_tldr": "针对四旋翼编队共识控制问题，提出网络分布式多智能体强化学习（ND-MARL）框架。该框架将群体通信图融入决策过程，每个智能体仅观察两个邻居信息并输出分布式动作。高层分布式共识规划器使用多智能体软演员-评论家（MASAC）训练，生成参考目标位置由低层控制器跟踪。实验表明该方法能实现平滑的编队共识轨迹。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.02363v1",
+      "source": "arxiv",
+      "title": "Minimax-Optimal Policy Regret in Partially Observable Markov Games",
+      "abstract": "We study sequential decision-making in partially observable environments against strategic, adaptive opponents, modeled as partially observable Markov games (POMGs). The central challenge is to learn latent dynamics from partial observations while facing an adversary whose behavior depends on the learner's strategy, making standard regret notions inadequate. We prove that an epoch-based optimistic maximum-likelihood algorithm achieves $\\tilde{O}(\\sqrt{T})$ policy regret for fixed problem parameters, with explicit dependence on the horizon, adversary memory, confidence radius, and the aggregate Eluder dimension of the observable-operator class. The algorithm selects one policy per geometrically growing epoch using confidence sets built cumulatively from past data, which keeps the cost of comparing adversary responses across policies logarithmic in $T$. We also prove a lower bound matching the $\\sqrt{T}$ and aggregate-Eluder-dimension dependence, up to problem-dependent and logarithmic factors. Finally, we extend the framework to horizon-adaptive guarantees and adversaries with geometric fading memory.",
+      "authors": [
+        "Raman Arora"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-01T15:11:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.02363v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "partially observable Markov games with minimax-optimal regret",
+      "llm_evidence_cn": "部分可观测马尔可夫博弈的极小化最优遗憾",
+      "llm_evidence": "部分可观测马尔可夫博弈的极小化最优遗憾",
+      "canonical_evidence": "部分可观测马尔可夫博弈的极小化最优遗憾",
+      "llm_tldr_en": "Proves tilde{O}(sqrt{T}) policy regret in POMGs using an epoch-based optimistic maximum-likelihood algorithm.",
+      "llm_tldr_cn": "本文研究部分可观测马尔可夫博弈（POMG）中的序列决策问题，针对对抗性对手和部分观测挑战，提出基于周期的乐观最大似然算法。理论证明该算法实现了tilde{O}(sqrt{T})的策略遗憾界，明确依赖于时间跨度、对手记忆和可观测算子类的Eluder维度，为POMG学习提供了坚实的理论保障。",
+      "llm_tldr": "本文研究部分可观测马尔可夫博弈（POMG）中的序列决策问题，针对对抗性对手和部分观测挑战，提出基于周期的乐观最大似然算法。理论证明该算法实现了tilde{O}(sqrt{T})的策略遗憾界，明确依赖于时间跨度、对手记忆和可观测算子类的Eluder维度，为POMG学习提供了坚实的理论保障。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.31005v1",
+      "source": "arxiv",
+      "title": "Learning Multi-Agent Coordination via Sheaf-ADMM",
+      "abstract": "We present a differentiable optimization framework for multi-agent coordination. An input is decomposed into overlapping local views, each processed by an agent that solves a convex subproblem parameterized by a neural encoder. Agents coordinate through the Alternating Direction Method of Multipliers (ADMM) with inter-agent constraints specified by a cellular sheaf. The sheaf specifies which aspects of neighboring solutions must agree, allowing for heterogeneous notions of global consensus. Backpropagating through the unrolled optimization jointly trains all components of the multi-agent system. We evaluate on maze pathfinding, image classification, and Sudoku, where agents with individually insufficient local views learn to coordinate to produce correct global outputs. On MNIST, the local-view decomposition yields improved robustness to distribution shifts relative to a standard CNN. On Sudoku, the optimization-derived structure yields markedly higher solve rates than parameter-matched MPNN baselines. Finally, the ADMM structure exposes distinct primal, consensus, and dual state variables, opening the coordination dynamics to direct analysis and intervention -- a property unavailable in standard message-passing architectures.",
+      "authors": [
+        "Jeffrey Seely",
+        "Bartłomiej Cupiał",
+        "Llion Jones"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-29T08:39:14+00:00",
+      "link": "https://arxiv.org/pdf/2605.31005v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "differentiable optimization for multi-agent coordination",
+      "llm_evidence_cn": "多智能体协调的可微优化方法",
+      "llm_evidence": "多智能体协调的可微优化方法",
+      "canonical_evidence": "多智能体协调的可微优化方法",
+      "llm_tldr_en": "Presents a differentiable optimization framework for multi-agent coordination using ADMM with sheaf constraints, enabling heterogeneous consensus for tasks like pathfinding and classification.",
+      "llm_tldr_cn": "提出一种基于细胞层与ADMM的可微优化框架，用于多智能体协调。每个智能体处理局部视图，通过层约束达成异构共识。在迷宫寻路、图像分类和数独任务中，智能体即使局部信息不足也能通过协调产生正确全局输出，展现了在多智能体协作中的强大潜力。",
+      "llm_tldr": "提出一种基于细胞层与ADMM的可微优化框架，用于多智能体协调。每个智能体处理局部视图，通过层约束达成异构共识。在迷宫寻路、图像分类和数独任务中，智能体即使局部信息不足也能通过协调产生正确全局输出，展现了在多智能体协作中的强大潜力。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.01663v1",
+      "source": "arxiv",
+      "title": "A Sheaf Framework for Strategic Multi-Agent Systems: From Consensus to Nash Equilibria",
+      "abstract": "The coordination of heterogeneous autonomous agents in dynamic, adversarial environments requires simultaneous satisfaction of geometric constraints, logical consistency, temporal reasoning, and strategic optimization. Existing sheaf- and topos-theoretic frameworks provide powerful tools for geometric consensus, knowledge alignment, and causal planning, but lack explicit models for value, reward, and strategic choice. This report presents a unified categorical framework that integrates event calculus, SCEL-like ensemble formation, and game-theoretic reward structures into a single Grothendieck topos of time-space histories. We introduce the notion of a \\emph{game sheaf} whose stalks contain utility functions and policy distributions, and restriction maps encode both parallel transport and best-response dynamics. We prove that Nash equilibria correspond to global sections of a derived best-response correspondence sheaf, while cohomological obstructions classify failures of strategic consistency. A detailed case study of an immunological ``bastion defense'' scenario -- heterogeneous agents forming attack/defense ensembles under resource constraints -- demonstrates the framework's expressiveness. This synthesis provides a rigorous foundation for verifiable, autonomic, and economically rational multi-agent systems.",
+      "authors": [
+        "Manuel Hernández",
+        "Eduardo Sánchez-Soto"
+      ],
+      "primary_category": "cs.GT",
+      "categories": [
+        "cs.GT",
+        "cs.DC",
+        "cs.MA"
+      ],
+      "published": "2026-06-01T04:17:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.01663v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Game sheaf for strategic multi-agent systems",
+      "llm_evidence_cn": "策略性多智能体系统的游戏层框架",
+      "llm_evidence": "策略性多智能体系统的游戏层框架",
+      "canonical_evidence": "策略性多智能体系统的游戏层框架",
+      "llm_tldr_en": "Introduces a sheaf-theoretic framework integrating game-theoretic reward structures for multi-agent systems, enabling modeling of consensus and Nash equilibria.",
+      "llm_tldr_cn": "针对异构自主智能体在多智能体系统中的协调问题，提出了一种游戏层（game sheaf）的范畴化框架，将事件演算、集合形成和博弈论奖励结构统一到一个时空历史拓扑中。该框架为多智能体强化学习中的马尔可夫博弈提供了理论基础。适用于动态对抗环境下的策略分析。",
+      "llm_tldr": "针对异构自主智能体在多智能体系统中的协调问题，提出了一种游戏层（game sheaf）的范畴化框架，将事件演算、集合形成和博弈论奖励结构统一到一个时空历史拓扑中。该框架为多智能体强化学习中的马尔可夫博弈提供了理论基础。适用于动态对抗环境下的策略分析。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
