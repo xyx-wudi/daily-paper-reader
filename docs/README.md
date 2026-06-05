@@ -6,44 +6,46 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-04
-- 运行时间：2026-06-04 21:39:30 UTC
+- 最新运行日期：2026-06-05
+- 运行时间：2026-06-05 21:36:52 UTC
 - 运行状态：成功
 - 本次总论文数：8
 - 精读区：6
 - 速读区：2
 
 ### 今日简报（AI）
-今日共处理8篇推荐，精读6篇、速读2篇，重点聚焦两篇9.0分高价值论文。最值得关注的方向：基于模型的强化学习中后验鲁棒性方法，以及多智能体系统中基于声誉的涌现合作机制。建议优先阅读这两篇精读文章，深入理解它们在鲁棒性和合作策略上的创新思路。
-- 详情：[/202606/04/README](/202606/04/README)
+1) 今日精读6篇、速读2篇，核心聚焦多智能体强化学习的合作策略与公平性机制。  
+2) 最值得关注：模型控制与多智能体强化学习的融合（10分）以及基于跨注意力的去中心化公平性方法（9分）。  
+3) 建议优先精读这两篇高分论文，并关注多机器人协调和跨模态数据集扩展的实际应用。
+- 详情：[/202606/05/README](/202606/05/README)
 
 ### 精读区论文标签
-1. [Post-Hoc Robustness for Model-Based Reinforcement Learning](/202606/04/2606.03521v1-post-hoc-robustness-for-model-based-reinforcement-learning)  
+1. [Merging model-based control with multi-agent reinforcement learning for multi-agent cooperative teaming strategies](/202606/05/2606.06011v1-merging-model-based-control-with-multi-agent-reinforcement-learning-for-multi-agent-cooperative-teaming-strategies)  
+   标签：评分：10.0/10、query:marl
+   evidence：将模型控制与协作多智能体强化学习结合
+2. [Learning to Contest: Decentralized Robust Fairness in Cooperative MARL via Cross-Attention](/202606/05/2606.06162v1-learning-to-contest-decentralized-robust-fairness-in-cooperative-marl-via-cross-attention)  
    标签：评分：9.0/10、query:marl
-   evidence：零和马尔可夫博弈下的鲁棒RL
-2. [Learning to cooperate with emergent reputation via multi-agent reinforcement learning](/202606/04/2606.04359v1-learning-to-cooperate-with-emergent-reputation-via-multi-agent-reinforcement-learning)  
+   evidence：基于交叉注意力的合作MARL去中心化鲁棒公平性方法
+3. [DNQ: Deep Nash Q-Network for Partially Observable n-Player Games](/202606/05/2606.06480v1-dnq-deep-nash-q-network-for-partially-observable-n-player-games)  
    标签：评分：9.0/10、query:marl
-   evidence：分布式MARL方法利用涌现声誉促进合作
-3. [Episodic Memory Temporal Consistency for Cooperative Multi-Agent Reinforcement Learning](/202606/04/2606.04492v1-episodic-memory-temporal-consistency-for-cooperative-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：合作多智能体强化学习，提出基于时序一致性的情节记忆框架
-4. [Enhancing the MADDPG Algorithm for Multi-Agent Learning via Action Inference and Importance Sampling](/202606/04/2606.05021v1-enhancing-the-maddpg-algorithm-for-multi-agent-learning-via-action-inference-and-importance-sampling)  
-   标签：评分：9.0/10、query:marl
-   evidence：对MADDPG算法的增强，用于多智能体学习
-5. [SMAC-Talk: A Natural Language Extension of the StarCraft Multi-Agent Challenge for Large Language Models](/202606/04/2606.04202v1-smac-talk-a-natural-language-extension-of-the-starcraft-multi-agent-challenge-for-large-language-models)  
+   evidence：面向n人博弈的深度纳什Q网络
+4. [AgentJet: A Flexible Swarm Training Framework for Agentic Reinforcement Learning](/202606/05/2606.04484v1-agentjet-a-flexible-swarm-training-framework-for-agentic-reinforcement-learning)  
    标签：评分：8.0/10、query:marl
-   evidence：具有分散控制的合作多智能体环境
-6. [GARL: Game-Theoretic Reinforcement Learning for Multi-Agent Strategic Prioritisation](/202606/04/2606.05002v1-garl-game-theoretic-reinforcement-learning-for-multi-agent-strategic-prioritisation)  
+   evidence：支持异构多智能体团队训练的分布式框架
+5. [Fog of Love: Engineering Virtuous Agent Behavior with Affinity-based Reinforcement Learning in a Game Environment](/202606/05/2606.04750v1-fog-of-love-engineering-virtuous-agent-behavior-with-affinity-based-reinforcement-learning-in-a-game-environment)  
    标签：评分：8.0/10、query:marl
-   evidence：博弈论多智能体强化学习框架
+   evidence：双人多智能体RL环境
+6. [Exploring cooperation mechanisms via reinforcement learning in network common-pool resource games](/202606/05/2606.05867v1-exploring-cooperation-mechanisms-via-reinforcement-learning-in-network-common-pool-resource-games)  
+   标签：评分：8.0/10、query:marl
+   evidence：网络公共池资源博弈中的多智能体合作
 
 ### 速读区论文标签
-1. [Scaling Datasets for Multi-Sensor, Multi-Agent, and Multi-Domain Learning in Autonomous Systems](/202606/04/2606.04444v1-scaling-datasets-for-multi-sensor-multi-agent-and-multi-domain-learning-in-autonomous-systems)  
+1. [Distributed GNEP Algorithms without Multiplier Sharing and Applications to Multi-Robot Coordination and Contextual Bandit-Based Active Learning](/202606/05/2606.00759v1-distributed-gnep-algorithms-without-multiplier-sharing-and-applications-to-multi-robot-coordination-and-contextual-bandit-based-active-learning)  
+   标签：评分：7.0/10、query:marl
+   evidence：无需乘子交换的分布式GNEP算法用于多机器人协调
+2. [Scaling Datasets for Multi-Sensor, Multi-Agent, and Multi-Domain Learning in Autonomous Systems](/202606/05/2606.04444v1-scaling-datasets-for-multi-sensor-multi-agent-and-multi-domain-learning-in-autonomous-systems)  
    标签：评分：6.0/10、query:marl
-   evidence：支持协作自主的多智能体数据集生成流水线
-2. [AgentJet: A Flexible Swarm Training Framework for Agentic Reinforcement Learning](/202606/04/2606.04484v1-agentjet-a-flexible-swarm-training-framework-for-agentic-reinforcement-learning)  
-   标签：评分：6.0/10、query:marl
-   evidence：LLM智能体强化学习的蜂群训练框架，支持异质多智能体训练
+   evidence：多智能体数据集生成管道
 
 
 <div class="dpr-home-promo-card">

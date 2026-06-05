@@ -1,0 +1,415 @@
+Title: Learning to Contest: Decentralized Robust Fairness in Cooperative MARL via Cross-Attention
+
+URL Source: https://arxiv.org/pdf/2606.06162v1
+
+Published Time: Fri, 05 Jun 2026 01:29:08 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Learning to Contest: Decentralized Robust Fairness in Cooperative MARL via Cross-Attention 
+
+Can Savcı 
+
+Independent Researcher 
+
+˙Izmir, Turkey savcisavcican@gmail.com 
+
+Abstract —Fair cooperative multi-agent reinforcement learn-ing (MARL) teams that maximize an egalitarian welfare are exploitable: a single self-interested agent free-rides on the surplus that fair agents forgo to raise the worst-off. A cen-tralized need-based allocator removes the exploit, but only by taking allocation out of the agents’ hands; whether decentralized 
+
+policies can be robust was left open. We show that the futility of a decentralized defense is an artifact of all-or-nothing con-tention. Under graded contention—where a contested resource still delivers a fraction 1−c and wastes c—we prove that for any 
+
+c < 1 a worst-off cooperator that contests a free-rider strictly improves on yielding, so decentralized leverage exists (Prop. 1). Realizing it, however, requires solving a coordination problem under uncertainty: the number of free-riders is unknown and variable , so any fixed rule is dominated (always-contest wastes 
+
+c when nobody defects; always-yield collapses when someone does). We introduce CAN, a permutation-equivariant cross-attention policy over agents’ observed behaviour that infers how many free-riders are present and responds proportionally— turn-taking when none, contesting just enough when some. Trained against an adversarial league (PSRO), CAN keeps best-response exploitability low ( ρ≈1.2–1.5, vs. ρ=N unprotected) across the full contention range while wasting essentially nothing when no free-rider is present (efficiency ≈1.0 vs. the 1−c of always-contest) and retaining most of that efficiency even with 
+
+a free-rider present ( D≥1 efficiency 0.83 –0.96 , so its robustness is not bought with waste), thereby approaching the centralized oracle on both axes without a central allocator. On the same game the fair-MARL learners fail on complementary axes— GGF/FEN learn to yield and are exploitable ( ρ≈N ), SOTO learns to all-contest and is wasteful (waste c)—while CAN is the only method that is both robust and efficient. On two further games we find a clear scope rather than blanket generality: CAN stays efficient ( D=0 efficiency 0.94 –1.0) and Pareto-dominates the welfare-fair learners throughout, but its robustness holds only in proportion to the contest leverage a game provides— strong on a multi-server game, partial when leverage weakens (high-value, high-contention steps), and absent under a winner-take-all rule where Prop. 1 fails. We further report where the approach is fragile—weak leverage and zero-shot transfer to much larger teams both degrade it at high contention—giving an honest account of how far decentralized robust fairness currently reaches. 
+
+Keywords —multi-agent reinforcement learning, fairness, ex-ploitability, cross-attention, decentralized execution, league training 
+
+I. I NTRODUCTION 
+
+Cooperative multi-agent reinforcement learning (MARL) increasingly optimizes not only efficiency but fairness : meth-ods such as FEN [1] and SOTO [2] maximize a fairness-inducing welfare (typically the Generalized Gini Welfare [3]) over agents’ returns so that no agent is starved. These meth-ods assume every agent cooperates in being fair. When one does not—one stakeholder upgrades a controller to minimize its own delay, one client maximizes its own throughput—the fair team is exploitable: because team-oriented agents sacri-fice their own utility to raise the worst-off, a self-interested agent free-rides on that sacrifice [4]. In a strictly rivalrous (all-or-nothing) resource—where a contested unit is either won by one agent or wasted—this exploit is hard to defend against at the policy level : a cooperator that contests a free-rider merely causes a collision, gaining nothing, so a welfare-fair team is indifferent between yielding and contesting; a recent study formalizes this futility and the centralized need-based remedy that sidesteps it [5]. The robust remedy is then to take allocation out of the agents’ hands entirely, via a 
+
+centralized need-based mechanism. This paper takes up the harder question that centralization sidesteps: can decentral-ized policies—acting only on local, observed information— retain fairness under a self-interested agent? 
+
+We answer affirmatively, with caveats, in three steps. 
+
+(1) Leverage exists once contention is graded. The policy-level futility above hinges on all-or-nothing con-tention: a contested resource is either won by one agent or wasted, so a cooperator that contests a free-rider gains nothing. We introduce a graded-contention game in which 
+
+m ≥ 2 claimers split a fraction 1−c of the resource (waste c). We prove (Prop. 1) that for any c < 1 a worst-off cooperator that contests a lone free-rider receives (1 −c)/2 > 0 instead of 0, so contesting strictly dominates yielding: decentralized leverage reappears. All-or-nothing is the limiting case c=1 .
+
+(2) The residual difficulty is coordination under uncer-tainty. Leverage is not a policy. The number of free-riders D
+
+is unknown and varies episode to episode (including D=0 ). A fixed rule cannot win: always-contest pays the waste c
+
+even when nobody defects, and always-yield collapses the moment someone does. A robust cooperator must infer D
+
+from observed behaviour and respond proportionally —do nothing (turn-take) when D=0 , contest just enough when 
+
+D ≥ 1.
+
+(3) A cross-attention policy, trained against a league, realizes it. We introduce CAN (Cross-Attention Networks), a shared, permutation-equivariant policy in which each agent attends over the observed behaviour of all agents (utili-ties, claim-rates, who is worst-off) to estimate contention and act. What is load-bearing is behaviour-conditioning with adaptive aggregation —the response must depend on 
+
+> arXiv:2606.06162v1 [cs.MA] 4 Jun 2026
+
+how many others are grabbing, not on fixed identities—and among permutation-respecting aggregators cross-attention is the most stable instance (Sec. V-G). We train CAN against an adversarial league (PSRO [6]) and audit it with a fresh best-response defector. CAN keeps exploitability low ( ρ≈1.2–1.5)across all contention levels while wasting essentially nothing when no free-rider is present (efficiency ≈1.0), approaching the centralized oracle without any central allocator. We are deliberate about limits. We report a negative-leaning result—single adversary co-training is unreliable at low contention—and a genuine fragility: zero-shot transfer of an N =6 policy to teams of 12 and 24 holds at low contention but degrades at high contention. The contribution is a controlled, honest map of how far decentralized robust fairness reaches, not a claim that the decentralization gap is closed. II. B ACKGROUND AND RELATED WORK 
+
+Welfare-based fair MARL. Given per-agent returns u =(u1, . . . , u N ), fair-MARL maximizes a Schur-concave wel-fare W (u) that is increasing (efficiency) and favours equity, e.g. the Generalized Gini Welfare W (u) = P 
+
+> k
+
+wku↑ 
+
+> k
+
+with decreasing weights wk so the worst-off agent dominates [3]. FEN [1] and SOTO [2] are representative learners. These objectives create the appropriable surplus we must defend. 
+
+Exploitability and the decentralization gap. The vul-nerability is a fairness-specific instance of free-riding in sequential social dilemmas [7]; that welfare-maximizing cooperation is gameable in general was noted by Ivanov et al. [4], who restore cooperation through an incentive-compatible mediator. Under strictly rivalrous (all-or-nothing) contention, policy-level reciprocity has no efficient lever, and a centralized need-based allocator—which decides who receives each resource—is an upper bound on fairness that any decentralized method should aim to match [5]. We take that target seriously and pursue the decentralized side it leaves open. 
+
+Reciprocity and conditional cooperation. Inequity aver-sion [8] and learned reciprocity [9] make cooperation condi-tional on others’ behaviour in social dilemmas. Our coopera-tors are likewise behaviour-conditioned, but the obstacle here is sharper: under all-or-nothing contention reciprocity has no efficient lever at all; we show graded contention restores one and that a learned attention policy can exploit it. 
+
+Attention in MARL. Attention over agents is well estab-lished for value/critic mixing and communication, e.g. actor-attention critics [10] and the centralized critics of MAD-DPG [11]. We use a single-head self-attention block [12] in the decentralized policy over observed behaviour tokens; its role is contention inference, and its permutation-equivariance gives a single N -agnostic policy that can be evaluated at unseen team sizes. 
+
+League / population training. Training against a growing population of past best responses—fictitious play [13] and PSRO [6]—yields policies robust to a history of adversaries rather than to a single co-evolving one. We use it to stabilize the cooperator against the worst free-rider it has seen, which we find is what makes robustness consistent across contention levels. III. T HE GRADED -C ONTENTION GAME 
+
+Game. N agents act over T steps. Each step every agent chooses C LAIM (1, the self-interested act) or Y IELD (0). Let 
+
+u ≥ 0 accumulate the resource each agent has collected and let m be the number of claimers this step. The unit resource is allocated by the graded-contention rule 
+
+g(m) = 
+
+
+
+1 m = 1 ,
+
+(1 −c) / m m ≥ 2,
+
+routed to the worst-off agent m = 0 ,
+
+(1) where each claimer receives g(m) and c ∈ [0 , 1] is the contention waste . A sole claimer wins the whole unit; 
+
+m ≥ 2 claimers split a discounted 1−c; if nobody claims, the resource flows (losslessly) to the worst-off agent. The parameter c interpolates from lossless sharing ( c=0 ) to the all-or-nothing model ( c=1 , where contesting destroys the resource). 
+
+Threat model. Each episode, each agent is independently a defector with some probability, so the number of free-riders D is variable and unknown (including D=0 ); defectors always claim. The remaining cooperators share one policy and seek to keep the allocation fair and efficient. We audit a trained cooperator policy by freezing it and training a fresh best-response defector to maximize its own utility— an exploitability test stronger than a fixed always-claim adversary. 
+
+Bounded free-ride metric. We measure exploitation by the free-ride factor of the defector group : its share of the delivered total, normalized by its fair share ndef /N ,
+
+ρ = N P 
+
+> i∈D
+
+ui
+
+ndef 
+
+P 
+
+> j
+
+uj
+
+∈ [0 , N/n def ], (2) where D is the defector set. ρ=1 is exactly fair; ρ=N
+
+means a lone defector took everything. Eq. (2) is bounded 
+
+by construction, unlike the naive ratio of defector utility to mean-cooperator utility, which diverges when cooperators are starved as c → 1; the delivered total is always positive, so 
+
+ρ stays in range and is comparable across c. We also report Jain’s index [14] and efficiency (delivered /T ). 
+
+Leverage. Under all-or-nothing contention ( c=1 ) a coop-erator cannot deny a free-rider except by wasteful levelling-down—contesting collides and destroys the unit—so awelfare-fair team is indifferent between yielding and contest-ing and has no efficient defense. Graded contention breaks that premise. 
+
+Proposition 1 (Decentralized leverage under graded con-tention): Fix c < 1 and a step at which a single free-rider claims. Let a worst-off cooperator choose C LAIM rather than YIELD . Then the cooperator’s received resource rises from 
+
+0 to (1 −c)/2 > 0, while the free-rider’s falls from 1 to 
+
+(1 −c)/2. Hence contesting strictly dominates yielding for the worst-off cooperator, and strictly reduces the free-rider’s appropriated surplus. 
+
+Proof. If the worst-off cooperator yields, the free-rider is the sole claimer ( m=1 ), receives g(1)=1 , and the cooperator receives 0. If the cooperator contests, m=2 and each receives 
+
+g(2)=(1 −c)/2. Since c < 1, (1 −c)/2 > 0, so the cooperator strictly gains and the free-rider strictly loses. □
+
+The dominant action is also objective-aligned : lifting the worst-off cooperator from 0 to (1 −c)/2 raises the cooperator mean and lowers their spread, so it strictly increases the training welfare Wcoop =mean −std (Sec. IV). Contesting is thus rewarded both at the level of the individual worst-off agent and of the team objective. Proposition 1 establishes that the lever exists for every c < 1;it does not say how to pull it. The cooperator must contest 
+
+only when a free-rider is present (else it pays the waste 
+
+c for nothing) and only enough cooperators must contest (over-contesting wastes; under-contesting leaves surplus). Be-cause D is unknown and variable, this is an inference-and-coordination problem, which motivates a behaviour-conditioned learned policy. IV. M ETHOD : C ROSS -A TTENTION NETWORKS (CAN) 
+
+Observed-behaviour tokens. At step t each agent i is represented by a token of six features computable from public state—no access to others’ intentions or rewards: 
+
+xi =
+
+h ui 
+
+> T
+
+, ui−¯uT , ui−umin  
+
+> T
+
+, 1[ui=umin ], cc i 
+
+> t
+
+, tT
+
+i
+
+, (3) where ¯u, u min are the team mean/min utilities and cc i/t is agent i’s running claim-rate. The claim-rate channel is what lets a cooperator estimate how many others are grabbing. 
+
+Architecture. CAN is a single-head self-attention block over the N tokens: with Q, K, V linear projections of {xi},
+
+ctx = softmax( QK ⊤/√d)V ; each agent concatenates its token with its context, passes a tanh layer, and outputs CLAIM /Y IELD logits (Fig. 1a). The block is shared by all cooperators and permutation-equivariant , so (i) the policy is decentralized—agent i acts on the public tokens, no central allocator decides the allocation—and (ii) it is N -agnostic, enabling zero-shot evaluation at unseen team sizes. 
+
+Cooperator objective. Cooperators maximize a per-step welfare reward-to-go with welfare 
+
+Wcoop = mean i∈C (ui) − std i∈C (ui), (4) over cooperators C: the mean term rewards reclaiming utility from a free-rider (contest when D ≥ 1), the std term rewards turn-taking (share evenly), and doing nothing when 
+
+D=0 avoids the waste c. Training is REINFORCE with an annealed entropy bonus; the defector(s) during training draw 
+
+D ∼ Unif {0, . . . , d max } per episode so the policy sees a variable, unknown adversary count. 
+
+Training schemes. We compare three ways to provide the adversary, holding the cooperator architecture fixed: (i) single co-training —cooperators and one co-evolving defector policy trained together; (ii) population co-training —a population of 
+
+K=4 co-evolving defectors, one assigned per episode; (iii) league (PSRO) [6]—alternate training the cooperators against the frozen pool of all past best-response defectors and adding a fresh best response to the pool (Fig. 1b). League training targets the multi-equilibrium fragility of single co-training: the cooperator becomes robust to the whole adversary history rather than to one moving target. 
+
+Baselines and oracle. Two fixed scripts bracket the prob-lem: all-contest (everyone always claims; ρ≈1 but efficiency 
+
+1−c) and yield (cooperators always yield; efficiency 1 but 
+
+ρ=N ). The centralized oracle allocates by need (worst-off first), achieving ρ=1 at efficiency 1—the unbeatable upper bound a decentralized policy aims to approach. V. E XPERIMENTS 
+
+Setup. Unless noted, N =6 , T =100 , dmax =2 , c ∈{0.3, 0.5, 0.7, 0.9}, 5 seeds; all policies are shared single-head cross-attention nets (hidden 64 ) trained with REIN-FORCE/Adam (lr 3×10 −3, B=512 parallel episodes). Every reported policy is audited by a freshly trained best-response defector (Eq. (2)). Implementation details are in the appendix. 
+
+A. Head-to-head with fair-MARL learners 
+
+We first place CAN against the welfare-fair learners that motivate the problem, on the same graded-contention game and under the same bounded audit : a shared-policy GGF maximizer, a faithful SOTO (Self-/Team-Oriented sub-nets, annealing β:1 →0) [2], and a FEN-style learner whose agents maximize the fair-efficient reward ¯u/ (c0+|ui−¯u|) [1]. All three see the same six behaviour features and are trained 
+
+cooperatively (no defector at train time, as in their originals); we then freeze each team and train a best-response defector. This comparison is therefore fair-as-published vs. robust-by-design : it isolates whether the fair objective alone confers robustness (it does not), not whether these objectives could be hardened by adversarial training. The training axis itself— cooperative vs. league—is isolated separately in Sec. V-F on CAN’s own architecture. The result is a clean two-axis separation (Fig. 2, Table I). Every fair learner is fair at D=0 (Jain ≈1.0), but each collapses onto one of the two scripted extremes and fails on one axis. GGF learns to yield : efficient ( D=0 eff. 1.00 ) but maximally exploitable ( ρ=6= N at every c—a lone defector takes everything). SOTO learns to all-contest : robust ( ρ=1 .0)but wasteful—its D=0 efficiency is exactly 1−c (down to 
+
+0.10 at c=0 .9), because its “be selfish first, then anneal to fair” schedule settles in a fair-by-symmetry but resource-destroying equilibrium. FEN is unstable, landing in either 
+
+bad corner depending on seed and c (at c=0 .5 most seeds learn yield, ρ≈5.9, a minority all-contest, ρ=1 .0, giving a high-variance mean); its fair-efficient reward does not reliably resolve the tradeoff. CAN is the only method in the good corner: efficient ( 0.98 ) and robust ( ρ=1 .2–1.5), clustered beside the centralized oracle. The remaining experiments isolate the two properties that put it there. Fig. 1: Overview. (a) The CAN policy: each agent is a token of observed behaviour (utilities, claim-rate, who is worst-off); a shared cross-attention block infers contention and outputs claim/yield; the graded allocator returns utilities, closing a fully decentralized loop. (b) League (PSRO) training: alternate retraining the cooperators against the frozen pool of past best-response defectors and adding a fresh exploiter, yielding robustness to the whole adversary history. TABLE I: Head-to-head on the graded-contention game ( N =6 , 5 seeds). Each fair learner fails on one axis; CAN attains both. Ranges span c ∈{0.3, ..., 0.9}.Method D=0 eff. best-resp. ρ outcome GGF (welfare) 1.00 6.0 efficient, exploitable FEN 0.68 –0.98 3.0–6.0 unstable, mostly exploitable SOTO 1−c 1.0 robust, wasteful          
+
+> CAN (league) 0.98 1.2–1.5both
+> centralized oracle 1.00 1.0(upper bound)
+> Fig. 2: Efficiency vs. exploitability (each marker is one seed ×c). The welfare-fair learners collapse onto the scripted extremes—GGF/yield (ef-ficient, ρ=N) and SOTO/all-contest (robust, eff. 1−c)—and FEN scatters between them. Only CAN occupies the good corner (shaded), beside the centralized oracle.
+
+B. Efficiency when no free-rider is present 
+
+A robust cooperator must not pay for a defense it does not need. Fig. 3 shows the D=0 efficiency of CAN against the fixed all-contest script. CAN delivers 0.99 –1.00 of the resource at every contention level, whereas all-contest de-livers only 1−c (down to 0.10 at c=0 .9). Because CAN turn-takes when it detects no free-rider, it incurs essentially no contention waste—matching the centralized oracle on efficiency. This is the half of the problem fixed rules cannot get right.   
+
+> Fig. 3: Efficiency with no free-rider present ( D=0 ). CAN turn-takes and wastes essentially nothing ( ≈1.0) at all c, while a fixed all-contest policy pays the full waste 1−c. Mean over 5 seeds.
+
+C. Efficiency under a defector: is robustness free? 
+
+D=0 is the easy case. The axis where a decentralized pol-icy could lose to the centralized oracle—which delivers ρ=1 
+
+and efficiency 1 simultaneously —is efficiency with a free-rider present, since contesting forces m ≥ 2 and delivers only 
+
+1−c on contested steps; in principle a policy could buy a low 
+
+ρ at c=0 .9 by contesting so hard that it wastes as much as the all-contest equilibrium it is meant to beat. It does not. Under the best-response defector, league-trained CAN keeps D≥1
+
+efficiency at 0.88 , 0.88 , 0.83 , 0.96 for c=0 .3, 0.5, 0.7, 0.9
+
+(pooled over 10 seed-runs)—at the hardest setting it delivers 
+
+0.96 versus the all-contest equilibrium’s 1−c=0 .10 . CAN contests selectively (just enough, and mostly via turn-taking rather than collisions), so its robustness is essentially free: it sits near the oracle on both axes even with a defector present, where SOTO reaches ρ=1 only by destroying 90% of the resource. A residual gap to the oracle remains (efficiency 
+
+< 1), as expected for a decentralized policy, but it is small, not the structural 1−c collapse. TABLE II: Best-response free-ride ρ vs. contention c (N =6 , mean with 95% bootstrap CI; pooled over independent gen-6 runs—league 15 , vanilla                                
+
+> 10 seed-runs per c. Lower is better, 1= fair, oracle = 1 .0).
+> c0.3 0.5 0.7 0.9 vanilla co-train 1.90 2.03 2.06 2.24
+> 95% CI [1.83,1.96] [1.98,2.09] [1.97,2.15] [2.07,2.42] CAN (league) 1.33 1.36 1.51 1.20
+> 95% CI [1.26,1.42] [1.22,1.53] [1.25,1.85] [1.10,1.32]
+> Fig. 4: Robustness vs. contention. League-trained CAN keeps ρlow ( 1.20 –
+> 1.51 ) and is most robust at the highest contention, while the vanilla co-trained policy is roughly twice as exploitable and drifts upward. The fair / centralized-oracle line is ρ=1 . Mean with 95% bootstrap CI, pooled over independent gen-6 runs ( 15 league / 10 vanilla seed-runs).
+
+D. Robustness across the contention range 
+
+Fig. 4 and Table II report best-response exploitability ρ
+
+vs. c for CAN trained with vanilla co-training (against a fixed always-claim adversary) versus league (PSRO) training (against a growing pool of learned exploiters; to average over run-to-run variance we pool three independent gen-6 league runs, 15 seed-runs per c). League training keeps ρ low across the entire range ( 1.20 –1.51 ), far below the vanilla co-trained policy ( 1.90 –2.24 ) and well below the unprotected ρ=N =6 .It is in fact most robust at the highest contention ( ρ=1 .20 at 
+
+c=0 .9, the lowest point)—consistent with leverage: at higher waste a single contest caps the free-rider’s per-step take at 
+
+(1 −c)/2, so targeted contention denies it more effectively (Prop. 1). Vanilla co-training shows the opposite drift, rising to 2.24 : training against a static adversary does not teach 
+
+when to contest. Training against a learned exploiter is what converts the existence of leverage (Prop. 1) into robustness. 
+
+E. Larger dmax and defector coalitions 
+
+The main results cap the per-episode defector count at 
+
+dmax =2 , an easy “0/1/2 grabbers” inference. We stress this by training CAN with dmax =4 (up to four of six defecting) and auditing against a best-response coalition of D defectors sharing one policy. CAN remains robust at all c and D
+
+(Table III): the worst case is a lone free-rider ( ρ=1 .13 –
+
+1.60 , comparable to the dmax =2 results), and larger coalitions are easier —ρ→1.0 for D≥2—because with more agents defecting there is less cooperative surplus to appropriate. The harder inference and coordinated free-riders thus do not break the policy.                                 
+
+> TABLE III: Larger-dmax stress: best-response ρfor CAN trained at
+> dmax =4 , audited against a D-defector coalition ( N=6 , 5 seeds).
+> cD=1 D=2 D=3
+> 0.3 1.22 1.11 1.07 0.5 1.13 1.00 1.00 0.7 1.51 1.00 1.00 0.9 1.60 1.05 1.00
+> Fig. 5: Per-seed best-response ρfor three adversarial training schemes (5 seeds). The schemes are indistinguishable (all ρ≈1.2–1.5); what matters is training against a learned exploiter rather than a static one. The dotted line marks the all-yield ceiling ( ρ=N).
+
+F. Choice of adversarial training scheme 
+
+Does the result depend on the league specifically? Fig. 5 compares three adversarial schemes—single co-training (one co-evolving defector), population co-training ( K=4 defec-tors), and the league—at the two lower contention levels, per seed. The schemes are statistically indistinguishable: at 
+
+c=0 .3 all three average ρ≈1.48 , and at c=0 .5 they span 1.18 –
+
+1.46 with overlapping CIs. What carries the result is that the cooperator is trained against a learned , adapting exploiter at all: every adversarial scheme lands near ρ=1 .2–1.5, versus 
+
+1.8–2.2 for the static-adversary vanilla baseline (Table II). We adopt the league for its robustness to the whole adversary history, but the headline robustness is not an artifact of that choice. 
+
+G. What is load-bearing? Architecture ablation 
+
+Is the win the attention, or just behaviour-conditioning with 
+
+some adaptive aggregation? We test this by replacing the cross-attention block with three alternative aggregators of the 
+
+same behaviour tokens, under identical league training and the same best-response audit: a mean-pool policy (each agent conditions on its token and the mean of all tokens), a deep-sets policy (mean-pool of a learned per-agent embedding), and a bidirectional GRU over the agent tokens. Table IV reports best-response ρ (mean over c, 5 seeds). The clear conclusion is that aggregation matters but pool-ing is not enough : the mean-pool and deep-sets policies are markedly more exploitable than CAN ( ρ=1 .78 , 1.75 vs. 
+
+1.37 ), so the natural objection “a permutation-equivariant pool should already match attention” does not hold. The gap to the strongest alternative is narrower and we do not overstate it: the bidirectional GRU is competitive on the mean (1.56 vs. 1.37 ) and even better at low c, so we credit behaviour-conditioning plus adaptive aggregation ,not attention per se. Where cross-attention earns its place is stability : at the hardest contention ( c=0 .9) CAN holds 
+
+ρ=1 .16 ±0.20 while the GRU is erratic (1.99 ±1.50 ), so attention is the most stable instance of the family rather than TABLE IV: Architecture ablation under identical league training: best-response ρ (mean over c, 5 seeds; lower is better). Pooling policies ( †, run at a lighter budget) are more exploitable than CAN even when CAN is held to that same lighter budget (ρ=1 .57 ); at full budget CAN improves to 1.37 and also beats the bi-GRU, chiefly by staying stable at the hardest contention. CAN’s ρ in this ablation ( 1.37 ) is one of the three independent gen-6 league runs pooled in Table II (pooled mean 1.35 ); all audit with a fresh best-response defector, and the spread reflects run-to-run (GPU) variance. Policy (aggregator) best-resp. ρ ρ at c=0 .9                
+
+> mean-pool †1.78 2.05 deep-sets †1.75 2.06 bidirectional GRU 1.56 1.99 ±1.50
+> cross-attention (CAN) 1.37 1.16 ±0.20
+> Fig. 6: Architecture ablation: best-response ρvs. cby aggregator (5 seeds, 95% bootstrap CI). Cross-attention is the only policy that stays low and
+> becomes most robust at the hardest contention ( c=0 .9); the bi-GRU is competitive at low cbut erratic at high c, and the pooling baselines ( †,lighter budget) are uniformly worse.
+
+categorically superior. These comparisons are at the deployed training budget; we found that under a lighter budget the CAN–GRU ranking reverses, underscoring that architecture ablations must use the budget at which the method is actually trained. 
+
+H. Zero-shot transfer across team size (a limitation) 
+
+Because CAN is permutation-equivariant it can be eval-uated at team sizes it never trained on. Fig. 7 applies the 
+
+N =6 policy to teams of 12 and 24 . Transfer holds well at low contention—at c=0 .3 a 4× larger team is still close to fair ( ρ=1 .85 at N =24 )—but degrades at high contention, reaching ρ=8 .8 at N =24 , c=0 .9. The bounded metric keeps these readable (all curves stay below the all-yield ceiling 
+
+ρ=N ), and the ordering is clean: difficulty grows with both team size and waste. We report this as a genuine fragility— the contention-inference learned at N =6 does not fully generalize to crowds at high waste—rather than smoothing it over. The obvious remedy does not work: training on a size curriculum ( N ∈ { 4, 6, 8, 12 }, evaluating at the held-out 
+
+N =24 ) helps only at c=0 .3 and worsens mid-range transfer (it dilutes the per-size budget), leaving the high-contention gap unchanged ( ρ=4 .5 at c=0 .9, vs. 4.5 for N =6 -only). Closing it is open. 
+
+I. Generality across environments 
+
+The experiments so far use the single-resource graded game. To test whether CAN’s behaviour-conditioned con-tention inference is specific to that game, we replicate the       
+
+> Fig. 7: Zero-shot transfer of the N=6 policy to larger teams (log scale). Robust at low contention; degrades with team size at high contention. All curves remain below the all-yield ceiling ρ=N; the oracle line is ρ=1 .
+
+head-to-head on two further leverage-preserving environ-ments that pose different inference problems (Fig. 8, Ta-ble V). (i) Congestion : M =3 parallel servers; each agent claims one or yields; equal-split per server; empty servers route to the neediest. The cooperators must infer which server each free-rider targets and contest just that one. (ii) Stakes :a single resource whose value vt is random (lumpy: usually small, occasionally a jackpot, E[v]=1 ). The cooperators must contest selectively , on the high-stakes steps where a free-rider’s surplus concentrates. Both keep equal-split contention, so Prop. 1 leverage holds; CAN and the three welfare-fair learners are trained and audited exactly as before. 
+
+The efficiency axis is what carries over. On exploitability alone the games differ in difficulty (the congestion exploit is structurally capped at ρ=N/M =2 ; stakes restores the ρ=N
+
+ceiling). The one property that is consistent is efficiency: 
+
+CAN keeps D=0 efficiency 0.94 –1.00 in all three games ,so it never buys robustness by wasting the resource—unlike the only baseline that attains low ρ, SOTO, whose all-contesting collapses efficiency to 0.40 –0.47 (and to 0.10 at stakes c=0 .9). GGF and FEN are Pareto-dominated by CAN in every game. Robustness, however, does not carry over uniformly: CAN is both efficient and robust on base and congestion, but on stakes it is only partially robust—robust up to moderate contention and exploited at c=0 .9—so we claim a clear scope, not blanket generality. 
+
+An honest gradient: leverage strength governs success. 
+
+CAN is not uniformly robust; its exploitability tracks how much leverage Prop. 1 actually delivers. With strong leverage (base: a contest caps the free-rider at (1 −c)/2 for any c)CAN is robust at every c and most robust at the highest contention (ρ=1 .20 at c=0 .9). With structurally capped 
+
+leverage (congestion) it is robust but cannot beat the ρ=2 
+
+ceiling by much at high c. With weakening leverage (stakes: contesting a jackpot at c=0 .9 returns only 0.05 v) it degrades to ρ=4 .05 at c=0 .9—while still staying efficient ( 0.97 ) where the robust alternative (SOTO) delivers only 0.10 . And with 
+
+absent leverage—a rich-get-richer (Matthew) rule where the 
+
+richest claimer wins, so a worst-off contester captures nothing and Prop. 1 fails by construction—CAN is exploited ( ρ≈5.5), marking the boundary of the approach. The method works as TABLE V: Generality: ( D=0 efficiency, best-response ρ) per method, mean over c (5 seeds). CAN is efficient ( ≥ 0.94 ) in every environment and the least exploitable efficient policy; SOTO’s robustness costs catastrophic efficiency. ρmax is the yield ceiling. base ( ρmax =6 ) congestion ( 2) stakes ( 6)Method eff ρ eff ρ eff ρ                        
+
+> GGF 1.00 6.00 1.00 2.01 0.98 5.75 FEN 0.81 4.20 0.96 2.05 0.70 3.27 SOTO 0.40 1.00 1.00 2.01 0.47 1.64
+> CAN 0.98 1.35 1.00 1.60 0.94 2.32
+
+far as the leverage it is built on, and no further. VI. D ISCUSSION AND LIMITATIONS 
+
+What this shows. The decentralization gap left open by prior work [5] is not fundamental: on the graded game a decentralized cross-attention policy trained against an ad-versarial league recovers most of the centralized oracle’s incentive-compatibility ( ρ≈1.2–1.5) and its efficiency ( ≈1.0
+
+when no free-rider is present), with no central allocator. The all-or-nothing futility result is the boundary case c=1 .The effect is not automatic for every graded rule, though: it requires that contesting a free-rider actually return a positive share to the contester (Prop. 1), which the stakes and Matthew games show can be weak or absent. 
+
+Where it is fragile. (i) Zero-shot transfer to much larger teams degrades at high contention (Fig. 7), and a naive size curriculum does not fix it (it dilutes the per-size budget and leaves the c=0 .9 gap unchanged); crowd-scale robustness at high waste is an open problem. (ii) The single-adversary scheme is seed-sensitive at low contention; league training is needed for consistency, at extra training cost. (iii) Robustness is bounded by leverage: on the stakes game it degrades at high contention (where contesting a jackpot returns almost nothing), and under a winner-take-all (Matthew) rule it dis-appears entirely—CAN is robust only as far as Prop. 1’s leverage extends. (iv) Our games are controlled abstractions with a single shared cooperator policy; spatial/continuous environments are still open (coordinated defector coalitions, by contrast, we do test, and they are no harder than a lone free-rider). (v) The oracle remains an upper bound CAN approaches but does not reach. 
+
+Takeaway. Fair-MARL methods are usually reported on the fairness they achieve under full cooperation. We argue they should also be reported on the fairness they retain under self-interest—and that, contrary to the all-or-nothing intu-ition, a decentralized policy can retain much of it whenever the contention rule leaves a contester a real share to capture. VII. C ONCLUSION 
+
+We gave a decentralized account of robust fairness in cooperative MARL. Graded contention makes contesting a free-rider strictly worthwhile for the worst-off (Prop. 1), but exploiting this requires inferring an unknown, variable num-ber of free-riders and responding proportionally. CAN—a permutation-equivariant cross-attention policy over observed behaviour, trained against an adversarial league—does so, holding best-response exploitability low across the contention range (and most robust at the highest contention) while wasting essentially nothing when no free-rider is present, thereby approaching a centralized need-based oracle without a central allocator. We are explicit about scope rather than claiming blanket generality: across additional games CAN stays efficient and dominates the welfare-fair learners, but its robustness holds in proportion to the contest leverage—strong on a multi-server game, only partial where the leverage weak-ens (high-value steps at high contention), and absent under a winner-take-all rule. We hope this reframes decentralized robust fairness as a tractable, measurable target—bounded by a clear condition—rather than an impossibility. CODE AVAILABILITY 
+
+All code (the graded-contention game, CAN, the archi-tecture and training-scheme ablations, and all experiments) and the L ATEX source are available at https://github.com/ highcansavci/can-fair-marl. USE OF AI-A SSISTED TECHNOLOGIES 
+
+The author used Claude (Anthropic), including Claude Code, to assist with the experimental code, manuscript review and revision, and formatting. All AI-assisted content was verified by the author, who is solely responsible for the methodology, results, and conclusions of this paper. APPENDIX AENVIRONMENT DETAILS 
+
+All environments share a skeleton: N =6 agents act for 
+
+T =100 steps; at each step divisible resource is available; each agent chooses a self-interested act (C LAIM ) or to Y IELD ;accumulated utilities u determine fairness. They differ only in the allocation rule mapping the joint action to utility increments, and (for stakes/congestion) in the action space and one extra observation. Let m be the number of claimers of a resource and c ∈ [0 , 1] the contention waste. 
+
+Base (single-resource graded contention). One resource per step, binary action. Each claimer receives 
+
+g(m) = 
+
+
+
+1 m=1 ,
+
+(1 −c)/m m ≥ 2,
+
+(unit to worst-off arg min i ui) m=0 ,
+
+so a sole claimer wins the unit, m ≥ 2 claimers split a discounted 1−c, and an unclaimed unit flows losslessly to the neediest agent. c=1 recovers the all-or-nothing model. 
+
+Congestion (multi-server). M =3 parallel unit resources (“servers”) per step; action space 
+
+{YIELD , claim 1, . . . , claim M } (M +1 actions). Each server is allocated independently by the base rule (k
+
+claimers → 1 if k=1 , (1 −c)/k if k ≥ 2); the E empty servers route to the E lowest-utility agents (one unit each, no waste). A lone free-rider can monopolise only one of M
+
+servers, so the exploit ceiling is ρ=N/M =2 . Each token is augmented with the agent’s per-server running claim-rates (so the policy can infer which server is being grabbed): 
+
+5+ M features, (M +1) -way head. Fig. 8: D=0 efficiency vs. best-response ρ on three structurally distinct leverage-preserving games (each marker is one seed ×c). In every game CAN (green) stays on the efficient (right) side while remaining the least exploitable efficient policy; the only robust baseline, SOTO (blue), reaches low ρ only by moving left into the wasteful region. GGF/FEN are efficient but exploitable (top-right). Shaded = the efficient-and-robust corner; gold star = centralized oracle. 
+
+Stakes (stochastic value). One resource per step with random value vt drawn i.i.d. as vt=3 .25 w.p. 0.25 and 
+
+vt=0 .25 otherwise (lumpy jackpots, E[vt]=1 , so efficiency normalises as in base). The base rule scales by vt: a sole claimer gets vt, m ≥ 2 claimers get (1 −c)vt/m each, an unclaimed unit gives vt to the worst-off. The current vt is appended to each token ( 7 features), so the policy can contest selectively on high-value steps. 
+
+Matthew (rich-get-richer; boundary). One resource, bi-nary action, but among claimers the richest wins: m=1 gives the sole claimer 1; m ≥ 2 gives the richest claimer (1 −c) and the rest 0 (ties broken uniformly at random); m=0 routes to the worst-off. A worst-off cooperator that contests a richer free-rider receives 0, so Prop. 1 leverage vanishes; we use this environment only to mark the boundary of the method. 
+
+Threat model and metric (all environments). Each episode, D agents are defectors with D ∼ Unif {0, . . . , d max }
+
+(dmax =2 unless noted; the stress study uses dmax =4 ); de-fectors always take the self-interested act and the N −D
+
+cooperators share one policy. To audit a frozen cooperator policy we train a best-response defector (or a D-agent coalition sharing one policy) to maximise the defector group’s utility, and report the bounded free-ride factor 
+
+ρ = N P 
+
+> i∈D
+
+ui
+
+ndef 
+
+P 
+
+> j
+
+uj
+
+∈ [0 , N/n def ],ρ=1 exactly fair, ρ=N a lone defector taking every-thing. Cooperators maximise the per-step increment of 
+
+Wcoop =mean i∈C (ui)−std i∈C (ui).APPENDIX BIMPLEMENTATION DETAILS 
+
+CAN and all adversaries are shared single-head self-attention blocks (hidden width 64 ): Q, K, V linear maps of the N ×6 token matrix, scaled-dot-product attention, a tanh 
+
+layer on [ xi ∥ ctx i ], and a 2-logit head. All policies train with REINFORCE and Adam (lr 3 × 10 −3), B=512 parallel episodes, episodes of T =100 steps, with the entropy coeffi-cient annealed from 0.05 to 0.003 . Per-episode defector count is D ∼ Unif {0, 1, 2}. Vanilla/population co-training run 3000 
+
+updates; league training runs 6 generations of 1200 coopera-tor updates against the pool and 1000 updates per fresh best response. Every audit trains a best-response defector for 1500 
+
+updates against the frozen cooperator and reports ρ from Eq. (2). The cooperator welfare is the masked mean −std 
+
+over cooperators; advantages are discounted ( γ=0 .99 ) per-step welfare increments with a batch-mean (or learned value) baseline. The architecture ablation reuses this league setup with the cross-attention block replaced by a mean-pool, deep-sets, or bi-GRU aggregator; the mixed-N curriculum cycles the team size over {4, 6, 8, 12 } per update with the same total step budget. Unless noted, all numbers average 5 seeds and error bars are 95% bootstrap confidence intervals. League training is mildly sensitive to GPU non-determinism, which compounds over generations; the headline league/vanilla ro-bustness (Table II, Fig. 4) therefore pools several independent gen-6 runs ( 15 and 10 seed-runs) so the CIs absorb run-to-run as well as seed variance. REFERENCES [1] J. Jiang and Z. Lu, “Learning fairness in multi-agent systems,” in                              
+
+> Advances in Neural Information Processing Systems (NeurIPS) , 2019. [2] M. Zimmer, C. Glanois, U. Siddique, and P. Weng, “Learning fair poli-cies in decentralized cooperative multi-agent reinforcement learning,” in International Conference on Machine Learning (ICML) , 2021. [3] U. Siddique, P. Weng, and M. Zimmer, “Learning fair policies in multi-objective (deep) reinforcement learning with average and discounted rewards,” International Conference on Machine Learning (ICML) ,2020. [4] D. Ivanov, I. Zisman, and K. Chernyshev, “Mediated multi-agent reinforcement learning,” in International Conference on Autonomous Agents and Multiagent Systems (AAMAS) , 2023, pp. 49–57. [5] C. Savcı, “On the exploitability of fair multi-agent reinforcement learning,” arXiv preprint , 2026. [6] M. Lanctot, V. Zambaldi, A. Gruslys, A. Lazaridou, K. Tuyls, J. P´ erolat, D. Silver, and T. Graepel, “A unified game-theoretic ap-proach to multiagent reinforcement learning,” in Advances in Neural Information Processing Systems (NeurIPS) , 2017. [7] J. Z. Leibo, V. Zambaldi, M. Lanctot, J. Marecki, and T. Graepel, “Multi-agent reinforcement learning in sequential social dilemmas,” in International Conference on Autonomous Agents and Multiagent Systems (AAMAS) , 2017. [8] E. Hughes, J. Z. Leibo, M. Phillips, K. Tuyls, E. Du´ e˜ nez-Guzm´ an, A. G. Casta˜ neda, I. Dunning, T. Zhu, K. McKee, R. Koster et al. ,“Inequity aversion improves cooperation in intertemporal social
+
+dilemmas,” in Advances in Neural Information Processing Systems (NeurIPS) , 2018. [9] T. Eccles, E. Hughes, J. Kram´ ar, S. Wheelwright, and J. Z. Leibo, “Learning reciprocity in complex sequential social dilemmas,” arXiv preprint arXiv:1903.08082 , 2019. [10] S. Iqbal and F. Sha, “Actor-attention-critic for multi-agent reinforce-ment learning,” in International Conference on Machine Learning (ICML) , 2019. [11] R. Lowe, Y. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mordatch, “Multi-agent actor-critic for mixed cooperative-competitive environments,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) , 2017. [12] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) , 2017. [13] J. Heinrich, M. Lanctot, and D. Silver, “Fictitious self-play in extensive-form games,” in International Conference on Machine Learning (ICML) , 2015. [14] R. K. Jain, D.-M. W. Chiu, and W. R. Hawe, “A quantitative measure of fairness and discrimination for resource allocation in shared computer systems,” DEC Research Report TR-301 , 1984.
