@@ -1,0 +1,8092 @@
+Title: Convergence of Two-Timescale Markovian Stochastic Approximations with Applications in Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2605.31172v1
+
+Published Time: Mon, 01 Jun 2026 01:40:15 GMT
+
+Number of Pages: 71
+
+Markdown Content:
+# Convergence of Two-Timescale Markovian Stochastic Approximations with Applications in Reinforcement Learning 
+
+Vagul Mahadevan 1 Claire Chen 2 Shuze Daniel Liu 3 4 Shangtong Zhang 5
+
+## Abstract 
+
+This work studies the convergence of two-timescale stochastic approximations (SA), a class of iterative algorithms that update two sets of parameters in fast and slow timescales respec-tively. Notable examples of two-timescale SA in reinforcement learning (RL) include tempo-ral difference learning with gradient correction (TDC) and actor-critic methods. Previously, the stability (i.e., boundedness) and convergence of two-timescale SA were only established under i.i.d. noise. This work instead establishes the sta-bility and convergence of two-timescale SA under Markovian noise, a setup that is more realistic in RL. Notably, we do not need to use any projection operator and the noise does not need to live in a compact space. Our key technical novelty is to control the fast timescale parameter with the run-ning max of the slow timescale parameter, instead of with the current slow timescale parameter, as most prior works do. As a key application, we es-tablish the first almost sure convergence of TDC with eligibility traces under off-policy learning with linear function approximation. 
+
+## 1. Introduction 
+
+Stochastic approximation (SA, Robbins & Monro (1951); Benveniste et al. (1990); Kushner & Yin (2003); Borkar (2009)) concerns algorithms that recursively and randomly update a vector of parameters. Prominent SA algorithms include stochastic gradient descent (Kiefer & Wolfowitz, 
+
+> 1
+
+Metron, Reston, VA, USA 2Division Office Physics, Math and Astronomy, California Institute of Technology, Pasadena, CA, USA 3Data Science Lab, MIT, Cambridge, MA, USA 4Mitch Daniels School of Business, Purdue University, West Lafayette, IN, USA 5Department of Computer Science, University of Virginia, Charlottesville, VA, USA. Correspondence to: Vagul Mahadevan <vagulgm@gmail.com>, Shangtong Zhang <shangtong@virginia.edu>. 
+
+Proceedings of the 43 rd International Conference on Machine Learning , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s). 
+
+1952) and temporal difference learning (Sutton, 1988). Many SA algorithms involve computations of two sets of parameters. One set of parameters, referred to as the fast timescale, is updated with a large step size. The other set of parameters, referred to as the slow timescale, is updated with a small step size. A key characteristic is that the smaller step size is asymptotically negligible compared with the larger step size; i.e., asymptotically, the fast timescale pa-rameter is updated as if the slow timescale parameter were static. The two-timescale structure can therefore be regarded as a special implementation of a nested loop, where the fast timescale corresponds to the inner loop while the slow timescale corresponds to the outer loop. The advantage of the two-timescale implementation over a nested loop im-plementation is that the slow timescale (the outer loop) is continually updated and does not need to wait for the com-pletion of the fast timescale (the inner loop). These SA algorithms are called two-timescale SA (Borkar, 1997) and are common in reinforcement learning (RL, Sutton & Barto (2018)). For example, in actor-critic algorithms (Sutton et al., 1999; Konda, 2002), the fast timescale is the critic that estimates the value of the agent’s policy, and the slow timescale is the actor, which is the policy itself. A fundamental challenge of the theoretical analysis of two-timescale SA is showing almost sure convergence. The seminal work Borkar (1997) establishes almost sure conver-gence when (i) the noise in the two-timescale SA is i.i.d. and (ii) the stability of the two-timescale SA is assumed. Here, by stability, we mean the almost sure boundedness of the parameters. It is well known that stability is usu-ally a prerequisite for establishing almost sure convergence with ODE approaches (Kushner & Yin, 2003; Borkar, 2009) and in many works on two-timescale SA, e.g., Karmakar & Bhatnagar (2018), stability is simply assumed. How-ever, for many RL algorithms instantiating two-timescale SA, the noise is a Markov chain, and the stability cannot be assumed directly. Efforts have been made to relax both (i) and (ii). For example, Lakshminarayanan & Bhatnagar (2017) establish the stability of two-timescale SA with i.i.d. noise. Borkar et al. (2025); Liu et al. (2025b) establish the stability of single-timescale SA with Markovian noise. However, to our knowledge, no prior work can establish the stability (and thus convergence) of two-timescale SA 1 
+
+> arXiv:2605.31172v1 [cs.LG] 29 May 2026 Two-Timescale Markovian Stochastic Approximation
+> Table 1. Comparison between our work and representative works regarding stability and almost sure convergence of SA. Single-timescale is a special case of two-timescale, and i.i.d. noise is a special case of Markovian noise. By “coupled dynamics,” we mean the fast and slow parameters impact each other, rather than only the slow parameters affecting the fast parameters. Notably, our work is the only one that applies to TDC( λ).
+
+Single Timescale Two Timescale Coupled Dynamics No Projection i.i.d. Noise Markovian Noise Noncompact Noise Borkar (2009) ✓ ✓ ✓
+
+Lakshminarayanan & Bhatnagar (2017) 
+
+✓ ✓ ✓ ✓ ✓
+
+Karmakar & Bhatna-gar (2021) 
+
+✓ ✓ ✓ ✓ ✓
+
+Liu et al. (2025b) ✓ ✓ ✓ ✓ ✓
+
+Panda & Bhatnagar (2025) 
+
+✓ ✓ ✓ ✓ ✓ ✓
+
+Our Work ✓ ✓ ✓ ✓ ✓ ✓ ✓
+
+with Markovian noise, a gap that this work closes. Prior attempts include Karmakar & Bhatnagar (2021); Panda & Bhatnagar (2025). However, Karmakar & Bhatnagar (2021) assume that the two sets of parameters are not coupled and the Markovian noise evolves in a compact space. Panda & Bhatnagar (2025) use additional projections to enforce boundedness (and thus stability). Consequently, none of them applies to representative two-timescale RL algorithms such as temporal difference learning with gradient correc-tion and eligibility traces (TDC( λ), Sutton et al. (2009); Yu (2017)). By contrast, our result requires milder assumptions, as can be seen in Table 1. To summarize, this work makes the following three contributions: 1. We establish the stability of two-timescale SA with Markovian noise under mild assumptions (Theorem 3.2) without using additional projections. 2. Building on the stability, we further establish the almost sure convergence (Theorem 3.3), where the Markovian noise can evolve in a possibly unbounded and uncountable space. 3. Applying our new theoretical results, we establish the first almost sure convergence of TDC( λ) under off-policy learning and linear function approximation (The-orem 7.2). 
+
+1.1. Technical Innovation 
+
+This work establishes the stability of two-timescale SA by extending the ODE @∞ approach in Borkar & Meyn (2000). Essentially, this work can be viewed as a combina-tion of Lakshminarayanan & Bhatnagar (2017) and Liu et al. (2025b). Techniques from Lakshminarayanan & Bhatna-gar (2017) are used to address (i) and techniques from Liu et al. (2025b) are used to address (ii). However, to enable this seemingly straightforward combination, we need to in-troduce a major methodological innovation. Namely, we connect the parameters in the two timescales by bounding the parameter in the fast timescale with the running max of the parameter in the slow timescale . This methodology is a novel contribution to the literature since prior works on two-timescale SA, such as Kushner & Yin (2003); Mokkadem & Pelletier (2006); Lakshminarayanan & Bhatnagar (2017); Dalal et al. (2018); Yaji & Bhatnagar (2020); Doan (2021a); Zeng et al. (2024); Panda & Bhatnagar (2025), either use stronger assumptions or show that the parameter in one timescale is bounded by the parameter in the other timescale at the same step. These requirements cannot be established when combining Lakshminarayanan & Bhatnagar (2017) and Liu et al. (2025b). By contrast, we show that a weaker condition is sufficient for combining Lakshminarayanan & Bhatnagar (2017) and Liu et al. (2025b). Specifically, the parameter in the fast timescale does not need to be bounded by the parameter in the slow timescale at the same step. Instead, it only needs to be bounded by the maximal pa-rameter in the slow timescale seen so far, as the rescaling scheme in Lakshminarayanan & Bhatnagar (2017) uses the maximal scaling factor seen thus far. Precisely speaking, the methodological innovation is Lemma 3.1, which tracks the maximal slow parameter previously encountered. 
+
+## 2. Background 
+
+In this work, we study the general two-timescale SA scheme: given an initial x0 ∈ Rd1 and y0 ∈ Rd2 , we recursively 2Two-Timescale Markovian Stochastic Approximation 
+
+generate sequences of vectors {xn} and {yn} by 
+
+xn+1 = xn + α(n)H(xn, y n, W n+1 ) (1) 
+
+yn+1 = yn + β(n)G(xn, y n, W n+1 ) (2) We also define for convenience the concatenation zn
+
+.
+
+=(xn, y n). Each zn is an element of Rd1+d2 .In this scheme, {α(n)}∞ 
+
+> n=0
+
+and {β(n)}∞ 
+
+> n=0
+
+are sequences of deterministic learning rates and {Wn}∞ 
+
+> n=1
+
+is a sequence of random noise in a general space W (not necessarily compact), while H : Rd1+d2 × W → Rd1 is a function that maps the current iterate zn and noise Wn+1 to the actual incremental update of x (the fast timescale iterate) and G : Rd1+d2 × W → Rd2 maps zn and Wn+1 to the incremental update of y (the slow timescale iterate). This is a two-timescale scheme since the stepsizes satisfy 
+
+lim n→∞ β(n) 
+
+> α(n)
+
+= 0 . Thus, since we can consider yn to remain almost constant relative to xn for large n in the fast timescale, the behavior of xn can be studied by analyzing the ordinary differential equation (ODE) 
+
+dx(t)dt = h(x(t), y ) (3) where y is a fixed constant and h(x, y ) .
+
+= E[H(x, y, ω )] 
+
+(with respect to a specific probability distribution). In the slow timescale, we can consider xn to have already con-verged to a value that depends on yn, so we study the ODE 
+
+dy(t)dt = g(λ(y(t)) , y (t)) (4) where λ(y) denotes the equilibrium of (3) (i.e., the x such that h(x, y ) = 0 for fixed y) and g(x, y ) .
+
+= E[G(x, y, ω )] .The asymptotic behavior of the discrete, stochastic iterates 
+
+{zn} can then be characterized by the continuous, deter-ministic trajectories of the ODEs (3) and (4) . This is called the ODE method (see Borkar (2009) for a comprehensive background). For this ODE approximation to be valid, the iterates must be bounded; this is known as stability . One needs to show 
+
+sup 
+
+> n
+
+∥zn∥ < ∞ a.s., which is widely considered challenging (Borkar, 2009), but stability is a critical prerequisite for convergence and many works in the realm of two-timescale SA rely on it (Borkar, 2009; Karmakar & Bhatnagar, 2018; Borkar, 2025; Hu et al., 2024; Borkar, 2025). 
+
+## 3. Main Results 
+
+We begin by giving a structural overview of the rest of the paper (see Figure 1 for a high-level visual). In this section, we will describe our assumptions and present our main results on stability and convergence of two-timescale algorithms. In Section 4, we give a detailed overview of the proof of Lemma 3.1, which states that the current fast timescale iterate is bounded by the largest slow timescale it-erate seen previously. This proof is a fast timescale analysis. In Section 5, we give an overview of the proof of Theorem 3.2, which establishes stability (boundedness) over all the iterates with probability one. This is a slow timescale analy-sis. We then utilize the stability results to prove Theorem 3.3, which shows the convergence of two-timescale SA al-gorithms under Markovian noise, in Section 6. Finally, in Section 7, we apply our results to prove the convergence of the off-policy RL algorithm TDC( λ). 
+
+3.1. Assumptions 
+
+We now briefly discuss our assumptions (the full details are in Appendix B). In Assumption B.1 , we assume that our Markov chain 
+
+{Wn} has a unique stationary distribution, a standard as-sumption in RL. In Assumption B.2 , we also assume our learning rates fol-low standard SA conditions. Importantly, since we are ana-lyzing a two-timescale scheme, we have lim n→∞ β(n) 
+
+> α(n)
+
+= 0 .Then, in Assumption B.4 , we make assumptions about the functions H and G. For any c ∈ [1 , ∞), define 
+
+Hc(x, y, w ) .
+
+= H(cx, cy, w )
+
+c , G c(x, y, w ) .
+
+= G(cx, cy, w )
+
+c .
+
+The functions Hc and Gc are rescaled versions of the func-tions H and G and will be used to construct rescaled iterates, a key technique in the ODE method (see, e.g., Borkar & Meyn (2000); Borkar (2009)). Just as in those works, we need the existence of some sort of limiting functions H∞
+
+and G∞ for Hc and Gc respectively, when c → ∞ .In Assumption B.5 , we take Hc, G c, H ∞, G ∞ to be Lip-schitz, so that their growth is well-characterized and to guarantee existence and uniqueness of the ODEs of interest, and define their respective expectations hc, g c, h ∞, g ∞ with respect to the stationary distribution of the Markov chain. Then, in Assumption B.6 , we define the limiting ODEs, which are central to the ODE method: 
+
+dx (t)
+
+dt = h∞(x(t), y ), dy (t)
+
+dt = g∞(λ∞(y(t)) , y (t)) 
+
+which have the unique globally asymptotically stable equi-libria λ∞(y) (where λ∞ : Rd2 → Rd1 is a homogeneous Lipschitz map with λ∞(0) = 0 ) and 0 respectively. We define similar objects for h and g.Finally, in Assumption B.7 , we take a natural assumption showing that over long timescales, the average of certain 3Two-Timescale Markovian Stochastic Approximation       
+
+> Assumptions Fix a Sample Path Assume for Contradiction:
+> sup n∥zn∥=∞
+> Fast Timescale Stability Analysis
+> Definitions Equicontinuity Diminishing Disc. Error ODEs w/ External Input
+> Lemma 3.1 Connecting the Timescales
+> Slow Timescale Stability Analysis
+> Definitions Equicontinuity Diminishing Disc. Error Contradiction
+> Theorem 3.2
+> Two-Timescale Convergence
+> Fast Timescale Slow Timescale Theorem 3.3
+> TDC( λ) Convergence
+> Theorem 7.2
+> Figure 1. High-level proof roadmap of this work.
+
+functions is close to the expectation. This regularity assump-tion about the noise is central to the averaging technique of Kushner & Yin (2003) that we apply. These assumptions are well-supported in literature that stud-ies stability of SA (Borkar, 2009; Lakshminarayanan & Bhatnagar, 2017; Liu et al., 2025b). We can easily ver-ify that important RL algorithms like TDC( λ) satisfy them rather than simply assuming that stability holds, so our re-sults are widely applicable to general methods. 
+
+3.2. Results 
+
+We present our first result, which is a key methodological innovation :
+
+Lemma 3.1 (Max Slow Iterate Controls Fast Iterate) . Let the Assumptions in Appendix B hold. Then, there exists a sample path dependent constant K such that for all n,
+
+∥xn∥ ≤ K(1 + ∥ymax  
+
+> n
+
+∥) a.s. 
+
+where ymax 
+
+> n
+
+.
+
+= ym such that m = arg max i≤n ∥yi∥ (with ties broken arbitrarily). 
+
+We discuss its proof in Section 4. Intuitively, this result tells us that the size of the fast timescale iterates is bounded by the largest slow timescale iterate seen thus far. In the long history of the ODE method, no previous work has attempted to establish and use a result bounding one timescale by the maximum of the other to tie the timescales together (see the introduction for more detail). Having established that the slow timescale iterates control the fast timescale iterates, we are able to prove stability: 
+
+Theorem 3.2 (Stability of Two-Timescale Iterates) . The iterates {zn} are stable, i.e., 
+
+sup 
+
+> n
+
+∥zn∥ < ∞ a.s. 
+
+See Section 5 for a discussion of the proof. Once the bound-edness of the iterates is established, convergence can be shown. We can now guarantee that the iterates converge to a bounded, nonempty invariant set as the iterates evolve in a compact set, ensuring the existence of subsequential limits. 
+
+Theorem 3.3 (Convergence of Two-Timescale Updates) .
+
+Let Assumptions B.1 - B.7 hold. Then the iterates {xn}
+
+generated by (1) converge almost surely to the equilibrium depending on {yn} as follows: 
+
+lim  
+
+> n→∞
+
+∥xn − λ(yn)∥ = 0 
+
+where λ : Rd2 → Rd1 is a Lipschitz map and λ(y) is the globally asymptotically stable equilibrium of dx(t)dt =
+
+h(x(t), y ). With this convergence established, we can then establish the main two-timescale convergence result: 
+
+lim  
+
+> n→∞
+
+∥zn − (λ(y∗), y ∗)∥ = 0 .
+
+The discussion of the proof is in Section 6. As with stability, we first establish a convergence result for the fast timescale and then the slow timescale separately. This type of result is the goal of the ODE method. In the proof of Theorem 3.3, we show convergence to bounded invariant sets, and the as-sumptions we place on the ODEs (in particular, the existence of unique globally asymptotically stable equilibria) charac-terize the invariant sets. Since dy(t)dt = g(λ(y(t)) , y (t)) has a unique globally asymptotically stable equilibrium, its in-variant set is the singleton set {y∗}, ensuring convergence to the optimal value. 
+
+## 4. Bounding the Fast Timescale Iterates xn
+
+In this section, we will give a discussion of the proof of Lemma 3.1; see Appendix C for the full details. To prove Lemma 3.1, we conduct analysis in the fast timescale. This allows us to treat the slow timescale iterates as almost con-stant relative to the fast iterates. Note that the lemmas are derived on an arbitrary sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+} such that the assumptions in Section 3 hold, so we omit “ a.s. ”from the lemma statements for conciseness. 4Two-Timescale Markovian Stochastic Approximation 
+
+4.1. Setting up the Timeline 
+
+We begin by splitting the positive real axis [0 , ∞) into chunks of length {α(i)}i=0 ,1,... . We then collect these seg-ments together into larger intervals {[Tn, T n+1 )}n=0 ,1,... ,where the sequence {Tn} has the property that as n grows large, we have Tn+1 − Tn ≈ T . We define 
+
+t(0) .
+
+= 0 , t(n) .
+
+=
+
+> n−1
+
+X
+
+> i=0
+
+α(i) n = 1 , 2, . . . 
+
+For all T > 0, define 
+
+m(T ) = max {i|T ≥ t(i)}
+
+as the maximal i where t(i) is no greater than T . We define 
+
+T0 = 0 , Tn+1 = t(m(Tn + T ) + 1) .
+
+Intuitively, Tn+1 is a little to the right of Tn + T on the real axis. As n grows large, the interval [Tn, T n+1 ) contains more time steps as α(i) is decreasing to 0.
+
+4.2. Defining the Scaled Iterates 
+
+We start by fixing a sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+}. We take ¯z(t) to be the piecewise constant interpolation of zn at points {t(n)}n=0 ,1,... , i.e., 
+
+¯z(t) .
+
+= (¯ x(t), ¯y(t)) .
+
+=
+
+
+
+(x0, y 0) t ∈ [0 , t (1)) (x1, y 1) t ∈ [t(1) , t (2)) (x2, y 2) t ∈ [t(2) , t (3)) 
+
+. . . 
+
+Now we describe our rescaling of ¯z(t).
+
+Definition 4.1 (Fast Timescale Rescaling) . ∀n ∈ N, t ∈
+
+[0 , T + 1) , define 
+
+rn
+
+.
+
+= max {1, r n−1, ∥¯z(Tn)∥} , r 0
+
+.
+
+= max {1, ∥¯z(0) ∥} ,
+
+˜zn(t) .
+
+= (˜ xn(t), ˜yn(t)) .
+
+= ¯z(Tn + t)
+
+rn
+
+.
+
+This implies 
+
+∀n ∈ N, ∥˜zn(0) ∥ ≤ 1.
+
+Through the definition, we ensure that the sequence {rn} is monotonic, forcing the (to be defined) ODE discretization error to diminish over the entire sequence rather than just a subsequence, which is necessary in the two-time scale case. We can regard ˜zn(t) as the Euler discretization of zn(t)
+
+defined below. 
+
+Definition 4.2. ∀n ∈ N, t ∈ [0 , T + 1) , define zn(t) = (xn(t), y n(t)) as the solution to the ODE system 
+
+dx n(t)
+
+dt = hrn (xn(t), y n(t)) , dy n(t)
+
+dt = 0 
+
+with initial condition zn(0) = ˜ zn(0) .
+
+We want to show that the error of the discretization dimin-ishes asymptotically. Precisely speaking, the discretization error is defined as fn(t) .
+
+= ˜ zn(t) − zn(t), and we want to show that fn(t) diminishes to 0 uniformly in t as n → ∞ .So, we analyze the following three sequences of functions: 
+
+{˜zn(t)}∞
+
+> n=0
+
+, {zn(t)}∞
+
+> n=0
+
+, {fn(t)}∞
+
+> n=0
+
+.
+
+In particular, we show that they are all equicontinuous in the extended sense , as this is required to apply the Arzelà-Ascoli theorem (Appendix A.4). We defer the relevant definitions, statements, and proofs to the Appendix. 
+
+4.3. Selecting a Convergent Subsequence 
+
+To prove stability, we need to show that sup n ∥zn∥ < ∞.
+
+Observe the inequality zm(Tn) = ∥¯z(Tn)∥ ≤ rn. There-fore, if we had sup n rn < ∞, the result would come in-stantly. So, we assume that sup n rn = ∞ to show that Lemma 3.1 holds even in this case. According to the Arzelà-Ascoli theorem in the extended sense (Appendix A.4), a sequence of equicontinuous functions always has a subse-quence of functions that uniformly converges to a continu-ous limit. We use this to identify a subsequence of interest. 
+
+Lemma 4.3. Suppose sup n rn = ∞. Take an arbitrary subsequence {nk, 0}∞ 
+
+> k=0
+
+⊆ { 0, 1, 2, . . . }. Then there is a subsequence {nk}∞ 
+
+> k=0
+
+⊆ { nk, 0}∞ 
+
+> k=0
+
+such that there exist some continuous functions f lim (t) and ˜zlim (t) such that 
+
+∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+
+fnk (t) = f lim (t), lim  
+
+> k→∞
+
+˜znk (t) =˜ zlim (t),
+
+where both convergences are uniform in t on [0 , T + 1) .Furthermore, let zlim (t) = ( xlim (t), y lim (t)) denote the unique solution to the ODE system 
+
+dx lim (t)
+
+dt = h∞(xlim (t), y lim (t)) , dy lim (t)
+
+dt = 0 
+
+with the initial condition zlim (0) = ˜ zlim  
+
+> n
+
+(0) . Then ∀t ∈
+
+[0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+znk (t) = zlim (t),
+
+where the convergence is uniform in t on [0 , T + 1) .
+
+Its proof is in Appendix G.4. We will use the subsequence 
+
+{nk} intensively. 5Two-Timescale Markovian Stochastic Approximation 
+
+4.4. Diminishing Discretization Error 
+
+We show that lim n→∞ ∥fn(t)∥ = 0 for all t ∈ [0 , T +1) . We start by first proving that the discretization error diminishes along the sequence {nk}, i.e., that 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥ = f lim (t) = 0 .
+
+This means ˜znk (t) is close to znk (t) as k → ∞ . From Lemma G.11, we have lim k→∞ ∥fnk (t)∥ = 0 uniformly in 
+
+t on [0 , T + 1) , so the discretization error goes to 0 on {nk}.Because we are working with a two-timescale scheme, con-vergence to 0 along a subsequence will not be sufficient. As we defined rn to be monotonic, this enabled us to chose an arbitrary subsequence fnk, 0 which itself had a subse-quence {fnk } that converges to 0. We can now use Lemma A.6 to upgrade to full sequence convergence, confirming that {fn} also converges to 0. Thus, the discretization error diminishes along the entire sequence. That is, 
+
+lim  
+
+> k→∞
+
+∥fn(t)∥ = 0 
+
+for all t ∈ [0 , T + 1) .
+
+4.5. ODEs with External Inputs. 
+
+In the previous section, we showed that the discrete iterates generated by the two-timescale stochastic algorithm approx-imate the deterministic trajectories of certain ODEs. We now need to show that these trajectories of the ODEs exhibit certain behavior, including approaching their equilibria. We present some notation concerning ODEs with external inputs. This is useful since, in the limit, we can treat the slow iterates as constant external inputs. 
+
+Definition 4.4 (ODE Trajectory Notation) . We use the no-tation ηy(t) 
+
+> c
+
+(t, x ) to denote the solution of the ODE 
+
+dx(t)dt = hc(x(t), y (t)) 
+
+with the initial condition x. Under this notation, xn(t) can be written η˜yn(0)  
+
+> rn
+
+(t, ˜xn(0)) .The following lemma shows that within a certain amount of time, the trajectory of the ODE will be pulled close to the equilibrium determined by the external input. 
+
+Lemma 4.5 (Lemma 1 from Chapter 3.2 of Borkar (2009)) .
+
+Let K ⊂ Rd1 be compact and fix y ∈ Rd2 . Given any ϵ > 0,there exists a Tϵ > 0 such that for all initial conditions 
+
+x ∈ K, we have ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ )1 for all t ≥ Tϵ.
+
+The next lemma shows that if the external input is close to some constant y, then the trajectory remains close to the trajectory we would obtain if y were the external input.     
+
+> 1B(x, r )denotes the open ball centered at xwith radius r.
+
+Lemma 4.6 (Lemma 2 from Chapter 3.2 of Borkar (2009)) .
+
+Let y ∈ Rd2 , [0 , T ] be a given time interval, and ρ be a small positive constant with y′(t) ∈ B(y, ρ ). Then, 
+
+ηy′(t) 
+
+> c
+
+(t, x ) − ηy
+
+> ∞
+
+(t, x ) ≤(Lρ + ϵ(c)) T e LT .
+
+for any initial x ∈ Rd1 and for all t ∈ [0 , T ].
+
+4.6. Completing the Proof. 
+
+The most involved result left is Lemma 4.7, which tells us that if the x component is too much larger than the y
+
+component, the norm of the iterate at Tn+1 cannot be larger than that of the iterate at Tn. We use the results about ODEs with external inputs to ensure that the x component of the trajectory gets pulled to the equilibrium, which is close to 0.
+
+Lemma 4.7 (Limiting Growth of ∥¯z(Tn)∥). There exists a C1 > 1 such that if ∥¯x(Tn)∥ > C 1(1 + ∥¯y(Tn)∥), then 
+
+∥¯z(Tn+1 )∥ ≤ ∥ ¯z(Tn)∥. Consequently, rn+1 = rn.
+
+Lemma 4.8 tells us that the iterate at each Tn is bounded by the largest y component seen so far in the sequence of times 
+
+Tn. To do this, we use an inductive argument. Intuitively, we combine the previous lemma, which prevents z from growing if the x component is too much larger than the 
+
+y component, with Lemma H.15 which prevents z from growing too much within one period T , ensuring that x can never get too much larger than y.
+
+Lemma 4.8 (Boundedness of ∥¯z(Tn)∥). There exists a con-stant C2 such that for all n,
+
+∥¯z(Tn)∥ ≤ C1C2(max  
+
+> m≤n
+
+∥¯y(Tm)∥ + 1) .
+
+Finally, while we have ensured that for all Tn, ¯z(Tn) is not too much larger than ¯y(Tn), we need the result to also hold for the iterates that lie in between Tn and Tn+1 . Lemma 4.9 takes care of this. 
+
+Lemma 4.9 (Boundedness of ∥xn∥). There exists a constant 
+
+C3 such that for all n,
+
+∥xn∥ ≤ C1C2C3(∥ymax  
+
+> n
+
+∥ + 1) ,
+
+By setting K equal to C1C2C3, this concludes the proof of Lemma 3.1. 
+
+Connecting the Timescales. We present the following result, showing that eventually, in the fast timescale, the fast iterates will track the equilibria λ∞(˜ yn(t)) . In the fast timescale analysis, the slow iterates were regulated by the fact that the slow step sizes are small. However, in the slow timescale analysis, the fast step sizes can grow large. This result regulates the behavior of the fast iterates. 
+
+Lemma 4.10. For any ϵ > 0, there is some Tϵ and some 
+
+Nϵ such that for all n > N ϵ, ∥˜xn(t) − λ∞(˜ yn(t)) ∥ ≤ ϵ for all t ∈ [0 , T ϵ].
+
+6Two-Timescale Markovian Stochastic Approximation 
+
+## 5. Stability of the Two-Timescale Iterates 
+
+We give the proof of Theorem 3.2, restated below: 
+
+Theorem (3.2 Restated) . The iterates {zn} are stable, i.e., 
+
+sup 
+
+> n
+
+∥zn∥ < ∞ a.s. 
+
+We now conduct analysis in the slow timescale, but the structure is very similar to the fast timescale analysis, so we only highlight the key differences. Note that we are still working with the same sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+} from the last section. We again split the positive real axis [0 , ∞), but this time into chunks of length {β(i)}i=0 ,1,... instead of {α(i)}i=0 ,1,... .We then redefine the scaled iterates for the slow timescale. This time the scaling factor is defined differently, so that it will be at least as large as the largest iterate seen so far: 
+
+Definition 5.1 (Slow Timescale Rescaling) .
+
+rn
+
+.
+
+= max 
+
+n
+
+1, zmax m(Tn)
+
+o
+
+where zmax n
+
+.
+
+= zm such that m = arg max i≤n ∥zi∥ (with ties broken arbitrarily). Defining the scaling factor this way in the slow timescale is an innovation. It ensures that at each time Tn, the iterate, when scaled by the slow timescale’s {rn} values, is no larger than when scaled by the appropriate fast timescale’s {rn}
+
+values. We need this to link the timescales in Lemma 5.3. We can regard ˜yn(t) as the Euler’s discretization of yn(t)
+
+defined below. 
+
+Definition 5.2. ∀n ∈ N, t ∈ [0 , T + 1) , define yn(t) as the solution to the ODE 
+
+dy n(t)
+
+dt = grn (λ∞(yn(t)) , y n(t)) 
+
+with initial condition yn(0) = ˜ yn(0) .
+
+The discretization error is then defined as fn(t) .
+
+= ˜ yn(t) −
+
+yn(t); just considering the slow component. Again, we show equicontinuity (here Lemma 3.1 plays a big role in controlling the growth of the fast iterates) and apply Arzelà-Ascoli to obtain a convergent subsequence. To show that the discretization error diminishes, we must prove an involved result. It requires us to work in both timescales to show that although the iterates get rescaled less often in the slow timescale, they still do not grow too much faster than the iterates in the fast timescale. So, we show that even in the slow timescale, the fast timescale iterates converge to the equilibria dependent on the slow timescale iterates, formalizing the intuition that in the slow timescale, we can consider the fast iterates to have converged: 
+
+Lemma 5.3 (Fast Iterates Approach Equilibrium) . For all 
+
+ϵ > 0, there exists some N such that for all n > N ,
+
+∥˜xn(t) − λ∞(˜ yn(t)) ∥ < ϵ 
+
+for all t ∈ [0 , T ].
+
+We can now deal with the error term (41) unique to the slow timescale, and show the discretization error decreases to zero (42) . We then obtain ODE results similar to single-timescale stability results (Chapter 3 of Borkar (2009)). As the limiting ODE is attracted to its globally asymptoti-cally stable equilibrium, 0, our iterates cannot grow without bound. Thus, the sequence rn is bounded, creating a contra-diction. We conclude that Theorem 3.2 holds true. 
+
+## 6. Convergence of the Two-Timescale Iterates 
+
+We discuss the proof of Theorem 3.3, restated below: 
+
+Theorem (3.3 Restated) . Let Assumptions B.1 - B.7 hold. Then the iterates {xn} generated by (1) converge almost surely to the equilibrium depending on {yn} as follows: 
+
+lim  
+
+> n→∞
+
+∥xn − λ(yn)∥ = 0 
+
+where λ : Rd2 → Rd1 is a Lipschitz map and λ(y) is the globally asymptotically stable equilibrium of dx(t)dt =
+
+h(x(t), y ). With this convergence established, we can then establish the main two-timescale convergence result: 
+
+lim  
+
+> n→∞
+
+∥zn − (λ(y∗), y ∗)∥ = 0 .
+
+The proof mirrors the stability proof but is simpler. We first show a convergence result in the fast timescale. Namely, we show that the fast iterates xn converge to λ(yn). Then, we obtain the full convergence result through analysis in the slow timescale. The difference is that we no longer need to use rescaling, since we know that the iterates are bounded by Theorem 3.2, and we now prove results on t ∈ (−∞ , ∞)
+
+as this simplifies showing convergence to an invariant set. First, we show that the discretization error between {zn}
+
+and the ODE system 
+
+dx(t)dt = h(x(t), y (t)) , dy(t)dt = 0 (5) diminishes in the fast timescale. Then, due to Theorem 3.2, we argue that since the set of limit points Z of {zn}
+
+is bounded and nonempty, it is an invariant set of (5) . We then show that no subsequence of {zn} converges to a point not in Z, confirming that {zn} converges to Z. Since the invariant set of (5) is (λ(y), y ) : y ∈ Rd2 , we have 
+
+lim  
+
+> n→∞
+
+∥xn − λ(yn)∥ = 0 .
+
+7Two-Timescale Markovian Stochastic Approximation 
+
+We then pursue the slow timescale argument and show that 
+
+{yn} converges to the invariant set of the ODE 
+
+dy(t)dt = g(λ(y(t)) , y (t)) 
+
+which is the singleton set containing y∗, the equilibrium of the ODE. This, combined with the fast timescale conver-gence result, yields our desired result: 
+
+lim  
+
+> n→∞
+
+∥zn − (λ(y∗), y ∗)∥ = 0 .
+
+## 7. Applications in Reinforcement Learning 
+
+In this section, we give some context on RL and prove the convergence of an important off-policy RL algorithm, TDC( λ), using our main results (Section 3). We consider a Markov Decision Process (MDP) with state space S, action space A, reward function r : S × A → R,transition function p : S × S × A → [0 , 1] , and discount fac-tor γ ∈ [0 , 1) . At time t, an agent with a control policy π :
+
+S ×A → [0 , 1] will, given the current state St, sample an ac-tion At ∼ π(·| St). Upon taking action At, the environment yields the reward Rt
+
+.
+
+= r(St, A t) to the agent and transi-tions to the next state St ∼ p(·| St, A t). We define the return at time t as Gt
+
+.
+
+= P∞ 
+
+> i=t
+
+γi−1Rt. Based on this, we can de-fine the value function vπ (s) .
+
+= Eπ,p [Gt|St = s]. Since the state space S could be quite large, we wish to approximate 
+
+vπ (s) using a vector of parameters θ ∈ RK where K ≪ | S|.Specifically, we define vθ,π (s) .
+
+= ϕ(s)⊤θ ≈ vπ (s), where 
+
+ϕ : S → RK is the function which extracts the features from the state s.The task of computing or approximating vπ (s) is called pol-icy evaluation , and it is one of the most important problems in RL. Temporal Difference (TD) learning methods (Sutton, 1988) have been the most effective at this task. They operate through bootstrapping , the practice of updating estimates us-ing other estimates. In the case of TD methods, they update the estimated value of a current state using the estimated value of sampled future states. Another important technique is off-policy learning , where we estimate the value of a target policy π by using data from a behavior policy μ. This has many advantages as it enables us to run many policies in parallel and train offline, improve data-efficiency (Sutton et al., 2011; Liu & Zhang, 2024; Liu et al., 2025a;c), and enforce safety by using a safe behavior policy to evaluate a riskier target policy (Dulac-Arnold et al., 2019; Chen et al., 2025). Unfortunately, when combining bootstrapping and off-policy learning with function approximation (necessary in large state spaces), naive TD methods can diverge. This pit-fall is called the deadly triad (Sutton & Barto, 2018; Zhang, 2022). Gradient temporal difference learning (GTD) was developed to break the deadly triad (Sutton et al., 2008). While convergent, it is slow. Temporal Difference learning with gradient correction (TDC) was first proposed in Sutton et al. (2009) as a modification of GTD that is nearly as fast as standard TD but still convergent. In addition to having the parameter vector θ for the linear approximation of the value function, it has a second parameter vector ν to esti-mate one of the expectations in the algorithm. TDC is a two-timescale algorithm as the updates to ν run on a faster timescale, which empirically leads to faster convergence of the algorithm. In this work, we study TDC( λ), i.e., TDC with eligibility traces. Eligibility traces are a powerful tool for credit assignment, a critical challenge in RL, and have been a fundamental part of RL since the inception of the field (Barto & Sutton, 1981). Although eligibility traces empirically speed up convergence (Sutton & Barto, 2018), they can introduce difficulties in analysis. 
+
+Definition 7.1 (TDC( λ)) .
+
+et =λγρ t−1et−1 + ϕt, (6) 
+
+δt =Rt+1 + γϕ ⊤
+
+> t+1
+
+θt − ϕ⊤ 
+
+> t
+
+θt,νt+1 =νt + αt
+
+ ρtδtet − ϕtϕ⊤ 
+
+> t
+
+νt
+
+ ,θt+1 =θt + βt(ρtδtet − ρt(1 − λ)γϕ t+1 e⊤ 
+
+> t
+
+νt).
+
+The eligibility trace et is an exponential average of the features ϕt
+
+.
+
+= ϕ(St) (weighted by importance sampling ratio ρt, which is necessary in off-policy learning). δt is the TD error. θt and νt parametrize the approximations of the value function and of the gradient correction respectively. The version of TDC( λ) we study in Definition (6) is referred to as GTDb in Yu (2017). 
+
+Theorem 7.2. Take the assumptions in Appendix F. Then, by applying Theorem 3.3, TDC with eligibility traces converges almost surely. Remark 7.3 . One can apply Theorem 3.3 similarly to show that two-timescale GTD with eligibility traces (GTDa in Yu (2017)) also converges. The assumptions are not very strong. We assume the state space S and the action space A are finite, the Markov chain 
+
+{St} is irreducible, and that from any state, all possible actions have a positive probability of being chosen (as this is an off-policy algorithm, this ensures coverage of the target policy we are estimating the value of). These assumptions are well-established in the literature (Yu, 2017; Liu et al., 2025b). From this, it is easy to verify that TDC( λ) satisfies all assumptions in Appendix B, so Theorem 3.3 applies. Applying Theorem 3.3, we confirm that TDC with eligibility traces converges (see Appendix F for the detailed proof). 8Two-Timescale Markovian Stochastic Approximation 
+
+## 8. Related Work 
+
+This work is primarily concerned with the almost sure convergence of two-timescale SA in an asymptotic sense without a rate. For single-timescale SA, almost sure con-vergence rates are also established for specific algorithms such as Q-learning (Szepesvári, 1997), linear Q-learning (Liu et al., 2025d), and linear TD (Tadi´ c, 2002), for linear SA (Chong et al., 1999; Tadic, 2004; Kouritzin & Sadeghi, 2015), and for general SA under various noise conditions (Koval & Schwabe, 2003; Vidyasagar, 2023; Karandikar & Vidyasagar, 2024). The most general ones are Qian et al. (2024); Liu et al. (2026), which establish almost sure con-vergence rates for general contractive SA under Markovian noise. Extending these results to two-timescale SA is a direction for future work. The asymptotic almost sure con-vergence of general contractive single-timescale Markovian SA is also recently formally verified in Lean by Zhang (2025). Extending this formal verification framework to two-timescale SA is also a direction for future work. In addition to almost sure convergence, there are many other modes of convergence, e.g., L2 convergence. The L2 con-vergence rates of two-timescale SA are established under various noise and algorithmic conditions (Doan, 2021a;b; 2022). One particularly relevant work is Chandak et al. (2025). The main result of Chandak et al. (2025) is an 
+
+L2 convergence rate for two-timescale Markovian SA. But Chandak et al. (2025) also have a claim about the almost sure convergence of two-timescale Markovian SA, exactly overlapping with our main result. We believe that their claim about almost sure convergence does not hold. Par-ticularly, their proof of almost sure convergence relies crucially on their claim that if the iterates are bounded in expectation, then they are bounded almost surely (i.e., 
+
+sup n E
+
+h
+
+∥xn∥2i
+
+< ∞ =⇒ sup n ∥xn∥ < ∞ a.s.), which is false. A counterexample (e.g., xn = √n with probabil-ity 1/n and 0 otherwise) can be easily constructed by the second Borel-Cantelli lemma. TDC( λ) is one representative two-timescale RL algorithm. Other two-timescale RL algorithms include actor-critic algo-rithms (Sutton et al., 1999; Konda & Tsitsiklis, 1999; Zhang et al., 2020; 2022), average-reward gradient TD algorithms (Zhang et al., 2021a), and TD with target networks (Zhang et al., 2021b). Investigating whether our results can be ap-plied to these algorithms is a possible future work. Many previous convergence analyses of TDC do not handle eligi-bility traces (Sutton et al., 2008; Xu et al., 2019), i.e., they set λ = 0 . The only prior work that handles eligibility traces properly for TDC is Yu (2017), which, however, only ana-lyzes projected variants of TDC. The fundamental reason is that even if the state space of the Markov chain {(St, A t)}
+
+is finite, with eligibility traces, we must instead consider the chain {(St, A t, e t)}, which now evolves in an uncount-able space. Even worse, off-policy learning makes the trace 
+
+et unbounded as well, as the product of the importance sampling ratio can be unbounded. Prior works resort to additional projection (Yu, 2015; 2017) or truncation (Zhang & Whiteson, 2022) to handle the unboundedness of the eligibility traces. This work instead directly handles the unboundedness via averaging following the techniques in Kushner & Yin (2003); Liu et al. (2025b). 
+
+## 9. Conclusion 
+
+This work establishes the first almost sure convergence re-sults for general two-timescale Markovian SA under mild assumptions. This work can be viewed as a combination of Lakshminarayanan & Bhatnagar (2017) and Liu et al. (2025b), both of which are extensions of the seminal work Borkar & Meyn (2000). Key to our analysis is a methodolog-ical innovation that bounds the faster iterates with the run-ning max of the slower iterates. On the other hand, Borkar & Meyn (2000) are recently extended by Borkar et al. (2025) to include not only Markovian noise but also (functional) central limit theorems. A fruitful direction for future work is thus to investigate whether our methodological innova-tion can be applied to extend the (functional) central limit theorems of Borkar et al. (2025) to two-timescale SA. 
+
+## Acknowledgements 
+
+This work is supported in part by the US National Science Foundation under the awards III-2128019, SLES-2331904, and CAREER-2442098, the Commonwealth Cyber Initia-tive’s Central Virginia Node under the award VV-1Q26-001, and a Cisco Faculty Research Award. Additionally, we thank the reviewers whose comments and suggestions improved the quality of our work. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Barto, A. G. and Sutton, R. S. Landmark learning: An illustration of associative search. Biological Cybernetics ,1981. Benveniste, A., Métivier, M., and Priouret, P. Adaptive Algorithms and Stochastic Approximations . Springer, 1990. Borkar, V., Chen, S., Devraj, A., Kontoyiannis, I., and Meyn, S. The ODE method for asymptotic statistics in stochastic 9Two-Timescale Markovian Stochastic Approximation 
+
+approximation and reinforcement learning. The Annals of Applied Probability , 2025. Borkar, V. S. Stochastic approximation with two time scales. 
+
+Systems & Control Letters , 1997. Borkar, V. S. Stochastic Approximation: A Dynamical Systems Viewpoint . Hindustan Book Agency, 2009. Borkar, V. S. Stochastic approximation with two time scales: The general case. Stochastic Processes and their Appli-cations , 2025. Borkar, V. S. and Meyn, S. P. The O.D.E. method for con-vergence of stochastic approximation and reinforcement learning. SIAM Journal on Control and Optimization ,2000. Chandak, S., Haque, S. U., and Bambos, N. Finite-time bounds for two-time-scale stochastic approximation with arbitrary norm contractions and markovian noise. In 
+
+Proceedings of the IEEE Conference on Decision and Control , 2025. Chen, C., Liu, S., and Zhang, S. Efficient policy evalua-tion with safety constraint for reinforcement learning. In 
+
+Proceedings of the International Conference on Learning Representations , 2025. Chong, E. K., Wang, I.-J., and Kulkarni, S. R. Noise con-ditions for prespecified convergence rates of stochastic approximation algorithms. IEEE Transactions on Infor-mation Theory , 1999. Dalal, G., Szörényi, B., Thoppe, G., and Mannor, S. Finite sample analyses for TD(0) with function approximation. In Proceedings of the AAAI Conference on Artificial In-telligence , 2018. Doan, T. T. Finite-time convergence rates of nonlinear two-time-scale stochastic approximation under marko-vian noise. arXiv Preprint , 2021a. Doan, T. T. Finite-time analysis and restarting scheme for linear two-time-scale stochastic approximation. SIAM Journal on Control and Optimization , 2021b. Doan, T. T. Nonlinear two-time-scale stochastic approxi-mation: Convergence and finite-time performance. IEEE Transactions on Automatic Control , 2022. Dulac-Arnold, G., Mankowitz, D., and Hester, T. Chal-lenges of real-world reinforcement learning. arXiv Preprint , 2019. Hu, J., Doshi, V., and Eun, D. Y. Central limit theorem for two-timescale stochastic approximation with markovian noise: Theory and applications. In Proceedings of the International Conference on Artificial Intelligence and Statistics , 2024. Karandikar, R. L. and Vidyasagar, M. Convergence rates for stochastic approximation: Biased noise with unbounded variance, and applications. Journal of Optimization The-ory and Applications , 2024. Karmakar, P. and Bhatnagar, S. Two time-scale stochas-tic approximation with controlled markov noise and off-policy temporal-difference learning. Mathematics of Op-erations Research , 2018. Karmakar, P. and Bhatnagar, S. Stochastic approximation with iterate-dependent markov noise under verifiable con-ditions in compact state space with the stability of iterates not ensured. IEEE Transactions on Automatic Control ,2021. Kiefer, J. and Wolfowitz, J. Stochastic estimation of the maximum of a regression function. Annals of Mathemati-cal Statistics , 1952. Konda, V. and Tsitsiklis, J. Actor-critic algorithms. In Ad-vances in Neural Information Processing Systems , 1999. Konda, V. R. Actor-Critic Algorithms . PhD thesis, Mas-sachusetts Institute of Technology, 2002. Kouritzin, M. A. and Sadeghi, S. Convergence rates and decoupling in linear stochastic approximation algorithms. 
+
+SIAM Journal on Control and Optimization , 2015. Koval, V. and Schwabe, R. A law of the iterated logarithm for stochastic approximation procedures in d-dimensional euclidean space. Stochastic Processes and Their Applica-tions , 2003. Kushner, H. and Yin, G. G. Stochastic approximation and recursive algorithms and applications . Springer, 2003. Lakshminarayanan, C. and Bhatnagar, S. A stability crite-rion for two timescale stochastic approximation schemes. 
+
+Automatica , 2017. Liu, S. and Zhang, S. Efficient policy evaluation with offline data informed behavior policy design. In Proceedings of the International Conference on Machine Learning ,2024. Liu, S., Chen, C., and Zhang, S. Doubly optimal policy eval-uation for reinforcement learning. In Proceedings of the International Conference on Learning Representations ,2025a. Liu, S., Chen, S., and Zhang, S. The ODE method for stochastic approximation and reinforcement learning with markovian noise. Journal of Machine Learning Research ,2025b. 10 Two-Timescale Markovian Stochastic Approximation 
+
+Liu, S. D., Chen, C., and Zhang, S. Efficient multi-policy evaluation for reinforcement learning. In Proceedings of the AAAI Conference on Artificial Intelligence , 2025c. Liu, X., Xie, Z., and Zhang, S. Extensions of Robbins-Siegmund theorem with applications in reinforcement learning. arXiv Preprint , 2025d. Liu, X., Xie, Z., and Zhang, S. Almost sure convergence rates of stochastic approximation and reinforcement learn-ing via a Poisson-Moreau drift. arXiv Preprint , 2026. Mokkadem, A. and Pelletier, M. Convergence rate and averaging of nonlinear two-time-scale stochastic approx-imation algorithms. The Annals of Applied Probability ,2006. Panda, P. and Bhatnagar, S. Two-timescale critic-actor for average reward mdps with function approximation. In 
+
+Proceedings of the AAAI Conference on Artificial Intelli-gence , 2025. Qian, X., Xie, Z., Liu, X., and Zhang, S. Almost sure convergence rates and concentration of stochastic approx-imation and reinforcement learning with markovian noise. 
+
+arXiv Preprint , 2024. Robbins, H. and Monro, S. A stochastic approximation method. The Annals of Mathematical Statistics , 1951. Sutton, R. S. Learning to predict by the methods of temporal differences. Machine Learning , 1988. Sutton, R. S. and Barto, A. G. Reinforcement Learning: An Introduction (2nd Edition) . MIT press, 2018. Sutton, R. S., McAllester, D. A., Singh, S. P., and Mansour, Y. Policy gradient methods for reinforcement learning with function approximation. In Advances in Neural Information Processing Systems , 1999. Sutton, R. S., Szepesvári, C., and Maei, H. A convergent 
+
+O(n) algorithm for off-policy temporal-difference learn-ing with linear function approximation. In Advances in Neural Information Processing Systems , 2008. Sutton, R. S., Maei, H. R., Precup, D., Bhatnagar, S., Sil-ver, D., Szepesvári, C., and Wiewiora, E. Fast gradient-descent methods for temporal-difference learning with linear function approximation. In Proceedings of the International Conference on Machine Learning , 2009. Sutton, R. S., Modayil, J., Delp, M., Degris, T., Pilarski, P. M., White, A., and Precup, D. Horde: a scalable real-time architecture for learning knowledge from un-supervised sensorimotor interaction. In Proceedings of the International Conference on Autonomous Agents and Multiagent Systems , 2011. Szepesvári, C. The asymptotic convergence-rate of Q-learning. In Advances in Neural Information Processing Systems , 1997. Tadi´ c, V. B. On the almost sure rate of convergence of temporal-difference learning algorithms. IFAC Proceed-ings Volumes , 2002. Tadic, V. B. On the almost sure rate of convergence of linear stochastic approximation algorithms. IEEE Transactions on Information Theory , 2004. Tsitsiklis, J. N. and Van Roy, B. An analysis of temporal-difference learning with function approximation. IEEE Transactions on Automatic Control , 1997. Vidyasagar, M. Convergence of stochastic approximation via martingale and converse lyapunov methods. Mathe-matics of Control, Signals, and Systems , 2023. Xu, T., Zou, S., and Liang, Y. Two time-scale off-policy TD learning: Non-asymptotic analysis over markovian samples. In Advances in Neural Information Processing Systems , 2019. Yaji, V. G. and Bhatnagar, S. Stochastic recursive inclusions in two timescales with nonadditive iterate-dependent markov noise. Mathematics of Operations Research ,2020. Yu, H. On convergence of emphatic temporal-difference learning. In Proceedings of the Conference on Learning Theory , 2015. Yu, H. On convergence of some gradient-based temporal-differences algorithms for off-policy learning. arXiv Preprint , 2017. Zeng, S., Doan, T. T., and Romberg, J. A two-time-scale stochastic optimization framework with applications in control and reinforcement learning. SIAM Journal on Optimization , 2024. Zhang, S. Breaking the deadly triad in reinforcement learn-ing . PhD thesis, University of Oxford, 2022. Zhang, S. Towards formalizing reinforcement learning the-ory. arXiv Preprint , 2025. Zhang, S. and Whiteson, S. Truncated emphatic temporal difference methods for prediction and control. Journal of Machine Learning Research , 2022. Zhang, S., Liu, B., Yao, H., and Whiteson, S. Provably con-vergent two-timescale off-policy actor-critic with func-tion approximation. In Proceedings of the International Conference on Machine Learning , 2020. 11 Two-Timescale Markovian Stochastic Approximation 
+
+Zhang, S., Wan, Y., Sutton, R. S., and Whiteson, S. Average-reward off-policy policy evaluation with function approx-imation. In Proceedings of the International Conference on Machine Learning , 2021a. Zhang, S., Yao, H., and Whiteson, S. Breaking the deadly triad with a target network. In Proceedings of the Inter-national Conference on Machine Learning , 2021b. Zhang, S., Tachet des Combes, R., and Laroche, R. Global optimality and finite sample analysis of softmax off-policy actor critic under state distribution mismatch. Jour-nal of Machine Learning Research , 2022. 12 Two-Timescale Markovian Stochastic Approximation 
+
+## A. Mathematical Background 
+
+Theorem A.1 (Gronwall Inequality ). (Lemma 6 in Section 11.2 in Borkar (2009)) For a continuous function u(·) ≥ 0 and scalars C, K, T ≥ 0,
+
+u(t) ≤ C + K
+
+Z t
+
+> 0
+
+u(s)ds ∀t ∈ [0 , T ]
+
+implies 
+
+u(t) ≤ Ce tK , ∀t ∈ [0 , T ].
+
+Theorem A.2 (Gronwall Inequality in the Reverse Time ). For a continuous function u(·) ≥ 0 and scalars C, K, T ≥ 0,
+
+u(t) ≤ C + K
+
+Z 0
+
+> t
+
+u(s)ds ∀t ∈ [−T, 0] 
+
+implies 
+
+u(t) ≤ Ce −tK , ∀t ∈ [−T, 0] .
+
+For a proof, see Appendix A.2 of Liu et al. (2025b). 
+
+Theorem A.3 (Discrete Gronwall Inequality ). (Lemma 8 in Section 11.2 in Borkar (2009)) For nonnegative sequences 
+
+{xn, n ≥ 0} and {an, n ≥ 0} and scalars C, L ≥ 0,
+
+xn+1 ≤ C + L
+
+> n
+
+X
+
+> i=0
+
+aixi ∀n
+
+implies 
+
+xn+1 ≤ Ce L Pni=0 ai ∀n. 
+
+Theorem A.4 (The Arzelà-Ascoli Theorem in the Extended Sense on [0 , T )). Let {t ∈ [0 , T ) 7 → gn(t)} be equicontinuous in the extended sense. Then, there exists a subsequence {gnk (t)} that converges to some continuous limit glim (t), uniformly in t on [0 , T ).
+
+For a proof, see Appendix A.4 of Liu et al. (2025b). 
+
+Theorem A.5 (Moore-Osgood Theorem for Interchanging Limits) . If lim n→∞ an,m = bm uniformly in m and 
+
+lim m→∞ an,m = cn for each large n, then both lim m→∞ bm and lim n→∞ cn exists and are equal to the double limit, i.e., 
+
+lim  
+
+> m→∞
+
+lim  
+
+> n→∞
+
+an,m = lim  
+
+> n→∞
+
+lim  
+
+> m→∞
+
+an,m = lim n→∞ 
+
+> m→∞
+
+an,m .
+
+Lemma A.6 (Sub-subsequence Lemma) . Let xn be a sequence in some metric space. If every subsequence xnk itself has a subsequence xnkj that converges to the same limit x, then xn converges to x.Proof. Suppose we have a sequence xn where every subsequence xnk itself has a subsequence xnkj that converges to the same limit x. For contradiction, assume that xn does not converge to x, so there is a subsequence xnk, 0 that is always at least some distance ϵ away from x. By assumption, xnk, 0 has a subsequence xnk, 1 that converges to x, which contradicts that xnk, 0 is always at least some ϵ away from x. So, it must be that xn converges to x.13 Two-Timescale Markovian Stochastic Approximation 
+
+## B. Main Assumptions 
+
+Assumption B.1. The Markov chain {Wn} has a unique invariant probability measure (i.e., stationary distribution), denoted by dW .Although the uniqueness and even the existence of the invariant probability measure can be relaxed, we use Assumption B.1 for simplification. Additionally, due to the way updates are defined ((1) and (2)), we start counting {Wn} from n = 1 .
+
+Assumption B.2. The learning rates {α(i)}, {β(i)} are positive, decreasing, and satisfy 
+
+> ∞
+
+X
+
+> i=0
+
+α(i) = 
+
+> ∞
+
+X
+
+> i=0
+
+β(i) = ∞,
+
+lim  
+
+> i→∞
+
+α(i) = lim  
+
+> i→∞
+
+β(i) = 0 
+
+α(i) − α(i + 1) 
+
+α(i) =O (α(i)) , (7) 
+
+β(i) − β(i + 1) 
+
+β(i) =O (β(i)) ,
+
+lim 
+
+> i→∞
+
+β(i)
+
+α(i) = 0 . (8) These conditions on the learning rates are quite common in stochastic approximation. The last condition is necessary for the two-timescale formulation we are using. 
+
+Remark B.3 . For any α(n) = B1 
+
+> (n+B2)γα
+
+, β (n) = B3 
+
+> (n+B4)γβ
+
+with γα, γ β ∈ (0 .5, 1] , γ β > γ α, and all Bi positive, one can verify that all the conditions in Assumption B. 2 are satisfied. Now, we make assumptions about the functions H and G. For any c ∈ [1 , ∞), define 
+
+Hc(x, y, w ) .
+
+= H(cx, cy, w )
+
+c (9) 
+
+Gc(x, y, w ) .
+
+= G(cx, cy, w )
+
+c . (10) The functions Hc and Gc are rescaled versions of the functions H and G and will be used to construct rescaled iterates, a key technique in the ODE method (see, e.g., Borkar & Meyn (2000); Borkar (2009); Liu et al. (2025b)). Just as in those works, we need the existence of some sort of limiting functions for Hc and Gc when c → ∞ .
+
+Assumption B.4. There exist measurable functions H∞(x, y, w ) and G∞(x, y, w ), functions κH (c), κ G(c) : R → R, and measurable functions bH (x, y, w ), b G(x, y, w ) such that for all x, y, w Hc(x, y, w ) − H∞(x, y, w ) = κH (c)bH (x, y, w ) (11) 
+
+Gc(x, y, w ) − G∞(x, y, w ) = κG(c)bG(x, y, w )lim  
+
+> c→∞
+
+κH (c) = lim  
+
+> c→∞
+
+κG(c) = 0 
+
+There also exists a measurable function Lb(w) such that for all x, x ′, y, y ′, w 
+
+∥bH (x, y, w ) − bH (x′, y ′, w )∥ ≤ Lb(w)∥(x, y ) − (x′, y ′)∥,
+
+∥bG(x, y, w ) − bG(x′, y ′, w )∥ ≤ Lb(w)∥(x, y ) − (x′, y ′)∥.
+
+Additionally, the expectation Lb
+
+.
+
+= Ew∼dW [Lb(w)] is well-defined and finite. Assumption B.4 provides details on how Hc and Gc converge to H∞ and G∞ when c → ∞ .We now assume that the functions Hc and Gc are Lipschitz. This will guarantee that the corresponding ODEs exist and are unique. 14 Two-Timescale Markovian Stochastic Approximation 
+
+Assumption B.5. There exists a measurable function L(w) such that for any x, x ′, y, y ′, w ,
+
+∥H(x, y, w ) − H(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥, (12) 
+
+∥H∞(x, y, w ) − H∞(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥, (13) 
+
+∥G(x, y, w ) − G(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥,
+
+∥G∞(x, y, w ) − G∞(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥.
+
+Moreover, the following expectations are well-defined and finite for any x, y :
+
+h(x, y ) .
+
+= Ew∼dW [H(x, y, w )] ,h∞(x, y ) .
+
+= Ew∼dW [H∞(x, y, w )] ,g(x, y ) .
+
+= Ew∼dW [G(x, y, w )] ,g∞(x, y ) .
+
+= Ew∼dW [G∞(x, y, w )] ,L .
+
+= Ew∼dW [L(w)] .
+
+The functions x, y 7 → Hc(x, y, w ) and x, y 7 → Gc(x, y, w ) share the same Lipschitz constant L(w) as the functions 
+
+x, y 7 → H(x, y, w ) and x, y 7 → G(x, y, w ). Similarly to (9) and (10), we define 
+
+hc(x, y ) .
+
+= h(cx, cy )
+
+c ,gc(x, y ) .
+
+= g(cx, cy )
+
+c .
+
+The following assumption is necessary to ensure that the rescaled iterates can converge to the trajectory of the limiting ODE. 
+
+Assumption B.6. The ODE 
+
+dx (t)
+
+dt = h(x(t), y )
+
+has a unique globally asymptotically stable equilibrium λ(y) where λ : Rd2 → Rd1 is a Lipschitz map. Additionally, we assume that the ODE 
+
+dy (t)
+
+dt = g(λ(y(t)) , y (t)) 
+
+has a unique globally asymptotically stable equilibrium. As c → ∞ , hc(x, y ) converges to h∞(x, y ) uniformly in (x, y ) on any compact subsets of Rd1+d2 . The limiting ODE 
+
+dx (t)
+
+dt = h∞(x(t), y )
+
+has a unique globally asymptotically stable equilibrium λ∞(y) where λ∞ : Rd2 → Rd1 is a Lipschitz map. λ∞ is homogeneous, i.e., λ∞(cy ) = cλ ∞(y). And λ∞(0) = 0 .As c → ∞ , gc(x, y ) converges uniformly to g∞(x, y ) on compact subsets of Rd1+d2 . The limiting ODE 
+
+dy (t)
+
+dt = g∞(λ∞(y(t)) , y (t)) 
+
+has 0 as its unique globally asymptotically stable equilibrium. The map λ∞ tells us, for a particular external input y, what x (the parameters of the inner loop) should converge to. This idea and the notation for it come from Chapter 6 of Borkar (2009). 15 Two-Timescale Markovian Stochastic Approximation 
+
+Assumption B.7. Let γ denote any of the following functions: 
+
+w 7 →H(x, y, w ) (∀x, y ),w 7 →G(x, y, w ) (∀x, y ),w 7 →Lb(w),w 7 →L(w).
+
+We have, for any initial condition W1,
+
+lim  
+
+> n→∞
+
+α(n)
+
+> n
+
+X
+
+> i=1
+
+(γ(Wi) − Ew∼dW [γ(w)]) = 0 a.s. 
+
+lim  
+
+> n→∞
+
+β(n)
+
+> n
+
+X
+
+> i=1
+
+(γ(Wi) − Ew∼dW [γ(w)]) = 0 a.s. (14) The assumption holds for all functions γ on the same probability-one set. 
+
+Remark B.8 . Once more, consider β(n) = B1 
+
+> (n+B2)γβ
+
+as an example. For γβ = 1 , (14) is implied by the following Law of Large Numbers (LLN) 
+
+lim 
+
+> n→∞
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(γ(Wi) − Ew∼dW [γ(w)]) = 0 a.s. (LLN) For γβ ∈ (0 .5, 1] , (14) is implied by the following Law of the Iterated Logarithm (LIL) 
+
+> n
+
+X
+
+> i=1
+
+(γ(Wn) − Ew∼dW [γ(w)]) ≤ ζpn log log n a.s., (LIL) where ζ is a sample path dependent finite constant. 16 Two-Timescale Markovian Stochastic Approximation 
+
+## C. Proof of Lemma 3.1 
+
+This is a more detailed version of Section 4. In this section, we will prove Lemma 3.1. Section C.1 sets up the notation and explains our fast timescale analysis. Section C.2 defines the rescaled iterates and some important functions. Section C.3 assumes for contradiction that stability does not hold and identifies a resulting subsequence of interest. Section C.4 demonstrates convergence along this subsequence and uses this to show that the convergence holds for the entire sequence. Section C.5 defines some notation and provides some results about ODEs with external inputs. Finally, Section C.6 uses results from the previous sections to complete the proof. Lemmas in this section are derived on an arbitrary sample path 
+
+{x0, y 0, {Wi}∞
+
+> i=1
+
+} such that the assumptions in Appendix B hold. Thus, we omit “ a.s. ” from the lemma statements for conciseness. 
+
+C.1. Splitting up the Timeline 
+
+Here, we perform a fast timescale analysis. First, we split the positive real axis [0 , ∞) into chunks of length {α(i)}i=0 ,1,... .We then collect these segments together into larger intervals {[Tn, T n+1 )}n=0 ,1,... , where the sequence {Tn} has the property that as n grows large, we have Tn+1 − Tn ≈ T . We define 
+
+t(0) .
+
+=0 ,t(n) .
+
+=
+
+> n−1
+
+X
+
+> i=0
+
+α(i) n = 1 , 2, . . . .
+
+For all T > 0, define 
+
+m(T ) = max {i|T ≥ t(i)} (15) to be the maximal i where t(i) is no greater than T . To visualize, t(m(T )) is a bit to the left of T on the real axis. So, 
+
+t(m(T )) satisfies the following: 
+
+t(m(T )) ≤ T < t (m(T ) + 1) = t(m(T )) + α(m(T )) ,t(m(T )) > T − α(m(T )) .
+
+Define 
+
+T0 = 0 ,Tn+1 = t(m(Tn + T ) + 1) .
+
+Intuitively, Tn+1 is a little to the right of Tn + T on the real axis. We define 
+
+α(i) = β(i) =0 ∀i < 0,m(t) =0 ∀t ≤ 0, (16) for simplifying notations. For any given function f with domain W, its asymptotic rate of change is defined as 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i)[ f (Wi+1 ) − Ew∼dW [f (w)]] .
+
+This asymptotic rate of change helps us to describe the asymptotic regularity of {f (Wn)} and we lean on its usefulness in studying stochastic approximation. We refer the reader to Sections 5.3.2 and 6.2 of Kushner & Yin (2003) for a detailed exposition of this tool. In this work, we have deferred the contents concerning asymptotic rate of change to Appendices G.1 and G.2 since the statements and proofs are very similar to results in Liu et al. (2025b). 17 Two-Timescale Markovian Stochastic Approximation 
+
+C.2. Defining the Scaled Iterates 
+
+We start by fixing a sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+}. We will take ¯z(t) to be the piecewise constant interpolation 2 of zn at points {t(n)}n=0 ,1,... , i.e., 
+
+¯z(t) .
+
+= (¯ x(t), ¯y(t)) .
+
+=
+
+
+
+(x0, y 0) t ∈ [0 , t (1)) (x1, y 1) t ∈ [t(1) , t (2)) (x2, y 2) t ∈ [t(2) , t (3)) 
+
+...By (15), we also have 
+
+¯z(t) .
+
+= zm(t). (17) By (1), ∀n ≥ 0, we have 
+
+¯z(t(n + 1)) = ¯ z(t(n)) + ( α(n)H(¯ z(t(n)) , W n+1 ), β (n)G(¯ z(t(n)) , W n+1 )) .
+
+Now we describe our rescaling of ¯z(t).
+
+Definition C.1. ∀n ∈ N, t ∈ [0 , T + 1) , define 
+
+˜zn(t) .
+
+= (˜ xn(t), ˜yn(t)) .
+
+= ¯z(Tn + t)
+
+rn
+
+where 
+
+rn
+
+.
+
+= max {1, r n−1, ∥¯z(Tn)∥} , r 0
+
+.
+
+= max {1, ∥¯z(0) ∥} . (18) This implies 
+
+∀n ∈ N, ∥˜zn(0) ∥ ≤ 1. (19) Moreover 3,
+
+∀n ∈ N, t ∈ [0 , T + 1) ,
+
+˜zn(t) = ¯z(Tn) + Pm(Tn+t)−1 
+
+> i=m(Tn)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) 
+
+rn
+
+= ˜ zn(0) + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ), β (i)Grn (˜ zn(t(i) − Tn), W i+1 )) .
+
+Remark C.2 . Note that we depart from Liu et al. (2025b) in our definition of the rescaling factor rn (18) . Through the definition, we ensure that the sequence {rn} is monotonic, which enables us to obtain convergence over the entire sequence rather than just a subsequence. We also depart from prior works by defining the sequence of rescaled functions {t 7 → ˜zn(t)} which share the domain 
+
+[0 , T + 1) , as opposed to rescaling the function ¯z(t) directly (often denoted as ˆz). This consistent, larger domain greatly simplifies our arguments, while prior works must handle the diminishing excess part [T, T n+1 − Tn), which can get messy. 
+
+> 2
+
+It also works if we consider a piecewise linear interpolation following Borkar (2009). The piecewise linear interpolation, however, will significantly complicate the presentation. We, therefore, follow Kushner & Yin (2003) and Liu et al. (2025b) and use the piecewise constant interpolation. 
+
+> 3
+
+In this paper, we use the convention that Pjk=i α(k) = Pjk=i β(k) = 0 when j < i .
+
+18 Two-Timescale Markovian Stochastic Approximation 
+
+We can regard ˜zn(t) as the Euler’s discretization of zn(t) defined below. 
+
+Definition C.3. ∀n ∈ N, t ∈ [0 , T + 1) , define zn(t) = ( xn(t), y n(t)) as the solution to the ODE system 
+
+dx n(t)
+
+dt = hrn (xn(t), y n(t)) 
+
+dy n(t)
+
+dt = 0 
+
+with initial condition 
+
+zn(0) = ˜ zn(0) . (20) We can also write zn(t) as 
+
+zn(t) = ˜ zn(0) + 
+
+Z t
+
+> 0
+
+(hrn (zn(s)) , 0) ds. (21) Ideally, we would like to see that the error of the discretization diminishes asymptotically. Precisely speaking, the discretization error is defined as 
+
+fn(t) .
+
+= ˜ zn(t) − zn(t)
+
+and we want to show that fn(t) diminishes to 0 uniformly in t as n → ∞ . To accomplish this, we need to analyze the following three sequences of functions 
+
+{t 7 → ˜zn(t)}∞
+
+> n=0
+
+, {zn(t)}∞
+
+> n=0
+
+, {fn(t)}∞
+
+> n=0
+
+.
+
+In particular, we show that they are all equicontinuous in the extended sense . We defer the relevant definitions, statements, and proofs to Appendix G.3 as they are quite similar to the analogous sections in Liu et al. (2025b). 
+
+C.3. A Convergent Subsequence 
+
+The ultimate goal would be to show that 
+
+sup 
+
+> n
+
+∥zn∥ < ∞.
+
+Observe the inequality 
+
+∀n, zm(Tn) = ∥¯z(Tn)∥ ≤ rn.
+
+Therefore, if we had 
+
+sup 
+
+> n
+
+rn < ∞,
+
+then the result would come easily. So, we assume for contradiction that sup n rn = ∞. However, we can’t obtain a contradiction in this section and must first show Lemma 3.1. According to the Arzelà-Ascoli theorem in the extended sense (Theorem A.4), a sequence of equicontinuous functions always has a subsequence of functions that uniformly converge to a continuous limit. In the following, we use this to identify a particular subsequence of interest. 
+
+Lemma C.4 (4.3 Restated ). Suppose sup n rn = ∞. Take an arbitrary subsequence {nk, 0}∞ 
+
+> k=0
+
+⊆ { 0, 1, 2, . . . }. Then there is a subsequence {nk}∞ 
+
+> k=0
+
+⊆ { nk, 0}∞ 
+
+> k=0
+
+such that there exist some continuous functions f lim (t) and ˜zlim (t) such that 
+
+∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+
+fnk (t) = f lim (t),
+
+lim  
+
+> k→∞
+
+˜znk (t) =˜ zlim (t), (22) 19 Two-Timescale Markovian Stochastic Approximation 
+
+where both convergences are uniform in t on [0 , T + 1) . Furthermore, let zlim (t) = ( xlim (t), y lim (t)) denote the unique solution to the ODE system 
+
+dx lim (t)
+
+dt = h∞(xlim (t), y lim (t)) 
+
+dy lim (t)
+
+dt = 0 
+
+with the initial condition 
+
+zlim (0) = ˜ zlim  
+
+> n
+
+(0) ,
+
+in other words, 
+
+zlim (t) = ˜ zlim (0) + 
+
+Z t
+
+> 0
+
+(h∞(zlim (s)) , 0) ds. (23) 
+
+Then ∀t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+znk (t) = zlim (t),
+
+where the convergence is uniform in t on [0 , T + 1) .
+
+Its proof is in Appendix G.4. We use the subsequence {nk} intensively in the remaining proofs. 
+
+C.4. Diminishing Discretization Error 
+
+Recall that fn(t) denotes the discretization error between ˜zn(t) and zn(t). In this section, we will show that 
+
+lim n→∞ ∥fn(t)∥ = 0 for all t ∈ [0 , T + 1) . We start by first proving that the discretization error diminishes along the sequence {nk}, i.e., that 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥ = f lim (t) = 0 .
+
+This means ˜znk (t) is close to znk (t) as k → ∞ . For any t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥
+
+= lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+(α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 ), β (i)Grnk (˜ znk (t(i) − Tnk ), W i+1 )) 
+
+−
+
+Z t
+
+> 0
+
+(hrnk (znk (s)) , 0) ds (by (21)) 
+
+≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds 
+
++ lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds (24) 
+
++ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)Grnk (˜ znk (t(i) − Tnk ), W i+1 ) .
+
+Here, we will bound the last term. This term is a novelty of the two-timescale setting and so there is no analogous result in Liu et al. (2025b). 20 Two-Timescale Markovian Stochastic Approximation 
+
+Lemma C.5. ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)Grnk (˜ znk (t(i) − Tnk ), W i+1 ) = 0 .
+
+Its proof is in Appendix G.5. We defer the rest of the argument to Appendix G.6 since it is quite similar to the relevant section in Liu et al. (2025b). At the end of it all, from Lemma G.11, we obtain 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥ = 0 ,
+
+for all t ∈ [0 , T + 1) showing that the discretization error goes to 0 along {nk}.Now, since we had chosen an arbitrary subsequence fnk, 0 and it has a subsequence {fnk } that converges to 0, by Lemma A.6 we know that {fn} also converges to 0. Thus, the discretization error diminishes along the entire sequence. That is, 
+
+lim  
+
+> k→∞
+
+∥fn(t)∥ = 0 (25) for all t ∈ [0 , T + 1) .
+
+C.5. ODEs with External Inputs 
+
+This section contains some notation and results concerning ODEs with external inputs, which we need for the next section. First, we will define some new notation. 
+
+Definition C.6. We use the notation ηy(t) 
+
+> c
+
+(t, x ) to denote the solution to the ODE 
+
+dx(t)dt = hc(x(t), y (t)) 
+
+with the initial condition x.Note that under this notation, xn(t) (C.3) can be written η˜yn(0)  
+
+> rn
+
+(t, ˜xn(0)) . This notation (borrowed from Lakshminarayanan & Bhatnagar (2017)) is useful since it identifies a trajectory of an ODE parameterized by the rescaling factor c and the external input y(t).The following lemma shows that within a certain amount of time, the trajectory of the ODE will be pulled close to the equilibrium determined by the external input. 
+
+Lemma C.7 (Lemma 4.5 Restated ). Let K ⊂ Rd1 be compact and fix y ∈ Rd2 . Given any ϵ > 0, there exists a Tϵ > 0
+
+such that for all initial conditions x ∈ K, we have ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ ) for all t ≥ Tϵ.
+
+Its proof is in Appendix G.7. The next lemma shows that if the external input is close to some constant y, then the trajectory will remain close to the trajectory we would obtain if y was the external input. 
+
+Lemma C.8 (Lemma 4.6 Restated ). Let y ∈ Rd2 , [0 , T ] be a given time interval, and ρ be a small positive constant with 
+
+y′(t) ∈ B(y, ρ ). Then, 
+
+ηy′(t) 
+
+> c
+
+(t, x ) − ηy
+
+> ∞
+
+(t, x ) ≤(Lρ + ϵ(c)) T e LT .
+
+for any initial x ∈ Rd1 and for all t ∈ [0 , T ].
+
+Its proof is in G.8. Armed with these results, we are ready for the next section. 
+
+C.6. Completing the Proof 
+
+We now proceed to complete the proof of Lemma 3.1. The most involved result in this section is Lemma C.9, which tells us that if the x component is too much larger than the y component, the norm of the iterate at Tn+1 cannot be larger than that of the iterate at Tn. We use the results about ODEs with external inputs to ensure that the x component of the trajectory gets pulled to the equilibrium, which is close to 0.21 Two-Timescale Markovian Stochastic Approximation 
+
+Lemma C.9 (Lemma 4.7 Restated ). There exists a constant C1 > 1 such that if ∥¯x(Tn)∥ > C 1(1 + ∥¯y(Tn)∥), then 
+
+rn+1 = rn.Proof. Suppose that for some n, ∥¯x(Tn)∥ > C 1(1 + ∥¯y(Tn)∥), which implies that ∥˜xn(0) ∥ > C 1( 1 
+
+> rn
+
++ ∥˜yn(0) ∥). Since 
+
+1 ≥ ∥ ˜xn(0) ∥ and ∥˜xn(0) ∥ 
+
+> C1
+
+> ∥˜yn(0) ∥, we have 
+
+∥˜yn(0) ∥ < 1
+
+C1
+
+. (26) We know from Lemma 4.5 that there exists some T 14 such that for all t ≥ T 14 ,
+
+η0
+
+> ∞
+
+(t, ˜xn(0)) ≤ 14 . (27) So if we set T .
+
+= T 14 , then (27) holds for all t ∈ [T, T + 1) .From Lemma 4.6 we know that there exist ρ 14 and c 14 such that if y(t) ∈ B(0 , ρ 14 ) for all t ∈ [0 , T + 1) and rn > c 14 then 
+
+ηy(t) 
+
+> rn
+
+(t, ˜xn(0)) − η0
+
+> ∞
+
+(t, ˜xn(0)) ≤ 14 (28) for all t ∈ [0 , T + 1) . Since lim n→∞ rn = ∞, there is some finite n1 such that if n > n 1, we can be sure that rn > c 14 . By (25), we know that there exists n2 such that for n > n 2, the discretization error will diminish enough so that 
+
+˜yn(t) ∈ B
+
+
+
+˜yn(0) , min 
+
+ ρ 14
+
+2 , 18
+
+ 
+
+(29) for all t ∈ [0 , T + 1) . So, if we choose C1 large enough so that C1 > 16 and 1 
+
+> C1
+
+< ρ 14 
+
+> 2
+
+, then we have ˜yn(t) ∈ B(0 , ρ 14 ) (by (26) and (29)) for all t ∈ [0 , T + 1) . So, we know that for all n > max( n1, n 2), (28) holds. From (25), we know that there is some finite n3 such that for n > n 3,
+
+˜xn(t) − η˜yn(0)  
+
+> rn
+
+(t, ˜xn(0)) ≤ 14 (30) for all t ∈ [0 , T + 1) .By (27), (28), and (30), since ˜xn(Tn+1 − Tn) = ¯x(Tn+1 ) 
+
+> rn
+
+, we have ¯x(Tn+1 ) 
+
+> rn
+
+≤ 34 .For n > n 1, since ˜yn(Tn+1 − Tn) = ¯y(Tn+1 ) 
+
+> rn
+
+we also have ¯y(Tn+1 ) 
+
+> rn
+
+≤ 14 (by (26), 1 
+
+> C1
+
+< 116 , and (29)). So we conclude ¯z(Tn+1 ) 
+
+> rn
+
+≤ 1, telling us that rn+1 = rn as desired. If we let n0 = max( n1, n 2, n 3) and ensure that 
+
+C1 > max i≤n0 ∥¯x(Ti)∥, then the result holds for all n.Lemma C.10 tells us that the iterate at each Tn is bounded by the largest y component seen so far in the sequence of times 
+
+Tn. To do this, we use an inductive argument–intuitively, we combine the previous lemma, which prevents z from growing if the x component is too much larger than the y component, with Lemma H.15, which prevents z from growing too much within one period T , ensuring that x can never get too much larger than y.
+
+Lemma C.10 (Lemma 4.8 Restated ). There exists a constant C2 such that for all n,
+
+∥¯z(Tn)∥ ≤ C1C2(max  
+
+> m≤n
+
+∥¯y(Tm)∥ + 1) .
+
+Proof. From Lemma H.15, we know that there are some constants A, B such that for all n,
+
+∥¯z(Tn+1 )∥ ≤ A∥¯z(Tn)∥ + B. 
+
+22 Two-Timescale Markovian Stochastic Approximation 
+
+Our argument is inductive in nature. Let C1, C 2 and ensure that C1 > A + B and C2 > 2A + B + 2 . To make sure the base case (n = 0) , holds, we also ensure that C1C2 > ∥z0∥. From Lemma C.9 we know that if ∥¯x(Tn)∥ ≥ C1(1 + ∥¯y(Tn)∥),then rn+1 = rn. Thus, if the result holds for all i less than some n, i.e., we have ∥¯z(Ti)∥ ≤ C1C2(max m≤i ∥¯y(Tm)∥ + 1) 
+
+for all i ≤ n, then we can conclude that ∥¯z(Tn+1 )∥ ≤ C1C2(max m≤n ∥¯y(Tm)∥ + 1) also. To address the other case, assume for some n that ∥¯x(Tn)∥ ≤ C1(∥¯y(Tn)∥ + 1) . Then we have 
+
+∥¯z(Tn+1 )∥ ≤ A∥¯z(Tn)∥ + B
+
+≤ A∥¯x(Tn)∥ + A∥¯y(Tn)∥ + B
+
+≤ AC 1∥¯y(Tn)∥ + AC 1 + A∥¯y(Tn)∥ + B
+
+≤ C1C2(∥¯y(Tn)∥ + 1) 
+
+≤ C1C2( max  
+
+> m≤n+1
+
+∥¯y(Tm)∥ + 1) .
+
+Finally, while we’ve ensured that for all the Tn that ¯z(Tn) is not to much larger than ¯y(Tn), we need the result to also hold for all the iterates that lie in between Tn and Tn+1 . Lemma C.11 takes care of this. 
+
+Lemma C.11 (Lemma 4.9 Restated ). There exists a constant C3 such that for all n,
+
+∥xn∥ ≤ C1C2C3(∥ymax  
+
+> n
+
+∥ + 1) ,
+
+Proof. From Lemma H.15, we know that for all m such that m(Tn) ≤ m ≤ m(Tn+1 ), there exist constants A, B such that 
+
+∥zm∥ ≤ A∥¯z(Tn)∥ + B. 
+
+Let C3 > A + B. This means that 
+
+∥xm∥ ≤ ∥ zm∥ ≤ AC 1C2(max  
+
+> l≤n
+
+∥¯y(Tl)∥ + 1) + B
+
+≤ C1C2C3(max  
+
+> l≤n
+
+∥¯y(Tl)∥ + 1) 
+
+≤ C1C2C3(∥ymax  
+
+> n
+
+∥ + 1) .
+
+By setting K equal to C1C2C3, this concludes the proof of Lemma 3.1. 
+
+C.7. Connecting the Timescales 
+
+Now that we have proved the first major result, Lemma 3.1, we now have some final tasks in the fast timescale to show that the fast iterates will track the slow iterates in some way. The result at the end of this section will be used in showing the diminishing discretization error in the slow timescale analysis. In the following result, we show that there is a time period within which we can be such that the ODE trajectory of the fast variable will fall into and stay within a ball around λ∞(y).
+
+Lemma C.12. Let Ky ⊂ Rd2 where Ky is compact. Given any ϵ > 0, there exists a Tϵ > 0 such that for all constant external inputs y ∈ Ky , we have ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ ) for any initial condition x ∈ λ∞(Ky ) and for all t ≥ Tϵ.Proof. By Lyapunov stability, we know that there is some δ with ϵ 
+
+> 2
+
+> δ > 0 such that if ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), δ ), then for all t′ > t , ηy
+
+> ∞
+
+(t′, x ) ∈ B(λ∞(y), ϵ 
+
+> 2
+
+). By Lemma 4.5 we know that there exists some time Tδ such that for all x ∈ λ∞(Ky )
+
+(image of a compact set under a continuous map is compact) and t ≥ Tδ , we have 
+
+ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), δ
+
+2 ). (31) 23 Two-Timescale Markovian Stochastic Approximation 
+
+By Lemma 4.6, we can select ρy small enough such that for all y1 ∈ B(y, ρ y ),
+
+∥ηy
+
+> ∞
+
+(t, x ) − ηy1 
+
+> ∞
+
+(t, x )∥ ≤ δ
+
+2 (32) for all t ∈ [0 , T δ ], x ∈ λ∞(Ky ).We can split up the timeline into chunks of size Tδ . The insight we will rely on is that if ηy
+
+> ∞
+
+(Tδ , x ) = x1, then ηy
+
+> ∞
+
+(Tδ +t, x ) = 
+
+ηy
+
+> ∞
+
+(t, x 1) for all t ≥ 0. The way our logic proceeds is as follows: By (31) and (32) we have that 
+
+ηy1 
+
+> ∞
+
+(Tδ , x ) ∈ B(λ∞(y), δ )
+
+Let x1
+
+.
+
+= ηy1 
+
+> ∞
+
+(Tδ , x ). For all t ∈ [0 , T δ ], we know by Lyapunov stability that 
+
+ηy
+
+> ∞
+
+(t, x 1) ∈ B(λ∞(y), ϵ
+
+2 ),
+
+so by (32) we know (since we can reuse the ρy selected earlier) that 
+
+ηy1 
+
+> ∞
+
+(t, x 1) ∈ B(λ∞(y), 3ϵ
+
+4 ).
+
+for all t ∈ [0 , T δ ], implying that 
+
+ηy1 
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), 3ϵ
+
+4 ) (33) for all t ∈ [Tδ , 2Tδ ].By (31) and (32) we know that 
+
+ηy1 
+
+> ∞
+
+(Tδ , x 1) ∈ B(λ∞(y), δ ).
+
+We can then define x2
+
+.
+
+= ηy1 
+
+> ∞
+
+(Tδ , x 1) and repeat the above arguments to see that (33) holds for all t ∈ [2 Tδ , 3Tδ ]. We can continue repeating this argument for all xn to see that (33) holds for all t ≥ Tδ .Let Lλ be the Lipschitz constant for λ∞. Then for all y1 ∈ B(y, ϵ 
+
+> 4Lλ
+
+) we have 
+
+∥λ∞(y) − λ∞(y1)∥ ≤ ϵ
+
+4 . (34) To summarize, by (33) and (34), we know that if y1 ∈ B(y, min( ρy , ϵ 
+
+> 4Lλ
+
+)) then 
+
+ηy1 
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y1), ϵ ).
+
+Each y gives us such a ball B(y, min( ρy , ϵ 
+
+> 4Lλ
+
+)) along with a Tδ and these balls cover K. By compactness, we can obtain a finite subcover and a finite number of times T1, . . . , T n. Taking Tϵ to be the maximum of these times completes the proof. The next lemma shows that if the fast variable starts close enough to the slow variable, it should stay close to it forever. 
+
+Lemma C.13. Let Ky ⊂ Rd2 where Ky is compact. Given any ϵ > 0, there exists a δ such that for all constant external inputs y ∈ Ky , if the initial condition x ∈ B(λ∞(y), δ ), then ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ ) for all t ≥ 0.Proof. Fix y and ϵ. From Lemma C.12 we know that the result holds for t ≥ Tϵ, so we just need to show that it holds for 0 ≤ t < T ϵ. By Lyapunov stability, there exists δy such that if x ∈ B(λ∞(y), δ y ), then for all t ≥ 0,
+
+ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ 
+
+> 3
+
+).By Lemma 4.6, there exists ρ small enough that for all y′ ∈ B(y, ρ ),
+
+∥ηy
+
+> ∞
+
+(t, x ) − ηy1 
+
+> ∞
+
+(t, x )∥ < ϵ
+
+3
+
+24 Two-Timescale Markovian Stochastic Approximation 
+
+for all x ∈ B(λ∞(y), δ y ), t ∈ [0 , T δ ]. Finally, since λ∞ is Lipschitz, if y′ ∈ B(y, ϵ 
+
+> 3Lλ
+
+),
+
+∥λ∞(y) − λ∞(y1)∥ < ϵ
+
+3 .
+
+Combining these facts, we know that if y1 ∈ B(y, min( ρ, ϵ 
+
+> 3Lλ
+
+)) , then ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), ϵ ) for all t ≥ 0. Each y comes with such a neighborhood and a distance δ. By compactness, we can extract a finite subcover and a finite number of distances 
+
+δ1, . . . , δ n, and taking δ to be the smallest one gives us our result. Finally, we repeatedly apply the previous two lemmas every period to show that the fast iterates track the slow iterates. 
+
+Lemma C.14 (Lemma 4.10 Restated ). For any ϵ > 0, there is some Tϵ and some Nϵ such that for all n > N ϵ,
+
+∥˜xn(t) − λ∞(˜ yn(t)) ∥ ≤ ϵ for all t ∈ [0 , T ϵ].Proof. By C.13, we know that for all y ∈ [−2, 2] d2 (chosen since ∥˜yn(0) ∥ ≤ 1) there is some δ with ϵ 
+
+> 2
+
+> δ > 0 such that if 
+
+ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), δ ), then for all t′ > t , ηy
+
+> ∞
+
+(t′, x ) ∈ B(λ∞(y), ϵ 
+
+> 2
+
+). By Lemma C.12 we know that there exists some time Tδ such that for all x ∈ λ∞(Ky ) (image of a compact set under a continuous map is compact) and t ≥ Tδ , we have, for all y ∈ [−2, 2] d2 ,
+
+ηy
+
+> ∞
+
+(t, x ) ∈ B(λ∞(y), δ
+
+4 ). (35) By Lemma 4.6, there exists n1 such that for all n > n 1,
+
+ηyrn (t, x ) − ηy
+
+> ∞
+
+(t, x ) < δ
+
+4 (36) for all t ∈ [0 , T δ + 1] .By (25), there exists n2 such that for all n > n 2,
+
+˜xn(t) − η˜yn(0)  
+
+> rn
+
+(t, ˜xn(0)) < δ
+
+4 (37) and 
+
+∥λ∞(˜ yn(t)) − λ∞(˜ yn(0)) ∥ ≤ Lλ∥˜yn(t) − ˜yn(0) ∥ < δ
+
+4 (38) for all t ∈ [0 , T δ + 1] . Combining (35) , (36) , (37) , (38) , and the fact that for n large enough, Tn+1 − Tn < T + 1 , we have 
+
+∥˜xn(Tn+1 − Tn) − λ∞(˜ yn(Tn+1 − Tn)) ∥ < δ 
+
+for all n > max( n1, n 2). This means that, by homogeneity of λ∞,
+
+∥˜xn+1 (0) − λ∞(˜ yn+1 (0)) ∥ = rn
+
+rn+1 
+
+∥˜xn(Tn+1 − Tn) − λ∞(˜ yn(Tn+1 − Tn)) ∥ < δ 
+
+when n > max( n1, n 2), giving us 
+
+∥˜xn(0) − λ∞(˜ yn(0)) ∥ < δ 
+
+for all n > N ϵ = max( n1, n 2) + 1 . So, 
+
+η˜yn(0)  
+
+> rn
+
+(t, ˜xn(0)) − λ∞(˜ yn(0)) < ϵ
+
+2
+
+for all t ≥ 0. Combining this with (37) and (38) gives us 
+
+∥˜xn(t) − λ∞(˜ yn(t)) ∥ ≤ ϵ
+
+for all t ∈ [0 , T δ ], as desired. Taking Tϵ
+
+.
+
+= Tδ completes the proof. 25 Two-Timescale Markovian Stochastic Approximation 
+
+## D. Proof of Theorem 3.2 
+
+In this section we will prove Theorem 3.2. 
+
+D.1. Slow Timescale Setup 
+
+Here we are working in the slow timescale. We reuse the notation from Section C.1 but redefine some things in terms of the slow timescale. We split the positive real axis [0 , ∞) into chunks of length {β(i)}i=0 ,1,... . We then collect these segments together into larger intervals {[Tn, T n+1 )}n=0 ,1,... , where the sequence {Tn} has the property that as n grows large, we have Tn+1 − Tn ≈ T . We define 
+
+t(0) .
+
+=0 ,t(n) .
+
+=
+
+> n−1
+
+X
+
+> i=0
+
+β(i) n = 1 , 2, . . . .
+
+For all T > 0, define 
+
+m(T ) = max {i|T ≥ t(i)}
+
+to be the maximal i where t(i) is no greater than T .Define 
+
+T0 = 0 ,Tn+1 = t(m(Tn + T ) + 1) .
+
+For any given function f with domain W, its asymptotic rate of change is defined as 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+β(i)[ f (Wi+1 ) − Ew∼dW [f (w)]] .
+
+D.2. Defining the Slow Iterates 
+
+Here, we take ¯z(t) to be the piecewise constant interpolation of zn at points {t(n)}n=0 ,1,... , i.e., 
+
+¯z(t) .
+
+= (¯ x(t), ¯y(t)) .
+
+=
+
+
+
+(x0, y 0) t ∈ [0 , t (1)) (x1, y 1) t ∈ [t(1) , t (2)) (x2, y 2) t ∈ [t(2) , t (3)) 
+
+...Now we describe our rescaling of ¯z(t).
+
+Definition D.1. ∀n ∈ N, t ∈ [0 , T + 1) , define 
+
+˜zn(t) .
+
+= (˜ xn(t), ˜yn(t)) .
+
+= ¯z(Tn + t)
+
+rn
+
+.
+
+We will define rn differently, such that it will be at least as large as the largest iterate seen so far: 
+
+rn
+
+.
+
+= max 
+
+n
+
+1, zmax m(Tn)
+
+o
+
+.
+
+where zmax n
+
+.
+
+= zm such that m = arg max i≤n ∥zi∥ (with ties broken arbitrarily). 26 Two-Timescale Markovian Stochastic Approximation 
+
+We can regard ˜yn(t) as the Euler’s discretization of yn(t) defined below. 
+
+Definition D.2. ∀n ∈ N, t ∈ [0 , T + 1) , define yn(t) as the solution to the ODE 
+
+dy n(t)
+
+dt = grn (λ∞(yn(t)) , y n(t)) 
+
+with initial condition 
+
+yn(0) = ˜ yn(0) .
+
+We can also write yn(t) as 
+
+yn(t) = ˜ yn(0) + 
+
+Z t
+
+> 0
+
+grn (λ∞(yn(t)) , y n(t)) ds. (39) The discretization error is defined as 
+
+fn(t) .
+
+= ˜ yn(t) − yn(t)
+
+and we want to show that fn(t) diminishes to 0 uniformly in t as n → ∞ . To accomplish this, we need to show that the following three sequences of functions are equicontinuous in the extended sense: 
+
+{t 7 → ˜yn(t)}∞
+
+> n=0
+
+, {yn(t)}∞
+
+> n=0
+
+, {fn(t)}∞
+
+> n=0
+
+.
+
+We deferred the relevant definitions to Appendix G.3 as they are quite similar to the analogous sections in Liu et al. (2025b), but we will prove it for one of the sequences of functions. 
+
+Lemma D.3. {˜yn(t)}∞ 
+
+> n=0
+
+is equicontinuous in the extended sense on [0 , T + 1) .
+
+Its proof is in Appendix G.9. Equicontinuity for the other two sequences of functions follows more similarly to the fast timescale arguments. 
+
+D.3. A Convergent Subsequence 
+
+The ultimate goal is to show that 
+
+sup 
+
+> n
+
+∥zn∥ < ∞.
+
+Once again, observe the inequality 
+
+∀n, zm(Tn) = ∥¯z(Tn)∥ ≤ rn.
+
+Therefore, if we had 
+
+sup 
+
+> n
+
+rn < ∞,
+
+then the result would come easily. So, we assume for contradiction from now on that sup n rn = ∞.According to the Arzelà-Ascoli theorem in the extended sense (Theorem A.4), a sequence of equicontinuous functions always has a subsequence of functions that uniformly converge to a continuous limit. In the following, we use this to identify a particular subsequence of interest. 
+
+Lemma D.4. Suppose sup n rn = ∞. Take an arbitrary subsequence {nk, 0}∞ 
+
+> k=0
+
+⊆ { 0, 1, 2, . . . }. Then there is a subsequence {nk}∞ 
+
+> k=0
+
+⊆ { nk, 0}∞ 
+
+> k=0
+
+such that there exist some continuous functions f lim (t) and ˜ylim (t) such that ∀t ∈
+
+[0 , T + 1) ,
+
+lim  
+
+> k→∞
+
+fnk (t) = f lim (t),
+
+lim  
+
+> k→∞
+
+˜ynk (t) =˜ ylim (t), (40) 27 Two-Timescale Markovian Stochastic Approximation 
+
+where both convergences are uniform in t on [0 , T + 1) . Furthermore, let ylim (t) denote the unique solution to the ODE 
+
+dy lim (t)
+
+dt = g∞(λ∞(ylim (t)) , y lim (t)) 
+
+with the initial condition 
+
+ylim (0) = ˜ ylim  
+
+> n
+
+(0) ,
+
+in other words, 
+
+ylim (t) = ˜ ylim (0) + 
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) ds. 
+
+Then ∀t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+ynk (t) = ylim (t),
+
+where the convergence is uniform in t on [0 , T + 1) .
+
+Its proof is in Appendix G.10. We use the subsequence {nk} intensively in the remaining proofs. 
+
+D.4. Diminishing Discretization Error 
+
+Recall that fn(t) denotes the discretization error between ˜yn(t) and yn(t). In this section, we will show that 
+
+lim n→∞ ∥fn(t)∥ = 0 for all t ∈ [0 , T + 1) . We start by first proving that the discretization error diminishes along the sequence {nk}, i.e., that 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥ = f lim (t) = 0 .
+
+This means ˜ynk (t) is close to ynk (t) as k → ∞ . For any t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥
+
+= lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)Grnk (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) ds (by (39)) 
+
+≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)[ Grnk (˜ znk (t(i) − Tnk ), W i+1 ) − Grnk (λ∞(˜ ynk (t(i) − Tnk )) , ˜ynk (t(i) − Tnk ), W i+1 )] (41) 
+
++ 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)Grnk (λ∞(˜ ynk (t(i) − Tnk )) , ˜ynk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) ds .
+
+Lemma D.5 (Lemma 5.3 Restated ). For all ϵ > 0, there exists some N such that for all n > N ,
+
+∥˜xn(t) − λ∞(˜ yn(t)) ∥ < ϵ 
+
+for all t ∈ [0 , T ].
+
+Proof. For clarity, since we will work with both fast and slow timescale objects, we will use α and β in superscripts to indicate the fast and slow timescale variants respectively. We also define some notation to help in converting between timescales: 
+
+τ α(t) .
+
+= tα(mβ (t)) 
+
+τ β (t) .
+
+= tβ (mα(t)) 
+
+28 Two-Timescale Markovian Stochastic Approximation 
+
+By the difference in how the rescaling is defined between the timescales, we know that ˜zβn (0) ≤ ˜zαm(τ α(T βn ) − T αm) ,where m is the largest v such that T αv ≤ τ α(T βn ). Essentially, whenever the slow timescale is rescaled, the iterate has a smaller norm than the fast timescale’s iterate at that index. Now we need to show that for the rest of that period in the slow timescale (i.e. when T βn ≤ t ≤ T βn+1 ) the slow timescale iterates, despite not being rescaled during this period, never get too much larger than the fast timescale iterates which may be rescaled many times. Thus, given t ∈ [0 , T β ], we are interested in the ratio rαl
+
+> rβn
+
+, where l is the largest v where T αv ≤ τ α(T βn + t). By Lemma H.19 we know that 
+
+rαl ≤ zmax mβ (T βn +t) ≤ C zmax mβ (T βn ) + D = C · rβn + D
+
+implying that 
+
+rαl
+
+rβn
+
+≤ C + Drβn
+
+.
+
+There exists n1 such that for all n > n 1, Drβn
+
+≤ C, so for all n > n 1,
+
+rαl
+
+rβn
+
+≤ 2C. 
+
+By Lemma C.14, there exist n2 and Tϵ such that for all n > n ϵ, we have 
+
+∥˜xαn (t) − λ∞(˜ yαn (t)) ∥ ≤ ϵ
+
+2C
+
+for all t ∈ [0 , T ϵ]. Now, set N = max {n1, n 2}, where n2 is the smallest v such that T βv ≥ τ β (T αnϵ ) and T α is set to Tϵ. We then have, for all t ∈ [0 , T β ], by homogeneity of λ∞,
+
+˜xβn(t) − λ∞(˜ yβn (t)) ≤ 2C ˜xαl (τ α(T βn + t)) − λ∞(˜ yαl (τ α(T βn + t))) ≤ ϵ
+
+for all n > N . Since we set T α to Tϵ without modifying T β , the result holds for all ϵ, regardless of what value we set T β to at the start. 
+
+Lemma D.6. The first error term (41) converges to 0. Proof. 
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)[ Grnk (˜ znk (t(i) − Tnk ), W i+1 ) − Grnk (λ∞(˜ ynk (t(i) − Tnk )) , ˜ynk (t(i) − Tnk ), W i+1 )] 
+
+≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)L(Wi)∥˜xnk (t(i) − Tnk ) − λ∞(˜ ynk (t(i) − Tnk )) ∥≤ lim  
+
+> k→∞
+
+ϵ(k) 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)L(Wi) (Lemma D.5) 
+
+≤C lim  
+
+> k→∞
+
+ϵ(k) (95) 
+
+=0 .
+
+The rest of the proof, including the verification that the other term diminishes is the same as Liu et al. (2025b) and the fast timescale’s analogous term. Now, since we had chosen an arbitrary subsequence fnk, 0 and it has a subsequence {fnk } that converges to 0, by Lemma A.6 we know that {fn} also converges to 0. Thus, the discretization error diminishes along the entire sequence. That is, 
+
+lim  
+
+> k→∞
+
+∥fn(t)∥ = 0 (42) for all t ∈ [0 , T + 1) .29 Two-Timescale Markovian Stochastic Approximation 
+
+D.5. Completing the Proof 
+
+Now we finish the proof by first establishing two results about ODEs and then finding the contradiction. 
+
+Definition D.7. We use the notation χc(t, y ) to denote the solution to the ODE 
+
+dy(t)dt = gc(λ∞(y(t)) , y (t)) 
+
+with the initial condition y.Note that under this notation, yn(t) (D.2) can be written χrn (t, ˜yn(0)) .The next result shows us that there is a period within which the trajectory of the slow variable will fall to 0. 
+
+Lemma D.8. Let K ⊂ Rd2 be compact. Given any ϵ > 0, there exists a Tϵ such that for all initial conditions y ∈ K,
+
+χ∞(t, y ) ∈ B(0 , ϵ ) for all t > T ϵ.Proof. By Lyapunov stability, there is a δ > 0 such that any trajectory beginning within B(0 , δ ) stays within ϵ 
+
+> 2
+
+of the equilibrium 0.For an initial condition y, let Ty be a time at which the trajectory is within δ 
+
+> 2
+
+of the equilibrium. Let y1 be some other initial condition. By definition, Lipschitzness, and the Gronwall inequality, we have 
+
+∥χ∞(t, y ) − χ∞(t, y 1)∥ ≤ ∥ y − y1∥ + L(Lλ + 1) 
+
+Z t
+
+> 0
+
+∥χ∞(s, y ) − χ∞(s, y 1)∥ds 
+
+≤ ∥ y − y1∥eL(Lλ+1) Ty
+
+for all t ≤ Ty .So there is a neighborhood Vy such that for all y1 ∈ Vy , χ∞(Ty , y 1) is within δ of the equilibrium, which by Lyapunov stability implies that it will always be within ϵ of the equilibrium after Ty .By compactness, we can cover the set K by a finite number of such intervals and obtain a finite number of times Ty1 , . . . , T yn
+
+and then take the maximum time to be the value of Tϵ.The next lemma shows that as c approaches infinity, the two trajectories remain close within a certain time interval. 
+
+Lemma D.9. Let [0 , T ] be a given time interval. Then, 
+
+∥χc(t, y ) − χ∞(t, y )∥ ≤ ϵ(c) · T e L(Lλ+1) T .
+
+for any initial y ∈ Rd2 and for all t ∈ [0 , T ].Proof. We have 
+
+χc(t, y ) = y +
+
+Z t
+
+> 0
+
+gc(λ∞(χc(s, y )) , χ c(s, y )) ds, χ∞(t, y ) = y +
+
+Z t
+
+> 0
+
+g∞(λ∞(χ∞(s, y )) , χ ∞(s, y )) ds. 
+
+Let us define the error term: 
+
+e(t) = ∥χc(t, y ) − χ∞(t, y )∥.
+
+We can bound e(t) by two terms: 
+
+e(t) ≤
+
+Z t
+
+> 0
+
+∥gc(λ∞(χc(s, y )) , χ c(s, y )) − gc(λ∞(χ∞(s, y )) , χ ∞(s, y )) ∥ds 
+
++
+
+Z t
+
+> 0
+
+∥gc(λ∞(χ∞(s, y )) , χ ∞(s, y )) − g∞(λ∞(χ∞(s, y )) , χ ∞(s, y )) ∥ds 
+
+30 Two-Timescale Markovian Stochastic Approximation 
+
+To bound the first term, we use Lipschitzness: 
+
+Z t
+
+> 0
+
+∥gc(λ∞(χc(s, y )) , χ c(s, y )) − gc(λ∞(χ∞(s, y )) , χ ∞(s, y )) ∥ds 
+
+≤ L(Lλ + 1) 
+
+Z t
+
+> 0
+
+∥χc(t, y ) − χ∞(t, y )∥ds 
+
+= L
+
+Z t
+
+> 0
+
+e(s)ds. 
+
+To bound the second term, we use Lipschitzness and Assumption B.4: 
+
+Z t
+
+> 0
+
+∥gc(λ∞(χ∞(s, y )) , χ ∞(s, y )) − g∞(λ∞(χ∞(s, y )) , χ ∞(s, y )) ∥ds 
+
+≤
+
+Z t
+
+> 0
+
+ϵ(c)ds 
+
+≤T ϵ (c).
+
+To conclude, we will use the Gronwall Inequality (Appendix A.1): 
+
+e(t) ≤T ϵ (c) + L(Lλ + 1) 
+
+Z t
+
+> 0
+
+e(s)ds 
+
+≤ϵ(c) · T e L(Lλ+1) T .
+
+Since in this section, rn is defined as the largest iterate norm seen so far, if it is bounded, then the iterate norms are bounded, verifying Theorem 3.2. 
+
+Lemma D.10. The sequence rn is bounded, creating a contradiction. Proof. By Lyapunov stability there is some δ with 14( Lλ+1) > δ > 0 such that if χ∞(t, y ) ∈ B(0 , δ ) at some time t, then for all times t′ > t , we have 
+
+χ∞(t′, y ) ∈ B
+
+
+
+0, 14( Lλ + 1) 
+
+
+
+. (43) By Lemma D.8 we know that there is a Tδ such that when we set T = Tδ , for all t > T ,
+
+χ∞(t, y ) ∈ B(0 , δ
+
+3 ) (44) for all y ∈ [−2, 2] d2 .By Lemma D.9 we know that there is an n1 such that for all n > n 1,
+
+∥χrn (t, y ) − χ∞(t, y )∥ < δ
+
+3 (45) for all y ∈ [−2, 2] d2 and t ∈ [0 , T + 1] .By (42), we know that there is an n2 such that for all n > n 2, we have 
+
+∥˜zn(t) − (λ∞(χrn (t, ˜yn(0))) , χ rn (t, ˜yn(0))) ∥ < δ
+
+3 (46) 31 Two-Timescale Markovian Stochastic Approximation 
+
+for all t ∈ [0 , T + 1] .From (44), (45), and (46), and the fact that when n is large enough, Tn+1 − Tn < T + 1 , we have 
+
+˜yn(0) ∈ B(0 , δ )
+
+for all n ≥ max {n1, n 2} + 1 . Thus, from (43), we have 
+
+χ∞(t, ˜yn(0)) ∈ B
+
+
+
+0, 14( Lλ + 1) 
+
+
+
+for all t ∈ [0 , T + 1] , which implies that 
+
+(λ∞(χ∞(t, ˜yn(0))) , χ ∞(t, ˜yn(0))) ∈ B
+
+
+
+0, 14
+
+
+
+.
+
+Combining this with (46) gives us 
+
+˜zn(t) ∈ B(0 , 12 ),
+
+for all n ≥ max {n1, n 2}+1 and t ∈ [0 , T +1] , which, by definition, prevents the sequence rn from increasing, contradicting the assumption that rn increases to infinity. 32 Two-Timescale Markovian Stochastic Approximation 
+
+## E. Convergence 
+
+E.1. Fast Timescale Convergence 
+
+In this section, we return to the fast timescale definitions. 
+
+Corollary E.1. Let Assumptions B.1 - B.7 hold. Then the iterates {zn} generated by (1) converge almost surely to a (sample path dependent) bounded invariant set 4 of the ODE system 5
+
+dx(t)dt = h(x(t), y (t)) (47) 
+
+dy(t)dt = 0 .
+
+Proof. To prove convergence results on t ∈ (−∞ , ∞) in Corollary E.1, we fix an arbitrary sample path {z0, {Wi}∞
+
+> i=1
+
+}.The stability results from Theorem 3.2 hold. To prove properties on t ∈ (−∞ , ∞), we first fix an arbitrary τ > 0 and show properties on ∀t ∈ [−τ, τ ].
+
+Definition E.2. ∀n ∈ N, define ¯zn(t) as the solution to the ODE (47) in (−∞ , ∞) with an initial condition 
+
+¯zn(0) = ¯ z(t(n)) .
+
+¯zn(t) can also be written as 
+
+¯zn(t) = ¯ z(t(n)) + 
+
+Z t
+
+> 0
+
+(h(¯ zn(s)) , 0) ds, ∀t ∈ (−∞ , ∞). (48) We need to show that the error of Euler’s discretization diminishes asymptotically. With (16) and (17) , ∀τ > 0, ∀t ∈ [−τ, τ ],
+
+¯z(t(n) + t) = zm(t(n)+ t) (49) 
+
+=
+
+(
+
+¯z(t(n)) + Pm(t(n)+ t)−1 
+
+> i=n
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) if t ≥ 0¯z(t(n)) − Pn−1
+
+> i=m(t(n)+ t)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) if t < 0.
+
+Notably, the property (16) that ∀t < 0, m (t) = 0 in (49) ensures ¯z(t(n) + t) is well-defined when t(n) + t < 0. Precisely speaking, ∀τ > 0, ∀t ∈ [−τ, τ ], the discretization error is defined as 
+
+¯fn(t) .
+
+= ¯ z(t(n) + t) − ¯zn(t). (50) and we need ¯fn(t) to diminish to 0 as n → ∞ . To this end, we study the following three sequences of functions 
+
+{¯z(t(n) + t)}∞
+
+> n=0
+
+, {¯zn(t)}∞
+
+> n=0
+
+,  ¯fn(t) ∞
+
+> n=0
+
+.
+
+Equicontinuity in the extended sense on the domain (−∞ , ∞) is defined as following (Section 4.2.1 in Kushner & Yin (2003)). 
+
+Definition E.3. A sequence of functions γn : ( −∞ , ∞) → RK is equicontinuous in the extended sense on (−∞ , ∞) if 
+
+sup n ∥γn(0) ∥ < ∞ and ∀τ > 0, ∀ϵ > 0, ∃δ > 0 such that 
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤| t1−t2|≤ δ, |t1|≤ τ, |t2|≤ τ
+
+∥γn(t1) − γn(t2)∥ ≤ ϵ. 
+
+We show {¯z(t(n) + t)}, {¯zn(t)} and  ¯fn(t) are all equicontinuous in the extended sense. 
+
+> 4
+
+A set X is an invariant set of the ODE system (47) if and only if for every z ∈ Z, there exists a solution z(t) to the ODE (47) such that z(0) = z and z(t) ∈ Z for all t ∈ (−∞ , ∞). If the ODE (47) is globally asymptotically stable, the only bounded invariant set is (λ(y), y ) : y ∈ Rd2 .
+
+> 5
+
+By {zn} converges to a set Z, we mean lim n→∞ inf z∈Z ∥zn − z∥ = 0 .
+
+33 Two-Timescale Markovian Stochastic Approximation 
+
+Lemma E.4. The three sequences of functions {¯z(t(n) + t)}∞
+
+> n=0
+
+, {¯zn(t)}∞
+
+> n=0
+
+, and  ¯fn(t) ∞ 
+
+> n=0
+
+are all equicontinuous in the extended sense on t ∈ (−∞ , ∞).
+
+To prove those lemmas, we need the Gronwall inequality in the reverse time in Appendix A.2. Compared to lemmas in the main text which have the domain t ∈ [0 , T + 1) , lemmas in this section have similar proofs because we first fix an arbitrary 
+
+τ and prove properties on the domain t ∈ [−τ, τ ]. We omit proofs for Lemma E.4 because they are extremely similar to the proofs of equicontinuity in the fast timescale. Similar to Lemma 4.3, we now construct a particular subsequence of interest. 
+
+Lemma E.5. There exists a subsequence {nk}∞ 
+
+> k=0
+
+⊆ { 0, 1, 2, . . . } and some continuous functions ¯f lim (t) and ¯zlim (t) such that ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = ¯f lim (t),
+
+lim  
+
+> k→∞
+
+¯z(t(nk) + t) =¯ zlim (t),
+
+where both convergences are uniform in t on [−τ, τ ]. Furthermore, let zlim (t) denote the unique solution to the ODE (47) 
+
+with the initial condition 
+
+zlim (0) = ¯ zlim (0) ,
+
+in other words, 
+
+zlim (t) = ¯ zlim (0) + 
+
+Z t
+
+> 0
+
+(h(¯ zlim (s)) , 0) ds. 
+
+Then ∀τ , ∀t ∈ [−τ, τ ], we have 
+
+lim  
+
+> k→∞
+
+¯znk (t) = zlim (t),
+
+where the convergence is uniform in t on [−τ, τ ].
+
+Its proof is very similar to the proof of Lemma 4.3 and is omitted. We use the subsequence {nk} intensively in the remaining proofs. Recall that ¯fn(t) denotes the discretization error between ¯z(t(n) + t) and ¯zn(t). We now proceed to prove that this discretization error diminishes along {nk}. In particular, we aim to prove that ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = ¯f lim (t) = 0 .
+
+This means ¯z(t(nk) + t) is close to ¯znk (t) as k → ∞ . For t ∈ (0 , τ ], the proof for this part is the same as the proof we have done in Section C.4. Thus, we only discuss the proof for t ∈ [−τ, 0] . ∀τ , ∀t ∈ [−τ, 0] ,
+
+lim 
+
+> k→∞
+
+¯fnk (t)
+
+= lim  
+
+> k→∞
+
+¯z(t(nk)) − 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) − ¯znk (t) (by (49) and (50)) 
+
+= lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) −
+
+Z t
+
+> 0
+
+(h(¯ znk (s)) , 0) ds (by (48)) 
+
+≤ lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+α(i)H(¯ z(t(i)) , W i+1 ) −
+
+Z t
+
+> 0
+
+h(¯ zlim (s)) ds 
+
++ lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 )
+
++ lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+h(¯ zlim (s)) ds −
+
+Z t
+
+> 0
+
+h(¯ znk (s)) ds . (51) 34 Two-Timescale Markovian Stochastic Approximation 
+
+The second term in the RHS of (51) is 0. 
+
+Lemma E.6. ∀τ , ∀t ∈ [−τ, 0] ,
+
+lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 ) = 0 .
+
+The proof is very similar to the proof of Lemma C.5 so is omitted. The first term in the RHS of (51) is also 0. 
+
+Lemma E.7. ∀τ , ∀t ∈ [−τ, 0] ,
+
+lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+α(i)H(¯ z(t(i)) , W i+1 ) −
+
+Z t
+
+> 0
+
+h(¯ zlim (s)) ds = 0 .
+
+Its proof is very similar to the proof of Lemma G.9 and is omitted. This convergence is also simpler than (68) because here we have only a single (H, h ). But in (68) , we have a sequence {(Hnk , h nk )}, for which we have to split it to a double limit (69) and then invoke the Moore-Osgood theorem to reduce it to the single (H, h ) case. Lemma E.7 confirms that the first term in the RHS of (51) is 0. Moreover, it also enables us to rewrite ¯zlim (t) from a summation form to an integral form. ∀τ , ∀t ∈ [−τ, 0] ¯zlim (t)= lim  
+
+> k→∞
+
+¯z(t(nk)) − 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) = lim  
+
+> k→∞
+
+¯z(t(nk)) + 
+
+Z t
+
+> 0
+
+(h(¯ zlim (s)) , 0) ds. (by Lemma E.7) Thus, we can show the following diminishing discretization error. 
+
+Lemma E.8. ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = 0 .
+
+Moreover, the convergence is uniform in t on [−τ, τ ].
+
+Its proof is very similar to the proof of Lemma G.11 and is omitted. This immediately implies that for any t ∈ (−∞ , ∞)lim  
+
+> k→∞
+
+¯z(t(nk) + t) = zlim (t). (52) Theorem 3.2 then yields that 
+
+sup 
+
+> t∈(−∞ ,∞)
+
+zlim (t) < ∞.
+
+Let Z be the set of limit points of {zn}. By Theorem 3.2, sup n ∥zn∥ < ∞, so Z is bounded and nonempty. We now prove 
+
+Z is an invariant set of the ODE (47). For any z ∈ Z, there exists a subsequence {znk } such that 
+
+lim  
+
+> k→∞
+
+znk = z. 
+
+Since {¯z(t(nk) + t)} is equicontinuous in the extended sense, following the way we arrive at (52) , we can construct a subsequence {n′
+
+> k
+
+} ⊆ { nk} such that 
+
+lim  
+
+> k→∞
+
+¯z(t(n′
+
+> k
+
+) + t) = zlim  
+
+> ∗
+
+(t), (53) 35 Two-Timescale Markovian Stochastic Approximation 
+
+where zlim  
+
+> ∗
+
+(t) is a solution to the ODE (47) and zlim  
+
+> ∗
+
+(0) = z. The remaining is to show that zlim  
+
+> ∗
+
+(t) lies entirely in Z. For any t ∈ (−∞ , ∞), by the piecewise constant nature of ¯z in (49) , the above limit (53) implies that there exists a subsequence of {zn} that converges to zlim  
+
+> ∗
+
+(t), indicating zlim  
+
+> ∗
+
+(t) ∈ Z by the definition of the limit set. We now have proved ∀z ∈ Z,there exists a solution zlim  
+
+> ∗
+
+(t) to the ODE (47) such that zlim  
+
+> ∗
+
+(0) = z and ∀t ∈ (−∞ , ∞), z lim  
+
+> ∗
+
+(t) ∈ Z. This means Z is an invariant set, by definition. In particular, Z is a bounded invariant set. We now prove that {zn} converges to Z. Let {znk } be any convergent subsequence of {zn} with its limit denoted by z. We must have z ∈ Z by the definition of the limit set. So we have proved that all convergent subsequences of {zn} converge to a point in the bounded invariant set Z. If {zn} does not converge to Z, there must exist a subsequence 
+
+n
+
+zn′
+
+> k
+
+o
+
+such that 
+
+n
+
+zn′
+
+> k
+
+o
+
+is always away from Z by some small ϵ0 > 0, i.e., ∀k,
+
+inf  
+
+> z∈Z
+
+zn′ 
+
+> k
+
+− z ≥ ϵ0. (54) But 
+
+n
+
+zn′
+
+> k
+
+o
+
+is bounded, so by the Bolzano-Weierstrass Theorem, it must have a convergent subsequence, which, by the definition of the limit set, converges to some point in Z. This contradicts (54) . So we must have {zn} converge to Z, which is a bounded invariant set of the ODE (47). This completes the proof. Since the invariant set of (47) is (λ(y), y ) : y ∈ Rd2 , we have 
+
+lim  
+
+> n→∞
+
+∥xn − λ(yn)∥ = 0 . (55) We will use this fact to now establish convergence to the unique equilibrium. 
+
+E.2. Slow Timescale Convergence 
+
+Returning to slow timescale definitions here. 
+
+Corollary E.9. Let Assumptions B.1 - B.7 hold. Then the iterates {yn} generated by (1) converge almost surely to a (sample path dependent) bounded invariant set of the ODE 
+
+dy(t)dt = g(λ(y(t)) , y (t)) (56) 
+
+Proof. To prove convergence results on t ∈ (−∞ , ∞) in Corollary E.9, we fix an arbitrary sample path {z0, {Wi}∞
+
+> i=1
+
+}.The stability results from Theorem 3.2 hold. To prove properties on t ∈ (−∞ , ∞), we first fix an arbitrary τ > 0 and show properties on ∀t ∈ [−τ, τ ].
+
+Definition E.10. ∀n ∈ N, define ¯yn(t) as the solution to the ODE (56) in (−∞ , ∞) with an initial condition 
+
+¯yn(0) = ¯ y(t(n)) .
+
+¯yn(t) can also be written as 
+
+¯yn(t) = ¯ y(t(n)) + 
+
+Z t
+
+> 0
+
+g(λ(¯ yn(s)) , ¯yn(s)) ds, ∀t ∈ (−∞ , ∞). (57) We need to show that the error of Euler’s discretization diminishes asymptotically. With (16) and (17) , ∀τ > 0, ∀t ∈ [−τ, τ ],
+
+¯z(t(n) + t) = zm(t(n)+ t) (58) 
+
+=
+
+(
+
+¯z(t(n)) + Pm(t(n)+ t)−1 
+
+> i=n
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) if t ≥ 0¯z(t(n)) − Pn−1
+
+> i=m(t(n)+ t)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) if t < 0.
+
+Notably, the property (16) that ∀t < 0, m (t) = 0 in (58) ensures ¯z(t(n) + t) is well-defined when t(n) + t < 0. Precisely speaking, ∀τ > 0, ∀t ∈ [−τ, τ ], the discretization error is defined as 
+
+¯fn(t) .
+
+= ¯ y(t(n) + t) − ¯yn(t). (59) 36 Two-Timescale Markovian Stochastic Approximation 
+
+and we need ¯fn(t) to diminish to 0 as n → ∞ . To this end, we study the following three sequences of functions 
+
+{¯y(t(n) + t)}∞
+
+> n=0
+
+, {¯yn(t)}∞
+
+> n=0
+
+,  ¯fn(t) ∞
+
+> n=0
+
+.
+
+We show {¯y(t(n) + t)}, {¯yn(t)} and  ¯fn(t) are all equicontinuous in the extended sense on the domain (−∞ , ∞).
+
+Lemma E.11. The three sequences of functions {¯y(t(n) + t)}∞
+
+> n=0
+
+, {¯yn(t)}∞
+
+> n=0
+
+, and  ¯fn(t) ∞ 
+
+> n=0
+
+are all equicontinuous in the extended sense on t ∈ (−∞ , ∞).
+
+To prove those lemmas, we need the Gronwall inequality in the reverse time in Appendix A.2. Compared to lemmas in the main text which have the domain t ∈ [0 , T + 1) , lemmas in this section have similar proofs because we first fix an arbitrary 
+
+τ and prove properties on the domain t ∈ [−τ, τ ]. We omit proofs for Lemma E.11 because they are extremely similar to the proofs of equicontinuity in the slow timescale. Similar to Lemma D.4, we now construct a particular subsequence of interest. 
+
+Lemma E.12. There exists a subsequence {nk}∞ 
+
+> k=0
+
+⊆ { 0, 1, 2, . . . } and some continuous functions ¯f lim (t) and ¯ylim (t)
+
+such that ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = ¯f lim (t),
+
+lim  
+
+> k→∞
+
+¯y(t(nk) + t) =¯ ylim (t),
+
+where both convergences are uniform in t on [−τ, τ ]. Furthermore, let ylim (t) denote the unique solution to the ODE (56) 
+
+with the initial condition 
+
+ylim (0) = ¯ ylim (0) ,
+
+in other words, 
+
+ylim (t) = ¯ ylim (0) + 
+
+Z t
+
+> 0
+
+g(λ(¯ ylim ), ¯ylim (s)) ds. 
+
+Then ∀τ , ∀t ∈ [−τ, τ ], we have 
+
+lim  
+
+> k→∞
+
+¯ynk (t) = ylim (t),
+
+where the convergence is uniform in t on [−τ, τ ].
+
+Its proof is very similar to the proof of Lemma D.4 and is omitted. We use the subsequence {nk} intensively in the remaining proofs. Recall that ¯fn(t) denotes the discretization error between ¯y(t(n) + t) and ¯yn(t). We now proceed to prove that this discretization error diminishes along {nk}. In particular, we aim to prove that ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = ¯f lim (t) = 0 .
+
+This means ¯y(t(nk) + t) is close to ¯ynk (t) as k → ∞ . For t ∈ (0 , τ ], the proof for this part is the same as the proof we have 37 Two-Timescale Markovian Stochastic Approximation 
+
+done in Section D.4. Thus, we only discuss the proof for t ∈ [−τ, 0] . ∀τ , ∀t ∈ [−τ, 0] ,
+
+lim 
+
+> k→∞
+
+¯fnk (t)
+
+= lim  
+
+> k→∞
+
+¯y(t(nk)) − 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 ) − ¯ynk (t) (by (58) and (59)) 
+
+= lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 ) −
+
+Z t
+
+> 0
+
+g(λ(¯ ynk ), ¯ynk )ds (by (57)) 
+
+≤ lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 ) +  
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(λ(¯ y(t(i))) , ¯y(t(i)) , W i+1 )
+
++ lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(λ(¯ y(t(i))) , ¯y(t(i)) , W i+1 ) −
+
+Z t
+
+> 0
+
+g(λ(¯ ynk ), ¯ynk )ds . (60) The first term in the RHS of (60) is 0. 
+
+Lemma E.13. ∀τ , ∀t ∈ [−τ, 0] ,
+
+lim  
+
+> k→∞
+
+− 
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(¯ z(t(i)) , W i+1 ) +  
+
+> nk−1
+
+X 
+
+> i=m(t(nk)+ t)
+
+β(i)G(λ(¯ y(t(i))) , ¯y(t(i)) , W i+1 ) = 0 .
+
+Its proof is very similar to the proof of Lemma D.6 (except that we use (55) instead of Lemma D.5) and is omitted. This convergence is also simpler than (68) because here we have only a single (G, g ).
+
+Lemma E.14. ∀τ , ∀t ∈ [−τ, τ ],
+
+lim 
+
+> k→∞
+
+¯fnk (t) = 0 .
+
+Moreover, the convergence is uniform in t on [−τ, τ ].
+
+Its proof is very similar to the proof of the diminishing discretization error in the slow timescale. This immediately implies that for any t ∈ (−∞ , ∞)lim  
+
+> k→∞
+
+¯z(t(nk) + t) = ( λ(ylim (t)) , y lim (t)) . (61) Theorem 3.2 then yields that 
+
+sup 
+
+> t∈(−∞ ,∞)
+
+(λ(ylim (t)) , y lim (t)) < ∞.
+
+Let Y be the set of limit points of {yn}. By Theorem 3.2, sup n ∥yn∥ < ∞, so Y is bounded and nonempty. We now prove 
+
+Y is an invariant set of the ODE (56). For any y ∈ Y , there exists a subsequence {ynk } such that 
+
+lim  
+
+> k→∞
+
+ynk = y. 
+
+Since {¯y(t(nk) + t)} is equicontinuous in the extended sense, following the way we arrive at (61) , we can construct a subsequence {n′
+
+> k
+
+} ⊆ { nk} such that 
+
+lim  
+
+> k→∞
+
+¯y(t(n′
+
+> k
+
+) + t) = ylim  
+
+> ∗
+
+(t), (62) 38 Two-Timescale Markovian Stochastic Approximation 
+
+where ylim  
+
+> ∗
+
+(t) is a solution to the ODE (56) and ylim  
+
+> ∗
+
+(0) = y. The remaining is to show that ylim  
+
+> ∗
+
+(t) lies entirely in Y . For any t ∈ (−∞ , ∞), by the piecewise constant nature of ¯y in (58) , the above limit (62) implies that there exists a subsequence of {yn} that converges to ylim  
+
+> ∗
+
+(t), indicating ylim  
+
+> ∗
+
+(t) ∈ Y by the definition of the limit set. We now have proved ∀y ∈ Y ,there exists a solution ylim  
+
+> ∗
+
+(t) to the ODE (56) such that ylim  
+
+> ∗
+
+(0) = y and ∀t ∈ (−∞ , ∞), y lim  
+
+> ∗
+
+(t) ∈ Y . This means Y is an invariant set, by definition. Additionally, Y is a bounded invariant set. We now prove that {yn} converges to Y . Let {ynk } be any convergent subsequence of {yn} with its limit denoted by y. We must have y ∈ Y by the definition of the limit set. So we have proved that all convergent subsequences of {yn} converge to a point in the bounded invariant set Y . If {yn} does not converge to Y , there must exist a subsequence 
+
+n
+
+yn′
+
+> k
+
+o
+
+such that 
+
+n
+
+yn′
+
+> k
+
+o
+
+is always away from Y by some small ϵ0 > 0, i.e., ∀k,
+
+inf  
+
+> y∈Y
+
+yn′ 
+
+> k
+
+− y ≥ ϵ0. (63) But 
+
+n
+
+yn′
+
+> k
+
+o
+
+is bounded, so by the Bolzano-Weierstrass Theorem, it must have a convergent subsequence, which, by the definition of the limit set, converges to some point in Y . This contradicts (63) . So we must have {yn} converge to Y , which is a bounded invariant set of the ODE (56). This completes the proof. Since the invariant set of (56) is the singleton containing y∗, the equilibrium of the ODE, we have 
+
+lim  
+
+> n→∞
+
+∥yn − y∗∥ = 0 .
+
+Combined with the fast convergence, we have 
+
+lim  
+
+> n→∞
+
+∥zn − (λ(y∗), y ∗)∥ = 0 .
+
+39 Two-Timescale Markovian Stochastic Approximation 
+
+## F. Convergence of TDC with Eligibility Traces 
+
+TDC was first proposed in Sutton et al. (2008) as a modification of gradient temporal difference learning (GTD) (Sutton et al., 2008). GTD was developed to break the deadly triad, divergence that can arise when combining off-policy learning, function approximation, and bootstrapping, each of which are critical components in successful RL algorithms. While GTD mitigates the deadly triad, it is slow. TDC, on the other hand, is nearly as fast as regular TD learning and converges. It is also a two-timescale algorithm, as the gradient correction runs on a faster timescale. Although vanilla TDC is known to converge, the best prior work was only able to establish the convergence of projected variants of TDC with eligibility traces (Yu, 2017). We must also explain the important of eligibility traces: they are a powerful tool for credit assignment, a critical challenge in RL, and have been a fundamental part of RL since the inception of the field (Barto & Sutton, 1981). Although eligibility traces are useful, they introduce difficulties in analysis. Even if the state space of the Markov chain {(St, A t)} is finite, with eligibility traces, we have to instead consider the chain {(St, A t, e t)}, which now evolves in an uncountable space. And, in the case of off-policy learning, the importance sampling ratio can cause the state space to be unbounded as well. Our results, therefore, are the first to be able to handle the important case of off-policy RL algorithms with eligibility traces. We demonstrate this with TDC. 
+
+Assumption F.1. Both the state space S and the action space A are finite. The Markov chain {St} induced by the behavior policy μ is irreducible, and μ(a|s) > 0 for all s, a .
+
+Assumption F.2. The feature matrix Φ is of full rank. Assumption F.2 is standard in RL with linear function approximations to guarantee existence and uniqueness of the solution. Additionally, any feature matrix that is not full rank can be converted into one that is by finding a linearly independent basis for the space spanned by the column vectors, so in practice, this is a very weak assumption (Tsitsiklis & Van Roy, 1997). TDC with eligibility traces is defined as follows: 
+
+et =λγρ t−1et−1 + ϕt,δt =Rt+1 + γϕ ⊤
+
+> t+1
+
+θt − ϕ⊤ 
+
+> t
+
+θt,νt+1 =νt + αt
+
+ ρtδtet − ϕtϕ⊤ 
+
+> t
+
+νt
+
+ ,θt+1 =θt + βt(ρtδtet − ρt(1 − λ)γϕ t+1 e⊤ 
+
+> t
+
+νt).
+
+We can more compactly express the updates with the following equations: 
+
+νt+1 = νt + αt
+
+−ϕtϕ⊤ 
+
+> t
+
+ρtet(γϕ t+1 − ϕt)⊤νt
+
+θt
+
+
+
++ ρtRt+1 et
+
+
+
+θt+1 = θt + βt
+
+−ρt(1 − λ)γϕ t+1 e⊤ 
+
+> t
+
+ρtet(γϕ t+1 − ϕt)⊤νt
+
+θt
+
+
+
++ ρtRt+1 et
+
+
+
+.
+
+Now we define the augmented Markov chain {Wt} as 
+
+Wt+1 
+
+.
+
+= ( St, A t, S t+1 , e t), t = 0 , 1, . . . . 
+
+40 Two-Timescale Markovian Stochastic Approximation 
+
+We also define shorthands 
+
+x .
+
+=ν, x t
+
+.
+
+= νt, y .
+
+= θ, y t
+
+.
+
+= θt
+
+w .
+
+=( s, a, s ′, e ),A(w) .
+
+=ρ(s, a )e(γϕ (s′) − ϕ(s)) ⊤,b(w) .
+
+=ρ(s, a )r(s, a )e, C(w) .
+
+=ϕ(s)ϕ(s)⊤,D(w) .
+
+=eρ (s, a )(1 − λ)γϕ (s′)⊤,H(x, y, w ) .
+
+=−C(w) A(w)xy
+
+
+
++ b(w),G(x, y, w ) .
+
+=−D⊤(w) A(w)xy
+
+
+
++ b(w).
+
+Then TDC can be expressed as 
+
+xt+1 = xt + αtH(xt, y t, W t+1 ),yt+1 = yt + βtG(xt, y t, W t+1 ),
+
+which reduces to the form of (1) and (2). 
+
+Lemma F.1. (Theorem 2.1 from Yu (2017)) If Assumption F.1 holds, then (i) {Wt} has a unique invariant probability measure, dW .(ii) The expectation with respect to the stationary distribution, Ew∼dW [γ(w)] < ∞ when γ(w) is a function which is Lipschitz in the trace variable e. Additionally, (LLN) holds for γ.
+
+Yu (2017) also shows that 
+
+A .
+
+=Ew∼dW [A(w)] = Φ ⊤Dμ(Pπ,λ − I)Φ ,b .
+
+=Ew∼dW [b(w)] = Φ ⊤Dμrπ,λ ,C .
+
+=Ew∼dW [C(w)] = Φ ⊤DμΦ,D .
+
+=Ew∼dW [D(w)] = Φ ⊤DμPπ,λ Φ,
+
+where we use Dμ to denote the diagonal matrix whose diagonal entry is dμ, the invariant distribution of the underlying Markov chain {St}.
+
+Theorem (Theorem 7.2 Restated ). Assume A is invertible (without this assumption, there is no solution so the algorithm itself would be ill-posed as the solution point involves A−1). Then, TDC with eligibility traces converges. Proof. We show that all the assumptions are satisfied such that Theorem 3.3 applies. Assumption B.1 follows immediately from Lemma F.1. The assumption B.2 follows immediately from the choice of appropriate learning rates. For Assumption B.4, define 
+
+H∞(x, y, w ) .
+
+=−C(w) A(w)xy
+
+
+
+,G∞(x, y, w ) .
+
+=−D⊤(w) A(w)xy
+
+
+
+.
+
+41 Two-Timescale Markovian Stochastic Approximation 
+
+Then we have 
+
+Hc(x, y, w ) − H∞(x, y, w ) = b(w)
+
+c ,Gc(x, y, w ) − G∞(x, y, w ) = b(w)
+
+c
+
+After noticing 
+
+∥b(( s, a, s ′, e )) − b(( s, a, s ′, e ′)) ∥ = ρ(s, a )|r(s, a )|∥ e − e′∥, ∀s, a, s ′, e, e ′,
+
+Assumption B.4 follows immediately from Lemma F.1. For Assumption B.5, it can be easily verified that H(x, y, w ), G (x, y, w ), H ∞(x, y, w ), and G∞(x, y, w ) are Lipschitz continuous in (x, y ) for each w, with the Lipschitz constant being 
+
+L(w) = max   −C(w) A(w) , −D⊤(w) A(w)
+
+Since A(w), b (w), C (w), D (w) are Lipschitz continuous in e for each (s, a, s ′), Lemma F.1 implies that 
+
+h(x, y ) = −C Axy
+
+
+
++ b, h∞(x, y ) = −C Axy
+
+
+
+,g(x, y ) = −D⊤ Axy
+
+
+
++ bg∞(x, y ) = −D⊤ Axy
+
+
+
+,L = max   −C A , −D⊤ A .
+
+Assumption B.5 then follows. For Assumption B.6, we have 
+
+∥hc(x, y ) − h∞(x, y )∥ = 1
+
+c ∥b∥,
+
+∥gc(x, y ) − g∞(x, y )∥ = 1
+
+c ∥b∥,
+
+so the uniform convergence of hc to h∞ and gc to g∞ follow immediately. Since Φ has full column rank and Dμ is positive definite (due to irreducibility of {St}), C = Φ ⊤DμΦ is positive definite, so −C is negative definite. This implies the global asymptotic stability of these two ODEs: 
+
+dx(t)dt = h(x(t), y ) = −Cx (t) + Ay + b, dx(t)dt = h∞(x(t), y ) = −Cx (t) + Ay. 
+
+The unique globally asymptotically stable equilibrium of the first is C−1(Ay + b), and of the second is C−1Ay . This means that we can define λ(y) = C−1(Ay + b) and λ∞(y) = C−1Ay . Note that λ∞(cy ) = cλ ∞(y) as required. Now we will analyze two ODEs: 
+
+dy(t)dt =g(λ(y(t)) , y (t)) = − D⊤λ(y(t)) + Ay (t) + b
+
+= − D⊤(C−1(Ay (t) + b)) + Ay (t) + b
+
+=( I − D⊤C−1)( Ay (t) + b)=( I − (A⊤ + C)C−1)( Ay (t) + b) (by A + C = D, C = C⊤)
+
+= − A⊤C−1(Ay (t) + b),
+
+42 Two-Timescale Markovian Stochastic Approximation 
+
+dy(t)dt =g∞(λ∞(y(t)) , y (t)) = − D⊤λ∞(y(t)) + Ay (t)= − D⊤C−1Ay (t) + Ay (t)=( I − D⊤C−1)Ay (t)=( I − (A⊤ + C)C−1)Ay (t) (by A + C = D, C = C⊤)
+
+= − A⊤C−1Ay (t),
+
+Since A is nonsingular and C is positive definite, −A⊤C−1A is negative definite. This implies the global asymptotic stability of the previous two ODEs. The unique globally asymptotically stable equilibrium of the first is −A−1b, and of the second is 0. Assumption B.6 then follows. Assumption B.7 follows immediately from Lemma F.1 and Assumption B.2. Theorem 3.3 then implies that 
+
+lim  
+
+> t→∞
+
+xt = 0 a.s. 
+
+lim  
+
+> t→∞
+
+yt = −A−1b a.s. which completes the proof. 43 Two-Timescale Markovian Stochastic Approximation 
+
+## G. Technical Lemmas 
+
+G.1. Asymptotic Rate of Change of Functions in Assumption B.7 Lemma G.1. Let Assumptions B.1, B.2, B.5, and B.7 hold. Then the asymptotic rate of change of the functions that could be represented by γ in Assumption B.7 is 0, i.e., for any fixed τ > 0 and x, it holds that 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) [ H(x, y, W i+1 ) − h(x, y )] = 0 a.s., 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) [ G(x, y, W i+1 ) − g(x, y )] = 0 a.s., 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i)[ Lb(Wi+1 ) − Lb] = 0 a.s., 
+
+lim sup 
+
+> n
+
+sup  
+
+> −τ≤t1≤t2≤τ
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i)[ L(Wi+1 ) − L] = 0 a.s. 
+
+and we can replace α(i) with β(i) in any of the above. 
+
+The proofs of these results are very similar to the proof of Lemma 9 in Liu et al. (2025b) and so are omitted due to their length. 
+
+G.2. A Uniform Convergence of Hc, G c to H∞, G ∞
+
+Lemma G.2. Let Assumptions B.1, B.2, B.5, and B.7 hold. It then holds that 
+
+lim  
+
+> c→∞
+
+sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i) [ Hc(z, W i+1 ) − H∞(z, W i+1 )] = 0 a.s., 
+
+lim  
+
+> c→∞
+
+sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i) [ Gc(z, W i+1 ) − G∞(z, W i+1 )] = 0 a.s., where B denotes an arbitrary compact set of Rd1+d2 . Again, α(i) can be replaced with β(i).Proof. Fix an arbitrary sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+}. Use B to denote an arbitrary compact subset of Rd1+d2 .
+
+lim  
+
+> c→∞
+
+sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i) [ Hc(z, W i+1 ) − H∞(z, W i+1 )] 
+
+= lim  
+
+> c→∞
+
+sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)κ(c)b(z, W i+1 ) (by (11)) 
+
+= lim  
+
+> c→∞
+
+κ(c) sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 )
+
+=0 sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 ) (64) 44 Two-Timescale Markovian Stochastic Approximation 
+
+We now show that the function 
+
+z 7 → sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 ) (65) is Lipschitz continuous. ∀z, z ′,
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 ) − sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z′, W i+1 )
+
+≤ sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 ) −
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z′, W i+1 )
+
+(by |sup z f (z) − sup z g(z)| ≤ sup z |f (z) − g(z)|)
+
+≤ sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z, W i+1 ) −
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)b(z′, W i+1 )
+
+≤ sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)∥b(z, W i+1 ) − b(z′, W i+1 )∥≤ sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+
+
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)Lb(Wi+1 )
+
+ ∥z − z′∥
+
+By Lemma G.1 and (98), 
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+
+
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)Lb(Wi+1 )
+
+ < ∞
+
+can be viewed as the Lipschitz constant. Thus, (65) is a continuous function. Since B is compact, the extreme value theorems asserts that the supremum of (65) in B is attainable at some zB and is finite. This means the RHS of (64) is 0, so 
+
+lim  
+
+> c→∞
+
+sup 
+
+> z∈B
+
+sup 
+
+> n
+
+sup  
+
+> t∈[0 ,T ]
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i) [ Hc(z, W i+1 ) − H∞(z, W i+1 )] = 0 .
+
+The proofs for the other statements follow similar arguments and so are omitted. 
+
+G.3. Definitions and Proofs Relating to Equicontinuity Definition G.3. A sequence of functions γn : [0 , T ) → RK is equicontinuous on [0 , T ) if 
+
+sup n ∥γn(0) ∥ < ∞ and ∀ϵ > 0, ∃δ > 0 such that 
+
+sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+∥γn(t1) − γn(t2)∥ ≤ ϵ. 
+
+A standard example of a family of equicontinuous functions is a sequence of bounded Lipschitz continuous functions with a common Lipschitz constant. Clearly, if {γn} is equicontinuous, each γn must be continuous. However, the functions of interest in this work, i.e., ˜zn(t), f n(t), are not continuous, so equicontinuity cannot apply. We, therefore, define the following equicontinuity in the extended sense. 45 Two-Timescale Markovian Stochastic Approximation 
+
+Definition G.4. A sequence of functions γn : [0 , T ) → RK is equicontinuous in the extended sense on [0 , T ) if 
+
+sup n ∥γn(0) ∥ < ∞ and ∀ϵ > 0, ∃δ > 0 such that 
+
+lim sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+∥γn(t1) − γn(t2)∥ ≤ ϵ. 
+
+The following lemmas establish the desired equicontinuity, where Lemma G.1 plays a key role. 
+
+Lemma G.5. {˜zn(t)}∞ 
+
+> n=0
+
+is equicontinuous in the extended sense on [0 , T + 1) .Proof. By (19), 
+
+sup 
+
+> n
+
+∥˜zn(0) ∥ ≤ 1.
+
+Without loss of generality, let t1 ≤ t2.
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜zn(t1) − ˜zn(t2)∥
+
+= lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+(α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ), β (i)Grn (˜ zn(t(i) − Tn), W i+1 )) 
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 )
+
++ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 ) .
+
+We bound each term individually. We start with the first term. 
+
+∀ξ > 0, by (91), ∃δ0, such that ∀0 < δ ≤ δ0,
+
+sup 
+
+> c≥1
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) ≤ ξ. (66) By (97), ∃δ1, such that ∀0 < δ ≤ δ1,
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)L(Wi+1 ) ≤ ξ. (67) 46 Two-Timescale Markovian Stochastic Approximation 
+
+Without loss of generality, let t1 ≤ t2. Then ∀δ ≤ min {δ0, δ 1}, we have 
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 )
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ) −
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (0 , W i+1 )
+
++ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (0 , W i+1 )
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ) −
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (0 , W i+1 )
+
++ sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 )
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ) −
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (0 , W i+1 )
+
++ ξ (by (66)) 
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ) −
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hrn (0 , W i+1 )
+
++ ξ
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)∥Hrn (˜ zn(t(i) − Tn), W i+1 ) − Hrn (0 , W i+1 )∥ + ξ
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)L(Wi+1 )∥˜zn(t(i) − Tn)∥ + ξ
+
+≤(Cˆx + Cˆy ) lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)L(Wi+1 ) + ξ (by Lemma H.6) 
+
+≤(Cˆx + Cˆy )ξ + ξ. (by (67)) A similar argument bounds the other term, implying that {˜zn(t)} is equicontinuous in the extended sense. 
+
+Lemma G.6. {zn(t)} is equicontinuous on [0 , T + 1) .Proof. By (19) and (20), 
+
+sup 
+
+n
+
+∥zn(0) ∥ ≤ 1.
+
+47 Two-Timescale Markovian Stochastic Approximation 
+
+Without loss of generality, let t1 ≤ t2. Then ∀δ > 0, we have 
+
+sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+∥zn(t1) − zn(t2)∥
+
+= sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+hrn (zn(s)) ds 
+
+= sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+[hrn (zn(s)) − hrn (0)] ds +
+
+Z t2
+
+> t1
+
+hrn (0) ds 
+
+≤ sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+∥hrn (zn(s)) − hrn (0) ∥ds + sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+∥hrn (0) ∥ds 
+
+≤ sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+L∥zn(s)∥ds + sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+∥hrn (0) ∥ds (by Lemma H.2) 
+
+≤δLC ˆx + sup 
+
+> n
+
+sup  
+
+> 0≤| t1−t2|≤ δ, 0≤t1≤t2<T
+
+Z t2
+
+> t1
+
+∥hrn (0) ∥ds (by Lemma H.7) 
+
+≤δ(LC ˆx + CH ), (by (100)) which implies that {zn} is equicontinuous. 
+
+Lemma G.7. {fn(t)} is equicontinuous in the extended sense on [0 , T + 1) .Proof. 
+
+sup 
+
+> n
+
+fn(0) = sup 
+
+> n
+
+˜zn(0) − zn(0) = sup 
+
+> n
+
+˜zn(0) − ˜zn(0) = 0 < ∞.
+
+By Lemma G.5 and Lemma G.6, ∀ϵ > 0, ∃δ such that 
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜zn(t1) − ˜zn(t2)∥ ≤ ϵ
+
+2 ,
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥zn(t1) − zn(t2)∥ ≤ ϵ
+
+2 .
+
+Without loss of generality let t1 ≤ t2. Then ∀ϵ, ∃δ such that 
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥fn(t1) − fn(t2)∥
+
+= lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜zn(t1) − ˜zn(t2) − (zn(t1) − zn(t2)) ∥≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜zn(t1) − ˜zn(t2)∥ + lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥zn(t1) − zn(t2)∥≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜zn(t1) − ˜zn(t2)∥ + sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥zn(t1) − zn(t2)∥≤ϵ, 
+
+which implies that {fn} is equicontinuous in the extended sense. 
+
+G.4. Proof of Lemma 4.3 
+
+Proof. Since sup n rn = ∞ and rn is monotonic, lim n→∞ rn = ∞, and every subsequence also converges to infinity. Since {fnk, 0 } is equicontinuous, by the Arzelà-Ascoli theorem (see Appendix A.4), there exists a subsequence nk, 1 ⊆ nk, 0
+
+such that {fnk, 1 } converges uniformly to a continuous limit f lim . Similarly, since ˜znk, 1 (t) is equicontinuous, there is a subsequence nk ⊆ nk, 1 such that {˜znk (t)} converges uniformly in t to a continuous limit ˜zlim (t).The proof that lim n→∞ znk (t) = zlim (t) uniformly is by lemma H.11. 48 Two-Timescale Markovian Stochastic Approximation 
+
+G.5. Proof of Lemma C.5 
+
+Proof. 
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)Grnk (˜ znk (t(i) − Tnk ), W i+1 )
+
+≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i) Grnk (˜ znk (t(i) − Tnk ), W i+1 )
+
+≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)L(Wi+1 )∥˜znk (t(i) − Tnk )∥≤Cˆz lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+β(i)L(Wi+1 ) (by Lemma H.6) 
+
+≤0. (96) 
+
+G.6. Bounding the Discretization Error 
+
+We will now prove that the first term in the RHS of (24) is 0. We need to show that ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds = 0 . (68) To evaluate the above, we first fix any t ∈ [0 , T + 1) and then compute the following stronger double limit, which implies that the above limit holds. 
+
+lim  
+
+> j→∞
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) ds . (69) The Moore-Osgood theorem (Appendix A.5) will help us compute this double limit by turning it into iterated limits. To invoke the Moore-Osgood theorem, we first prove the uniform convergence in k when j → ∞ .
+
+Lemma G.8. ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> j→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds 
+
+= 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)H∞(˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds 
+
+uniformly in k.
+
+49 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀j, ∀k, ∀t ∈ [0 , T + 1) , 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) ds 
+
+− 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)H∞(˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds 
+
+≤ 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) ds 
+
+− 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)H∞(˜ znk (t(i)) , W i+1 ) + 
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds (by |∥ a∥ − ∥ b∥| ≤ ∥ a − b∥)
+
+≤ 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)( Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) − H∞(˜ znk (t(i) − Tnk ), W i+1 )) 
+
++
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) − h∞(˜ zlim (s)) ds 
+
+≤ 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)( Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) − H∞(˜ znk (t(i) − Tnk ), W i+1 )) 
+
++
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) − h∞(˜ zlim (s)) ds (70) By Lemma H.6, ˜znk (t(i) − Tnk ) is in a compact set Bˆz . By Lemma G.2, for the compact set Bˆz , ∀ϵ > 0, ∃j1 such that 
+
+∀j ≥ j1, ∀k, ∀z ∈ B , ∀t ∈ [0 , T + 1) , 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)
+
+h
+
+Hrnj (z, W i+1 ) − H∞(z, W i+1 )
+
+i
+
+≤ ϵ. (71) Similar to the proof of Lemma H.10, we have 
+
+lim  
+
+> j→∞
+
+hrnj (˜ zk(t)) = h∞(˜ zk(t)) (72) uniformly in k and t ∈ [0 , T + 1) . By (72), ∀ϵ > 0, ∃j2 such that ∀j > j 2, ∀k, ∀t ∈ [0 , T + 1) ,
+
+hrnj (˜ zk(t)) − h∞(˜ zk(t)) ≤ ϵ. (73) 50 Two-Timescale Markovian Stochastic Approximation 
+
+Define j0
+
+.
+
+= max {j1, j 2}. ∀j ≥ j0, ∀k, ∀t ∈ [0 , T + 1) , 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) ds 
+
+− 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)H∞(˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds 
+
+≤ 
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)( Hrnj (˜ znk (t(i) − Tnk ), W i+1 ) − H∞(˜ znk (t(i) − Tnk ), W i+1 )) + ( T + 1) ϵ (by (70), (73)) 
+
+≤ϵ + ( T + 1) ϵ (by (70), (71)) 
+
+≤(T + 2) ϵ. 
+
+This completes the proof of uniform convergence. Now, we prove, for each j, the convergence with k → ∞ .
+
+Lemma G.9. ∀t ∈ [0 , T + 1) , ∀j,
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnj (˜ znj (t(i) − Tnj ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnj (˜ zlim (s)) ds = 0 .
+
+The proof of Lemma G.9 is very similar to the proof of Lemma 18 in Liu et al. (2025b) and is omitted here due to its length. We are now ready to compute the limit in (68). 
+
+Lemma G.10. ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds = 0 .
+
+Proof. It follows immediately from Lemmas G.8 & G.9, the Moore-Osgood theorem, and Lemma H.12. Lemma G.10 confirms that the first term in the RHS of (24) is 0. Moreover, it also enables us to rewrite ˜zlim (t) from a summation form to an integral form. 
+
+˜zlim (t)= lim  
+
+> k→∞
+
+˜znk (0) +  
+
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 )= lim  
+
+> k→∞
+
+˜znk (0) + 
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds. (by Lemma G.10) (74) This, together with a few Gronwall’s inequality arguments, confirms that the discretization error indeed diminishes along 
+
+{nk}.
+
+Lemma G.11. ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥ = 0 .
+
+51 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀t ∈ [0 , T + 1) ,
+
+lim  
+
+> k→∞
+
+∥fnk (t)∥≤ lim  
+
+> k→∞
+> m(Tnk+t)−1
+
+X 
+
+> i=m(Tnk)
+
+α(i)Hrnk (˜ znk (t(i) − Tnk ), W i+1 ) −
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds 
+
++ lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds + 0 (by (24) and Lemma C.5) 
+
+= lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds 
+
+=
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds . (by Lemma H.13 and Lemma H.14) (75) We now show the relationship between ˜zlim (t) and zlim (t).
+
+˜zlim (t) − zlim (t) (76) 
+
+= lim 
+
+> k→∞
+
+
+
+˜znk (0) + 
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds 
+
+
+
+−
+
+
+
+˜zlim (0) + 
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+
+
+(by (23) and (74)) 
+
+= ˜zlim (0) + 
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds −
+
+
+
+˜zlim (0) + 
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+
+
+(by Lemma H.13) 
+
+=
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds (77) 
+
+≤
+
+Z t
+
+> 0
+
+L ˜zlim (s) − zlim (s) ds (by Lemma H.2) 
+
+≤0. (by Gronwall inequality in Theorem A.1) Thus, 
+
+lim  
+
+> k→∞
+
+fnk (t)
+
+≤
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds (by (75)) 
+
+= ˜zlim (t) − zlim (t) (by (77)) 
+
+≤0. (by (76)) 
+
+G.7. Proof of Lemma 4.5 
+
+The proof is similar to Lemma 1 from Chapter 3.2 of Borkar (2009). Proof. By Lyapunov stability, there is a δ > 0 such that any trajectory beginning within B(λ∞(y), δ ) stays within ϵ 
+
+> 2
+
+of the equilibrium λ∞(y).For an initial condition x, let Tx be a time at which the trajectory is within δ 
+
+> 2
+
+of the equilibrium. Let x1 be some other initial condition. By definition, Lipschitzness, and the Gronwall inequality, we have 
+
+∥ηy
+
+> ∞
+
+(t, x ) − ηy
+
+> ∞
+
+(t, x 1)∥ ≤ ∥ x − x1∥ + L
+
+Z t
+
+> 0
+
+∥ηy
+
+> ∞
+
+(s, x ) − ηy
+
+> ∞
+
+(s, x 1)∥ds 
+
+≤ ∥ x − x1∥eLT x
+
+52 Two-Timescale Markovian Stochastic Approximation 
+
+for all t ≤ Tx.So there is a neighborhood Vx such that for all x1 ∈ Vx, ηy
+
+> ∞
+
+(Tx, x 1) is within δ of the equilibrium, which by Lyapunov stability implies that it will always be within ϵ of the equilibrium after Tx.By compactness, we can cover the set K by a finite number of such intervals and obtain a finite number of times Tx1 , . . . , T xn
+
+and then take the maximum time to be the value of Tϵ.
+
+G.8. Proof of Lemma 4.6 
+
+The proof is similar to Lemma 2 from chapter 3.2 of Borkar (2009). Proof. We have 
+
+ηy′(t) 
+
+> c
+
+(t, x ) = x +
+
+Z t
+
+> 0
+
+hc(ηy′(s) 
+
+> c
+
+(s, x ), y ′(s)) ds, ηy
+
+> ∞
+
+(t, x ) = x +
+
+Z t
+
+> 0
+
+h∞(ηy
+
+> ∞
+
+(s, x ), y )ds. 
+
+Let us define the error term: 
+
+e(t) = ηy′(t) 
+
+> c
+
+(t, x ) − ηy
+
+> ∞
+
+(t, x ) .
+
+We can bound e(t) by two terms: 
+
+e(t) ≤
+
+Z t
+
+> 0
+
+hc(ηy′(s) 
+
+> c
+
+(s, x ), y ′(s)) − hc(ηy
+
+> ∞
+
+(s, x ), y ′(s)) ds 
+
++
+
+Z t
+
+> 0
+
+∥hc(ηy
+
+> ∞
+
+(s, x ), y ′(s)) − h∞(ηy
+
+> ∞
+
+(s, x ), y )∥ds 
+
+To bound the first term, we use Lipschitzness: 
+
+Z t
+
+> 0
+
+hc(ηy′(s) 
+
+> c
+
+(s, x ), y ′(s)) − hc(ηy
+
+> ∞
+
+(s, x ), y ′(s)) ds ≤ L
+
+Z t
+
+> 0
+
+ηy′(t) 
+
+> c
+
+(t, x ) − ηy
+
+> ∞
+
+(t, x ) ds 
+
+= L
+
+Z t
+
+> 0
+
+e(s)ds. 
+
+To bound the second term, we use Lipschitzness and Assumption B.4: 
+
+Z t
+
+> 0
+
+∥hc(ηy
+
+> ∞
+
+(s, x ), y ′(s)) − h∞(ηy
+
+> ∞
+
+(s, x ), y )∥ds ≤
+
+Z t
+
+> 0
+
+∥hc(ηy
+
+> ∞
+
+(s, x ), y ′(s)) − h∞(ηy
+
+> ∞
+
+(s, x ), y ′(s)) ∥ds 
+
++
+
+Z t
+
+> 0
+
+∥h∞(ηy
+
+> ∞
+
+(s, x ), y ′(s)) − h∞(ηy
+
+> ∞
+
+(s, x ), y )∥ds 
+
+≤
+
+Z t
+
+> 0
+
+ϵ(c)ds + L
+
+Z t
+
+> 0
+
+∥y′(s) − y∥ds 
+
+≤T ϵ (c) + T Lρ. 
+
+To conclude, we will use the Gronwall Inequality (Appendix A.1): 
+
+e(t) ≤T ϵ (c) + T Lρ + L
+
+Z t
+
+> 0
+
+e(s)ds 
+
+≤(Lρ + ϵ(c)) T e LT .
+
+53 Two-Timescale Markovian Stochastic Approximation 
+
+G.9. Proof of Lemma D.3 
+
+Proof. We know that 
+
+sup 
+
+> n
+
+∥˜yn(0) ∥ ≤ 1.
+
+Without loss of generality, let t1 ≤ t2.
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+
+∥˜yn(t1) − ˜yn(t2)∥ = lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 )
+
+∀ξ > 0, by (91), ∃δ0, such that ∀0 < δ ≤ δ0,
+
+sup 
+
+> c≥1
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Gc(0 , W i+1 ) ≤ ξ. (78) By (97), ∃δ1, such that ∀0 < δ ≤ δ1,
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)L(Wi+1 ) ≤ ξ. (79) 54 Two-Timescale Markovian Stochastic Approximation 
+
+Without loss of generality, let t1 ≤ t2. Then ∀δ ≤ min {δ0, δ 1}, we have 
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 )
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 ) −
+
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (0 , W i+1 )
+
++ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (0 , W i+1 )
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 ) −
+
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (0 , W i+1 )
+
++ sup 
+
+> c≥1
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Gc(0 , W i+1 )
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 ) −
+
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (0 , W i+1 )
+
++ ξ (by (78)) 
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (˜ zn(t(i) − Tn), W i+1 ) −
+
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Grn (0 , W i+1 )
+
++ ξ
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)∥Grn (˜ zn(t(i) − Tn), W i+1 ) − Grn (0 , W i+1 )∥ + ξ
+
+≤ lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)L(Wi+1 )∥˜zn(t(i) − Tn)∥ + ξ
+
+≤E lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)L(Wi+1 ) + ξ (by Lemma H.19) 
+
+≤Eξ + ξ. (by (79)) 
+
+G.10. Proof of Lemma D.4 
+
+Proof. Since sup n rn = ∞ and rn is monotonic, lim n→∞ rn = ∞, and every subsequence also converges to infinity. Since {fnk, 0 } is equicontinuous, by the Arzelà-Ascoli theorem (see Appendix A.4), there exists a subsequence nk, 1 ⊆ nk, 0
+
+such that {fnk, 1 } converges uniformly to a continuous limit f lim . Similarly, since ˜ynk, 1 (t) is equicontinuous, there is a subsequence nk ⊆ nk, 1 such that {˜znk (t)} converges uniformly in t to a continuous limit ˜ylim (t).The proof that lim n→∞ ynk (t) = ylim (t) uniformly is by lemma H.18. 55 Two-Timescale Markovian Stochastic Approximation 
+
+## H. Auxiliary Lemmas 
+
+The next lemma establishes some results about the relationship between the step sizes and T . It applies to the fast timescale, but a similar result to (80) holds for β(i) in the slow timescale. 
+
+Lemma H.1. 
+
+∀n, T n+1 − Tn ≥T, 
+
+lim  
+
+> n→∞
+
+Tn+1 − Tn =T. 
+
+Moreover, ∀τ > 0, t 1, t 2 such that −τ ≤ t1 ≤ t2 ≤ τ , we have 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) = t2 − t1, (80) 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+β(i) = 0 . (81) 
+
+Proof. ∀n,
+
+Tn+1 − Tn
+
+=t(m(Tn + T ) + 1) − Tn
+
+≥Tn + T − Tn
+
+≥T. 
+
+Thus, 
+
+lim  
+
+> n→∞
+
+Tn+1 − Tn ≥ T. 
+
+With 
+
+lim  
+
+> n→∞
+
+Tn+1 − Tn
+
+= lim  
+
+> n→∞
+
+t(m(Tn + T ) + 1) − Tn
+
+= lim  
+
+> n→∞
+
+t(m(Tn + T )) + α(m(Tn + T )) − Tn
+
+≤ lim  
+
+> n→∞
+
+Tn + T + α(m(Tn + T )) − Tn
+
+=T, 
+
+by the squeeze theorem, we have lim n→∞ Tn+1 − Tn = T .To prove (80), ∀τ , ∀ − τ ≤ t1 ≤ t2 ≤ τ , it suffices to only consider large n such that t(n) − τ ≥ 0. We have 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i)= lim  
+
+> n→∞
+
+t(m(t(n) + t2)) − t(m(t(n) + t1)) 
+
+≤ lim  
+
+> n→∞
+
+t(n) + t2 − t(m(t(n) + t1)) 
+
+≤ lim  
+
+> n→∞
+
+t(n) + t2 − (t(n) + t1 − α(m(t(n) + t1))) =t2 − t1 + lim  
+
+> n→∞
+
+α(m(t(n) + t1)) =t2 − t1 (by (7)) 56 Two-Timescale Markovian Stochastic Approximation 
+
+and 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i)= lim  
+
+> n→∞
+
+t(m(t(n) + t2)) − t(m(t(n) + t1)) 
+
+≥ lim  
+
+> n→∞
+
+t(n) + t2 − α(m(t(n) + t2)) − t(m(t(n) + t1)) 
+
+≥ lim  
+
+> n→∞
+
+t(n) + t2 − α(m(t(n) + t2)) − (t(n) + t1)= lim  
+
+> n→∞
+
+t2 − t1 − α(m(t(n) + t2)) =t2 − t1. (by (7)) By the squeeze theorem, we have 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) = t2 − t1.
+
+To prove (81), fix ϵ > 0. By (8), there exists N1 ∈ N such that for all n > m (t(N1) + t1),
+
+β(n)
+
+α(n) < ϵ. (82) By (80), there exists N2 ∈ N such that for all n > N 2,
+
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) < t 2 − t1 + ϵ. (83) Let N = max {N1, N 2}. Then for all n > N ,
+
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+β(i)
+
+<ϵ 
+
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+α(i) (by (82)) 
+
+<ϵ (t2 − t1 + ϵ). (by (83)) Since t2 − t1 is a constant and ϵ can be made arbitrarily small, we have 
+
+lim 
+
+> n→∞
+> m(t(n)+ t2)−1
+
+X
+
+> i=m(t(n)+ t1)
+
+β(i) = 0 .
+
+This lemma establishes Lipschitzness for a few classes of functions. 
+
+Lemma H.2. For any x, x ′, y, y ′, w, c ≥ 1, including c = ∞,
+
+∥Hc(x, y, w ) − Hc(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥, (84) 
+
+∥hc(x, y ) − hc(x′, y ′)∥ ≤ L∥(x, y ) − (x′, y ′)∥. (85) 
+
+∥Gc(x, y, w ) − Gc(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥, (86) 
+
+∥gc(x, y ) − gc(x′, y ′)∥ ≤ L∥(x, y ) − (x′, y ′)∥. (87) 57 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. To prove (84), we first consider 1 ≤ c < ∞,
+
+∥Hc(x, y, w ) − Hc(x′, y ′, w )∥
+
+= H(cx, cy, w )
+
+c − H(cx ′, cy, w )
+
+c (by (9)) 
+
+≤ ∥H(cx, cy, w ) − H(cx ′, cy ′, w )∥
+
+c
+
+≤L(w) ∥(cx, cy ) − (cx ′, cy ′)∥
+
+c (by (12)) 
+
+=L(w)∥(x, y ) − (x′, y ′)∥.
+
+By (13), 
+
+∥H∞(x, y, w ) − H∞(x′, y ′, w )∥ ≤ L(w)∥(x, y ) − (x′, y ′)∥.
+
+To prove (85), ∀x, x ′, y, y ′, ∀c ≥ 1 including c = ∞,
+
+∥hc(x, y ) − hc(x′, y ′)∥
+
+=∥Ew∼ω [Hc(x, y, w ) − Hc(x′, y ′, w )] ∥≤Ew∼ω [∥Hc(x, y, w ) − Hc(x′, y ′, w )∥]
+
+≤Ew∼ω [L(w)∥(x, y ) − (x′, y ′)∥]
+
+≤L∥(x, y ) − (x′, y ′)∥.
+
+By similar arguments, (86) and (87) also follow. The following lemma gives some regularity results in the fast timescale. 
+
+Lemma H.3. ∀x, y ,
+
+sup 
+
+> c≥1
+
+∥hc(0) ∥ < ∞, sup 
+
+> c≥1
+
+∥gc(0) ∥ < ∞, (88) 
+
+sup 
+
+> c≥1
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i) [ Hc(x, y, W i+1 ) − hc(x, y )] = 0 a.s., (89) 
+
+sup 
+
+> c≥1
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) < ∞ a.s., (90) 
+
+lim  
+
+> δ→0+
+
+sup 
+
+> c≥1
+
+lim sup 
+
+> n
+
+sup 
+
+> 0≤t2−t1≤δ
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) = 0 a.s. (91) 
+
+By the same arguments, we can show the last three results with the substitutions of G for H and β(i) for α(i).Proof. Proof of (88) :
+
+sup 
+
+> c≥1
+
+∥hc(0) ∥ = sup 
+
+> c≥1
+
+h(0) 
+
+c ≤ sup 
+
+> c≥1
+
+∥h(0) ∥ = ∥h(0) ∥ < ∞, (92) 
+
+sup 
+
+> c≥1
+
+∥gc(0) ∥ = sup 
+
+> c≥1
+
+g(0) 
+
+c ≤ sup 
+
+> c≥1
+
+∥g(0) ∥ = ∥g(0) ∥ < ∞.
+
+58 Two-Timescale Markovian Stochastic Approximation 
+
+Proof of (89) : ∀x,
+
+sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) [ Hc(x, y, W i+1 ) − hc(x, y )] 
+
+= sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)
+
+ H(cx, cy, W i+1 )
+
+c − h(cx, cy )
+
+c
+
+
+
+= sup 
+
+c≥1
+
+1
+
+c lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) [ H(cx, cy, W i+1 ) − h(cx, cy )] 
+
+≤ sup 
+
+c≥1
+
+1
+
+c lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) [ H(cx, cy, W i+1 ) − h(cx, cy )] 
+
+(∀n, T n+1 − Tn ≤ T + sup j α(j))
+
+= sup 
+
+c≥1
+
+1
+
+c · 0=0 . (93) 
+
+Proof of (90) :
+
+lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)H(0 , W i+1 )
+
+= lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)[ H(0 , W i+1 ) − h(0) + h(0)] 
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)[ H(0 , W i+1 ) − h(0)] 
+
++ lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)h(0) 
+
+≤ lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)[ H(0 , W i+1 ) − h(0)] 
+
++ lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)h(0) (∀n, T n+1 − Tn ≤ T + sup j α(j))
+
+= lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)h(0) 
+
+=∥h(0) ∥ lim sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)=∥h(0) ∥(T + sup 
+
+j
+
+α(j)) (by Lemma H.1) 
+
+<∞. (94) 59 Two-Timescale Markovian Stochastic Approximation 
+
+We now consider c in the above bounds. We first get 
+
+sup 
+
+c≥1
+
+sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 )
+
+= sup 
+
+c≥1
+
+sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) H(0 , W i+1 )
+
+c (by (9)) 
+
+= sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)H(0 , W i+1 ) (by c ≥ 1)
+
+<∞. (by (94)) 
+
+Proof of (91) :
+
+lim 
+
+δ→0+ sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 )
+
+≤ lim 
+
+δ→0+ sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) [ Hc(0 , W i+1 ) − hc(0)] 
+
++ lim 
+
+δ→0+ sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)hc(0) 
+
+≤0 + lim 
+
+δ→0+
+
+sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)hc(0) (by (93)) 
+
+≤0 + lim 
+
+δ→0+
+
+sup 
+
+c≥1
+
+lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i) h(0) 
+
+c
+
+≤0 + ∥h(0) ∥ lim 
+
+δ→0+ sup 
+
+c≥1
+
+1
+
+c lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δm(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)
+
+≤∥ h(0) ∥ lim 
+
+δ→0+ sup 
+
+c≥1
+
+1
+
+c δ (by (80)) 
+
+=∥h(0) ∥ lim 
+
+δ→0+
+
+δ
+
+=0 .
+
+We now have some more regularity results in the fast timescale. 60 Two-Timescale Markovian Stochastic Approximation 
+
+Lemma H.4. 
+
+sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)L(Wi+1 ) < ∞ a.s., (95) 
+
+lim 
+
+n→∞ sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)L(Wi+1 ) = 0 a.s., (96) 
+
+lim 
+
+δ→0+ lim sup 
+
+n
+
+sup 
+
+0≤t2−t1≤δ
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)L(Wi+1 ) = 0 a.s., (97) 
+
+sup 
+
+n
+
+sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+α(i)Lb(Wi+1 ) < ∞ a.s. (98) These proofs are similar to the proofs of Lemma H.3 and are thus omitted, except for the proof of (96) (since this is a two-timescale novelty and we need it for Lemma C.5). For the other statements, we can also replace α(i) with β(i).
+
+Proof. Here we show 96: 
+
+lim 
+
+n sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)L(Wi+1 )
+
+= lim 
+
+n sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)[ L(Wi+1 ) − L + L]
+
+≤ lim 
+
+n sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)[ L(Wi+1 ) − L]
+
++ lim 
+
+n sup 
+
+0≤t1≤t2≤Tn+1 −Tn
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)L
+
+≤ lim 
+
+n sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)[ L(Wi+1 ) − L]
+
++ lim 
+
+n sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)L (∀n, T n+1 − Tn ≤ T + sup j α(j))
+
+= lim 
+
+n sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)L
+
+=∥L∥ lim 
+
+n sup 
+
+0≤t1≤t2≤T +sup j α(j)
+
+m(Tn+t2)−1
+
+X
+
+i=m(Tn+t1)
+
+β(i)=0 . (by Lemma H.1) We now show that several different quantities are bounded in the fast timescale. 61 Two-Timescale Markovian Stochastic Approximation 
+
+Lemma H.5. Fix a sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+}, there exist constants CH , C G such that 
+
+LT ≤ CH , LT ≤ CG (99) 
+
+sup 
+
+> c≥1
+
+∥hc(0) ∥ ≤ CH
+
+T , sup 
+
+> c≥1
+
+∥gc(0) ∥ ≤ CG
+
+T (100) 
+
+sup 
+
+> c≥1
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) ≤ CH , (101) 
+
+sup 
+
+> c≥1
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+β(i)Gc(0 , W i+1 ) ≤ CG,
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)L(Wi+1 ) ≤ CH . (102) 
+
+We can replace α(i) with β(i) in the last statement. Moreover, for convenience of presentation, we denote 
+
+Cˆx
+
+.
+
+= [1 + CH ] eCH , C ˆy
+
+.
+
+= [1 + CG] eCG , C ′ .
+
+= CG + CH , C ˆz
+
+.
+
+= [1 + C′]eC′
+
+(103) 
+
+Proof. Fix a sample path {x0, y 0, {Wi}∞
+
+> i=1
+
+},
+
+LT < ∞, (L and T are constants) 
+
+sup 
+
+> c≥1
+
+∥hc(0) ∥T < ∞, (by (92)) 
+
+sup 
+
+> c≥1
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) < ∞, (by (90)) 
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)L(Wi+1 ) < ∞. (by (95)) Thus, there exists a constant CH such that 
+
+LT ≤ CH
+
+sup 
+
+> c≥1
+
+∥hc(0) ∥ ≤ CH
+
+T ,
+
+sup 
+
+> c≥1
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)Hc(0 , W i+1 ) ≤ CH ,
+
+sup 
+
+> n
+
+sup 
+
+> 0≤t1≤t2≤Tn+1 −Tn
+> m(Tn+t2)−1
+
+X
+
+> i=m(Tn+t1)
+
+α(i)L(Wi+1 ) ≤ CH .
+
+We show that the scaled iterates are bounded in the fast timescale. 
+
+Lemma H.6. sup n,t ∈[0 ,T +1) ∥˜zn(t)∥ ≤ Cˆz .
+
+62 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀n ∈ N, t ∈ [0 , T + 1) ,
+
+∥˜zn(t)∥
+
+= ˜zn(0) + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i)Hrn (˜ zn(t(i) − Tn), W i+1 ), β (i)Grn (˜ zn(t(i) − Tn), W i+1 )) 
+
+≤∥ ˜zn(0) ∥ +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i) [ Hrn (˜ zn(t(i) − Tn), W i+1 ) − Hrn (0 , W i+1 )] + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)Hrn (0 , W i+1 )
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i) [ Grn (˜ zn(t(i) − Tn), W i+1 ) − Grn (0 , W i+1 )] + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)Grn (0 , W i+1 )
+
+≤∥ ˜zn(0) ∥ +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)∥Hrn (˜ zn(t(i) − Tn), W i+1 ) − Hrn (0 , W i+1 )∥ + CH
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)∥Grn (˜ zn(t(i) − Tn), W i+1 ) − Grn (0 , W i+1 )∥ + CG
+
+≤∥ ˜zn(0) ∥ +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥˜zn(t(i) − Tn)∥ + C′ (by (101)) 
+
+≤1 + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥˜zn(t(i) − Tn)∥ + C′ (by (19)) 
+
+≤ [1 + C′] e 
+
+> Pm(Tn +t)−1
+> i=m(Tn )(α(i)+ β(i)) L(Wi+1 )
+
+(by ˜zn(t) = ˜ zn(t(m(Tn + t)) − Tn) and discrete Gronwall inequality in Theorem A.3) 
+
+≤ [1 + C′] eC′
+
+(by (102)) 
+
+=Cˆz . (by (103)) We show that the trajectories of these ODEs are bounded in the fast timescale. 
+
+Lemma H.7. sup n,t ∈[0 ,T +1) ∥zn(t)∥ ≤ Cˆx.
+
+63 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀n, t ∈ [0 , T + 1) ,
+
+∥zn(t)∥
+
+= zn(0) + 
+
+Z t
+
+> 0
+
+(hrn (zn(s)) , 0) ds 
+
+≤∥ zn(0) ∥ +
+
+Z t
+
+> 0
+
+hrn (zn(s)) ds 
+
+≤∥ zn(0) ∥ +
+
+Z t
+
+> 0
+
+∥hrn (zn(s)) − hrn (0) ∥ds +
+
+Z t
+
+> 0
+
+∥hrn (0) ∥ds 
+
+≤∥ zn(0) ∥ +
+
+Z t
+
+> 0
+
+L∥zn(s)∥ds +
+
+Z t
+
+> 0
+
+∥hrn (0) ∥ds (by Lemma H.2) 
+
+≤∥ zn(0) ∥ +
+
+Z t
+
+> 0
+
+L∥zn(s)∥ds + ( T + 1) ∥hrn (0) ∥≤∥ zn(0) ∥ +
+
+Z t
+
+> 0
+
+L∥zn(s)∥ds + ( T + 1) CH
+
+T + 1 (by (100)) 
+
+≤1 + 
+
+Z t
+
+> 0
+
+L∥zn(s)∥ds + CH (by (19), (20)) 
+
+≤ [1 + CH ] eL(T +1) (by Gronwall inequality in Theorem A.1) 
+
+≤ [1 + CH ] eCH (by (99)) 
+
+=Cˆx (by (103)) We show that applying hrn to the ODE trajectories still is bounded. 
+
+Lemma H.8. sup n,t ∈[0 ,T +1) ∥hrn (zn(t)) ∥ < ∞.Proof. ∀n, ∀t ∈ [0 , T + 1) ,
+
+∥hrn (zn(t)) ∥≤∥ hrn (zn(t)) − hrn (0) ∥ + ∥hrn (0) ∥≤L∥zn(t)∥ + ∥hrn (0) ∥ (by Lemma H.2) 
+
+≤LC ˆx + ∥hrn (0) ∥ (by Lemma H.7) 
+
+≤LC ˆx + CH
+
+T . (by (18) and (100)) Thus, because Cˆx, C H are independent of n, t , sup n,t ∈[0 ,T +1) ∥hrn (zn(t)) ∥ < ∞.In the fast timescale, we show that the limiting trajectory is bounded. 
+
+Lemma H.9. sup t∈[0 ,T +1) zlim (t) ≤ Cˆx.
+
+64 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀t ∈ [0 , T + 1) ,
+
+zlim (t)
+
+= zlim (0) + 
+
+Z t
+
+> 0
+
+(h∞(zlim (s)) , 0) ds 
+
+≤ zlim (0) +
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+= zlim (0) +
+
+Z t
+
+> 0
+
+h∞(zlim (s)) − h∞(0)  ds +
+
+Z t
+
+> 0
+
+h∞(0) ds 
+
+≤ zlim (0) +
+
+Z t
+
+> 0
+
+h∞(zlim (s)) − h∞(0) ds +
+
+Z t
+
+> 0
+
+∥h∞(0) ∥ds 
+
+≤ zlim (0) +
+
+Z t
+
+> 0
+
+L zlim (s) ds +
+
+Z t
+
+> 0
+
+∥h∞(0) ∥ds (by Lemma H.2) 
+
+≤1 + 
+
+Z t
+
+> 0
+
+L zlim (s) ds +
+
+Z t
+
+> 0
+
+∥h∞(0) ∥ds (by (19), (20)) 
+
+≤1 + 
+
+Z t
+
+> 0
+
+L zlim (s) ds + ( T + 1) ∥h∞(0) ∥≤1 + 
+
+Z t
+
+> 0
+
+L zlim (s) ds + CH (by Assumption B.6 and (100)) 
+
+≤ [1 + CH ] eR t  
+
+> 0Lds
+
+(by Gronwall inequality in Theorem A.1) 
+
+≤ [1 + CH ] eL(T +1) 
+
+≤Cˆx. (by (99), (103)) 
+
+Lemma H.10. lim k→∞ hrnk (zlim (t)) = h∞(zlim (t)) uniformly in t ∈ [0 , T + 1) .Proof. By Assumption B.6, lim k→∞ hrnk (v) = h∞(v) uniformly in a compact set v|v ∈ Rd, ∥v∥ ≤ Cx . By Lemma H.9, zlim (t)|t ∈ [0 , T + 1) ⊆ v|v ∈ Rd, ∥v∥ ≤ Cx . Therefore, lim k→∞ hrnk (zlim (t)) = h∞(zlim (t)) uniformly in 
+
+zlim (t)|t ∈ [0 , T + 1) and in t ∈ [0 , T + 1) .
+
+Lemma H.11. ∀t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+znk (t) = zlim (t).
+
+Moreover, the convergence is uniform in t on [0 , T + 1) .Proof. By (22), ∀δ > 0, there exists a k1 such that ∀k ≥ k1, ∀t ∈ [0 , T + 1) ,
+
+˜znk (t) − ˜zlim (t) ≤ δ. (104) By Lemma H.10, there exists a k2 such that ∀k ≥ k2, ∀t ∈ [0 , T + 1) ,
+
+hrnk (zlim (t)) − h∞(zlim (t)) ≤ δ. (105) 65 Two-Timescale Markovian Stochastic Approximation 
+
+∀k ≥ max {k1, k 2}, ∀t ∈ [0 , T + 1) 
+
+znk (t) − zlim (t)
+
+= ˜znk (0) + 
+
+Z t
+
+> 0
+
+(hrnk (znk (s)) , 0) ds − ˜zlim (0) −
+
+Z t
+
+> 0
+
+(h∞(zlim (s)) , 0) ds 
+
+≤ ˜znk (0) − ˜zlim (0) +
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+≤δ +
+
+Z t
+
+> 0
+
+hrnk (znk (s)) − h∞(zlim (s)) ds (by (104)) 
+
+≤δ +
+
+Z t
+
+> 0
+
+hrnk (znk (s)) − hrnk (zlim (s)) ds +
+
+Z t
+
+> 0
+
+hrnk (zlim (s)) − h∞(zlim (s)) ds 
+
+≤δ + L
+
+Z t
+
+> 0
+
+znk (s) − zlim (s) ds +
+
+Z t
+
+> 0
+
+hrnk (zlim (s)) − h∞(zlim (s)) ds (by Lemma H.2) 
+
+≤δ + tδ + L
+
+Z t
+
+> 0
+
+znk (s) − zlim (s) ds (by (105)) 
+
+≤(δ + tδ )eLt (by Gronwall inequality in Theorem A.1) 
+
+≤(δ + ( T + 1) δ)eL(T +1) ,
+
+which completes the proof. 
+
+Lemma H.12. For any function f : R × R → R, if lim a→∞ 
+
+> b→∞
+
+f (a, b ) = L then lim  
+
+> c→∞
+
+f (c, c ) = L where L is a constant. Proof. By definition, ∀ϵ > 0, ∃a0, b 0 such that ∀a > a 0, b > b 0, ∥f (a, b ) − L∥ < ϵ . Thus, ∀ϵ > 0, ∃c0 = max {a0, b 0}
+
+such that ∀c > c 0, ∥f (c, c ) − L∥ < ϵ .Here we are pulling the limit into the integral. 
+
+Lemma H.13. ∀t ∈ [0 , T + 1) ,
+
+lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds =
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds. 
+
+Proof. From Lemma H.6, it is easy to see that 
+
+sup  
+
+> t∈[0 ,T +1)
+
+˜zlim (t) < ∞,
+
+which, similar to Lemma H.8, implies that 
+
+sup  
+
+> k,t ∈[0 ,T +1)
+
+hrnk
+
+ ˜zlim (t) < ∞.
+
+By the dominated convergence theorem, ∀t ∈ [0 , T + 1) ,
+
+lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (˜ zlim (s)) ds =
+
+Z t
+
+> 0
+
+lim  
+
+> k→∞
+
+hrnk (˜ zlim (s)) ds =
+
+Z t
+
+> 0
+
+h∞(˜ zlim (s)) ds, 
+
+which completes the proof. Finally, we put all the previous lemmas together and get convergence. 
+
+Lemma H.14. ∀t ∈ [0 , T + 1) ,
+
+lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds =
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds. 
+
+66 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. ∀ϵ > 0, by Lemma H.10, ∃k0 such that ∀k ≥ k0, ∀t ∈ [0 , T ),
+
+hrnk (zlim (s)) − h∞(zlim (s)) ≤ ϵ. (106) By Lemma H.11, ∃k1 such that ∀k ≥ k1, ∀t ∈ [0 , T + 1) ,
+
+znk (t) − zlim (t) ≤ ϵ. (107) Thus, ∀k ≥ max {k0, k 1}, ∀t ∈ [0 , T + 1) ,
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+≤
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds −
+
+Z t
+
+> 0
+
+hrnk (zlim (s)) ds +
+
+Z t
+
+> 0
+
+hrnk (zlim (s)) ds −
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds 
+
+≤
+
+Z t
+
+> 0
+
+hrnk (znk (s)) − hrnk (zlim (s)) ds +
+
+Z t
+
+> 0
+
+hrnk (zlim (s)) − h∞(zlim (s)) ds 
+
+≤
+
+Z t
+
+> 0
+
+hrnk (znk (s)) − hrnk (zlim (s)) ds + ( T + 1) ϵ (by (106)) 
+
+≤
+
+Z t
+
+> 0
+
+L znk (s) − zlim (s) ds + T ϵ (by Lemma H.2) 
+
+≤L(T + 1) ϵ + ( T + 1) ϵ. (by (107)) Thus, ∀t ∈ [0 , T + 1) ,
+
+lim 
+
+> k→∞
+
+Z t
+
+> 0
+
+hrnk (znk (s)) ds =
+
+Z t
+
+> 0
+
+h∞(zlim (s)) ds. 
+
+This lemma uses the Gronwall inequality to show that in the fast timescale, the iterates can’t grow too much in one period T .
+
+Lemma H.15. ∀n, ∀t ∈ [0 , T n+1 − Tn],
+
+∥¯z(Tn + t)∥ ≤ (∥¯z(Tn)∥C′ + C′) eC′
+
++ ∥¯z(Tn)∥,
+
+and in particular, 
+
+∥¯z(Tn+1 )∥ ≤ (∥¯z(Tn)∥C′ + C′) eC′
+
++ ∥¯z(Tn)∥
+
+where C′ is a positive constant defined in Lemma H.5. 
+
+67 Two-Timescale Markovian Stochastic Approximation 
+
+Proof. We first show the difference between ¯z(Tn+1 ) and ¯z(Tn) by the following derivations. ∀n, ∀t ∈ [0 , T n+1 − Tn],
+
+∥¯z(Tn + t) − ¯z(Tn)∥
+
+=∥¯z(t(m(Tn + t))) − ¯z(Tn)∥
+
+= ¯z(Tn) + 
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) − ¯z(Tn)
+
+=
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i)H(¯ z(t(i)) , W i+1 ), β (i)G(¯ z(t(i)) , W i+1 )) 
+
+≤
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)∥H(¯ z(t(i)) , W i+1 ) − H(¯ z(Tn), W i+1 )∥ + β(i)∥G(¯ z(t(i)) , W i+1 ) − G(¯ z(Tn), W i+1 )∥
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)H(¯ z(Tn), W i+1 ) +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)G(¯ z(Tn), W i+1 )
+
+≤
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(t(i)) − ¯z(Tn)∥
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)H(¯ z(Tn), W i+1 ) +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)G(¯ z(Tn), W i+1 )
+
+≤
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(t(i)) − ¯z(Tn)∥ +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(Tn)∥
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)H(0 , W i+1 ) +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)G(0 , W i+1 ) (by Assumption B.5) 
+
+=
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(t(i)) − ¯z(Tn)∥ + ∥¯z(Tn)∥
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )+
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)H(0 , W i+1 ) +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)G(0 , W i+1 )
+
+≤
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(t(i)) − ¯z(Tn)∥ + ∥¯z(Tn)∥C′ +
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+α(i)H(0 , W i+1 )
+
++
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+β(i)G(0 , W i+1 ) (by (102)) 
+
+≤
+
+> m(Tn+t)−1
+
+X
+
+> i=m(Tn)
+
+(α(i) + β(i)) L(Wi+1 )∥¯z(t(i)) − ¯z(Tn)∥ + [ ∥¯z(Tn)∥C′ + C′] (by (101)) 
+
+≤ [∥¯z(Tn)∥C′ + C′] e  
+
+> Pm(Tn +t)−1
+> i=m(Tn )(α(i)+ β(i)) L(Wi+1 )
+
+(by discrete Gronwall inequality in Theorem A.3) 
+
+≤[∥¯z(Tn)∥C′ + C′] eC′
+
+(by (102)) The following lemmas are in the slow timescale. 68 Two-Timescale Markovian Stochastic Approximation 
+
+The next lemma shows the boundedness of ylim (t) where C, C 0 are arbitrary constants. 
+
+Lemma H.16. sup t∈[0 ,T +1) ylim (t) ≤ C.Proof. ∀t ∈ [0 , T + 1) ,
+
+ylim (t)
+
+= ylim (0) + 
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) ds 
+
+≤ ylim (0) +
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) ds 
+
+= ylim (0) +
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) − g∞(0)  ds +
+
+Z t
+
+> 0
+
+g∞(0) ds 
+
+≤ ylim (0) +
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) − g∞(0) ds +
+
+Z t
+
+> 0
+
+∥g∞(0) ∥ds 
+
+≤ ylim (0) +
+
+Z t
+
+> 0
+
+L λ∞(ylim (s)) + L ylim (s) ds +
+
+Z t
+
+> 0
+
+∥g∞(0) ∥ds (by Lemma H.2) 
+
+≤1 + 
+
+Z t
+
+> 0
+
+L · Lλ ylim (s) + L ylim (s) ds +
+
+Z t
+
+> 0
+
+∥g∞(0) ∥ds 
+
+≤1 + 
+
+Z t
+
+> 0
+
+L(Lλ + 1) ylim (s) ds + ( T + 1) ∥g∞(0) ∥≤1 + 
+
+Z t
+
+> 0
+
+L(Lλ + 1) ylim (s) ds + C0
+
+≤ [1 + C0] eR t  
+
+> 0L(Lλ+1) ds
+
+(by Gronwall inequality in Theorem A.1) 
+
+≤ [1 + C0] eL(Lλ+1)( T +1) 
+
+≤C. 
+
+The following shows a uniform convergence on the sequence grnk .
+
+Lemma H.17. lim k→∞ grnk (λ∞(ylim (t)) , y lim (t)) = g∞(λ∞(ylim (t)) , y lim (t)) uniformly in t ∈ [0 , T + 1) .Proof. By Assumption B.6, lim k→∞ grnk (v) = g∞(v) uniformly in a compact set v|v ∈ Rd1+d2 , ∥v∥ ≤ C .By Lemma H.16, ylim (t)|t ∈ [0 , T + 1) ⊆ v|v ∈ Rd, ∥v∥ ≤ C . Additionally, λ∞ is Lipschitz, so (λ∞(ylim (t)) , y lim (t)) |t ∈ [0 , T + 1) ⊆ v|v ∈ Rd1+d2 , ∥v∥ ≤ C .Therefore, lim k→∞ grnk (λ∞(ylim (t)) , y lim (t)) = g∞(λ∞(ylim (t)) , y lim (t)) uniformly in ylim (t)|t ∈ [0 , T + 1) and in 
+
+t ∈ [0 , T + 1) .The next lemma gives us the uniform convergence of ynk we desire. 
+
+Lemma H.18. ∀t ∈ [0 , T + 1) , we have 
+
+lim  
+
+> k→∞
+
+ynk (t) = ylim (t).
+
+Moreover, the convergence is uniform in t on [0 , T + 1) .Proof. By (40), ∀δ > 0, there exists a k1 such that ∀k ≥ k1, ∀t ∈ [0 , T + 1) ,
+
+˜ynk (t) − ˜ylim (t) ≤ δ. (108) 69 Two-Timescale Markovian Stochastic Approximation 
+
+By Lemma H.17, there exists a k2 such that ∀k ≥ k2, ∀t ∈ [0 , T + 1) ,
+
+grnk (λ∞(ylim (t)) , y lim (t)) − g∞(λ∞(ylim (t)) , y lim (t)) ≤ δ. (109) 
+
+∀k ≥ max {k1, k 2}, ∀t ∈ [0 , T + 1) 
+
+ynk (t) − ylim (t)
+
+= ˜ynk (0) + 
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) ds − ˜ylim (0) −
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) ds 
+
+≤ ˜ynk (0) − ˜ylim (0) +
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) ds −
+
+Z t
+
+> 0
+
+g∞(λ∞(ylim (s)) , y lim (s)) ds 
+
+≤δ +
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) − g∞(λ∞(ylim (s)) , y lim (s)) ds (by (108)) 
+
+≤δ +
+
+Z t
+
+> 0
+
+grnk (λ∞(ynk (s)) , y nk (s)) − grnk (λ∞(ylim (s)) , y lim (s)) ds 
+
++
+
+Z t
+
+> 0
+
+grnk (λ∞(ylim (s)) , y lim (s)) − g∞(λ∞(ylim (s)) , y lim (s)) ds 
+
+≤δ + L
+
+Z t
+
+> 0
+
+(λ∞(ynk (s)) , y nk (s)) − (λ∞(ylim (s)) , y lim (s))) ds 
+
++
+
+Z t
+
+> 0
+
+grnk (λ∞(ylim (s)) , y lim (s)) − g∞(λ∞(ylim (s)) , y lim (s)) (by Lemma H.2) 
+
+≤δ + tδ + L(Lλ + 1) 
+
+Z t
+
+> 0
+
+ynk (s) − ylim (s) ds (by (109)) 
+
+≤(δ + tδ )eL(Lλ+1) t (by Gronwall inequality in Theorem A.1) 
+
+≤(δ + T δ )eL(Lλ+1) T ,
+
+which completes the proof. The next lemma applies the Gronwall inequality to control the growth of the iterates in the slow timescale. 
+
+Lemma H.19. There are some constants A, B such that 
+
+∥ymax  
+
+> l
+
+∥ ≤ A ymax  
+
+> m(Tn)
+
++ B
+
+where m(Tn) ≤ l ≤ m(Tn+1 ). As a consequence, there are constants C and D such that 
+
+∥zmax l ∥ ≤ C zmax m(Tn) + D. (110) 
+
+This implies that ∥˜zn(t)∥ is bounded since for all n, ∥˜zn(0) ∥ ≤ 1.Proof. We know that 
+
+∥yl∥ = ym(Tn) +
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)G(xi, y i, W i+1 )
+
+≤ ∥ ymax  
+
+> n
+
+∥ +
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)∥G(xi, y i, W i+1 )∥ (111) 70 Two-Timescale Markovian Stochastic Approximation 
+
+Since the second term of (111) is monotonically increasing in l, we know that the following holds: 
+
+∥ymax  
+
+> l
+
+∥ ≤ ymax  
+
+> m(Tn)
+
++
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)∥G(xi, y i, W i+1 )∥≤ ymax  
+
+> m(Tn)
+
++
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )( ∥xi∥ + ∥yi∥) + 
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)G(0 , W i+1 )
+
+≤ ymax  
+
+> m(Tn)
+
++
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )( ∥xi∥ + ∥yi∥) + E (90) 
+
+≤ ymax  
+
+> m(Tn)
+
++
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )( K(1 + ∥ymax  
+
+> i
+
+∥) + ∥ymax  
+
+> i
+
+∥) + E (Lemma 3.1) 
+
+≤ ymax  
+
+> m(Tn)
+
++
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )( K + ( K + 1) ∥ymax  
+
+> i
+
+∥) + E
+
+≤ ymax  
+
+> m(Tn)
+
++ K
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 ) + ( K + 1) 
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )∥ymax  
+
+> i
+
+∥ + E
+
+≤ ymax  
+
+> m(Tn)
+
++ KC ′ + ( K + 1) 
+
+> l
+
+X
+
+> i=m(Tn)
+
+β(i)L(Wi+1 )∥ymax  
+
+> i
+
+∥ + E (102) 
+
+≤
+
+
+
+ymax  
+
+> m(Tn)
+
++ KC ′
+
+e(K+1) Pli=m(Tn ) β(i)L(Wi+1 ) + E (by discrete Grownwall inequality in Appendix A.3) 
+
+≤
+
+
+
+ymax  
+
+> m(Tn)
+
++ KC ′
+
+e(K+1) C′
+
++ E (102) Now we show (110): 
+
+∥zmax l ∥ ≤ ∥ ymax  
+
+> l
+
+∥ + K(1 + ∥ymax  
+
+> l
+
+∥) (Lemma 3.1) 
+
+≤ K + ( K + 1)( A ymax  
+
+> m(Tn)
+
++ B)
+
+≤ K + ( K + 1)( A zmax m(Tn) + B)
+
+71
