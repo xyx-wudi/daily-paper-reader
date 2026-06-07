@@ -6,26 +6,31 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-06
-- 运行时间：2026-06-06 21:10:56 UTC
+- 最新运行日期：2026-06-07
+- 运行时间：2026-06-07 20:27:52 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：2
 - 精读区：0
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-1) 今日仅速读一篇探讨两时间尺度马尔可夫随机逼近收敛性的论文，评分7/10。  
-2) 核心结论是该算法在强化学习应用中的收敛性证明，为理论分析提供支撑。  
-3) 建议深入研读数学推导，以掌握算法收敛的关键条件。
-- 详情：[/202606/06/README](/202606/06/README)
+今日速读2篇，聚焦多智能体系统的通信拓扑优化与效率提升。
+
+最值得关注《Dynamic Trust-Aware Sparse Communication Topology》中的信任感知稀疏通信方案（7.0分），以及《What Should Agents Say?》探索的动作-状态通信机制（6.0分）。
+
+建议普通读者优先了解前者，它直接关联LLM多智能体共识的实际应用瓶颈，具有较高参考价值。
+- 详情：[/202606/07/README](/202606/07/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Convergence of Two-Timescale Markovian Stochastic Approximations with Applications in Reinforcement Learning](/202606/06/2605.31172v1-convergence-of-two-timescale-markovian-stochastic-approximations-with-applications-in-reinforcement-learning)  
+1. [Dynamic Trust-Aware Sparse Communication Topology for LLM-Based Multi-Agent Consensus](/202606/07/2606.01828v1-dynamic-trust-aware-sparse-communication-topology-for-llm-based-multi-agent-consensus)  
    标签：评分：7.0/10、query:marl
-   evidence：面向演员-评论家方法的两时间尺度收敛性分析
+   evidence：具有稀疏通信拓扑的分散式多智能体系统
+2. [What Should Agents Say? Action-state Communication for Efficient Multi-Agent Systems](/202606/07/2606.05304v1-what-should-agents-say-action-state-communication-for-efficient-multi-agent-systems)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体系统通信策略，支持去中心化执行
 
 
 <div class="dpr-home-promo-card">

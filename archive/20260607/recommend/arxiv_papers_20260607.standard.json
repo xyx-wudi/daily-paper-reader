@@ -1,0 +1,91 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-07T20:26:57.083711+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.01828v1",
+      "source": "arxiv",
+      "title": "Dynamic Trust-Aware Sparse Communication Topology for LLM-Based Multi-Agent Consensus",
+      "abstract": "Large language model-driven multi-agent systems enhance the reliability of complex reasoning tasks through multi-round deliberation, role specialization, and cross-validation. However, existing multi-agent debate and collaboration frameworks typically adopt fully connected communication, causing the number of messages, token costs, and end-to-end latency to grow approximately quadratically with the number of agents; although fixed sparse topologies reduce overhead, they cannot adapt communication relationships to different task instances or intermediate reasoning states, making them prone either to preserving low-value interactions or to losing critical error-correction information. To address this problem, this paper proposes DySCo (Dynamic Sparse Consensus), a dynamic trust-aware sparse consensus mechanism. In each round of reasoning, DySCo estimates the value of communication edges based on agent reliability, answer divergence, and task relevance, and selects a small number of high-value edges for message exchange under budget constraints; it then aggregates the answers of different agents through dynamic trust weights and terminates the discussion early once consensus stabilizes. This mechanism replaces universal broadcasting with on-demand communication, thereby reducing communication overhead while preserving essential cross-validation information. We further present analyses of communication complexity and consensus stability, and evaluate the performance of DySCo on mathematical reasoning, logical reasoning, and factual question-answering tasks.",
+      "authors": [
+        "Wanshuang Gou",
+        "Zihan Liu"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-06-01T07:42:33+00:00",
+      "link": "https://arxiv.org/pdf/2606.01828v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "decentralized multi-agent system with sparse communication topology",
+      "llm_evidence_cn": "具有稀疏通信拓扑的分散式多智能体系统",
+      "llm_evidence": "具有稀疏通信拓扑的分散式多智能体系统",
+      "canonical_evidence": "具有稀疏通信拓扑的分散式多智能体系统",
+      "llm_tldr_en": "Proposes DySCo for dynamic sparse communication in LLM-based multi-agent consensus to reduce token costs.",
+      "llm_tldr_cn": "该论文针对基于大语言模型的多智能体共识系统，提出动态信任感知稀疏通信拓扑（DySCo）。它根据任务实例和推理状态自适应调整通信关系，在保持推理可靠性的同时大幅降低消息数量和令牌成本。实验表明DySCo在多种任务上优于全连接和固定稀疏拓扑。",
+      "llm_tldr": "该论文针对基于大语言模型的多智能体共识系统，提出动态信任感知稀疏通信拓扑（DySCo）。它根据任务实例和推理状态自适应调整通信关系，在保持推理可靠性的同时大幅降低消息数量和令牌成本。实验表明DySCo在多种任务上优于全连接和固定稀疏拓扑。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.05304v1",
+      "source": "arxiv",
+      "title": "What Should Agents Say? Action-state Communication for Efficient Multi-Agent Systems",
+      "abstract": "Multi-agent systems (MAS) built on large language models are typically organized around roles, pipelines, and turn schedules, while the content that agents pass to one another is often left as unconstrained natural language. However, this free-form communication can rapidly inflate token usage, consume the shared context window, and ultimately affect both system performance and inference cost. We analyze five common inter-agent communication strategies across two MAS topologies, finding that no fixed strategy is universally optimal. Instead, effective inter-agent messages consistently preserve action-centered information needed by downstream agents. Building on this, we propose the PACT (Protocolized Action-state Communication and Transmission), which treats inter-agent communication as a public state-update problem and projects each raw agent output into a compact action-state record before it enters shared history. Across different MAS topologies, PACT consistently improves the performance-cost trade-off, achieving comparable or stronger task performance with substantially fewer tokens. The gains extend to production coding harnesses: PACT lifts OpenHands' resolve rate at -10% tokens-per-resolved, and is resolve-neutral on SWE-agent while halving input tokens. Our code is publicly available at https://github.com/iNLP-Lab/PACT.",
+      "authors": [
+        "Chen Huang",
+        "Yuhao Wu",
+        "Wenxuan Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-03T18:00:22+00:00",
+      "link": "https://arxiv.org/pdf/2606.05304v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "inter-agent communication strategies for multi-agent systems; supports decentralized execution",
+      "llm_evidence_cn": "多智能体系统通信策略，支持去中心化执行",
+      "llm_evidence": "多智能体系统通信策略，支持去中心化执行",
+      "canonical_evidence": "多智能体系统通信策略，支持去中心化执行",
+      "llm_tldr_en": "Analyzes five inter-agent communication strategies in LLM-based multi-agent systems, finding that action-centered messages are most efficient; proposes PACT protocol for structured communication, reducing token usage.",
+      "llm_tldr_cn": "多智能体系统中智能体间自由文本通信导致令牌消耗过高。本文分析五种通信策略，发现保留动作中心信息的消息最有效。基于此提出PACT（协议化动作-状态通信）框架，通过结构化通信降低开销，提升系统效率。",
+      "llm_tldr": "多智能体系统中智能体间自由文本通信导致令牌消耗过高。本文分析五种通信策略，发现保留动作中心信息的消息最有效。基于此提出PACT（协议化动作-状态通信）框架，通过结构化通信降低开销，提升系统效率。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

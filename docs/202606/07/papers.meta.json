@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-07",
+  "date": "2026-06-07",
+  "generated_at": "2026-06-07T20:27:59",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/07/2606.01828v1-dynamic-trust-aware-sparse-communication-topology-for-llm-based-multi-agent-consensus",
+      "section": "quick",
+      "title_en": "Dynamic Trust-Aware Sparse Communication Topology for LLM-Based Multi-Agent Consensus",
+      "authors": "Wanshuang Gou, Zihan Liu",
+      "date": "2026-06-01",
+      "pdf": "https://arxiv.org/pdf/2606.01828v1",
+      "score": "7.0",
+      "evidence": "具有稀疏通信拓扑的分散式多智能体系统",
+      "tldr": "针对LLM多智能体系统全连接通信开销平方级增长、固定稀疏拓扑缺乏适应性的问题，提出DySCo动态信任感知稀疏共识机制。每轮根据智能体可靠性、答案分歧和任务相关性估计通信边价值，在预算约束下选择高价值边进行消息交换，并通过动态信任权重聚合答案，共识稳定后提前终止。该方法以按需通信替代全广播，显著降低token成本和延迟，同时保留关键交叉验证信息。在数学推理、逻辑推理和事实问答任务上验证了有效性。",
+      "tags": "query:marl",
+      "abstract_en": "Large language model-driven multi-agent systems enhance the reliability of complex reasoning tasks through multi-round deliberation, role specialization, and cross-validation. However, existing multi-agent debate and collaboration frameworks typically adopt fully connected communication, causing the number of messages, token costs, and end-to-end latency to grow approximately quadratically with the number of agents; although fixed sparse topologies reduce overhead, they cannot adapt communication relationships to different task instances or intermediate reasoning states, making them prone either to preserving low-value interactions or to losing critical error-correction information. To address this problem, this paper proposes DySCo (Dynamic Sparse Consensus), a dynamic trust-aware sparse consensus mechanism. In each round of reasoning, DySCo estimates the value of communication edges based on agent reliability, answer divergence, and task relevance, and selects a small number of high-value edges for message exchange under budget constraints; it then aggregates the answers of different agents through dynamic trust weights and terminates the discussion early once consensus stabilizes. This mechanism replaces universal broadcasting with on-demand communication, thereby reducing communication overhead while preserving essential cross-validation information. We further present analyses of communication complexity and consensus stability, and evaluate the performance of DySCo on mathematical reasoning, logical reasoning, and factual question-answering tasks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/07/2606.05304v1-what-should-agents-say-action-state-communication-for-efficient-multi-agent-systems",
+      "section": "quick",
+      "title_en": "What Should Agents Say? Action-state Communication for Efficient Multi-Agent Systems",
+      "authors": "Chen Huang, Yuhao Wu, Wenxuan Zhang",
+      "date": "2026-06-03",
+      "pdf": "https://arxiv.org/pdf/2606.05304v1",
+      "score": "6.0",
+      "evidence": "多智能体系统通信策略，支持去中心化执行",
+      "tldr": "多智能体系统基于大语言模型时，自由形式通信导致token膨胀和共享上下文窗口过载。分析五种策略发现无固定最优，有效消息保留动作中心信息。提出PACT协议，将原始输出压缩为动作状态记录作为公共状态更新。在多种拓扑下提升性能成本权衡，并成功应用于生产代码工具，降低token使用同时保持或提升任务表现。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) built on large language models are typically organized around roles, pipelines, and turn schedules, while the content that agents pass to one another is often left as unconstrained natural language. However, this free-form communication can rapidly inflate token usage, consume the shared context window, and ultimately affect both system performance and inference cost. We analyze five common inter-agent communication strategies across two MAS topologies, finding that no fixed strategy is universally optimal. Instead, effective inter-agent messages consistently preserve action-centered information needed by downstream agents. Building on this, we propose the PACT (Protocolized Action-state Communication and Transmission), which treats inter-agent communication as a public state-update problem and projects each raw agent output into a compact action-state record before it enters shared history. Across different MAS topologies, PACT consistently improves the performance-cost trade-off, achieving comparable or stronger task performance with substantially fewer tokens. The gains extend to production coding harnesses: PACT lifts OpenHands' resolve rate at -10% tokens-per-resolved, and is resolve-neutral on SWE-agent while halving input tokens. Our code is publicly available at https://github.com/iNLP-Lab/PACT.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
