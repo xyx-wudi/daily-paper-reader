@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-09",
+  "date": "2026-06-09",
+  "generated_at": "2026-06-09T22:07:17",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/09/2606.08064v1-cooperative-long-rope-skipping-via-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Cooperative Long Rope Skipping via Multi-Agent Reinforcement Learning",
+      "authors": "Zihao Wang, Shijie Peng, Kerui Wu, Yu Huang, Ruiqi Xue, Dong Liu, Tian Xu, Lei Yuan, Yang Yu",
+      "date": "2026-06-06",
+      "pdf": "https://arxiv.org/pdf/2606.08064v1",
+      "score": "10.0",
+      "evidence": "合作多智能体强化学习在长绳跳跃中的应用",
+      "tldr": "仿人机器人多智能体协调任务如长绳跳绳尚未被充分探索。为此，提出Marope分层强化学习框架：下层通过多智能体强化学习学习分散绳索操作策略，上层训练集中调度策略以协调执行，并融入多样跳跃策略增强对不同玩家风格的泛化。在仿真和真实Unitree G1机器人上，Marope实现更高效稳定的绳索操作及更鲁棒灵活的合作，优于多种基线。",
+      "tags": "query:marl",
+      "abstract_en": "Humans exhibit remarkable motor agility, enabling a wide range of dynamic skills such as running and jumping, which highlights the great potential of humanoid robots for athletic locomotion. Among athletic sports, long rope skipping requires two rope turners to cooperatively swing the rope while adapting to a player under different jumping rhythms, making it a meaningful yet challenging task for humanoid robots. Although existing methods for humanoid sports have achieved success in single-agent and interaction-free settings, such as running, dancing, and parkour, task scenarios that require precise coordination among multiple participants remain largely unexplored. To this end, we propose Marope, a multi-agent reinforcement learning (MARL) framework for cooperative long rope skipping with multiple humanoid robots. Specifically, Marope adopts a hierarchical reinforcement learning framework for policy training. At the lower level, it learns decentralized rope manipulation policies through MARL, while at the upper level, a centralized scheduling policy is trained to coordinate the execution of the lower-level policies. To improve generalization across different player behavioral styles, Marope further incorporates diverse jumping policies into cooperative game training. We evaluate our approach on Unitree G1 humanoid robots in both simulation and real-world settings. Experimental results demonstrate that Marope outperforms various baselines, achieving more efficient and stable rope manipulation as well as more robust and adaptable cooperation with varied players.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/09/2606.08039v1-mujoco-drones-gym-a-gpu-accelerated-multi-drone-simulator-for-control-and-reinforcement-learning",
+      "section": "deep",
+      "title_en": "MuJoCo-Drones-Gym: A GPU-Accelerated Multi-Drone Simulator for Control and Reinforcement Learning",
+      "authors": "Manan Tayal",
+      "date": "2026-06-06",
+      "pdf": "https://arxiv.org/pdf/2606.08039v1",
+      "score": "9.0",
+      "evidence": "用于强化学习的GPU加速多无人机仿真器",
+      "tldr": "多无人机仿真面临物理保真度、多智能体支持和训练吞吐量之间的权衡。本文提出MuJoCo-Drones-Gym，基于MuJoCo引擎，支持任意数量Bitcraze Crazyflie 2.x纳米四旋翼，提供模块化物理模型（刚体、显式动力学等）和多种动作/观测空间。兼容Gymnasium和PettingZoo，涵盖七种任务环境（悬停、速度跟踪、编队飞行等），利用MuJoCo的GPU加速实现高效并行。该平台在高保真度下桥接了控制算法开发与大规模强化学习训练的需求。",
+      "tags": "query:marl",
+      "abstract_en": "Robotic simulators are a cornerstone of modern research in aerial robotics, serving both as a vehicle for the development of new control algorithms and as the data source for training reinforcement learning (RL) policies. Yet, existing quadcopter learning environments often face a trade-off between physical fidelity, multi-agent support, and the throughput required by modern deep RL pipelines. In this paper, we present MuJoCo-Drones-Gym, an open-source Gymnasium-compatible multi-drone environment built on top of the MuJoCo physics engine. MuJoCo-Drones-Gym supports an arbitrary number of Bitcraze Crazyflie 2.x nano-quadcopters and exposes a modular API for selecting (i)~the physics model (rigid-body MuJoCo, explicit Python dynamics, or any subset of ground effect, blade drag, and inter-drone downwash), (ii)~the action interface (per-motor RPMs, collective normalized thrust, velocity setpoints, or PID waypoint commands), and (iii)~the observation space (kinematic state vectors, RGB / depth / segmentation cameras, or neighbourhood adjacency information). A PettingZoo ParallelEnv wrapper enables drop-in multi-agent reinforcement learning, while a suite of seven task environments, hover, velocity tracking, multi-drone hover, waypoint navigation, formation flight, gate racing, and a generic multi-agent template, demonstrates the breadth of the interface. We describe the environment design, the underlying physics and quadcopter dynamics, and illustrate its use through control and learning examples that mirror those of the closely related gym-pybullet-drones project, while taking advantage of MuJoCo's improved contact handling, rendering, and parallelizability.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/09/2606.08068v1-dice-entropy-regularized-equilibrium-selection-for-stable-multi-agent-llm-coordination",
+      "section": "deep",
+      "title_en": "DICE: Entropy-Regularized Equilibrium Selection for Stable Multi-Agent LLM Coordination",
+      "authors": "Yi Xie, Zhanke Zhou, Chentao Cao, Bo Liu, Bo Han",
+      "date": "2026-06-06",
+      "pdf": "https://arxiv.org/pdf/2606.08068v1",
+      "score": "8.0",
+      "evidence": "将多智能体LLM系统形式化为马尔可夫博弈并提出HQRE均衡",
+      "tldr": "多智能体LLM系统因未指定协调惯例导致均衡选择不当，出现振荡和漂移，引发不稳定学习与线性贝叶斯遗憾。本文形式化为折扣不完全信息马尔可夫博弈，并提出异质量化响应均衡（HQRE）作为唯一且稳定的目标，满足单调性条件时收敛快、遗憾有界。基于HQRE设计DICE-PC（提示控制）和DICE-FT（参数高效微调）算法。在11个基准上，DICE-PC平均提升4.3个百分点，DICE-FT提升8.5个百分点，显著改善了准确率-成本权衡。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent large language model (LLM) systems often fail to reliably outperform a single strong model equipped with best-of-N sampling. We argue that a core source of this instability is ill-posed equilibrium selection: current systems specify what information agents share, but not which coordination convention should be selected. We formalize a broad class of such systems as discounted incomplete-information Markov games and show that two common pathologies, oscillation between competing conventions and drift across them, can both induce unstable learning and linear Bayesian regret. To obtain a well-posed target, we introduce the Heterogeneous Quantal Response Equilibrium (HQRE), an entropy-regularized equilibrium concept with agent- and state-dependent temperatures. Under a monotonicity condition, HQRE is unique, admits linearly convergent mirror updates, and yields bounded Bayesian regret; the same condition yields rollout-measurable stability diagnostics. We instantiate this objective in two algorithms: DICE-PC, which coordinates frozen models through prompt-control actions, and DICE-FT, which performs parameter-efficient mirror fine-tuning. Across eleven benchmarks in four domains, DICE improves accuracy-cost trade-offs over strong within-class baselines; on reasoning and planning tasks, DICE-PC improves by 4.3 percentage points on average and DICE-FT by 8.5 points.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/09/2606.08340v1-benchmarking-open-ended-multi-agent-coordination-in-language-agents",
+      "section": "quick",
+      "title_en": "Benchmarking Open-Ended Multi-Agent Coordination in Language Agents",
+      "authors": "Kale-ab Abebe Tessera, Andras Szecsenyi, Cameron Barker, Alexander Rutherford, Davide Paglieri, Aidan Scannell, Henry Gouk, Elliot J. Crowley, Tim Rocktäschel, Amos Storkey",
+      "date": "2026-06-06",
+      "pdf": "https://arxiv.org/pdf/2606.08340v1",
+      "score": "7.0",
+      "evidence": "基于Craftax的开放式多智能体协调基准，以MARL智能体作为参考",
+      "tldr": "现有评估侧重单智能体或短交互，缺乏对语言智能体长程开放多智能体协调的考验。本文提出基于JAX的Alem基准，在Craftax类世界中嵌入程序化协调任务、通信和可控难度，评估13种现代LLM零样本性能。结果显示平均归一化回报仅约6%，但Gemini-3.1-Pro-High在硬协调设置下接近十亿步训练的MARL；通信是协调最大贡献因素。该基准量化了协调作为前沿LLM独立瓶颈，提供可控测试床。",
+      "tags": "query:marl",
+      "abstract_en": "As language models are increasingly deployed as autonomous agents, they must coordinate with others over long horizons in open-ended interactive tasks. Yet existing evaluations rarely test these demands together, instead emphasising single-agent tasks, short interactions, or highly structured multi-agent settings. We introduce $alem$, a JAX-based benchmark for open-ended multi-agent coordination built on Craftax-like dynamics. Alem embeds procedurally generated coordination tasks, soft specialisation, communication, and controllable coordination difficulty into a long-horizon survival world with exploration, crafting, trading, and combat. We evaluate $13$ modern LLMs zero-shot within homogeneous teams, with trained MARL agents as reference points. Current LLM agents remain far from solving alem, averaging only ~6% normalised return, but their failures are not uniform. On the hardest coordination setting, zero-shot Gemini-3.1-Pro-High approaches MARL agents trained for one billion steps, while GPT-5.4-High achieves strong base-task reward but much lower coordination reward. This contrast shows that individual task competence does not imply coordination competence. Ablations show that communication is the largest contributor to coordination, while memory and reasoning help when used to maintain multi-step plans. Overall, our results identify coordination as a distinct bottleneck for frontier LLM agents, separate from single-agent capabilities. Alem makes this bottleneck measurable and provides a controlled testbed for developing agents that communicate, allocate roles, and execute shared plans. Code is available at https://github.com/alem-world/alem-env.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
