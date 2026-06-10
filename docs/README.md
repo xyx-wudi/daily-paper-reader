@@ -6,32 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-09
-- 运行时间：2026-06-09 22:07:12 UTC
+- 最新运行日期：2026-06-10
+- 运行时间：2026-06-10 22:16:01 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：5
 - 精读区：3
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读3篇论文，聚焦多智能体强化学习、GPU加速无人机仿真及语言智能体协调。最值得关注的是满分论文《Cooperative Long Rope Skipping》中的多智能体协作策略，以及《MuJoCo-Drones-Gym》提供的GPU加速仿真工具。建议后续可深入探索多智能体协作在复杂任务中的实战效果，并尝试利用GPU加速仿真进行算法验证。
-- 详情：[/202606/09/README](/202606/09/README)
+今日聚焦多智能体系统协同训练与人本AI设计，精读与速读共5篇论文。  
+重点推荐《Divide and Cooperate》中角色分解的跨智能体学习信号方法，以及融合认知与价值观的AI合作框架。  
+建议先深入理解多智能体协同训练机制，再结合人本AI原则评估实际应用价值。
+- 详情：[/202606/10/README](/202606/10/README)
 
 ### 精读区论文标签
-1. [Cooperative Long Rope Skipping via Multi-Agent Reinforcement Learning](/202606/09/2606.08064v1-cooperative-long-rope-skipping-via-multi-agent-reinforcement-learning)  
-   标签：评分：10.0/10、query:marl
-   evidence：合作多智能体强化学习在长绳跳跃中的应用
-2. [MuJoCo-Drones-Gym: A GPU-Accelerated Multi-Drone Simulator for Control and Reinforcement Learning](/202606/09/2606.08039v1-mujoco-drones-gym-a-gpu-accelerated-multi-drone-simulator-for-control-and-reinforcement-learning)  
+1. [Divide and Cooperate: Role-Decomposed Multi-Agent LLM Training with Cross-Agent Learning Signals](/202606/10/2606.10684v1-divide-and-cooperate-role-decomposed-multi-agent-llm-training-with-cross-agent-learning-signals)  
    标签：评分：9.0/10、query:marl
-   evidence：用于强化学习的GPU加速多无人机仿真器
-3. [DICE: Entropy-Regularized Equilibrium Selection for Stable Multi-Agent LLM Coordination](/202606/09/2606.08068v1-dice-entropy-regularized-equilibrium-selection-for-stable-multi-agent-llm-coordination)  
+   evidence：角色分解的多智能体训练与跨智能体学习信号
+2. [Toward Human-Centered Multi-Agent Systems: Integrating Cognition, Culture, Values, and Cooperation in AI Agents](/202606/10/2606.08274v1-toward-human-centered-multi-agent-systems-integrating-cognition-culture-values-and-cooperation-in-ai-agents)  
    标签：评分：8.0/10、query:marl
-   evidence：将多智能体LLM系统形式化为马尔可夫博弈并提出HQRE均衡
+   evidence：关于多智能体系统的综述，聚焦以人为中心的合作、价值观与文化，直接呼应合作式多智能体强化学习主题
+3. [Game-Theoretic Area Coverage Control with Cooperative-Adversarial Multi-Agent Systems](/202606/10/2606.10201v1-game-theoretic-area-coverage-control-with-cooperative-adversarial-multi-agent-systems)  
+   标签：评分：8.0/10、query:marl
+   evidence：多智能体零和博弈与区域覆盖
 
 ### 速读区论文标签
-1. [Benchmarking Open-Ended Multi-Agent Coordination in Language Agents](/202606/09/2606.08340v1-benchmarking-open-ended-multi-agent-coordination-in-language-agents)  
+1. [Multi-Agent Next-Best-View Optimization for Risk-Averse Planning](/202606/10/2606.04158v1-multi-agent-next-best-view-optimization-for-risk-averse-planning)  
    标签：评分：7.0/10、query:marl
-   evidence：基于Craftax的开放式多智能体协调基准，以MARL智能体作为参考
+   evidence：分布式多智能体协调方法，直接相关于去中心化多智能体强化学习方法
+2. [Distilling LLM Reasoning into an Interpretable Policy Tree for Human-AI Collaboration](/202606/10/2606.08596v1-distilling-llm-reasoning-into-an-interpretable-policy-tree-for-human-ai-collaboration)  
+   标签：评分：7.0/10、query:marl
+   evidence：针对人机协作多智能体场景，提出可解释策略树方法替代传统多智能体强化学习
 
 
 <div class="dpr-home-promo-card">

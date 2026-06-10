@@ -1,0 +1,206 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-10T22:12:34.780857+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.10684v1",
+      "source": "arxiv",
+      "title": "Divide and Cooperate: Role-Decomposed Multi-Agent LLM Training with Cross-Agent Learning Signals",
+      "abstract": "Modern language agents which perform multi-step reasoning have shown strong performance in knowledge-intensive question answering. However, existing approaches typically couple evidence acquisition and answer generation within a single policy. This forces a single model to play multiple potentially conflicting roles, inducing a combinatorial explosion in the policy space and hindering efficient exploration. It also introduces a credit assignment problem during training: a search action that retrieves sufficient evidence may still be penalized when generation fails, and vice versa. We propose DAC (Divide and Cooperate), a role-decomposed multi-agent training framework that divides agentic search into two cooperative subtasks, each handled by a dedicated agent trained with role-specific learning signals. The generator serves a dual role as both an answer producer and an evidence sufficiency verifier, abstaining when retrieved evidence is insufficient. This abstention signal is incorporated into the search agent's reward, providing structured cross-agent learning signals that improve credit assignment. Conversely, the searcher exposes the generator to diverse and challenging evidence environments by hard-positive evidence augmentation, improving its robustness. Experiments on general and multi-hop QA benchmarks show that DAC, implemented via parameter-efficient LoRA modules over a shared backbone, achieves strong performance against prior baselines that rely on full fine-tuning of monolithic models.",
+      "authors": [
+        "Jaewan Park",
+        "Solbee Cho",
+        "Jay-Yoon Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-09T10:40:55+00:00",
+      "link": "https://arxiv.org/pdf/2606.10684v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "role-decomposed multi-agent training with cross-agent learning signals",
+      "llm_evidence_cn": "角色分解的多智能体训练与跨智能体学习信号",
+      "llm_evidence": "角色分解的多智能体训练与跨智能体学习信号",
+      "canonical_evidence": "角色分解的多智能体训练与跨智能体学习信号",
+      "llm_tldr_en": "Proposes DAC framework that divides agentic search into cooperative subtasks and uses cross-agent learning signals for credit assignment, enabling efficient training of multi-agent LLM systems.",
+      "llm_tldr_cn": "现有方法将证据获取与答案生成耦合在单一策略中，导致信用分配困难。本文提出DAC框架，将智能体搜索分解为两个合作子任务，并通过跨智能体学习信号进行角色特定的信用分配。实验表明该方法在知识密集型问答中显著提升性能，为解决多智能体协作学习问题提供了新思路。",
+      "llm_tldr": "现有方法将证据获取与答案生成耦合在单一策略中，导致信用分配困难。本文提出DAC框架，将智能体搜索分解为两个合作子任务，并通过跨智能体学习信号进行角色特定的信用分配。实验表明该方法在知识密集型问答中显著提升性能，为解决多智能体协作学习问题提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.10201v1",
+      "source": "arxiv",
+      "title": "Game-Theoretic Area Coverage Control with Cooperative-Adversarial Multi-Agent Systems",
+      "abstract": "We formulate a multi-agent area coverage control problem as a two-player zero-sum game between two agent groups with conflicting goals. Conventional coverage control allocates resources based on an environmental risk density field. In contrast, we generalize this metric by allowing a second group of adversarial agents to generate the spatial risk field. Coupled agent dynamics are linked through the area coverage metric, which functions as the game reward. This framework induces coupled gradient-descent-ascent controllers for the groups. Analysis of a low-dimensional case reveals a Hopf bifurcation dictated by the ratio of the groups' control gains. In the regime dominated by adversarial agents, the system is driven into a periodic chase-evasion cycle. In the regime dominated by ordinary agents, the system converges to a fixed configuration. Numerical simulations validate these theoretical insights. Finally, we characterize the Nash equilibrium conditions. Under this equilibrium, ordinary agents converge to a generalized centroidal Voronoi tessellation, whereas adversarial agents settle at their corresponding equilibrium centroids.",
+      "authors": [
+        "Ruiming Zheng",
+        "Mohammad Pirani",
+        "Davide Spinello"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-06-08T21:43:39+00:00",
+      "link": "https://arxiv.org/pdf/2606.10201v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "multi-agent zero-sum game with area coverage",
+      "llm_evidence_cn": "多智能体零和博弈与区域覆盖",
+      "llm_evidence": "多智能体零和博弈与区域覆盖",
+      "canonical_evidence": "多智能体零和博弈与区域覆盖",
+      "llm_tldr_en": "Formulates multi-agent area coverage as a two-player zero-sum game between cooperative and adversarial groups, inducing coupled gradient-descent-ascent controllers with a Hopf bifurcation.",
+      "llm_tldr_cn": "传统的区域覆盖控制基于固定环境风险场，忽视了对抗性干扰，且缺乏博弈交互框架。本文提出合作-对抗多智能体区域覆盖博弈，将覆盖指标作为博弈奖励，推导出梯度下降-上升控制器。低维分析揭示了由控制增益比决定的Hopf分岔，在对抗主导下系统进入周期追踪行为。为多智能体覆盖控制提供了博弈论新视角。",
+      "llm_tldr": "传统的区域覆盖控制基于固定环境风险场，忽视了对抗性干扰，且缺乏博弈交互框架。本文提出合作-对抗多智能体区域覆盖博弈，将覆盖指标作为博弈奖励，推导出梯度下降-上升控制器。低维分析揭示了由控制增益比决定的Hopf分岔，在对抗主导下系统进入周期追踪行为。为多智能体覆盖控制提供了博弈论新视角。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.08274v1",
+      "source": "arxiv",
+      "title": "Toward Human-Centered Multi-Agent Systems: Integrating Cognition, Culture, Values, and Cooperation in AI Agents",
+      "abstract": "The emergence of large language model (LLM)-based agents and multi-agent systems has enabled a shift from narrow task automation to more autonomous decision-making. Despite progress in language generation, planning, tool use, and coordination, most agents still treat intelligence as prediction, optimization, and task completion. Human environments are social and normative, where people reason under bounded rationality, communicate in culturally situated language, and make decisions guided by values, beliefs, trust, and social norms. This survey argues that future AI agents, especially those acting on behalf of humans, must move beyond task competence toward human-centered capabilities.   We review research across six areas: (1) evolution of intelligent agents, (2) human cognition and decision-making, (3) language, culture, and social context, (4) human values and belief systems, (5) human-agent collaboration, and (6) multi-agent coordination and modeling of human characteristics. We synthesize work from cognitive science, sociolinguistics, computational social science, and AI alignment, along with recent advances in LLM agents, cultural alignment benchmarks, preference learning, explainability, and agent societies. We identify a key gap: existing systems do not provide a unified framework integrating cognition, culture, values, and social behavior into autonomous agents. We conclude with directions for building culturally aware, value-aligned, cognitively grounded, and cooperative multi-agent systems.",
+      "authors": [
+        "Safia Baloch",
+        "Rahemeen Khan"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-06-06T17:40:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.08274v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Survey on multi-agent systems focusing on human-centered cooperation, values, and culture, directly relevant to cooperative MARL theme",
+      "llm_evidence_cn": "关于多智能体系统的综述，聚焦以人为中心的合作、价值观与文化，直接呼应合作式多智能体强化学习主题",
+      "llm_evidence": "关于多智能体系统的综述，聚焦以人为中心的合作、价值观与文化，直接呼应合作式多智能体强化学习主题",
+      "canonical_evidence": "关于多智能体系统的综述，聚焦以人为中心的合作、价值观与文化，直接呼应合作式多智能体强化学习主题",
+      "llm_tldr_en": "A comprehensive survey arguing that future multi-agent AI systems must integrate human-centered capabilities beyond task competence, covering cognition, culture, values, and cooperation.",
+      "llm_tldr_cn": "现有大多数AI智能体仍将智能视为预测、优化和任务完成，而人类环境是社交性的、规范性的。本文综述指出，未来的AI智能体，特别是代表人类行动的智能体，必须超越任务能力，具备以人为中心的认知、文化、价值观和社会规范等能力。文章回顾了相关研究进展，并呼吁构建更人性化的多智能体系统。该综述为合作式多智能体强化学习的发展方向提供了重要参考。",
+      "llm_tldr": "现有大多数AI智能体仍将智能视为预测、优化和任务完成，而人类环境是社交性的、规范性的。本文综述指出，未来的AI智能体，特别是代表人类行动的智能体，必须超越任务能力，具备以人为中心的认知、文化、价值观和社会规范等能力。文章回顾了相关研究进展，并呼吁构建更人性化的多智能体系统。该综述为合作式多智能体强化学习的发展方向提供了重要参考。",
+      "llm_tags": [
+        "query:marl:composite"
+      ],
+      "matched_query_tag": "query:marl:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习, especially work that connects or combines: multi-agent reinforcement learning; cooperative multi-agent reinforcement learning; decentralized multi-agent reinforcement learning; centralized training for multi-agent reinforcement learning; decentralized execution in multi-agent systems; Markov games in multi-agent reinforcement learning; multi agent reinforcement learning algorithms; cooperative multi agent reinforcement learning applications; decentralized multi agent reinforcement learning methods; comparison of value decomposition and actor critic methods.",
+      "matched_requirement_id": "req-composite-marl",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.04158v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Next-Best-View Optimization for Risk-Averse Planning",
+      "abstract": "Multi-agent Next-Best-View (NBV) selection for safe path planning in uncertain and unknown environments requires informative, safety-aware, and efficient coordination. Centralized approaches rely on sharing raw sensor data or significant communication overhead, resulting in limited scalability. We propose a distributed, risk-aware multi-agent NBV framework in which each robot maintains a private local 3D Gaussian Splatting map and the team jointly maximizes expected information gain (EIG) restricted to masked zones along planned trajectories. The resulting distributed objective is solved by Consensus ADMM (C-ADMM) over a communication graph, with each robot exchanging only candidate viewpoints, planned trajectory descriptors, and scalar EIG contributions. Collision risk along each trajectory is modeled via Average Value-at-Risk (AV@R) over the local 3DGS map and used both to shape the masking radius and to score planned paths. Experiments in Gibson environments at multiple team sizes show that the distributed formulation approaches the centralized baseline in mapping quality and trajectory safety while reducing communication by orders of magnitude.",
+      "authors": [
+        "Amirhossein Mollaei Khass",
+        "Vivek Pandey",
+        "Guangyi Liu",
+        "Athanasios Cosse",
+        "Emrah Bayrak",
+        "Nader Motee"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-06-02T19:23:23+00:00",
+      "link": "https://arxiv.org/pdf/2606.04158v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "distributed multi-agent coordination without explicit RL, but directly relevant to decentralized multi-agent methods",
+      "llm_evidence_cn": "分布式多智能体协调方法，直接相关于去中心化多智能体强化学习方法",
+      "llm_evidence": "分布式多智能体协调方法，直接相关于去中心化多智能体强化学习方法",
+      "canonical_evidence": "分布式多智能体协调方法，直接相关于去中心化多智能体强化学习方法",
+      "llm_tldr_en": "Proposes a distributed risk-aware multi-agent Next-Best-View framework using Consensus ADMM for safe path planning, addressing scalability issues of centralized approaches.",
+      "llm_tldr_cn": "针对集中式多智能体路径规划可扩展性差的问题，提出一种分布式风险感知的多智能体Next-Best-View框架。每个机器人维护私有局部3D高斯泼溅地图，通过一致性ADMM算法分布式最大化期望信息增益。该方法仅交换候选视点和轨迹描述符，通信开销低。实验表明该框架在不确定性环境中实现了安全高效协调，为去中心化多智能体规划提供了新思路。",
+      "llm_tldr": "针对集中式多智能体路径规划可扩展性差的问题，提出一种分布式风险感知的多智能体Next-Best-View框架。每个机器人维护私有局部3D高斯泼溅地图，通过一致性ADMM算法分布式最大化期望信息增益。该方法仅交换候选视点和轨迹描述符，通信开销低。实验表明该框架在不确定性环境中实现了安全高效协调，为去中心化多智能体规划提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.08596v1",
+      "source": "arxiv",
+      "title": "Distilling LLM Reasoning into an Interpretable Policy Tree for Human-AI Collaboration",
+      "abstract": "Constructing efficient and reliable policies to assist humans is indispensable for human-AI collaboration. Existing methods mainly follow two lines of work. Most prior work relies on multi-agent reinforcement learning (MARL) to learn black-box policies, which limits interpretability and raises safety concerns. Recent methods query large language models (LLMs) at each decision step, causing slow responses and high inference costs. We propose Collaboration Policy Tree (Co-pi-tree), a closed-loop method that learns an executable policy tree consisting of a partner-behavior prediction tree and an agent-action selection tree. Co-pi-tree constructs a policy by distilling LLM reasoning into policy tree code. It then evaluates the policy through partner interaction, obtains feedback, and uses natural language to summarize the interaction feedback to improve problematic branches. Experiments in Overcooked-AI show that Co-pi-tree improves average reward by 35.4% over the baseline average, while reducing the number of LLM queries by 77.7% and test-time latency by 97.1%. Project page: https://beiwenzhang.github.io/Co-pi-tree/",
+      "authors": [
+        "Beiwen Zhang",
+        "Yongheng Liang",
+        "Guowei Zou",
+        "Haitao Wang",
+        "Hejun Wu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.HC"
+      ],
+      "published": "2026-06-07T12:20:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.08596v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Addresses cooperative multi-agent human-AI collaboration, proposes interpretable policy tree as alternative to MARL",
+      "llm_evidence_cn": "针对人机协作多智能体场景，提出可解释策略树方法替代传统多智能体强化学习",
+      "llm_evidence": "针对人机协作多智能体场景，提出可解释策略树方法替代传统多智能体强化学习",
+      "canonical_evidence": "针对人机协作多智能体场景，提出可解释策略树方法替代传统多智能体强化学习",
+      "llm_tldr_en": "Proposes Co-pi-tree, a method that distills LLM reasoning into an interpretable policy tree for human-AI collaboration, addressing MARL lack of interpretability and high inference cost of LLM methods.",
+      "llm_tldr_cn": "现有工作大多依赖多智能体强化学习（MARL）学习黑盒策略，缺乏可解释性且存在安全问题；而直接查询大语言模型则导致响应慢、成本高。本文提出协作策略树（Co-pi-tree），通过将LLM推理蒸馏为可执行的策略树代码，同时实现可解释性与高效推理。实验表明该方法在协作任务中性能优于基线，并提供了清晰的决策逻辑。该工作为人类与AI的可信协作提供了新范式。",
+      "llm_tldr": "现有工作大多依赖多智能体强化学习（MARL）学习黑盒策略，缺乏可解释性且存在安全问题；而直接查询大语言模型则导致响应慢、成本高。本文提出协作策略树（Co-pi-tree），通过将LLM推理蒸馏为可执行的策略树代码，同时实现可解释性与高效推理。实验表明该方法在协作任务中性能优于基线，并提供了清晰的决策逻辑。该工作为人类与AI的可信协作提供了新范式。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
