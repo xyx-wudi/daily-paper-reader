@@ -6,29 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-12
-- 运行时间：2026-06-12 21:31:18 UTC
+- 最新运行日期：2026-06-13
+- 运行时间：2026-06-13 21:22:32 UTC
 - 运行状态：成功
 - 本次总论文数：2
-- 精读区：2
-- 速读区：0
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读两篇强化学习论文，聚焦多智能体协同运输与带时序反馈的匹配问题。  
-值得关注：多智能体强化学习实现任意物体形状形成搬运，以及可处理延迟反馈的两边匹配学习框架。  
-建议重点阅读这两篇论文，了解MARL在机器人协作与匹配决策中的前沿应用。
-- 详情：[/202606/12/README](/202606/12/README)
+今日精读1篇、速读1篇，聚焦多智能体视觉推理与博弈论控制。最值得关注的是《Visual Para-Thinker++》（8.0/10），提出单策略多智能体框架用于视觉推理。下一步建议深入研究该框架如何将多智能体协作融入复杂视觉任务。
+- 详情：[/202606/13/README](/202606/13/README)
 
 ### 精读区论文标签
-1. [Shape Formation for the Cooperative Transportation of Arbitrary Objects Using Multi-Agent Reinforcement Learning](/202606/12/2606.09610v1-shape-formation-for-the-cooperative-transportation-of-arbitrary-objects-using-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：多智能体强化学习用于协作运输
-2. [Learn to Match: Two-Sided Matching with Temporally Extended Feedback](/202606/12/2606.06744v2-learn-to-match-two-sided-matching-with-temporally-extended-feedback)  
+1. [Visual Para-Thinker++: A Single-Policy Multi-Agent Framework for Visual Reasoning](/202606/13/2606.09290v1-visual-para-thinker-a-single-policy-multi-agent-framework-for-visual-reasoning)  
    标签：评分：8.0/10、query:marl
-   evidence：将匹配问题形式化为部分可观察马尔可夫博弈并提出MARL基准
+   evidence：提出单策略多智能体框架，使用角色特定奖励和优势的多智能体RL优化
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Game-Theoretic Multi-Agent Control for Robust Contextual Reasoning in LLMs](/202606/13/2606.10322v1-game-theoretic-multi-agent-control-for-robust-contextual-reasoning-in-llms)  
+   标签：评分：7.0/10、query:marl
+   evidence：提出博弈论多智能体控制方法用于LLM上下文推理，直接相关于多智能体强化学习
 
 
 <div class="dpr-home-promo-card">

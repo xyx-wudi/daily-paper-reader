@@ -1,0 +1,98 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-13T21:20:05.007919+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2606.09290v1",
+      "source": "arxiv",
+      "title": "Visual Para-Thinker++: A Single-Policy Multi-Agent Framework for Visual Reasoning",
+      "abstract": "Visual reasoning requires integrating evidence distributed across regions, attributes, and relations, making single-chain reasoning prone to early perceptual commitment and hallucination. We propose Visual Para-Thinker++, a single-policy multi-agent framework in which one shared MLLM policy is instantiated as role-conditioned Main, Worker, and Summary Agents. The Main Agent decomposes the task with fixed allocation patterns; Worker Agents reason in parallel under context isolation; and the Summary Agent reconciles full Worker reasoning traces rather than majority-voting on final labels. The shared policy is trained by Multi-Agent Capability Injection and Role-Decoupled Multi-Agent Optimization, which assign role-specific rewards and advantages to corresponding token segments to reduce gradient conflict among collaborative roles. A native inference engine enables efficient multi-agent rollout through shared visual prefix and KV cache reuse. Across V*, CountBench, the RefCOCO family, and HallusionBench, Visual Para-Thinker++ consistently outperforms single-trajectory and inference-time parallel baselines, with especially strong gains on hallucination-sensitive visual reasoning.",
+      "authors": [
+        "Haoran Xu",
+        "Hongyu Wang",
+        "Yifei Gao",
+        "Jiaze Li",
+        "Zizhao Tong",
+        "Xiaofeng Zhang",
+        "Xiaosong Yuan"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-08T09:57:48+00:00",
+      "link": "https://arxiv.org/pdf/2606.09290v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "proposes a single-policy multi-agent framework trained with role-specific rewards and advantage, using multi-agent RL optimization",
+      "llm_evidence_cn": "提出单策略多智能体框架，使用角色特定奖励和优势的多智能体RL优化",
+      "llm_evidence": "提出单策略多智能体框架，使用角色特定奖励和优势的多智能体RL优化",
+      "canonical_evidence": "提出单策略多智能体框架，使用角色特定奖励和优势的多智能体RL优化",
+      "llm_tldr_en": "Visual Para-Thinker++ proposes a single-policy multi-agent framework for visual reasoning, trained via Multi-Agent Capability Injection and Role-Decoupled Multi-Agent Optimization.",
+      "llm_tldr_cn": "本文提出Visual Para-Thinker++，一个共享策略的多智能体视觉推理框架，包含主智能体、工作者智能体和总结智能体角色。通过多智能体能力注入和角色解耦优化训练，利用角色特定奖励和优势。实验表明该方法在多个视觉推理基准上优于单链方法，有效缓解幻觉。",
+      "llm_tldr": "本文提出Visual Para-Thinker++，一个共享策略的多智能体视觉推理框架，包含主智能体、工作者智能体和总结智能体角色。通过多智能体能力注入和角色解耦优化训练，利用角色特定奖励和优势。实验表明该方法在多个视觉推理基准上优于单链方法，有效缓解幻觉。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi agent reinforcement learning algorithms",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.10322v1",
+      "source": "arxiv",
+      "title": "Game-Theoretic Multi-Agent Control for Robust Contextual Reasoning in LLMs",
+      "abstract": "Large Language Models (LLMs) in multi-turn interactions maintain evolving context rather than generating isolated responses, making them vulnerable to prompt-injection and context-poisoning attacks in which locally plausible adversarial fragments gradually distort reasoning trajectories. Existing defenses mainly filter individual outputs and often ignore context evolution across turns, leaving long-horizon reasoning exposed. Although the Model Context Protocol (MCP) standardizes context exchange and tool invocation, it functions as a passive routing layer and does not enforce contextual stability. To address these limitations, we introduce the Game-Theoretic Secure Model Context Protocol (GT-MCP), a controller-driven multi-agent method that treats context management as a closed-loop dynamical process. GT-MCP coordinates three heterogeneous LLM agents and selects outputs through a trust function that jointly evaluates causal consistency against a validated context graph, semantic agreement among agents, and distributional drift over time. When instability is detected, a rollback-based self-healing mechanism restores the validated context and prevents unsupported fragments from propagating. Empirical evaluation over 500 interaction turns under an adaptive adversarial threat model shows that contextual drift remains bounded in 99.6% of turns, with recovery required in only 0.4%. Per-turn utility remains tightly concentrated, with median = -0.19, P05 = -0.72, and P95 = 0.30; severe degradation below -1 occurs in only 0.4% of cases, and no injection attempt succeeds at the controller level. Selected outputs maintain stable win rates above 98%, and computational overhead remains predictable, with latency per token = 1.63e-3 s.",
+      "authors": [
+        "Saeid Jamshidi",
+        "Amin Nikanjam",
+        "Arghavan Moradi Dakhel",
+        "Kawser Wazed Nafi",
+        "Foutse Khomh"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.MA"
+      ],
+      "published": "2026-06-09T02:18:44+00:00",
+      "link": "https://arxiv.org/pdf/2606.10322v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "proposes a game-theoretic multi-agent control method for LLM contextual reasoning, directly relevant to multi-agent RL",
+      "llm_evidence_cn": "提出博弈论多智能体控制方法用于LLM上下文推理，直接相关于多智能体强化学习",
+      "llm_evidence": "提出博弈论多智能体控制方法用于LLM上下文推理，直接相关于多智能体强化学习",
+      "canonical_evidence": "提出博弈论多智能体控制方法用于LLM上下文推理，直接相关于多智能体强化学习",
+      "llm_tldr_en": "GT-MCP introduces a game-theoretic multi-agent controller to secure LLM context reasoning, using multi-agent RL principles.",
+      "llm_tldr_cn": "本文针对LLM多轮交互中的上下文投毒攻击，提出博弈论安全模型上下文协议（GT-MCP），将多智能体控制与博弈论结合。控制器驱动多个智能体协作维护上下文稳定性。实验表明该方法能有效防御攻击，同时保持推理质量。",
+      "llm_tldr": "本文针对LLM多轮交互中的上下文投毒攻击，提出博弈论安全模型上下文协议（GT-MCP），将多智能体控制与博弈论结合。控制器驱动多个智能体协作维护上下文稳定性。实验表明该方法能有效防御攻击，同时保持推理质量。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
