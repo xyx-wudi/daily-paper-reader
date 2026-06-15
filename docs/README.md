@@ -6,39 +6,40 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-14
-- 运行时间：2026-06-14 21:02:14 UTC
+- 最新运行日期：2026-06-15
+- 运行时间：2026-06-15 22:19:00 UTC
 - 运行状态：成功
-- 本次总论文数：5
+- 本次总论文数：6
 - 精读区：4
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读4篇、速读1篇，聚焦多智能体系统的注意力机制与安全离线强化学习。
-
-资源受限下的动态注意力半径算法（DARRMS）和安全离线多智能体强化学习方法（ICBF-DM）评分高达9.0，最值得关注。
-
-建议优先精读这两篇论文，理解其如何解决实际部署中的计算约束与安全保证问题。
-- 详情：[/202606/14/README](/202606/14/README)
+1) 今日精读两篇9.0高分论文，聚焦图神经网络与多智能体强化学习在网络安全与智能控制中的突破应用。
+2) 最值得关注的方向：图契约多智能体系统实现自主安全响应，以及时序一致图Q网络提升网络控制可靠性。
+3) 建议优先精读《Safety-Contract Graph Multi-Agent RL》与《Temporally Consistent Graph Q-Networks》，速读可作为应用参考。
+- 详情：[/202606/15/README](/202606/15/README)
 
 ### 精读区论文标签
-1. [DARRMS -- An Efficient Algorithm for Dynamic Attention Radius in Resource-Constrained Multi-Agent Systems](/202606/14/2606.12614v1-darrms----an-efficient-algorithm-for-dynamic-attention-radius-in-resource-constrained-multi-agent-systems)  
+1. [Safety-Contract Graph Multi-Agent Reinforcement Learning for Autonomous Network Security Response](/202606/15/2606.13832v1-safety-contract-graph-multi-agent-reinforcement-learning-for-autonomous-network-security-response)  
    标签：评分：9.0/10、query:marl
-   evidence：具有动态注意力半径的多智能体强化学习
-2. [Individual Control Barrier Functions-Guided Diffusion Model for Safe Offline Multi-Agent Reinforcement Learning](/202606/14/2606.12640v1-individual-control-barrier-functions-guided-diffusion-model-for-safe-offline-multi-agent-reinforcement-learning)  
+   evidence：直接的多智能体强化学习，包含安全约束和合作智能体
+2. [Temporally Consistent Graph Q-Networks for Intelligent Network Control](/202606/15/2606.13848v1-temporally-consistent-graph-q-networks-for-intelligent-network-control)  
    标签：评分：9.0/10、query:marl
-   evidence：安全离线多智能体强化学习
-3. [$α$-fair heterogeneous agent reinforcement learning](/202606/14/2606.13076v1--fair-heterogeneous-agent-reinforcement-learning)  
+   evidence：提出基于图神经网络的多智能体强化学习算法用于网络控制
+3. [Contract-Based Compositional Shielding for Safe Multi-Agent Reinforcement Learning](/202606/15/2606.14130v1-contract-based-compositional-shielding-for-safe-multi-agent-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：异构多智能体强化学习中的公平性与马尔可夫博弈
-4. [Multi-Agent Reinforcement Learning from Delayed Marketplace Feedback for Objective-Weight Adaptation in Three-Sided Dispatch](/202606/14/2606.13604v1-multi-agent-reinforcement-learning-from-delayed-marketplace-feedback-for-objective-weight-adaptation-in-three-sided-dispatch)  
-   标签：评分：8.0/10、query:marl
-   evidence：MARL在配送市场目标权重自适应中的应用
+   evidence：去中心化屏蔽实现多智能体安全协调
+4. [Learning Coordinated Preference for Multi-Objective Multi-Agent Reinforcement Learning](/202606/15/2606.14693v1-learning-coordinated-preference-for-multi-objective-multi-agent-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：合作多目标多智能体强化学习中的偏好协调
 
 ### 速读区论文标签
-1. [Reward Modeling for Multi-Agent Orchestration](/202606/14/2606.13598v1-reward-modeling-for-multi-agent-orchestration)  
+1. [Game-Theoretic Multi-Agent Control for Robust Contextual Reasoning in LLMs](/202606/15/2606.10322v2-game-theoretic-multi-agent-control-for-robust-contextual-reasoning-in-llms)  
    标签：评分：7.0/10、query:marl
-   evidence：多智能体编排奖励建模
+   evidence：博弈论多智能体控制用于LLM上下文安全
+2. [LLM-Mediated Demand Response Coordination in Smart Microgrids](/202606/15/2606.11050v1-llm-mediated-demand-response-coordination-in-smart-microgrids)  
+   标签：评分：7.0/10、query:marl
+   evidence：LLM中介的智能微电网需求响应合作多智能体应用
 
 
 <div class="dpr-home-promo-card">
