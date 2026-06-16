@@ -6,40 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-15
-- 运行时间：2026-06-15 22:19:00 UTC
+- 最新运行日期：2026-06-16
+- 运行时间：2026-06-16 22:08:12 UTC
 - 运行状态：成功
-- 本次总论文数：6
-- 精读区：4
-- 速读区：2
+- 本次总论文数：2
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-1) 今日精读两篇9.0高分论文，聚焦图神经网络与多智能体强化学习在网络安全与智能控制中的突破应用。
-2) 最值得关注的方向：图契约多智能体系统实现自主安全响应，以及时序一致图Q网络提升网络控制可靠性。
-3) 建议优先精读《Safety-Contract Graph Multi-Agent RL》与《Temporally Consistent Graph Q-Networks》，速读可作为应用参考。
-- 详情：[/202606/15/README](/202606/15/README)
+今日解析群智能体轨迹规划与平均奖励逆强化学习两大前沿。
+重点推荐博弈论多智能体强化学习在低空无线网络群轨迹规划中的应用，以及平均场逆强化学习的新思路。
+建议关注多智能体协同与逆强化学习的交叉方向，可用于无人机编队、机器人集群等实际场景。
+- 详情：[/202606/16/README](/202606/16/README)
 
 ### 精读区论文标签
-1. [Safety-Contract Graph Multi-Agent Reinforcement Learning for Autonomous Network Security Response](/202606/15/2606.13832v1-safety-contract-graph-multi-agent-reinforcement-learning-for-autonomous-network-security-response)  
+1. [Game-Theoretic Multi-Agent Reinforcement Learning for Swarm Trajectory Planning in Low-Altitude Wireless Networks](/202606/16/2606.16386v1-game-theoretic-multi-agent-reinforcement-learning-for-swarm-trajectory-planning-in-low-altitude-wireless-networks)  
    标签：评分：9.0/10、query:marl
-   evidence：直接的多智能体强化学习，包含安全约束和合作智能体
-2. [Temporally Consistent Graph Q-Networks for Intelligent Network Control](/202606/15/2606.13848v1-temporally-consistent-graph-q-networks-for-intelligent-network-control)  
-   标签：评分：9.0/10、query:marl
-   evidence：提出基于图神经网络的多智能体强化学习算法用于网络控制
-3. [Contract-Based Compositional Shielding for Safe Multi-Agent Reinforcement Learning](/202606/15/2606.14130v1-contract-based-compositional-shielding-for-safe-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：去中心化屏蔽实现多智能体安全协调
-4. [Learning Coordinated Preference for Multi-Objective Multi-Agent Reinforcement Learning](/202606/15/2606.14693v1-learning-coordinated-preference-for-multi-objective-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：合作多目标多智能体强化学习中的偏好协调
+   evidence：基于博弈论的多智能体强化学习
 
 ### 速读区论文标签
-1. [Game-Theoretic Multi-Agent Control for Robust Contextual Reasoning in LLMs](/202606/15/2606.10322v2-game-theoretic-multi-agent-control-for-robust-contextual-reasoning-in-llms)  
+1. [Maximum Entropy Inverse Reinforcement Learning for Mean-Field Games with Average Reward](/202606/16/2606.16759v1-maximum-entropy-inverse-reinforcement-learning-for-mean-field-games-with-average-reward)  
    标签：评分：7.0/10、query:marl
-   evidence：博弈论多智能体控制用于LLM上下文安全
-2. [LLM-Mediated Demand Response Coordination in Smart Microgrids](/202606/15/2606.11050v1-llm-mediated-demand-response-coordination-in-smart-microgrids)  
-   标签：评分：7.0/10、query:marl
-   evidence：LLM中介的智能微电网需求响应合作多智能体应用
+   evidence：平均场博弈中的逆强化学习，属于马尔可夫博弈
 
 
 <div class="dpr-home-promo-card">
