@@ -1,0 +1,93 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-17T21:45:43.168764+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.17682v1",
+      "source": "arxiv",
+      "title": "From Trainee to Trainer: LLM-Designed Training Environment for RL with Multi-Agent Reasoning",
+      "abstract": "Reinforcement learning pipelines for Large Language Model (LLM) training often rely on manually redesigned environments between stages, requiring practitioners to heuristically infer which configuration will best improve the current policy. To automate this process, we propose the LLM-as-Environment-Engineer framework in which the current policy model analyzes failure trajectories together with contextual information and proposes modifications to the next-stage training environment configuration. We also introduce MAPF-FrozenLake, a controllable testbed whose generator exposes multi-dimensional environment configurations, making it suitable for studying and benchmarking environment redesign. On this testbed, we condition the environment engineer on structured summaries of policy behavior, failure cases, and environment statistics, from which it produces the configuration for the next training stage. With Qwen3-4B as the backbone, our framework achieves the strongest aggregate performance on our benchmarks, outperforming larger proprietary LLMs (e.g., GPT, Gemini) and fixed-environment training baselines. We further analyze which forms of context are most effective, finding that successful environment updates rely on failure evidence and preserve configurations that already work. Interestingly, the current RL checkpoint serves as a better environment engineer than the original base model, suggesting that policy learning improves the model's ability to diagnose its remaining weaknesses.",
+      "authors": [
+        "Chao Chen",
+        "Chengzu Li",
+        "Zhiwei Li",
+        "Yinhong Liu",
+        "Zhijiang Guo"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-16T08:48:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.17682v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent reasoning testbed and LLM-designed environment for RL",
+      "llm_evidence_cn": "多智能体推理测试平台及基于LLM的RL环境设计",
+      "llm_evidence": "多智能体推理测试平台及基于LLM的RL环境设计",
+      "canonical_evidence": "多智能体推理测试平台及基于LLM的RL环境设计",
+      "llm_tldr_en": "Proposes LLM-as-Environment-Engineer framework that automatically redesigns training environments for multi-agent RL, using MAPF-FrozenLake testbed to show improved policy learning efficiency.",
+      "llm_tldr_cn": "该论文针对多智能体强化学习训练中环境手动重设计的局限性，提出LLM作为环境工程师的框架，自动分析失败轨迹并修改下一阶段环境配置。在MAPF-FrozenLake多智能体测试平台上，该方法显著提升了策略学习效率，展示了自动化环境设计在复杂多智能体任务中的潜力。",
+      "llm_tldr": "该论文针对多智能体强化学习训练中环境手动重设计的局限性，提出LLM作为环境工程师的框架，自动分析失败轨迹并修改下一阶段环境配置。在MAPF-FrozenLake多智能体测试平台上，该方法显著提升了策略学习效率，展示了自动化环境设计在复杂多智能体任务中的潜力。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.13733v1",
+      "source": "arxiv",
+      "title": "How Task Structure Limits Multi-Agent Success: An Information-Theoretic Analysis",
+      "abstract": "Multi-agent systems (MAS) were expected to overcome the limitation of single-agent systems (SAS) through collaboration. However, under typicality conditions on the task's constraint graph and bounded inter-agent communication, we prove that the success probability of a MAS is closely tied to the connectivity of task constraints, where each agent has limited information-processing capacity. Specifically, the success probability decays exponentially with an information bottleneck that emerges from partitioning the task's constraint graph among agents. We define this quantity as the \\emph{minimum cut cost} $C_{\\min}$ of the potential constraint graph of each task. This information-theoretic bound applies to both open systems with external feedback and closed systems without. We validate our theory on both synthetic experiments and real-world empirical data from SWE-bench submissions. From our framework, effective MAS design should incorporate task-inherent constraints alongside engineering optimization, and when $\\Cmin$ is high, practitioners should restructure tasks rather than simply scaling agents or communication.",
+      "authors": [
+        "Shi Pan",
+        "Ming Luo"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT",
+        "cs.LG"
+      ],
+      "published": "2026-06-11T11:56:06+00:00",
+      "link": "https://arxiv.org/pdf/2606.13733v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "information-theoretic analysis of multi-agent system success limitations",
+      "llm_evidence_cn": "多智能体系统成功限制的信息论分析",
+      "llm_evidence": "多智能体系统成功限制的信息论分析",
+      "canonical_evidence": "多智能体系统成功限制的信息论分析",
+      "llm_tldr_en": "Proves that multi-agent success probability decays exponentially due to information bottleneck from task constraint graph partitioning, with implications for decentralized MARL.",
+      "llm_tldr_cn": "该论文从信息论角度分析多智能体系统的成功限制，证明在任务约束图划分下，成功概率随信息瓶颈指数衰减。该理论界限适用于去中心化强化学习中的通信约束场景，揭示了任务结构对多智能体协作的内在限制，为设计高效通信协议提供了理论指导。",
+      "llm_tldr": "该论文从信息论角度分析多智能体系统的成功限制，证明在任务约束图划分下，成功概率随信息瓶颈指数衰减。该理论界限适用于去中心化强化学习中的通信约束场景，揭示了任务结构对多智能体协作的内在限制，为设计高效通信协议提供了理论指导。",
+      "llm_tags": [
+        "query:marl:composite"
+      ],
+      "matched_query_tag": "query:marl:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习, especially work that connects or combines: multi-agent reinforcement learning; cooperative multi-agent reinforcement learning; decentralized multi-agent reinforcement learning; centralized training for multi-agent reinforcement learning; decentralized execution in multi-agent systems; Markov games in multi-agent reinforcement learning; multi agent reinforcement learning algorithms; cooperative multi agent reinforcement learning applications; decentralized multi agent reinforcement learning methods; comparison of value decomposition and actor critic methods.",
+      "matched_requirement_id": "req-composite-marl",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

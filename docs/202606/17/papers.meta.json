@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-17",
+  "date": "2026-06-17",
+  "generated_at": "2026-06-17T21:46:56",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/17/2606.17682v1-from-trainee-to-trainer-llm-designed-training-environment-for-rl-with-multi-agent-reasoning",
+      "section": "quick",
+      "title_en": "From Trainee to Trainer: LLM-Designed Training Environment for RL with Multi-Agent Reasoning",
+      "authors": "Chao Chen, Chengzu Li, Zhiwei Li, Yinhong Liu, Zhijiang Guo",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.17682v1",
+      "score": "7.0",
+      "evidence": "多智能体推理测试平台及基于LLM的RL环境设计",
+      "tldr": "针对强化学习训练大语言模型时环境配置需手动设计的问题，提出LLM-as-Environment-Engineer框架，让策略模型自主分析失败轨迹并调整下一阶段环境。在MAPF-FrozenLake测试台上，使用Qwen3-4B骨干网络，通过结构化摘要生成配置，性能超越GPT等大型模型及固定环境基线。实验表明，利用失败证据并保留有效配置是关键，且当前策略检查点的诊断能力优于基础模型。",
+      "tags": "query:marl",
+      "abstract_en": "Reinforcement learning pipelines for Large Language Model (LLM) training often rely on manually redesigned environments between stages, requiring practitioners to heuristically infer which configuration will best improve the current policy. To automate this process, we propose the LLM-as-Environment-Engineer framework in which the current policy model analyzes failure trajectories together with contextual information and proposes modifications to the next-stage training environment configuration. We also introduce MAPF-FrozenLake, a controllable testbed whose generator exposes multi-dimensional environment configurations, making it suitable for studying and benchmarking environment redesign. On this testbed, we condition the environment engineer on structured summaries of policy behavior, failure cases, and environment statistics, from which it produces the configuration for the next training stage. With Qwen3-4B as the backbone, our framework achieves the strongest aggregate performance on our benchmarks, outperforming larger proprietary LLMs (e.g., GPT, Gemini) and fixed-environment training baselines. We further analyze which forms of context are most effective, finding that successful environment updates rely on failure evidence and preserve configurations that already work. Interestingly, the current RL checkpoint serves as a better environment engineer than the original base model, suggesting that policy learning improves the model's ability to diagnose its remaining weaknesses.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/17/2606.13733v1-how-task-structure-limits-multi-agent-success-an-information-theoretic-analysis",
+      "section": "quick",
+      "title_en": "How Task Structure Limits Multi-Agent Success: An Information-Theoretic Analysis",
+      "authors": "Shi Pan, Ming Luo",
+      "date": "2026-06-11",
+      "pdf": "https://arxiv.org/pdf/2606.13733v1",
+      "score": "6.0",
+      "evidence": "多智能体系统成功限制的信息论分析",
+      "tldr": "多智能体系统的成功概率受任务约束图划分产生的信息瓶颈限制，指数衰减于最小割代价。理论表明，在典型条件下，智能体间有限通信容量导致协作瓶颈。通过合成数据和SWE-bench实验验证。建议任务设计与优化，而非单纯扩大智能体规模或通信。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) were expected to overcome the limitation of single-agent systems (SAS) through collaboration. However, under typicality conditions on the task's constraint graph and bounded inter-agent communication, we prove that the success probability of a MAS is closely tied to the connectivity of task constraints, where each agent has limited information-processing capacity. Specifically, the success probability decays exponentially with an information bottleneck that emerges from partitioning the task's constraint graph among agents. We define this quantity as the \\emph{minimum cut cost} $C_{\\min}$ of the potential constraint graph of each task. This information-theoretic bound applies to both open systems with external feedback and closed systems without. We validate our theory on both synthetic experiments and real-world empirical data from SWE-bench submissions. From our framework, effective MAS design should incorporate task-inherent constraints alongside engineering optimization, and when $\\Cmin$ is high, practitioners should restructure tasks rather than simply scaling agents or communication.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
