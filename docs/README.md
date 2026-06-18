@@ -6,27 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-17
-- 运行时间：2026-06-17 21:46:49 UTC
+- 最新运行日期：2026-06-18
+- 运行时间：2026-06-18 22:10:49 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：0
+- 本次总论文数：5
+- 精读区：3
 - 速读区：2
 
 ### 今日简报（AI）
-今日速读两篇多智能体论文，分别从LLM设计训练环境和任务结构信息论角度切入。最值得看7分论文：LLM可自主构建训练环境强化多智能体推理；6分论文则揭示任务结构如何限制协作成功率。建议优先精读第一篇，思考如何将LLM设计环境的方法迁移到你的多智能体场景中。
-- 详情：[/202606/17/README](/202606/17/README)
+今日精读3篇、速读2篇，聚焦多智能体强化学习的安全性与足球环境。最值得关注的是满分的《TRIDENT》提出可证明安全的多智能体强化学习方法，以及《R2D-RL》提供的RoboCup 2D足球平台。建议优先精读这两篇高分论文，把握安全强化学习前沿。
+- 详情：[/202606/18/README](/202606/18/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [TRIDENT: Breaking the Hybrid-Safety-Physics Coupling for Provably Safe Multi-Agent Reinforcement Learning](/202606/18/2606.18308v1-trident-breaking-the-hybrid-safety-physics-coupling-for-provably-safe-multi-agent-reinforcement-learning)  
+   标签：评分：10.0/10、query:marl
+   evidence：多智能体强化学习框架
+2. [R2D-RL: A RoboCup 2D Soccer Environment for Multi-Agent Reinforcement Learning](/202606/18/2606.18786v1-r2d-rl-a-robocup-2d-soccer-environment-for-multi-agent-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：用于多智能体强化学习的RoboCup 2D足球环境
+3. [Enhancing Decision-Making with Large Language Models through Multi-Agent Fictitious Play](/202606/18/2606.19308v1-enhancing-decision-making-with-large-language-models-through-multi-agent-fictitious-play)  
+   标签：评分：9.0/10、query:marl
+   evidence：基于多智能体虚拟博弈的LLM决策增强
 
 ### 速读区论文标签
-1. [From Trainee to Trainer: LLM-Designed Training Environment for RL with Multi-Agent Reasoning](/202606/17/2606.17682v1-from-trainee-to-trainer-llm-designed-training-environment-for-rl-with-multi-agent-reasoning)  
+1. [The Internet of Agentic AI: Communication, Coordination, and Collective Intelligence at Scale](/202606/18/2606.12835v1-the-internet-of-agentic-ai-communication-coordination-and-collective-intelligence-at-scale)  
    标签：评分：7.0/10、query:marl
-   evidence：多智能体推理测试平台及基于LLM的RL环境设计
-2. [How Task Structure Limits Multi-Agent Success: An Information-Theoretic Analysis](/202606/17/2606.13733v1-how-task-structure-limits-multi-agent-success-an-information-theoretic-analysis)  
-   标签：评分：6.0/10、query:marl
-   evidence：多智能体系统成功限制的信息论分析
+   evidence：提出了多智能体通信与协调的互联网架构
+2. [Intermittent Strategic Cooperation of Two Selfish Agents on Graphs](/202606/18/2606.17216v1-intermittent-strategic-cooperation-of-two-selfish-agents-on-graphs)  
+   标签：评分：7.0/10、query:marl
+   evidence：多智能体路径规划中的去中心化合作
 
 
 <div class="dpr-home-promo-card">
