@@ -6,35 +6,38 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-18
-- 运行时间：2026-06-18 22:10:49 UTC
+- 最新运行日期：2026-06-19
+- 运行时间：2026-06-19 21:56:38 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：3
-- 速读区：2
+- 本次总论文数：6
+- 精读区：2
+- 速读区：4
 
 ### 今日简报（AI）
-今日精读3篇、速读2篇，聚焦多智能体强化学习的安全性与足球环境。最值得关注的是满分的《TRIDENT》提出可证明安全的多智能体强化学习方法，以及《R2D-RL》提供的RoboCup 2D足球平台。建议优先精读这两篇高分论文，把握安全强化学习前沿。
-- 详情：[/202606/18/README](/202606/18/README)
+今日多智能体系统研究收获颇丰，精读两篇高分论文聚焦层次化控制与通信策略形式化验证。最值得关注的是LLM规划与RL执行结合的层次化框架，以及通过决策树蒸馏验证多智能体通信策略的方法。建议后续可探索层次化控制与形式验证的融合方向，提升多智能体系统的可靠性与可解释性。
+- 详情：[/202606/19/README](/202606/19/README)
 
 ### 精读区论文标签
-1. [TRIDENT: Breaking the Hybrid-Safety-Physics Coupling for Provably Safe Multi-Agent Reinforcement Learning](/202606/18/2606.18308v1-trident-breaking-the-hybrid-safety-physics-coupling-for-provably-safe-multi-agent-reinforcement-learning)  
-   标签：评分：10.0/10、query:marl
-   evidence：多智能体强化学习框架
-2. [R2D-RL: A RoboCup 2D Soccer Environment for Multi-Agent Reinforcement Learning](/202606/18/2606.18786v1-r2d-rl-a-robocup-2d-soccer-environment-for-multi-agent-reinforcement-learning)  
+1. [Hierarchical Control in Multi-Agent Games: LLM-based Planning and RL Execution](/202606/19/2606.20014v1-hierarchical-control-in-multi-agent-games-llm-based-planning-and-rl-execution)  
    标签：评分：9.0/10、query:marl
-   evidence：用于多智能体强化学习的RoboCup 2D足球环境
-3. [Enhancing Decision-Making with Large Language Models through Multi-Agent Fictitious Play](/202606/18/2606.19308v1-enhancing-decision-making-with-large-language-models-through-multi-agent-fictitious-play)  
-   标签：评分：9.0/10、query:marl
-   evidence：基于多智能体虚拟博弈的LLM决策增强
+   evidence：使用分层强化学习和LLM规划的多智能体博弈
+2. [Formal Verification of Learned Multi-Agent Communication Policies via Decision Tree Distillation](/202606/19/2606.19632v1-formal-verification-of-learned-multi-agent-communication-policies-via-decision-tree-distillation)  
+   标签：评分：8.0/10、query:marl
+   evidence：多智能体通信策略的形式化验证
 
 ### 速读区论文标签
-1. [The Internet of Agentic AI: Communication, Coordination, and Collective Intelligence at Scale](/202606/18/2606.12835v1-the-internet-of-agentic-ai-communication-coordination-and-collective-intelligence-at-scale)  
+1. [Lyapunov-Based Sample Complexity Analysis for Weakly-Coupled MDPs](/202606/19/2606.14095v1-lyapunov-based-sample-complexity-analysis-for-weakly-coupled-mdps)  
    标签：评分：7.0/10、query:marl
-   evidence：提出了多智能体通信与协调的互联网架构
-2. [Intermittent Strategic Cooperation of Two Selfish Agents on Graphs](/202606/18/2606.17216v1-intermittent-strategic-cooperation-of-two-selfish-agents-on-graphs)  
+   evidence：分析弱耦合MDPs的样本复杂度，是多智能体强化学习的标准模型
+2. [Mean-Field Control with a Common Hidden State under Decentralized Observations](/202606/19/2606.19639v1-mean-field-control-with-a-common-hidden-state-under-decentralized-observations)  
    标签：评分：7.0/10、query:marl
-   evidence：多智能体路径规划中的去中心化合作
+   evidence：分散观测下的多智能体平均场控制
+3. [MAStrike: Shapley-Guided Collusive Red-Teaming on Multi-Agent Systems](/202606/19/2606.12918v2-mastrike-shapley-guided-collusive-red-teaming-on-multi-agent-systems)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体系统中的合谋红队测试，合作多智能体强化学习的应用
+4. [Playful Agentic Robot Learning](/202606/19/2606.19419v1-playful-agentic-robot-learning)  
+   标签：评分：6.0/10、query:marl
+   evidence：提出机器人智能体团队RATs，通过自我玩耍进行多机器人技能获取，隐含协作多智能体强化学习。
 
 
 <div class="dpr-home-promo-card">
