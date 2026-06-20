@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-20",
+  "date": "2026-06-20",
+  "generated_at": "2026-06-20T21:28:47",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/20/2606.18194v1-ergodic-deviation-robust-equilibrium-under-mirror-descent-learning-in-finite-games",
+      "section": "deep",
+      "title_en": "Ergodic Deviation-Robust Equilibrium under Mirror Descent Learning in Finite Games",
+      "authors": "Joshua Steier",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.18194v1",
+      "score": "8.0",
+      "evidence": "多智能体博弈学习均衡镜面下降",
+      "tldr": "针对有限重复博弈中智能体通过熵镜像下降学习的问题，本文引入遍历偏离鲁棒均衡（EDRE），要求同时满足极限为ε-纳什均衡、所有固定联盟的累积偏离增益为√T量级、且极限点是学习映射不动点。证明该速率最优，在势博弈中存在且具Lyapunov单调性，拓展至单调多项式博弈。EDRE作为纳什均衡的动态证书，排除线性不稳定均衡，计算复杂性为PPAD难。",
+      "tags": "query:marl",
+      "abstract_en": "We introduce Ergodic Deviation-Robust Equilibrium (EDRE), a dynamics-relative equilibrium concept for repeated finite games in which agents learn via entropic mirror descent (EMD). EDRE requires three properties to hold simultaneously for the same profile and learning run: (E1) the limit profile is an $\\varepsilon$-Nash equilibrium at a product distribution; (E2) along the entire learning trajectory, every fixed coalition's cumulative aggregate (summed-unilateral) deviation gain is $\\tilde{\\mathcal{O}}(\\sqrt{T})$ with high probability; and (E3) the limit profile is a fixed point of the EMD map, so that it is selected by the dynamics rather than merely certified as an equilibrium. We prove that the $\\sqrt{T}$ deviation-regret rate is order-tight, establish existence in exact-potential games (via Nash's theorem, with a constructive proximal route under concavity) together with Lyapunov monotonicity of EMD (and pointwise convergence when the fixed-point set is a singleton), and extend the selection property to monotone polymatrix games through variational inequalities. Although a static EDRE coincides with an $\\varepsilon$-Nash equilibrium, its content is dynamic: robust (positive-measure) selection under EMD excludes linearly unstable equilibria, so EDRE acts as a Nash equilibrium equipped with a dynamic certificate rather than a static refinement. On the complexity side, we show that computing EDRE is PPAD-hard in general polymatrix games and belongs to promise-PPAD for potential games. A worked $2\\times 2$ coordination-game example illustrates all components of the framework. Additional results, including a bandit-feedback extension, a period-doubling route to Li-Yorke chaos for the two-strategy EMD map at large step size, a linear-program formulation for minimum-cost steering, and supporting simulations, appear in the appendices.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/20/2606.16497v1-davinci-kernel-co-evolving-skill-selection-summarization-and-utilization-via-rl-for-gpu-kernel-optimization",
+      "section": "quick",
+      "title_en": "daVinci-kernel: Co-Evolving Skill Selection, Summarization, and Utilization via RL for GPU Kernel Optimization",
+      "authors": "Dayuan Fu, Mohan Jiang, Tongyu Wang, Dian Yang, Jiarui Hu, Liming Liu, Jinlong Hou, Pengfei Li",
+      "date": "2026-06-15",
+      "pdf": "https://arxiv.org/pdf/2606.16497v1",
+      "score": "7.0",
+      "evidence": "使用三个合作RL智能体进行GPU内核优化应用",
+      "tldr": "GPU内核优化中，技能选择与利用缺乏自动协同。daVinci-kernel框架通过强化学习联合训练三个共享LLM的智能体，分别负责技能选择、内核生成和技能总结，技能经执行验证后动态加入库。在KernelBench上，Level1/2/3的Fast_1阈值分别达到37.2%、70.6%、32.2%，超越Dr.Kernel-14B。该方法实现了技能发现与利用的自动化循环，显著提升优化效率。",
+      "tags": "query:marl",
+      "abstract_en": "GPU kernel optimization represents a paradigm where functional correctness is assumed and execution efficiency is the objective. We present daVinci-kernel, a reinforcement learning framework that couples skill discovery with skill exploitation through a dynamically evolving skill library. daVinci-kernel jointly trains three agents sharing one LLM backbone: a Skill Selection Agent that retrieves relevant techniques via BM25 and LLM reranking, a Policy Agent that generates multi-turn CUDA/Triton kernels conditioned on selected skills, and a Skill Summary Agent that distills successful rollouts into reusable skills. Candidate skills are added only after execution-based verification confirms reproducible speedups. All three agents share a single LLM backbone, are initialized via a structured SFT cold start on diversity-filtered data, and are then jointly optimized end-to-end with multi-turn REINFORCE and per-agent advantage estimation. On KernelBench, daVinci-kernel-14B achieves 37.2%, 70.6%, and 32.2% on Level 1, Level 2, and Level 3 under the Fast$_1$ threshold, outperforming the strongest prior RL-trained model, Dr.Kernel-14B.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/20/2606.18132v1-knowledge-reutilization-in-meta-reinforcement-learning",
+      "section": "quick",
+      "title_en": "Knowledge Reutilization in Meta-Reinforcement Learning",
+      "authors": "Yuan Meng, Bo Wang, Juan de los Rios Ruiz, Xiangtong Yao, Zhenshan Bing, Fuchun Sun, Alois Knoll",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.18132v1",
+      "score": "7.0",
+      "evidence": "元强化学习中异构智能体间的知识重用",
+      "tldr": "现有元强化学习方法将任务推理与具体智能体控制耦合，限制了知识跨具身重用。本文提出元知识重用框架，先在简化动力学的智能体上学习任务级知识，再通过语义-幅度接口和轻量时间适配器迁移至不同具身的智能体。该方法利用贝叶斯非参数先验组织任务模式，以高层策略生成幅度指导。实验表明，在多个运动智能体上，最终步跟踪误差降低94.75%-99.79%，且仅需约23.8%的交互数据即达到相当性能。",
+      "tags": "query:marl",
+      "abstract_en": "Meta-reinforcement learning enables fast adaptation by extracting shared structure from related tasks, but existing end-to-end methods often couple task inference with embodiment-specific control. This coupling can obscure non-parametric task semantics, reduce sample efficiency, and limit cross-agent reuse. We propose a meta-knowledge reutilization framework that learns task-level knowledge on a dynamics-simplified agent and transfers it to heterogeneous agents. The framework uses a Bayesian non-parametric prior to organize latent task modes and a high-level policy to generate task-level magnitude guidance. To bridge reusable task knowledge with different embodiments, we introduce a semantic-magnitude interface and a lightweight temporal adaptor, which convert frozen meta-knowledge into temporally aligned subgoals for embodiment-specific low-level controllers. Experiments on multiple locomotion agents show that our framework reduces final-step tracking error by 94.75% -- 99.79% compared with recent state-of-the-art baselines and achieves comparable deployment performance with about 23.8% of their interaction data.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/20/2606.19758v1-sigma-skill-incidence-graphs-for-compositional-multi-agent-design",
+      "section": "quick",
+      "title_en": "SIGMA: Skill-Incidence Graphs for Compositional Multi-Agent Design",
+      "authors": "Kun Zeng, Yu Huo, Siyu Zhang, Yuecheng Zhuo, Yuquan Lu, Haoyue Liu, Siyue Chen, Xiaoying Tang",
+      "date": "2026-06-18",
+      "pdf": "https://arxiv.org/pdf/2606.19758v1",
+      "score": "7.0",
+      "evidence": "分布式多智能体系统通信拓扑技能组合",
+      "tldr": "现有基于图的多智能体系统主要优化通信拓扑，但节点为封闭实体，难以泛化到新能力组合。SIGMA提出技能-任务图框架，将智能体构建为可复用技能的捆绑，预测技能-智能体关联矩阵，组合技能得到节点嵌入并解码通信拓扑。在6个推理编码基准上平均性能最优，较CARD提升约2点，对未见技能库的鲁棒性更强。表明组合节点构建是MAS设计的重要新维度。",
+      "tags": "query:marl",
+      "abstract_en": "Existing graph-based multi-agent system (MAS) designers mainly improve collaboration by optimizing communication topologies over predefined agents, roles, or groups. However, because each node remains a closed-set entity, these methods struggle to generalize to tasks that require unseen combinations of capabilities. We propose SIGMA, a skill-incidence graph framework that constructs agents as task-conditioned bundles of reusable skills. Given a task and a skill library, SIGMA predicts a skill-agent incidence matrix, composes agent node embeddings from selected skills, and decodes a communication topology over the constructed agents. During execution, skill-specific mailboxes route messages to the relevant assigned capabilities, making the incidence structure directly operational. Across six reasoning and coding benchmarks with three base LLMs, SIGMA achieves the best average performance and improves over CARD, the strongest non-compositional topology-based baseline, by 2.06, 2.36, and 1.75 points, respectively. It also shows stronger robustness to unseen skill libraries, with an average performance drop of only 0.96 points. These results suggest that compositional node construction is a complementary and important axis for multi-agent design beyond communication topology optimization. Code is available at https://anonymous.4open.science/r/SIGMA-2338/.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
