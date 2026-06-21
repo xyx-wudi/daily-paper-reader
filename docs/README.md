@@ -6,34 +6,38 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-20
-- 运行时间：2026-06-20 21:28:38 UTC
+- 最新运行日期：2026-06-21
+- 运行时间：2026-06-21 20:22:03 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：6
 - 精读区：1
-- 速读区：3
+- 速读区：5
 
 ### 今日简报（AI）
-今日精读博弈论中镜像下降学习的遍历偏差鲁棒均衡，速读GPU内核优化、元强化学习知识复用与多智能体技能结构图。  
-最值得关注的是均衡鲁棒性理论以及多智能体技能组合的图模型设计方向。  
-建议优先精读高分均衡论文，再结合技能图方法探索多智能体协同应用。
-- 详情：[/202606/20/README](/202606/20/README)
+今日共6篇论文，精读1篇、速读5篇，重点覆盖多智能体系统与分布式架构。最值得关注的是精读论文《Distributed General-Purpose Agent Networks》提出的通用智能体网络架构，以及速读中关于多智能体联合规划和异构行为学习的两个方向。建议优先研读精读论文，了解分布式智能体的核心机制与原型实现。
+- 详情：[/202606/21/README](/202606/21/README)
 
 ### 精读区论文标签
-1. [Ergodic Deviation-Robust Equilibrium under Mirror Descent Learning in Finite Games](/202606/20/2606.18194v1-ergodic-deviation-robust-equilibrium-under-mirror-descent-learning-in-finite-games)  
+1. [Distributed General-Purpose Agent Networks: Architecture, Key Mechanisms, and Prototypes](/202606/21/2606.17368v1-distributed-general-purpose-agent-networks-architecture-key-mechanisms-and-prototypes)  
    标签：评分：8.0/10、query:marl
-   evidence：多智能体博弈学习均衡镜面下降
+   evidence：分布式智能体网络与去中心化执行
 
 ### 速读区论文标签
-1. [daVinci-kernel: Co-Evolving Skill Selection, Summarization, and Utilization via RL for GPU Kernel Optimization](/202606/20/2606.16497v1-davinci-kernel-co-evolving-skill-selection-summarization-and-utilization-via-rl-for-gpu-kernel-optimization)  
+1. [Tensor-Coord: Algebraic Decomposition of Joint Plan Tensors for Conflict-Free Multi-Agent LLM Planning](/202606/21/2606.16478v1-tensor-coord-algebraic-decomposition-of-joint-plan-tensors-for-conflict-free-multi-agent-llm-planning)  
    标签：评分：7.0/10、query:marl
-   evidence：使用三个合作RL智能体进行GPU内核优化应用
-2. [Knowledge Reutilization in Meta-Reinforcement Learning](/202606/20/2606.18132v1-knowledge-reutilization-in-meta-reinforcement-learning)  
+   evidence：通过联合计划张量分解解决多智能体系统中的分散执行问题
+2. [Do as the Romans Do: Learning Universal Behaviors from Heterogeneous Agents](/202606/21/2606.18537v1-do-as-the-romans-do-learning-universal-behaviors-from-heterogeneous-agents)  
    标签：评分：7.0/10、query:marl
-   evidence：元强化学习中异构智能体间的知识重用
-3. [SIGMA: Skill-Incidence Graphs for Compositional Multi-Agent Design](/202606/20/2606.19758v1-sigma-skill-incidence-graphs-for-compositional-multi-agent-design)  
+   evidence：从异构智能体学习通用行为，奖励推断
+3. [A Multi-Agent system for Multi-Objective constrained optimization](/202606/21/2606.20236v1-a-multi-agent-system-for-multi-objective-constrained-optimization)  
    标签：评分：7.0/10、query:marl
-   evidence：分布式多智能体系统通信拓扑技能组合
+   evidence：多智能体强化学习用于多目标约束优化
+4. [Knowledge Reutilization in Meta-Reinforcement Learning](/202606/21/2606.18132v1-knowledge-reutilization-in-meta-reinforcement-learning)  
+   标签：评分：6.0/10、query:marl
+   evidence：元强化学习用于异构智能体间的知识迁移
+5. [Learning Red Agent Policy from Observations for Neurosymbolic Autonomous Cyber Agents](/202606/21/2606.18223v1-learning-red-agent-policy-from-observations-for-neurosymbolic-autonomous-cyber-agents)  
+   标签：评分：6.0/10、query:marl
+   evidence：用于网络防御的多智能体强化学习，部分可观测
 
 
 <div class="dpr-home-promo-card">
