@@ -6,38 +6,31 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-21
-- 运行时间：2026-06-21 20:22:03 UTC
+- 最新运行日期：2026-06-22
+- 运行时间：2026-06-22 21:39:12 UTC
 - 运行状态：成功
-- 本次总论文数：6
+- 本次总论文数：3
 - 精读区：1
-- 速读区：5
+- 速读区：2
 
 ### 今日简报（AI）
-今日共6篇论文，精读1篇、速读5篇，重点覆盖多智能体系统与分布式架构。最值得关注的是精读论文《Distributed General-Purpose Agent Networks》提出的通用智能体网络架构，以及速读中关于多智能体联合规划和异构行为学习的两个方向。建议优先研读精读论文，了解分布式智能体的核心机制与原型实现。
-- 详情：[/202606/21/README](/202606/21/README)
+1) 今日精读满分论文《Multi-agent Framework for Time-Sensitive Complementary Collaboration in Minecraft》，速读两篇多智能体联盟形成与跨记忆研究。
+2) 最值得关注的是Minecraft中时间敏感的互补协作机制，以及去中心化联盟形成的高效退出加入策略。
+3) 建议从游戏场景切入理解多智能体协作，并延伸考察跨记忆如何提升复杂任务中的团队决策效率。
+- 详情：[/202606/22/README](/202606/22/README)
 
 ### 精读区论文标签
-1. [Distributed General-Purpose Agent Networks: Architecture, Key Mechanisms, and Prototypes](/202606/21/2606.17368v1-distributed-general-purpose-agent-networks-architecture-key-mechanisms-and-prototypes)  
-   标签：评分：8.0/10、query:marl
-   evidence：分布式智能体网络与去中心化执行
+1. [Multi-agent Framework for Time-Sensitive Complementary Collaboration in Minecraft](/202606/22/2606.15684v1-multi-agent-framework-for-time-sensitive-complementary-collaboration-in-minecraft)  
+   标签：评分：10.0/10、query:marl
+   evidence：多智能体协作基准
 
 ### 速读区论文标签
-1. [Tensor-Coord: Algebraic Decomposition of Joint Plan Tensors for Conflict-Free Multi-Agent LLM Planning](/202606/21/2606.16478v1-tensor-coord-algebraic-decomposition-of-joint-plan-tensors-for-conflict-free-multi-agent-llm-planning)  
+1. [Exit-and-Join Dynamics for Decentralized Coalition Formation](/202606/22/2606.19683v1-exit-and-join-dynamics-for-decentralized-coalition-formation)  
    标签：评分：7.0/10、query:marl
-   evidence：通过联合计划张量分解解决多智能体系统中的分散执行问题
-2. [Do as the Romans Do: Learning Universal Behaviors from Heterogeneous Agents](/202606/21/2606.18537v1-do-as-the-romans-do-learning-universal-behaviors-from-heterogeneous-agents)  
-   标签：评分：7.0/10、query:marl
-   evidence：从异构智能体学习通用行为，奖励推断
-3. [A Multi-Agent system for Multi-Objective constrained optimization](/202606/21/2606.20236v1-a-multi-agent-system-for-multi-objective-constrained-optimization)  
-   标签：评分：7.0/10、query:marl
-   evidence：多智能体强化学习用于多目标约束优化
-4. [Knowledge Reutilization in Meta-Reinforcement Learning](/202606/21/2606.18132v1-knowledge-reutilization-in-meta-reinforcement-learning)  
+   evidence：分散式联盟形成中的合作收益分配
+2. [Multi-Agent Transactive Memory](/202606/22/2606.19911v1-multi-agent-transactive-memory)  
    标签：评分：6.0/10、query:marl
-   evidence：元强化学习用于异构智能体间的知识迁移
-5. [Learning Red Agent Policy from Observations for Neurosymbolic Autonomous Cyber Agents](/202606/21/2606.18223v1-learning-red-agent-policy-from-observations-for-neurosymbolic-autonomous-cyber-agents)  
-   标签：评分：6.0/10、query:marl
-   evidence：用于网络防御的多智能体强化学习，部分可观测
+   evidence：去中心化LLM代理间的多智能体知识共享
 
 
 <div class="dpr-home-promo-card">
