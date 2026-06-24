@@ -6,47 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-23
-- 运行时间：2026-06-23 21:56:22 UTC
+- 最新运行日期：2026-06-24
+- 运行时间：2026-06-24 21:44:36 UTC
 - 运行状态：成功
-- 本次总论文数：9
-- 精读区：6
-- 速读区：3
+- 本次总论文数：3
+- 精读区：3
+- 速读区：0
 
 ### 今日简报（AI）
-今日推荐9篇论文，精读《BARD-MARL》与《Heterogeneous Policy Networks》各获9分。最值得关注多智能体强化学习中的拜占庭攻击检测与异构策略网络协调。建议优先阅读两篇9分论文，并关注数据驱动纳什均衡方法。
-- 详情：[/202606/23/README](/202606/23/README)
+今日精读两篇9.0分多智能体强化学习论文，聚焦安全泛化与区块链可信决策。
+
+最值得关注：分层约束流形控制提升RL安全性和泛化性；SkyChain用区块链保障低空具身AI的决策可信。
+
+建议关注去中心化安全多智能体RL的融合方向，或可应用于无人机集群与边缘智能。
+- 详情：[/202606/24/README](/202606/24/README)
 
 ### 精读区论文标签
-1. [BARD-MARL: Byzantine-Agent Detection for Learned Communication in Multi-Agent Reinforcement Learning](/202606/23/2606.20701v1-bard-marl-byzantine-agent-detection-for-learned-communication-in-multi-agent-reinforcement-learning)  
+1. [Safe and Generalizable Hierarchical Multi-Agent RL via Constraint Manifold Control](/202606/24/2606.24010v1-safe-and-generalizable-hierarchical-multi-agent-rl-via-constraint-manifold-control)  
    标签：评分：9.0/10、query:marl
-   evidence：在具有学习通信的协作多智能体强化学习中进行拜占庭代理检测
-2. [Heterogeneous Policy Networks for Composite Robot Team Communication and Coordination](/202606/23/2606.20962v1-heterogeneous-policy-networks-for-composite-robot-team-communication-and-coordination)  
+   evidence：通过约束流形实现带安全保证的分层多智能体强化学习
+2. [SkyChain Intelligence: A Blockchain-Secured Multi-Agent DRL Framework for Low-Altitude Embodied Artificial Intelligence](/202606/24/2606.24193v1-skychain-intelligence-a-blockchain-secured-multi-agent-drl-framework-for-low-altitude-embodied-artificial-intelligence)  
    标签：评分：9.0/10、query:marl
-   evidence：多智能体强化学习用于异构机器人团队通信
-3. [Sim2O: Efficient Offline-to-Online MARL via Joint Action Composition](/202606/23/2606.21085v1-sim2o-efficient-offline-to-online-marl-via-joint-action-composition)  
+   evidence：多智能体深度强化学习框架结合区块链安全
+3. [ASALT: Adaptive State Alignment for Lateral Transfer in Multi-agent Reinforcement Learning](/202606/24/2606.24601v1-asalt-adaptive-state-alignment-for-lateral-transfer-in-multi-agent-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：离线到在线的多智能体强化学习框架
-4. [WebCQ: Cooperative Multi-Agent Deep Reinforcement Learning for Scalable Web GUI Testing](/202606/23/2606.22502v1-webcq-cooperative-multi-agent-deep-reinforcement-learning-for-scalable-web-gui-testing)  
-   标签：评分：9.0/10、query:marl
-   evidence：用于网页GUI测试的协作多智能体深度强化学习
-5. [Distilling Collaborative Dynamics into Latent Space for Implicit Coordination in Decentralized Multi-Agent Manipulation](/202606/23/2606.22982v1-distilling-collaborative-dynamics-into-latent-space-for-implicit-coordination-in-decentralized-multi-agent-manipulation)  
-   标签：评分：9.0/10、query:marl
-   evidence：集中训练分散执行框架用于分散多智能体操作
-6. [Stationary Robust Mean-Field Games under Model Mismatches](/202606/23/2606.22579v1-stationary-robust-mean-field-games-under-model-mismatches)  
-   标签：评分：8.0/10、query:marl
-   evidence：模型失配下的均场博弈鲁棒多智能体强化学习
+   evidence：通过状态对齐实现多智能体强化学习迁移
 
 ### 速读区论文标签
-1. [Robust Data-Driven Nash Equilibrium Seeking under Partial-Decision Information](/202606/23/2606.23011v1-robust-data-driven-nash-equilibrium-seeking-under-partial-decision-information)  
-   标签：评分：8.0/10、query:marl
-   evidence：多智能体系统中具有部分决策信息的分散纳什均衡求解
-2. [A Gated Graph Neural Network Approach to Fast-Convergent Dynamic Average Estimation](/202606/23/2606.20955v1-a-gated-graph-neural-network-approach-to-fast-convergent-dynamic-average-estimation)  
-   标签：评分：7.0/10、query:marl
-   evidence：多智能体系统中的分布式动态平均估计
-3. [Deep-Unfolded Coordination](/202606/23/2606.19920v1-deep-unfolded-coordination)  
-   标签：评分：6.0/10、query:marl
-   evidence：用于多智能体分布式优化的深度展开协调
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
