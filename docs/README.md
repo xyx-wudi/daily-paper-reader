@@ -6,39 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-25
-- 运行时间：2026-06-25 21:48:05 UTC
+- 最新运行日期：2026-06-26
+- 运行时间：2026-06-26 21:48:08 UTC
 - 运行状态：成功
-- 本次总论文数：6
-- 精读区：6
-- 速读区：0
+- 本次总论文数：1
+- 精读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读6篇论文，聚焦多智能体强化学习的样本效率瓶颈与价值分解可塑性退化两大前沿方向。最值得关注的是基于图对比迁移的GCT-MARL方法可显著提升样本效率，以及揭示神经元停滞导致价值分解可塑性损失的新机制。建议先深入品味这两篇满分论文，再思考如何将图对比迁移与可塑性修复策略融入你的协作任务中。
-- 详情：[/202606/25/README](/202606/25/README)
+今日速读1篇多智能体控制论文，聚焦仿真到真实迁移中的动力学不匹配问题。
+
+核心方向是通过效果对齐使策略对动力学差异不敏感，评分6分，适合关注多智能体迁移学习的读者参考。
+
+建议深入阅读该文的效果对齐方法，并尝试在自身项目中设计类似的不适应性测试。
+- 详情：[/202606/26/README](/202606/26/README)
 
 ### 精读区论文标签
-1. [GCT-MARL: Graph-Based Contrastive Transfer for Sample-Efficient Cooperative Multi-Agent Reinforcement Learning](/202606/25/2606.25073v1-gct-marl-graph-based-contrastive-transfer-for-sample-efficient-cooperative-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：合作多智能体强化学习迁移学习框架
-2. [Stagnant Neuron: Towards Understanding the Plasticity Loss in Multi-Agent Reinforcement Learning Value Factorization Methods](/202606/25/2606.25335v1-stagnant-neuron-towards-understanding-the-plasticity-loss-in-multi-agent-reinforcement-learning-value-factorization-methods)  
-   标签：评分：9.0/10、query:marl
-   evidence：研究MARL价值分解方法中的塑性损失，与价值分解和actor-critic方法比较相关
-3. [Offline Multi-agent Continual Cooperation via Skill Partition and Reuse](/202606/25/2606.25389v1-offline-multi-agent-continual-cooperation-via-skill-partition-and-reuse)  
-   标签：评分：9.0/10、query:marl
-   evidence：通过技能划分与重用的离线多智能体持续合作
-4. [Low Variance Trust Region Optimization with Independent Actors and Sequential Updates in Cooperative Multi-agent Reinforcement Learning](/202606/25/2606.25526v1-low-variance-trust-region-optimization-with-independent-actors-and-sequential-updates-in-cooperative-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：协作多智能体强化学习中的信任区域优化方法
-5. [Multi-Agent Goal Recognition with Team- and Goal-Conditioned Reinforcement Learning and Factorized Branch-and-Bound](/202606/25/2606.25978v1-multi-agent-goal-recognition-with-team--and-goal-conditioned-reinforcement-learning-and-factorized-branch-and-bound)  
-   标签：评分：9.0/10、query:marl
-   evidence：使用团队和目标条件强化学习与因子化分支定界解决多智能体目标识别
-6. [Rate-Aware Quantum-Inspired Trajectory Learning for Interference-Limited Multi-UAV Networks](/202606/25/2606.25480v1-rate-aware-quantum-inspired-trajectory-learning-for-interference-limited-multi-uav-networks)  
-   标签：评分：8.0/10、query:marl
-   evidence：在干扰受限网络中采用去中心化强化学习进行多无人机轨迹协调
+- 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [IDEA: Insensitive to Dynamics Mismatch via Effect Alignment for Sim-to-Real Transfer in Multi-Agent Control](/202606/26/2606.26575v1-idea-insensitive-to-dynamics-mismatch-via-effect-alignment-for-sim-to-real-transfer-in-multi-agent-control)  
+   标签：评分：6.0/10、query:marl
+   evidence：提出多智能体控制中基于学习的sim-to-real迁移方法
 
 
 <div class="dpr-home-promo-card">
