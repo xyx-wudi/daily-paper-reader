@@ -6,28 +6,32 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-26
-- 运行时间：2026-06-26 21:48:08 UTC
+- 最新运行日期：2026-06-27
+- 运行时间：2026-06-27 20:35:44 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
-- 速读区：1
+- 本次总论文数：4
+- 精读区：2
+- 速读区：2
 
 ### 今日简报（AI）
-今日速读1篇多智能体控制论文，聚焦仿真到真实迁移中的动力学不匹配问题。
-
-核心方向是通过效果对齐使策略对动力学差异不敏感，评分6分，适合关注多智能体迁移学习的读者参考。
-
-建议深入阅读该文的效果对齐方法，并尝试在自身项目中设计类似的不适应性测试。
-- 详情：[/202606/26/README](/202606/26/README)
+今日聚焦4篇论文，精读2篇高分研究，涉及去中心化交通管理、工业微电网多智能体强化学习。最值得关注的是《Decentralized Autonomous Traffic Management》9分，提出走廊网络实现自主交通管理；《Reference-Free Heterogeneous Multi-Agent RL》8分，解决工业微电网并网功率整形问题。建议优先阅读这两篇精读论文，可快速了解强化学习在交通与能源领域的创新应用。
+- 详情：[/202606/27/README](/202606/27/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Decentralized Autonomous Traffic Management through Corridor Networks](/202606/27/2606.23585v1-decentralized-autonomous-traffic-management-through-corridor-networks)  
+   标签：评分：9.0/10、query:marl
+   evidence：去中心化多智能体强化学习用于通道网络交通流管理
+2. [Reference-Free Heterogeneous Multi-Agent Reinforcement Learning for Grid-Friendly Tie-Line Power Shaping in Industrial Microgrids](/202606/27/2606.25599v1-reference-free-heterogeneous-multi-agent-reinforcement-learning-for-grid-friendly-tie-line-power-shaping-in-industrial-microgrids)  
+   标签：评分：8.0/10、query:marl
+   evidence：合作多智能体强化学习在微电网中的应用
 
 ### 速读区论文标签
-1. [IDEA: Insensitive to Dynamics Mismatch via Effect Alignment for Sim-to-Real Transfer in Multi-Agent Control](/202606/26/2606.26575v1-idea-insensitive-to-dynamics-mismatch-via-effect-alignment-for-sim-to-real-transfer-in-multi-agent-control)  
+1. [EMAgnet: Parameter-Space EMA Regularization for Policy Gradient Self-Play in Large Games](/202606/27/2606.23995v1-emagnet-parameter-space-ema-regularization-for-policy-gradient-self-play-in-large-games)  
+   标签：评分：7.0/10、query:marl
+   evidence：两人零和博弈中的策略梯度自对弈
+2. [Hierarchical Reinforcement Learning for Neural Network Compression (HiReLC): Pruning and Quantization](/202606/27/2606.26002v1-hierarchical-reinforcement-learning-for-neural-network-compression-hirelc-pruning-and-quantization)  
    标签：评分：6.0/10、query:marl
-   evidence：提出多智能体控制中基于学习的sim-to-real迁移方法
+   evidence：用于神经网络压缩的层次化多智能体强化学习
 
 
 <div class="dpr-home-promo-card">

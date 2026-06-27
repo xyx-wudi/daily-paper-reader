@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-27",
+  "date": "2026-06-27",
+  "generated_at": "2026-06-27T20:35:50",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/27/2606.23585v1-decentralized-autonomous-traffic-management-through-corridor-networks",
+      "section": "deep",
+      "title_en": "Decentralized Autonomous Traffic Management through Corridor Networks",
+      "authors": "Jasmine Jerry Aloor, Aadarsh Govada, Hamsa Balakrishnan",
+      "date": "2026-06-22",
+      "pdf": "https://arxiv.org/pdf/2606.23585v1",
+      "score": "9.0",
+      "evidence": "去中心化多智能体强化学习用于通道网络交通流管理",
+      "tldr": "针对高密度自主飞行器交通中集中式管理可扩展性不足的问题，本文提出基于多智能体强化学习的去中心化空中走廊网络交通管理方法。在单走廊训练的策略可零样本迁移至多走廊合并与分裂场景，适应不同密度、网络几何与异构性能。系统级评估显示策略仅需局部协调即可实现高效交通流，无需集中控制或重新训练。",
+      "tags": "query:marl",
+      "abstract_en": "As autonomous aircraft are introduced at scale and traffic density increases, centralized management becomes insufficient to coordinate the large numbers of crewed and uncrewed aircraft. Dedicated Advanced Air Mobility (AAM) corridors have therefore been proposed for organizing high-density autonomous traffic flows. The desire to scalably provide autonomous aircraft flexibility in trajectory planning motivates the development of decentralized approaches to traffic management in AAM corridors.   In this work, we extend a multi-agent reinforcement learning (MARL) approach to address the challenge of decentralized traffic flow management in air corridor networks. We test policies trained in a single-corridor setting on increasingly complex multi-corridor networks with combinations of merges and splits in a zero-shot manner. Experimental results demonstrate that learned behaviors transfer well to scenarios with varying traffic density, network geometry, and heterogeneous vehicle performance, without needing centralized coordination or model retraining. We evaluate system-level performance in terms of conformance to corridor boundaries, completion rates, average speeds, distance traveled, and maintenance of inter-aircraft separation. We find that although our policies require only locally coordinated entry, traversal, and exit behaviors, they collectively produce desirable traffic flows through the corridor network.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/27/2606.25599v1-reference-free-heterogeneous-multi-agent-reinforcement-learning-for-grid-friendly-tie-line-power-shaping-in-industrial-microgrids",
+      "section": "deep",
+      "title_en": "Reference-Free Heterogeneous Multi-Agent Reinforcement Learning for Grid-Friendly Tie-Line Power Shaping in Industrial Microgrids",
+      "authors": "Daniyaer Paizulamua, Lin Cheng, Fashun Shi, Haoyu Zheng, Pengfei He, Haiwang Zhong",
+      "date": "2026-06-24",
+      "pdf": "https://arxiv.org/pdf/2606.25599v1",
+      "score": "8.0",
+      "evidence": "合作多智能体强化学习在微电网中的应用",
+      "tldr": "工业微电网需通过多时间尺度异构资源协调实现并网友好型联络线功率塑形。提出顺序异构智能体协作框架，将工艺负荷、氢储能和电池储能建模为功能异构智能体，含跨角色观测、异步决策和角色特定奖励评论家。嵌入工艺知识动作掩码和可行性投影确保实时执行，并开发角色感知多时间尺度演员-评论家训练方案。实际数据实验表明，该方法无需预定义参考轨迹，实现自适应分钟级决策，降低总购电成本91.27%、合同越限时间98.64%、累积爬坡越限96.91%。",
+      "tags": "query:marl",
+      "abstract_en": "Tie-line power (TLP) shaping is a key requirement for the grid-friendly operation of industrial microgrids (IMGs). This paper studies the coordination of multi-timescale heterogeneous adjustable resources in a steel IMG to shape a grid-friendly TLP trajectory considering multiple objectives. A sequential heterogeneous-agent coordination (SHAC) framework is proposed, where process loads, hydrogen storage, and battery storage are modeled as functionally heterogeneous agents with cross-role observations, asynchronous decision intervals, role-specific rewards and critics. This design captures the heterogeneous temporal effects of different resources on the TLP trajectory and alleviates ambiguous credit assignment and weak inter-agent coordination. To ensure feasible real-time execution, process-knowledge-based action masking and feasibility projection are embedded into policy execution, and a role-aware multi-timescale actor--critic training scheme is developed for agents with different action structures and decision intervals. Numerical studies using real renewable generation and electricity market data show that SHAC effectively eliminates the dependence on predefined reference trajectories and enables adaptive 1-min online decision-making, achieving zero production failures with an average computational time of only 0.4 ms per step. Compared with the original operation, SHAC reduces the total grid purchase cost, contract-demand exceedance time, and cumulative ramp excess by 91.27\\%, 98.64\\%, and 96.91\\%, respectively. These results demonstrate that the proposed framework improves the economic efficiency and grid friendliness of industrial microgrid operation while satisfying strict process-safety constraints and real-time computational requirements.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/27/2606.23995v1-emagnet-parameter-space-ema-regularization-for-policy-gradient-self-play-in-large-games",
+      "section": "quick",
+      "title_en": "EMAgnet: Parameter-Space EMA Regularization for Policy Gradient Self-Play in Large Games",
+      "authors": "Tristan Maidment, JB Lanier, Chase McDonald, Nathan Tsang, Eugene Vinitsky, Roy Fox, Albert Wang, Wesley N. Kerr",
+      "date": "2026-06-22",
+      "pdf": "https://arxiv.org/pdf/2606.23995v1",
+      "score": "7.0",
+      "evidence": "两人零和博弈中的策略梯度自对弈",
+      "tldr": "双人零和不完全信息博弈中，均匀分布正则化策略梯度自对弈虽能匹配博弈论算法，但均匀正则化对所有动作一视同仁，忽视策略改进。为此，本文提出EMAgnet，通过指数移动平均策略参数作为自适应正则化目标，引导策略向历史均值演化。在标准博弈与含大量严格占优策略的挑战性环境中，EMAgnet相比PPO自对弈均匀正则化及退火调度，取得更低可利用性。该方法为策略梯度自对弈提供自适应机制，增强对占优策略鲁棒性，推动大型博弈求解。",
+      "tags": "query:marl",
+      "abstract_en": "Recent work has established that regularized policy gradient methods such as PPO, when used in self-play, can match or exceed specialized game-theoretic algorithms for solving two-player zero-sum imperfect-information games. The uniform distribution has emerged as a strong policy regularization target for this purpose, but it regularizes equally toward all actions regardless of their viability. We introduce EMAgnet, which instead regularizes toward an exponential moving average (EMA) of the last-iterate policy's parameters, providing an adaptive regularization target that evolves with the agent's improving strategy. We evaluate EMAgnet on both standard two-player zero-sum benchmarks and modified benchmarks with exploration challenges and large numbers of strictly dominated strategies. Relative to PPO self-play with uniform-magnet regularization under both linear and power-law annealing schedules, EMAgnet achieves lower exploitability in the majority of tested environments, with consistent performance gains across games containing strictly dominated strategies.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/27/2606.26002v1-hierarchical-reinforcement-learning-for-neural-network-compression-hirelc-pruning-and-quantization",
+      "section": "quick",
+      "title_en": "Hierarchical Reinforcement Learning for Neural Network Compression (HiReLC): Pruning and Quantization",
+      "authors": "Kamar Hibatallah Baghdadi, Kawther Guoual Belhamidi, Sara Belhadj, Aissa Boulmerka, Nadir Farhi",
+      "date": "2026-06-24",
+      "pdf": "https://arxiv.org/pdf/2606.26002v1",
+      "score": "6.0",
+      "evidence": "用于神经网络压缩的层次化多智能体强化学习",
+      "tldr": "针对深度神经网络压缩中剪枝与量化联合搜索的挑战，提出HiReLC分层强化学习框架。低层代理独立优化每块核的位宽、保留率等配置，高层代理基于Fisher信息估计协调全局预算分配。采用主动学习循环与轻量MLP代理进行奖励塑造，降低评估成本。在ViT和CNN上实现5.99-6.72倍压缩，部分设置准确率提升3.83%，证明了分层策略与敏感性引导的有效性。",
+      "tags": "query:marl",
+      "abstract_en": "We present HiReLC, a hierarchical ensemble-reinforcement learning framework for automated joint quantization and structured pruning of deep neural networks. The framework decomposes the compression search across two levels of abstraction: low-level agents (LLAs) operate independently per block, selecting per-kernel configurations over a multi-discrete action space spanning bitwidth, pruning keep-ratio, quantization type, and granularity, while high-level agents (HLAs) coordinate global budget allocation via ensemble voting guided by Fisher Information-based sensitivity estimates. To mitigate the computational cost of policy evaluation, an iterative active learning loop interleaves surrogate-guided RL optimization with post-compression fine-tuning, using a lightweight MLP surrogate to amortize expensive evaluations and a logit-MSE proxy during cold-start. The surrogate is used for reward shaping rather than as a replacement for final post-compression evaluation. The controller is architecture-agnostic by design, with a modular layer abstraction decoupling the RL environment from the underlying network topology. Experiments across Vision Transformer and CNN benchmarks demonstrate effective parameter-storage compression ratios of 5.99 - 6.72$\\times$ with a 3.83 % gain in one setting and 0.55 - 5.62 % accuracy drops elsewhere, supporting hierarchical policy decomposition and sensitivity-aware guidance as practical design choices for joint neural network compression.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

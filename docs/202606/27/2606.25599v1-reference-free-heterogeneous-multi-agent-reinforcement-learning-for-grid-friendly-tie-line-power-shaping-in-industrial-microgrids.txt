@@ -1,0 +1,2456 @@
+Title: Reference-Free Heterogeneous Multi-Agent Reinforcement Learning for Grid-Friendly Tie-Line Power Shaping in Industrial Microgrids
+
+URL Source: https://arxiv.org/pdf/2606.25599v1
+
+Published Time: Thu, 25 Jun 2026 00:45:23 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Reference-Free Heterogeneous Multi-Agent Reinforcement Learning for Grid-Friendly Tie-Line Power Shaping in Industrial Microgrids 
+
+## Daniyaer Paizulamu a, Lin Cheng a, Fashun Shi a,∗, Haoyu Zheng a, Pengfei He a and Haiwang Zhong a
+
+> a
+
+Department of Electrical Engineering, Tsinghua University, Beijing 100084, China 
+
+A R T I C L E I N F O 
+
+Keywords :Industrial microgrid Tie-line power shaping Heterogeneous-agent Safety-aware Reference-free 
+
+A B S T R A C T 
+
+Tie-line power (TLP) shaping is a key requirement for the grid-friendly operation of industrial microgrids (IMGs). This paper studies the coordination of multi-timescale heterogeneous adjustable resources in a steel IMG to shape a grid-friendly TLP trajectory considering multiple objectives. A sequential heterogeneous-agent coordination (SHAC) framework is proposed, where process loads, hydrogen storage, and battery storage are modeled as functionally heterogeneous agents with cross-role observations, asynchronous decision intervals, role-specific rewards and critics. This design captures the heterogeneous temporal effects of different resources on the TLP trajectory and alleviates ambiguous credit assignment and weak inter-agent coordination. To ensure feasible real-time execution, process-knowledge-based action masking and feasibility projection are embedded into policy execution, and a role-aware multi-timescale actor–critic training scheme is developed for agents with different action structures and decision intervals. Numerical studies using real renewable generation and electricity market data show that SHAC effectively eliminates the dependence on predefined reference trajectories and enables adaptive 1-min online decision-making, achieving zero production failures with an average computational time of only 0.4 ms per step. Compared with the original operation, SHAC reduces the total grid purchase cost, contract-demand exceedance time, and cumulative ramp excess by 91.27%, 98.64%, and 96.91%, respectively. These results demonstrate that the proposed framework improves the economic efficiency and grid friendliness of industrial microgrid operation while satisfying strict process-safety constraints and real-time computational requirements. 
+
+## 1. Introduction 
+
+1.1. Background and motivation 
+
+An industrial microgrid (IMG) is a local energy system that coordinates industrial process loads, renewable energy sources (RES), energy storage, and the connection to the utility grid. Steel industrial microgrids have been studied to coordinate steel production, storage resources, and distributed energy resources under renewable uncertainty [1]. Compared with conventional microgrids, IMGs are characterized by intensive electricity consumption, strict production constraints, and highly variable power profiles. Therefore, grid-friendly IMG operation is required to coordinate production economy and grid interaction. From the active power perspective, this requirement is mainly reflected in the tie-line power (TLP), which should reduce high cost grid purchase, avoid excessive contract demand, improve local RES utilization, and suppress rapid power variations. Process loads provide an important source of operational flexibility for IMGs, since their production timing and operating power can be adjusted within process feasible boundaries. Existing studies have shown that flexible electric arc furnace (EAF) scheduling can reduce electricity costs, and ladle furnace (LF) refining processes can provide quantifiable load flexibility for industrial demand response [2]. However, short-process steelmaking loads are constrained by batch production, non-interruptible operations, and inter-stage coupling, and therefore cannot fully follow RES fluctuations. Hybrid storage can complement process load flexibility by absorbing renewable surplus and compensating production induced power variations. In particular, hydrogen storage is suitable for slow energy buffering, whereas battery storage can provide fast residual regulation [3, 4]. Given the distinct operational characteristics of process loads, hydrogen storage, and battery storage, designing an effective coordinated decision framework to achieve grid-friendly TLP shaping is significant but challenging. 
+
+> ∗
+
+Corresponding author 
+
+shi_fashun@tsinghua.edu.cn (F. Shi) 
+
+Page 1 of 23 
+
+> arXiv:2606.25599v1 [eess.SY] 24 Jun 2026
+
+1.2. Literature review 
+
+(1) Flexible scheduling of industrial process loads Existing studies mainly exploit the operational flexibility of process loads from the perspectives of industrial demand response and production scheduling. Industrial facilities have been modeled as price-responsive production systems, where state-task networks, mixed-integer programming, and real-time decision models are used to coordinate production tasks with electricity price signals for reducing energy costs and enhancing demand response capability [5–7]. For energy-intensive discrete industrial processes, device commitment, process sequence, batch processing, and production coupling constraints have been further incorporated, with typical applications in electric arc furnace steelmaking, refinery operations, metal casting, air separation, and cement production [8–10]. For the short process steelmaking system considered in this paper, flexible EAF scheduling is investigated in [11] to reduce electricity costs, the flexibility of the LF refining process is quantified as cuttable loads in [12], hydrogen-based steel production is coordinated with renewable energy supply in [13] to improve low-carbon production economy; and risk-aware energy management of steel industrial microgrids with energy storage is studied in [14]. In addition, continuous modeling is introduced in [15] to improve the computational efficiency of discrete industrial process scheduling, providing a new modeling approach for fast optimization of complex process loads. However, existing studies still have two main limitations: (i) the grid friendliness of the TLP trajectory has not been treated as a core objective. (ii) Optimization-based methods are difficult to directly apply to minute-level online decision-making due to discrete variables, while data-driven methods have not sufficiently embedded process safety knowledge. (2) Coordination of flexibility resources for grid-friendly TLP shaping Existing studies have improved microgrid TLP characteristics through flexible load regulation [16], storage regulation [17], and coordinated operation of flexibility resources [18]. One class of methods constrains the power exchange between microgrids and the main grid by constructing TLP references or scheduling plans. For instance, flat TLP scheduling control is adopted in [19] to coordinate renewable generation and storage units, thereby enabling grid-connected microgrids to form smoother grid-interaction power profiles according to dispatch requirements. Another class of methods exploits the dynamic complementarity between flexible loads and storage for power smoothing. Demand response and battery storage are coordinated in [20] to share TLP fluctuations across different frequency ranges and reduce storage capacity requirements. Load shifting and storage dynamic response are combined in [21] to suppress microgrid TLP fluctuations, and this idea is further extended to multi-area load coordination and storage control in [22]. In addition, rolling optimization and multi-timescale control have been used to coordinate adjustable resources with different response speeds. Flexible loads are modeled as virtual storage and coordinated with hybrid storage for grid-connected power fluctuation smoothing in [23]. Hydrogen storage and battery storage are incorporated into a multi-timescale model predictive control framework in [24] to smooth the output power of hybrid microgrids. However, existing studies still have two main limitations: (i) most methods mainly regulate conventional flexible loads or storage resources, without fully addressing the strong impact characteristics of process loads. (ii) Existing methods mainly rely on predefined TLP references, filtering targets, day-ahead schedules, or rolling tracking frameworks, rather than providing a reference-free online TLP shaping method. (3) MARL for microgrid multi-resource coordination MARL has been increasingly applied to the coordinated control of loads, storage, and multi-resource in microgrids. For discrete manufacturing systems, production machines and processing tasks are modeled as multiple agents, and MARL is used to coordinate production scheduling and demand response for reducing electricity costs while maintaining production completion [25]. A similar framework is further extended to heavy industries with discrete manufacturing systems to coordinate energy demand and operating costs in energy intensive production processes [26]. CTDE-based MARL has been used to coordinate multiple energy resources, with soft actor–critic and attention mechanisms incorporated to handle device coupling and operational uncertainties [27]. The coordinated scheduling of microgrids has also been formulated as an interactive decision making process among autonomous agents to optimize local energy management and system-level operational performance [28]. For heat-electricity coupled microgrids, surrogate-model-enabled MARL is adopted to reduce the dependence on accurate physical models and coordinate thermal loads, electrical loads, and storage resources [29]. 
+
+> Page 2 of 23
+
+Table 1 
+
+Comparison of this paper with existing studies.                                                                                             
+
+> Ref. Resource Type Algorithm Research Objective Reference-free Safety-aware Multi-timescale Coordination Time Resolution [8] PL+BS DA scheduling+MPC Ancillary service ✓✓2-s/1-h [11] PL RTN-MIP Cost reduction ✓15-min [13] PL+HS+RES iRTN-MIP H2-steel scheduling ✓30-min [14] PL+BS+GT DRCC-MISOCP Risk-aware EM ✓1-h [15] PL cRTN-MILP Efficient scheduling ✓5-min [16] PL LQ-based OR TLP smoothing ✓<5-min [17] BS MAD3QN PCC smoothing 1-h [18] FL+BS DASP+IDRC Grid-friendly EM ✓30-min [19] RES+BS Hierarchical control Flat TLP scheduling 15-min [20] FL+BS SQ+KBM TLP smoothing ✓1-min [23] FL+HESS NROS PFS+economy ✓6-min/30-min [24] HS MT-MPC Output smoothing ✓10-min/1-h [25] PL MADDPG Industrial DR 1-h [26] PL+ES MAPPO+AM DR+production EM 1-h [27] Load+ES+ME MADRL+CB/SAC/AM Cost reduction 1-h [32] ES+DG MA-OCDDPG Hierarchical EM ✓1-h [33] MEMGs CD-EHATRPO Collaborative optimization ✓15-min This paper PL+HS+BS SHAC Grid-friendly TLP shaping ✓✓✓1/5/15-min
+> ✓: The item is considered; GT: gas turbine; ME: multi-energy resources; MEMGs: multi-energy microgrids; EM: energy management; OR: output regulation; PFS: power fluctuation smoothing; KBM: kinetic battery model; MAD3QN: multi-agent dueling double deep Q-network; DASP: day-ahead scheduling plan; IDRC: intraday rolling correction; NROS: novel rolling optimization strategy; MADDPG: multi-agent deep deterministic policy gradient; AM: attention mechanism; MA-OCDDPG: multi-agent option-critic deep deterministic policy gradient; CD-EHATRPO: collaboration-driven enhanced heterogeneous-agent trust-region policy optimization.
+
+For storage coordination, different storage resources in hybrid storage systems are modeled as multiple agents to accommodate short, medium, and long timescale energy regulation requirements, thereby improving renewable energy utilization and microgrid operating benefits [30]. Shared hydrogen storage has also been incorporated into MARL-based microgrid energy management to coordinate the interactions between multiple microgrids and long-duration storage resources [31]. Furthermore, hierarchical or multi-timescale MARL methods have been explored for complex energy systems, where upper-level policies make slower energy allocation or scheduling decisions, while lower-level policies conduct faster power tracking or real-time correction [32]. Hierarchical trust-region MARL has also been used for the collaborative optimization of multi-energy multi-microgrid systems to improve training stability and coordination efficiency [33]. From the algorithmic perspective, HATRPO/HAPPO mitigates the training instability caused by simultaneous policy updates in cooperative MARL through sequential policy updates [34]. HARL/HAML further supports heterogeneous-agent cooperation with non-parameter-sharing policies, and monotonic improvement guarantees, providing a methodological basis for cooperative learning with heterogeneous action spaces and policy structures [35]. However, existing studies have not sufficiently characterized the differentiated responsibilities of PL, HS, and BS in TLP smoothing. 
+
+1.3. Research gap 
+
+Existing literature is summarized in Table 1. Despite the extensive literature, several critical research gaps remain insufficiently addressed. (1) Existing studies on PL scheduling mainly focus on production economy, demand response, or ancillary service provision, while the grid friendliness of the TLP trajectory has not been treated as a core optimization objective. Therefore, it is crucial to exploit PL flexibility for improving the grid-interaction power trajectory while preserving process safety constraints. (2) Existing TLP shaping methods mostly follow a two-stage paradigm in which a predefined TLP reference trajectory is first generated and flexible resources are then coordinated to track it. However, in short-process steelmaking IMGs, process loads are characterized by discrete batch processing, non-interruptible operation, strict temporal coupling, and strong power impacts. Predefined TLP reference trajectories may not adequately accommodate real-time renewable generation, electricity price signals, and production-state variations, which may lead to degraded economic performance, excessive storage cycling, and even compromised production feasibility. Therefore, a reference-free online TLP shaping mechanism is still needed to achieve grid-friendly TLP shaping. 
+
+Page 3 of 23 (3) Current MARL-based microgrid coordination studies often place flexible resources with similar functions or comparable timescales within a unified decision-making framework, which is insufficient to characterize the physical het-erogeneity and hierarchical coordination of multi-type resources in industrial microgrids. In steel IMGs, PL, HS, and BS differ not only in their decision timescales but also in their functional roles in TLP shaping, where PL reshapes production-induced load profiles, HS buffers medium-timescale energy residuals, and BS compensates minute-level residual fluctuations. Under such heterogeneity, a unified reward or parallel training structure may obscure credit assignment and weaken cross-resource coordination. Therefore, a heterogeneous coordination framework oriented toward resource heterogeneity and temporal coupling is still needed to enable effective credit assignment and coordinated TLP shaping. 
+
+1.4. Contributions 
+
+Motivated by the above research gaps, this paper proposes a reference-free heterogeneous MARL framework for grid-friendly TLP shaping in a steel IMG. Specifically, the main contributions are threefold: 
+
+(1) A heterogeneous Markov decision model for reference-free TLP shaping: Considering the significant differences among process loads, hydrogen storage, and battery storage in physical characteristics, action structures, and response timescales in short-process steelmaking industrial microgrids, this paper models the grid-friendly TLP shaping problem as a heterogeneous multi-agent sequential decision-making process. This model uniformly transforms process constraints, storage dynamics, real-time operating signals, and grid-friendly objectives into a state-driven reinforcement learning decision-making problem, providing a modeling basis for reference-free online collaborative optimization of complex industrial source–load–storage systems. 
+
+(2) A sequential heterogeneous-agent coordination framework (SHAC): To address the ambiguous credit assignment and weakened coordination that may occur in conventional MARL for heterogeneous resource coordination, this paper proposes a PL →HS →BS sequential heterogeneous coordination framework. Its core is to strictly align the sequential decision-making of agents with the physical responsibility chain of resources, and to establish conditional de-pendencies among heterogeneous actions through cross-role observations, role-specific rewards, role-specific critics, and asynchronous update mechanism design. This design effectively alleviates the credit assignment difficulty in heteroge-neous cooperation, not only enabling efficient coordinated decision-making among heterogeneous microgrid resources, but also enhancing the dynamic collaborative shaping capability of multi-timescale resources for the TLP trajectory. 
+
+(3) A process-knowledge-embedded safety-executable policy layer: To address the problem that purely data-driven policies are prone to generating non-executable actions in short-process steelmaking scenarios, this paper introduces a safety-aware action processing layer between heterogeneous-agent policies and the industrial microgrid environment, which uniformly embeds complex discrete process logic and continuous physical operating boundaries into the policy execution process. Through action masking and feasibility projection, this mechanism maps the heterogeneous policy outputs of PL, HS, and BS in real time into process-feasible and physically feasible online dispatch commands, thereby enhancing engineering deployability while maintaining reference-free adaptive decision-making capability. 
+
+1.5. Paper organization 
+
+We organize the remainder of this paper as follows. Section 2 describes the configuration of IMG and characterizes the requirements of grid-friendly TLP shaping. Section 3 presents the equivalent models of HESS, together with the operation constraints of PLs. Section 4 introduces the reference-free SHAC framework for grid-friendly TLP shaping. Section 5 provides numerical case studies to evaluate the effectiveness of the proposed framework. Finally, Section 6 concludes this paper. 
+
+## 2. Industrial microgrid description and grid-friendly TLP characterization 
+
+2.1. Industrial microgrid configuration 
+
+Industrial microgrid (IMG) refers to the local energy system deployed in an industrial park, typically comprising distributed generation, PL-dominated industrial loads, energy storage devices, an internal distribution network, an energy management system, and a grid-interconnection interface. Compared with conventional microgrids, IMGs are more strongly shaped by industrial production in their resource composition, system structure, and operating patterns. Specifically, (1) the generation side often integrates large-capacity low-carbon resources, such as wind power, photovoltaic generation, and waste-heat or waste-pressure recovery generation, rather than only small-scale distributed       
+
+> Page 4 of 23 220kV
+> Main Grid T1:220/35kV
+> PCC
+> Grid -Friendly
+> TLP
+> Renewable Generation
+> Wind Power PV
+> Baseline Loads
+> Office
+> Buildings
+> Residential
+> Area
+> Auxiliary
+> Equipment
+> Agent 2 ：
+> Hydrogen Energy Storage
+> Electrolyzer
+> H₂Storage
+> Fuel Cell
+> Agent 1 ：
+> Process Loads
+> EAF LF CC
+> Agent 3 ：
+> Battery Energy Storage
+> Lithium Battery
+> 35 kV AC Busbar
+
+Figure 1: Architecture of the studied steel industrial microgrid with process loads and hybrid energy storage. 
+
+units. (2) The load side is dominated by high-power industrial equipment and automated production lines, exhibiting nonlinear, impulsive, and strongly process-coupled characteristics. (3) The operating scale typically ranges from tens to hundreds of MW, with possible interconnection at higher voltage levels and coverage of an entire industrial plant or park. (4) The operation of an IMG aims not only to improve local economy and supply reliability, but also to enhance local renewable energy accommodation and improve TLP interactions with the upstream distribution grid through coordinated source-load-storage scheduling. As shown in Fig. 1, the steel IMG studied in this paper consists of wind and photovoltaic renewable energy sources (RESs), short-process steelmaking process loads (PLs), a hybrid energy storage system (HESS), and an external grid interface. The steelmaking PLs mainly include EAFs, LFs, and continuous casters (CCs), and are constrained by batch production, inter-process coordination, equipment occupancy, and intraday production requirements. The HESS integrates hydrogen storage and battery energy storage systems, providing long- and short-duration energy shifting capabilities, respectively. This paper focuses on the coordinated dispatch of PLs and the HESS to shape a more grid-friendly tie-line power 𝑃 TL  
+
+> 𝑡
+
+in real time while satisfying production requirements and equipment operating constraints. 
+
+2.2. Grid-friendly TLP characterization 
+
+In this paper, a grid-friendly TLP refers to a power trajectory that attenuates the direct transmission of internal PL shocks and renewable energy fluctuations from the industrial microgrid to the upstream grid, coordinates electricity procurement with grid operational needs, and presents an observable, controllable, bounded, and coordinated interaction pattern at the grid interface. Specifically, Fig. 2 illustrates the contrast between grid-unfriendly and grid-friendly TLP trajectories, and a grid-friendly TLP should exhibit the following characteristics [36]. (1) Smoothness: Smoothness requires the TLP to change gradually rather than directly transferring abrupt PL variations or renewable fluctuations to the upstream grid. This property can be characterized by the admissible ramping-rate limit: |||||
+
+𝑃 TL  
+
+> 𝑡
+
+−𝑃 TL 
+
+> 𝑡 −1
+
+Δ𝑡 
+
+|||||
+
+≤ 𝑅 max , ∀𝑡 ∈  , (1) where 𝑅 max denotes the maximum acceptable minute-level TLP ramping rate. A lower ramping rate implies a smoother grid-interaction trajectory. (2) Local renewable accommodation and limited grid export: A grid-friendly IMG should prioritize the local accommodation of wind and photovoltaic generation by industrial loads and storage devices. Surplus renewable generation may be exported to the upstream grid for spot market participation, whereas the exported energy should remain limited relative to the total available renewable generation. This property can be characterized by: 
+
+𝜂 RES =
+
+∑𝑡 ∈ 𝑃 RES  
+
+> 𝑡
+
+Δ𝑡 
+
+∑𝑡 ∈ 𝑃 RES  
+
+> 𝑡
+
+Δ𝑡 
+
+≥ 𝜂 RES , (2a) 
+
+Page 5 of 23 High Grid Stress Low Grid Stress  
+
+> Smooth and Bounded
+> High Ramping Rate
+> High Reverse
+> Power Flow Rate
+> Grid -St ress Response
+> Exceeds Contract Demand
+> Low Ramp
+
+Figure 2: Illustrative comparison of grid-unfriendly and grid-friendly IMG tie-line power trajectories under renewable generation and electricity price signals. 
+
+𝜂 ex =
+
+∑𝑡 ∈ [− 𝑃 TL  
+
+> 𝑡
+
+]+Δ𝑡 
+
+∑𝑡 ∈ 𝑃 RES  
+
+> 𝑡
+
+Δ𝑡 
+
+≤ 𝜂 ex , (2b) where 𝑃 RES  
+
+> 𝑡
+
+denotes the available renewable power at time 𝑡 , 𝑃 RES  
+
+> 𝑡
+
+denotes the locally accommodated renewable power, and [− 𝑃 TL  
+
+> 𝑡
+
+]+ denotes the exported power. 𝜂 RES imposes the lower limit on the local renewable accommodation ratio, while 𝜂 ex imposes the upper limit on the grid-export energy ratio. (3) Bounded grid import: Grid-friendly TLP should remain within the admissible import capacity accepted by the upstream grid. For an IMG, this capacity can be represented by its contracted demand 𝐷 dem . Accordingly, the TLP is required to satisfy: 
+
+𝑃 TL  
+
+> 𝑡
+
+≤ 𝐷 dem , ∀𝑡 ∈  . (3) (4) Grid-stress responsiveness: A grid-friendly TLP should be coordinated with the operating stress of the upstream grid. When the upstream grid is under high-load, high-price, or high-net-load conditions, the IMG is expected to reduce its grid import. Conversely, when grid stress is low or surplus renewable generation is available, the IMG may increase local consumption or charge storage. 
+
+Remark 1 (Grid Export and Renewable Curtailment) . Renewable curtailment is not adopted as a direct control lever for reducing exported power in this paper. Unrestricted curtailment would reduce the grid-export ratio through the disposal of available renewable generation, rather than through the effective coordination of industrial process loads and hybrid energy storage. This treatment would obscure the attribution of grid-export reduction to the cooperative actions of heterogeneous agents. Therefore, the limited grid-export requirement is mainly achieved through coordinated production scheduling and storage charging/discharging, rather than through renewable energy disposal. 
+
+Remark 2 (Grid-Stress Responsiveness) . The real-time electricity price is adopted as a measurable proxy for the operating stress of the upstream grid. Elevated prices generally reflect stressed operating conditions associated with high demand, limited supply, or network congestion, whereas low prices indicate relatively relaxed operating conditions or abundant low-cost generation. When local renewable generation is insufficient, shifting production toward low-price periods and avoiding high-price periods reduces grid import under stressed grid conditions, thereby enabling grid-stress-responsive TLP shaping. 
+
+## 3. Hybrid energy storage and process loads modeling 
+
+Page 6 of 23 Considering that the net load of an industrial microgrid exhibits both medium-to-long-duration energy imbalance and short-term power fluctuations within the intraday horizon, a hybrid energy storage system composed of hydrogen storage (HS) and battery energy storage (BS) is adopted to facilitate the shaping of a smoother and more grid-friendly 
+
+𝑃 TL trajectory. The battery energy storage system mitigates minute-level power fluctuations through its fast response capability, while the hydrogen storage system regulates net-load deviations at approximately the 15 -min timescale by leveraging its longer-duration energy shifting capability. 
+
+3.1. Equivalent hydrogen and battery storage model 
+
+The HS consists of an electrolyzer, a hydrogen tank, and a fuel cell, where electrical energy is stored through electrolytic hydrogen production during charging and released through fuel-cell generation during discharging. The conversion efficiencies of both processes are not constant but depend on the operating power. Following the power-dependent efficiency characterization in [37], the equivalent HS model is formulated as follows: 
+
+Constraints : ∀𝑡 ∈  ,∀𝑝 ∈ Ω 𝑃 
+
+𝐸 H 
+
+> 𝑡 +1
+
+= 𝐸 H 
+
+> 𝑡
+
++Δ 𝑡 H
+
+(
+
+𝜂 H,c 
+
+> 𝑡
+
+𝑃 H,c 
+
+> 𝑡
+
+− 𝑃 H,d
+
+> 𝑡
+
+𝜂 H,d
+
+> 𝑡
+
+)
+
+, (4a) 
+
+𝜂 H,c 
+
+> 𝑡
+
+= 𝜂 H,c(
+
+𝑃 H,c
+
+> 𝑡
+
+)
+
+, 𝜂 H,d 
+
+> 𝑡
+
+= 𝜂 H,d(
+
+𝑃 H,d
+
+> 𝑡
+
+)
+
+, (4b) 
+
+𝜂 H,c(𝑃 ) = 𝛼 c
+
+> 𝑝
+
+𝑃 +𝛽 c 
+
+> 𝑝
+
+, 𝑃 ∈
+
+[
+
+𝑃 H,c 
+
+> 𝑝
+
+,𝑃 H,c
+
+> 𝑝
+
+]
+
+, (4c) 
+
+𝜂 H,d(𝑃 ) = 𝛼 d 
+
+> 𝑝
+
+𝑃 +𝛽 d 
+
+> 𝑝
+
+, 𝑃 ∈
+
+[
+
+𝑃 H,d 
+
+> 𝑝
+
+,𝑃 H,d
+
+> 𝑝
+
+]
+
+, (4d) 
+
+𝐸 H ≤ 𝐸 H 
+
+> 𝑡
+
+≤ 𝐸 H, (4e) 
+
+0 ≤ 𝑃 H,c 
+
+> 𝑡
+
+≤ 𝑃 H,c, 0 ≤ 𝑃 H,d 
+
+> 𝑡
+
+≤ 𝑃 H,d. (4f) where  and Ω𝑃 denote the sets of time periods and efficiency segments, respectively. 𝐸 H 
+
+> 𝑡
+
+is the HS energy state, and 
+
+𝑃 H,c 
+
+> 𝑡
+
+and 𝑃 H,d 
+
+> 𝑡
+
+are the charging and discharging powers of HS. 𝜂 H,c 
+
+> 𝑡
+
+and 𝜂 H,d 
+
+> 𝑡
+
+are the corresponding power-dependent efficiencies. Parameters 𝛼 c
+
+> 𝑝
+
+, 𝛽 c 
+
+> 𝑝
+
+, 𝛼 d 
+
+> 𝑝
+
+, and 𝛽 d 
+
+> 𝑝
+
+define the piecewise affine efficiency curves, and the active segment is determined by the realized operating power. Constraints (4e) and (4f) impose the energy and power limits of HS. The charging and discharging efficiencies of BS are assumed to be constant. The BS model is then formulated as follows: 
+
+Constraints : ∀𝑡 ∈ 
+
+𝐸 B 
+
+> 𝑡 +1
+
+= (1− 𝜂 B,s)𝐸 B 
+
+> 𝑡
+
++Δ 𝑡 B
+
+(
+
+𝜂 B,c𝑃 B,c 
+
+> 𝑡
+
+− 𝑃 B,d
+
+> 𝑡
+
+𝜂 B,d
+
+)
+
+, (5a) 
+
+0 ≤ 𝑃 B,c 
+
+> 𝑡
+
+≤ 𝑃 B(1− 𝑏 B
+
+> 𝑡
+
+), (5b) 
+
+0 ≤ 𝑃 B,d 
+
+> 𝑡
+
+≤ 𝑃 B𝑏 B 
+
+> 𝑡
+
+, (5c) 
+
+𝐸 B ≤ 𝐸 B 
+
+> 𝑡
+
+≤ 𝐸 B, (5d) where 𝐸 B 
+
+> 𝑡
+
+denotes the BS energy state. 𝑃 B,c 
+
+> 𝑡
+
+and 𝑃 B,d 
+
+> 𝑡
+
+are the charging and discharging power of BS, respectively. 𝜂 B,c
+
+and 𝜂 B,d are the charging and discharging efficiencies, and 𝜂 B,s denotes the self-discharge rate. 𝑃 B is the maximum charging/discharging power. 𝐸 B and 𝐸 B are the lower and upper bounds of the BS energy state. 𝑏 B 
+
+> 𝑡
+
+is a binary variable. 
+
+3.2. Process loads modeling 
+
+This paper focuses on the PLs in a short-process steelmaking industrial microgrid. A typical short-process steelmaking system consists of multiple parallel production lines, each of which follows a fixed technological sequence for steelmaking, refining, and continuous casting. The main process units include the EAF, LF, and CC. Specifically, the EAF 
+
+> Page 7 of 23
+
+melts scrap steel and performs primary steelmaking, representing the PL with the highest power level and the most pro-nounced power fluctuations. The LF adjusts the chemical composition and temperature of molten steel, and its operation is subject to both processing-duration requirements and inter-process coordination constraints. The CC casts the refined molten steel into billets, imposing strict requirements on upstream batch arrival times and production continuity. Since steelmaking is characterized by batch processing, the scheduling flexibility of PLs mainly arises from selecting the start times of different batches across production lines and time periods. Therefore, PLs are modeled as production-coupled loads with discrete start-up decisions, non-interruptible processing, and multi-stage temporal coupling. 
+
+3.2.1. Process loads state equation 
+
+We introduce the state of work (SoW) equation to describe the processing progress of each batch at different stages. Let  denote the set of production lines,  = {EAF ,LF ,CC} denote the set of process units, 𝓁 denote the set of batches on production line 𝓁 , and  denote the set of scheduling intervals. For batch 𝑘 on production line 𝓁 , SoW 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+∈ [0 ,1] 
+
+denotes its completion progress on unit 𝑠 at time 𝑡 . The state update is given by 
+
+SoW 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= SoW 𝑠  
+
+> 𝓁 ,𝑘,𝑡 −1
+
++𝑥 𝑠 
+
+> 𝓁 ,𝑘,𝑡
+
+𝑃 𝑠 
+
+> 𝓁 ,𝑘,𝑡
+
+Δ𝑡 PL 
+
+𝐸 𝑠 
+
+> 𝓁 ,𝑘
+
+, ∀𝓁 ∈ , 𝑘 ∈ 𝓁 , 𝑠 ∈ , 𝑡 ∈  , (6) where 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+∈ {0 ,1} is the processing-status variable. Specifically, 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= 1 indicates that batch 𝑘 on line 𝓁 is processed by unit 𝑠 at time 𝑡 , while 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= 0 indicates that the batch is not processed by this unit and its SoW remains unchanged. 
+
+𝑃 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+is the actual processing power, Δ𝑡 PL is the scheduling interval of PLs, and 𝐸 𝑠  
+
+> 𝓁 ,𝑘
+
+is the total energy required to complete the corresponding stage. 
+
+3.2.2. Process loads operation constraints 
+
+In short-process steelmaking, each batch sequentially passes through EAF, LF, and CC. To ensure process-feasible scheduling, the operation of PLs must satisfy the device power limits, device occupancy limits, non-interruptible processing requirements, stage sequence constraints, inter-stage transfer and waiting time limits, processing-duration limits, and daily production requirement. Let  = {(EAF ,LF) ,(LF ,CC)} denote the set of adjacent process-stage pairs. For batch 𝑘 on production line 𝓁 , 𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
+and 𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+denote the start and end time slots on unit 𝑠 , respectively. The operation constraints of PLs are formulated as follows. 
+
+Constraints : ∀𝓁 ∈ ,∀𝑘 ∈ 𝓁 ,∀𝑠 ∈ ,∀𝑡 ∈ 
+
+𝑃 𝑠 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+≤ 𝑃 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+≤ 𝑃 𝑠 𝑥 𝑠 
+
+> 𝓁 ,𝑘,𝑡
+
+, (7a) 
+
+∑
+
+> 𝑘 ∈𝓁
+
+𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+≤ 1, (7b) 
+
+𝑡 ≥ 𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
+−𝑀 
+
+(
+
+1− 𝑥 𝑠 
+
+> 𝓁 ,𝑘,𝑡
+
+)
+
+, (7c) 
+
+𝑡 ≤ 𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
++𝑀 
+
+(
+
+1− 𝑥 𝑠 
+
+> 𝓁 ,𝑘,𝑡
+
+)
+
+, (7d) 
+
+∑
+
+> 𝑡 ∈
+
+𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= 𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+−𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
++1 , (7e) 
+
+SoW 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+≥ 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+−𝑥 𝑠 
+
+> 𝓁 ,𝑘,𝑡 +1
+
+, ∀𝑡 ∈  ⧵{| |}, (7f) 
+
+𝐷 𝑠 ≤
+
+(
+
+𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+−𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
++1 
+
+)
+
+Δ𝑡 PL ≤ 𝐷 𝑠 , (7g) 
+
+𝑊 𝑠,𝑟 ≤
+
+(
+
+𝑇 𝑟, st  
+
+> 𝓁 ,𝑘
+
+−𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+−1 
+
+)
+
+Δ𝑡 PL ≤ 𝑊 𝑠,𝑟 , ∀( 𝑠,𝑟 ) ∈ , (7h) 
+
+𝑇 𝑠, st  
+
+> 𝓁 ,𝑘 +1
+
+≥ 𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
+, ∀𝑘 ∈ 𝓁 ⧵{|𝓁 |}, (7i) 
+
+(
+
+𝑇 EAF ,st  
+
+> 𝓁 ,𝑘 +1
+
+−𝑇 EAF ,ed  
+
+> 𝓁 ,𝑘
+
+−1 
+
+)
+
+Δ𝑡 PL ≥ 𝐷 EAF ,gap , ∀𝑘 ∈ 𝓁 ⧵{|𝓁 |}, (7j) 
+
+∑
+
+> 𝓁 ∈
+
+∑
+
+> 𝑘 ∈𝓁
+
+SoW CC   
+
+> 𝓁 ,𝑘, ||
+
+≥ 𝑁 tar , (7k) 
+
+Page 8 of 23 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+∈ {0 ,1} , 𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
+,𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+∈ ℤ+. (7l) where , 𝓁 , , and  denote the sets of production lines, batches on line 𝓁 , process units, and scheduling intervals, respectively, with  = {EAF ,LF ,CC} . 𝑃 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+is the actual processing power of batch 𝑘 on line 𝓁 assigned to unit 𝑠 at time 𝑡 , and 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+is the binary processing-status variable. Specifically, 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= 1 indicates that the batch is processed by unit 𝑠 at time 𝑡 , while 𝑥 𝑠  
+
+> 𝓁 ,𝑘,𝑡
+
+= 0 indicates otherwise. 𝑇 𝑠, st  
+
+> 𝓁 ,𝑘
+
+and 𝑇 𝑠, ed  
+
+> 𝓁 ,𝑘
+
+are the start and end time slots of batch 𝑘 on unit 𝑠 ,respectively. 𝑃 𝑠 and 𝑃 𝑠 are the minimum and maximum operating powers of unit 𝑠 . 𝐷 𝑠 and 𝐷 𝑠 denote the minimum and maximum processing durations on unit 𝑠 . 𝑊 𝑠,𝑟 and 𝑊 𝑠,𝑟 denote the minimum transfer time and maximum waiting time between adjacent stages (𝑠,𝑟 ). 𝐷 EAF ,gap represents the minimum time gap between two consecutive EAF batches on the same line, and 𝑁 tar is the target number of completed batches within the scheduling horizon. Constraint (7a) imposes the operating power limits of each process unit, ensuring that the processing power is zero when the corresponding batch is not processed and remains within the admissible range when it is processed. Constraint (7b) ensures that each unit on each production line processes at most one batch at any time. Constraints (7c)–(7e) define a continuous processing interval for each batch on each unit, thereby enforcing non-interruptible processing. Constraint (7f) ensures that a batch can leave the current unit only after the corresponding stage is completed. Constraint (7g) bounds the processing duration of each batch on each unit. Constraint (7h) enforces the process coupling between EAF–LF and LF–CC by imposing both the minimum transfer time and maximum waiting time. Constraint (7i) preserves the batch order within each production line. Constraint (7j) imposes the minimum time gap between consecutive EAF batches. Constraint (7k) imposes the daily production quota requirement. 
+
+## 4. Sequential heterogeneous-agent coordination framework 
+
+4.1. Reference-free coordination architecture 
+
+To shape a grid-friendly TLP trajectory, this paper proposes the sequential heterogeneous-agent coordination (SHAC) framework for reference-free and safety-aware operation of heterogeneous agents. Short-process steelmaking PLs are governed by batch operations and strong inter-stage coupling. Although their scheduling flexibility can redistribute electricity demand over relatively long intervals, discrete production transitions still induce pronounced power variations. To address this issue, the system is decomposed into three functionally heterogeneous agents: a PL agent, a HS agent, and a BS agent. The PL agent adjusts production schedules within process-feasible boundaries to provide low-frequency coarse load shaping. The HS agent performs slow-timescale energy buffering to regulate the medium-timescale TLP residual, while the BS agent provides fast residual regulation to suppress minute-level TLP fluctuations. Considering the distinct response speeds and operating mechanisms of PLs, hydrogen storage, and battery storage, a multi-timescale asynchronous decision structure is adopted under a role-aware training and decentralized execution paradigm. During training, role-specific critics evaluate the corresponding agents according to their coordination objectives. During execution, the PL, HS, and BS agents make decisions based on cross-role local observations at 5-min, 15-min, and 1-min intervals, respectively, while safety-aware action processing ensures the feasibility of production logic and storage physical constraints. The overall workflow of SHAC is illustrated in Fig. 3. 
+
+4.2. Heterogeneous Markov game formulation 
+
+The real-time dispatch problem is formulated as a cooperative heterogeneous Markov game with asynchronous decision epochs. The basic execution interval is set to 1-min. The PL, HS, and BS agents make decisions at 5-min, 
+
+15 -min, and 1-min intervals, respectively. Between two consecutive decision epochs, the latest valid PL or HS action is retained for execution. The heterogeneous Markov game is defined as: 
+
+ = ⟨ ,,{𝑖 }𝑖 ∈ ,{𝑖 }𝑖 ∈ ,{𝑖 }𝑖 ∈ ,,{𝑟 𝑖 }𝑖 ∈ ,𝛾 ⟩, (8) where  = {PL ,HS ,BS} denotes the set of heterogeneous agents.  is the global state space, 𝑖 and 𝑖 are the observation and action spaces of agent 𝑖 , 𝑖 is its valid decision epoch set,  is the transition kernel, 𝑟 𝑖 is the role-specific reward, and 
+
+𝛾 ∈ [0 ,1) is the discount factor. Let  M = {0 ,1,…,𝑇 M − 1} denote the set of minute-level operation periods. The valid decision epochs are PL = { 𝑡 ∈  M ∣ 𝑡 mod 5 = 0} , H = { 𝑡 ∈  M ∣ 𝑡 mod 15 = 0} , and B =  M. The action-retention mapping is defined as: 
+
+> Page 9 of 23
+
+Figure 3: Overall workflow of the proposed SHAC framework. 
+
+𝜅 𝑚 (𝑡 ) = 𝑚 
+
+⌊ 𝑡 𝑚 
+
+⌋
+
+, (9) then the PL scheduling action is retained over [𝜅 5(𝑡 ),𝜅 5(𝑡 )+4] , the HS action is retained over [𝜅 15 (𝑡 ),𝜅 15 (𝑡 )+14] , and the BS action is updated at each minute-level period. To preserve the Markov property under asynchronous action retention, the global state 𝑥 𝑡 ∈  includes operating states, exogenous forecasts, retained actions, and temporal phase indicators: 
+
+𝑥 𝑡 =
+
+[
+
+ΞPL  
+
+> 𝑡
+
+,𝐸 B 
+
+> 𝑡
+
+,𝐸 H 
+
+> 𝑡
+
+,𝑃 TL 
+
+> 𝑡 −1
+
+,̄ 𝑎 PL  
+
+> 𝑡
+
+,̄ 𝜌 H 
+
+> 𝑡
+
+,{̂𝑃 RES  
+
+> 𝜏 |𝑡
+
+,̂ 𝑐 e
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1  
+
+> 𝜏 =𝑡
+
+,𝝌 𝑡 
+
+]
+
+, (10) where ΞPL  
+
+> 𝑡
+
+collects the operating states of EAFs, LFs, and CCs, including batch progress, remaining processing time, inter-stage waiting status, admissible startup candidates, and remaining production tasks. ̄𝑎 PL  
+
+> 𝑡
+
+= 𝑎 PL  
+
+> 𝜅 5(𝑡 )
+
+and ̄𝜌 H 
+
+> 𝑡
+
+= 𝜌 H
+
+> 𝜅 15 (𝑡 )
+
+denote the retained PL scheduling action and the retained normalized HS action, respectively. 𝝌 𝑡 collects quota-related, time-related, TLP-related, storage-related, process-urgency, and temporal phase indicators. During decentralized execution, SHAC adopts sequentially conditioned observations. The PL agent acts first based on the current production state and previously available storage-support information. The HS agent then observes the current PL decision, while the BS agent further observes the realized PL power and executable HS action. The information flow is represented as: 
+
+𝑜 PL  
+
+> 𝑡
+
+= 𝑔 PL (𝑥 𝑡 ), (11a) 
+
+𝑜 H 
+
+> 𝑡
+
+= 𝑔 H(𝑥 𝑡 ,̃ 𝑎 PL 
+
+> 𝑡
+
+), (11b) 
+
+𝑜 B 
+
+> 𝑡
+
+= 𝑔 B(𝑥 𝑡 ,̃ 𝑎 PL  
+
+> 𝑡
+
+,̃ 𝑎 H
+
+> 𝑡
+
+), (11c) where 𝑔 𝑖 (⋅) is a deterministic observation-construction map. The corresponding observations are represented as: 
+
+𝑜 PL  
+
+> 𝑡
+
+=
+
+[
+
+ΞPL  
+
+> 𝑡
+
+,𝜻 B
+
+> 𝑡 −1
+
+,𝜻 H
+
+> 𝑡 −1
+
+,𝑃 TL 
+
+> 𝑡 −1
+
+,̄ 𝜌 H
+
+> 𝑡 −1
+
+,{̂𝑃 RES  
+
+> 𝜏 |𝑡
+
+,̂ 𝑐 e
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1  
+
+> 𝜏 =𝑡
+
+,𝝌 PL 
+
+> 𝑡
+
+]
+
+, (12a) 
+
+Page 10 of 23 𝑜 H 
+
+> 𝑡
+
+=
+
+[
+
+𝐸 H 
+
+> 𝑡
+
+,𝐸 B
+
+> 𝑡 −1
+
+,̃ 𝑎 PL  
+
+> 𝑡
+
+,{̂𝑃 PL  
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1  
+
+> 𝜏 =𝑡
+
+,𝑃 TL 
+
+> 𝑡 −1
+
+,̄ 𝜌 H 
+
+> 𝑡
+
+,{̂𝑃 RES  
+
+> 𝜏 |𝑡
+
+,̂ 𝑐 e
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1  
+
+> 𝜏 =𝑡
+
+,𝝌 H
+
+> 𝑡
+
+]
+
+, (12b) 
+
+𝑜 B 
+
+> 𝑡
+
+=
+
+[
+
+𝐸 B 
+
+> 𝑡
+
+,𝐸 H 
+
+> 𝑡
+
+,𝑃 PL  
+
+> 𝑡
+
+,𝑢 H,⋆ 𝑡 ,𝑃 TL 
+
+> 𝑡 −1
+
+,{̂𝑃 RES  
+
+> 𝜏 |𝑡
+
+,̂ 𝑐 e
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1  
+
+> 𝜏 =𝑡
+
+,𝝌 B
+
+> 𝑡
+
+]
+
+, (12c) where 𝜻 B 
+
+> 𝑡 −1
+
+and 𝜻 H 
+
+> 𝑡 −1
+
+denote the previously available storage support indicators provided to the PL agent. {̂𝑃 PL  
+
+> 𝜏 |𝑡
+
+}𝑡 +𝐻 𝑠 −1 
+
+> 𝜏 =𝑡
+
+denotes the PL power inferred from the current process state and retained production mode. These cross-role observations enable the PL agent to account for storage flexibility, the HS agent to anticipate 5-min scale TLP residuals induced by PL scheduling, and the BS agent to regulate minute-level TLP fluctuations after the HS action. To reduce the discrete action dimension, the PL agent makes scheduling decisions only for active-frontier batches. For device 𝑠 ∈  on production line 𝓁 , the PL action is defined over the active-frontier set 𝓁 ,𝑠,𝜏 as follows: 
+
+𝑎 PL  
+
+> 𝜏
+
+= (𝑎 𝑥, PL  
+
+> 𝜏
+
+,𝝆 PL 
+
+> 𝜏
+
+) =
+
+({ 
+
+𝑎 𝑥, PL 
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+}
+
+,
+
+{
+
+𝜌 PL 
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+}) 
+
+,̃ 𝑎 PL  
+
+> 𝑡
+
+= 𝑎 PL 
+
+> 𝜅 5(𝑡 )
+
+,𝑎 𝑥, PL  
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+∈ {0 ,1} , 𝜌 PL  
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+∈ [0 ,1] , 𝜏 ∈ PL ,𝓁 ∈ ,𝑠 ∈ ,𝑘 ∈ 𝓁 ,𝑠,𝜏 ,
+
+(13a) ̃𝑎 H 
+
+> 𝑡
+
+= 𝜌 H
+
+> 𝜅 15 (𝑡 )
+
+, 𝜌 H 
+
+> 𝜅 15 (𝑡 )
+
+∈ [−1 ,1] , (13b) ̃𝑎 B 
+
+> 𝑡
+
+= 𝜌 B 
+
+> 𝑡
+
+, 𝜌 B 
+
+> 𝑡
+
+∈ [−1 ,1] . (13c) where 𝑎 𝑥, PL  
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+denotes the connection intention between device 𝑠 and active-frontier batch 𝑘 , and 𝜌 PL  
+
+> 𝓁 ,𝑠,𝑘,𝜏
+
+denotes the normalized processing-power command associated with this candidate connection. 𝜌 B 
+
+> 𝑡
+
+and 𝜌 H 
+
+> 𝜅 15 (𝑡 )
+
+denote the normalized signed actions of BS and HS, respectively. At valid decision epochs, the raw actions are sampled from non-parameter-sharing heterogeneous policies: 
+
+𝑎 PL  
+
+> 𝜏
+
+∼ 𝜋 PL 
+
+> 𝜃 PL
+
+(⋅ ∣ 𝑜 PL 
+
+> 𝜏
+
+), 𝜏 ∈ PL , (14a) 
+
+𝜌 H 
+
+> 𝜏
+
+∼ 𝜋 H
+
+> 𝜃 H
+
+(⋅ ∣ 𝑜 H
+
+> 𝜏
+
+), 𝜏 ∈ H, (14b) 
+
+𝜌 B 
+
+> 𝑡
+
+∼ 𝜋 B
+
+> 𝜃 B
+
+(⋅ ∣ 𝑜 B
+
+> 𝑡
+
+), 𝑡 ∈ B. (14c) The minute-level execution distribution of SHAC is induced by non-parameter-sharing local policies and factorized according to the sequential information flow: 
+
+𝝅 𝜃 
+
+(̃
+
+𝐚 𝑡 ∣ 𝑥 𝑡 
+
+) = 𝜋 PL 
+
+> 𝜃 PL
+
+(̃𝑎 PL  
+
+> 𝑡
+
+∣ 𝑜 PL 
+
+> 𝑡
+
+)𝜋 H
+
+> 𝜃 H
+
+(̃𝑎 H 
+
+> 𝑡
+
+∣ 𝑜 H
+
+> 𝑡
+
+(̃𝑎 PL 
+
+> 𝑡
+
+)) 𝜋 B
+
+> 𝜃 B
+
+(̃𝑎 B 
+
+> 𝑡
+
+∣ 𝑜 B
+
+> 𝑡
+
+(̃𝑎 PL  
+
+> 𝑡
+
+,̃ 𝑎 H
+
+> 𝑡
+
+)) , (15a) ̃
+
+𝐚 𝑡 = (̃𝑎 PL  
+
+> 𝑡
+
+,̃ 𝑎 H 
+
+> 𝑡
+
+,̃ 𝑎 B
+
+> 𝑡
+
+), 𝜃 = { 𝜃 PL ,𝜃 H,𝜃 B}, (15b) where 𝝅 𝜃 denotes the joint execution distribution induced by non-parameter-sharing local policies. The factorization follows the SHAC coordination order, i.e., PL → HS → BS, where HS conditions its action on the current PL decision and BS further conditions its action on the PL and HS actions. The policy parameters are updated through role-specific training objectives. The normalized raw joint action ̃ 𝐚 𝑡 is mapped to an executable physical action through the safety-aware action processor: 
+
+𝐚 ⋆𝑡 = 𝑡 
+
+(̃ 𝐚 𝑡 ,𝑥 𝑡 
+
+), (16) where 𝑡 (⋅) denotes the safety-processing mapping induced by production logic, storage physical constraints, and TLP-related operational requirements. Under 𝐚 ⋆𝑡 , the minute-level system transition is described by 
+
+𝑃 PL  
+
+> 𝑡
+
+= ∑
+
+> 𝓁 ∈
+
+∑
+
+> 𝑠 ∈
+
+∑
+
+> 𝑘 ∈𝓁
+
+𝑃 𝑠,⋆ 
+
+> 𝓁 ,𝑘,𝑡
+
+, (17a) 
+
+𝑃 TL  
+
+> 𝑡
+
+= 𝑃 PL  
+
+> 𝑡
+
++𝑢 H,⋆ 𝑡 +𝑢 B,⋆ 𝑡 −𝑃 RES  
+
+> 𝑡
+
+, (17b) 
+
+𝑥 𝑡 +1 ∼ (⋅ ∣ 𝑥 𝑡 ,𝐚 ⋆𝑡 
+
+), (17c) where 𝑃 𝑠,⋆  
+
+> 𝓁 ,𝑘,𝑡
+
+is the executable processing power, and 𝑢 H,⋆ 𝑡 and 𝑢 B,⋆ 𝑡 are the executable signed storage powers of HS and BS, respectively. The cooperative objective of SHAC is defined by the role-specific returns: 
+
+max  
+
+> 𝜃
+
+𝐽 SHAC (𝜃 ) = 𝔼 𝝅 𝜃 ,
+
+[ ∑
+
+> 𝑖 ∈
+
+∑
+
+> 𝑡 ∈𝑖
+
+𝛾 𝑡 𝑟 𝑖 𝑡 
+
+]
+
+. (18) 
+
+Page 11 of 23 4.3. Safety-aware action processing 
+
+Raw outputs of the heterogeneous local policies may violate PL operating logic or storage physical constraints. Therefore, a safety-aware action processor is introduced to map normalized policy outputs into executable physical actions before environment transition. The processor consists of process-knowledge-based masking for PL discrete actions and feasibility projection for PL, HS, and BS continuous power actions. The overall mapping is expressed as: 
+
+𝐚 ⋆𝑡 = 𝑡 
+
+(̃
+
+𝐚 𝑡 ,𝑥 𝑡 
+
+) =
+
+(
+
+𝑎 𝑥, PL ,⋆ 𝑡 ,𝐏 PL ,⋆ 𝑡 ,𝑢 H,⋆ 𝑡 ,𝑢 B,⋆ 𝑡 
+
+)
+
+, (19a) 
+
+𝑚 PL 
+
+> 𝜏
+
+(𝑎 𝑥, PL 
+
+> 𝜏
+
+) =
+
+{
+
+1, 𝑎 𝑥, PL  
+
+> 𝜏
+
+∈ 𝑥, PL ,safe  
+
+> 𝜏
+
+(𝑥 𝜏 ),
+
+0, otherwise , 𝜏 ∈ PL , (19b) ̃𝜋 𝑥, PL 
+
+> 𝜃 PL
+
+(𝑎 𝑥, PL  
+
+> 𝜏
+
+∣ 𝑜 PL 
+
+> 𝜏
+
+) =
+
+𝜋 𝑥, PL 
+
+> 𝜃 PL
+
+(
+
+𝑎 𝑥, PL  
+
+> 𝜏
+
+∣ 𝑜 PL 
+
+> 𝜏
+
+)
+
+𝑚 PL 
+
+> 𝜏
+
+(
+
+𝑎 𝑥, PL 
+
+> 𝜏
+
+)∑
+
+> 𝑎 ′∈𝑥, PL
+> 𝜏
+
+𝜋 𝑥, PL 
+
+> 𝜃 PL
+
+(𝑎 ′ ∣ 𝑜 PL 
+
+> 𝜏
+
+)𝑚 PL  
+
+> 𝜏
+
+(𝑎 ′) , 𝑎 𝑥, PL ,⋆ 𝜏 ∼̃𝜋 𝑥, PL 
+
+> 𝜃 PL
+
+(⋅ ∣ 𝑜 PL 
+
+> 𝜏
+
+), (19c) 
+
+𝑃 PL ,⋆  
+
+> 𝓁 ,𝑠,𝑘,𝑡
+
+= 𝑎 𝑥, PL ,⋆ 
+
+> 𝓁 ,𝑠,𝑘,𝜅 5(𝑡 )
+
+[
+
+𝑃 PL  
+
+> 𝓁 ,𝑠,𝑘,𝑡
+
++𝜌 PL 
+
+> 𝓁 ,𝑠,𝑘,𝜅 5(𝑡 )
+
+(
+
+𝑃 PL  
+
+> 𝓁 ,𝑠,𝑘,𝑡
+
+−𝑃 PL 
+
+> 𝓁 ,𝑠,𝑘,𝑡
+
+)] 
+
+, (19d) 
+
+𝜌 H 
+
+> 𝑡
+
+= 𝜌 H
+
+> 𝜅 15 (𝑡 )
+
+, 𝑢 𝑞, raw  
+
+> 𝑡
+
+= 𝜌 𝑞 𝑡 𝑃 𝑞 , 𝑞 ∈ {H ,B} , (19e) 
+
+𝑢 𝑞,⋆ 𝑡 = min {𝑢 𝑞 𝑡 ,max {𝑢 𝑞, raw  
+
+> 𝑡
+
+,𝑢 𝑞 𝑡 
+
+}} , 𝑞 ∈ {H ,B} , (19f) where the safe PL action set 𝑥, PL ,safe  
+
+> 𝜏
+
+(𝑥 𝜏 ) is constructed from device occupancy, EAF–LF–CC process sequence, non-interruptible processing, minimum transfer time, maximum waiting time, EAF inter-batch interval, and batch-order constraints. Mandatory continuation and downstream transfer actions are embedded when required by process continuity or waiting-time limits. Equation (19c) renormalizes the discrete PL policy over the safe action set before execution, while (19d) maps the normalized PL power command to the feasible processing power interval of the selected batch-device connection. 𝑢 𝑞, raw  
+
+> 𝑡
+
+denotes the raw signed power command converted from the normalized action, where positive and negative values correspond to charging and discharging, respectively. The bounds 𝑢 𝑞 𝑡 and 𝑢 𝑞 𝑡 denote the lower and upper executable signed power limits determined by the storage power rating, energy state, conversion efficiency, and retained action duration. Equation (19f) projects the raw storage command onto the feasible physical interval before execution. The resulting executable actions are then evaluated by the role-specific rewards in the subsequent training process. 
+
+4.4. Role-specific reward design 
+
+Following the grid-friendly TLP characterization in Section 2.2, SHAC adopts role-specific rewards to align the learning signals with the physical responsibilities of heterogeneous agents, thereby mitigating ambiguous credit assignment and improving training stability. The PL reward is designed for production profitability, grid-stress-responsive electricity consumption, contract demand management, and process feasibility. The HS reward focuses on medium-timescale TLP regulation and long-duration storage sustainability, while the BS reward focuses on minute-level TLP smoothing and fast regulation sustainability. The role-specific rewards are formulated as: 
+
+𝑟 PL  
+
+> 𝑡
+
+= 𝑅 f in  
+
+> 𝑡
+
+−𝐶 grd  
+
+> 𝑡
+
+−𝐶 loss  
+
+> 𝑡
+
++𝕀 𝑡 =𝑇 M−1 𝑅 PL  
+
+> 𝑇
+
+, 𝑡 ∈ PL , (20a) 
+
+𝑟 H 
+
+> 𝑡
+
+= − 𝐶 H,res  
+
+> 𝑡
+
+−𝐶 H,sto  
+
+> 𝑡
+
++𝕀 𝑡 =𝑇 M−1 
+
+(𝑅 H 
+
+> 𝑇
+
++𝑅 ex 
+
+> 𝑇
+
+), 𝑡 ∈ H, (20b) 
+
+𝑟 B 
+
+> 𝑡
+
+= − 𝐶 ramp  
+
+> 𝑡
+
+−𝐶 B,sto  
+
+> 𝑡
+
++𝕀 𝑡 =𝑇 M−1 𝑅 B 
+
+> 𝑇
+
+, 𝑡 ∈ B, (20c) where HS represents long-duration storage, no intra-day terminal SOC constraint is imposed. In contrast, BS is a short-duration storage resource for fast regulation, and its terminal SOC penalty is retained to preserve the regulation capability for subsequent operation periods. The reward components in (20) are defined as: 
+
+𝐶 grd  
+
+> 𝑡
+
+= 𝑐 e
+
+> 𝑡
+
+[𝑃 TL 
+
+> 𝑡
+
+]+Δ𝑡 +(𝜇 dem −1 )𝑐 e
+
+> 𝑡
+
+[[𝑃 TL 
+
+> 𝑡
+
+]+ −𝐷 dem ]+
+
+Δ𝑡, (21a) 
+
+𝐶 ramp  
+
+> 𝑡
+
+= 𝑐 ramp ||||||Δ𝑃 TL 
+
+> 𝑡
+
+|||−𝑅 max |||, (21b) 
+
+𝐶 𝑞, sto  
+
+> 𝑡
+
+= 𝑐 𝑞 |||𝑢 𝑞,⋆ 𝑡 
+
+|||Δ𝑡, 𝑞 ∈ {B ,H} , (21c) 
+
+Page 12 of 23 𝐶 H,res  
+
+> 𝑡
+
+= 𝑐 H,res (
+
+𝑃 TL ,H
+
+> 𝑡
+
+)2
+
+, 𝑃 TL ,H 
+
+> 𝑡
+
+= 1
+
+𝐻 H
+
+> 𝑡 +𝐻 H−1
+
+∑
+
+> 𝜏 =𝑡
+
+𝑃 TL  
+
+> 𝜏
+
+, (21d) 
+
+𝐶 loss  
+
+> 𝑡
+
+= 𝑐 hm 𝑛 hm  
+
+> 𝑡
+
++𝑐 sp 𝑛 sp  
+
+> 𝑡
+
+, (21e) 
+
+𝑅 f in  
+
+> 𝑡
+
+= 𝜌 hΔ𝑁 f in  
+
+> 𝑡
+
+, Δ𝑁 f in  
+
+> 𝑡
+
+= 𝑁 f in  
+
+> 𝑡
+
+−𝑁 f in 
+
+> 𝑡 −1
+
+, (21f) 
+
+𝑅 PL  
+
+> 𝑇
+
+= − 𝑐 ms (𝑁 tar −𝑁 f in  
+
+> 𝑇
+
+), (21g) 
+
+𝑅 B 
+
+> 𝑇
+
+= − 𝑐 soc |||||
+
+𝐸 B
+
+> 𝑇
+
+𝐸 B −𝜉 B,tar |||||
+
+, (21h) where 𝐶 grd  
+
+> 𝑡
+
+denotes the electricity purchase and contract demand exceedance cost, 𝑐 e 
+
+> 𝑡
+
+is the electricity price. 𝐶 ramp 
+
+> 𝑡
+
+measures the deviation between the minute-level TLP variation Δ𝑃 TL  
+
+> 𝑡
+
+and the maximum acceptable ramping rate 𝑅 max .
+
+𝐶 𝑞, sto  
+
+> 𝑡
+
+denotes the operating cost of storage. 𝐶 H,res  
+
+> 𝑡
+
+penalizes the medium-timescale TLP residual over the HS regulation horizon 𝐻 H. 𝐶 loss  
+
+> 𝑡
+
+and 𝑅 f in  
+
+> 𝑡
+
+characterize process losses and production completion, respectively. 𝑅 PL  
+
+> 𝑇
+
+penalizes terminal production shortfall, while 𝑅 B 
+
+> 𝑇
+
+penalizes terminal BS SOC deviation. 
+
+4.5. Role-aware multi-timescale training and decentralized execution 
+
+To train the heterogeneous PL, HS, and BS agents with different decision intervals and action spaces, SHAC adopts a role-aware multi-timescale actor–critic training scheme. The common coordination objective defined in the heteroge-neous Markov game is optimized through non-parameter-sharing local actors, role-specific critics, and clipped policy updates. Although the agents are evaluated by role-specific reward signals and value functions, their samples are collected from the same IMG environment under the sequential SHAC rollout. Therefore, the training process remains coordinated through the jointly induced TLP trajectory, cross-role observations, retained actions, and shared environment transition. Given the behavior policy parameters 𝜃 old = { 𝜃 𝑖 
+
+> old
+
+}𝑖 ∈ , the trajectory distribution used for policy updating is induced by the non-parameter-sharing local policies and the safety-aware transition process. Let 𝑡 = { 𝑖 ∈  ∣ 𝑡 ∈ 𝑖 } denote the ordered set of agents that make new decisions at time 𝑡 , following the SHAC order PL → HS → BS when multiple agents act simultaneously. The trajectory distribution is expressed as: 
+
+ℙ𝜃 old , (𝜁 ) = 𝜌 0(𝑥 0) ∏
+
+> 𝑖 ∈
+
+∏
+
+> 𝜏 ∈𝑖
+
+𝜋 𝑖 𝜃 𝑖 
+
+> old
+
+(𝑎 𝑖 𝜏 ∣ 𝑜 𝑖 𝜏 
+
+)𝑇 M−1 ∏
+
+> 𝑡 =0
+
+(𝑥 𝑡 +1 ∣ 𝑥 𝑡 ,𝑡 
+
+(̃ 𝐚 𝑡 ,𝑥 𝑡 
+
+)) , (22) where 𝜁 denotes the episode trajectory. The raw joint action at the minute-level execution step is composed of the latest valid actions retained from the corresponding agents: ̃ 𝐚 𝑡 =
+
+(
+
+𝑎 PL 
+
+> 𝜅 5(𝑡 )
+
+,𝜌 HS 
+
+> 𝜅 15 (𝑡 )
+
+,𝜌 BS 
+
+> 𝑡
+
+)
+
+. The policy likelihoods in (22) are evaluated only at the valid decision epochs of the corresponding agents, whereas the environment transition is evaluated at each minute-level period using the safety-processed action. This formulation avoids repeatedly counting the likelihoods of retained PL and HS actions within their holding windows. For policy updating, the log-likelihood of each agent at its valid decision epoch is denoted by: 
+
+𝓁 PL 
+
+> 𝜏
+
+(𝜃 PL ) = log ̃𝜋 𝑥, PL 
+
+> 𝜃 PL
+
+(𝑎 𝑥, PL  
+
+> 𝜏
+
+∣ 𝑜 PL 
+
+> 𝜏
+
+)+log 𝜋 𝜌, PL 
+
+> 𝜃 PL
+
+(𝝆 PL  
+
+> 𝜏
+
+∣ 𝑜 PL 
+
+> 𝜏
+
+), 𝜏 ∈ PL , (23a) 
+
+𝓁 HS 
+
+> 𝜏
+
+(𝜃 HS ) = log 𝜋 HS 
+
+> 𝜃 HS
+
+(𝜌 HS  
+
+> 𝜏
+
+∣ 𝑜 HS 
+
+> 𝜏
+
+), 𝜏 ∈ HS , (23b) 
+
+𝓁 BS 
+
+> 𝑡
+
+(𝜃 BS ) = log 𝜋 BS 
+
+> 𝜃 BS
+
+(𝜌 BS  
+
+> 𝑡
+
+∣ 𝑜 BS 
+
+> 𝑡
+
+), 𝑡 ∈ BS , (23c) where ̃𝜋 𝑥, PL  
+
+> 𝜃 PL
+
+denotes the masked discrete PL policy defined in (19c). The PL log-likelihood is decomposed into the masked discrete-action likelihood and the continuous normalized processing-power likelihood, corresponding to the two branches generated from the same PL observation. All likelihoods are evaluated on the sampled policy actions before physical action mapping. Each agent 𝑖 ∈  is assigned a role-specific critic 𝑉 𝑖 𝜓 𝑖 (𝑜 𝑖 𝑡 ). Let {𝜏 𝑖 𝑛 }𝐾 𝑖  
+
+> 𝑛 =0
+
+denote the augmented decision sequence of agent 𝑖 , where 𝜏 𝑖 𝐾 𝑖 = 𝑇 M is the terminal epoch. The holding interval of the 𝑛 th decision is defined as Δ𝑖 𝑛 = 𝜏 𝑖 𝑛 +1 − 𝜏 𝑖 𝑛 ,
+
+𝑛 = 0 ,…,𝐾 𝑖 − 1 . Since a retained PL or HS action affects multiple minute-level transitions, the reward assigned to a 
+
+Page 13 of 23 decision epoch is obtained by accumulating the corresponding minute-level reward components over its holding interval: 
+
+𝑖 𝑛 =
+
+> Δ𝑖 𝑛 −1
+
+∑
+
+> 𝑚 =0
+
+𝛾 𝑚 ̄𝑟 𝑖 𝜏 𝑖 𝑛 +𝑚 , (24) where ̄𝑟 𝑖 𝑡 denotes the minute-level contribution induced by the role-specific reward components defined in (20). For the BS agent, whose action is updated every minute, BS  
+
+> 𝑛
+
+reduces to the minute-level reward. For the PL and HS agents, 𝑖 𝑛 
+
+aggregates the effect of a retained multi-minute decision. Define Γ𝑖 𝑛 = 𝛾 Δ𝑖 𝑛 as the discount factor across the holding interval of the 𝑛 th valid decision of agent 𝑖 . The temporal-difference error, generalized advantage estimate, return target, and critic loss are then defined as: 
+
+𝛿 𝑖 𝑛 = 𝑖 𝑛 +Γ 𝑖 𝑛 ̄ 𝑉 𝑖 𝑛 +1 −𝑉 𝑖 𝜓 𝑖 
+
+(
+
+𝑜 𝑖 𝜏 𝑖 𝑛 
+
+)
+
+, (25a) ̂𝐴 𝑖 𝜏 𝑖 𝑛 
+
+= 𝛿 𝑖 𝑛 +Γ 𝑖 𝑛 𝜆 𝑖 ̂ 𝐴 𝑖 𝜏 𝑖 𝑛 +1 
+
+, 𝑛 = 𝐾 𝑖 −1 ,…,0, (25b) ̂𝑅 𝑖 𝜏 𝑖 𝑛 
+
+=̂ 𝐴 𝑖 𝜏 𝑖 𝑛 
+
++𝑉 𝑖 𝜓 𝑖 
+
+(
+
+𝑜 𝑖 𝜏 𝑖 𝑛 
+
+)
+
+, (25c) 
+
+𝑖 𝑉 
+
+(𝜓 𝑖 ) = 𝔼 𝜁 ∼ℙ𝜃 old , ,𝑛 =0 ,…,𝐾 𝑖 −1 
+
+[(
+
+𝑉 𝑖 𝜓 𝑖 
+
+(
+
+𝑜 𝑖 𝜏 𝑖 𝑛 
+
+)
+
+−̂ 𝑅 𝑖 𝜏 𝑖 𝑛 
+
+)2]
+
+, (25d) where ̄ 𝑉 𝑖 𝑛 +1 = 𝑉 𝑖 𝜓 𝑖 (𝑜 𝑖 𝜏 𝑖 𝑛 +1 
+
+) for nonterminal decision epochs and ̄ 𝑉 𝑖 𝑛 +1 = 0 at the terminal epoch. The terminal advantage is set as ̂ 𝐴 𝑖 𝜏 𝑖 𝐾 𝑖 
+
+= 0 . The advantage ̂ 𝐴 𝑖 𝜏 𝑖 𝑛 
+
+is computed along the valid decision sequence of agent 𝑖 .The PPO ratio is evaluated from the log-likelihood difference of the sampled policy action: 
+
+𝜚 𝑖 𝜏 
+
+(𝜃 𝑖 ) = exp [𝓁 𝑖 𝜏 
+
+(𝜃 𝑖 )−𝓁 𝑖 𝜏 
+
+(𝜃 𝑖 
+
+> old
+
+)] , 𝜏 ∈ 𝑖 , 𝑖 ∈  . (26) For the PL agent, the discrete component is computed under the masked policy. For the HS and BS agents, it is evaluated using the continuous signed-action likelihoods in (23b) and (23c), respectively. Based on the role-specific advantage, the clipped actor objective is formulated as: 
+
+ 𝑖 𝜋 
+
+(𝜃 𝑖 ) = 𝔼 𝜁 ∼ℙ𝜃 old , ,𝜏 ∈𝑖 
+
+[
+
+min 
+
+(
+
+𝜚 𝑖 𝜏 ̂ 𝐴 𝑖 𝜏 ,clip (𝜚 𝑖 𝜏 ,1− 𝜖 𝜋 ,1+ 𝜖 𝜋 
+
+)̂𝐴 𝑖 𝜏 
+
+)] 
+
+, 𝑖 ∈  . (27) The parameters are updated by: 
+
+𝜃 𝑖 ← 𝜃 𝑖 +𝛼 𝑖 𝜋 ∇𝜃 𝑖  𝑖 𝜋 
+
+(𝜃 𝑖 ), (28a) 
+
+𝜓 𝑖 ← 𝜓 𝑖 −𝛼 𝑖 𝑉 ∇𝜓 𝑖 𝑖 𝑉 
+
+(𝜓 𝑖 ), 𝑖 ∈ {PL ,HS ,BS} . (28b) The role-specific updates are coupled through the trajectory distribution in (22). The PL policy shapes the production-induced TLP profile, while the HS and BS policies are optimized under the trajectories sequentially affected by upstream decisions. In online execution, the critics are no longer required, and only the role-specific local actors are deployed for decentralized decision making. The actor outputs are then passed to the safety-aware action processor before being applied to the IMG environment. 
+
+## 5. Case studies 
+
+5.1. Set-up 
+
+Page 14 of 23 Algorithm 1: Sequential Heterogeneous-Agent Coordination Procedure 
+
+Input : , , 𝑡 (⋅), actors {𝜋 𝑖 𝜃 𝑖 }, critics {𝑉 𝑖 𝜓 𝑖 }.
+
+Output: Trained actors {𝜋 𝑖 𝜃 𝑖 }𝑖 ∈ .Set  , PL , HS , BS , and 𝜅 𝑚 (𝑡 ).
+
+for 𝑒 = 1 ,2,…,𝐸 do 
+
+Sample one day from  and initialize 𝑥 0.
+
+for 𝑡 = 0 ,1,…,𝑇 M −1 do 
+
+𝑜 PL  
+
+> 𝑡
+
+= 𝑔 PL (𝑥 𝑡 ); sample ̃𝑎 PL  
+
+> 𝑡
+
+∼ 𝜋 PL  
+
+> 𝜃 PL
+
+(⋅|𝑜 PL  
+
+> 𝑡
+
+) if 𝑡 ∈ PL , otherwise retain ̃𝑎 PL  
+
+> 𝑡
+
+= 𝑎 PL 
+
+> 𝜅 5(𝑡 )
+
+.
+
+𝑜 HS  
+
+> 𝑡
+
+= 𝑔 HS (𝑥 𝑡 ,̃ 𝑎 PL  
+
+> 𝑡
+
+); sample ̃𝑎 HS  
+
+> 𝑡
+
+∼ 𝜋 HS  
+
+> 𝜃 HS
+
+(⋅|𝑜 HS  
+
+> 𝑡
+
+) if 𝑡 ∈ HS , otherwise retain ̃𝑎 HS  
+
+> 𝑡
+
+= 𝑎 HS 
+
+> 𝜅 15 (𝑡 )
+
+.
+
+𝑜 BS  
+
+> 𝑡
+
+= 𝑔 BS (𝑥 𝑡 ,̃ 𝑎 PL  
+
+> 𝑡
+
+,̃ 𝑎 HS  
+
+> 𝑡
+
+); sample ̃𝑎 BS  
+
+> 𝑡
+
+∼ 𝜋 BS  
+
+> 𝜃 BS
+
+(⋅|𝑜 BS  
+
+> 𝑡
+
+).̃
+
+𝐚 𝑡 = ( ̃𝑎 PL  
+
+> 𝑡
+
+,̃ 𝑎 HS  
+
+> 𝑡
+
+,̃ 𝑎 BS  
+
+> 𝑡
+
+), 𝐚 ⋆𝑡 = 𝑡 (̃𝐚 𝑡 ,𝑥 𝑡 ) by (19). Apply 𝐚 ⋆𝑡 , roll out 𝑥 𝑡 +1 by (17), compute {𝑟 𝑖 𝑡 }𝑖 ∈ by (20), and store valid samples at 𝑡 ∈ 𝑖 .
+
+end for 𝑖 ∈  do 
+
+Compute 𝑖 𝑛 ,̂ 𝐴 𝑖 𝜏 𝑖 𝑛 
+
+, and ̂ 𝑅 𝑖 𝜏 𝑖 𝑛 
+
+by (24)–(25c). Update 𝜓 𝑖 and 𝜃 𝑖 by (28b) and (28a). 
+
+end end 
+
+Discard {𝑉 𝑖 𝜓 𝑖 }𝑖 ∈ and deploy {𝜋 𝑖 𝜃 𝑖 }𝑖 ∈ with 𝑡 (⋅).
+
+for 𝑡 = 0 ,1,…,𝑇 M −1 do 
+
+Generate ̃ 𝐚 𝑡 sequentially by PL → HS → BS , compute 𝐚 ⋆𝑡 = 𝑡 (̃𝐚 𝑡 ,𝑥 𝑡 ), update 𝑥 𝑡 +1 .
+
+end Result : {𝐚 ⋆𝑡 ,𝑃 TL  
+
+> 𝑡
+
+}𝑇 M−1  
+
+> 𝑡 =0
+
+.
+
+5.1.1. Renewable Energy Sources and Market Data 
+
+The renewable generation data are collected from an industrial microgrid with installed wind and PV capacities of 425 
+
+MW and 375 MW, respectively, covering the period from Oct. 2024 to Dec. 2025. The market data are from the PJM real-time market, where the locational marginal price (LMP) is available at a 5-min resolution. Fig. 4 summarizes the statistical characteristics of renewable generation and electricity prices. Fig. 4(a) shows the relationship between daily renewable energy and daily average price, indicating that renewable availability and electricity price are not strictly synchronized. Fig. 4(b) presents the duration curves of renewable generation and real-time price, showing the uneven distribution of high-/low-renewable periods and price spikes. Fig. 5 further illustrates four representative days under high-/low-RES and high-/low-price scenarios, which characterize the typical exogenous conditions considered in this study. Daily Renewable Energy (MWh)           
+
+> 02000 4000 6000 8000 10000
+> Daily Avg. Price ($/MWh)
+> 0
+> 50
+> 100
+> 150
+> 200
+> 250
+> 300
+> (a)
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> Month Index
+> Duration Share (%)
+> 020 40 60 80 100
+> Power (MW)
+> 0
+> 200
+> 400
+> 600
+> 800
+> Electricity Price ($/MWh)
+> 0
+> 50
+> 100
+> 150
+> 200
+> 250
+> (b)
+> RES Power
+> Electricity Price
+
+Figure 4: Statistical characteristics of renewable generation and electricity price data: (a) daily renewable energy versus daily average electricity price and (b) duration curves of renewable generation and real-time electricity price. 
+
+Page 15 of 23 Table 2 
+
+Main PL and inter-stage logistics parameters of the short-process steelmaking system. 
+
+Parameter EAF LF CC EAF–LF LF–CC Number of units 3 3 3 – –
+
+(𝑃 𝑏 ,𝑃 ,𝑃 ) (MW) (60 ,45 ,75) (8 ,6,10) (4 ,4,4) – –Energy (MWh/heat) 34.8 2.4 2.0 – –Processing time (min) 40–60 20–30 30 – –Transfer time (min) – – – 5–10 5–10 Waiting time (min) – – – ≤ 10 ≤ 10 
+
+EAF inter-batch interval (min) 10 – – – –Daily production target (heats) – – – – 54 
+
+Table 3 
+
+Main parameters of the hybrid energy storage system. 
+
+Type Power (MW) Energy (MWh) SOC range Efficiency Cost ($/MWh) Interval (min) BS ±100 200 5–95% 95%/95% 0.5 1HS ±100 1000 5–95% 60–70%/45–55% 0.5 15 Time (hour)                   
+
+> 0612 18 24
+> Power (MW)
+> 0
+> 100
+> 200
+> 300
+> 400
+> High RES / Low Price, 2025 -09 -03
+> Electricity Price ($/MWh)
+> 0
+> 50
+> 100
+> Time (hour)
+> 0612 18 24
+> Power (MW)
+> 0
+> 100
+> 200
+> 300
+> 400
+> High RES / High Price, 2025 -08 -11
+> Electricity Price ($/MWh)
+> 0
+> 100
+> 200
+> 300
+> 400
+> Time (hour)
+> 0612 18 24
+> Power (MW)
+> 0
+> 100
+> 200
+> 300 Low RES / Low Price, 2025 -07 -06
+> Electricity Price ($/MWh)
+> 0
+> 50
+> 100
+> 150
+> Time (hour)
+> 0612 18 24
+> Power (MW)
+> 0
+> 100
+> 200
+> 300
+> 400 Low RES / High Price, 2025 -08 -04
+> Electricity Price ($/MWh)
+> 0
+> 100
+> 200
+> 300
+> RES Power
+> Electricity Price
+
+Figure 5: Representative daily profiles of renewable generation and real-time electricity price under four RES–price scenarios. 
+
+5.1.2. System Configuration and Parameters 
+
+The test system represents a short-process steel industrial microgrid with three parallel production lines, three continuous casters, and a HESS composed of BS and HS. Each heat corresponds to 80 t of molten steel. Tables 2 and 3 summarize the main PL and storage parameters used in the case studies. 
+
+5.1.3. Simulation Environment 
+
+The simulation environment is implemented in MATLAB (R2025b) on a workstation with an Intel Core Ultra 9 275HX processor at 2.70 GHz and 32 GB RAM. Each episode represents one operating day, and the basic simulation inter-val is set to 1 min. The look-ahead horizon is set to 3 h for renewable generation and real-time electricity price signals. The dataset is divided into training and testing sets. The agents are trained by repeatedly cycling through 400 days of historical renewable generation and price data. In both training and testing, the look-ahead RES and real-time price inputs provided to the agents are represented by 90% -accuracy forecast profiles, thereby emulating practical online operation with imper-fect exogenous information. The realized historical profiles are used for environment evolution and reward calculation. 
+
+Page 16 of 23 5.2. Training convergence and feasibility 
+
+To verify the training stability and operational feasibility of the proposed SHAC framework, Fig. 6 presents the convergence results of different agents on training samples and validation days. As shown in Fig. 6(a), the training reward of the PL agent increases rapidly at the initial stage and then gradually stabilizes, remaining around 1.27×10 5 in the later stage. Its greedy validation reward also converges after approximately 1.0 × 10 4 training episodes and approaches the upper bound of the daily production reward 𝑅 f in  
+
+> 𝑡
+
+. This indicates that the PL agent shifts from merely advancing production to economically scheduling production in favorable periods, thereby increasing local renewable utilization and reducing grid purchase cost. Furthermore, Fig. 6 (b) shows that the mean number of completed heats rapidly approaches the daily production target and remains around 54 heats in the later stage, while the production failure rate remains zero throughout training. This result verifies that the safety-aware action processing and embedded process constraints effectively preserve the temporal feasibility of EAF, LF, and CC operations, avoiding invalid production transitions and process interruptions. Fig. 6 (c) shows the training reward of the HS agent and its regulation effect on the 15-min TLP residual. The mean HS contribution gradually increases and stabilizes at approximately 35 –45 MW, while the 15-min TLP residual after HS regulation decreases from more than 140 MW at the initial stage to approximately 55 –65 MW. This demonstrates that the HS agent effectively mitigates the medium timescale power imbalance induced by PL scheduling through its energy buffering capability, thereby reducing the regulation burden assigned to the downstream BS agent. Fig. 6 (d) presents the training reward of the BS agent and the TLP ramp excess reduction. As training proceeds, the BS training reward improves gradually, and the TLP ramp excess reduction increases from approximately 10 MW at the initial stage to approximately 50 –60 MW before reaching a stable level. Daily Quota   
+
+> (b) (a)
+> (c) (d)
+> Figure 6: Training and greedy validation performance of the SHAC framework: (a) PL-agent sample training reward and greedy validation reward, (b) mean completed heats and production failure rate in greedy validation, (c) HS-agent training performance, (d) BS-agent training performance.
+
+5.3. Operational performance of SHAC framework 
+
+To further illustrate the intraday operation mechanism of the SHAC framework, Fig. 7 presents the multi-agent opera-tion trajectories on a representative testing day. As shown in Fig. 7(a), renewable generation exhibits pronounced intraday fluctuations, while electricity prices show several peak periods. Fig. 7(b) compares the PL power profiles under the PL agent and the existing rule-based production strategy. The rule-based strategy starts production lines at a fixed rhythm, leading to periodic step changes in PL power and limited responsiveness to intraday variations in renewable generation and electricity prices. In contrast, the PL agent provides more flexible production scheduling and, using only a 3 h forecast horizon, jointly accounts for local renewable generation, electricity prices, and the states of the two storage systems when adjusting the production rhythm. Fig. 7(c) shows the power responses and SOC trajectories of HS and BS. The HS power varies relatively smoothly and mainly provides medium timescale energy buffering, whereas the BS power responds more 
+
+> Page 17 of 23
+
+frequently to compensate minute-level fast fluctuations. The SOCs of both storage systems remain within feasible ranges, indicating that the terminal SOC reward helps maintain storage feasibility while supporting TLP regulation. Fig. 7(d) compares the TLP trajectories under the full SHAC strategy and the rule-based production strategy. Under rule-based production, the fixed step changes in PL power lead to pronounced peak-valley variations and rapid ramping in TLP. In contrast, SHAC effectively mitigates the TLP impacts caused by the superposition of production load variations and renewable fluctuations through the sequential coordination of PL, HS, and BS, resulting in a smoother TLP trajectory. Fig. 8 illustrates the TLP regulation performance of SHAC on different testing days. Compared with the rule-based production strategy, SHAC substantially attenuates the peak-valley variations of the grid-interaction power in most scenarios and reduces the periods in which the contract demand is exceeded. Table 4 reports the average results over the full testing set. SHAC reduces the total grid purchase cost, peak grid import, and cumulative time above the contract demand by 91 .27% , 61 .39% , and 98 .64% , respectively. In addition, the 15-min residual, mean 1-min ramp, ramp violation count, and ramp excess are reduced by 42 .53% , 37 .45% , 89 .25% , and 96 .91% , respectively. These results demonstrate that SHAC improves grid-interaction performance in terms of operating economy, contract demand compliance, TLP smoothness, and reduced grid export. Time (h)                                         
+
+> 036912 15 18 21 24
+> Power (MW)
+> 0
+> 200
+> 400
+> LMP ( MWh /$ )
+> 20
+> 40
+> 60
+> 80 RES Power Electricity Price
+> Time (h)
+> 036912 15 18 21 24
+> Power (MW)
+> 0
+> 100
+> 200
+> PL -Agent Rule -Based PL
+> Time (h)
+> 036912 15 18 21 24
+> Power (MW)
+> -100
+> 0
+> 100
+> SOC (%)
+> 0
+> 50
+> 100
+> HS Power BS Power HS SOC BS SOC
+> (a)
+> (b)
+> (c)
+> Time (h)
+> 036912 15 18 21 24
+> Power (MW)
+> -400
+> -200
+> 0
+> (d)
+> 200 TLP under SHAC TLP under Rule -Based PL TLP under SHAC TLP under Rule -Based PL
+
+Figure 7: Representative day operational performance of the SHAC framework: (a) RES power and electricity price, (b) PL-agent power and rule-based PL power, (c) HS and BS power responses with SOC trajectories, (d) TLP under SHAC and rule-based PL operation. 
+
+5.4. Ablation Studies 
+
+To further examine the effectiveness of the key structural designs in SHAC, two ablation variants are constructed for comparison. Shared-Critic SHAC (SC-SHAC) removes the role-specific credit assignment mechanism by replacing the 
+
+Page 18 of 23 TLP under SHAC  TLP under Rule -Based Dispatch  Contract Demand             
+
+> 04812 16 20 24
+> Power (MW)
+> -600
+> -500
+> -400
+> -300
+> -200
+> -100
+> 0
+> 100
+> 200
+> Contract Demand
+> 04812 16 20 24
+> Power (MW)
+> -600
+> -500
+> -400
+> -300
+> -200
+> -100
+> 0
+> 100
+> 200
+> Contract Demand
+
+Day 1  Day 3 
+
+Day 9  Day 11 
+
+Day 5 
+
+Day 7 Figure 8: TLP shaping performance of the SHAC framework on various RES–price scenarios. Table 4 
+
+Average grid-friendly TLP performance over all testing days. 
+
+Model 𝐶 base 𝐶 dem 𝐶 grd 𝑃 imp max 𝑇 dem ̄ 𝑃 15 res ̄ 𝑅 1 𝑁 ramp 𝐸 ramp 
+
+($10 4) ($10 4) ($10 4) (MW) (h) (MW) (MW) (MW) Original TLP 3.02 1.61 4.63 181.79 4.56 107.26 9.69 283.47 9115.50 Grid-friendly TLP under SHAC 0.40 0.01 0.40 70.19 0.06 61.65 6.06 30.47 281.26 Reduction rate 86.91% 99.48% 91.27% 61.39% 98.64% 42.53% 37.45% 89.25% 96.91% 
+
+𝐶 base : regular grid purchase cost within 𝐷 dem ; 𝐶 dem : contract demand exceedance cost; 𝐶 grd : total grid purchase cost; 𝑃 imp max :peak grid import; 𝑇 dem : cumulative time above 𝐷 dem ;̄ 𝑃 15 res : mean absolute 15-min TLP residual; ̄ 𝑅 1: mean 1-min TLP ramp; 
+
+𝑁 ramp : ramp violation count; 𝐸 ramp : cumulative ramp excess. 
+
+role-specific critics and rewards of PL, HS, and BS with a shared critic and a unified reward. Parallel SHAC (P-SHAC) preserves the role-specific critics and rewards, but removes the sequential PL → HS → BS conditioning structure, such that the three agents make decisions in parallel based on their own observations. Episode (#104)          
+
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Normalized Validation Reward
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> SHAC
+> SC-SHAC
+> P-SHAC
+
+Figure 9: Normalized diagnostic validation reward trends of SHAC, SC-SHAC, and P-SHAC during training. 
+
+Fig. 9 presents the normalized diagnostic validation rewards of the three methods during training. SHAC, SC-SHAC, and P-SHAC all exhibit clear reward improvement trends, indicating that the sample-based training processes are effective for all three schemes and that each variant develops a decision logic consistent with its own structural design. Fig. 10 further reveals the key limitation of SC-SHAC. Although its normalized validation reward increases in the later training stage, the mean number of completed daily production heats remains far below the daily quota target. This result indicates that the shared critic and unified reward cannot provide a sufficiently clear long-term production credit signal 
+
+Page 19 of 23 for the PL agent, and may induce policies that apparently improve grid-side rewards while failing to satisfy the production requirement. Fig. 11 compares the role-specific validation rewards of SHAC and P-SHAC. The overall learning trends of the two methods are relatively close, but P-SHAC exhibits stronger fluctuations in the HS- and BS-agent rewards, with a particularly evident degradation in the stability of the BS reward in the later training stage. This suggests that the main function of sequential conditioning is not to alter the production learning capability of the PL agent, but to enhance the ability of downstream storage agents to perceive and compensate for the residual after PL and HS actions. Therefore, role-specific credit assignment determines whether SHAC can learn an effective scheduling policy that satisfies production constraints, while the sequential update further improves the coordination stability of HS and BS in residual regulation and ramp mitigation. Validation Episode ( #10 4)          
+
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Mean Completed Batches
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> SHAC
+> SC-SHAC
+> Target
+
+Figure 10: Mean completed production heats during validation for SHAC and SC-SHAC. Normalized BS Validation RewardNormalized BS Validation Reward                    
+
+> Episode ( 10 4)
+> 00.5 11.5 2
+> 0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1
+> Episode ( 10 4)
+> 00.5 11.5 2
+> 0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1
+> Episode ( 10 4)
+> 00.5 11.5 2
+> Normalized HS Validation Reward
+> 0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1
+> Episode ( 10 4)
+> 00.5 11.5 2
+> Normalized HS Validation Reward
+> 0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1
+> P-SHAC
+> SHAC
+
+Figure 11: HS- and BS-agent validation reward comparison between SHAC and P-SHAC. 
+
+5.5. Comparative performance evaluation 
+
+To further evaluate the advantages of SHAC in grid-friendly TLP shaping, it is compared with three representative coordination methods: rule-based control (RB-Control), hierarchical reference tracking control (HRTC), and multi-timescale model predictive control (MT-MPC). RB-Control completes the daily production task following a fixed and uniform production rhythm, and coordinates HS and BS through rule-based power compensation. HRTC represents a conventional hierarchical reference tracking control method, where a smooth TLP reference trajectory is first generated, and PL, HS, and BS are then coordinated to track this reference over a 3 h prediction horizon. MT-MPC adopts a hierarchical multi-objective rolling optimization framework, which jointly considers grid purchase cost, contract demand exceedance, 15-min TLP residual, ramp excess, and storage operating cost within a 3 h prediction horizon, and is solved by YALMIP/Gurobi. All comparative methods use the same renewable generation and electricity price data as SHAC, and online decisions are made under a 90% forecast accuracy setting. It should be noted that constructing a full-day global 
+
+Page 20 of 23 MILP requires simultaneously modeling 54 heats, all process units, and storage dynamics. As the number of time steps, devices, and batches increases, the number of binary variables grows rapidly, making the global MILP difficult to solve. Therefore, MT-MPC is adopted as a computationally tractable optimization-based benchmark. Fig. 12 presents the TLP trajectories of different methods on a representative testing day. Due to its fixed production rhythm, RB-Control leads to pronounced peak-valley variations and rapid ramping in TLP. HRTC improves the TLP profile in some periods through reference tracking, however its performance depends on the predefined reference and is less adaptive to the dynamic coupling between renewable generation and process loads. MT-MPC can substantially reduce grid purchase in some periods, however, under the limited 3-h prediction horizon and forecast errors, it cannot simultaneously achieve the best performance in grid purchase cost, 15-min residual, ramp mitigation, and reverse power control. In contrast, SHAC achieves more stable dynamic regulation through the sequential heterogeneous coordination of PL, HS, and BS, without relying on a predefined TLP reference. Table 5 further reports the statistical results over all testing days. Although the total grid purchase cost of SHAC is higher than that of MT-MPC, SHAC achieves the lowest 15-min residual, ramp violation count, and reverse energy. Its online decision time is only 0.4 ms per 1-min step, which is significantly lower than those of HRTC and MT-MPC. These results indicate that SHAC achieves a more balanced grid-friendly TLP shaping performance with a low computational burden, making it particularly suitable for real-time dispatch of industrial microgrids with multiple discrete process loads and multi-timescale storage resources. High Ramp 
+
+> Low Ramp
+
+Figure 12: Comparative TLP shaping performance of different coordination methods on a representative testing day. 
+
+Table 5 
+
+Grid-friendly TLP performance of different coordination methods over all testing days.                              
+
+> Model 𝐶 grd ̄𝑃 15 res 𝑁 ramp 𝐸 rev Decision Time ($10 4)(MW) (MWh) /1-min step RB-Control 0.99 67.65 249.63 1982.2 0.1 ms HRTC 0.81 85.45 202.65 1107.6 2.2 s MT-MPC 0.34 77.81 167.42 1486.9 18.7 s SHAC 0.40 61.65 30.47 1055.1 0.4 ms
+
+## 6. Conclusion 
+
+This paper investigated the grid-friendly TLP shaping problem for short-process steelmaking industrial micro-grids and proposed a reference-free sequential heterogeneous-agent coordination framework, namely SHAC. In this 
+
+Page 21 of 23 framework, process loads, hydrogen storage, and battery storage are modeled as heterogeneous agents with different physical responsibilities, action structures, and response timescales. Through sequential coordination, role-specific credit assignment, and safety-aware action processing, the proposed framework enables online coordinated dispatch of multi-type flexible resources under strict process constraints. Numerical results based on real renewable generation and electricity market data demonstrate that SHAC can achieve stable 1-min online decision-making without relying on a predefined TLP reference trajectory, while satisfying the production feasibility requirements of short-process steelmaking. Compared with the original operation, the proposed method significantly reduces the total grid purchase cost, contract-demand exceedance time, and cumulative ramp excess, demonstrating its comprehensive improvements in operational economy, contract-demand management, and TLP smoothing. The ablation studies further verify the necessity of role-specific credit assignment for production-task completion and policy stability, as well as the contribution of sequentially conditioned decision-making to the coordinated residual regulation of HS and BS. Compared with rule-based control, hierarchical reference tracking control, and multi-timescale MPC, SHAC achieves a more balanced grid-friendly TLP shaping performance while maintaining millisecond-level online computational efficiency. Future work will further consider internal network constraints, communication delays, and coordinated operation of multiple industrial microgrids to improve the applicability of the proposed framework in more complex engineering scenarios. 
+
+## CRediT authorship contribution statement 
+
+Daniyaer Paizulamu: Writing – original draft, Writing – review and editing, Visualization, Validation, Software, Methodology, Formal analysis, Data curation, Conceptualization. Lin Cheng: Methodology, Supervision, Funding acquisition. Fashun Shi: Writing – review and editing, Methodology, Supervision. Haoyu Zheng: Data curation, Visualization. Pengfei He: Data curation, Visualization. Haiwang Zhong: Writing – review and editing, Methodology, Supervision. 
+
+Declaration of competing interest 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+Data availability 
+
+The electricity price data can be downloaded from [38]. 
+
+Acknowledgements 
+
+This work was supported by Science and Technology Program of Xinjiang Uyghur Autonomous Region (2024B01001-2). 
+
+## References                    
+
+> [1] Yufei Xi, Xinyi Wang, Lin Cheng, Meng Chen, Ioannis Lestas, Fashun Shi, and Kaidi Huang. Toward sustainable and low-carbon industrial transformation: Insights from industrial green microgrids. Applied Energy , 417:128055, 2026. [2] Jiubo Zhang, Bowen Zhou, Zhile Yang, Yuanjun Guo, Chen Lv, Xiaofeng Xu, and Jichun Liu. A review of industrial load flexibility enhancement for demand-response interaction. Sustainability , 17(11):4938, 2025. [3] Pengfei Su, Yue Zhou, and Jianzhong Wu. Multi-objective scheduling of a steelmaking plant integrated with renewable energy sources and energy storage systems: Balancing costs, emissions and make-span. Journal of Cleaner Production , 428:139350, 2023. [4] Michael Anthony Giovanniello and Xiao-Yu Wu. Hybrid lithium-ion battery and hydrogen energy storage systems for a wind-supplied microgrid. Applied Energy , 345:121311, 2023. [5] Yue Min Ding, Seung Ho Hong, and Xiao Hui Li. A demand response energy management scheme for industrial facilities in smart grid. IEEE transactions on industrial informatics , 10(4):2257–2269, 2014. [6] Armen Gholian, Hamed Mohsenian-Rad, and Yingbo Hua. Optimal industrial load control in smart grid. IEEE Transactions on Smart Grid ,7(5):2305–2316, 2015. [7] Mengmeng Yu, Renzhi Lu, and Seung Ho Hong. A real-time decision model for industrial load management in a smart grid. Applied energy ,183:1488–1497, 2016. [8] Xiao Zhang, Gabriela Hug, J Zico Kolter, and Iiro Harjunkoski. Demand response of ancillary service from industrial loads coordinated with energy storage. IEEE Transactions on Power Systems , 33(1):951–961, 2017. [9] Danial Ramin, Stefano Spinelli, and Alessandro Brusaferri. Demand-side management via optimal production scheduling in power-intensive industries: The case of metal casting process. Applied Energy , 225:622–636, 2018.
+
+Page 22 of 23 [10] Hessam Golmohamadi, Reza Keypour, Birgitte Bak-Jensen, Jayakrishnan R Pillai, and Mohammad Hassan Khooban. Robust self-scheduling of operational processes for industrial demand response aggregators. IEEE Transactions on Industrial Electronics , 67(2):1387–1395, 2019. [11] Xiao Zhang, Gabriela Hug, and Iiro Harjunkoski. Cost-effective scheduling of steel plants with flexible eafs. IEEE Transactions on Smart Grid ,8(1):239–249, 2016. [12] Jiayang Wang, Qiang Wang, and Wenqiang Sun. Quantifying flexibility provisions of the ladle furnace refining process as cuttable loads in the iron and steel industry. Applied Energy , 342:121178, 2023. [13] Pengfei Su, Yue Zhou, Hongyi Li, Hector D Perez, and Jianzhong Wu. Cost-effective scheduling of a hydrogen-based iron and steel plant powered by a grid-assisted renewable energy system. Applied Energy , 384:125412, 2025. [14] Linbo Fu, Houhe Chen, Rufeng Zhang, Tao Jiang, Guoqing Li, and Rui Qu. Distributionally robust chance-constrained energy management of steel industrial microgrid with energy storage in distribution market. Applied Energy , 400:126574, 2025. [15] Ruike Lyu, Xiangbo Su, Ershun Du, Hongye Guo, Qixin Chen, and Chongqing Kang. Efficient scheduling of discrete industrial processes through continuous modeling. IEEE Transactions on Smart Grid , 2025. [16] Chen Zhang, Wei Lin, Deping Ke, and Yuanzhang Sun. Smoothing tie-line power fluctuations for industrial microgrids by demand side control: An output regulation approach. IEEE Transactions on Power Systems , 34(5):3716–3728, 2019. [17] Wangli He, Chengyuan Li, Chenhao Cai, Xiangyun Qing, and Wenli Du. Suppressing active power fluctuations at pcc in grid-connection microgrids via multiple besss: A collaborative multi-agent reinforcement learning approach. Applied Energy , 373:123858, 2024. [18] Shenglin Li, Jizhong Zhu, Hanjiang Dong, Haohao Zhu, Fengji Luo, and Alberto Borghetti. Multi-time-scale energy management of renewable microgrids considering grid-friendly interaction. Applied Energy , 367:123428, 2024. [19] Zhao-xia Xiao, Josep M Guerrero, Jia Shuang, Dezso Sera, Erik Schaltz, and Juan C Vásquez. Flat tie-line power scheduling control of grid-connected hybrid microgrids. Applied Energy , 210:786–799, 2018. [20] Dan Wang, Shaoyun Ge, Hongjie Jia, Chengshan Wang, Yue Zhou, Ning Lu, and Xiangyu Kong. A demand response and battery storage coordination algorithm for providing microgrid tie-line smoothing services. IEEE Transactions on Sustainable Energy , 5(2):476–486, 2014. [21] Ting Yang, Yingjie Zhao, Haibo Pen, and Zhaoxia Wang. Data center holistic demand response algorithm to smooth microgrid tie-line power fluctuation. Applied Energy , 231:277–287, 2018. [22] Ting Yang, Yuxing Hou, Shaotang Cai, Jie Yu, and Haibo Pen. Multi-data center tie-line power smoothing method based on demand response. 
+
+IEEE Transactions on Cloud Computing , 12(4):983–995, 2024. [23] Shenglin Li, Jizhong Zhu, Hanjiang Dong, Haohao Zhu, and Junwei Fan. A novel rolling optimization strategy considering grid-connected power fluctuations smoothing for renewable energy microgrids. Applied Energy , 309:118441, 2022. [24] Muhammad Bakr Abdelghany, Ahmed Al-Durra, Hatem H Zeineldin, and Fei Gao. A coordinated multitimescale model predictive control for output power smoothing in hybrid microgrid incorporating hydrogen energy storage. IEEE Transactions on Industrial Informatics ,20(9):10987–11001, 2024. [25] Renzhi Lu, Yi-Chang Li, Yuting Li, Junhui Jiang, and Yuemin Ding. Multi-agent deep reinforcement learning based demand response for discrete manufacturing systems energy management. Applied Energy , 276:115473, 2020. [26] Atit Bashyal, Tina Boroukhian, Pakin Veerachanchai, Myanganbayar Naransukh, and Hendro Wicaksono. Multi-agent deep reinforcement learning based demand response and energy management for heavy industries with discrete manufacturing systems. Applied Energy ,392:125990, 2025. [27] Dafeng Zhu, Bo Yang, Yuxiang Liu, Zhaojian Wang, Kai Ma, and Xinping Guan. Energy management based on multi-agent deep reinforcement learning for a multi-energy industrial park. Applied Energy , 311:118636, 2022. [28] Dawei Qiu, Tianyi Chen, Goran Strbac, and Shengrong Bu. Coordination for multienergy microgrids using multiagent reinforcement learning. 
+
+IEEE Transactions on Industrial Informatics , 19(4):5689–5700, 2022. [29] Sichen Li, Weihao Hu, Di Cao, Zhe Chen, Qi Huang, Frede Blaabjerg, and Kaiji Liao. Physics-model-free heat-electricity energy management of multiple microgrids based on surrogate model-enabled multi-agent deep reinforcement learning. Applied Energy , 346:121359, 2023. [30] Daniel JB Harrold, Jun Cao, and Zhong Fan. Renewable energy integration and microgrid energy trading using multi-agent deep reinforcement learning. Applied Energy , 318:119151, 2022. [31] David Toquica, Kodjo Agbossou, and Nilson Henao. Multi-agent reinforcement learning for energy management in microgrids with shared hydrogen storage. International Journal of Hydrogen Energy , 144:1019–1027, 2025. [32] Imen Jendoubi and François Bouffard. Multi-agent hierarchical reinforcement learning for energy management. Applied Energy , 332:120500, 2023. [33] Xuesong Xu, Kai Xu, Ziyang Zeng, Jiale Tang, Yuanxing He, Guangze Shi, and Tao Zhang. Collaborative optimization of multi-energy multi-microgrid system: A hierarchical trust-region multi-agent reinforcement learning approach. Applied Energy , 375:123923, 2024. [34] Jakub Grudzien Kuba, Ruiqing Chen, Muning Wen, Ying Wen, Fanglei Sun, Jun Wang, and Yaodong Yang. Trust region policy optimisation in multi-agent reinforcement learning. arXiv preprint arXiv:2109.11251 , 2021. [35] Yifan Zhong, Jakub Grudzien Kuba, Xidong Feng, Siyi Hu, Jiaming Ji, and Yaodong Yang. Heterogeneous-agent reinforcement learning. 
+
+Journal of Machine Learning Research , 25(32):1–67, 2024. [36] Ministry of Industry and Information Technology of the People’s Republic of China et al. Guidelines for the Construction and Application of Industrial Green Microgrids (2026–2030). https://www.miit.gov.cn/zwgk/zcwj/wjfb/tz/art/2026/art_ 44c5364d80b748e4b797bc115388c6aa.html , 2026. [37] Ning Qi, Kaidi Huang, Zhiyuan Fan, and Bolun Xu. Long-term energy management for microgrid with hybrid hydrogen-battery energy storage: A prediction-free coordinated optimization framework. Applied Energy , 377:124485, 2025. [38] PJM Interconnection, L.L.C. Data Miner 2: Real-Time Five Minute LMPs. https://dataminer2.pjm.com/feed/rt_fivemin_hrl_ lmps/definition , 2026. 
+
+Page 23 of 23
