@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-29",
+  "date": "2026-06-29",
+  "generated_at": "2026-06-29T21:43:08",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/29/2606.28187v1-gbc-gradient-based-connections-for-optimizing-multi-agent-systems",
+      "section": "deep",
+      "title_en": "GBC: Gradient-Based Connections for Optimizing Multi-Agent Systems",
+      "authors": "Xiaocheng Yang, Abdulrahman Alrabah, Dilek Hakkani-Tür, Gokhan Tur",
+      "date": "2026-06-26",
+      "pdf": "https://arxiv.org/pdf/2606.28187v1",
+      "score": "8.0",
+      "evidence": "提出基于梯度的多智能体系统信用分配方法",
+      "tldr": "基于大规模语言模型的多智能体系统在复杂任务中展现出强大能力，但粗粒度反馈导致错误溯源困难，严重限制了协作性能。GBC将多智能体协作建模为有向计算图，通过引入梯度连接权重实现对每个智能体输出的令牌级归因，并构建归因图反向传播任务损失以精确定位错误来源，进而利用梯度信息进行定向提示优化。AgentChord利用前缀梯度计算大幅降低归因开销，在MultiWOZ和τ-bench两个基准上，GBC不仅显著超越单智能体和多智能体强基线，还显示出归因质量与优化效果的高度正相关性。该工作为多智能体系统提供了首个可解释的细粒度信用分配范式，有望成为未来多智能体优化的重要基础。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) built on large language models (LLMs) provide a promising framework for solving complex tasks through role specialization and structured interaction. However, their performance is often limited by miscoordination and, more fundamentally, the lack of fine-grained credit assignment across agents. Existing approaches typically rely on coarse-grained feedback, making it difficult to identify which agents or interaction steps are responsible for errors. We propose Gradient-Based Connections (GBC), an approach for fine-grained attribution and optimization of multi-agent systems. GBC models a MAS as a computational graph and introduces gradient-based connection weights to quantify the influence of each agent's output on downstream agents at the token level. By constructing an attribution graph and propagating task-specific loss signals backward, our method enables precise identification of error sources and targeted prompt optimization. We further develop AgentChord, an efficient implementation that leverages prefix-based gradient computation. Experiments on MultiWOZ and τ-bench show that GBC improves multi-agent performance and outperforms strong single-agent and multi-agent baselines, and higher attribution quality is associated with greater optimization effectiveness. Code is available at: https://github.com/yxc-cyber/AgentChord.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
