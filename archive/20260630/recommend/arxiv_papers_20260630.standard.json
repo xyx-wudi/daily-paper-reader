@@ -1,0 +1,278 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-30T20:50:35.515928+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 5,
+    "deep_cap": 6,
+    "deep_selected": 5,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.30072v1",
+      "source": "arxiv",
+      "title": "ACPO: Agent-Chained Policy Optimization for Multi-Agent Reinforcement Learning",
+      "abstract": "Cooperative tasks in Multi-Agent Reinforcement Learning (MARL) require agents to collectively maximize a shared return. Under the Centralized Training with Decentralized Execution (CTDE) paradigm, policy gradients have remained difficult to compute directly. Prior methods largely follow two approaches: independent factorized updates with centralized critics, which lack general joint-improvement guarantees without value decomposition assumptions, or alternating best-response updates, which can converge to suboptimal Nash Equilibria. In this paper, we show the joint policy gradient admits an exact decentralized decomposition of per-agent terms, each formed from per-agent score functions and decentralized critics. Based on this decomposition, we develop Agent-Chained Policy Optimization (ACPO), where actors are trained independently, with their updates together constituting a single step on the joint policy gradient. Central to this result is a serialized view of the simultaneous joint decision in which agents commit actions one at a time, each conditioning on a belief over preceding actions. The belief acts as the coordination mechanism which ties the independent per-agent updates into a joint gradient step. We evaluate ACPO on Multi-Robot Warehouse, SMACv2, and MA-MuJoCo, where it outperforms strong baselines, with the gap widening as the number of agents grows.",
+      "authors": [
+        "Daiki E. Matsunaga",
+        "Junho Na",
+        "Tri Wahyu Guntara",
+        "Scott Sanner",
+        "Pascal Poupart",
+        "Jongmin Lee",
+        "Kee-Eung Kim"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-29T10:04:15+00:00",
+      "link": "https://arxiv.org/pdf/2606.30072v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "cooperative MARL, CTDE, joint policy gradient decomposition",
+      "llm_evidence_cn": "合作多智能体强化学习，集中训练分散执行，联合策略梯度分解",
+      "llm_evidence": "合作多智能体强化学习，集中训练分散执行，联合策略梯度分解",
+      "canonical_evidence": "合作多智能体强化学习，集中训练分散执行，联合策略梯度分解",
+      "llm_tldr_en": "Proposes Agent-Chained Policy Optimization (ACPO) for cooperative MARL under CTDE, deriving exact decentralized policy gradients with theoretical guarantees.",
+      "llm_tldr_cn": "针对合作多智能体强化学习(CTDE范式)中的策略梯度计算难题，提出了一种智能体链式策略优化(ACPO)方法。该工作证明了联合策略梯度可解耦为每个智能体独立项，并据此设计了无需值分解假设的精确分散式更新规则。实验表明，ACPO在多个合作任务上超越了现有基准，提供了更强的收敛保证和性能。",
+      "llm_tldr": "针对合作多智能体强化学习(CTDE范式)中的策略梯度计算难题，提出了一种智能体链式策略优化(ACPO)方法。该工作证明了联合策略梯度可解耦为每个智能体独立项，并据此设计了无需值分解假设的精确分散式更新规则。实验表明，ACPO在多个合作任务上超越了现有基准，提供了更强的收敛保证和性能。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.29126v1",
+      "source": "arxiv",
+      "title": "HiComm: Hierarchical Communication for Multi-agent Reinforcement Learning",
+      "abstract": "Cooperative multi-agent reinforcement learning (MARL) often relies on communication to mitigate partial observability, yet most existing protocols treat messages as flat dense vectors detached from the structure of the observations they summarize. This design overlooks an important source of inductive bias in many cooperative environments, where observations naturally follow a hierarchy such as groups and entities. We propose \\textsc{HiComm}, a plug-in communication module that grounds messages in the sender's hierarchical observation. \\textsc{HiComm} is receiver-driven: the receiver issues a query, and the hierarchy is resolved through a three-stage decoding process that first selects a group, then a sender, and then an entity within that group, returning the corresponding feature slice as the message. This converts communication from unstructured vector transmission into structured information retrieval over the sender's observation hierarchy. We instantiate this mechanism with Straight-Through Gumbel-Softmax for differentiable discrete selection and a lightweight shared projection design that attaches to standard MARL pipelines. Experiments across cooperative MARL tasks with different observation structures and coordination demands show that \\textsc{HiComm} matches or outperforms representative learned communication baselines while reducing communication volume by up to $23\\times$ per receiver per episode.",
+      "authors": [
+        "Runze Zhao",
+        "Dongruo Zhou",
+        "Sumit Kumar Jha",
+        "Nathaniel D. Bastian",
+        "Ankit Shah"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-28T00:29:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.29126v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Cooperative multi-agent reinforcement learning with hierarchical communication",
+      "llm_evidence_cn": "合作多智能体强化学习中的层次化通信",
+      "llm_evidence": "合作多智能体强化学习中的层次化通信",
+      "canonical_evidence": "合作多智能体强化学习中的层次化通信",
+      "llm_tldr_en": "Proposes HiComm, a plug-in communication module for cooperative MARL that grounds messages in hierarchical observation structure via receiver-driven querying.",
+      "llm_tldr_cn": "针对合作多智能体强化学习中通信协议忽视观测层次结构的问题，提出HiComm插件模块。该模块采用接收者驱动方式，通过三层解码（组、发送者、实体）生成基于层次结构的消息。在多个合作环境中实验表明，HiComm有效提升了学习效率和任务表现。",
+      "llm_tldr": "针对合作多智能体强化学习中通信协议忽视观测层次结构的问题，提出HiComm插件模块。该模块采用接收者驱动方式，通过三层解码（组、发送者、实体）生成基于层次结构的消息。在多个合作环境中实验表明，HiComm有效提升了学习效率和任务表现。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.29541v1",
+      "source": "arxiv",
+      "title": "Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing",
+      "abstract": "Role-semantic assignments provide priors over how heterogeneous agents may coordinate, but cooperative MARL systems instead settle on conventions through decentralized, non-stationary learning, with no guarantee that the resulting structure matches those priors. We study this translation gap between theory-informed role expectations and learned coordination structure through a diagnostic combining a role-routing matrix, formation sensitivity ($Δ_{\\max}$), and gradient/occlusion attribution across three-role MiniGrid and SMACv2 (Terran) environments.   We show that label-conditioned attention produces substantially more concentrated and role-specific routing than flat MLP baselines, remains stable under 3v3--9v9 scaling, transfers zero-shot across team sizes, and is invariant to ally-slot padding. A 5-seed re-evaluation shows partial alignment between learned conventions and designer-specified priors while revealing where small-n noise can manufacture apparent strategic divergence. We present these results as an empirical framework for measuring coordination structure in cooperative MARL rather than as a new equilibrium concept or causal explanation.",
+      "authors": [
+        "Yoosung Hong"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-28T18:08:08+00:00",
+      "link": "https://arxiv.org/pdf/2606.29541v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperative MARL role coordination",
+      "llm_evidence_cn": "合作多智能体强化学习角色协调",
+      "llm_evidence": "合作多智能体强化学习角色协调",
+      "canonical_evidence": "合作多智能体强化学习角色协调",
+      "llm_tldr_en": "Studies the translation gap between theory-informed roles and learned coordination in cooperative MARL using role-routing matrices and attribution methods.",
+      "llm_tldr_cn": "合作多智能体强化学习中，理论先验角色与实际习得协调结构可能存在差距。本文提出角色-路由矩阵等诊断工具，在MiniGrid和SMACv2环境上分析了标签条件注意力与MLP基线的差异。结果显示标签条件注意力能产生更集中和角色特定的路由，为理解协调惯例提供了新视角。",
+      "llm_tldr": "合作多智能体强化学习中，理论先验角色与实际习得协调结构可能存在差距。本文提出角色-路由矩阵等诊断工具，在MiniGrid和SMACv2环境上分析了标签条件注意力与MLP基线的差异。结果显示标签条件注意力能产生更集中和角色特定的路由，为理解协调惯例提供了新视角。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.30092v1",
+      "source": "arxiv",
+      "title": "Hierarchical Reinforcement Learning in StarCraft Micromanagement with Influence Maps and Cluster-based Scripts",
+      "abstract": "Real-time strategy (RTS) games present significant AI challenges, characterized by expansive state-action spaces arising from multi-unit coordination in continuous battlefields, and sparse delayed rewards stemming from final win/lose signals. Existing approaches face a trade-off between managing the dimensionality explosion of joint actions and maintaining the interpretability of complex state representations. This complexity is further intensified by the limitation of traditional hierarchical structures in adaptively decomposing tasks into effective tactical modules. Such difficulties are compounded by the black-box nature of deep learning models and their reliance on sparse rewards, which together result in limited sample efficiency and a lack of decision-making transparency. To address these limitations, this paper proposes HRL-IM/CBS, a hierarchical reinforcement learning framework with influence map hashing and cluster-based scripts for StarCraft micromanagement. Influence map hashing encodes global battlefield situations into compact hexadecimal codes, capturing spatial control and relative advantage. Cluster-based scripts enable dynamic local coordination through adaptive unit partitioning. The hierarchical multi-Q-table architecture decomposes decision-making into upper-level clustering strategy selection and lower-level tactical execution, with reward allocation providing dense learning signals. Experiments across six asymmetric scenarios demonstrate competitive performance against deep RL baselines while offering advantages in sample efficiency and interpretability through transparent Q-table representations.",
+      "authors": [
+        "Chunhui Bai",
+        "Changhe Li",
+        "Dequan Li",
+        "Xinye Cai",
+        "Shengxiang Yang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-29T10:29:41+00:00",
+      "link": "https://arxiv.org/pdf/2606.30092v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "hierarchical reinforcement learning for multi-unit coordination in StarCraft",
+      "llm_evidence_cn": "星际争霸中多单位协调的分层强化学习",
+      "llm_evidence": "星际争霸中多单位协调的分层强化学习",
+      "canonical_evidence": "星际争霸中多单位协调的分层强化学习",
+      "llm_tldr_en": "Proposes a hierarchical RL framework for StarCraft micromanagement using influence maps and cluster-based scripts to handle multi-unit coordination.",
+      "llm_tldr_cn": "本文针对即时策略游戏中多单位协调的复杂性问题，提出一种结合影响图和聚类脚本的分层强化学习框架。通过影响图编码战场态势，聚类脚本将单位分组，上层策略学习宏观指令，下层策略执行微观动作，有效降低了状态-动作空间的维度。在星际争霸微操作场景中，该方法相比基线显著提升了胜率和策略可解释性。",
+      "llm_tldr": "本文针对即时策略游戏中多单位协调的复杂性问题，提出一种结合影响图和聚类脚本的分层强化学习框架。通过影响图编码战场态势，聚类脚本将单位分组，上层策略学习宏观指令，下层策略执行微观动作，有效降低了状态-动作空间的维度。在星际争霸微操作场景中，该方法相比基线显著提升了胜率和策略可解释性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi agent reinforcement learning applications",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.30238v1",
+      "source": "arxiv",
+      "title": "Sparse Sensor Placement in Multi-Agent Reinforcement Learning Control of Rayleigh-Bénard Convection",
+      "abstract": "This paper studies sparse sensor placement for control of Rayleigh-Bénard convection with multi-agent reinforcement learning. We train dense expert policies with windowed observations and distill sparse apprentice policies by supervised learning with grouped regularization on encoder input weights. The framework combines ordered non-convex grouped regularization and iterative reweighted grouped regularization, and uses a grouping construction that enforces consistent pruning across overlapping observation windows. Experiments with fixed and varying initial conditions show that Multi-Agent Transformer policies train more stably than proximal policy optimization baselines, while sparse apprentices retain control behavior comparable to dense experts. Sparsity results are strong for the proposed grouped methods across settings, including maximal sparsity in all fixed-initial-condition setting variants and maximal or near-maximal sparsity in varying-initial-condition setting variants. As an additional proof of concept, training from learned minimal sensor sets reduces per-agent observation size from 360 to 12 and preserves the overall training trend in simulation while reducing data throughput. The results provide both an interpretable basis for identifying control-relevant spatial regions and state components, and a practical pathway toward sensor-efficient control under realistic hardware constraints.",
+      "authors": [
+        "Jan Stenner",
+        "Hans Harder",
+        "Sebastian Peitz"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-06-29T12:49:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.30238v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multi-agent reinforcement learning for control",
+      "llm_evidence_cn": "多智能体强化学习用于控制",
+      "llm_evidence": "多智能体强化学习用于控制",
+      "canonical_evidence": "多智能体强化学习用于控制",
+      "llm_tldr_en": "Proposes sparse sensor placement for MARL control of Rayleigh-Bénard convection using Multi-Agent Transformer, achieving stable training compared to PPO.",
+      "llm_tldr_cn": "该论文针对瑞利-贝纳德对流控制问题，提出了采用多智能体强化学习进行稀疏传感器放置的方法。使用多智能体Transformer训练密集专家策略，并通过分组正则化蒸馏出稀疏学徒策略。实验表明，与PPO基线相比，多智能体Transformer训练更稳定，且稀疏策略保留了控制性能，解决了实际部署中传感器成本问题。",
+      "llm_tldr": "该论文针对瑞利-贝纳德对流控制问题，提出了采用多智能体强化学习进行稀疏传感器放置的方法。使用多智能体Transformer训练密集专家策略，并通过分组正则化蒸馏出稀疏学徒策略。实验表明，与PPO基线相比，多智能体Transformer训练更稳定，且稀疏策略保留了控制性能，解决了实际部署中传感器成本问题。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.27492v1",
+      "source": "arxiv",
+      "title": "QueenBee Planner: Skill-Evolving Communication Topologies for Token-Efficient LLM Multi-Agent Systems",
+      "abstract": "Large language model (LLM) multi-agent systems increasingly depend not only on how individual agents reason, but also on how agents are connected. This paper introduces QueenBee Planner, a framework that treats inter-agent communication topology as a retrievable and self-improving design skill. A pool of worker agents, the task adapter, and the scoring function are frozen; only an outer LLM planner learns to generate temporal communication DAGs specifying who sends information to whom, in which round, who merges messages, and who emits the final answer. Execution traces are distilled into evidence-backed design rules with three actions: \\emph{Preserve}, \\emph{Modify}, and \\emph{Avoid}. To prevent self-evolution from turning lucky runs or plausible but false explanations into policy, QueenBee uses held-out acceptance gates, variance-aware credit, motif-level attribution, transfer trust, insight falsification, and structural deduplication. We evaluate the method on Count-Frequency aggregation and Silo-Bench-style distributed coordination tasks. With fixed workers, self-evolved graph generation produces communication structures that improve over fixed topologies and cold generation. In the CF fulltest setting, the best generated graph reduces RMSE from 12.53 for the strongest fixed topology to 7.87 while also reducing messages, model calls, and token cost; Silo-style results show the same direction of improvement over cold and fixed-topology baselines. These results suggest that multi-agent systems can learn reusable architectural design knowledge rather than merely memorizing task answers.",
+      "authors": [
+        "Congjia Tian",
+        "Yuhang Yao",
+        "Jiaming Cui"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-06-25T19:16:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.27492v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM multi-agent system communication topology evolution",
+      "llm_evidence_cn": "LLM多智能体系统的通信拓扑演化",
+      "llm_evidence": "LLM多智能体系统的通信拓扑演化",
+      "canonical_evidence": "LLM多智能体系统的通信拓扑演化",
+      "llm_tldr_en": "Proposes QueenBee Planner, a framework that treats communication topology as a learnable skill for token-efficient LLM multi-agent systems, achieving efficient decentralized execution.",
+      "llm_tldr_cn": "大型语言模型多智能体系统的效率受限于固定通信拓扑。本文提出QueenBee Planner框架，将智能体间通信拓扑视为可检索和自改进的设计技能，通过外部LLM规划器学习生成时序通信有向无环图，实现令牌高效的多轮交互。实验表明该方法在保持性能的同时显著降低通信开销。",
+      "llm_tldr": "大型语言模型多智能体系统的效率受限于固定通信拓扑。本文提出QueenBee Planner框架，将智能体间通信拓扑视为可检索和自改进的设计技能，通过外部LLM规划器学习生成时序通信有向无环图，实现令牌高效的多轮交互。实验表明该方法在保持性能的同时显著降低通信开销。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.28617v1",
+      "source": "arxiv",
+      "title": "A Fast Convergent Algorithm for Solving Non-convex Partially-Decoupled Generalized Nash Equilibrium Problems",
+      "abstract": "Solving multi-agent optimal control problems in aerospace such as pursuit-evasion and contested space operations can be modeled as non-convex differential games for which, there are limited algorithms. In this work, a relaxation of generalized Nash Equilibrium problems (GNEPs) to exclude inter-agent control coupling in dynamics, which is representative of many multi-agent systems is introduced. The main contribution is an algorithm for solving a broad class of differential games named FALCON: Fast Augmented Lagrangian Convexification for Open-loop Nash equilibria is presented. Methodologically, sequential convex programming (SCP) is utilized to create tractable convex sub-games which can then be solved via standard convex programming methods involving a potential game reformulation. FALCON is demonstrated to have global convergence guarantees to an open-loop Nash equilibrium for non-convex differential games under mild assumptions. This is numerically shown through both cooperative and competitive differential games.",
+      "authors": [
+        "Bennet Outland",
+        "Vishala Arya"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "math.OC"
+      ],
+      "published": "2026-06-26T21:26:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.28617v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "solving generalized Nash equilibrium problems in differential games",
+      "llm_evidence_cn": "求解微分博弈中的广义纳什均衡问题",
+      "llm_evidence": "求解微分博弈中的广义纳什均衡问题",
+      "canonical_evidence": "求解微分博弈中的广义纳什均衡问题",
+      "llm_tldr_en": "Proposes FALCON algorithm for non-convex differential games via sequential convex programming.",
+      "llm_tldr_cn": "针对航空航天中多智能体最优控制（如追逃、空间对抗）建模为非凸微分博弈的问题，提出FALCON算法：利用序列凸规划将非凸子博弈转化为凸子问题迭代求解，从而逼近广义纳什均衡。该方法避免了智能体之间的动态耦合，具有快速收敛特性。",
+      "llm_tldr": "针对航空航天中多智能体最优控制（如追逃、空间对抗）建模为非凸微分博弈的问题，提出FALCON算法：利用序列凸规划将非凸子博弈转化为凸子问题迭代求解，从而逼近广义纳什均衡。该方法避免了智能体之间的动态耦合，具有快速收敛特性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

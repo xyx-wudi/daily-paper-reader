@@ -6,24 +6,41 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-29
-- 运行时间：2026-06-29 21:43:02 UTC
+- 最新运行日期：2026-06-30
+- 运行时间：2026-06-30 20:56:08 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：1
-- 速读区：0
+- 本次总论文数：7
+- 精读区：5
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读一篇高分论文，提出基于梯度的连接方法优化多智能体系统。该方法通过梯度信息动态调整智能体间连接，显著提升系统性能。建议关注多智能体协作中梯度优化的应用潜力。
-- 详情：[/202606/29/README](/202606/29/README)
+今日精读两篇多智能体强化学习高分论文，速读LLM多智能体通信与纳什均衡算法。最值得关注的是ACPO多智能体策略优化和HiComm分层通信机制。建议后续可深入探索QueenBee Planner的token高效通信拓扑及非凸问题快速收敛方法。
+- 详情：[/202606/30/README](/202606/30/README)
 
 ### 精读区论文标签
-1. [GBC: Gradient-Based Connections for Optimizing Multi-Agent Systems](/202606/29/2606.28187v1-gbc-gradient-based-connections-for-optimizing-multi-agent-systems)  
-   标签：评分：8.0/10、query:marl
-   evidence：提出基于梯度的多智能体系统信用分配方法
+1. [ACPO: Agent-Chained Policy Optimization for Multi-Agent Reinforcement Learning](/202606/30/2606.30072v1-acpo-agent-chained-policy-optimization-for-multi-agent-reinforcement-learning)  
+   标签：评分：10.0/10、query:marl
+   evidence：合作多智能体强化学习，集中训练分散执行，联合策略梯度分解
+2. [HiComm: Hierarchical Communication for Multi-agent Reinforcement Learning](/202606/30/2606.29126v1-hicomm-hierarchical-communication-for-multi-agent-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：合作多智能体强化学习中的层次化通信
+3. [Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing](/202606/30/2606.29541v1-learned-coordination-conventions-in-cooperative-marl-measuring-the-translation-gap-between-theory-informed-roles-and-learned-routing)  
+   标签：评分：9.0/10、query:marl
+   evidence：合作多智能体强化学习角色协调
+4. [Hierarchical Reinforcement Learning in StarCraft Micromanagement with Influence Maps and Cluster-based Scripts](/202606/30/2606.30092v1-hierarchical-reinforcement-learning-in-starcraft-micromanagement-with-influence-maps-and-cluster-based-scripts)  
+   标签：评分：9.0/10、query:marl
+   evidence：星际争霸中多单位协调的分层强化学习
+5. [Sparse Sensor Placement in Multi-Agent Reinforcement Learning Control of Rayleigh-Bénard Convection](/202606/30/2606.30238v1-sparse-sensor-placement-in-multi-agent-reinforcement-learning-control-of-rayleigh-bnard-convection)  
+   标签：评分：9.0/10、query:marl
+   evidence：多智能体强化学习用于控制
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [QueenBee Planner: Skill-Evolving Communication Topologies for Token-Efficient LLM Multi-Agent Systems](/202606/30/2606.27492v1-queenbee-planner-skill-evolving-communication-topologies-for-token-efficient-llm-multi-agent-systems)  
+   标签：评分：7.0/10、query:marl
+   evidence：LLM多智能体系统的通信拓扑演化
+2. [A Fast Convergent Algorithm for Solving Non-convex Partially-Decoupled Generalized Nash Equilibrium Problems](/202606/30/2606.28617v1-a-fast-convergent-algorithm-for-solving-non-convex-partially-decoupled-generalized-nash-equilibrium-problems)  
+   标签：评分：7.0/10、query:marl
+   evidence：求解微分博弈中的广义纳什均衡问题
 
 
 <div class="dpr-home-promo-card">
