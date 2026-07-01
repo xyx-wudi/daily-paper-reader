@@ -1,0 +1,406 @@
+Title: Smart charging of large fleets of Electric Vehicles: Independent Multi-Agent Reinforcement Learning approaches
+
+URL Source: https://arxiv.org/pdf/2606.31347v1
+
+Published Time: Wed, 01 Jul 2026 00:47:50 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Smart charging of large fleets of Electric Vehicles: Independent Multi-Agent Reinforcement Learning approaches 
+
+Xavier Rate 1, Eloann Le Guern 2, Raphaël Féraud 1, Fatma Salem 1, Melissa Chiknoun 1, Eymeric Giabicani 2, Mehdi Feki 1, Patrick Maillé 3, Guy Camilleri 4,Anne Blavette 2, and Hamid Benhamed 2 
+
+> 1
+
+Orange Research @orange.com  
+
+> 2
+
+ENS Rennes @ens-rennes.fr  
+
+> 3
+
+IMT Atlantique @imt-atlantique.fr  
+
+> 4
+
+IRIT @irit.fr 
+
+Abstract. The electrification of transportation through electric vehicles introduces new challenges for power grid management, such as increased peak demand, voltage fluctuations, line overloads, and the integration of variable renewable energy sources. To enable efficient integration of EVs while minimizing costs for users and avoiding network overloads, implicit coordination between EVs is required. This work compares two independent multi-agent reinforcement learning approaches for optimiz-ing such decentralized EV charging: contextual combinatorial bandits and policy gradient algorithms. Using a realistic simulation environment with autonomous agents making decisions based on local environmental information (including price signals, state-of-charge, and temporal con-straints), we evaluate their performance across varying congestion levels, and mixed-strategy configurations with heterogeneous agent groups un-der dynamic electricity pricing derived from real photovoltaic production data. 
+
+# 1 Introduction 
+
+The widespread adoption of Electric Vehicles (EVs) poses significant challenges for modern electrical grids. With 17 million units sold in 2024, representing over 20% of the market share, EVs are expected to continue their growth and account for 40% of automotive sales by 2030 [1]. This rapid expansion has consequences for electrical networks because the global adoption of EVs comes with a rising electricity demand. In 2024, the global fleet of EVs consumed around 180 TWh of electricity, equivalent to Argentina’s annual electricity consumption [1]. While this growth is essential for global commitments to achieve carbon neutrality by 2050, it also raises concerns about grid stability. Uncoordinated charging during peak hours can cause voltage drops, line overloads, and network instability [2].  
+
+> arXiv:2606.31347v1 [cs.AI] 30 Jun 2026 2Authors Suppressed Due to Excessive Length
+
+Moreover, renewable energy sources often experience curtailment, with sev-eral GWh of clean electricity lost due to insufficient demand during peak pro-duction periods and the lack of energy storage solutions. For example, Cali-fornia’s Independent System Operator regularly curtails renewable generation when supply exceeds demand, with solar curtailment reaching over 900 GWh in peak months during spring and fall [3]. In extreme cases, energy producers are even paid to stop generating electricity to prevent grid overload [4]. EV batteries can be leveraged as flexible storage to absorb excess energy and mitigate such curtailment issues. Smart charging is therefore a promising solution, as it can reduce grid pressure while maximizing renewable energy utilization by utilizing the storage capacity of EV batteries. However, optimizing charging schedules for EV fleets requires handling two major issues: 
+
+– scalability: the number of EVs is very large, which requires scalable algo-rithms, 
+
+– uncertainty: the production of renewable energy and the consumption of energy depend on the weather, while the availability of EVs depends on unknown human constraints. While centralized optimization, such as mixed-integer linear programming [5], requires full information about all EVs (arrival times, departure times, state of charges), prices, grid load, which is often impractical due to temporal, scalability, privacy, and communication constraints, fully decentralized approaches can scale with any number of EVs by allowing each EV to take decisions based on local and partial information. That is why, in this paper we will focus on fully decentralized approaches. Reinforcement learning (RL) [6] can optimize the scheduling of charging EVs, while handling uncertainties arising from EV owners’ behavior, variability in re-newable production and energy consumption. Multi-Agent Reinforcement Learn-ing (MARL) has become a popular approach for EV charging coordination [7]. MARL algorithms based on the concept of centralized training and decentralized exploration [8, 9] are efficient in collaborative setting. However, the centralized critic needs the observations and the actions of all agents, which limits their scalability when the number of agents becomes large. Independent Multi-Agent Reinforcement Learning [10] is a fully decentralized approach that can scale with any number of EVs, and is well suited for competitive setting: each agent has its own policy. Proximal Policy Optimization (PPO) [11], which is an improvement over Advantage Actor Critic (A2C) [12], is one of the most popular reinforcement algorithm due to its excellent compromise between performance and simplicity, making it a good candidate for each independent agent, while Simple Policy Optimization (SPO) [13] is a recent version of PPO equipped with theoretical guarantees. Based on a simplified version of reinforcement learning problem, Multi-armed bandits [14] benefit from a lighter and faster training that is a key advantage for real-world use in a changing environment. Multi-Agent Multi-armed bandits have been successfully tested for optimizing communications in IoT networks [15–17], and then for EV charging [18,19]. However, previous stud-ies focus on just one approach without comparing different algorithms. Moreover, EV Smart Charging: Independent MARL approaches 3
+
+real-world deployments will inevitably involve heterogeneous vehicle populations using different charging algorithms. As in Independent MARL, other agents are seen as a part of the environment, this heterogeneity between charging algo-rithms can change their performances. In this paper, for bridging the gap, we investigate and compare the perfor-mances of Independent MARL based on modern policy gradient algorithms such as PPO [11], A2C [12], and SPO [13] with Linear Thompson Sampling [20] for charging large fleets of vehicles. To assess algorithm robustness in real-world environment, we also evaluate mixed deployments of algorithms. 
+
+# 2 Problem Setting 
+
+An electrical grid is a large graph that connects power plants to each customer. It involves different actors (producers, transporters, distributors, and consumers), each having different goals and constraints. This study focuses on the decen-tralized smart charging of multiple electric vehicles connected to an electrical grid. We consider only one actor: the owners of electric vehicles, who seek to charge their vehicles at the lowest possible rate, when available. The electric grid constraints are taken into account through congestion. 
+
+2.1 System Model Electrical grid. We consider an elementary electrical grid that consists of 
+
+N electric vehicles connected to a transformer. The electrical grid is modeled without losses to focus on vehicle coordination, with total load being the sum of charging powers. The transformer has the capacity to charge at the same time 
+
+K EVs, leading to congestion when demand exceeds this capacity ( N > K ). 
+
+Electric Vehicle. We consider an episodic structure of time, where each day 
+
+d ∈ [D] is discretized into T intervals. An EV n ∈ [N ] is available for charging during the time slots {and , ..., b nd } ∈ [T ]2, where and and bnd are respectively the arrival and departure time slots, and < b nd . Arrival and departure time slots are dependent random variables. Each EV n ∈ [N ] needs mnd time slots to complete its charge during the day. mnd is also a random variable. 
+
+Pricing Model. We model the price at time slot t as: 
+
+p(t) = 1 − PP V (t)¯P (1) where PP V (t) is the photovoltaic production at time slot t, normalized to the maximum of photovoltaic production ¯P . This pricing mechanism is designed to create incentives for renewable energy utilization: when solar production is at its peak ( PP V (t) = ¯P ), the price is minimal ( p(t) = 0 ), and when solar production is zero, the price reaches its maximum ( p(t) = 1 ). Notice, that the price depends on weather, and hence it is a random variable. 4 Authors Suppressed Due to Excessive Length 
+
+2.2 Problem Formulation 
+
+At the first glance, the decentralized smart charging problem can be viewed as a repeated planning problem over D days, under uncertainty. Each day d ∈ [D], each EV n ∈ [N ] aims to find a schedule of charging that allows to complete its charge at the end of the day, while minimizing its cost of charge. Due to the availability of each EV n, and its initial state of charge, only some schedules snd ∈ { 0, 1}T are feasible: 
+
+Snd = snd ∈ { 0, 1}T , supp (snd ) ⊆ { and , ..., b nd }, ∥snd ∥1 = mnd , (2) where supp (snd ) = {t ∈ [T ], snd (t) = 1 }, and mnd denotes the number of required charging time slots to reach the target state-of-charge. Without taking into ac-count the congestion due to other charging EVs, the optimal schedule for day 
+
+d ∈ [D], and agent n ∈ [N ] is: 
+
+sn, ∗ 
+
+> d
+
+= arg min  
+
+> snd∈S nd
+
+(snd )⊤pd, (3) where pd ∈ [0 , 1] T is the vector of price for day d. The availability, the required number of time slots for charging, and the prices for the day are random variables. Moreover, the schedules of other EVs i̸ = n are unknown to EV n. If more than 
+
+K EVs choose the same time slot t for charging, a congestion occurs cd(t) = 1 
+
+and no EV can charge 5, cd(t) ∈ { 0, 1}T , else no congestion occurs cd(t) = 0 .We consider the case where all the EVs use a stochastic policy for choosing their charging time slots, and hence cd(t) is a random variable. This random variable cd(t) drifts the decentralized charging problem from planning under uncertainty or model-based reinforcement learning to model free reinforcement learning. Indeed, choosing a good planning at the beginning of the day is not sufficient. When congestion occurs, for reaching their target state-of-charge, EVs need to replan their charging during the day. Moreover, the model free reinforcement learning framework allows to take into account imperfect ob-servation of the state xnd,t ∈ Rl, l ∈ N+, through the policy that chooses charging of EV n at time slot t.At each time slot t ∈ [T ] of episode d ∈ [D], each EV n ∈ [N ] chooses an action snd (t) ∈ { 0, 1} until the end of the episode or until it is charged, i.e. 
+
+(snd,.<t )⊤(1 − cd,.<t ) = mnd , where cd is the vector of T dimensions where each coordinate is the event congestion, and the subscript sd,.<t means the first t
+
+dimensions of the vector sd.The vector of reward rnd ∈ [0 , 1] T of EV n is provided at the end of the episode d:
+
+rnd = ( snd ◦ (1 − cd)) ⊤(1 − pd), (4)   
+
+> 5congestion management can involve random disconnection of excess vehicles when the aggregate demand surpasses the transformer capacity, or congestion management can be done by available energy sharing. EV Smart Charging: Independent MARL approaches 5
+
+where ◦ denotes the Hadamard product. The goal of each EV is to maximize its expected daily gain: 
+
+Gn(D) = 1
+
+D
+
+> D
+
+X
+
+> d=1
+> T
+
+X
+
+> t=1
+
+E[rnd (t)] , (5) while minimizing the number of times the state of charge its not reached: 
+
+> D
+
+X
+
+> d=1
+
+1{(snd,.<T )⊤(1 − cd,.<T ) < m nd }. (6) 
+
+# 3 Independent Multi-Agent Reinforcement Learning approaches 
+
+In this section, we present and adapt to our problem setting two reinforcement learning approaches that have been proposed in the literature for EV charg-ing: Contextual Combinatorial Thompson Sampling [18,19], and policy gradient algorithms: PPO [11], A2C [12], and SPO [13]. 
+
+3.1 Contextual Combinatorial Linear Bandits 
+
+A Multi-Armed Bandit (MAB) problem involves repeatedly selecting among actions, receiving rewards drawn from unknown probability distributions corre-sponding to the chosen actions [14]. The goal is to maximize expected cumulative reward over time. As at the beginning of the game the player does not know which is the action with the highest mean reward, the player faces exploration-exploitation dilemma: in one hand, it has to explore actions with loosely estimated mean reward to built better estimates, and on the other hand, it has to exploit actions with highest estimated mean reward to gather rewards. The decentralized charging problem can be viewed as a special case of the combinatorial bandit problem [21]. Each day d, each EV n has to choose mnd
+
+time slots from T time slots. When a congestion occurs, EV n has to reselect the remaining time slots to reach the target state-of-charge. Moreover, at the beginning of each day d, EV n can observe a context xnd,t ∈ Rl for each time slot 
+
+t, l ∈ N+.Algorithm 1 uses a Linear Thompson Sampling (LinTS) [20] for taking into account the context to evaluate the highest likelihood of reward at time slot t
+
+(line 6). Then, the schedule of charging is selected using the time slots with the highest likelihood of reward (line 11), where ˜μnd,a nd ≤.<b nd means the dimensions between and and bnd of the vector ˜μnd . The computational complexity of the selec-tion of the best schedule is linear in term of number of time slots T . Moreover, this selection could be done at the first time slot and then only if a congestion occurs at the previous time slot. The price of each time slot is revealed at the end of the day (line 19). It allows to update the linear model of each selected time slot (lines 22-25). 6 Authors Suppressed Due to Excessive Length 
+
+Algorithm 1 Contextual Combinatorial Bandits based on Linear Thompson Sampling for EV n
+
+Input: σ > 0, for all t ∈ [T ], A t := Il,l , bt := 0 l, ˆθt := 0 l
+
+1: for d = 1 , ..., D do 
+
+2: m := min( mnd , b nd − and )
+
+3: for t = 1 , ..., T do 
+
+4: Observe context xnd,t 
+
+// Sampling parameter for each charging time slot 5: Sample ˜θt ∼ N (ˆθt, σ 2A−1 
+
+> t
+
+)
+
+// Compute the likelihood of reward for each time slot 6: Compute ˜μnd (t) := ( xnd,t )⊤ ˜θt
+
+7: end for 
+
+8: t := and , snd := 0 T , cd := 0 T
+
+9: while (t ≤ bnd and m > 0) do 
+
+10: Define set S(t) := {0, 1}bnd −t+1 
+
+// Choice of charging schedule 11: Choose st := arg max s∈S (t),|| s|| 1=m s⊤ ˜μnd,a nd ≤.<b nd −t+1 
+
+12: Play action st(t), observe congestion cd(t)
+
+13: snd (t) := snd (t) + st(t)
+
+14: if st(t) = 1 and cd(t) = 0 then 
+
+15: m:=m-1 16: end if 
+
+17: t := t + 1 
+
+18: end while 
+
+19: Observe price pd
+
+// The linear models are updated for selected slots snd (t)
+
+20: for t = 1 , ..., T do 
+
+21: if snd (t) = 1 then 
+
+22: rnd (t) := snd (t)(1 − cd(t))( 1 − pd(t)) 
+
+23: At := At + ( xnd,t )⊤xnd,t 
+
+24: bt := bt + rnd (t)xnd,t 
+
+25: ˆθt := b⊤ 
+
+> t
+
+A−1
+
+> t
+
+26: end if 
+
+27: end for 
+
+28: end for EV Smart Charging: Independent MARL approaches 7
+
+3.2 Proximal Policy Optimization (PPO) 
+
+In contrast to Contextual Combinatorial Linear Bandits, standard Reinforce-ment Learning addresses sequential decision-making problems modeled as Markov Decision Processes: an agent observes a state, select an action according to its policy, and receives a reward that depends on the current state, the played ac-tion, and the following state, while in Contextual Combinatorial Linear Bandits the reward depends only on the state and on the played action. 
+
+Algorithm 2 PPO 
+
+Require: Initial policy πθ0 , value function Vϕ0
+
+Require: Hyperparameters: ϵ (clipping), λ (GAE), K (epochs), D (horizon), M (mini-batch size) 1: D := ∅
+
+// Collect trajectories 2: for iteration d = 1 , 2, . . . , D do 
+
+3: Collect trajectories D := {(xnd,t , snd (t), cd(t), pd(t)) } by running πθold 
+
+// Compute returns and advantages for each timestep 4: for each trajectory T in D do 
+
+5: for each t ∈ T do 
+
+6: rnd (t) := snd (t)(1 − cd(t)(1 − pd(t)) 
+
+7: R(t) := P|T |− 1−tl=0 rnd (t + l)
+
+8: δ(t) := rnd (t) + Vϕ(xnd,t +1 ) − Vϕ(xnd,t )
+
+9: ˆA(t) := P|T |− 1−tl=0 (λ)lδ(t + l)
+
+10: end for 
+
+11: end for 
+
+// Optimize over multiple epochs 12: for epoch k = 1 to K do 
+
+13: Split D into M mini-batches colorblue// Compute loss averaged over timesteps in batch 14: for each mini-batch B = {(xnd,t , snd (t), ˆA(t), R (t)) }t∈B do 
+
+15: ρθ (t) := πθ (sd(t)|xnd,t ) 
+
+> πθold (sd(t)|xnd,t )
+
+16: LCLIP := 1
+
+> |B|
+
+P 
+
+> t∈B
+
+min( ρθ (t) ˆA(t), clip (ρθ (t), 1 − ϵ, 1 + ϵ) ˆA(t)) 
+
+17: LV F := 1
+
+> |B|
+
+P 
+
+> t∈B
+
+(Vϕ(xnd,t ) − R(t)) 2
+
+18: Update θ and ϕ using gradients of LCLIP and LV F 
+
+19: end for 
+
+20: end for 
+
+21: D := ∅, θold := θ
+
+22: end for 
+
+The decentralized charging problem can be viewed as a reinforcement learning problem, where the environment is composed by the considered EVs, and the electrical grid, where the terminal states are the maximum length T of the episode and the event "target state-of-charge is reached", and where the discount factor is 1: the reward of the episode is the sum of rewards of charging time slots. 8 Authors Suppressed Due to Excessive Length 
+
+Proximal Policy Optimization (PPO) [11] is a policy gradient algorithm that addresses the instability of traditional policy gradient methods by limiting pol-icy updates. Algorithm 2 collects trajectories using the previously updated pol-icy πold (line 3), computes advantages using Generalized Advantage Estima-tion (GAE) (line 6-9). PPO uses collected trajectories for multiple optimization epochs with mini-batch gradient descent (lines 14-19) The key innovation is the clipping mechanism: the probability ratio between new and old policies ρθ (line 15) is constrained within [1 − ϵ, 1 + ϵ], ensuring conservative updates (line 16). PPO jointly trains an actor (policy) πθ and a critic (value function) VΦ (line 18). 
+
+3.3 Advantage Actor Critic (A2C) 
+
+PPO and A2C differ only by the clipping mechanism (lines 15-16 Algorithm 2). This gives PPO greater stability during gradient descent, thus reducing over-fitting and allowing it to replay K times the buffer of trajectories D (line 12), thereby improving sample efficiency. 
+
+3.4 Simple Policy Optimization (SPO) 
+
+While PPO uses hard clipping (line 16 Algorithm 2), resulting in zero gradients for data points outside the interval [1 − ϵ, 1 + ϵ], SPO [13] replaces this with soft quadratic regularization, which maintains non-zero gradients everywhere. In practice, the only difference with the PPO algorithm lies in line 16: 
+
+Lp := − 1
+
+> |B|
+
+P
+
+> t∈B
+
+n
+
+ρθ (t) ˆA(t) − | ˆA(t)| 
+
+> 2ϵ
+
+· [ρθ (t) − 1] 2o
+
+# 4 Experimental setup 
+
+4.1 Simulation Environment 
+
+We developed a multi-agent EV charging simulation environment in Python 6,leveraging our custom multi-agent platform built on Gymnasium [22], building upon the work of [19]. Key features include: 
+
+– configurable capacity K of electrical grid, 
+
+– support for heterogeneous strategies across the vehicle population, 
+
+– integration of historical photovoltaic production data, 
+
+– customizable distributions for EV arrivals and departures, 
+
+– congestion management by random disconnection of excess vehicles when the aggregate demand surpasses the transformer capacity,   
+
+> 6a gitlab can be found here: https://gitlab.com/lpplc/anon EV Smart Charging: Independent MARL approaches 9
+
+4.2 Electric Vehicle Parameters 
+
+Each vehicle has a 22 kW charging power and a 92 kWh battery capacity [23]. Vehicle arrivals follow a truncated normal distribution centered at 9:00 AM (τ arr  
+
+> i
+
+∼ TruncNorm (μ = 9 , σ = 1 .5, a = 6 , b = 12) ), while parking durations follow a truncated exponential distribution ( Di ∼ TruncExp (λ = 1 , a = 7 , b =10) hours). The initial state of charge varies uniformly between 10% and 70%, with a target SoC of 80%. 
+
+4.3 Data and Electricity Prices 
+
+Four years (2021-2024) of photovoltaic production data available on Elia’s por-tal [24] are used to derive electricity price using equation (1). Two information are considered: one with perfect real-time solar data and another with realistic day-ahead forecasts including uncertainty. The data are then normalized be-tween the 1st and 99th percentiles with a 15-minute granularity. 4000 days are generated by sampling uniformly these four years of electricity price. 3000 days are used for training for training dataset and 1000 days are used for test dataset. 
+
+4.4 Algorithms and baselines Implementation Greedy. This strategy sorts all available time slots between arrival and de-parture times in ascending order of electricity price, then selects the cheapest time slots to meet the charging demand. If the current time falls within this selection, the vehicle charges; otherwise, it waits. Without congestion and the true electricity price, this policy is optimal. If a charging attempt fails due to congestion, the selection process is repeated to find the most suitable time slots. The electricity price may be based on a forecast or the actual price. 
+
+Bernoulli Thompson Sampling (TS). Bernoulli Thompson Sampling is an optimal algorithm for the stochastic Multi-Armed Bandits [25]. It does not take into account the context xnd,t ∈ Rl. It is used as a baseline to evaluate the gain of contextual information in Linear Thompson Sampling. At each timestep, Bernoulli Thompson Sampling models the probability of successfully charging (i.e., not being congested) as a Beta distribution: 
+
+psuccess (t) ∼ Beta (α, β ).
+
+Parameters are updated according to observed outcomes: 
+
+α := α + 1 − cd(t), β[t] ← β[t] + cd(t).
+
+At each time slot, the algorithm samples from these Beta distributions to estimate the probability of successful charging and computes an expected gain for each time slot as: 
+
+ˆgnd (t) = psuccess (t)(1 − ˆpd(t)) ,10 Authors Suppressed Due to Excessive Length 
+
+where ˆpd(t) is forecast price at time slot t. The algorithm then selects mnd time slots with the highest expected gain. If congestion occurs, the selection process is repeated. The parameters α and β are initialized to 1.
+
+Linear Thompson Sampling (LinTS). Linear Thompson Sampling [20] is used in Algorithm 1 for selecting the best schedules. The variance parameter v is set to 1. The context xnd,t contains the forecast price, the current time step, the current week. Given the cyclic nature of time step and week a sin/cos coding is used. 
+
+Neural Thompson Sampling (NeuralTS). This algorithm is the same that Algorithm 1, except that instead using LinTS it employs a neural network fθ
+
+to model the relationship between contextual features xnd,t and expected reward 
+
+rnd (t). The neural network uses a single hidden layer with 64 neurons, a learning rate of 10 −3, and Sherman-Morrison updates for the Bayesian linear head. The context xnd,t is the same as the one used in LinTS. 
+
+Proximal Policy Optimization (PPO). PPO [11] is used in Algorithm 2 for selecting the best schedules. PPO uses 25 epochs per update, a batch size of 
+
+512 , a cliping range of 0.3, and a learning rate of 5 × 10 −4. PPO is implemented with Stable-Baselines3 [26]. The state xnd,t used in PPO contains the same infor-mation as that of LinTS, plus plug status, which is an indicator of connection to the electrical grid, the state of charge, and the remaining number of time steps. This additional contextual information is directly included in Contextual Combinatorial MAB (Algorithm 1). 
+
+Advantage Actor Critic (A2C). A2C [12] uses the same parameters, contexts and implementation as PPO. 
+
+Simple Policy Optimization (SPO). SPO [13] uses the same parameters, contexts and implementation as PPO. 
+
+# 5 Experimental Results 
+
+5.1 Evaluation Protocol 
+
+All algorithms are trained over 3000 episodes, each representing a one-day sce-nario, and tested on 1000 unseen episodes. Performance is assessed using two complementary metrics: the average daily rewards achieved by the agents (equa-tion 5) and the number of "SOC failure" events (equation 6). Each experiment is done 5 times. We consider two scenarios within this unified protocol. The first scenario cor-responds to homogeneous deployments, where all 20 EVs use the same algorithm EV Smart Charging: Independent MARL approaches 11 
+
+under different capacity levels and both information regimes (perfect real-time prices versus day-ahead forecasts). The second scenario involves heterogeneous deployments, where multiple algorithms coexist within the same environment to assess robustness and interoperability. 
+
+5.2 Homogeneous Groups 
+
+Fig. 1: Learning curves. Left panel 70% capacity. Right panel 30% capacity. 
+
+Learning curves. We focus first on the learning curves to study the con-vergence time of different learning algorithms, which is crucial in a constantly evolving real-world environment. In Figure 1, for each algorithm, the mean reward evaluated on the test dataset versus the number of training episodes is plotted for a grid capacity allowing si-multaneous charging 70% of EVs (left panel) and 30% of EVs (right panel). In low congestion regime (capacity of 70% ), EVs equipped with LinTS and and TS converge to a reasonably good policy in few episodes. Then, due to additional contextual information, EVs equipped with LinTS outperforms those with TS in term of mean reward. EVs equipped with PPO, SPO and A2C do not have time to converge since their test mean reward still increase after 3000 episodes. Neural Thompson Sampling exhibits a very slow convergence. In high congestion regime (capacity of 30% ), EVs equipped with LinTS also quickly converge to a reason-ably good policy that is improved after 400 episodes. After 500 episodes, EVs equipped with PPO, SPO or A2C exhibit slightly better performance than those using LinTS. EVS equipped with TS converge very fast, but are outperformed by policies that use contextual information. NeuralTS would require more episodes to converge. 
+
+Performance Analysis. To analyze the performance of algorithms, in Figure 2, we plot the average reward and the percentage of failures in the state-of-charge measurement against capacity levels (percentage of electric vehicles that can be charged simultaneously). Results are presented for both measured prices 12 Authors Suppressed Due to Excessive Length 
+
+> (a) Measured prices
+> (b) Day-ahead forecasted prices
+
+Fig. 2: Algorithm performance for homogeneous groups across capacity levels. Left panels: average rewards per vehicle; right panels: SOC failure rates (log scale). in Figure 2a (perfect real-time information) and day-ahead forecasted prices in Figure 2b (realistic uncertainty). While the performance of greedy baseline is optimal when the price infor-mation is perfect and when there is no congestion (capacity level 100% ), we observe that its performance in terms of mean reward and SOC failures are the worst for low capacity level (Figure 2a). Notice that in perfect condition (capacity level 100% and measured price), TS and LinTS obtain near optimal performance, while PPO, SPO and A2C do not achieve this performance. This is consistent with their lower convergence rate observed in Figure 1a. For low EV Smart Charging: Independent MARL approaches 13 
+
+capacity (between 20% and 30% ), EVs equipped with PPO, SPO or A2C slightly outperform those equipped with LinTS, while TS that does not use contextual information and NeuralTS that does not finish its convergence are outperformed. In terms of SOC failures, EVs equipped with A2C, PPO and SPO outperform those equipped with LinTS for low to medium capacity (between 20% and 50% ). This suggests that EV equipped with policy gradient algorithms coordinate bet-ter than other algorithms. For high capacity (between 70% and 100% ), EVs equipped with LinTS and A2C dominate other algorithms. The worst algorithm is Greedy that chooses the lower prices and hence, as soon as there is congestion, fails to charge EVs. Finally, while the performances of LinTS and TS decrease when the electricity prices are forecasted, those of PPO, SPO, and A2C are the same. Globally, LinTS exhibits a fast convergence (Figure 1), and good perfor-mances in terms of electricity price and SOC failures for all network capacity levels (Figure 2), while policy gradient algorithms are better for low capacity, which suggests that EV equipped with PPO, SPO, or A2C coordinate better than other algorithms. 
+
+5.3 Heterogeneous Groups 
+
+Real-world deployments will inevitably involve heterogeneous vehicle popula-tions using different charging algorithms. To assess algorithm robustness in such environments, we evaluate mixed deployments with 10 PPO agents and 10 LinTS agents sharing the same network constraints. For high network capacity ( 70% ), the conclusion of the previous experiment with homogeneous groups of EVs is reinforced (Figure 1): EVs equipped with LinTS converge faster to a good solution that is slightly improved during time (figure 3 left panel). However, for low network capacity ( 30% ) the behavior of the learning curve of EVs equipped with LinTS radically change: after quickly reaching a good solution, the mean reward on the test set decreases (Figure 3 right panel). This is due to the learning of electric vehicles equipped with PPO, which, when LinTS-equipped electric vehicles focus on certain time slots, manage to find a better compromise between price and congestion, thus polluting the solution obtained by LinTS. Indeed, LinTS is based on a stationary stochastic assumption that does not hold in high congestion regime in face of another group of learning agents, while standard reinforcement learning handles dynamic environment. It should be noted, however, that EVs equipped with PPO only demonstrate superior performance to those equipped with LinTS after 500 days, or nearly a year and a half. Furthermore, EVs equipped with LinTS outperform those equipped with PPO on medium to high capacity grids (Figure 4). 14 Authors Suppressed Due to Excessive Length 
+
+Fig. 3: Learning curves for heterogeneous groups ( 10 PPO agents, 10 LinTS agents). Left panel 70% capacity. Right panel 30% capacity. 
+
+Fig. 4: Left panel: average rewards per vehicle; right panel: SOC failure rates (log scale). Heterogeneous groups ( 10 PPO agents, 10 LinTS agents) across capacity levels. 
+
+# 6 Conclusion 
+
+To develop a scalable approach for optimizing electric vehicle charging, we pro-posed two approaches based on independent multi-agent reinforcement learning: contextual and combinatorial linear bandits, and classical reinforcement learning algorithms such as PPO, SPO, and A2C. When the agents use the same learning algorithm, Contextual and combinatorial linear bandits based on LinTS find a good solution faster, which, in the absence of congestion, achieves performance close to the one of the optimal policy, and, in the presence of significant con-gestion, closely matches those of the best classical reinforcement learning algo-rithms. However, when two teams of agents compete to recharge their batteries EV Smart Charging: Independent MARL approaches 15 
+
+on the same highly congested electrical grid, we have observed that strong learn-ers such as PPO, SPO or A2C can significantly outperform LinTS. However, the convergence speed of these algorithms remains far too slow to be learned on-line in even a slightly changing environment (one year and a half to do better than LinTS). Using a sliding window for LinTS might seem like a good solution for improving performance against an opposing team. Indeed, the sliding win-dow allows players to forget part of their past performance and thus adapt to a change [27]. However, electricity consumption and photovoltaic electricity pro-duction are seasonally dependent. This means that to learn this dependence, a sliding window of at least one year is necessary, which severely limits the ability to adapt to a change in the opposing team’s strategy. Future works will focus on adversarial linear bandits [28], which should allow for adaptation to changes and could also provide theoretical guarantees. 
+
+# References 
+
+1. IEA, “Global ev outlook 2025,” 2025. Licence: CC BY 4.0. 2. S. Tirunagari, M. Gu, and L. Meegahapola, “Reaping the benefits of smart electric vehicle charging and vehicle-to-grid technologies: Regulatory, policy and technical aspects,” IEEE Access , vol. 10, pp. 114657–114672, 2022. 3. California Independent System Operator, “Managing the evolving grid - renewable curtailment,” 2025. Accessed: October 2025. 4. J. Rowlatt, “Britain’s energy bills problem - and why firms are paid huge sums to stop producing power,” June 2024. October: January 2025. 5. R. R. J. F. Franco, M. J. Rider, “A mixed-integer linear programming model for the electric vehicle charging coordination problem in unbalanced electrical distribution systems,” IEEE Transactions on Smart Grid , 2015. 6. R. Sutton and A. Barto, Reinforcement Learning: An Introduction . MIT Press, 2nd ed., 2018. 7. H. Xie, G. Song, Z. Shi, J. Zhang, Z. Lin, Q. Yu, H. Fu, X. Song, and H. Zhang, “Reinforcement learning for vehicle-to-grid: A review,” Advances in Applied Energy ,vol. 17, p. 100214, 2025. 8. T. Rashid, M. Samvelyan, C. S. de Witt, G. Farquhar, J. Foerster, and S. Whiteson, “Qmix: Monotonic value function factorisation for deep multi-agent reinforcement learning,” in Proceedings of the 35th International Conference on Machine Learn-ing , vol. 80 of ICML , pp. 4295–4304, PMLR, 2018. 9. R. Lowe, Y. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mordatch, “Multi-agent actor-critic for mixed cooperative-competitive environments,” in Advances in Neu-ral Information Processing Systems , vol. 30 of NeurIPS , 2017. 10. M. Tan, “Multi-agent reinforcement learning: Independent vs. cooperative agents,” in Proceedings of the Tenth International Conference on Machine Learning , 1993. 11. J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, “Proximal policy optimization algorithms,” 2017. 12. V. Mnih, A. P. Badia, M. Mirza, A. Graves, T. P. Lillicrap, T. Harley, D. Silver, and K. Kavukcuoglu, “Asynchronous methods for deep reinforcement learning,” 
+
+arXiv , 2016. 13. Z. Xie, Q. Zhang, F. Yang, M. Hutter, and R. Xu, “Simple policy optimization,” in Proceedings of the 42nd International Conference on Machine Learning , 2025. 16 Authors Suppressed Due to Excessive Length 14. T. Lattimore and C. Szepesvári, Bandit Algorithms . Cambridge University Press, 2020. Available online at https://banditalgs.com .15. R. Bonnefoi, L. Besson, C. Moy, E. Kaufmann, and J. Palicot, “Multi-armed ban-dit learning in iot networks: Learning helps even in non-stationary settings,” in 
+
+Cognitive Radio Oriented Wireless Networks , 2018. 16. R. Kerkouche, R. Alami, R. Féraud, N. Varsier, and P. Maillé’, “Node-based opti-mization of lora transmissions with multi-armed bandit algorithms,” in 2018 25th International Conference on Telecommunications (ICT) , 2018. 17. H. Dakdouk, R. Feraud, N. Varsier, P. Maillé, and R. Laroche, “Massive multi-player multi-armed bandits for iot networks: An application on lora networks,” Ad Hoc Networks , 2023. 18. S. Zafar, R. Féraud, A. Blavette, G. Camilleri, and H. B. Ahmed, “Decentralized multi-agent multi-armed bandits for smart electric vehicles charging,” Engineering Applications of Artificial Intelligence , 2026. 19. E. Le Guern-Dall’o, R. Féraud, G. Camilleri, P. Maillé, F. Petit, R. Zorgati, H. Ben Ahmed, and A. Blavette, “Multi-Agent Multi-Armed Bandits: application to EVs smart charging with grid constraints,” in PowerTech , (Kiel, Germany), IEEE, June 2025. 20. S. Agrawal and N. Goyal, “Thompson sampling for contextual bandits with linear payoffs,” CoRR , vol. abs/1209.3352, 2012. 21. W. Chen, Y. Wang, and Y. Yuan, “Combinatorial multi-armed bandit: General framework and applications,” in Proceedings of the 30th International Conference on Machine Learning , 2013. 22. M. Towers, A. Kwiatkowski, J. Terry, J. U. Balis, G. D. Cola, T. Deleu, M. Goulão, A. Kallinteris, M. Krimmel, A. KG, R. Perez-Vicente, A. Pierré, S. Schulhoff, J. J. Tai, H. Tan, and O. G. Younis, “Gymnasium: A standard interface for reinforcement learning environments,” 2024. 23. Statista, “Voitures électriques : les modèles qui dominent le marché français en 2025,” 2025. Infographie. 24. E. T. B. SA, “Photovoltaic power generation data brussels,” 2025. Elia Open Data License. 25. E. Kaufmann, N. Korda, and R. Munos, “Thompson sampling: An asymptotically optimal finite-time analysis,” in International Conference on Algorithmic Learning Theory , 2012. 26. A. Raffin, A. Hill, A. Gleave, A. Kanervisto, M. Ernestus, and N. Dormann, “Stable-baselines3: Reliable reinforcement learning implementations,” Journal of Machine Learning Research , vol. 22, no. 268, pp. 1–8, 2021. 27. A. Garivier and E. Moulines, “On upper-confidence bound policies for switching bandit problems,” in Algorithmic Learning Theory , 2011. 28. G. Neu and J. Olkhovskaya, “Efficient and robust algorithms for adversarial lin-ear contextual bandits,” in Proceedings of Thirty Third Conference on Learning Theory , 2020.
