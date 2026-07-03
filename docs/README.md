@@ -6,26 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-02
-- 运行时间：2026-07-02 20:31:16 UTC
+- 最新运行日期：2026-07-03
+- 运行时间：2026-07-03 21:11:14 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：1
-- 速读区：0
+- 本次总论文数：5
+- 精读区：4
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读一篇高分论文《HiComm: Hierarchical Communication for Multi-agent Reinforcement Learning》（9/10），聚焦多智能体通信层级化设计。  
-核心方向：通过层级通信结构提升多智能体协作效率，证明分层信息传递可减少冗余并加速收敛。  
-建议关注多智能体强化学习中通信机制的设计，可尝试将层级思想应用于您的研究或应用场景。
-- 详情：[/202607/02/README](/202607/02/README)
+今日精读两篇9分论文，聚焦多智能体强化学习在轨检查与平均场理论。
+最值得关注的方向：基于仿真的奖励函数验证方法以及平均场强化学习框架。
+建议普通读者后续可重点了解多智能体奖励设计技巧与大规模群体控制中的平均场近似思路。
+- 详情：[/202607/03/README](/202607/03/README)
 
 ### 精读区论文标签
-1. [HiComm: Hierarchical Communication for Multi-agent Reinforcement Learning](/202607/02/2606.29126v2-hicomm-hierarchical-communication-for-multi-agent-reinforcement-learning)  
+1. [Simulation Based Reward Function Validation for Multi-Agent On Orbit Inspection](/202607/03/2607.01367v1-simulation-based-reward-function-validation-for-multi-agent-on-orbit-inspection)  
    标签：评分：9.0/10、query:marl
-   evidence：合作多智能体强化学习中的层次通信
+   evidence：合作多智能体强化学习在轨检查应用
+2. [Mean Field Reinforcement Learning](/202607/03/2607.01525v1-mean-field-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：从多智能体强化学习角度介绍平均场强化学习的专著
+3. [Towards Value-Constrained Credit Assignment in Fully Delegated AI Cooperatives](/202607/03/2606.28217v1-towards-value-constrained-credit-assignment-in-fully-delegated-ai-cooperatives)  
+   标签：评分：8.0/10、query:marl
+   evidence：协作人工智能系统中的奖励分配与信用分配
+4. [Controllable Sim Agents with Behavior Latents](/202607/03/2607.02496v1-controllable-sim-agents-with-behavior-latents)  
+   标签：评分：8.0/10、query:marl
+   evidence：用于交通仿真的去中心化智能体行为隐变量
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [When Multi-Robot Systems Meet Agentic AI:Towards Embodied Collective Intelligence](/202607/03/2606.27929v1-when-multi-robot-systems-meet-agentic-aitowards-embodied-collective-intelligence)  
+   标签：评分：6.0/10、query:marl
+   evidence：多机器人系统与多智能体协作
 
 
 <div class="dpr-home-promo-card">
