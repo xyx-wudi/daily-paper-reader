@@ -6,26 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-04
-- 运行时间：2026-07-04 20:29:27 UTC
+- 最新运行日期：2026-07-05
+- 运行时间：2026-07-05 20:53:22 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
+- 本次总论文数：2
+- 精读区：1
 - 速读区：1
 
 ### 今日简报（AI）
-今日聚焦一篇关于安全与社会意识自主系统的论文，探讨其如何在复杂社交环境下平衡安全与合规。  
-该研究提出一种框架，使自主系统在动态人群中既能保证物理安全，又能遵循社会规范。  
-建议关注自主系统在自动驾驶或机器人领域的社交安全设计，后续可查阅该方向的更深入评估。
-- 详情：[/202607/04/README](/202607/04/README)
+今日精读高分论文《适应性智能体群体中的集体学习理论》（8.0分），速读《分布式在线赌博机子模最大化》。值得关注的方向是集体学习机制与分布式在线优化中的违规约束。建议优先精读高分论文，再拓展速读内容的应用场景。
+- 详情：[/202607/05/README](/202607/05/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Theory of collective learning in populations of adaptive agents](/202607/05/2607.02171v1-theory-of-collective-learning-in-populations-of-adaptive-agents)  
+   标签：评分：8.0/10、query:marl
+   evidence：去中心化学习，策略交换和奖励评估
 
 ### 速读区论文标签
-1. [FormIDEAble: Safe and Socially-aware Autonomous Systems](/202607/04/2606.31572v1-formideable-safe-and-socially-aware-autonomous-systems)  
-   标签：评分：6.0/10、query:marl
-   evidence：人机协同合作与安全保证
+1. [Distributed Online Bandit Submodular Maximization with Bounded Sampling Violations](/202607/05/2607.00680v1-distributed-online-bandit-submodular-maximization-with-bounded-sampling-violations)  
+   标签：评分：7.0/10、query:marl
+   evidence：分布式多智能体bandit子模最大化，带有限采样违规
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,3061 @@
+Title: Distributed Online Bandit Submodular Maximization with Bounded Sampling Violations
+
+URL Source: https://arxiv.org/pdf/2607.00680v1
+
+Published Time: Thu, 02 Jul 2026 00:47:28 GMT
+
+Number of Pages: 34
+
+Markdown Content:
+## Distributed Online Bandit Submodular Maximization with Bounded Sampling Violations 
+
+Bin Du ∗ Chang Liu ∗ Dingqi Zhu ∗ Lintao Ye † Dengfeng Sun ‡
+
+July 2, 2026 
+
+Abstract 
+
+We study distributed online submodular maximization under partition matroid constraints, in which multiple agents select a limited number of actions from their own subsets sequentially to maximize the cumulative value of a sequence of objective functions. We develop a unified algorithmic framework that accommodates full-information and bandit feedback models. For both feedback models, we prove that the proposed algorithms achieve sublinear (1 − 1/e )-regret guarantees, which are comparable to those achieved by existing centralized counterparts. Furthermore, to tackle the sampling violation issue caused by continuous relaxation and rounding, we develop a bounded stochastic pipage rounding scheme and show that the probability of sampling violation vanishes asymptotically. As a result, the cumulative sampling violation remains sublinear in T , which is further shown to be not improvable under certain conditions. Numerical results validate the theoretical findings in this paper. 
+
+1 Introduction 
+
+Submodular maximization is a fundamental problem in a broad range of applications such as sensor selection [1], resource allocation [2], and task coordination with multi-agent systems [3]. In its general form, the problem aims to maximize a set function subject to certain combinatorial constraints, such as cardinality or matroid constraints. Despite its applicability, this class of problems is known to be NP -hard [4] and hence its exact solutions are computationally intractable in general. As a consequence, a substantial body of research has focused on the development of efficient approximation algorithms with provable performance guarantees. A rich line of such work has established that constant-factor approximation ratios, e.g., 1/2 or 1 − 1/e , can be achieved via greedy-based methods or their continuous variants [5 –7]. Additionally, these guarantees are further shown to be optimal unless P = NP [4]. Such a result has provided a solid theoretical foundation for designing algorithms that achieve near-optimal performance guarantees while remaining computationally tractable. Beyond the classical centralized problem, there has been a growing interest in studying distributed submodular maximization, see e.g., [8–11], motivated by large-scale decision-making scenarios over multi-agent networks. One typical class of distributed problems arises when agents possess distributed 
+
+> ∗
+
+College of Automation Engineering, Nanjing University of Aeronautics and Astronautics, Nanjing 211106, China; 
+
+{iniesdu, liuch, zdq.bpz}@nuaa.edu.cn 
+
+> †
+
+School of Artificial Intelligence and Automation at the Huazhong University of Science and Technology, Wuhan, China; yelintao93@hust.edu.cn 
+
+> ‡
+
+School of Aeronautics and Astronautics, Purdue University, West Lafayette, IN 47906, USA; dsun@purdue.edu 
+
+1
+
+> arXiv:2607.00680v1 [cs.LG] 1 Jul 2026
+
+action subsets, and feasibility is enforced through combinatorial constraints coupling all agents’ decisions, e.g., [11,12]. A canonical example is the partition matroid constraint [13], where the ground action set is partitioned over multiple agents and each one is allowed to select one or a few actions only from its local set. To solve the distributed submodular maximization under such constraints, the authors in [12] propose a solution method that combines the classical continuous greedy algorithm (also known as the Frank-Wolfe algorithm) with the consensus-based coordination scheme. However, this method relies on the exact gradient evaluation of the multi-linear extension of the submodular objective function, leading to computational complexity that grows exponentially with the size of the action set. To address this issue, the authors in [13] develop a distributed algorithm by following the same Frank-Wolfe framework but leveraging the empirical estimate of the gradient information. It is shown that the approximation ratio can be arbitrarily close to the optimal 1 − 1/e as the number of samples for the gradient estimation increases. Besides, our previous work [11] proposes a stochastic gradient-based distributed algorithm which also considerably reduces the computational complexity of gradient evaluation. However, since the algorithm in [11] is developed completely in a discrete domain, its approximation ratio is only guaranteed to be 1/2 which is suboptimal compared to algorithms developed in the continuous domain. Another rich line of work on submodular maximization has focused on the online setting, where a sequence of submodular objective functions is revealed over time and decisions must be made sequentially without access to future information. In this setting, the goal is to design an online algorithm that generates a sequence of decisions which maximizes the cumulative value of the time-varying objective functions. Specifically, the notion of cumulative α-regret, e.g., α = 1 /2 or 
+
+1 − 1/e , is utilized to characterize the performance of such online algorithms. If the cumulative 
+
+α-regret grows sublinearly with respect to the time horizon T , then the time-averaged performance of the algorithm asymptotically matches that of the α-suboptimal solution chosen in hindsight. To this end, the authors in [14] propose the first online submodular maximization algorithm by using the meta-action technique in the discrete domain. It is shown that the algorithm achieves 
+
+O(√T ) (1 − 1/e )-regret under the cardinality constraint. This result is further extended in [15] to the problem with partition matroid constraints. By employing a standard lifting technique, i.e., lifting the discrete problem into the continuous domain followed by a proper rounding scheme, the same regret guarantee is established. In fact, the meta-action idea introduced in [14] has also been applied to online continuous submodular maximization problems; see e.g., [16 –18]. In particular, the Meta-Frank-Wolfe algorithm is first proposed in [16] and shown to reproduce the O(√T ) (1 − 1/e )-regret under general convex set constraints. However, a critical limitation of this approach is that it requires √T evaluations of the exact gradient at each time t, which can be prohibitively expensive in practical scenarios. To alleviate this issue, the authors in [17] enhance the Meta-Frank-Wolfe algorithm by using stochastic gradient estimates and prove that the same regret result can be achieved under mild conditions. Nevertheless, the number of gradient evaluations remains on the order of √T , which may still be expensive for large-scale problems. Motivated by such a challenge, a one-shot version of the online algorithm, termed Mono-Frank-Wolfe, is developed in [18]. It is shown that this algorithm reduces the number of per-function gradient evaluations from √T to one and achieves an O(T 4/5)(1 − 1/e )-regret. In addition, by applying the one-point gradient estimator [19], the authors in [18] further adapt the algorithm development with a bandit feedback model and propose the first bandit submodular maximization method that achieves an O(T 8/9) (1 − 1/e )-regret. Additional related works can also be found in [20–22]. 2It is noteworthy that, by using the standard lifting technique, the aforementioned continuous algorithms can all be adopted to solve the discrete online submodular maximization problem. However, a critical limitation of such approaches is that they may require evaluating function values at sampled points that violate the original set constraints, such as (partition) matroid or cardinality constraints. Indeed, [18] shows that there is no proper rounding scheme that can simultaneously guarantee the unbiased gradient estimation and the feasibility of the resulting discrete samples. As a result, the responsive bandit algorithm is proposed in [18] which assigns zero rewards to the infeasible samples but still requires querying the function values at such violating points. In this paper, we aim to resolve the sampling violation issue. More recently, a few attempts have been made to study submodular maximization problems in both distributed and online settings, see e.g., [23 –25]. The authors in [23] consider the distributed online continuous submodular maximization problem in which each agent observes a local sequence of objective functions and all agents are subject to a common convex set constraint. Two distributed online algorithms are then presented, and their (1 − 1/e )-regrets are shown to be upper bounded by 
+
+O(T 4/5) and O(√T ), respectively. To address the distributed setting with separate action subsets across agents, our previous work [25] develops an online distributed greedy algorithm in the purely discrete domain, which is shown to inherently achieve an O(√T ) 1 /2-regret. To the best of the authors’ knowledge, no existing work addresses distributed online submodular maximization under partition matroid constraints while achieving the optimal (1 − 1/e )-regret. Closing this gap, as we detail below, requires more than assembling existing techniques. The contributions of this paper are summarized below: (i) We first formulate a distributed online submodular maximization problem under partition matroid constraints, and then propose a unified algorithmic framework that combines the lifting technique with the Meta-Frank-Wolfe algorithm, accommodating both full-information and bandit feedback models. To the best of the authors’ knowledge, this is the first framework to achieve the optimal (1 − 1/e )-regret for this problem. (ii) For the full-information and bandit models, we establish the O(T 4/5) and O(T 8/9) (1 − 1/e )-regret bounds, respectively, which match the known centralized rates while operating in a fully distributed manner over the network. (iii) To address the sampling violations inherent to online rounding under set constraints, we introduce bounded stochastic pipage rounding (B-SPR ), which generalizes pipage rounding to arbitrary fractional bounds while retaining its sum and monotonicity guarantees. Embed-ding B-SPR into a progressively bounded scheme ( PB-SPR ) then drives the iterates toward a matroid vertex. We prove that per-step violation probability vanishes as O(T −1/9), so the cumulative violation grows only sublinearly as O(T 7/9). A matching Ω( T 7/9) lower bound certifies that this rate is not improvable under certain conditions. 
+
+Notations: The sets of integers and real numbers are denoted as Z and R, respectively. For any given integer n ∈ Z≥1, let [n] := {1, 2, · · · , n } and 1n denote the n-dimensional one vector. For a set 
+
+S, let |S| be the cardinality of the set. For two vectors x, y ∈ Rn, the inequality x ⪯ y is defined element-wise. 1{·} denotes the indicator function. 32 Problem Statement and Preliminaries 
+
+2.1 Distributed Online Submodular Maximization 
+
+Consider a network of I agents, where each agent i ∈ [I] maintains a local action subset Ai ⊆ A := 
+
+∪Ii=1 Ai with |A i| = Ni and |A| = N . The objective of each agent is to select at most κi ∈ Z≥1
+
+actions from Ai, such that a sequence of time-varying or even adversarial objective functions f 1(S),
+
+f 2(S), · · · , f T (S) is cooperatively maximized over the time horizon T ∈ Z≥1. Such a problem can be formulated as the distributed maximization, maximize f t(S) (1a) subject to S ∈ I := {S |S ∩ A i| ≤ κi, i ∈ [I]}. (1b) Notice that, by assuming Ai ∩ A j = ∅, ∀i̸ = j, the set I in (1b) is known as a partition matroid [12]. Moreover, we assume that each function f t(·) : 2 A → R≥0 is monotone , submodular , and normalized ,whose definitions are provided as follows. 
+
+Definition 1 (Monotonicity) . A set function f (·) is monotone non-decreasing if, for ∀S 1 ⊆ S 2 ⊆ A ,it holds that f (S1) ≤ f (S2).
+
+Definition 2 (Submodularity) . A set function f (·) is submodular if, for ∀S 1 ⊆ S 2 ⊆ A and 
+
+∀a ∈ A \ S 2, it holds that f ({a} ∪ S 1) − f (S1) ≥ f ({a} ∪ S 2) − f (S2).
+
+In addition to the properties of monotonicity and submodularity, it is often useful if the set function is also normalized , i.e., f (∅) = 0 . Without loss of generality, this property can be enforced by adding an appropriate constant to the function [1]. In this work, we focus on an online setting of the submodular maximization problem where the agents have no a priori knowledge of the objective functions. Specifically, at each time t ∈ [T ],each agent selects a subset of actions Sti ⊆ A i such that |S ti | ≤ κi. After all agents commit to their decisions Sti ’s, a potential adversary selects an objective function f t(·) and certain information regarding the function is revealed to the agents. In the full-information feedback model, the agents have access to the full knowledge of f t(·) and thus can evaluate the function value for any selections of actions. By contrast, in the bandit feedback model, only the function value of selected decisions, i.e., 
+
+f t(∪Ii=1 Sti ), can be observed, leading to a more challenging setup for the decision-making of agents. Although the agents have no knowledge of f t(·) when selecting Sti , they may exploit previously revealed functions to guide their decisions. The problem where the sequence {f t(·)}1≤t≤T is arbitrary is often referred to as an adversarial online setting [17]. In this setting, the goal of agents is to cooperatively minimize the adversarial cumulative regret given by 
+
+RT := (1 − 1/e ) · max 
+
+> S∈I
+> T
+
+X
+
+> t=1
+
+f t(S) −
+
+> T
+
+X
+
+> t=1
+
+f t(∪Ii=1 Sti ). (2) The notion of regret in (2) is defined with respect to a joint reward f t(∪Ii=1 Sti ) received by all agents. Such a reward model has been widely used by many works on the distributed submodular maximization problem, see e.g., [8, 11, 13]. In addition, the factor 1 − 1/e in (2) is due to the 
+
+NP -hardness of the standard submodular maximization problem and therefore only approximate solutions can be expected in general by algorithms running in reasonable time [4]. 4Moreover, we consider that the communication topology of the I-agent network is modeled by a time-invariant undirected graph G := {N , E} where N := [ I] and E ⊂ N × N denote the sets of nodes and edges, respectively. The agent i receives information from the agent j if (i, j ) ∈ E .Particularly, we let Ni := {j ∈ [I] | (i, j ) ∈ E} represent the (in-)neighborhood of the agent i, i.e., the set of agents that can send information to the i-th agent directly. In addition, it is also assumed that the undirected graph G is connected , i.e., every agent i can receive information from all others through a path. We denote by d(G) the diameter of G, i.e., the greatest shortest-path distance over all pairs of agents (i, j ). Due to the connectedness of G, it is easy to verify that d(G) ≤ I.
+
+2.2 Multi-Linear Extension 
+
+To achieve the tightest approximation bound for solving the classical submodular maximization problems, a suite of well-studied methods uses the notion of multi-linear extension [26]. To provide a formal definition of the multi-linear extension of a submodular set function, let us assume without loss of any generality that the ground set is given by A = {1, 2, · · · , N } and the local subsets 
+
+Ai’s contain consecutive integers and are ordered such that, if Ai = {p, p + 1 , · · · , q }, then one can have p − 1 ∈ A i−1 and q + 1 ∈ A i+1 . Associated with A, we define a continuous variable 
+
+x = [ x(1) , x (2) , · · · , x (N )] ⊤ ∈ [0 , 1] N . Further, we let the i-th block of the vector x be [x]i ∈ [0 , 1] Ni
+
+whose entries are associated with the local subset Ai. Using the notations defined above, we can express the multi-linear extension of each function f t(·) as 
+
+F t(x) := X
+
+> S⊆A
+
+f t(S) · Y
+
+> n∈S
+
+x(n) · Y
+
+> n / ∈S
+
+ 1 − x(n). (3) Corresponding to the partition matroid constraint (1) , we introduce the matroid polytope M ⊆ [0 , 1] N
+
+where 
+
+M := {x ∈ [0 , 1] N | 1⊤ 
+
+> Ni
+
+[x]i ≤ κi, ∀i ∈ [I]}. (4) Similarly, we define the local polytope Mi ⊆ [0 , 1] Ni for each agent i ∈ [I] as 
+
+Mi := {x ∈ [0 , 1] Ni | 1⊤ 
+
+> Ni
+
+x ≤ κi}. (5) It is straightforward to have that M = Q 
+
+> i∈[I]
+
+Mi.The above notion of multi-linear extension transfers the classical submodular maximization problem from the discrete domain to the continuous domain. Precisely, the solution to max S∈I f (S)
+
+is equivalent to solving the following continuous optimization [27], maximize  
+
+> x∈M
+
+F (x). (6) In addition, even if the suboptimal solution ex to (6) is obtained, one can adopt various rounding schemes to recover an approximate discrete solution eS that ensures f ( eS) ≥ F (ex). Instances of such 
+
+lossless methods include pipage rounding [28], central rounding [29], etc. 
+
+2.3 Frank-Wolfe Algorithm and Tracking the Expert 
+
+To solve the maximization problem (6) in the continuous domain, a well-studied method is Frank-Wolfe [30], which performs xk+1 = xk + ηkvk where x0 is initialized as 0 and ηk ∈ R>0 is the 5step-size. Specifically, the updating direction vk ∈ RN can be obtained by maximizing a linear function under constraints, i.e., 
+
+vk = arg max  
+
+> v∈M
+
+⟨v, ∇F (xk)⟩. (7) It has been shown in [31] that the iterates xk produced by Frank-Wolfe can be arbitrarily close to the (1 − 1/e ) approximate solution, i.e., F (xk) → (1 − 1/e )F (x⋆) as k → ∞ where x⋆ denotes the optimal solution to (6). Although the Frank-Wolfe algorithm provides a promising solution method to the continuous optimization (6) , a critical drawback is that it heavily relies on the gradient ∇F (·) during the iterations. However, under the adversarial online setting , one can only have access to the knowledge of function F t(·) after committing to the decisions at this round. Therefore, to perform the Frank-Wolfe update, it is required to first obtain a sequence of approximate solutions to the maximization problem (7) without knowing the gradient information [18]. To resolve the above issue, a natural idea is to use the technique of tracking the expert which has been widely adopted in solving online optimization problems. The expert problem involves an agent selecting actions at ∈ A to maximize the cumulative reward PTt=1 rt(at) over a finite time horizon T ∈ Z≥1. The main challenge of such a problem lies in the fact that the time-varying reward 
+
+rt(·) can be unknown to the agent before committing to the action at, which is analogous to our adversarial online setting. Consequently, to solve this problem, the agent needs to track an expert’s decision, i.e., the action a⋆T ∈ arg max a∈A 
+
+PTt=1 rt(a) leading to the highest cumulative reward in hindsight. Indeed, there have been various approaches proposed in the literature, e.g., Regularized Follow the Leader (RFTL) [19], Follow the Perturbed Leader (FPL) [32], and the online gradient descent [33], which all manage to track the expert. In this work, we specifically adopt the RFTL algorithm, whose performance is guaranteed by the following result (see Theorem 5.1 in [19]): there exists a constant C0 > 0 such that the generated sequence of actions {at}1≤t≤T has 
+
+max 
+
+> a∈A
+> T
+
+X
+
+> t=1
+
+rt(a) −
+
+> T
+
+X
+
+> t=1
+
+E[rt(at)] ≤ C0
+
+√T , (8) where the expectation is taken with respect to the randomness of the generation of at.
+
+3 Algorithm with Full-Information Feedback 
+
+In this section, we first introduce a vanilla version of the distributed online algorithm under the full-information feedback setting, which also establishes analytical tools for the subsequent extensions. 
+
+3.1 Distributed Online Algorithm: A Vanilla Version 
+
+The distributed online algorithm with full-information feedback is outlined in Algorithm 1, which consists of two phases. In the distributed Frank-Wolfe phase, each agent performs a local block-coordinate Frank-Wolfe update (see Line 6) and then reaches a maximum consensus on the local variables xqi (k)’s with its neighbors (see Line 7), thereby building coordination over the network. The online learning phase, inspired by [18], requires only a one-shot gradient per function. Following a random permutation {tq, 1 
+
+> i
+
+, · · · , t q,K i } of the indices within block q ∈ [Q] (see Line 9), each agent applies the lossless rounding on [xqi (K + 1)] i to obtain its discrete decision Sti , which is executed 6for all time-steps within the block q (see Line 11). With an appropriate lossless rounding, e.g., the stochastic pipage rounding [28], the joint action St = ∪i∈[I]Sti is always feasible, i.e., St ∈ I 
+
+for ∀t ∈ [T ], and the global reward f t(St) is received by all agents. The gradients ∇F tq,k i (xqi (k)) 
+
+evaluated along the permutation mimic the stochastic gradient of the block-averaged function 
+
+¯F (·) = 1 /K · PKk=1 F (q−1) K+k(·) (see Line 13), and an averaging technique [34] is adopted to reduce the variance of the gradient estimate dqi (k) (see Line 15). 
+
+Algorithm 1 – Distributed online algorithm (full information feedback) 
+
+Input: Horizon length T ; block size K; number of blocks Q = T /K ; step-size ρk; communication topology G; local constraint Mi. 
+
+> 1:
+
+Each agent i ∈ [I] initializes experts Ei(k), k ∈ [K] for maximizing linear cost over Mi. 
+
+> 2:
+
+for q = 1 , 2, · · · , Q do 
+
+# Distributed Frank-Wolfe Phase  
+
+> 3:
+
+Initialize xqi (1) = 0 and dqi (0) = 0. 
+
+> 4:
+
+for k = 1 , 2, · · · , K do  
+
+> 5:
+
+Let vqi (k) ∈ M i be the output of Ei(k); 
+
+> 6:
+
+Update [xqi (k + 1)] i = [ xqi (k)] i + vqi (k)/K ; 
+
+> 7:
+
+Receive [xqj (k + 1)] i′ from neighbors j ∈ N i, and update 
+
+[xqi (k + 1)] i′ = max 
+
+> j∈N i∪{ i}
+
+[xqj (k + 1)] i′ , ∀i′̸ = i.  
+
+> 8:
+
+end for 
+
+# Online Learning Phase  
+
+> 9:
+
+Let {tq, 1 
+
+> i
+
+, t q, 2 
+
+> i
+
+, · · · , t q,K i } be a random permutation of {(q − 1) K + 1 , (q − 1) K + 2 , · · · , qK }. 
+
+> 10:
+
+for t = ( q − 1) K + 1 , (q − 1) K + 2 , · · · , qK do  
+
+> 11:
+
+Generate and execute the discrete decision Sti by applying the lossless rounding on 
+
+si(t) := [ xqi (K + 1)] i, and receive a global reward f t(St) where St := ∪i∈[I]Sti ; 
+
+> 12:
+
+Observe f t(·) and its multi-linear extension function F t(·); 
+
+> 13:
+
+Find k ∈ [K] such that tq,k i = t, and compute the gradient ∇F t(xqi (k)) . 
+
+> 14:
+
+end for  
+
+> 15:
+
+For k ∈ [K], let dqi (k) = (1 − ρk)dqi (k − 1)+ ρk∇F tq,k i (xqi (k)) , and feed [dqi (k)] i back to Ei(k). 
+
+> 16:
+
+end for 
+
+We note that the required gradient ∇F tq,k i (xqi (k)) can be conceptually obtained under the full-information model, since each agent has full knowledge of f t(·) (or F t(·)). Nevertheless, by the definition of multi-linear extension, evaluating the exact gradient is combinatorial in nature and thus computationally intractable even for moderately large problems. A standard remedy is Monte Carlo sampling [13], which still requires full-information feedback; we relax this requirement in the next section. 
+
+3.2 Regret Analysis 
+
+We first characterize the consensus performance of the distributed Frank-Wolfe phase in the following lemma. 7Lemma 1. Let ¯xq(k) := [xq
+
+> 1
+
+(k)] ⊤ 
+
+> 1
+
+, · · · , [xqI (k)] ⊤
+
+> I
+
+⊤ where xqi (k) is generated by Algorithm 1, the following statements hold for ∀q ∈ [Q] and k ∈ [K + 1] :i) ¯xq(k) ∈ M and xqi (k) ∈ M , ∀i ∈ [I];ii) ∥¯xq(k) − xqi (k)∥ ≤ κd (G)/K , ∀i ∈ [I], κ = PIi=1 κi.Proof. See Appendix I-A. ■
+
+With the aid of Lemma 1, we are now ready to provide the regret bound of Algorithm 1 in the following theorem. Note that we here assume, for simplicity of presentation, that K is an even number. This condition can be relaxed by more involved algebraic calculations. 
+
+Theorem 1. Suppose that the function f t(·), ∀t ∈ [T ] is monotone, submodular, and normalized. Let 
+
+K = T 3/5 and ρk be selected by ρk = 2 /(k + 3) 2/3 for 1 ≤ k ≤ K/ 2 + 1 and ρk = 1 .5/(K − k + 2) 2/3
+
+for K/ 2 + 2 ≤ k ≤ K, then the cumulative regret of Algorithm 1 satisfies 
+
+E[RT ] ≤  C1 + C0I + D2 · T 4/5 +  L2D2/2 + L2κd (G)
+
+> I
+
+X
+
+> i=1
+
+Di
+
+ · T 2/5, (9) 
+
+where C1 = 4 L21 + 32 · (2 L1 + DL 2)2, Di = pmin {2κi, N i}, D =
+
+qPIi=1 D2 
+
+> i
+
+, L1 = 2 √N f max and 
+
+L2 = 4 N f max with f max satisfying max S∈I f t(S) ≤ f max , ∀t ∈ [T ].Proof. See Appendix I-B. ■
+
+4 Algorithm with Bandit Feedback 
+
+In this section, we adapt the algorithm of Sec. 3 to the bandit feedback model and establish its sublinear regret. 
+
+4.1 Distributed Online Bandit Algorithm 
+
+Considering that only bandit feedback is available to the agents, a crucial step for the algorithm development here is to provide a proper estimation of the gradient as required by the previous algorithm. Towards this end, we use the classical one-point gradient estimator [18, 19], which is briefly reviewed as follows. For a function F (·) : RN → R, its δ-smoothed approximation can be defined as bFδ(x) := Ev∼Uni (BN )
+
+F (x + δv) where v ∈ RN is a sample uniformly drawn from the unit ball BN . Then, the gradient of the approximation function is shown to be ∇ bFδ(x) := 
+
+N/δ · Eu∼Uni (SN −1)
+
+F (x + δu)u, where SN −1 denotes the unit sphere (see Lemma 6.4 in [19]). Therefore, the value of N/δ · F (x + δu)u can be applied as a one-point unbiased stochastic estimate of the gradient ∇F (x). It should be noted that, to ensure the feasibility of the sampled point, i.e., 
+
+x + δu ∈ M , the gradient can only be estimated when x is taken from the interior of M. Specifically, a notion of δ-interior of M is defined in [18], i.e., fM := αM + δ · 1N . It is shown (see Lemma 1 in [18]) that x + δu ∈ M holds for ∀x ∈ fM and u ∈ SN −1, if α is chosen as α = 1 − (√N + 1) δ/γ 
+
+where γ > 0 denotes the radius of a ball whose positive orthant is contained in M. Thus, to validate the stochastic gradient estimation, we next restrict x to be in the δ-interior set fM.8Algorithm 2 – Distributed online algorithm (bandit feedback) 
+
+Input: Horizon length T ; block size L; number of blocks Q = T /L ; number of gradient estimation steps per block K ≤ L; step-sizes ρk; communication graph G; constraint Mi; and parameters δ, α. 
+
+> 1:
+
+Each agent i ∈ [I] initializes experts Ei(k), k ∈ [K] for maximizing linear cost over the local constraint fMi := αMi + δ · 1Ni . 
+
+> 2:
+
+for q = 1 , 2, · · · , Q do 
+
+# Distributed Frank-Wolfe Phase  
+
+> 3:
+
+Initialize xqi (1) = δ · 1N and dqi (0) = 0. 
+
+> 4:
+
+for k = 1 , 2, · · · , K do  
+
+> 5:
+
+Let vqi (k) ∈ fMi be the output of Ei(k); 
+
+> 6:
+
+Update 
+
+[xqi (k + 1)] i = [ xqi (k)] i +  vqi (k) − δ · 1Ni
+
+/K ; 
+
+> 7:
+
+Receive [xqj (k + 1)] i′ from neighbors j ∈ N i, and update 
+
+[xqi (k + 1)] i′ = max 
+
+> j∈N i∪{ i}
+
+[xqj (k + 1)] i′ , ∀i′̸ = i.  
+
+> 8:
+
+end for 
+
+# Online Learning Phase  
+
+> 9:
+
+Let {tq, 1 
+
+> i
+
+, t q, 2 
+
+> i
+
+, · · · , t q,L i } be a random permutation of {(q − 1) L + 1 , (q − 1) L + 2 , · · · , qL }. 
+
+> 10:
+
+for t = ( q − 1) L + 1 , (q − 1) L + 2 , · · · , qL do  
+
+> 11:
+
+Generate and execute the discrete decision Sti by applying the lossless rounding on 
+
+si(t) := [ xqi (K + 1)] i, and receive a global reward f t(St) where St := ∪i∈[I]Sti . 
+
+> 12:
+
+if t ∈ { tq, 1 
+
+> i
+
+, t q, 2 
+
+> i
+
+, · · · , t q,K i } then  
+
+> 13:
+
+Find k ∈ [K] such that tq,k i = t, and generate discrete variable X qi (k) by applying 
+
+random rounding on xqi (k) + δuqi (k) where uqi (k) is sampled uniformly from SN −1, i.e., 
+
+uqi (k) ∼ Uni (SN −1); 
+
+> 14:
+
+Receive Ri(k) = f t(X qi (k)) . 
+
+> 15:
+
+end if  
+
+> 16:
+
+end for  
+
+> 17:
+
+For k ∈ [K], let dqi (k) = (1 − ρk)dqi (k − 1)+ ρkNiRi(k)uqi (k)/δ , and feed [dqi (k)] i to Ei(k). 
+
+> 18:
+
+end for 
+
+Applying the above one-point gradient estimator, the distributed online algorithm with bandit feedback is outlined in Algorithm 2. The distributed Frank-Wolfe phase follows that of Algorithm 1, except that the local variable is restricted to the δ-interior fMi := αMi + δ · 1Ni of Mi. In the online learning phase, each block q has length L, and while the global reward f t(St) is received at every time-step (see Line 11), the one-point gradient estimation is performed only at K (out of L) steps (see Lines 13 and 14). The discrete variable X qi (k) is generated by applying the random rounding on the sample xqi (k) + δuqi (k), which ensures the unbiasedness E[f t(X qi (k))] = F (xqi (k) + δuqi (k)) . As before, an averaging technique is applied to dqi (k) for variance reduction (see Line 17). 94.2 Regret Analysis 
+
+Similar to the analysis of Algorithm 1, we here first show the consensus result obtained by the distributed Frank-Wolfe phase in Lemma 2, and then provide the regret bound of Algorithm 2 in Theorem 2. Note that the following Lemma 2 is analogous to Lemma 1 in Sec. 3.2, while the only difference is that the iterates xqi (k) are shown to be in the δ-interior set fM := αM + δ · 1N .
+
+Lemma 2. Let ¯xq(k) := [xq
+
+> 1
+
+(k)] ⊤ 
+
+> 1
+
+, · · · , [xqI (k)] ⊤
+
+> I
+
+⊤ where xqi (k) is generated by Algorithm 2, the following statements hold for ∀q ∈ [Q] and k ∈ [K + 1] :i) ¯xq(k) ∈ fM and xqi (k) ∈ fM, ∀i ∈ [I];ii) ∥¯xq(k) − xqi (k)∥ ≤ ακd (G)/K , ∀i ∈ [I].Proof. See Appendix II-A. ■
+
+Theorem 2. Suppose that the function f t(·), ∀t ∈ [T ] is monotone, submodular, and normalized. Let 
+
+L = T 7/9, K= T 2/3, α = 1 − (√N + 1) δ/γ , δ = T −1/9γ/ (√N + 2) , γ = min i∈[I]
+
+ min {1, κ i/√Ni} ,and ρk = 2 /(k + 3) 2/3 for ∀k ∈ [K], then the cumulative regret of Algorithm 2 satisfies 
+
+E[RT ] ≤
+
+
+
+(1 − 1/e )L1CMCδ + (2 − 1/e )L1Cδ + 3 /4 · C2/C δ + C0I + 3 /4 · D2/C δ
+
+
+
+· T 8/9
+
++ 3 /4 · C3Cδ · T 2/3 + L1κd (G)N
+
+> I
+
+X
+
+> i=1
+
+Di/C δ · T 4/9 + L2D2/2 · T 1/3,
+
+(10) 
+
+where CM = ( √κ/γ + 1) √N + √κ/γ , Cδ = γ/ (√N + 2) , C2 = 2 3
+
+√16 L21N 2, and C3 = 3
+
+√16  2L21 +(2 L1 + 3 DL 2)2.Proof. See Appendix II-B. ■
+
+Theorem 2 shows that Algorithm 2 also achieves sublinear expected regret. Compared to Theo-rem 1, however, the rate degrades to O(T 8/9) as only bandit feedback is available. Before the end of this section, we would also like to add a few remarks regarding the algorithm and its regret analysis. 
+
+Remark 1. Two pieces of information are received as feedback in Algorithm 2 during the iteration. While the reward f t(St) is observed at each time t ∈ [T ], the function value f tq,k i
+
+ X qi (k) is only received at a subset of the time horizon, i.e., for ∀k ∈ [K], q ∈ [Q]. However, it should be noted that the observations of f t(St) are used solely for counting the cumulative reward/regret, but not involved in the algorithmic updates. Therefore, we would like to argue that our algorithm still operates under the bandit feedback setting, in which only the function value at one single queried point is revealed at each iteration. In contrast, the regret analysis in [18] counts f tq,k i
+
+ X qi (k), rather than f t(St), as the reward received by each agent at time t = tq,k i . However, under the conditions in Theorem 2, the two formulations are inherently equivalent, since the resulting difference in cumulative regret is naturally bounded by a sublinear term with respect to T , i.e., PQq=1 
+
+PKk=1 |f tq,k i (Stq,k i )−f tq,k i
+
+ X qi (k)| ≤ O (T 8/9).
+
+Remark 2. Though it has been ensured by Lemma 2 and the definition of fM that xqi (k)+ δuqi (k) ∈ M ,the feasibility of the resulting discrete variable X qi (k) by random rounding, i.e., X qi (k) ∈ I , is not guaranteed. In fact, it is shown in [18] that there is no proper rounding scheme which can 
+
+10 simultaneously preserve the feasibility X qi (k) ∈ I and the unbiasedness of gradient estimation 
+
+E[f t(X qi (k))] = F (xqi (k) + δuqi (k)) . Hence, the so-called responsive bandit algorithm is developed in [18], which requires bandit feedback in the form of function values queried at points that violate the constraint, i.e., X qi (k) /∈ I . We deal with such a sampling violation issue in the next section. 
+
+5 Bounding the Sampling Violation 
+
+In this section, we extend the previous algorithm development by incorporating a bounded stochastic pipage rounding ( B-SPR ) technique. By designing a sequence of progressively relaxed bounds, we show that the probability of occurrence of violating samples vanishes as T → ∞ , and furthermore, the cumulative sampling violation is sublinear in T .
+
+5.1 Bounded Stochastic Pipage Rounding 
+
+The B-SPR scheme, as outlined in Algorithm 3, is a generalized variant of the stochastic pipage rounding method. Precisely, the standard pipage rounding scheme converts any M -dimensional continuous vector x ∈ [0 , 1] M to a discrete one z ∈ { 0, 1}M (given that 1⊤ 
+
+> M
+
+x is an integer). In contrast, our B-SPR scheme, denoted as Rbu 
+
+> bl
+
+(·), generalizes the upper and lower bounds to any fractional numbers bl and bu such that 0 ≤ bl < b u ≤ 1. We show in the following theorem that the promising properties of the stochastic pipage rounding are preserved by the B-SPR procedure. 
+
+Algorithm 3 – Bounded Stochastic Pipage Rounding 
+
+Input: Lower and upper bounds 0 ≤ bl < b u ≤ 1; input vector x ∈ [bl, b u]M . 
+
+> 1:
+
+Initialize y0 = x and τ = 0 . 
+
+> 2:
+
+while there are two entries of yτ in (bl, b u) do  
+
+> 3:
+
+Randomly select yτ (m), y τ (n) ∈ (bl, b u); 
+
+> 4:
+
+Denote ∆τ (m) = min yτ (m) − bl, b u − yτ (n) and ∆τ (n) = min yτ (n) − bl, b u − yτ (m) ; 
+
+> 5:
+
+Perform the randomized swapping: 
+
+yτ +1 (m) = yτ (m) − ∆τ (m),yτ +1 (n) = yτ (n) + ∆ τ (m). w. p. ∆τ (n)∆τ (m) + ∆ τ (n) ;
+
+yτ +1 (m) = yτ (m) + ∆ τ (n),yτ +1 (n) = yτ (n) − ∆τ (n). w. p. ∆τ (m)∆τ (m) + ∆ τ (n) ; 
+
+> 6:
+
+Update yτ +1 (s) = yτ (s), ∀s̸ = m, n ; 
+
+> 7:
+
+Let τ ← τ + 1 and continue.  
+
+> 8:
+
+end while Output: yτ .
+
+Theorem 3. For any integer M ∈ Z≥1 and any input vector x ∈ [bl, b u]M , the B-SPR procedure 
+
+Rbu 
+
+> bl
+
+(·) in Algorithm 3 has to terminate in finite time T ≤ M −1 and the following statements hold for 
+
+z = Rbu 
+
+> bl
+
+(x) ∈ [bl, b u]M : i) 1⊤ 
+
+> M
+
+z = 1⊤ 
+
+> M
+
+x; ii) PMm=1 1{z(m) ∈ (bl, b u)} ≤ 1; and iii) E[F (z)] ≥ F (x)
+
+where the expectation is taken with respect to the stochasticity in Rbu 
+
+> bl
+
+(·) and F (·) is the multi-linear extension of a monotone submodular function. Proof. See Appendix III-A. ■
+
+11 Theorem 3 establishes a few fundamental properties of the B-SPR procedure. First, statement i) verifies that the procedure terminates in finite time while preserving the sum of the input vector. Second, statement ii) ensures that at most one element of the output vector z takes a value other than bl and bu. More importantly, statement iii) shows that, for any multi-linear extension function, the expected function value does not decrease after applying the B-SPR procedure. This property is crucial for the development of algorithms in the sequel. Intuitively, B-SPR mirrors standard stochastic pipage rounding: it repeatedly transfers mass between two fractional coordinates while preserving their sum. The difference is that each coordinate is rounded toward the box [bl, b u] rather than {0, 1}.The swap probabilities are calibrated so that the multi-linear value does not decrease in expectation. This box-valued generalization precisely enables the progressive-bounding mechanism developed next. 
+
+5.2 Distributed Online Algorithm with Progressively Bounded Stochastic Pipage Rounding 
+
+Equipped with the above B-SPR technique, we are now able to tackle the issue of sampling violations as noted in Remark 2. The enhanced distributed online algorithm is outlined in Algorithm 4, in which the distributed Frank-Wolfe phase is integrated with a progressively bounded stochastic pipage rounding ( PB-SPR ) scheme while the online learning phase follows exactly the same steps as in Algorithm 2. The key idea here is to drive the local variable [xqi (k)] i to be as close as possible to the vertex of fMi. To do so, we let the upper bound bu of the PB-SPR procedure increase progressively as bu = δ + αk/K , while the lower bound remains unchanged as bl = δ (see Line 6). Due to the features of the B-SPR scheme in Theorem 3, it holds that 1⊤ 
+
+> Ni
+
+[xqi (k + 1)] i ≤ δN i + ακ ik/K . That is, there are at least Ni − κi elements of the vector [xqi (k + 1)] i whose values are δ. Given that δ
+
+vanishes as the time horizon T → ∞ , it is expected that the probability of generating a violating sample also vanishes accordingly. Before proceeding to the probability analysis, we should highlight two challenges that need to be addressed. First, due to the PB-SPR procedure, the elementwise monotonicity of the local variables, i.e., [xqi (k + 1)] i ⪰ [xqi (k)] i, no longer holds. As a result, the maximum consensus scheme employed in Algorithms 1 and 2 is not applicable in this case. Nevertheless, thanks to the sum-preserving property of B-SPR (see Theorem 3 statement i)), it holds that 1⊤ 
+
+> Ni
+
+[xqi (k + 1)] i ≥ 1⊤ 
+
+> Ni
+
+[xqi (k)] i. As such, we adopt a sum-maximum consensus (see Line 7 in Algorithm 4), whereby each local variable 
+
+[xqi (k + 1)] i′ is updated by selecting, from its neighbors, the vector with the largest aggregate value. More importantly, for the same reason, the discrepancy ∥¯xq(k) − xqi (k)∥ can no longer be bounded as directly as in the previous analysis. Fortunately, we are able to show that the difference between 
+
+xqi (k + 1) and xqi (k) is bounded in expectation by the term O(1 /K ). We next establish such a result in Lemma 3, and then use it to show the desired consensus property in Lemma 4. 
+
+Lemma 3. For any integer M ∈ Z≥1 and k ∈ [K], let ez(k +1) = z(k)+ v(k)/K where v(k) ∈ [0 , α ]M
+
+and z(k) ∈ RM be the output of Rδ+α(k−1) /K δ (·), then it holds 
+
+E
+
+h
+
+∥z(k + 1) − z(k)∥1
+
+i
+
+≤ 2αM 2/K, (11) 
+
+where z(k + 1) = Rδ+αk/K δ
+
+ ez(k + 1)  and the expectation is taken with respect to the randomness in 
+
+Rδ+αk/K δ (·).Proof. See Appendix III-B. ■
+
+12 Algorithm 4 – Distributed online algorithm (bounded violating samples) 
+
+Input: Horizon length T ; block size L; number of blocks Q = T /L ; number of gradient estimation steps per block K ≤ L; step-sizes ρk; communication graph G; constraint Mi; and parameters δ, α . 
+
+> 1:
+
+Each agent i ∈ [I] initializes experts Ei(k), k ∈ [K] for maximizing linear cost over the local constraint fMi := αMi + δ · 1Ni . 
+
+> 2:
+
+for q = 1 , 2, · · · , Q do 
+
+# Distributed Frank-Wolfe Phase  
+
+> 3:
+
+Initialize xqi (1) = δ · 1N and dqi (0) = 0. 
+
+> 4:
+
+for k = 1 , 2, · · · , K do  
+
+> 5:
+
+Let vqi (k) ∈ fMi be the output of Ei(k); 
+
+> 6:
+
+Update xqi (k + 1)  
+
+> i
+
+= Rδ+αk/K δ
+
+xqi (k) 
+
+> i
+
++  vqi (k) − δ · 1Ni
+
+/K 
+
+
+
+; 
+
+> 7:
+
+Receive xqj (k + 1)  
+
+> i′
+
+from neighbors j ∈ N i and update 
+
+xqi (k + 1)  
+
+> i′
+
+= xqj⋆ (k + 1)  
+
+> i′
+
+, ∀i′̸ = i, 
+
+where j⋆ ∈ arg max j∈N i∪{ i} 1⊤
+
+> Ni′
+
+xqj (k + 1)  
+
+> i′
+
+. 
+
+> 8:
+
+end for 
+
+# Online Learning Phase  
+
+> 9:
+
+Execute the steps as Lines 9–17 in Algorithm 2.  
+
+> 10:
+
+end for Lemma 4. Let ¯xq(k) := [xq
+
+> 1
+
+(k)] ⊤ 
+
+> 1
+
+, · · · , [xqI (k)] ⊤
+
+> I
+
+⊤ where xqi (k) is generated by Algorithm 4, the following statements hold for ∀q ∈ [Q] and k ∈ [K + 1] :i) ¯xq(k) ∈ fM and xqi (k) ∈ fM, ∀i ∈ [I];ii) E∥¯xq(k) − xqi (k)∥ ≤ 2αN 2d(G)/K , ∀i ∈ [I].Proof. See Appendix III-C. ■
+
+With the help of the consensus result in Lemma 4, we are now ready to show the cumulative regret bound of Algorithm 4 in the following theorem. 
+
+Theorem 4. Under the same conditions in Theorem 2, the expected cumulative regret of Algorithm 4 satisfies 
+
+E[RT ] ≤
+
+
+
+(1 − 1/e )L1CMCδ + (2 − 1/e )L1Cδ + 3 /4 · C2/C δ + C0I + 3 /4 · D2/C δ
+
+
+
+· T 8/9
+
++ 3 /4 · C3Cδ · T 2/3 + 2 L1N 3d(G)
+
+> I
+
+X
+
+> i=1
+
+Di/C δ · T 4/9 + L2D2/2 · T 1/3.
+
+(12) 
+
+Proof. See Appendix III-D. ■
+
+It has been shown by Theorem 4 that Algorithm 4 retains the same O(T 8/9) regret rate as Algorithm 2 in Theorem 2. Compared to (10) , the only difference is the second last term of (12) ,13 which reflects the consensus result of PB-SPR procedure (see Lemma 4 statement ii)). Since this term grows as O(T 4/9), it is non-dominant and the incorporation of PB-SPR does not compromise the regret bound. We next show that, thanks to PB-SPR , the probability of sampling violation vanishes as T → ∞ .
+
+Theorem 5. Under the same conditions in Theorem 2, the probability of a violating sample for each agent i ∈ [I] at each step of Algorithm 4 is bounded by 
+
+P
+
+
+
+X qi (k) /∈ I 
+
+
+
+≤ 2( N −κ)Cδ · T −1/9, ∀k ∈ [K], q ∈ [Q]. (13) 
+
+Furthermore, the cumulative sampling violation satisfies 
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+E
+
+h
+
+1X qi (k) /∈ I 
+
+i
+
+≤ 2( N − κ)Cδ · T 7/9. (14) 
+
+Proof. See Appendix III-E. ■
+
+Theorem 5 shows that, for each agent i ∈ [I], the probability of generating a violating sample at each step vanishes at the rate O(T −1/9), so the cumulative sampling violation grows sublinearly as 
+
+O(T 7/9). Since sampling occurs only at K out of L steps per block, with K = T 2/3 and Q = T 2/9
+
+the cumulative violation would be naturally bounded by O(T 8/9); the vanishing violation probability in (13) improves this to O(T 7/9) as in (14) . Moreover, as shown next, T 7/9 also serves as a lower bound in certain scenarios, implying that the bound (14) is nearly optimal and not improvable under certain conditions. 
+
+Proposition 1. Suppose that 1⊤
+
+> Ni
+
+vqi (k) = δN i + ακ i, then for any operator P(·) : [ δ, α + δ]Ni →
+
+[δ, α + δ]Ni with the sum-preserving property such that 
+
+xqi (k + 1)  
+
+> i
+
+= P
+
+xqi (k) 
+
+> i
+
++  vqi (k) − δ · 1Ni
+
+/K 
+
+
+
+, (15) 
+
+the cumulative sampling violation satisfies 
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+E
+
+h
+
+1X qi (k) /∈ I 
+
+i
+
+≥ Ω( T 7/9). (16) 
+
+Proof. See Appendix III-F. ■
+
+It has been shown in Proposition 1 that, under the condition 1⊤
+
+> Ni
+
+vqi (k) = δN i + ακ i and for any sum-preserving operator P(·) used to replace PB-SPR in Algorithm 4, the cumulative sampling violation is bounded by Ω( T 7/9). It is worth noting that 1⊤
+
+> Ni
+
+vqi (k) = δN i + ακ i often holds due to the nature of Frank-Wolfe. To elaborate on this, recall in (7) that the vector vqi (k) is obtained by maximizing a linear function under the polytope constraint. Hence, vqi (k) typically corresponds to an extreme point of fMi, which naturally satisfies the condition as considered in Proposition 1. In fact, when considering the full-information feedback model as discussed in Sec. 3, the gradient 
+
+∇F t(·) is componentwise nonnegative, making the resulting vector vqi (k) readily satisfy the above condition. 14 6 Numerical Example 
+
+In this section, we evaluate the performance of the proposed distributed online algorithms through numerical examples. We consider the multi-agent information harvesting problem studied in [13]. Specifically, let D ⊂ R2 denote a set of information sources and B ⊂ R2 denote a set of information retrieval points. A team of I agents is deployed, where each agent i is allowed to install at most 
+
+κi ∈ Z>0 information harvesting devices at locations selected from its candidate subset Bi ⊂ B .The objective of agents is to determine the device deployment so as to minimize the aggregate distance between all information sources and devices, which is equivalent to maximizing a normalized monotone submodular function [13]. 34
+
+1 2
+
+<latexit sha1_base64="Obdh7bwpwnWbtJ992V486mTwA/0=">AAACFHicbVBNS8MwGE79nPOr6tFLcAgDZbRjTC/C0IvHCe4D1lLSLN3C0rQkqTBKf4QX/4oXD4p49eDNf2O69aCbLyTvw/O8L8nz+DGjUlnWt7Gyura+sVnaKm/v7O7tmweHXRklApMOjlgk+j6ShFFOOooqRvqxICj0Gen5k5tc7z0QIWnE79U0Jm6IRpwGFCOlKc88c0Kkxhix9Drz6lfQSYVXP4fCa+ZXalvZvDcyJ/PMilWzZgWXgV2ACiiq7ZlfzjDCSUi4wgxJObCtWLkpEopiRrKyk0gSIzxBIzLQkKOQSDedmcrgqWaGMIiEPlzBGft7I0WhlNPQ15O5Bbmo5eR/2iBRwaWbUh4ninA8fyhIGFQRzBOCQyoIVmyqAcKC6r9CPEYCYaVzLOsQ7EXLy6Bbr9nNWvOuUWlVizhK4BicgCqwwQVogVvQBh2AwSN4Bq/gzXgyXox342M+umIUO0fgTxmfP6pKnJ4=</latexit> 
+
+B2 = {r2, r 6, r 10 , r 14 }
+
+<latexit sha1_base64="+LrpNOumM5htzAepWvgdZ/QQ/no=">AAACFHicbVBNS8MwGE79nPOr6tFLcAgDZbRONy/C0IvHCe4D1lLSLNvC0rQkqTBKf4QX/4oXD4p49eDNf2O69aCbLyTvw/O8L8nz+BGjUlnWt7G0vLK6tl7YKG5ube/smnv7bRnGApMWDlkouj6ShFFOWooqRrqRICjwGen445tM7zwQIWnI79UkIm6AhpwOKEZKU5554gRIjTBiyXXqVa+gkwivegqFV8+uxLbTWb9IndQzS1bFmhZcBHYOSiCvpmd+Of0QxwHhCjMkZc+2IuUmSCiKGUmLTixJhPAYDUlPQ44CIt1kaiqFx5rpw0Eo9OEKTtnfGwkKpJwEvp7MLMh5LSP/03qxGly6CeVRrAjHs4cGMYMqhFlCsE8FwYpNNEBYUP1XiEdIIKx0jkUdgj1veRG0zyp2rVK7Oy81ynkcBXAIjkAZ2KAOGuAWNEELYPAInsEreDOejBfj3fiYjS4Z+c4B+FPG5w+yM5yj</latexit> 
+
+B3 = {r3, r 7, r 11 , r 15 }
+
+<latexit sha1_base64="tuim6SW31mPLGHrthx76Yr4HdzQ=">AAAB83icbVBNS8NAEJ3Ur1q/qh69LBahp5KIVC9CwYvHCvYDmlAm2227dJMsuxuhhP4NLx4U8eqf8ea/cdvmoK0PBh7vzTAzL5SCa+O6305hY3Nre6e4W9rbPzg8Kh+ftHWSKspaNBGJ6oaomeAxaxluBOtKxTAKBeuEk7u533liSvMkfjRTyYIIRzEfcorGSr4/QSmx75Fb4vXLFbfmLkDWiZeTCuRo9stf/iChacRiQwVq3fNcaYIMleFUsFnJTzWTSCc4Yj1LY4yYDrLFzTNyYZUBGSbKVmzIQv09kWGk9TQKbWeEZqxXvbn4n9dLzfAmyHgsU8Niulw0TAUxCZkHQAZcMWrE1BKkittbCR2jQmpsTCUbgrf68jppX9a8eq3+cFVpVPM4inAG51AFD66hAffQhBZQkPAMr/DmpM6L8+58LFsLTj5zCn/gfP4AY9KQig==</latexit> 
+
+1 = 1 
+
+<latexit sha1_base64="tp/nbee47Wv8X1BUpqXWS3f0reA=">AAAB83icbVBNS8NAEJ3Ur1q/qh69LBahp5JIqV6EghePFWwtNKFMttt26SZZdjdCCf0bXjwo4tU/481/47bNQVsfDDzem2FmXigF18Z1v53CxubW9k5xt7S3f3B4VD4+6egkVZS1aSIS1Q1RM8Fj1jbcCNaVimEUCvYYTm7n/uMTU5on8YOZShZEOIr5kFM0VvL9CUqJ/Tq5IV6/XHFr7gJknXg5qUCOVr/85Q8SmkYsNlSg1j3PlSbIUBlOBZuV/FQziXSCI9azNMaI6SBb3DwjF1YZkGGibMWGLNTfExlGWk+j0HZGaMZ61ZuL/3m91Ayvg4zHMjUspstFw1QQk5B5AGTAFaNGTC1Bqri9ldAxKqTGxlSyIXirL6+TzmXNa9Qa9/VKs5rHUYQzOIcqeHAFTbiDFrSBgoRneIU3J3VenHfnY9lacPKZU/gD5/MHaGqQjQ==</latexit> 
+
+4 = 1 
+
+<latexit sha1_base64="79mjIBwhsW1Pi0cWLnKWTf7bWno=">AAAB83icbVBNS8NAEJ3Ur1q/qh69LBahp5IUqV6EghePFWwtNKFMttt26SZZdjdCCf0bXjwo4tU/481/47bNQVsfDDzem2FmXigF18Z1v53CxubW9k5xt7S3f3B4VD4+6egkVZS1aSIS1Q1RM8Fj1jbcCNaVimEUCvYYTm7n/uMTU5on8YOZShZEOIr5kFM0VvL9CUqJ/Tq5IV6/XHFr7gJknXg5qUCOVr/85Q8SmkYsNlSg1j3PlSbIUBlOBZuV/FQziXSCI9azNMaI6SBb3DwjF1YZkGGibMWGLNTfExlGWk+j0HZGaMZ61ZuL/3m91Ayvg4zHMjUspstFw1QQk5B5AGTAFaNGTC1Bqri9ldAxKqTGxlSyIXirL6+TTr3mNWqN+8tKs5rHUYQzOIcqeHAFTbiDFrSBgoRneIU3J3VenHfnY9lacPKZU/gD5/MHZVqQiw==</latexit> 
+
+2 = 1 
+
+<latexit sha1_base64="w6d3vrs9jhmR5l+Bh3cXYvNbcLQ=">AAAB83icbVBNS8NAEJ34WetX1aOXxSL0VBKV6kUoePFYwX5AE8pku2mXbpJldyOU0r/hxYMiXv0z3vw3btsctPXBwOO9GWbmhVJwbVz321lb39jc2i7sFHf39g8OS0fHLZ1mirImTUWqOiFqJnjCmoYbwTpSMYxDwdrh6G7mt5+Y0jxNHs1YsiDGQcIjTtFYyfdHKCX2Lskt8Xqlslt15yCrxMtJGXI0eqUvv5/SLGaJoQK17nquNMEEleFUsGnRzzSTSEc4YF1LE4yZDibzm6fk3Cp9EqXKVmLIXP09McFY63Ec2s4YzVAvezPxP6+bmegmmPBEZoYldLEoygQxKZkFQPpcMWrE2BKkittbCR2iQmpsTEUbgrf88ippXVS9WrX2cFWuV/I4CnAKZ1ABD66hDvfQgCZQkPAMr/DmZM6L8+58LFrXnHzmBP7A+fwBZuKQjA==</latexit> 
+
+3 = 1 
+
+<latexit sha1_base64="uwRoyrueQ5pVwHx33VPJ1DlZTo0=">AAACEXicbVDLSgMxFM34rPU16tJNsAhdSJn4qLoQim5cVrAP6AxDJs20oZkHSUYow/yCG3/FjQtF3Lpz59+YaWehrQdyOZxzL7n3eDFnUlnWt7GwuLS8slpaK69vbG5tmzu7bRklgtAWiXgkuh6WlLOQthRTnHZjQXHgcdrxRje533mgQrIovFfjmDoBHoTMZwQrLblm1Q6wGhLM0+vMRVfQToWLjqBwz/JymZcUnWR25poVq2ZNAOcJKkgFFGi65pfdj0gS0FARjqXsIStWToqFYoTTrGwnksaYjPCA9jQNcUClk04uyuChVvrQj4R+oYIT9fdEigMpx4GnO/P95ayXi/95vUT5F07KwjhRNCTTj/yEQxXBPB7YZ4ISxceaYCKY3hWSIRaYKB1iWYeAZk+eJ+3jGqrX6nenlUa1iKME9sEBqAIEzkED3IImaAECHsEzeAVvxpPxYrwbH9PWBaOY2QN/YHz+AFUnm1w=</latexit> 
+
+B1 = {r1, r 5, r 9, r 13 }
+
+<latexit sha1_base64="nKzOL2cXHcnt6aqUWViH/ON5oXc=">AAACFHicbVBNS8MwGE7n15xfVY9egkMYKKMdY+4iDL14nOA+YC0lzbItLE1Lkgqj9Ed48a948aCIVw/e/DemWw+6+ULyPjzP+5I8jx8xKpVlfRuFtfWNza3idmlnd2//wDw86sowFph0cMhC0feRJIxy0lFUMdKPBEGBz0jPn95keu+BCElDfq9mEXEDNOZ0RDFSmvLMcydAaoIRS65Tr34FnUR49QsovGZ2JXYtXfRG6qSeWbaq1rzgKrBzUAZ5tT3zyxmGOA4IV5ghKQe2FSk3QUJRzEhacmJJIoSnaEwGGnIUEOkmc1MpPNPMEI5CoQ9XcM7+3khQIOUs8PVkZkEuaxn5nzaI1ajpJpRHsSIcLx4axQyqEGYJwSEVBCs20wBhQfVfIZ4ggbDSOZZ0CPay5VXQrVXtRrVxVy+3KnkcRXACTkEF2OAStMAtaIMOwOARPINX8GY8GS/Gu/GxGC0Y+c4x+FPG5w+6HJyo</latexit> 
+
+B4 = {r4, r 8, r 12 , r 16 }
+
+(a) 4-agent network x-coordinate
+
+0 2 4 6 8 10
+
+> y-coordinate
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10
+
+Retrieval point
+
+Info sources Dt3
+
+Info sources Dt1
+
+Info sources Dt4
+
+Info sources Dt2
+
+<latexit sha1_base64="J32VHvfbZUqSCfbtUva3TU0g914=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5KIVI8FLx4r2g9oQ9lsJ+3SzSbsboQS+hO8eFDEq7/Im//GbZuDtj4YeLw3w8y8IBFcG9f9dgobm1vbO8Xd0t7+weFR+fikreNUMWyxWMSqG1CNgktsGW4EdhOFNAoEdoLJ7dzvPKHSPJaPZpqgH9GR5CFn1FjpQQ28Qbni1twFyDrxclKBHM1B+as/jFkaoTRMUK17npsYP6PKcCZwVuqnGhPKJnSEPUsljVD72eLUGbmwypCEsbIlDVmovycyGmk9jQLbGVEz1qveXPzP66UmvPEzLpPUoGTLRWEqiInJ/G8y5AqZEVNLKFPc3krYmCrKjE2nZEPwVl9eJ+3Lmlev1e+vKo1qHkcRzuAcquDBNTTgDprQAgYjeIZXeHOE8+K8Ox/L1oKTz5zCHzifP/49jYs=</latexit> 
+
+r1 <latexit sha1_base64="IdY87ZmWAOQSsro0TXPmMgY3DtE=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5IUqR4LXjxWtLXQhrLZTtqlm03Y3Qgl9Cd48aCIV3+RN/+N2zYHbX0w8Hhvhpl5QSK4Nq777RQ2Nre2d4q7pb39g8Oj8vFJR8epYthmsYhVN6AaBZfYNtwI7CYKaRQIfAwmN3P/8QmV5rF8MNME/YiOJA85o8ZK92pQH5Qrbs1dgKwTLycVyNEalL/6w5ilEUrDBNW657mJ8TOqDGcCZ6V+qjGhbEJH2LNU0gi1ny1OnZELqwxJGCtb0pCF+nsio5HW0yiwnRE1Y73qzcX/vF5qwms/4zJJDUq2XBSmgpiYzP8mQ66QGTG1hDLF7a2EjamizNh0SjYEb/XlddKp17xGrXF3WWlW8ziKcAbnUAUPrqAJt9CCNjAYwTO8wpsjnBfn3flYthacfOYU/sD5/AH/wY2M</latexit> 
+
+r2
+
+<latexit sha1_base64="b3jate6zqpok/caBQs+ygi3fm4g=">AAAB6nicbVBNS8NAEJ34WetX1aOXxSL0VBKV6rHgxWNF+wFtKJvtpF262YTdjVBCf4IXD4p49Rd589+4bXPQ1gcDj/dmmJkXJIJr47rfztr6xubWdmGnuLu3f3BYOjpu6ThVDJssFrHqBFSj4BKbhhuBnUQhjQKB7WB8O/PbT6g0j+WjmSToR3QoecgZNVZ6UP3LfqnsVt05yCrxclKGHI1+6as3iFkaoTRMUK27npsYP6PKcCZwWuylGhPKxnSIXUsljVD72fzUKTm3yoCEsbIlDZmrvycyGmk9iQLbGVEz0sveTPzP66YmvPEzLpPUoGSLRWEqiInJ7G8y4AqZERNLKFPc3krYiCrKjE2naEPwll9eJa2Lqler1u6vyvVKHkcBTuEMKuDBNdThDhrQBAZDeIZXeHOE8+K8Ox+L1jUnnzmBP3A+fwABVI2N</latexit> 
+
+r3
+
+<latexit sha1_base64="vaVdcYaya2Q9viJY9nHbNQngAGE=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5JIqR4LXjxWtLXQhrLZTtqlm03Y3Qgl9Cd48aCIV3+RN/+N2zYHbX0w8Hhvhpl5QSK4Nq777RQ2Nre2d4q7pb39g8Oj8vFJR8epYthmsYhVN6AaBZfYNtwI7CYKaRQIfAwmN3P/8QmV5rF8MNME/YiOJA85o8ZK92pQH5Qrbs1dgKwTLycVyNEalL/6w5ilEUrDBNW657mJ8TOqDGcCZ6V+qjGhbEJH2LNU0gi1ny1OnZELqwxJGCtb0pCF+nsio5HW0yiwnRE1Y73qzcX/vF5qwms/4zJJDUq2XBSmgpiYzP8mQ66QGTG1hDLF7a2EjamizNh0SjYEb/XlddK5rHmNWuOuXmlW8ziKcAbnUAUPrqAJt9CCNjAYwTO8wpsjnBfn3flYthacfOYU/sD5/AEC2I2O</latexit> 
+
+r4
+
+<latexit sha1_base64="BVTeLLBytDbPbtAvZAulnptOX6I=">AAAB6nicbVBNS8NAEJ34WetX1aOXxSL0VBLR6rHgxWNF+wFtKJvtpF262YTdjVBCf4IXD4p49Rd589+4bXPQ1gcDj/dmmJkXJIJr47rfztr6xubWdmGnuLu3f3BYOjpu6ThVDJssFrHqBFSj4BKbhhuBnUQhjQKB7WB8O/PbT6g0j+WjmSToR3QoecgZNVZ6UP2rfqnsVt05yCrxclKGHI1+6as3iFkaoTRMUK27npsYP6PKcCZwWuylGhPKxnSIXUsljVD72fzUKTm3yoCEsbIlDZmrvycyGmk9iQLbGVEz0sveTPzP66YmvPEzLpPUoGSLRWEqiInJ7G8y4AqZERNLKFPc3krYiCrKjE2naEPwll9eJa2Lqler1u4vy/VKHkcBTuEMKuDBNdThDhrQBAZDeIZXeHOE8+K8Ox+L1jUnnzmBP3A+fwAEXI2P</latexit> 
+
+r5 <latexit sha1_base64="hGkhss6XxY2dCaPpa0GWqYJfWno=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5KIVI8FLx4r2g9oQ9lsN+3SzSbsToQS+hO8eFDEq7/Im//GbZuDtj4YeLw3w8y8IJHCoOt+O4WNza3tneJuaW//4PCofHzSNnGqGW+xWMa6G1DDpVC8hQIl7yaa0yiQvBNMbud+54lrI2L1iNOE+xEdKREKRtFKD3pQH5Qrbs1dgKwTLycVyNEclL/6w5ilEVfIJDWm57kJ+hnVKJjks1I/NTyhbEJHvGepohE3frY4dUYurDIkYaxtKSQL9fdERiNjplFgOyOKY7PqzcX/vF6K4Y2fCZWkyBVbLgpTSTAm87/JUGjOUE4toUwLeythY6opQ5tOyYbgrb68TtqXNa9eq99fVRrVPI4inME5VMGDa2jAHTShBQxG8Ayv8OZI58V5dz6WrQUnnzmFP3A+fwAF4I2Q</latexit> 
+
+r6<latexit sha1_base64="Wm7C3HSAlXcn1+aStHf2G9/MEK4=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5KItB4LXjxWtB/QhrLZTtqlm03Y3Qgl9Cd48aCIV3+RN/+N2zYHrT4YeLw3w8y8IBFcG9f9cgobm1vbO8Xd0t7+weFR+fiko+NUMWyzWMSqF1CNgktsG24E9hKFNAoEdoPpzcLvPqLSPJYPZpagH9Gx5CFn1FjpXg0bw3LFrblLkL/Ey0kFcrSG5c/BKGZphNIwQbXue25i/Iwqw5nAeWmQakwom9Ix9i2VNELtZ8tT5+TCKiMSxsqWNGSp/pzIaKT1LApsZ0TNRK97C/E/r5+a8NrPuExSg5KtFoWpICYmi7/JiCtkRswsoUxxeythE6ooMzadkg3BW3/5L+lc1rx6rX53VWlW8ziKcAbnUAUPGtCEW2hBGxiM4Qle4NURzrPz5ryvWgtOPnMKv+B8fAMHZI2R</latexit> 
+
+r7 <latexit sha1_base64="4xmoErXCBAuafb3gKF+N04ZDFLY=">AAAB6nicbVBNS8NAEJ3Ur1q/qh69LBahp5KI1B4LXjxWtB/QhrLZTtqlm03Y3Qgl9Cd48aCIV3+RN/+N2zYHrT4YeLw3w8y8IBFcG9f9cgobm1vbO8Xd0t7+weFR+fiko+NUMWyzWMSqF1CNgktsG24E9hKFNAoEdoPpzcLvPqLSPJYPZpagH9Gx5CFn1FjpXg0bw3LFrblLkL/Ey0kFcrSG5c/BKGZphNIwQbXue25i/Iwqw5nAeWmQakwom9Ix9i2VNELtZ8tT5+TCKiMSxsqWNGSp/pzIaKT1LApsZ0TNRK97C/E/r5+asOFnXCapQclWi8JUEBOTxd9kxBUyI2aWUKa4vZWwCVWUGZtOyYbgrb/8l3Qua169Vr+7qjSreRxFOINzqIIH19CEW2hBGxiM4Qle4NURzrPz5ryvWgtOPnMKv+B8fAMI6I2S</latexit> 
+
+r8
+
+<latexit sha1_base64="cfoGYWoG46As+yom8IZ5gvCRuUw=">AAAB6nicbVBNS8NAEJ34WetX1aOXxSL0VBKRqreCF48V7Qe0oWy2k3bpZhN2N0IJ/QlePCji1V/kzX/jts1BWx8MPN6bYWZekAiujet+O2vrG5tb24Wd4u7e/sFh6ei4peNUMWyyWMSqE1CNgktsGm4EdhKFNAoEtoPx7cxvP6HSPJaPZpKgH9Gh5CFn1FjpQfVv+qWyW3XnIKvEy0kZcjT6pa/eIGZphNIwQbXuem5i/Iwqw5nAabGXakwoG9Mhdi2VNELtZ/NTp+TcKgMSxsqWNGSu/p7IaKT1JApsZ0TNSC97M/E/r5ua8NrPuExSg5ItFoWpICYms7/JgCtkRkwsoUxxeythI6ooMzadog3BW355lbQuql6tWru/LNcreRwFOIUzqIAHV1CHO2hAExgM4Rle4c0Rzovz7nwsWtecfOYE/sD5/AEKbI2T</latexit> 
+
+r9 <latexit sha1_base64="SzhW2lZzrQpBZpiC65A4VGTfBiw=">AAAB7XicbVDLSgNBEOyNrxhfUY9eBoOQU9gViR4DXjxGMA9IljA7mU3GzGOZmRXCkn/w4kERr/6PN//GSbIHTSxoKKq66e6KEs6M9f1vr7CxubW9U9wt7e0fHB6Vj0/aRqWa0BZRXOluhA3lTNKWZZbTbqIpFhGnnWhyO/c7T1QbpuSDnSY0FHgkWcwItk5q60EW+LNBueLX/AXQOglyUoEczUH5qz9UJBVUWsKxMb3AT2yYYW0Z4XRW6qeGJphM8Ij2HJVYUBNmi2tn6MIpQxQr7UpatFB/T2RYGDMVkesU2I7NqjcX//N6qY1vwozJJLVUkuWiOOXIKjR/HQ2ZpsTyqSOYaOZuRWSMNSbWBVRyIQSrL6+T9mUtqNfq91eVRjWPowhncA5VCOAaGnAHTWgBgUd4hld485T34r17H8vWgpfPnMIfeJ8/Mj6O0Q==</latexit> 
+
+r10 
+
+<latexit sha1_base64="WRQ2nLM11FNO4HmKSecKDwFfF9w=">AAAB7XicbVBNSwMxEJ2tX7V+VT16CRahp7IRqR4LXjxWsB/QLiWbZtvYbLIkWaEs/Q9ePCji1f/jzX9j2u5BWx8MPN6bYWZemAhurO9/e4WNza3tneJuaW//4PCofHzSNirVlLWoEkp3Q2KY4JK1LLeCdRPNSBwK1gknt3O/88S04Uo+2GnCgpiMJI84JdZJbT3IMJ4NyhW/5i+A1gnOSQVyNAflr/5Q0TRm0lJBjOlhP7FBRrTlVLBZqZ8alhA6ISPWc1SSmJkgW1w7QxdOGaJIaVfSooX6eyIjsTHTOHSdMbFjs+rNxf+8XmqjmyDjMkktk3S5KEoFsgrNX0dDrhm1YuoIoZq7WxEdE02odQGVXAh49eV10r6s4Xqtfn9VaVTzOIpwBudQBQzX0IA7aEILKDzCM7zCm6e8F+/d+1i2Frx85hT+wPv8ATPDjtI=</latexit> 
+
+r11 <latexit sha1_base64="HhDOTVFpAc945nl/3Jd7p6ZuL20=">AAAB7XicbVBNSwMxEJ34WetX1aOXYBF6KrtFqseCF48V7Ae0S8mm2TY2myxJVihL/4MXD4p49f9489+YtnvQ1gcDj/dmmJkXJoIb63nfaGNza3tnt7BX3D84PDounZy2jUo1ZS2qhNLdkBgmuGQty61g3UQzEoeCdcLJ7dzvPDFtuJIPdpqwICYjySNOiXVSWw8yvzYblMpe1VsArxM/J2XI0RyUvvpDRdOYSUsFMabne4kNMqItp4LNiv3UsITQCRmxnqOSxMwE2eLaGb50yhBHSruSFi/U3xMZiY2ZxqHrjIkdm1VvLv7n9VIb3QQZl0lqmaTLRVEqsFV4/joecs2oFVNHCNXc3YrpmGhCrQuo6ELwV19eJ+1a1a9X6/dX5UYlj6MA53ABFfDhGhpwB01oAYVHeIZXeEMKvaB39LFs3UD5zBn8Afr8ATVIjtM=</latexit> 
+
+r12 
+
+<latexit sha1_base64="pcidlyJ1tgCtpQKWrYI9u4AzsKE=">AAAB7XicbVDLSgNBEOyNrxhfUY9eBoOQU9hViR4DXjxGMDGQLGF2MpuMmccyMyuEJf/gxYMiXv0fb/6Nk2QPmljQUFR1090VJZwZ6/vfXmFtfWNzq7hd2tnd2z8oHx61jUo1oS2iuNKdCBvKmaQtyyynnURTLCJOH6Lxzcx/eKLaMCXv7SShocBDyWJGsHVSW/ez4GLaL1f8mj8HWiVBTiqQo9kvf/UGiqSCSks4NqYb+IkNM6wtI5xOS73U0ASTMR7SrqMSC2rCbH7tFJ05ZYBipV1Ji+bq74kMC2MmInKdAtuRWfZm4n9eN7XxdZgxmaSWSrJYFKccWYVmr6MB05RYPnEEE83crYiMsMbEuoBKLoRg+eVV0j6vBfVa/e6y0qjmcRThBE6hCgFcQQNuoQktIPAIz/AKb57yXrx372PRWvDymWP4A+/zBzbNjtQ=</latexit> 
+
+r13 <latexit sha1_base64="AVN0zX5FcokrkX1kxXGX2TrBnFc=">AAAB7XicbVBNSwMxEJ3Ur1q/qh69BIvQU9kVqR4LXjxWsB/QLiWbZtvYbLIkWaEs/Q9ePCji1f/jzX9j2u5BWx8MPN6bYWZemAhurOd9o8LG5tb2TnG3tLd/cHhUPj5pG5VqylpUCaW7ITFMcMlallvBuolmJA4F64ST27nfeWLacCUf7DRhQUxGkkecEuukth5k/tVsUK54NW8BvE78nFQgR3NQ/uoPFU1jJi0VxJie7yU2yIi2nAo2K/VTwxJCJ2TEeo5KEjMTZItrZ/jCKUMcKe1KWrxQf09kJDZmGoeuMyZ2bFa9ufif10ttdBNkXCapZZIuF0WpwFbh+et4yDWjVkwdIVRzdyumY6IJtS6gkgvBX315nbQva369Vr+/qjSqeRxFOINzqIIP19CAO2hCCyg8wjO8whtS6AW9o49lawHlM6fwB+jzBzhSjtU=</latexit> 
+
+r14 <latexit sha1_base64="jqnBBwN20B8JQWSe8qytl5pvFP8=">AAAB7XicbVDLSgNBEOyNrxhfUY9eBoOQU9gVjR4DXjxGMDGQLGF2MpuMmccyMyuEJf/gxYMiXv0fb/6Nk2QPmljQUFR1090VJZwZ6/vfXmFtfWNzq7hd2tnd2z8oHx61jUo1oS2iuNKdCBvKmaQtyyynnURTLCJOH6Lxzcx/eKLaMCXv7SShocBDyWJGsHVSW/ez4HLaL1f8mj8HWiVBTiqQo9kvf/UGiqSCSks4NqYb+IkNM6wtI5xOS73U0ASTMR7SrqMSC2rCbH7tFJ05ZYBipV1Ji+bq74kMC2MmInKdAtuRWfZm4n9eN7XxdZgxmaSWSrJYFKccWYVmr6MB05RYPnEEE83crYiMsMbEuoBKLoRg+eVV0j6vBfVa/e6i0qjmcRThBE6hCgFcQQNuoQktIPAIz/AKb57yXrx372PRWvDymWP4A+/zBznXjtY=</latexit> 
+
+r15 
+
+<latexit sha1_base64="1r+Eyxy6Z1tbI63OkP7lXqoWj0A=">AAAB7XicbVDLSgNBEOyNrxhfUY9eBoOQU9gViR4DXjxGMA9IljA7mU3GzGOZmRXCkn/w4kERr/6PN//GSbIHTSxoKKq66e6KEs6M9f1vr7CxubW9U9wt7e0fHB6Vj0/aRqWa0BZRXOluhA3lTNKWZZbTbqIpFhGnnWhyO/c7T1QbpuSDnSY0FHgkWcwItk5q60EW1GeDcsWv+QugdRLkpAI5moPyV3+oSCqotIRjY3qBn9gww9oywums1E8NTTCZ4BHtOSqxoCbMFtfO0IVThihW2pW0aKH+nsiwMGYqItcpsB2bVW8u/uf1UhvfhBmTSWqpJMtFccqRVWj+OhoyTYnlU0cw0czdisgYa0ysC6jkQghWX14n7ctaUK/V768qjWoeRxHO4ByqEMA1NOAOmtACAo/wDK/w5invxXv3PpatBS+fOYU/8D5/ADtcjtc=</latexit> 
+
+r16 (b) Info & retrieval points 
+
+Figure 1: Simulation setup: 4 agents connected via a ring graph, where each agent selects at most one retrieval point from its candidate set Bi for device deployment. The retrieval points are partitioned into four clusters. To maximize the overall objective value, agents are encouraged to cooperatively avoid overlap, i.e., to avoid selecting retrieval points from the same cluster. In this simulation, we consider |D| = 1000 information sources and |B| = 16 retrieval points. The positions of information sources and retrieval points are spread over a 10 × 10 region, as shown in Fig. 1(b). To conform with the online problem setting, we allow the configuration of information sources Dt to vary randomly over time t ∈ [T ]. More specifically, at each time t, the set Dt is generated according to a Gaussian kernel whose mean moves continuously within the region over the time horizon. The knowledge of Dt is not revealed to the agents prior to making decisions at the time t. A team of I = 4 agents is employed, whose communication network and local candidate set Bi are shown in Fig. 1(a). Note that all online algorithms implemented in this section apply RFTL [19] as the scheme of tracking the expert. In addition, the cumulative regret eRT is computed against the best decision in hindsight 1, by a brute-force search. 
+
+1The results obtained in this example consistently outperform the (1 − 1/e )-approximate solution. Hence, for a clearer empirical comparison, we compute regret w.r.t. the optimal solution, rather than the (1 − 1/e )-approximate one. 
+
+15 Time horizon T     
+
+> 0200040006000800010000
+> Cumulative regret ~RT
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10#107
+> Algo 1 (full-information)
+> Centralized Meta-FW
+> Algo 2 (bandit w/o B-SPR)
+> Algo 4 (bandit w B-SPR)
+> Responsive Bandit Algo
+
+(a) regret performance against baselines Time horizon T       
+
+> 02000 4000 6000 8000 10000
+> # of sampling violations
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9Algo 2 (bandit w/o B-SPR)
+> Algo 4 (bandit w B-SPR)
+
+(b) # of violating samples per round Time horizon T       
+
+> 02000 4000 6000 8000 10000
+> # of violations (per block)
+> 0
+> 50
+> 100
+> 150
+> 200 Algo 2 (bandit w/o B-SPR)
+> Algo 4 (bandit w B-SPR)
+
+(c) # of violating samples per block 
+
+Figure 2: Performance of the proposed algorithms against centralized baselines: (a) cumulative regrets of the proposed algorithms (all curves are averaged over 20 independent simulation trials); (b) number of violating samples per round t (aggregated over 20 independent trials); (c) cumulative number of violating samples per block q.We first examine the performance of Algorithms 1, 2 and 4, whose cumulative regrets and sampling violation behaviors are shown in Fig. 2. By sampling violation, we mean a gradient-estimation query whose sample is infeasible. We note that such infeasible queries are an unavoidable by-product of the one-point gradient estimator [18], and the role of our PB-SPR scheme is precisely to drive their frequency toward zero. In addition, we also compare the performance of our algorithms against two centralized baselines: i) the classical Meta-Frank-Wolfe, i.e., the centralized counterpart of Algorithm 1; and ii) the responsive bandit algorithm in [18], which operates in a bandit feedback setting where an infeasible query is permitted but earns zero reward. It can be observed from Fig. 2(a) that the cumulative regrets of our algorithms all grow sublinearly with respect to T . As expected, the full-information Algorithm 1 attains the lowest regret, while the bandit Algorithms 2 and 4 incur a moderately larger regret owing to the more restrictive feedback. Importantly, the incorporation of PB-SPR into the bandit algorithm does not compromise the regret performance. In fact, as suggested in Theorem 3, the function value is non-decreasing in expectation after the 
+
+B-SPR operation, which is reflected by a slight improvement of Algorithm 4 over Algorithm 2. In addition, it is also observed from Fig. 2(a) that Algorithm 1 and the centralized Meta-FW achieve essentially coincident regret, which implies that operating over the distributed network incurs negligible loss. Moreover, since the responsive bandit algorithm frequently queries and thus is charged for infeasible samples, it incurs a higher regret than our bandit Algorithms 2 and 4. Most importantly, thanks to PB-SPR , the occurrence of sampling violations is substantially reduced, by roughly 84% on this simulation instance, as shown in Fig. 2(b). As the experts progressively concentrate the iterates towards a vertex, the per-block number of violating samples grows for the standard bandit algorithm, whereas PB-SPR keeps it consistently and increasingly lower, as shown in Fig. 2(c). To further study how the communication graph shapes the behavior of our distributed algorithms, we next vary the number of agents by I ∈ { 4, 8, 12 , 16 , 24 , 32 , 40 } and consider three different network topologies: i) an Erdős–Rényi random graph , which remains well-connected with small diameter; ii) a two-dimensional grid graph with medium diameter; and iii) a ring graph with the largest diameter, as shown in Fig. 1(a). We note that for each instance, the ground set scales as N = 4 I. Hence, a brute-force search for the optimal solution may be intractable, and thus the regret here is measured against an offline greedy benchmark. Besides the regret performance and sampling-violation behavior, we also track the metric of consensus error , which quantifies how closely the agents agree on the 16 Number of agents I            
+
+> 010203040
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Consensus error J
+> #10!3
+> random
+> grid
+> ring(a) consensus error NumberofagentsI
+> 010203040
+> Per-round regret (solid)
+> 200
+> 400
+> 600
+> 800
+> 1000
+> Violation rate (dashed)
+> 0.05
+> 0.1
+> 0.15
+> 0.2
+> 0.25
+> 0.3(b) regret & violation rate
+
+Figure 3: Effect of the communication topology on Algorithm 4 with PB-SPR (all curves are averaged over 10 independent simulation trials): (a) consensus error J , as defined in (17) ; and (b) per-round regret (left axis, solid lines) and sampling violation rate (right axis, dashed lines). global decision. Precisely, the consensus error J is defined by 
+
+J := 1(I − 1) N
+
+> I
+
+X
+
+> j=1
+
+X
+
+> i̸=j
+
+[xqi (K+1)] j − [xqj (K+1)] j 2, (17) evaluated at all executed iterates. By the definition, we know that the consensus error J = 0 if and only if all agents hold the same iterate. The numerical results in Fig. 3 reveal three effects. First, the consensus error is topology-sensitive, and it increases as the diameter of the graph becomes large. Second, the regret is remarkably robust to the topology. Specifically, the per-round regret of the three topologies differs by less than 1% at every instance. This is mainly due to the fact that each agent’s executed reward is dominated by its own block, which it knows exactly, while the topology only delays its estimate of the others’ blocks. Third, the sampling-violation rate is driven by problem scale rather than topology. It rises with I,consistent with the (N − κ) dependence in Theorem 5, with only a mild secondary topology effect. The price of this robustness is that PB-SPR incurs a larger consensus error than the standard bandit method, consistent with the O(N 2/K ) consensus-error term in the analysis. 
+
+7 Conclusion 
+
+This paper studied the distributed submodular maximization problem in the online setting. An algorithmic framework was proposed which accommodates both full-information and bandit feedback models. Sublinear (1 − 1/e )-regret was established in both settings, matching the state-of-the-art centralized rates. To address the sampling violation issue which is inherent to bandit feedback with continuous relaxation, we further developed the B-SPR scheme and proved that the probability of sampling violation vanishes asymptotically. Numerical results validated the effectiveness of our algorithms. Future work will be devoted to developing distributed online algorithms that ensure hard per-round feasibility, as demanded by safety-critical applications. It would be of interest to extend the present framework beyond the partition matroid to more general constraints. 17 References 
+
+[1] Luiz FO Chamon, George J Pappas, and Alejandro Ribeiro. Approximate supermodularity of Kalman filter sensor selection. IEEE Trans. Autom. Control , 66(1):49–63, 2020. [2] Dario Paccagnan and Jason R Marden. Utility design for distributed resource allocation—part ii: Applications to submodular, covering, and supermodular problems. IEEE Trans. Autom. Control , 67(2):618–632, 2021. [3] Lifeng Zhou and Pratap Tokekar. Risk-aware submodular optimization for multirobot coordina-tion. IEEE Trans. Robot. , 38(5):3064–3084, 2022. [4] Uriel Feige. A threshold of ln n for approximating set cover. J. ACM , 45(4):634–652, 1998. [5] George L Nemhauser, Laurence A Wolsey, and Marshall L Fisher. An analysis of approximations for maximizing submodular set functions—I. Math. Program. , 14(1):265–294, 1978. [6] Marshall L Fisher, George L Nemhauser, and Laurence A Wolsey. An analysis of approximations for maximizing submodular set functions—II. In Polyhedral Combinatorics , pages 73–87. Springer, 1978. [7] Brandon Van Over, Bowen Li, Edwin KP Chong, and Ali Pezeshki. A performance bound for the greedy algorithm in a generalized class of string optimization problems. IEEE Trans. Autom. Control , 2025. [8] Bahman Gharesifard and Stephen L Smith. Distributed submodular maximization with limited information. IEEE Trans. Control Netw. Syst. , 5(4):1635–1645, 2017. [9] Joan Vendrell and Solmaz Kia. Optimality gap of decentralized submodular maximization under probabilistic communication. In Proc. IEEE Conf. Decis. Control , pages 5387–5392. IEEE, 2024. [10] Aryan Mokhtari, Hamed Hassani, and Amin Karbasi. Decentralized submodular maximization: Bridging discrete and continuous settings. In Int. Conf. Mach. Learn. , pages 3616–3625, 2018. [11] Bin Du, Kun Qian, Christian Claudel, and Dengfeng Sun. Jacobi-style iteration for distributed submodular maximization. IEEE Trans. Autom. Control , 67(9):4687–4702, 2022. [12] Alexander Robey, Arman Adibi, Brent Schlotfeldt, Hamed Hassani, and George J Pappas. Optimal algorithms for submodular maximization with distributed constraints. In Learn. Dyn. Control , pages 150–162, 2021. [13] Navid Rezazadeh and Solmaz S Kia. Distributed strategy selection: A submodular set function maximization approach. Automatica , 153, 2023. [14] Matthew Streeter and Daniel Golovin. An online algorithm for maximizing submodular functions. 
+
+Adv. Neural Inf. Process. Syst. , 21, 2008. [15] Daniel Golovin, Andreas Krause, and Matthew Streeter. Online submodular maximization under a matroid constraint with application to learning assignments. arXiv preprint arXiv:1407.1082 ,2014. 18 [16] Lin Chen, Hamed Hassani, and Amin Karbasi. Online continuous submodular maximization. In Int. Conf. Artif. Intell. Stat. , pages 1896–1905, 2018. [17] Lin Chen, Christopher Harshaw, Hamed Hassani, and Amin Karbasi. Projection-free online optimization with stochastic gradient: From convexity to submodularity. In Int. Conf. Mach. Learn. , pages 814–823, 2018. [18] Mingrui Zhang, Lin Chen, Hamed Hassani, and Amin Karbasi. Online continuous submodular maximization: From full-information to bandit feedback. Adv. Neural Inf. Process. Syst. , 32, 2019. [19] Elad Hazan et al. Introduction to online convex optimization. Found. Trends Optim. , 2(3-4):157–325, 2016. [20] Qixin Zhang, Zengde Deng, Zaiyi Chen, Haoyuan Hu, and Yu Yang. Stochastic continuous submodular maximization: Boosting via non-oblivious function. In Int. Conf. Mach. Learn. ,pages 26116–26134, 2022. [21] Guanyu Nie, Yididiya Y Nadew, Yanhui Zhu, Vaneet Aggarwal, and Christopher John Quinn. A framework for adapting offline algorithms to solve combinatorial multi-armed bandit problems with bandit feedback. In Int. Conf. Mach. Learn. , pages 26166–26198, 2023. [22] Zongqi Wan, Jialin Zhang, Wei Chen, Xiaoming Sun, and Zhijie Zhang. Bandit multi-linear DR-submodular maximization and its applications on adversarial submodular bandits. In Int. Conf. Mach. Learn. , pages 35491–35524, 2023. [23] Qixin Zhang, Zengde Deng, Xiangru Jian, Zaiyi Chen, Haoyuan Hu, and Yu Yang. Communication-efficient decentralized online continuous DR-submodular maximization. In 
+
+ACM Int. Conf. Inf. Knowl. Manag. , pages 3330–3339, 2023. [24] Zirui Xu, Hongyu Zhou, and Vasileios Tzoumas. Online submodular coordination with bounded tracking regret: Theory, algorithm, and applications to multi-robot coordination. IEEE Robot. Autom. Lett. , 8(4):2261–2268, 2023. [25] Lintao Ye, Bin Du, and Zhi-Wei Liu. Offline and online distributed submodular maximization under a partitioned matroid constraint. In Proc. IEEE Conf. Decis. Control . IEEE, 2025. [26] Jan Vondrák. Optimal approximation for the submodular welfare problem in the value oracle model. In Annu. ACM Symp. Theory Comput. , pages 67–74, 2008. [27] Jan Vondrák. Submodularity and curvature: The optimal algorithm (combinatorial optimization and discrete algorithms). Res. Inst. Math. Sci., Kyoto Univ. , 23:253–266, 2010. [28] Gruia Calinescu, Chandra Chekuri, Martin Pal, and Jan Vondrák. Maximizing a monotone submodular function subject to a matroid constraint. SIAM J. Comput. , 40(6):1740–1766, 2011. [29] Chandra Chekuri, Jan Vondrák, and Rico Zenklusen. Submodular function maximization via the multilinear relaxation and contention resolution schemes. In Annu. ACM Symp. Theory Comput. , pages 783–792, 2011. 19 [30] Marguerite Frank, Philip Wolfe, et al. An algorithm for quadratic programming. Nav. Res. Logist. Q. , 3(1-2):95–110, 1956. [31] Andrew An Bian, Baharan Mirzasoleiman, Joachim Buhmann, and Andreas Krause. Guaranteed non-convex optimization: Submodular maximization over continuous domains. In Artif. Intell. Stat. , pages 111–120, 2017. [32] Alon Cohen and Tamir Hazan. Following the perturbed leader for online structured learning. In Int. Conf. Mach. Learn. , pages 1034–1042, 2015. [33] Martin Zinkevich. Online convex programming and generalized infinitesimal gradient ascent. In 
+
+Int. Conf. Mach. Learn. , pages 928–936, 2003. [34] Aryan Mokhtari, Hamed Hassani, and Amin Karbasi. Stochastic conditional gradient methods: From convex minimization to submodular maximization. J. Mach. Learn. Res. , 21(105):1–49, 2020. [35] Lin Chen, Mingrui Zhang, Hamed Hassani, and Amin Karbasi. Black box submodular maxi-mization: Discrete and continuous settings. In Int. Conf. Artif. Intell. Stat. , pages 1058–1070, 2020. [36] Leon Jay Gleser. On the distribution of the number of successes in independent trials. Ann. Probab. , pages 182–188, 1975. [37] Wassily Hoeffding. On the distribution of the number of successes in independent trials. Ann. Math. Stat. , pages 713–721, 1956. 20 Appendix Contents 
+
+1 Introduction 12 Problem Statement and Preliminaries 4
+
+2.1 Distributed Online Submodular Maximization . . . . . . . . . . . . . . . . . . . . . . 42.2 Multi-Linear Extension . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52.3 Frank-Wolfe Algorithm and Tracking the Expert . . . . . . . . . . . . . . . . . . . . 5
+
+3 Algorithm with Full-Information Feedback 6
+
+3.1 Distributed Online Algorithm: A Vanilla Version . . . . . . . . . . . . . . . . . . . . 63.2 Regret Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+
+4 Algorithm with Bandit Feedback 8
+
+4.1 Distributed Online Bandit Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . 84.2 Regret Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 
+
+5 Bounding the Sampling Violation 11 
+
+5.1 Bounded Stochastic Pipage Rounding . . . . . . . . . . . . . . . . . . . . . . . . . . 11 5.2 Distributed Online Algorithm with Progressively Bounded Stochastic Pipage Rounding 12 
+
+6 Numerical Example 15 7 Conclusion 17 Appendix I: Proofs Pertaining to Algorithm 1 22 
+
+A Proof of Lemma 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 B Proof of Theorem 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 
+
+Appendix II: Proofs Pertaining to Algorithm 2 26 
+
+A Proof of Lemma 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 B Proof of Theorem 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+Appendix III: Proofs Pertaining to Algorithm 4 28 
+
+A Proof of Theorem 3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28 B Proof of Lemma 3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29 C Proof of Lemma 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32 D Proof of Theorem 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33 E Proof of Theorem 5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33 F Proof of Proposition 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 21 Appendix I: Proofs Pertaining to Algorithm 1 
+
+A Proof of Lemma 1 
+
+By the initialization xqi (1) = 0 and vqi (k) ∈ M i, it is easy to see that [xqi (k)] i ∈ M i for ∀i ∈ [I],and thus ¯xq(k) ∈ M by the definition of ¯xq(k). In addition, due to the updating rule of [xqi (k)] i′
+
+for ∀i′̸ = i (see Line 7 in Algorithm 1), we can have that 0 ⪯ [xqi (k)] i′ ⪯ [xqi′ (k)] i′ . As a result, 
+
+[xqi (k)] i′ ∈ M i′ holds for ∀i′̸ = i and thus xqi (k) ∈ M for ∀i ∈ [I].Notice that 1⊤ 
+
+> Ni
+
+[xqi (k)] i ≤ 1⊤ 
+
+> Ni
+
+[xqi (k − 1)] i + κi/K . Hence, applying the inequality for consecutive 
+
+d(G) steps yields, 
+
+1⊤ 
+
+> Ni
+
+[xqi (k)] i ≤ 1⊤ 
+
+> Ni
+
+[xqi (k − d(G))] i + κid(G)/K. (18) Recall that d(G) denotes the diameter of the graph G, meaning that every agent i′̸ = i can be reached from the agent i by at most d(G)-hop communications. Thus, it holds for ∀i′̸ = i that 
+
+1⊤ 
+
+> Ni
+
+[xqi′ (k)] i ≥ 1⊤ 
+
+> Ni
+
+[xqi (k − d(G))] i. Combining this inequality together with (18) gives 
+
+1⊤ 
+
+> Ni
+
+[xqi′ (k)] i ≥ 1⊤ 
+
+> Ni
+
+[xqi (k)] i − κid(G)/K. (19) Therefore, it follows that 
+
+∥¯xq(k) − xqi (k)∥ ≤ 1⊤
+
+> N
+
+ ¯xq(k) − xqi (k) ≤ κd (G)/K, (20) where the first inequality is due to the facts that ∥x∥ ≤ ∥ x∥1 and [xqi (k)] i′ ⪯ [xqi′ (k)] i′ holds for 
+
+∀i′̸ = i, and the second one follows by summing (19) for ∀i ∈ [I] and κ = P 
+
+> i∈[I]
+
+κi. The proof of Lemma 1 is completed. 
+
+B Proof of Theorem 1 
+
+To facilitate the subsequent proofs, let us first notice by the definitions in (4) and (5) that, the diameters of polytopes Mi and M have Di = max x,y∈M i ∥x − y∥ = pmin {2κi, N i} and D =max x,y∈M ∥x − y∥ =
+
+qPIi=1 min {2κi, N i}, respectively. In addition, recall that f t(·) is monotone and submodular with max S∈I f t(S) ≤ f max , it can be shown (see Lemma 3 in [35]) that its multi-linear extension F t(·) is L1-Lipschtiz and L2-smooth with L1 = 2 √N f max and L2 = 4 N f max .Let S⋆ ∈ arg max S∈I 
+
+PTt=1 f t(S) and ex⋆ ∈ M be the continuous variable so that PTt=1 F t(ex⋆) = 
+
+PTt=1 f t(S⋆). Likewise, let x⋆ ∈ arg max x∈M 
+
+PTt=1 F t(x), it is clear that PTt=1 F t(x⋆) ≥ PTt=1 F t(ex⋆).Considering that each discrete decision St is obtained by lossless rounding on ¯st = [ s1(t)⊤, · · · , sI (t)⊤]⊤,i.e., E[f t(St)] ≥ F t(¯ st), it has 
+
+RcT := (1 − 1/e ) ·
+
+> T
+
+X
+
+> t=1
+
+F t(x⋆) −
+
+> T
+
+X
+
+> t=1
+
+F t(¯ st)
+
+≥ E
+
+h
+
+(1 − 1/e ) ·
+
+> T
+
+X
+
+> t=1
+
+f t(S⋆) −
+
+> T
+
+X
+
+> t=1
+
+f t(St)
+
+i
+
+.
+
+(21) Therefore, to prove the regret bound in Theorem 1, it suffices to next show that RcT is no larger than the same bound. 22 Recall the definition of ¯xq(k) in Lemma 1 and let ¯vq(k) := [ vq
+
+> 1
+
+(k)⊤, · · · , vqI (k)⊤]⊤ ∈ M , it is straightforward to verify that ¯xq(k + 1) = ¯xq(k) + ¯vq(k)/K, ∀k ∈ [K]. Now, define a new vector 
+
+¯dqi (k) ∈ RN for every i ∈ [I] which is generated by the following recursion with ¯dqi (0) = 0,
+
+¯dqi (k) = (1 − ρk)¯dqi (k − 1) + ρk∇F tq,k i
+
+ ¯xq(k). (22) Furthermore, let edq(k) := 1 /I ·PIi=1 ¯dqi (k). Then, by the facts that {tq, 1 
+
+> i
+
+, t q, 2 
+
+> i
+
+, · · · , t q,K i } is a uniformly random permutation of {1, 2, · · · , K } and is independent for ∀i ∈ [I], we can have 
+
+E
+
+hedq(k) − ¯dqi (k)
+
+i
+
+= 0 . (23) Next, by the same steps in the proof of Lemma 4 in [18], we can obtain the following result. 
+
+Lemma 5. Define ¯F q,k i (·) := PKl=k+1 F tq,l i (·)/(K − k), it holds for ∀q ∈ [Q] and i ∈ [I] that 
+
+E
+
+h
+
+(1 − 1/e ) · ¯F q, 0 
+
+> i
+
+(x⋆) − ¯F q, 0
+
+> i
+
+ ¯xq(K + 1) i
+
+≤ 1/K ·
+
+> K
+
+X
+
+> k=1
+
+12β(k) E
+
+h
+
+∥∇ ¯F q,k −1 
+
+> i
+
+(¯ xq(k)) − ¯dqi (k)∥2i
+
++ 1 /K ·
+
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−k · E⟨¯dqi (k), x⋆ − ¯vq(k)⟩
+
++ 1 /K ·
+
+> K
+
+X
+
+> k=1
+
+β(k)D2
+
+2 + L2D2
+
+2K ,
+
+(24) 
+
+where {β(k)}k∈[K] is an arbitrary positive sequence. 
+
+Now, with the aid of the above Lemma 5, we can show an intermediate result for the upper bound of E[RcT ].
+
+Lemma 6. Let RcT be defined in (21) , then it holds that 
+
+E[RcT ] ≤
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+12β(k)I E
+
+h
+
+∥∇ ¯F q,k −1 
+
+> i
+
+(¯ xq(k)) − ¯dqi (k)∥2
+
+| {z } 
+
+> :=∆ 1
+> i(k)−− stochastic gradient error
+
+i
+
++
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−kDi · E
+
+h
+
+∥¯dqi (k) − dqi (k)∥
+
+| {z } 
+
+> :=∆ 2
+> i(k)−− consensus error
+
+i
+
++ K
+
+> I
+
+X
+
+> i=1
+
+REi 
+
+> Q
+
++ QD 2
+
+2
+
+> K
+
+X
+
+> k=1
+
+β(k) + L2QD 2
+
+2 ,
+
+(25) 
+
+where REi 
+
+> Q
+
+represents the cumulative regret of expert Ei(k).Proof. Let us first note that, by the definition of ¯F q,k i (·), it holds that ¯F q, 0 
+
+> i
+
+(x) = ¯F q, 0 
+
+> j
+
+(x), ∀i̸ = j
+
+and x ∈ M . Thus, we denote ¯F q, 0(·) = ¯F q, 0 
+
+> i
+
+(·), ∀i ∈ [I]. Moreover, by Algorithm 1, we can have 23 ¯st = ¯ xq(K + 1) , ∀(q − 1) K + 1 ≤ t ≤ qK . As a result, it follows that, 
+
+E[RcT ] = E
+
+h
+
+K
+
+> Q
+
+X
+
+> q=1
+
+
+
+(1 − 1/e ) ¯F q, 0(x⋆) − ¯F q, 0 ¯xq(K + 1) i 
+
+= E
+
+h
+
+K/I 
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+
+
+
+(1 − 1/e ) ¯F q, 0 
+
+> i
+
+(x⋆) − ¯F q, 0
+
+> i
+
+ ¯xq(K + 1) i 
+
+≤ 1/I ·
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+12β(k) E
+
+h
+
+∥∇ ¯F q,k −1 
+
+> i
+
+(¯ xq(k)) − ¯dqi (k)∥2i
+
++
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−k · E⟨edq(k), x⋆ − ¯vq(k)⟩
+
++ QD 2
+
+2
+
+> K
+
+X
+
+> k=1
+
+β(k) + L2QD 2
+
+2 ,
+
+(26) where the inequality follows from Lemma 5 and the fact that edq(k) = 1 /I · PIi=1 ¯dqi (k).Next, we deal with the term E[⟨edq(k), x⋆ − ¯vq(k)⟩] in (26) . By the definition of ¯vq(k), it holds that 
+
+E
+
+h
+
+⟨edq(k), x⋆ − ¯vq(k)⟩
+
+i
+
+= E
+
+h IX
+
+> i=1
+
+[edq(k)] i, [x⋆]i − vqi (k)
+
+i
+
+=
+
+> I
+
+X
+
+> i=1
+
+E
+
+h
+
+[edq(k)] i ± [¯dqi (k)] i ± [dqi (k)] i, [x⋆]i − vqi (k)
+
+i
+
+≤
+
+> I
+
+X
+
+> i=1
+
+E
+
+h
+
+[dqi (k)] i, [x⋆]i − vqi (k)  +
+
+> I
+
+X
+
+> i=1
+
+Di · E∥[¯dqi (k)] i − [dqi (k)] i∥
+
+i
+
+,
+
+(27) where the inequality is due to (23) and ∥[x⋆]i − vqi (k)∥ ≤ Di. Therefore, it follows that 
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−k · E⟨edq(k), x⋆ − ¯vq(k)⟩
+
+≤
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+> I
+
+X
+
+> i=1
+
+E
+
+h
+
+[dqi (k)] i, [x⋆]i − vqi (k)
+
+i
+
++
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−kIX
+
+> i=1
+
+Di · E∥[¯dqi (k)] i − [dqi (k)] i∥
+
+≤
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−kDi · E∥¯dqi (k) − dqi (k)∥ + K
+
+> I
+
+X
+
+> i=1
+
+REi 
+
+> Q
+
+,
+
+(28) where the last inequality is due to the definition of the regret of experts Ei. Combining the inequalities (26) and (28) completes the proof of Lemma 6. ■
+
+Subsequently, we turn to bound the two key terms in (25) , i.e., the stochastic gradient error 
+
+∆1 
+
+> i
+
+(k) and the consensus error ∆2 
+
+> i
+
+(k). First, by the same steps in the proof of Lemma 6 in [18], we can have the following result. 24 Lemma 7. Under conditions in Theorem 1, the stochastic gradient error ∆1 
+
+> i
+
+(k) := ∥∇ F q,k −1 
+
+> i
+
+( ¯xq(k)) −
+
+¯dqi (k)∥2 has 
+
+E∆1 
+
+> i
+
+(k) ≤
+
+( C1 
+
+> (k+4) 2/3
+
+, 1 ≤ k ≤ K/ 2;  
+
+> C1
+> (K−k+1) 2/3
+
+, K/ 2 + 1 ≤ k ≤ K, (29) 
+
+where C1 = 4 L21 + 32 · (2 L1 + DL 2)2.
+
+In addition, using the result in Lemma 1, we can also bound the consensus error ∆2 
+
+> i
+
+(k) as the following Lemma 8. 
+
+Lemma 8. Under conditions in Theorem 1, the consensus error ∆2 
+
+> i
+
+(k) := ∥¯dqi (k) − dqi (k)∥ has 
+
+E∆2 
+
+> i
+
+(k) ≤ L2κd (G)/K, ∀k ∈ [K]. (30) 
+
+Proof. By Lemma 1 statement ii) and L2-smoothness of each function F t(·), it holds for ∀t ∈ [T ]
+
+that 
+
+∥∇ F t(¯ xq(k)) − ∇ F t(xqi (k)) ∥ ≤ L2∥¯xq(k) − xqi (k)∥ ≤ L2κd (G)/K. (31) Next, we prove the statement in Lemma 8 by mathematical induction. Recall that both ¯dq(0) 
+
+and dqi (0) are initialized as zeros. By (31) , it is easy to see that ∆2 
+
+> i
+
+(1) ≤ L2κd (G)/K . Now, suppose that ∆2 
+
+> i
+
+(k − 1) ≤ L2κd (G)/K holds, it follows by triangle inequality that 
+
+∆2 
+
+> i
+
+(k) ≤ (1 − ρk) · ∥ ¯dqi (k − 1) − dqi (k − 1) ∥ + ρk · ∥∇ F tq,k i (¯ xq(k)) − ∇ F tq,k i (xqi (k)) ∥ ≤ L2κd (G)/K, 
+
+(32) which completes the proof. ■
+
+With the help of Lemmas 7 and 8, we are now able to prove the statement in Theorem 1. Let 
+
+{β(k)}k∈[K] in Lemma 5 be 
+
+β(k) = 
+
+(
+
+(k + 4) −1/3, when 1 ≤ k ≤ K/ 2; (K − k + 1) −1/3, when K/ 2 + 1 ≤ k ≤ K, (33) it holds that PK/ 2 
+
+> k=1
+
+β(k) ≤ K2/3 and PKk=K/ 2+1 β(k) ≤ K2/3. Further, by Lemma 7, we have 
+
+> K
+
+X
+
+> k=1
+
+E∆1 
+
+> i
+
+(k)
+
+β(k) =
+
+> K/ 2
+
+X
+
+> k=1
+
+C1
+
+(k + 4) 1/3 +
+
+> K
+
+X
+
+> k=K/ 2+1
+
+C1
+
+(K − k + 1) 1/3 ≤ 2C1K2/3. (34) Therefore, it follows from Lemmas 6 and 8 that 
+
+E[RcT ] ≤ QC 1K2/3 + QL 2κd (G)
+
+> I
+
+X
+
+> i=1
+
+Di + K
+
+> I
+
+X
+
+> i=1
+
+REi 
+
+> Q
+
++ QD 2K2/3 + L2QD 2/2
+
+≤  C1 + C0I + D2 · T 4/5 +  L2D2/2 + L2κd (G)
+
+> I
+
+X
+
+> i=1
+
+Di
+
+ · T 2/5,
+
+(35) where the last inequality is due to Q = T 2/5, K = T 3/5, and also the regret bound of experts, i.e., REi 
+
+> Q
+
+≤ C0
+
+√Q (see (8) in Sec. 2.3). Finally, combining the fact that E[RT ] ≤ E[RcT ] in (21) ,Theorem 1 has been proved. 25 Appendix II: Proofs Pertaining to Algorithm 2 
+
+A Proof of Lemma 2 
+
+Due to the initialization of xqi (1) and the update of [xqi (k)] i (see Lines 3 and 6 in Algorithm 2), it is straightforward to have that [xqi (k + 1)] i = Pkl=1 vqi (l)/K + (1 − k/K )[ xqi (1)] i, which is convex combination of [xi(1)] i, vqi (1) , · · · , vqi (k). Provided that [xi(1)] i ∈ fMi and vqi (k) ∈ fMi, ∀k ∈ [K], it follows by the convexity of set fMi that [xqi (k + 1)] i ∈ fMi, ∀k ∈ [K] and i ∈ [I]. The rest of this proof can be completed by following the same steps as the proof of Lemma 1 in Appendix I-A. 
+
+B Proof of Theorem 2 
+
+Similar to the previous proof, we first note that the diameters of the polytopes fMi and fM are 
+
+αD i and αD , respectively. Given that α < 1, Di and D are always valid upper bounds of the diameters, and thus we directly use Di and D in the following proofs for simplicity. Furthermore, let us recall that γ = min i∈[I]
+
+ min {1, κ i/√Ni} and the definition of M, it can be verified that 
+
+γBN 
+
+> ≥0
+
+⊆ M . Therefore, according to Lemma 1 in [18], with the parameters α and δ specified as in Theorem 2, the distance between the two sets M and fM has dist (M, fM) := max  
+
+> x∈M ,y∈fM
+
+∥x − y∥ ≤ CMδ, (36) where CM = ( √κ/γ + 1) √N + √κ/γ .Next, we define a δ-smoothed version of the function F t(·), i.e., bF t(x) := Ev∼Uni (BN )[F t(x + δv)] ,and based on Lemma 1 in [35], we have the following general result regarding bF t(·).
+
+Lemma 9. Suppose that F t(·) is a L1-Lipschitz and monotone continuous DR-submodular function, then so is bF t(·), and for ∀x ∈ fM, it holds that | bF t(x) − F t(x)| ≤ L1δ.
+
+With the help of the above Lemma 9, we are now ready to analyze the regret in Theorem 2. Let S⋆ and x⋆ be defined as same as before and x⋆δ ∈ arg max x∈ fM
+
+PTt=1 F t(x), then by the same reasons behind the inequality (21), we have 
+
+E[RT ] ≤ E
+
+h
+
+(1 − 1/e )
+
+> T
+
+X
+
+> t=1
+
+F t(x⋆) −
+
+> T
+
+X
+
+> t=1
+
+F t ¯sti
+
+= E
+
+h
+
+(1 − 1/e )
+
+> T
+
+X
+
+> t=1
+
+ F t(x⋆) ± F t(x⋆δ ) ± bF t(x⋆δ ) −
+
+> T
+
+X
+
+> t=1
+
+ F t(¯ st) ± bF t(¯ st)i
+
+≤ E
+
+h
+
+(1 − 1/e )
+
+> T
+
+X
+
+> t=1
+
+ F t(x⋆) − F t(x⋆δ ) +
+
+> T
+
+X
+
+> t=1
+
+ (1 − 1/e ) bF t(x⋆δ ) − bF t(¯ st)i
+
++ (2 − 1/e )T L 1δ
+
+≤ E
+
+h TX
+
+> t=1
+
+ (1 − 1/e ) bF t(x⋆δ ) − bF t(¯ st)i
+
++ (1 − 1/e )T L 1CMδ + (2 − 1/e )T L 1δ, 
+
+(37) where the second inequality follows from Lemma 9 and the last one follows from the facts that each 
+
+F t(·) is L1-Lipschitz and ∥x⋆ − x⋆δ ∥ ≤ dist (M, fM) ≤ CMδ.26 Subsequently, let bRcT := PTt=1 
+
+ (1 − 1/e ) bF t(x⋆δ ) − bF t(¯st) and following the same analysis in the proof of Theorem 1 in Appendix I-B, we provide the result analogous to Lemma 6. To proceed, we first define ¯F q,k i (x) := PLl=k+1 bF tq,l i (x)/(L − k) for ∀k = 0 , 1, · · · K − 1. In addition, we overload the vector ¯dqi (k) ∈ RN which is given by the following recursion with initialization ¯dqi (0) = 0,
+
+¯dqi (k) = (1 − ρk)¯dqi (k − 1) + ρk · N/δ · F tiq,k 
+
+ ¯xq(k) + δuqi (k) · uqi (k). (38) Note that the randomness of ¯dqi (k) defined in (38) comes from the random permutation {tiq, 1, t iq, 2, · · · , t iq,L }
+
+and the uniform sample uqi (k) from the sphere SN −1. However, both samples are independent across all agents and iterations, and therefore, the equality (23) still holds in this case. Now, we are ready to show the intermediate result for the upper bound of E[ bRcT ], whose proof can be completed by the same steps as the one for Lemma 6 and thus is omitted for simplicity. 
+
+Lemma 10. Let bRcT be defined as above, then it holds that 
+
+E[ bRcT ] ≤ L/K ·
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+12β(k)I E
+
+h
+
+∥∇ ¯F q,k −1 
+
+> i
+
+(¯ xq(k)) − ¯dqi (k)∥2
+
+| {z } 
+
+> :=∆ 1
+> i(k)
+
+i
+
++ L/K ·
+
+> Q
+
+X
+
+> q=1
+> I
+
+X
+
+> i=1
+> K
+
+X
+
+> k=1
+
+(1 − 1/K )K−kDi · E
+
+h
+
+∥¯dqi (k) − dqi (k)∥
+
+| {z } 
+
+> :=∆ 2
+> i(k)
+
+i
+
++ L
+
+> I
+
+X
+
+> i=1
+
+REi 
+
+> Q
+
++ LQD 2
+
+2K
+
+> K
+
+X
+
+> k=1
+
+β(k) + LQD 2L2
+
+2K ,
+
+(39) 
+
+where the regret of experts has REi 
+
+> Q
+
+≤ C0
+
+√Q.
+
+Similarly, we now turn to bound the two terms in (39), i.e., the stochastic gradient error ∆1 
+
+> i
+
+(k)
+
+and consensus error ∆2 
+
+> i
+
+(k).
+
+Lemma 11. Under conditions in Theorem 2, the stochastic gradient error ∆1 
+
+> i
+
+(k) := ∥∇ F q,k −1 
+
+> i
+
+( ¯xq(k)) −
+
+¯dqi (k)∥2 has 
+
+E∆1 
+
+> i
+
+(k) ≤ C2δ−2 + C3
+
+(k + 3) 2/3 , (40) 
+
+where C2 = 2 3
+
+√16 L21N 2, C3 = 3
+
+√16  2L21 + (2 L1 + 3 DL 2)2.Proof. This proof follows the same steps as the one for Lemma 11 in [18] and thus is omitted for simplicity. ■
+
+Lemma 12. Under conditions in Theorem 2, the consensus error ∆2 
+
+> i
+
+(k) := ∥¯dqi (k) − dqi (k)∥ has 
+
+E∆2 
+
+> i
+
+(k) ≤ L1κd (G)NKδ , ∀k ∈ [K]. (41) 
+
+Proof. By Lemma 2 statement ii) and the L1-Lipschitz continuity of each function F t(·), it holds for 
+
+∀t ∈ [T ] that 
+
+F t ¯xq(k) + δui(k) − F t xqi (k) + δui(k) ≤ L1∥¯xq(k) − xqi (k)∥ ≤ L1κd (G)/K. (42) 27 We also prove Lemma 12 by mathematical induction. Due to the fact that uki is sampled from the sphere, i.e., ∥uki ∥ = 1 , and inequality (42) , it is easy to see that ∆2 
+
+> i
+
+(1) ≤ L1κd (G)N /Kδ . Now, suppose that ∆2 
+
+> i
+
+(k − 1) ≤ L1κd (G)N /Kδ holds, it follows from triangle inequality that 
+
+∆2 
+
+> i
+
+(k) ≤ (1 − ρk) · ∆2 
+
+> i
+
+(k − 1) + ρkN/δ · F tiq,k 
+
+ ¯xq(k) + δui(k) − F tiq,k 
+
+ xqi (k) + δui(k)
+
+≤ L1κd (G)NKδ ,
+
+(43) which completes the proof. ■
+
+At last, we prove the statement in Theorem 2. Here, we let β(k) = ( k + 3) −1/3/δ , then it has PKk=1 β(k) ≤ 1.5K2/3/δ . In addition, by Lemma 11, it holds that 
+
+> K
+
+X
+
+> k=1
+
+E[∆ 1 
+
+> i
+
+(k)] 
+
+β(k) ≤ (C2δ−2 + C3)δ ·
+
+> K
+
+X
+
+> k=1
+
+1(k + 3) 1/3 ≤ 3( C2δ−1 + C3δ)K2/3
+
+2 . (44) Therefore, by (37) and Lemmas 10–12, we can have that 
+
+E[RT ] ≤ E[ bRcT ] + (1 − 1/e )T L 1CMδ + (2 − 1/e )T L 1δ
+
+≤ (1 − 1/e )T L 1CMδ + (2 − 1/e )T L 1δ + 3 /4 · C2δ−1LQK −1/3 + 3 /4 · C3δLQK −1/3
+
++ LQL 1κd (G)N PIi=1 Di
+
+δK + L
+
+> I
+
+X
+
+> i=1
+
+REi 
+
+> Q
+
++ 34δ · LQD 2K−1/3 + LQD 2L2
+
+2K
+
+≤
+
+
+
+(1 − 1/e )L1CMCδ + (2 − 1/e )L1Cδ + 3 /4 · C2/C δ + C0I + 3 /4 · D2/C δ
+
+
+
+· T 8/9
+
++ 3 /4 · C3Cδ · T 2/3 + L1κd (G)N
+
+> I
+
+X
+
+> i=1
+
+Di/C δ · T 4/9 + L2D2/2 · T 1/3,
+
+(45) where the last inequality follows from L = T 7/9, K = T 2/3, δ = CδT −1/9 and REi 
+
+> Q
+
+≤ C0
+
+√Q. The proof of Theorem 2 is completed. 
+
+Appendix III: Proofs Pertaining to Algorithm 4 
+
+A Proof of Theorem 3 
+
+According to Algorithm 3, the B-SPR procedure can be represented by y0 = x → y1 → · · · → yT = z.Then, by the randomized swapping operation in Algorithm 3, it holds that 1⊤ 
+
+> M
+
+yτ −1 = 1⊤ 
+
+> M
+
+yτ , τ ∈ [T ],which proves the statement i) in Theorem 3. Also, it is clear that, for each yτ −1 → yτ , τ ∈ [T ], there is at least one more element becoming either bl or bu. Since there are totally M elements in the vector, the procedure must terminate in finite time T ≤ M − 1, and there is at most one element in the output vector z = yT that is neither bl nor bu. Thus, the statement ii) in Theorem 3 is proved. Subsequently, to prove the statement iii), let us first notice the following directional convexity property of the multi-linear extension F (·) of any monotone submodular function [13]: let en, em ∈ RM
+
+be two basis vectors, then F  x + t(en − em) is convex with respect to the variable t. As a result of 28 the above convexity property and the randomized swapping, we can have 
+
+EF (yτ +1 )|yτ 
+
+= ∆τ (n)∆τ (m) + ∆ τ (n) F
+
+
+
+yτ + ∆ τ (m)( en − em)
+
+
+
++ ∆τ (m)∆τ (m) + ∆ τ (n) F
+
+
+
+yτ − ∆τ (n)( en − em)
+
+
+
+≥ F (yτ ).
+
+(46) It follows by the law of iterated expectations that EF (yτ )] ≥ EF (yτ −1)] , ∀τ ∈ [T ], which proves the statement iii). 
+
+B Proof of Lemma 3 
+
+We begin the proof by introducing more notations. Denote bl = δ and bu(k) = δ + α(k − 1) /K ,
+
+∀1 ≤ k ≤ K. Similar to the previous proof of Theorem 3, we let the B-SPR procedure executed by 
+
+Rδ+αk/K δ (·) be represented by y0 = ez(k + 1) → y1 → · · · → yT = z(k + 1) with T ≤ M − 1 (by Theorem 3). Since z(k) is the output of Rbu(k) 
+
+> bl
+
+(·), it is clear that bl1M ⪯ z(k) ⪯ bu(k)1M and by Theorem 3 statement ii), there is at most one element in z(k) that is neither bl nor bu(k). Let us denote the index of such an element in z(k) as c ∈ [M ], i.e., zc(k) ∈  bl, b u(k) (if not exist, take arbitrary c ∈ [M ]). Recall that ez(k + 1) = z(k) + v(k)/K , and during the B-SPR procedure, let cτ
+
+track the position of such an element in yτ (this will be clearer in the sequel). To prove the statement in Lemma 3, let us first consider the case when k ≤ M . By the fact that 
+
+bl1M ≤ z(k) ≤ bu(k)1M holds for ∀k ∈ [K + 1] , it follows that 
+
+∥z(k + 1) − z(k)∥1 ≤ M  bu(k + 1) − bl
+
+ ≤ αM 2/K. (47) Subsequently, we turn to the case when k > M . To facilitate the proof, we define the following three intervals, i.e., Aτ := δ + α(k − 1 − τ )/K, δ + αk/K , Bτ := δ, δ + α(τ + 1) /K , and 
+
+Cτ :=  δ + α(τ + 1) /K, δ + α(k − 1 − τ )/K . Note that Aτ ∪ B τ ∪ C τ = bl, b u(k + 1)  holds for 
+
+∀0 ≤ τ ≤ T , and since k > M ≥ τ + 1 , all the three intervals are well-defined. Associated with the intervals, we define three additional sets: 
+
+Yτ 
+
+> A
+
+: = 
+
+n
+
+yτ (m)|yτ (m) ∈ A τ , m ∈ [M ]
+
+o
+
+\ yτ (cτ ) ; (48a) 
+
+Yτ 
+
+> B
+
+: = 
+
+n
+
+yτ (m)|yτ (m) ∈ B τ , m ∈ [M ]
+
+o
+
+\ yτ (cτ ) ; (48b) 
+
+Yτ 
+
+> C
+
+: = 
+
+n
+
+yτ (m)|yτ (m) ∈ C τ , m ∈ [M ]
+
+o
+
+∪ yτ (cτ ) . (48c) Then, we show the following intermediate result. 
+
+Lemma 13. Let k > M , T ≤ M − 1 and the sets Yτ
+
+> A
+
+, Yτ
+
+> B
+
+, and Yτ 
+
+> C
+
+be defined as above, the following statements holds for ∀τ ∈ [T ]:i) Yτ 
+
+> C
+
+= {yτ (cτ )};ii) for any A elements yτ (m1), y τ (m2) · · · , y τ (mA) ∈ Y τ 
+
+> A
+
+with A ≤ Aτ 
+
+> max
+
+:= |Y τ
+
+> A
+
+|, there is 
+
+> A
+
+X
+
+> i=1
+
+yτ (mi) ≥ Aδ + αK
+
+ Ak − min {τ + A, A τ
+
+> max
+
+}; (49) 29 iii) for any B elements yτ (m1), y τ (m2) · · · , y τ (mB ) ∈ Y τ 
+
+> B
+
+with B ≤ Bτ 
+
+> max
+
+:= |Y τ
+
+> B
+
+|, there is 
+
+> B
+
+X
+
+> i=1
+
+yτ (mi) ≤ Bδ + αK
+
+  min {τ + B, B τ
+
+> max
+
+}. (50) 
+
+Proof. We prove Lemma 13 by mathematical induction. First, due to the facts that y0 = ez(k + 1) = 
+
+z(k) + v(k)/K and v(k) ∈ [0 , α ]M , it can be verified that all statements hold for τ = 0 . Now, suppose that the statements hold for any τ ∈ [T ], we prove the case for τ + 1 .Recall that, at each step of the stochastic rounding procedure Rδ+αk/K δ (·), two elements 
+
+yτ (m), y τ (n) ∈  bl, b u(k + 1)  are uniformly randomly selected. Next, we discuss on all five possibilities of the selected elements yτ (m) and yτ (n).
+
+Case i): yτ (m), y τ (n) ∈ Y τ
+
+> A
+
+. By the randomized swapping rule in Algorithm 3, one can have that 2
+
+[yτ +1 (m), y τ +1 (n)] ∈ bu(k+1) , y τ (m) + yτ (n) − bu(k+1) . (51) Due to the facts that the statement ii) is true for Yτ 
+
+> A
+
+and both yτ (m) and yτ (n) are from Aτ , it holds that 
+
+2δ + α(2 k − τ − 2) /K ≤ yτ (m) + yτ (n) ≤ 2δ + 2 αk/K, (52) where the inequality on left-hand-side follows from (49) and the one on right-hand-side is due to the definition of Aτ . As a result, we can have that δ + α(k − τ − 2) /K ≤ yτ (m) + yτ (n) − bu(k + 1) ≤
+
+δ + αk/K , i.e., yτ (m) + yτ (n) − bu(k + 1) ∈ A τ +1 . Together with the fact that bu(k + 1) ∈ A τ +1 , it follows that yτ +1 (m), y τ +1 (n) ∈ A τ +1 . In other words, if both yτ (m) and yτ (n) are selected from Yτ
+
+> A
+
+and in this case cτ +1 = cτ , it has been proved that they remain in the set Yτ +1  
+
+> A
+
+and the other two sets Yτ +1  
+
+> B
+
+and Yτ +1  
+
+> C
+
+remain unchanged. Therefore, the statements i) and iii) naturally holds for τ + 1 .Next, we continue to prove the statement ii). By the above analysis, we can have that Aτ +1  
+
+> max
+
+= Aτ
+
+> max
+
+.Thus, the worst-case scenario for proving inequality (49) is that only the smaller one of yτ +1 (m)
+
+and yτ +1 (n) is selected when counting the summation of A elements from Yτ +1  
+
+> A
+
+. Without loss of generality, let us assume that yτ +1 (m) is the smaller one, i.e., yτ +1 (m) = yτ (m) + yτ (n) − bu(k + 1) .In this scenario, it holds that 
+
+> A
+
+X
+
+> i=1
+
+yτ +1 (mi) = 
+
+> A
+
+X 
+
+> i=1 ,m i̸=m
+
+yτ (mi) + yτ (m) + yτ (n) − bu(k + 1) 
+
+≥ (A + 1) δ + αK
+
+
+
+(A + 1) k − min {τ + A + 1 , A τ
+
+> max
+
+}
+
+
+
+− bu(k + 1) = Aδ + αK
+
+
+
+Ak − min {τ + 1 + A, A τ +1 
+
+> max
+
+}
+
+
+
+,
+
+(53) where the inequality is due to (49) for the case τ , and the last equality follows from the definition of 
+
+bu(k + 1) and the fact that Aτ +1  
+
+> max
+
+= Aτ
+
+> max
+
+. Hence, the statement ii) is proved. 
+
+Case ii): yτ (m), y τ (n) ∈ Y τ
+
+> B
+
+. Due to the symmetry of the definitions of Aτ and Bτ as well as the statements ii) and iii), this proof can be completed by following the same steps as in the proof for case i) and thus is omitted for simplicity.       
+
+> 2We denote [y(m), y (n)] ∈ { a, b }to include both cases [y(m), y (n)] = [ a, b ]and [y(m), y (n)] = [ b, a ].
+
+30 Case iii): yτ (m) ∈ Y τ
+
+> A
+
+, y τ (n) ∈ Y τ 
+
+> B
+
+(or conversely, yτ (n) ∈ Y τ
+
+> A
+
+, y τ (m) ∈ Y τ
+
+> B
+
+). By the randomized swapping rule, one can have that [yτ +1 (m), y τ +1 (n)] ∈ bl, y τ (m) + yτ (n) − bl ∪ bu(k + 1) , y τ (m) + 
+
+yτ (n) − bu(k + 1) . Due to the definitions of Aτ and Bτ , it holds that yτ (m) + yτ (n) − bl ≥ yτ (m)
+
+and thus yτ (m) + yτ (n) − bl ∈ A τ ⊂ A τ +1 . Similarly, it also holds that yτ (m) + yτ (n) − bu(k + 1) ∈Bτ +1 . As a consequence, we can conclude either yτ +1 (m) ∈ A τ +1 , y τ +1 (n) ∈ B τ +1 or yτ +1 (n) ∈Aτ +1 , y τ +1 (m) ∈ B τ +1 . In both cases, the set Yτ +1  
+
+> C
+
+remains unchanged (with cτ +1 = cτ ), which proves the statement i). Next, also due to the symmetry of the statements ii) and iii), we here only prove the statement ii) and the proof of the statement iii) simply follows by the same steps. By the above analysis, the only change from Yτ 
+
+> A
+
+to Yτ +1  
+
+> A
+
+is that yτ (m) becomes either yτ (m) + yτ (n) − bl
+
+or bu(k + 1) . Since both quantities are no less than yτ (m), the inequality (49) follows for τ + 1 and the proof of statement ii) is finished. 
+
+Case iv): yτ (m) ∈ Y τ
+
+> A
+
+, y τ (n) ∈ Y τ 
+
+> C
+
+(or conversely, yτ (n) ∈ Y τ
+
+> A
+
+, y τ (m) ∈ Y τ 
+
+> C
+
+). Note that we have cτ = n in this case. By the randomized swapping rule, it is ensured that at least one of 
+
+yτ +1 (m) and yτ +1 (n) is either bl or bu(k + 1) . Specifically, if yτ +1 (n) becomes bl or bu(k + 1) , we let cτ +1 = m; otherwise cτ +1 = n. Regardless, one can confirm that the statement i) holds in both cases. Subsequently, we prove the statements ii) and iii). By the above analysis, the change from 
+
+Yτ 
+
+> A
+
+to Yτ +1  
+
+> A
+
+is that yτ (m) either becomes bu(k + 1) or is removed from the set Yτ
+
+> A
+
+. For the former case, since bu(k + 1) ≥ yτ (m) and the set Yτ +1  
+
+> B
+
+remains unchanged, the inequalities (49) and (50) holds for τ + 1 . For the latter case, bl is added to the set Yτ +1  
+
+> B
+
+. Since bl = δ, one can also verify the inequality (50) holds for τ + 1 . Therefore, the proof in case iv) is completed. 
+
+Case v): yτ (m) ∈ Y τ
+
+> B
+
+, y τ (n) ∈ Y τ 
+
+> C
+
+(or conversely, yτ (n) ∈ Y τ
+
+> B
+
+, y τ (m) ∈ Y τ 
+
+> C
+
+). Again, due to the same symmetry reason, this proof can be completed by following the same steps as in the proof for case iv) and thus is omitted for simplicity. ■
+
+With the aid of Lemma 13, we are now ready to prove the result in Lemma 3. To proceed, let us first show that, according to the randomized swapping operation, the distance between yτ +1 and yτ
+
+at each step 0 ≤ τ ≤ T − 1 has 
+
+E
+
+h
+
+∥yτ +1 − yτ ∥1
+
+i
+
+= 41/∆τ (m) + 1 /∆τ (n) . (54) Therefore, one can conclude that E∥yτ +1 − yτ ∥1
+
+ achieves its upper bound when ∆τ (m) and ∆τ (n)
+
+take their maximum values. Note that Lemma 13 confirms that the random selection of yτ (m)
+
+and yτ (n) at each step τ occurs in one of the five cases above. Subsequently, we upper bound 
+
+E[∥yτ +1 − yτ ∥1] by analyzing ∆τ (m) and ∆τ (n) in each of the five cases. 
+
+Case i) : Considering yτ (m) ∈ A τ and yτ (n) ∈ A τ , one can confirm that ∆τ (m) ≤ bu(k + 1) −
+
+yτ (n) ≤ α(τ + 1) /K and ∆τ (n) ≤ bu(k + 1) − yτ (m) ≤ α(τ + 1) /K . As a consequence, it holds that 
+
+E[∥yτ +1 − yτ ∥1] ≤ 2α(τ + 1) /K .
+
+Case ii) : Similarly, one can confirm that ∆τ (m) ≤ yτ (m) − bl ≤ α(τ + 1) /K and ∆τ (n) ≤
+
+yτ (n) − bl ≤ α(τ + 1) /K . Therefore, E[∥yτ +1 − yτ ∥1] ≤ 2α(τ + 1) /K .
+
+Case iii) : Since yτ (m) ∈ A τ and yτ (n) ∈ B τ , we can have that ∆τ (m) ≤ yτ (m)−bl ≤ αk/K and 
+
+∆τ (n) ≤ yτ (n) − bl ≤ α(τ + 1) /K . Therefore, E[∥yτ +1 − yτ ∥1] ≤ 4α(τ + 1) /K .
+
+Case iv) : Since yτ (m) ∈ A τ , yτ (n) ∈ C τ , we can have that ∆τ (m) ≤ yτ (m) − bl ≤ αk/K and 
+
+∆τ (n) ≤ bu(k + 1) − yτ (m) ≤ α(τ + 1) /K . Thus, it holds that E[∥yτ +1 − yτ ∥1] ≤ 4α(τ + 1) /K .
+
+Case v) : Similarly, one can confirm that ∆τ (m) ≤ yτ (m) − bl ≤ α(τ + 1) /K and ∆τ (n) ≤
+
+bu(k + 1) − yτ (m) ≤ αk/K . Therefore, it holds that E[∥yτ +1 − yτ ∥1] ≤ 4α(τ + 1) /K .31 Now, combining the above cases i) – v), we can obtain that E[∥yτ +1 − yτ ∥1] ≤ 4α(τ + 1) /K ,which further implies that 
+
+E
+
+h
+
+∥z(k + 1) − ez(k + 1) ∥1
+
+i
+
+= E
+
+h
+
+∥yT − y0∥1
+
+i
+
+≤ E
+
+h T − 1X 
+
+> τ=0
+
+∥yτ +1 − yτ ∥1
+
+i
+
+≤ 2M (M − 1) α/K, (55) where last inequality is due to the fact that T ≤ M − 1. Further, by triangle inequality, it holds that 
+
+E
+
+h
+
+∥z(k + 1) − z(k)∥1
+
+i
+
+≤ E
+
+h
+
+∥z(k + 1) − ez(k + 1) ∥1
+
+i
+
++ ∥v(k)∥1/K 
+
+≤ 2M (M − 1) α/K + αM/K ≤ 2αM 2/K, 
+
+(56) which, together with the result in (47), completes the proof of Lemma 3. 
+
+C Proof of Lemma 4 
+
+Similar to the proofs of Lemmas 1 and 2, we first show that [xqi (k + 1)] i ∈ fMi, ∀k ∈ [K] and i ∈ [I].Recall the definition of fMi = α fMi + δ · 1Ni , to prove [xqi (k + 1)] i ∈ fMi, it is equivalent to show  [xqi (k + 1)] i − δ · 1Ni
+
+/α ∈ M i, i.e., to prove the following: i) δ · 1Ni ⪯ [xqi (k + 1)] i ⪯ (α + δ) · 1Ni ;and ii) 0 ≤  1⊤ 
+
+> Ni
+
+[xqi (k + 1)] i − δN i
+
+/α ≤ κi. The inequalities in i) are easily verified by the reason that [xqi (k + 1)] i is the output of Rδ+αk/K δ (·). In addition, by the statement i) in Theorem 3, it holds that 
+
+1⊤ 
+
+> Ni
+
+[xqi (k + 1)] i = 1⊤ 
+
+> Ni
+
+[xqi (k)] i + ( 1⊤ 
+
+> Ni
+
+vqi (k) − δN i)/K =
+
+> k
+
+X
+
+> l=1
+
+1⊤ 
+
+> Ni
+
+vqi (l)/K + δN i(1 − k/K ). (57) Since vqi (l) ∈ fMi, we have that δN i ≤ 1⊤ 
+
+> Ni
+
+vqi (l) ≤ ακ i + δN i and thus the inequalities in ii) are proved. Next, due to the updating rule of [xqi (k)] i′ for ∀i′̸ = i (see Line 7 in Algorithm 3), it holds that [xqi (k)] i′ = [ xqi′ (k − t)] i′ for some 1 ≤ t ≤ d(G). As a consequence, one can also have that 
+
+[xqi (k)] i′ ∈ M i′ for ∀i′̸ = i. The proof of statement i) in Lemma 4 is completed. By Lemma 3, it has been shown that for ∀i ∈ [I], k ∈ [K],
+
+E [xqi (k + 1)] i − [xqi (k)] i 1
+
+ ≤ 2αN 2 
+
+> i
+
+/K. (58) Recall that d(G) represents the diameter of the graph, meaning that every agent j̸ = i can be reached from the agent i at most in d(G)-hop communications, thus it follows from the triangle inequality that for ∀j̸ = i, k ∈ [K]
+
+E
+
+h
+
+[xqj (k)] i − [xqi (k)] i 1
+
+i
+
+≤ 2αN 2 
+
+> i
+
+d(G)/K. (59) As a result, it holds for ∀i ∈ [n] that 
+
+E
+
+h
+
+¯xq(k) − xqi (k)
+
+i
+
+≤ E
+
+h
+
+¯xq(k) − xqi (k) 1
+
+i
+
+= X 
+
+> j̸=i
+
+E
+
+h
+
+[xqj (k)] j − [xqi (k)] j 1
+
+i
+
+≤ 2αN 2d(G)/K. 
+
+(60) Therefore, the proof of Lemma 4 is completed. 32 D Proof of Theorem 4 
+
+This proof can be completed by repeating the proof in Appendix II-B. The only two differences are noted as follows. First, due to the incorporation of the PB-SPR procedure (see Line 6 in Algorithm 4), the update of [xqi (k)] i is different from the one in Algorithm 2. Specifically, we let exqi (k + 1) := [xqi (k)] i + ( vqi (k) − δ · 1Ni )/K , which is corresponding to the updating step in Algorithm 2, while Algorithm 4 imposes an additional operation by [xqi (k + 1)] i = Rδ+αk/K δ (exqi (k + 1)) . However, according to statement iii) in Theorem 3, it has 
+
+E
+
+h
+
+F  ¯xq(k + 1) i
+
+≥ F  exq(k + 1) , ∀k ∈ [K], (61) where exq(k + 1) := [ exq
+
+> 1
+
+(k + 1) ⊤, · · · , exqI (k + 1) ⊤]⊤. Therefore, all arguments in the proof of Theorem 2 naturally follows by taking additional expectation with respect to the randomness in the PB-SPR 
+
+procedure. Second, in the previous proof, when bounding the consensus error term ∆2 
+
+> i
+
+(k) (see Lemma 12), the L1-Lipschitz continuity of F t(·) and the fact ∥¯xq(k) −xqi (k)∥ ≤ κd (G)/K are used. However, since the PB-SPR procedure is now involved, the bound of difference between ¯xq(k) and xqi (k) becomes that E∥¯xq(k) − xqi (k)∥ ≤ 2αN 2d(G)/K (see the statement ii) in Lemma 4). As a consequence, the constant N 2d(G) appears in the second last term of the regret bound in Theorem 4. 
+
+E Proof of Theorem 5 
+
+By the equality (57) and the fact that 1⊤ 
+
+> Ni
+
+vqi (l) ≤ ακ i + δN i, ∀l ∈ [K], it follows that 
+
+1⊤ 
+
+> Ni
+
+[xqi (k)] i ≤ δN i + ακ i(k − 1) /K. (62) Moreover, given that [xqi (k)] i is the output of Rδ+α(k−1) /K δ (·), there are at least Ni − κi components of the vector [xqi (k)] i equal to δ. In addition, since it has been shown in Lemma 4 that [xqi (k)] i′ =[xqi′ (k − t)] i′ holds for some 1 ≤ t ≤ d(G), the above statement is also true for [xqi (k)] i′ , ∀i′̸ = i.Let pqi (k) = xqi (k) + δuqi (k), based upon which the discrete decision X qi (k) is randomly generated. Then, it holds that 
+
+P X qi (k) /∈ I  = P
+
+ I[
+
+> i′=1
+
+[X qi (k)] i′ > κ i′
+
+
+
+≤
+
+> I
+
+X
+
+> i′=1
+
+P
+
+
+
+[X qi (k)] i′ > κ i′
+
+
+
+≤
+
+> I
+
+X
+
+> i′=1
+
+1 − (1 − 2δ)Ni′ −κi′
+
+≤ 2δ(N − κ).
+
+(63) Note that in (63) , we use [X qi (k)] i′ to denote the discrete decision generated by [pqi (k)] i′ , the first inequality is due to the union bound, the second inequality follows from the fact that there are at least Ni′ − κi′ components of each block [pqi (k)] i′ less than or equal to 2δ, and the last one is by the Bernoulli inequality. Hence, the inequality (13) in Theorem 5 is proved by δ = CδT −1/9 and (14) simply follows from the facts that E1{X qi (k) /∈ I}  = P X qi (k) /∈ I , Q = T 2/9, K = T 2/3.33 F Proof of Proposition 1 
+
+Using the same notations as in Appendix III-E, we can have 
+
+P X qi (k) /∈ I  = P
+
+ I[
+
+> i′=1
+
+[X qi (k)] i′ > κ i′
+
+
+
+≥ P  [X qi (k)] i > κ i
+
+. (64) Therefore, to prove the statement in Proposition 1, it suffices to show that 
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+P  [X qi (k)] i > κ i
+
+ ≥ Ω( T 7/9). (65) By the sum-preserving property of P(·) and the condition that 1⊤ 
+
+> Ni
+
+vqi (k) = δN i + ακ i, it is straightforward to have that 1⊤ 
+
+> Ni
+
+[xqi (k)] i = δN i + ακ ik/K . Note that the discrete decision [X qi (k)] i is generated by applying the random rounding on the variable gqi (k) := [ xqi (k)] i + δ[ui]i, then one can have that 1⊤ 
+
+> Ni
+
+gqi (k) ≤ δN i + δ√Ni + ακ ik/K . Next, we show an intermediate result in the following lemma, which verifies that the probability P(|[X qi (k)] i| > κ i) is minimized when the vector gqi (k) is most majorized. 
+
+Lemma 14. Suppose that x1, x 2, · · · , x M are independent Bernoulli variables with P(xi = 1) = pi.Subject to constraints PMi=1 pi < κ and δ ≤ pi ≤ 1, the probability P(PNi=1 xi > κ ) is minimized when 
+
+p = [ p1, p 2, · · · pM ] is most majorized, i.e., there is at most one element in p distinct from δ and 1.Proof. This proof can be found in [36, 37]. ■
+
+Due to the definitions of α and δ (see conditions in Theorem 2), one can have that δN i + δ√Ni +
+
+ακ ik/K < κ i , ∀k ∈ [K]. Moreover, let us denote sk = ( δ√Ni + ακ ik/K )/(1 − δ) and σk = ⌊sk⌋, i.e., one can assign at most σk one’s in the vector gqi (k) to minimize the probability P(|[X qi (k)] i| > κ i).Now, let Ks = min k∈[K]{k | σk = κi − 1}, and as a result of Lemma 14, we can have that 
+
+> K
+
+X
+
+> k=1
+
+P  [X qi (k)] i > κ i
+
+ ≥
+
+> K
+
+X
+
+> k=Ks
+
+
+
+(1 − δ)( sk − σk) + δ
+
+ 
+
+1 − (1 − δ)Ni−κi
+
+
+
+. (66) Notice that 
+
+> K
+
+X
+
+> k=Ks
+
+
+
+(1 − δ)( sk − σk) + δ
+
+
+
+≥
+
+> K
+
+X
+
+> k=Ks
+
+
+
+sk − σk
+
+
+
+≥ ακ i/K 
+
+1 − δ
+
+(K − Ks + 1)( K − Ks)2 ≥ Ω( K), (67) where the first inequality follows from sk − σk < 1, the second inequality is due to sk+1 − sk =
+
+ακ i/(K(1 − δ)) , and the last inequality is due to the definition of Ks. In addition, provided that 
+
+1 − (1 − δ)Ni−κi ≥ (Ni − κi)δ − (Ni − κi)2δ2/2 and also δ = Ω( T −1/9), it follows that 
+
+> Q
+
+X
+
+> q=1
+> K
+
+X
+
+> k=1
+
+P  [X qi (k)] i > κ i
+
+ ≥ Ω( QKδ ) = Ω( T 7/9). (68) The proof of Proposition 1 is completed. 34
