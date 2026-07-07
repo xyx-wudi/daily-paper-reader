@@ -1,0 +1,374 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-07T21:39:23.075754+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 6,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2607.03473v1",
+      "source": "arxiv",
+      "title": "MUTE: Return-Preserving Communication Unlearning for Efficient Multi-Agent Coordination",
+      "abstract": "Inter-agent communication is critical for coordinating Multi-Agent Reinforcement Learning (MARL) agents under partial observability to perform effectively in cooperative games; however, real-world bandwidth constraints demand sparse interactions. Prior approaches primarily address this trade-off by optimizing information-theoretic surrogates. We argue that these statistical proxies are fundamentally misaligned with the true objective: a message can be highly informative yet irrelevant to the joint return of the task. In this work, we propose Message Unlearning for Targeted Efficiency (MUTE), a framework that views communication reduction as a value-guided machine unlearning problem. MUTE rigorously quantifies the Counterfactual Message Value using an attention-based estimator, and systematically unlearns the transmission of low-value messages from a policy trained without any communication constraints. This is achieved through a dual-objective mechanism that enforces communication sparsity while preserving the return of the original joint policy. We derive a theoretical upper bound on the performance gap induced by this sparsification, guaranteeing controlled return degradation. We also empirically evaluate MUTE on various complex multi-agent environments, achieving 80% to 90% bandwidth reduction while maintaining performance comparable to state-of-the-art baselines.",
+      "authors": [
+        "Rui Zuo",
+        "Qinwei Huang",
+        "Mingyang Li",
+        "Zhenhang Zhang",
+        "Simon Khan",
+        "Qinru Qiu"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-07-03T16:34:19+00:00",
+      "link": "https://arxiv.org/pdf/2607.03473v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-agent reinforcement learning communication reduction",
+      "llm_evidence_cn": "多智能体强化学习通信减少",
+      "llm_evidence": "多智能体强化学习通信减少",
+      "canonical_evidence": "多智能体强化学习通信减少",
+      "llm_tldr_en": "Proposes MUTE, a framework that treats communication reduction as value-guided machine unlearning for efficient multi-agent coordination in cooperative MARL.",
+      "llm_tldr_cn": "本文针对多智能体强化学习中通信带宽受限的问题，提出MUTE框架，将通信减少视为值引导的机器遗忘问题。通过反事实消息值量化每条消息对联合回报的贡献，从而剪除冗余消息。实验表明，该方法在保持任务性能的同时显著降低通信开销。",
+      "llm_tldr": "本文针对多智能体强化学习中通信带宽受限的问题，提出MUTE框架，将通信减少视为值引导的机器遗忘问题。通过反事实消息值量化每条消息对联合回报的贡献，从而剪除冗余消息。实验表明，该方法在保持任务性能的同时显著降低通信开销。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.04470v1",
+      "source": "arxiv",
+      "title": "Regime-Conditional Stabilisation of LLM-Augmented Cooperative Multi-Agent Reinforcement Learning",
+      "abstract": "Large Language Models (LLMs) offer a natural interface for translating human objectives into reward signals for cooperative multi-agent reinforcement learning (MARL), yet the training-time dynamics of this integration remain poorly understood. We show that dynamically updating LLM-generated reward weights during off-policy MARL violates the stationarity assumption of Potential-Based Reward Shaping (PBRS) and contaminates the experience replay buffer, whose stored transitions carry reward labels computed under stale shaping weights. We characterise the result as a regime-dependent failure whose severity depends on how competent the unshaped baseline already is. To control it we propose two stabilisation strategies: a Phase-Based Freeze Schedule that enforces strict stationarity within training phases, and Exponential Moving Average (EMA) smoothing that bounds per-episode weight drift. We evaluate across three cooperative environments and five random seeds with QMIX, complemented by an exploratory VDN extension, yielding a three-regime taxonomy. In the augmentative regime (Simple Spread), where the baseline is functional (74.4 %), EMA significantly improves success to 86.7 % ($+12.3$ pp, $p<0.01$) while naive dynamic updates collapse it to 15.2 %. In the essential regime (Level-Based Foraging), where the baseline is broken (0.1 %), any shaping unlocks the task (95.9 % under EMA). In the supplementary regime (SMAC 3m), where the baseline is near-saturated (98.8 %), stabilised shaping preserves performance (99.9 %) while unstabilised shaping adds variance without gain. These findings establish reward-signal stationarity as a necessary design constraint and indicate that regime placement is a practical predictor of whether dynamic LLM shaping helps or harms.",
+      "authors": [
+        "Faid Keddouri",
+        "Sohaib Houhou",
+        "Aissa Boulmerka",
+        "Nadir Farhi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "math.OC"
+      ],
+      "published": "2026-07-05T19:29:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.04470v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "focuses on stabilizing LLM-augmented cooperative MARL training",
+      "llm_evidence_cn": "专注于稳定LLM增强的协作MARL训练",
+      "llm_evidence": "专注于稳定LLM增强的协作MARL训练",
+      "canonical_evidence": "专注于稳定LLM增强的协作MARL训练",
+      "llm_tldr_en": "Identifies regime-dependent failure due to non-stationary LLM-generated rewards in cooperative MARL, and proposes two stabilization strategies: Phase-Based and conditional approaches.",
+      "llm_tldr_cn": "针对大语言模型（LLM）增强协作多智能体强化学习中的训练动态问题，本文揭示了LLM生成奖励权重动态更新会破坏势能引导的奖励重塑的平稳性假设，并污染经验回放缓冲区。将失败分为依赖模态的不同严重程度，并提出了基于阶段和基于条件的两类稳定化策略，有效控制了训练不稳定现象。该工作为LLM与MARL的可靠集成提供了理论分析和实用方案。",
+      "llm_tldr": "针对大语言模型（LLM）增强协作多智能体强化学习中的训练动态问题，本文揭示了LLM生成奖励权重动态更新会破坏势能引导的奖励重塑的平稳性假设，并污染经验回放缓冲区。将失败分为依赖模态的不同严重程度，并提出了基于阶段和基于条件的两类稳定化策略，有效控制了训练不稳定现象。该工作为LLM与MARL的可靠集成提供了理论分析和实用方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.04710v1",
+      "source": "arxiv",
+      "title": "Integrated Altruistic and Fairness Preference Induces Advanced Mutual Cooperation in Sequential Social Dilemmas",
+      "abstract": "Inducing cooperation among distributed agents is still a difficult problem in the field of multi-agent reinforcement learning (MARL), particularly in social dilemma situations. There, individual interests are misaligned with the common good and individual rationality leads to suboptimal group outcomes. In contrast, humans are able to achieve cooperation with one another in such situations. A common explanation for such cooperative behavior is that individuals have social preferences. In order to achieve cooperation in MARL, we design a new utility function integrating altruistic preferences (incentive for other's reward) and fairness preferences (incentive for equality) from social psychology and behavioral economics, namely, Altruistic and Fairness Preference (AFP), a reward-sharing mechanism which converts one's own and other's rewards to incentives for cooperative behavior. We performed comparative experiments with standard RL and inequity aversion agents in two challenging sequential social dilemma games, and showed that AFP agents successfully achieved mutual cooperation with more collective rewards and higher equity than the baselines. To further understand the progression of AFP during training, we subsequently explore the effects of altruistic preferences and fairness preferences on agents' behavior. The results suggest that altruistic preferences encourage agents to contribute to the public goods, and fairness preferences induce mutual behavior between agents.",
+      "authors": [
+        "Yu Wei",
+        "Yukiko Ogura",
+        "Yoshiyuki Ohmura",
+        "Ildefons Magrans de Abril",
+        "Hoshinori Kanazawa",
+        "Yasuo Kuniyoshi"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-06T06:26:43+00:00",
+      "link": "https://arxiv.org/pdf/2607.04710v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperative multi-agent reinforcement learning with altruistic and fairness preferences",
+      "llm_evidence_cn": "合作多智能体强化学习结合利他和公平偏好",
+      "llm_evidence": "合作多智能体强化学习结合利他和公平偏好",
+      "canonical_evidence": "合作多智能体强化学习结合利他和公平偏好",
+      "llm_tldr_en": "Introduces integrated altruistic and fairness preferences into MARL utility functions to induce advanced mutual cooperation in sequential social dilemmas.",
+      "llm_tldr_cn": "针对多智能体强化学习中的社会困境问题，该论文从社会心理学和行为经济学中引入利他偏好和公平偏好，设计了一种新的效用函数。该函数激励智能体关注他人回报和公平性，从而在序列社会困境中诱导出高级的相互合作。实验表明该方法优于传统独立学习，促进了群体协作。",
+      "llm_tldr": "针对多智能体强化学习中的社会困境问题，该论文从社会心理学和行为经济学中引入利他偏好和公平偏好，设计了一种新的效用函数。该函数激励智能体关注他人回报和公平性，从而在序列社会困境中诱导出高级的相互合作。实验表明该方法优于传统独立学习，促进了群体协作。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.03269v1",
+      "source": "arxiv",
+      "title": "Agentic-SecPBFT: Agentic AI-Driven Proactive Security Framework for Wireless PBFT Consensus in Mobile Ad-Hoc Networks",
+      "abstract": "The standard Practical Byzantine Fault Tolerance (PBFT) protocol, designed for stable, wired environments, exhibits critical vulnerabilities when deployed in settings like mobile ad-hoc networks, thus making it susceptible to sophisticated threats such as Sybil attacks, Byzantine collusion, and message manipulation. Existing static defense mechanisms are ill-equipped to handle the intelligent and coordinated nature of these attacks. To address this challenge, this paper leverages the Agentic AI paradigm to build a distributed multi-agent system in which each consensus node is equipped with an intelligent agent. These agents employ a hierarchical Multi-Agent Deep Q-Network (MADQN) algorithm to learn and execute proactive security policies in real-time. By observing local network behavior, message consistency, and dynamically maintained reputation scores, the agents collaboratively identify suspicious behavior and recommend defensive actions under standard PBFT quorum and membership rules, thereby improving the integrity of the consensus process. We refer to the resulting framework as Agentic-SecPBFT. Then, we formally model key attack vectors and conduct extensive simulations. The results demonstrate that Agentic-SecPBFT reaches a 95.0% attack detection rate with a 1.8% false positive rate. Compared with mainstream PBFT variants, it achieves 3.1* higher throughput with 56% lower latency on average under 33% malicious nodes, offering a robust and adaptive security solution for decentralized wireless systems.",
+      "authors": [
+        "Haoxiang Luo",
+        "Yinqiu Liu",
+        "Ruichen Zhang",
+        "Guangyuan Liu",
+        "Gang Sun",
+        "Hongfang Yu",
+        "Zhu Han",
+        "Dong In Kim"
+      ],
+      "primary_category": "cs.NI",
+      "categories": [
+        "cs.NI"
+      ],
+      "published": "2026-07-03T12:37:54+00:00",
+      "link": "https://arxiv.org/pdf/2607.03269v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses hierarchical Multi-Agent Deep Q-Network (MADQN) algorithm for proactive security",
+      "llm_evidence_cn": "使用层次化多智能体深度Q网络（MADQN）算法进行主动安全",
+      "llm_evidence": "使用层次化多智能体深度Q网络（MADQN）算法进行主动安全",
+      "canonical_evidence": "使用层次化多智能体深度Q网络（MADQN）算法进行主动安全",
+      "llm_tldr_en": "Proposes a distributed multi-agent system for PBFT consensus security, employing hierarchical Multi-Agent Deep Q-Network (MADQN) to learn and execute proactive defense strategies against sophisticated attacks.",
+      "llm_tldr_cn": "针对移动自组织网络中PBFT协议面对Sybil攻击、拜占庭合谋等威胁的脆弱性，提出Agentic-SecPBFT框架，为每个共识节点配备智能体，使用层次化多智能体深度Q网络（MADQN）学习主动防御策略。该方法在分布式环境中实现了智能的协同安全决策，有效提升了无线PBFT共识的鲁棒性。",
+      "llm_tldr": "针对移动自组织网络中PBFT协议面对Sybil攻击、拜占庭合谋等威胁的脆弱性，提出Agentic-SecPBFT框架，为每个共识节点配备智能体，使用层次化多智能体深度Q网络（MADQN）学习主动防御策略。该方法在分布式环境中实现了智能的协同安全决策，有效提升了无线PBFT共识的鲁棒性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi agent reinforcement learning algorithms",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.03324v1",
+      "source": "arxiv",
+      "title": "Hierarchical Multi-Agent Reinforcement Learning for Carbon-Aware AI Data Centers in Power Distribution Systems",
+      "abstract": "Eco-friendly energy management for artificial intelligence data centers (AIDCs) is crucial because of the significant increase in energy consumption-induced carbon emissions from AIDCs resulting from the rapid expansion of AI applications. This paper proposes a hierarchical carbon-aware multi-agent reinforcement learning (CA-MARL) framework for robust and efficient operations of AIDCs under uncertainties while ensuring low-carbon operation of power distribution systems. The framework comprises a workload manager (WM) agent and multiple local AIDC agents trained using a multi-agent transformer method, corresponding to a global AIDC aggregator and a local AIDC operator, respectively. Leveraging AIDC operation data along with nodal carbon intensity (NCI) calculated from the carbon emission flow-integrated distribution system operator problem, the WM agent spatially allocates AI training and inference jobs among all AIDCs. Based on the jobs allocated from the WM agent and NCI information, each AIDC agent schedules economical and eco-friendly operations of the AIDC by performing the following tasks: i) temporal shifting of training jobs, ii) spatial allocation of training graphics processing unit (GPU) blocks and inference GPUs within the AIDC, and iii) control of the supply air temperature of the cooling system. The effectiveness of the proposed framework was assessed using an IEEE 33-node power distribution system.",
+      "authors": [
+        "Hyunsoo Lee",
+        "Panggah Prabawa",
+        "Dae-Hyun Choi",
+        "Joongheon Kim"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.AI"
+      ],
+      "published": "2026-07-03T13:41:00+00:00",
+      "link": "https://arxiv.org/pdf/2607.03324v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cooperative multi-agent reinforcement learning application for carbon-aware data centers",
+      "llm_evidence_cn": "合作多智能体强化学习在碳感知数据中心的应用",
+      "llm_evidence": "合作多智能体强化学习在碳感知数据中心的应用",
+      "canonical_evidence": "合作多智能体强化学习在碳感知数据中心的应用",
+      "llm_tldr_en": "Proposes a hierarchical carbon-aware MARL framework with workload manager and local agents for efficient and low-carbon operation of AI data centers.",
+      "llm_tldr_cn": "本文提出一种分层碳感知多智能体强化学习框架，用于人工智能数据中心的低碳高效运营。该框架包含一个工作负载管理器智能体和多个本地数据中心组，使用多智能体Transformer训练。在配电系统不确定性下，该方法实现了低排放和鲁棒运行。",
+      "llm_tldr": "本文提出一种分层碳感知多智能体强化学习框架，用于人工智能数据中心的低碳高效运营。该框架包含一个工作负载管理器智能体和多个本地数据中心组，使用多智能体Transformer训练。在配电系统不确定性下，该方法实现了低排放和鲁棒运行。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi agent reinforcement learning applications",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.04972v1",
+      "source": "arxiv",
+      "title": "Multi-Robot Open Adaptive Teaming Across Unseen Environments, Partners, and Scales",
+      "abstract": "Deploying robot teams in the real world requires simultaneous adaptation to unseen environments, unknown partners, and varying team sizes, yet existing approaches often address these challenges in isolation under the closed-world assumption of fixed teammates. We formalize this as open adaptive multi-robot teaming and propose a hypergraphic-form game formulation that captures team-level cooperative relationships beyond pairwise interactions, providing a principled foundation for coordination structure inference when team composition changes dynamically within episodes. Unlike graph neural network architectures, this is a game-theoretic construct for modeling strategic interactions and payoff structures among agents. Building on this formulation, we develop the Hypergraphic Open-ended Learning Algorithm (HOLA), which progressively expands partner and environment diversity during training rather than optimizing for fixed configurations. Evaluated on cooperative pursuit with multi-drone and multi-quadruped platforms, HOLA outperforms all baselines across all three adaptability dimensions. Learned policies transfer directly to physical hardware without fine-tuning, with successful deployments on Crazyflie and Zsibot L1 platforms confirming robust real-world coordination in novel environments with unseen teammates.",
+      "authors": [
+        "Yang Li",
+        "Feng Xue",
+        "Fan Mo",
+        "Yunhao Liu",
+        "Jianhong Wang",
+        "Ying Wen",
+        "Qingrui Zhang",
+        "Shaoshuai Mou",
+        "Wei Pan"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-07-06T12:02:02+00:00",
+      "link": "https://arxiv.org/pdf/2607.04972v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "proposes hypergraphic-form game for cooperative multi-robot teaming",
+      "llm_evidence_cn": "提出超图形式博弈用于合作多机器人团队",
+      "llm_evidence": "提出超图形式博弈用于合作多机器人团队",
+      "canonical_evidence": "提出超图形式博弈用于合作多机器人团队",
+      "llm_tldr_en": "Introduces a hypergraphic-form game to model cooperative multi-robot teaming, enabling adaptation to unseen environments, partners, and scales.",
+      "llm_tldr_cn": "现有方法通常假设固定队友，无法应对真实世界中环境、伙伴和团队规模的同时变化。本文形式化开放自适应多机器人团队合作问题，并提出超图形式博弈来捕获团队级合作关系，为协调结构推断提供理论基础。实验表明该方法能有效适应未知场景、未知伙伴和变化规模，支持开放部署。",
+      "llm_tldr": "现有方法通常假设固定队友，无法应对真实世界中环境、伙伴和团队规模的同时变化。本文形式化开放自适应多机器人团队合作问题，并提出超图形式博弈来捕获团队级合作关系，为协调结构推断提供理论基础。实验表明该方法能有效适应未知场景、未知伙伴和变化规模，支持开放部署。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.03512v1",
+      "source": "arxiv",
+      "title": "High-Precision Formation Control for Heterogeneous Multi-Robot Systems via Hierarchical Hybrid Physics-Informed Deep Reinforcement Learning",
+      "abstract": "Existing classical control methods commonly require precise models and struggle to cope with model uncertainties and external disturbances, while end-to-end reinforcement learning (RL) approaches suffer from low sample efficiency and poor convergence. To overcome these challenges, this paper proposes a hierarchical hybrid physics-informed deep reinforcement learning (HHy-PIDRL) framework, aiming to realize high-precision, highly responsive formation control for heterogeneous multi-robot systems (HMRSs). The proposed framework contains two layers. Specifically, first, the upper layer designs an autonomous navigation policy network for Ackermann-steering leader based on the Soft Actor-Critic (SAC) deep reinforcement learning (DRL) algorithm. Second, the lower module integrates a high-fidelity physical feed-forward controller, a classical proportional-derivative (PD) controller, and an adaptive DRL residual controller to propose an effective hybrid model and DRL (HM-DRL)-based formation control policy network. Third, a unique hierarchical reward function is designed for training Omnidirectional followers, which effectively guides agents toward a refined, stable control policy. Experimental results demonstrate that, the success rate of both the upper-layer autonomous navigation policy network and the HM-DRL based formation control policy networks reach 100%. Meanwhile, ablation experiments are conducted to verify the validity and credibility of the proposed method.",
+      "authors": [
+        "Yanzhou Li",
+        "Guangli Chen",
+        "Xiao-Meng Li",
+        "Wenjian Zhong",
+        "Yongkang Lu",
+        "Shenghuang He"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-07-03T17:38:17+00:00",
+      "link": "https://arxiv.org/pdf/2607.03512v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-robot formation control via hierarchical DRL",
+      "llm_evidence_cn": "通过分层深度强化学习实现多机器人编队控制",
+      "llm_evidence": "通过分层深度强化学习实现多机器人编队控制",
+      "canonical_evidence": "通过分层深度强化学习实现多机器人编队控制",
+      "llm_tldr_en": "Proposes HHy-PIDRL for high-precision formation control of heterogeneous multi-robot systems using hierarchical hybrid physics-informed deep reinforcement learning, achieving high responsiveness and robustness.",
+      "llm_tldr_cn": "现有经典控制方法依赖精确模型，端到端强化学习则样本效率低且收敛性差。本文提出分层混合物理信息深度强化学习框架(HHy-PIDRL)，上层为领导者设计基于SAC的自主导航策略，下层结合物理信息实现高精度编队控制。在异构多机器人系统上验证了该方法的高精度和高响应性，为多机器人协同控制提供了新思路。",
+      "llm_tldr": "现有经典控制方法依赖精确模型，端到端强化学习则样本效率低且收敛性差。本文提出分层混合物理信息深度强化学习框架(HHy-PIDRL)，上层为领导者设计基于SAC的自主导航策略，下层结合物理信息实现高精度编队控制。在异构多机器人系统上验证了该方法的高精度和高响应性，为多机器人协同控制提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.31578v1",
+      "source": "arxiv",
+      "title": "Holonic Active Distillation for Scalable Multi-Agent Learning in Multi-Sensor Systems",
+      "abstract": "The rapid expansion of sensor-based networks introduces major challenges in scalability, adaptability, and knowledge transfer, especially in open environments where new subsystems can dynamically join or leave. In this work, we propose a Holonic Active Distillation architecture within a Holonic Multi-Agent System (HMAS) to address these issues. Our approach integrates Clustered Stream-Based Active Distillation (CSBAD), a framework in which specialized student models collect local data, query pseudo-labels from teacher models, and cluster into groups of similar sensors.   Results show that the holonic organization balances local specialization with global generalization, while efficiently adapting to sensor departures and re-integrations. We also analyzed trade-offs among incremental model updates, system reorganization, and scalability limits.   Our findings highlight the advantages of holonic learning for multi-sensor systems while identifying key challenges related to model drift and long-term adaptation.",
+      "authors": [
+        "Dani Manjah",
+        "Tim Bary",
+        "Benoît Macq",
+        "Stéphane Galland"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-06-30T12:34:47+00:00",
+      "link": "https://arxiv.org/pdf/2606.31578v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "scalable multi-agent learning via holonic active distillation",
+      "llm_evidence_cn": "通过Holonic主动蒸馏实现可扩展多智能体学习",
+      "llm_evidence": "通过Holonic主动蒸馏实现可扩展多智能体学习",
+      "canonical_evidence": "通过Holonic主动蒸馏实现可扩展多智能体学习",
+      "llm_tldr_en": "Proposes a Holonic Active Distillation architecture within a Holonic Multi-Agent System (HMAS) using Clustered Stream-Based Active Distillation (CSBAD) for scalable multi-agent learning, balancing local specialization and global generalization.",
+      "llm_tldr_cn": "针对多传感器网络动态环境中的可扩展性和知识迁移挑战，本文提出了一种基于Holonic多智能体系统的主动蒸馏架构。该方法通过聚类流式主动蒸馏（CSBAD）让学生模型收集本地数据、向教师模型查询伪标签，并自动聚类为相似传感器组。实验结果显示，该Holonic结构有效平衡了局部专业化与全局泛化，同时能高效适应传感器的动态加入和离开，为开放环境下的大规模多智能体学习提供了可扩展的解决方案。",
+      "llm_tldr": "针对多传感器网络动态环境中的可扩展性和知识迁移挑战，本文提出了一种基于Holonic多智能体系统的主动蒸馏架构。该方法通过聚类流式主动蒸馏（CSBAD）让学生模型收集本地数据、向教师模型查询伪标签，并自动聚类为相似传感器组。实验结果显示，该Holonic结构有效平衡了局部专业化与全局泛化，同时能高效适应传感器的动态加入和离开，为开放环境下的大规模多智能体学习提供了可扩展的解决方案。",
+      "llm_tags": [
+        "query:marl:composite"
+      ],
+      "matched_query_tag": "query:marl:composite",
+      "matched_query_text": "Papers central to 多智能体强化学习, especially work that connects or combines: multi-agent reinforcement learning; cooperative multi-agent reinforcement learning; decentralized multi-agent reinforcement learning; centralized training for multi-agent reinforcement learning; decentralized execution in multi-agent systems; Markov games in multi-agent reinforcement learning; multi agent reinforcement learning algorithms; cooperative multi agent reinforcement learning applications; decentralized multi agent reinforcement learning methods; comparison of value decomposition and actor critic methods.",
+      "matched_requirement_id": "req-composite-marl",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.04215v1",
+      "source": "arxiv",
+      "title": "Anytime Plug-and-Play Control with Contract-Based Distributed MPC",
+      "abstract": "A central challenge in many mobile multi-robot applications is that communication topologies are inherently time-varying. Agents may enter or exit the network and such changes cannot generally be restricted a priori. This work introduces a distributed multi-agent control algorithm based on local communication that supports anytime agent joining and leaving the communication network without centralized coordination. The method scales efficiently with the number of agents by relying on a distance-based neighbor definition and on contracts derived from predicted trajectories. The resulting contract constraints guarantee collision avoidance and constraint satisfaction. We validate the proposed method in an autonomous multi-agent driving scenario, demonstrating effective collision avoidance in high-speed, dynamic environments with agents moving in opposite directions, in both simulated and real-world experiments.",
+      "authors": [
+        "Sabrina Bodmer",
+        "Danilo Saccani",
+        "Melanie N. Zeilinger",
+        "Andrea Carron"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC",
+        "cs.RO"
+      ],
+      "published": "2026-07-05T10:06:49+00:00",
+      "link": "https://arxiv.org/pdf/2607.04215v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "distributed multi-agent control supporting anytime agent joining/leaving",
+      "llm_evidence_cn": "支持随时加入/离开的分布式多智能体控制",
+      "llm_evidence": "支持随时加入/离开的分布式多智能体控制",
+      "canonical_evidence": "支持随时加入/离开的分布式多智能体控制",
+      "llm_tldr_en": "Proposes a contract-based distributed MPC algorithm that supports anytime agent joining and leaving without centralized coordination, validated in autonomous driving.",
+      "llm_tldr_cn": "多机器人系统中通信拓扑动态变化，现有方法难以支持随时加入/离开。本文提出一种基于合同的分布式MPC算法，依赖局部通信和距离邻居定义，支持agent随时加入和离开，无需集中协调。在自动驾驶场景中验证了可扩展性和安全性。",
+      "llm_tldr": "多机器人系统中通信拓扑动态变化，现有方法难以支持随时加入/离开。本文提出一种基于合同的分布式MPC算法，依赖局部通信和距离邻居定义，支持agent随时加入和离开，无需集中协调。在自动驾驶场景中验证了可扩展性和安全性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
