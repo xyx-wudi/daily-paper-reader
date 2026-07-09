@@ -1,0 +1,402 @@
+Title: Gimitest: A Comprehensive Tool for Testing Reinforcement Learning Policies
+
+URL Source: https://arxiv.org/pdf/2607.07029v1
+
+Published Time: Thu, 09 Jul 2026 00:30:26 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# Gimitest: A Comprehensive Tool for Testing Reinforcement Learning Policies 
+
+Dennis Gross dennis@artigo.ai 
+
+Quentin Mazouni quentin@simula.no 
+
+Helge Spieker helge@simula.no 
+
+Arnaud Gotlieb arnaud@simula.no Simula Research Laboratory, Oslo, Norway 
+
+## Abstract 
+
+Reinforcement learning (RL) policies can be unsafe and vulnerable to attacks. Ensuring their reliability is often a pain point as existing automated testing methods target only selected environments, testing scenarios, and RL algorithms. To address this, we propose a comprehensive framework for testing single- and multi-agent RL policies under varying conditions. Our implementation of this framework, Gimitest , is an open-source tool that supports various gym frameworks and allows for modifications of their integrated components. This article describes the framework and details Gimitest’s functionality and architecture. It showcases its effectiveness in testing multiple RL policies in environments such as the official Farama Gymnasium and PettingZoo. 
+
+## 1 Introduction 
+
+Reinforcement Learning (RL) has improved various industries (Cui & Yuan, 2024; Tian et al., 2024; Zhou et al., 2023), enabling the creation of agents that can outperform humans in sequential decision-making tasks (Mnih et al., 2015). Generally, RL learns a near-optimal policy to achieve a fixed objective by acting and receiving rewards and observations from an environment simulator (see Example 1 and Figure 1) (Mnih et al., 2013). The RL setting can include a single agent (Arulkumaran et al., 2017) or multiple agents (MARL) (Zhu et al., 2024) that interact with the environment in parallel (see Figure 2) or in a turn-based manner (see Figure 3). RL Agent π(o)
+
+Environment 
+
+a
+
+o = O(s), rew 
+
+Figure 1: Single-agent RL system, where an agent receives an observation o and a reward rew from the environment after an action a, and chooses the next action. 
+
+Example 1 (RL Spaceship Agent) . Let’s imagine an RL agent learning to land a spaceship on the surface of a planet. The agent gets information about position, angle, angular velocity, and whether the landing legs touch the ground. It can fire the main engine, left thruster, right thruster, or do nothing. During training, the agent earns rewards for landing in the target location. Unfortunately, trained policies can exhibit unsafe behavior (Gross et al., 2022) like collisions (see Example 2), are vulnerable to attacks (Huang et al., 2017) like noised observations from a defect sensor or attacker (see Example 3), and testing RL policies for the two previous mentioned issues consumes considerable effort in human and machine time (Alshahwan et al., 2023; Dakhel et al., 2023; Khaliq et al., 2022). 
+
+Example 2 (Unsafe Behavior) . A trained RL spaceship agent might exhibit unsafe behavior during landing, such as colliding with the surface at high speeds, since its reward function may focus too much on fast landing. 1arXiv:2607.07029v1 [cs.LG] 8 Jul 2026 RL Agent 1 π1(o1) RL Agent 2 π2(o2)
+
+a = a1 × a2
+
+Environment 
+
+s, rew o1, rew o2, rew 
+
+a1 a2
+
+a
+
+o1 = O1(s)
+
+rew 
+
+o2 = O2(s)
+
+rew 
+
+Figure 2: Parallel MARL setup with two agents performing a joint action a = a1 × a2, leading to a new state 
+
+s and reward rew , divided into observations o1 and o2.Environment RL Agent 1 π1(o)
+
+RL Agent 2 π2(o)
+
+a1
+
+o1 = O(s1), rew 1 a2
+
+o2 = O(s2), rew 2
+
+Figure 3: Turn-based MARL system with two agents interacting sequentially with a shared environment. Each agent receives observations ( o1 and o2) and rewards ( rew 1 and rew 2) after their actions ( a1 and a2). Even though the agent might have learned a policy that achieves successful landings in ideal conditions, slight deviations in environmental parameters (e.g., terrain slopes or varying gravity) could cause the agent to perform risky maneuvers, like excessive lateral movement, resulting in collisions. 
+
+Example 3 (Adversarial Attack) . If an attacker introduces noise into the spaceship’s observation system by tampering with the sensor data, the agent might receive inaccurate information about its position or angle. This can cause the agent to misjudge its actions, leading to unsafe decisions such as firing the thrusters in the wrong direction, which could result in a crash. In this work, we argue that adversarial perturbations—despite their structured nature—highlight the same type of vulnerability as random noise, namely, the model’s sensitivity to particular inputs. So, we assume that random noise is a special type of adversarial attack (Ohashi et al., 2021). 
+
+1.1 RL Policy Testing 
+
+Fortunately, various studies have developed or adapted existing testing methods to check RL policies using 
+
+test cases (see Example 4), which are specifically designed scenarios in which test oracles determine the correctness of the outcomes (Mazouni et al., 2024b; Pang et al., 2022; Biagiola & Tonella, 2024; Zhou & Liu, 2023; Eniser et al., 2022). Such oracles have diverse requirements, ranging from the observations or actions collected during the test cases to accessing the agent’s internal states under test. 
+
+Example 4 (Test Cases and Test Oracles in RL Testing) . In testing an RL spaceship agent, a test case might involve a specific scenario where the spaceship starts at a high altitude with limited fuel. Given these challenging conditions, this scenario evaluates whether the agent can successfully land the spacecraft. In this case, the test oracle could check if the spaceship successfully lands without crashing or running out of fuel. 
+
+Search-based software testing (SBST) leverages optimization techniques to automatically generate test cases that maximize the likelihood of uncovering faults in software systems McMinn (2004). For instance, Biagiola & Tonella (2024) propose a SBST method to find initial scenarios for which the policies fail to solve the environment (see Example 5). 
+
+Example 5 (Search-Based Software Testing (SBST)) . In the context of the RL spaceship agent, SBST can be used to identify initial conditions where the agent fails to land safely. For instance, SBST might generate scenarios where the spaceship starts at an unusually high altitude or with minimal fuel. By systematically exploring different initial conditions, SBST can find cases where the agent’s policy leads to unsafe behaviors, 2such as running out of fuel mid-flight or failing to stabilize its descent, helping developers identify weaknesses in the policy. 
+
+Metamorphic testing (MT) is geared towards situations where no oracle is available or is difficult to compute. This technique relies on metamorphic relations to check how a program’s input changes should affect the output (Chen et al., 1998; 2018; Eniser et al., 2022) (see Example 6). 
+
+Example 6 (Metamorphic Testing (MT)) . In the RL spaceship agent scenario, MT could involve systemati-cally altering the environmental conditions, such as doubling the gravity or adding wind forces, and observing how these changes affect the agent’s ability to land. For instance, if the gravity is increased, the expected outcome is that the agent should use more thrust to counteract the increased downward force. MT ensures that the agent’s policy adapts appropriately to these controlled environmental changes and highlights cases where the agent fails to adjust its actions as expected. 
+
+Adversarial testing (AT) aims to fool the agents and make them change their behaviors (Chan et al., 2020b). In the context of RL policy testing, this is typically done by introducing so-called adversarial observations (see Example 7). 
+
+Example 7 (Adversarial Testing (AT)) . In the case of the RL spaceship agent, AT could involve introducing noisy sensor data during landing. For example, an adversarial observation might falsely indicate that the spaceship is at a higher altitude than it is, leading the agent to delay firing its thrusters. As a result, the agent could crash into the surface. Adversarial testing focuses on finding such vulnerabilities in the agent’s policy by providing misleading observations and testing the robustness of its decision-making. 
+
+Automated testing approaches also exist to accelerate testing (Wang et al., 2024; Paduraru et al., 2021; Bareiß et al., 2022), see Example 8. While these methods reduce manual effort, using High-Performance Computing (HPC) , which leverages powerful computational resources to handle large-scale tasks efficiently (see Example 9), can further accelerate testing (Ciortea et al., 2009). 
+
+Example 8 (Automated Testing) . Following the RL spaceship agent scenario, automated testing can accelerate testing the agent’s performance across various conditions. For example, an automated testing framework could create testing code and run thousands of simulated landings with different initial positions, fuel levels, and environmental factors like wind or gravity without requiring manual intervention. The system can automatically set up and track which scenarios lead to crashes or unsafe landings, flagging them for further analysis or automatically doing the analysis. This reduces the need for human oversight and speeds up the identification of edge cases and failure points in the agent’s policy. 
+
+Example 9 (HPC for RL Policy Testing) . Testing an RL spaceship agent across thousands of scenarios, such as varying gravitational forces or wind speeds, is computationally intensive. HPC accelerates this process by leveraging powerful computational clusters to execute simulations faster. For instance, HPC can simulate large amounts of landings in a fraction of the time required on standard hardware, enabling rapid identification of policy weaknesses and edge cases. In addition to the different testing categories, RL practitioners often need additional information about the test executions that would be collected during runtime. For instance, logging RL policy executions enables detailed analysis, aiding iterative improvements by capturing actions, measuring performance, and detecting anomalies (Pang et al., 2022) (see Example 10). 
+
+Example 10 (Logging RL Policy Executions) . In the RL spaceship agent scenario, logging the agent’s policy executions allows developers to capture detailed information about each landing attempt. For instance, logs would record the agent’s actions, such as firing the thrusters or adjusting the angle, along with the resulting changes in position and velocity. By analyzing these logs, developers gain better insight into the reasons for the failures, such as finding a correlation between failure occurrence and some action patterns. This process would eventually improve the policy and make it more reliable. 
+
+1.2 RL Policy Testing Problems 
+
+Despite RL policy testing method advances (Mazouni et al., 2023), there is no mature and unified tool support for various testing method categories like SBST, MT, and AT, logging RL policy executions, and allowing automated testing. 3The primary reason is the broad diversity of the requirements of both the testing methods and the testing tasks (Mazouni et al., 2023) and differences between RL frameworks (compare, for instance, Towers et al. 2023 with Terry et al. 2021) (see also Example 11). 
+
+Example 11 (Differences in Testing Methods for Single-Agent and Multi-Agent RL) . Testing RL policies can differ substantially across frameworks like OpenAI Gym, Gymnasium, and others. For example, in OpenAI Gym, the environment step typically returns the observation, reward, done flag, and an info dictionary, allowing straightforward validation of policy performance. However, in Gymnasium, the step function distinguishes between terminated and truncated episodes. Additionally, the goals and methods for testing RL policies using MT, SBST, and AT vary between single-agent and multi-agent RL environments. 
+
+1.3 Approach 
+
+We developed a comprehensive testing framework for single-agent and multi-agent RL policies, covering various testing categories . As part of this, we implemented Gimitest 1, an open-source tool that facilitates testing RL policies in single- and multi-agent scenarios using user-defined methods such as SBST, MT, or AT. Furthermore, it enables convenient logging execution and offers an interface for automated test code generation and testing approaches. Its flexibility enables the utilization of HPC resources to efficiently execute large-scale simulations and computationally intensive testing tasks. This capability accelerates the analysis and validation of RL policies in both single- and multi-agent settings, leveraging systems like the Norwegian Innovation Cluster (Cai et al., 2021). 
+
+Gimitest takes trained policies, an environment, and a user-specified testing method as inputs, generating test results to identify faults (see Figure 4). The tool assumes single-agent and multi-agent environment simulators to have action processing (step method) and environment reset (reset method) capabilities (Brockman et al., 2016; Terry et al., 2021). These assumptions align with the commonly used API in decision-making simulators (such as Farama Gymnasium). The step method is called every time the RL policies interact with the environment, and reset is called every time the environment gets reset. Gimitest enhances these simulator capabilities by decorating (Charalampidou et al., 2017) them with instances of the so-called “GTest” class. 
+
+Users can override the “GTest” class methods and apply modifications to environments, enabling them to create tests using their testing methods. An additional logger functionality allows test storage for further policy analysis, and a unified interface allows interaction with other systems, such as GPT-4 (OpenAI, 2023) for automated test code generation and testing (Schäfer et al., 2024) to save time. 
+
+1.4 Applications 
+
+Gimitest is designed to support researchers and developers in testing single-agent and multi-agent RL systems. It has already demonstrated its value in a replicability study (Mazouni et al., 2024a), showing its potential to standardize and streamline the testing process. The tool simplifies the implementation and adaptation of testing methods across a wide range of RL scenarios. By enabling users to customize testing setups, automate repetitive processes, and integrate advanced analysis tools, Gimitest provides a framework for testing RL policies. The following examples showcase how Gimitest can be applied to address different RL testing scenarios. 
+
+Example 12 (Gimitest with SBST (similar for MT)) . Imagine testing an RL spaceship agent using Gimitest to identify failure conditions in the landing policy. We applied SBST to discover the initial conditions where the spaceship agent fails to land safely. The test involves generating scenarios with varying initial positions and fuel levels for the spaceship. Unfortunately, most environment APIs do not allow the definition of such initial conditions. Using Gimitest, however, we can create a custom subclass of the GTest class and override the GTest method to configure the environment’s initial state at the beginning of each test run. We could then conveniently explore various SBST methods, such as Random Testing, which generates random initial values for the spaceship’s altitude and fuel. By decorating the instantiation of the subclass to the used RL environment simulator, Gimitest automatically handles the interactions between the policy and environment, resetting the conditions after each test run. Besides, as mentioned above, Gimitest unlocks systematic logging  
+
+> 1Repository: https://github.com/DennisGross/Gimitest
+
+4capabilities of any kind (after each run, throughout their executions, etc.), thanks to the additional policy and/or environment access functionalities made available by our tool. In short, Gimitest lets the practitioners conveniently apply their testing methods to RL agents. The previous Example 12 can be modified for MT in a straightforward manner. Example 13 illustrates how Gimitest facilitates AT by introducing noisy observations to test the resilience of RL policies against adversarial attacks. 
+
+Example 13 (Gimitest with AT) . Imagine testing the robustness of an RL spaceship agent by introducing adversarial inputs designed to disrupt its decision-making. Typically, we would apply AT in the test case execution of all environments manually . Precisely, we would simulate sensor noise or corrupted observations that could cause the agent to make unsafe landing decisions. Using Gimitest though, we can create a custom subclass of the GTest-class to automatically inject the aforementioned adversarial noise into the spaceship’s sensor data during the environment’s step function. For example, we would introduce slight distortions to the agent’s altitude readings, making the agent believe it’s higher than it actually is. By decorating the instantiation of the subclass to the used RL environment simulator, Gimitest executes the tests and logs scenarios where the adversarial noise causes the agent to make incorrect decisions, such as delaying the thruster firing and resulting in a crash. The following example illustrates how Gimitest, with advanced AI systems like GPT-4, automates the testing process by analyzing environment parameters and generating test cases for rapid policy evaluation. 
+
+Example 14 (Using Gimitest for Automated Testing with GPT-4) . Gimitest integrates an automated testing pipeline, shown in Figure 14. The process begins with GPT-4 analyzing the environment’s source code. For example, in the Cartpole environment, GPT-4 automatically extracts key parameters, such as gravity, cart mass, and pole length (with the help of Gimitest’s functions). Once these parameters are identified, GPT-4 generates various test cases by systematically modifying these values to explore how the agent behaves under different conditions. Gimitest executes these test cases automatically, running the RL agent in scenarios where the gravity is increased or the cart’s mass is altered. The pipeline generates the test code and executes the tests and logs the outcomes, providing insights into the agent’s robustness across a wide range of conditions. Together, these examples highlight Gimitest’s comprehensive approach to RL testing. From facilitating manual testing enhancements to enabling full automation, Gimitest supports researchers and practitioners in RL testing across various scenarios. 
+
+1.5 Outlook 
+
+The remainder of the paper is structured as follows: first, we introduce the background necessary to understand the paper, followed by a survey of related work. Next, we present the functionality and architecture of Gimitest. We then demonstrate the effectiveness of our proposed testing framework and tool through multiple use cases. Finally, we conclude the paper and provide an outlook for future work. 
+
+## 2 Background 
+
+In this section we introduce the fundamentals for this paper. 
+
+2.1 Reinforcement Learning (RL) 
+
+For the context of our work, reinforcement learning (RL) addresses sequential decision-making problems that can be modeled as a Markov decision process (MDP) (Sutton & Barto, 2018). The RL agent π interacts with the environment, which represents the sequential decision-making problem, via a series of interactions, i.e., steps, where it first observes the current state, then issues an action, and then receives a reward and the observation of the next state (see Figure 1). The MDP is represented by a four-tuple (S, A, R, P ),where S is the environment’s state space, A is the action space of all possible actions a the agent can take, 
+
+R : S × A × S → R is the reward function, assigning a numeric reward to an action taken in given current and next states, and P : S × A → S is the potentially stochastic, transition function, that determines the next 5state when taking action in the current state. Additionally, we consider the observation function O : S → O 
+
+that maps the fully-informed state to a (partial) observation, which might not include all information about the state. For example, the hidden dynamics of a physical system might be part of the state, but not of the RL agent’s observation. The goal of a RL agent is to maximize the accumulated rewards over an infinite horizon. Following the above definition, it can be extended to the parallel and turn-based Multi-Agent Reinforcement Learning (MARL) settings, as indicated in Figures 2 and 3. 
+
+2.2 Software Testing Techniques 
+
+Various testing techniques are available to ensure the reliability and safety of RL policies. Common methods include Search-Based Software Testing (SBST), Metamorphic Testing (MT), and Adversarial Testing (AT), which exposes weaknesses by simulating malicious or unexpected inputs. 
+
+2.2.1 Search-based Software Testing (SBST) 
+
+When testing complex software systems that cannot easily be analyzed, it can be relevant to guide the search of relevant test cases with program executions and fitness function evaluations (McMinn, 2004). In the case of RL policies, the purpose of search-based software testing is to find input tests, such as environment states, configurations or any kind of data representing a particular situation from which the agent under test fails to solve the decision-making task (Zolfagharian et al., 2023; Eniser et al., 2022; Mazouni et al., 2024b). Relying on ML models and genetic algorithms, SBST approaches can guide the search toward faulty sequences of states and actions produced by the RL agent. 
+
+2.2.2 Metamorphic Testing (MT) 
+
+In cases where the expected outcome of the system-under-test, i.e., in our context the RL policy, cannot be exactly specified, i.e., there is no oracle , we encounter the oracle problem in software testing (Weyuker, 1982; Barr et al., 2015). One approach to overcome the oracle problem is MT, where, instead of specifying the exact oracle of a test case, we specify metamorphic relations and generate follow-up test cases by using these relations (Chen et al., 1998; 2018). 
+
+Definition 1 (Metamorphic Relation (MR)) . Let P be the program under test, and x and y two test inputs for P . A MR for P is then expressed as a relation ∀x, ∀y, r i(x, y ) = ⇒ ro(P (x), P (y)) , where P (x)
+
+respectively P (y) denotes the execution of P on x respectively y.Keep in mind that MRs are necessary, but not sufficient, properties to ensure the correctness of P w.r.t. its specification, i.e., ri(x, y ) ∧ ¬ ro(P (x), P (y)) = ⇒ ¬ correct (P ). Nevertheless, MRs are convenient properties for generating follow-up test cases. 
+
+Definition 2 (Follow-up test cases) . Let ri(x, y ) =⇒ ro(P (x), P (y)) be a MR for P . If there exists a transformation f (possibly non-deterministic) such that y = f (x), then it becomes possible to generate a sequence of follow-up test cases from x, namely < x, t (x), t (t(x)) , ... > which all have to fulfill the MR for P .Thus, the transformation t is convenient for generating follow-up test cases. The effectiveness of MT depends on the strength of the MRs. While a lot of MRs can be found for a given system (Segura et al., 2016), many of them tend to be ineffective in revealing fault, albeit that they focus on trivial properties or have a too wide criterion to identify violations. Still, MT has been effective for the testing of many machine learning applications, ranging from simple classifiers (Murphy et al., 2008; Xie et al., 2011), deep learning models in general (Ding et al., 2017), machine translation (Sun & Zhou, 2018), or computer vision tasks (Spieker & Gotlieb, 2020; Spieker et al., 2024). MT has also been successfully applied for policy testing (Eniser et al., 2022; Eisenhut et al., 2023; Mazouni et al., 2023), giving a strong motivation for its inclusion in our framework. 62.2.3 Adversarial Testing (AT) 
+
+Informally, in Machine Learning adversaries describe inputs that fool the learned models under attack. The vulnerability of Neural Networks (NNs) to adversarial inputs was first observed by Szegedy et al. (2014), where they found that unperceivable random perturbations in images can lead NN classifiers to misclassify them. Goodfellow et al. (2014) further extend this work by suggesting additional causes of this vulnerability, as well as introducing fast methods for generating adversarial examples. In particular, they developed the fast gradient sign method (FGSM), which consists of perturbing the inputs up to a maximum ϵ, signed by the gradient of the loss between the output of the models for the initial inputs and the ground truth. The intuition is that such perturbations maximize the change in the model’s output. This method was then adapted to the reinforcement learning setting by Huang et al. (2017). Here, the idea is to bypass the limitation of not having observations labeled with the optimal action distribution by assuming that the attacked policy is optimal. Therefore, assuming stochastic policies π : O → A , the loss is computed between the output 
+
+π(o) and a distribution that places all weights on the highest-weighted action in π(o). Consequently, in this setting, adversarial testing aims to undermine the performance of the RL policy, such as reducing its episodic accumulated rewards. 
+
+## 3 Related Work 
+
+In the following, we first cover RL policy testing methods (that Gimitest would ease the implementation and application) before detailing tools related to Gimitest. Single-agent testing has been largely covered by the research community. DeepTest (Tian et al., 2018) is an automated testing framework of Deep Neural Networks (DNNs) for autonomous driving cars based on Metamorphic Testing. It specifically targets models that input images. DeepXplore also tests image input-based DNN agents but relies on differential testing to find errors (instead of MT) (Pei et al., 2019). Therefore, DeepXplore inputs several policies and finds failures by comparing their outputs. MDPFuzz is a black box fuzz testing framework for policies tackling MDPs, verifying if the target policy reaches abnormal or dangerous states (Pang et al., 2022; Mazouni et al., 2024a). It features a cover model of the state sequences observed during testing to guide the fuzzing process towards unseen behaviors. Similarly to MDPFuzz, Eniser et al. (2022) and Eisenhut et al. (2023) use fuzzing techniques to generate test inputs, whose results are however then checked with MT. Recently, Mazouni et al. (2024b) and Bhatt et al. (2022) explore the use Quality-Diversity optimization (Pugh et al., 2016) to search for failures. On the other hand, RL itself has been used to optimize the search. For instance, DeepCollision trains a RL agent to modify the environment during the execution of the test cases to find failures (Lu et al., 2023). Likewise, Haq et al. (2023) propose MORLOT, a framework for handling many-objective policy testing tasks. Their approach consists of training a Deep Q-Learning agent (Mnih et al., 2013) to find failure-triggering configurations of the environment. Other types of SBST approaches include genetic algorithm (Zolfagharian et al., 2023; Biagiola & Tonella, 2024), depth-first search (Tappler et al., 2022) and test oracle approximation through AI planning heuris-tics (Steinmetz et al., 2022). We refer interested readers to the survey of Mazouni et al. (2023) for a broader review of policy testing methods. In the multi-agent setting (MARL), Melting Pot tests learned policies’ generalization to unseen situa-tions (Leibo et al., 2021). Zhou & Liu (2023) present RTCA, a method that tests if the trained agents are robust against noise state observations. RTCA introduces two key innovations: 1) a Differential Evolution (DE) method to select critical agents as noise victims and determine worst-case joint actions; 2) a team cooperation policy evaluation used as the DE optimization objective. Adversarial state perturbations are then applied to the critical agents based on these joint actions. Adversarial testing has also been extensively applied to RL algorithms. The first line of research aims to reduce the number of times adversaries are injected (while achieving similar results compared to systemic attacks). For instance, Kos & Song (2017) refine the FGSM method by only attacking critical states during the episodes, which they select based on the value function of the policy. On the other hand, Lin et al. 7(2019) identifies when to attack the policy by targeting states that maximize the difference between the most preferred action and the least preferred action. Sun et al. (2020) opt for another strategy for planning the attacks and emphasize long-term damage impacts. They propose to achieve this goal by learning an antagonist model, which they train with the reward function to account for the agent’s end goal. Another line of work aims at the adversaries themselves. For instance, Chan et al. (2020a) quantify how much changing each feature composing the observations affects the rewards with a static reward impact map to only perturb the most impactful features. Similar to testing, there exists also works that formally verify adversarial attacks on RL policies in both single-agent (Gross et al., 2023b) and multi-agent settings (Gross et al., 2023a). Every framework has its own specifications for implementing the initialization and execution of the test cases. Gimitest offers a unified framework that is suitable for all of them since it builds on the RL community’s common interface. Related to our work, COOL-MC enables the training of single-agent and multi-agent RL policies in modeled environments while formally verifying them at any stage of the training process (Gross et al., 2022). MoGym 
+
+is an integrated toolbox that trains and verifies RL agents using deep statistical model checking (Köhl et al., 2021). Mungojerrie is a tool used for testing reward functions, specifically for ω-regular objectives (Hahn et al., 2021). Gu et al. (2022) introduce MCRL, merging verification with MARL for mission planning to ensure safety-critical requirements. Our tool differs in that it tests RL policies rather than verifying them for specific behaviors. 
+
+## 4 Functionality 
+
+Gimitest enables single-agent and multi-agent RL policy testing. It takes trained policies, an environment, and a user-specified testing method as inputs to generate test results and identify potential faults (see Figure 4). Gimitest can be applied to commonly used APIs in decision-making simulators, i.e., the Farama Gymnasium and OpenAI Gym interface, requiring only access to the action processing (step method) and the environment reset (reset method) . Technical details are provided in Section 5. Based on the different testing methods (see also related work in Section 3) and general interaction between policies and environments (see Figure 1, Figure 2, and Figure 3), we created a general testing framework for single-agent and multi-agent RL policies. This framework consists of the following steps: 1. Pre-configure and test the environment state: Setting up the (initial) state. 2. Environment Execution: Executing the environment step with the RL policy action. 3. Post-configure and test the environment state: Modifying potential observations, configuring the current environment state, and testing. Based on this framework, we support the following functionality. 
+
+4.1 Search-based Testing (SBST) 
+
+SBST aims to find initial scenarios for which the policies under test fail to solve the environment or exhibit unsafe behaviors (Biagiola & Tonella, 2024). It thus involves searching for the input tests for initializing the environment so that, when evaluated with known test oracles, e.g., failure conditions, failures are revealed. These inputs are environment configurations, defining the agent’s initial environment state. Gimitest allows the configuration and testing of the environment state at every time step in the RL policy execution. How the search is performed depends on the testing methods (see Section 3). For an example, we refer to Example 12. 
+
+4.2 Metamorphic Testing (MT) 
+
+In MT, metamorphic relations describe how input changes should affect output, eliminating the need for a test oracle (Eniser et al., 2022). The process involves running the RL policy in an original scenario, making systematic modifications to create follow-up cases, and observing behavior changes. Gimitest enables MT by modifying and testing the environment state at each time step. 
+
+8Train Policies Test Policies 
+
+Environment Testing Method 
+
+Faulty? Deploy Policies 
+
+no 
+
+yes Gimitest 
+
+Figure 4: Gimitest’s role within the RL workflow, which involves training, testing, and deploying policies. The flow starts with training policies using an environment (not part of Gimitest), then testing the policies through a user-specified testing method. Gimitest, highlighted in a red dashed box, is responsible for the testing phase, where it identifies potential faults. If the policies are deemed non-faulty, they proceed to deployment. Otherwise, the workflow loops back to policy retraining. 
+
+4.3 Adversarial Testing (AT) 
+
+An attack maps an observation to an adversarial observation (Huang et al., 2017). A successful attack at a given state leads to a misjudgment of the RL policy, and an attack is bounded by constraints. Gimitest lets the user access the internals of the policy for white-box attacks, as well as transform the policy’s observation for black-box attacks at every time step. For an example, we refer to Example 13. 
+
+4.4 Logging 
+
+Logging RL policy executions enables detailed analysis, aiding iterative improvements by capturing actions, measuring performance, and detecting anomalies (Pang et al., 2022). It provides insights into decision-making and environment interactions, facilitating effective debugging and tuning of RL models (Steinmetz et al., 2022). Gimitest enables the logging of RL executions. 
+
+4.5 Automated Test Code Generation 
+
+Gimitest aims to streamline testing for RL developers by allowing automatic test code generation (Schäfer et al., 2024) and testing. It enables automatic retrieval of environment source code, Gimitest source code, and supports specific test method implementations, allowing the automated generation of RL policy tests. For an example, we refer to Example 14. 
+
+## 5 Architecture 
+
+The Gimitest framework is written in Python 3 and enables testing RL policies in Farama Gymnasium (Towers et al., 2023), PettingZoo (Terry et al., 2021), and similar RL environment simulators (Young & Tian, 2019; Brockman et al., 2016). We implement the decorator design pattern (Charalampidou et al., 2017) to extend the reset and step capabilities of single-agent and multi-agent environments (see Algorithm 1) with instances of the GTest class ,allowing for testing at specific time intervals. This pattern dynamically enhances an object’s functionality at runtime (see Figure 5), promoting code reusability without altering its structure. GTest is a base class (see Figure 6). A base class is a class in object-oriented programming from which other classes (called derived or child classes) can inherit properties and behavior (Rentsch, 1982). The base class defines attributes and methods that are common to all its derived classes, allowing code reuse and reducing redundancy. 9Algorithm 1 The decorator design pattern is illustrated in decorating the CartPole environment from Farama. The environment is decorated by GTest to enable testing, and GTest is further decorated by GLogger to allow the test results to be logged.  
+
+> 1:
+
+env = gym.make(’CartPole-v1’)  
+
+> 2:
+
+m_gtest = GTest()  
+
+> 3:
+
+EnvDecorator.decorate(env, m_gtest)  
+
+> 4:
+
+m_logger = GLogger("m_log")  
+
+> 5:
+
+GTestDecorator.decorate_with_logger(m_gtest, m_logger) Environment Pre Post Policies Figure 5: Interception of Gimitest in the RL policy-environment interaction. Pre refers to functionality added before the environment is called; post refers to functionality added afterward. 
+
+Figure 6: GTest base class. 10 Figure 7: GLogger base class. We can create custom GTest subclasses and override specific methods to suit our testing needs. Overwriting the GTest configuration methods allows us to modify the environment at specific time steps, and overwriting the GTest testing methods allows us to test the policy at specific time steps. By applying GTest decoration to the environment step method, the environment sequentially performs the pre-step-configuration, pre-step-test, original step method, post-step-test, and post-step-configuration GTest calls (see Figure 5). Applying GTest decoration to the environment reset method, the environment sequentially executes the pre-reset-test, pre-reset-configuration, original reset method, post-reset-test, and post-reset-configuration GTest calls. 
+
+GLogger allows us to log the whole testing process at every point in time by decorating GTest instances. Users can override GLogger methods (see Figure 7) to implement customized logging behaviors, such as filtering specific events at specific time steps or adding new log outputs tailored to the needs of specific tests via, for instance, at every time step by overriding own_step_storage(). While custom environments are supported, environments that rely on third-party simulators, such as the Carla simulator for autonomous driving (Dosovitskiy et al., 2017), have not been studied yet. Parallel test execution is not supported yet. 
+
+## 6 Use Cases 
+
+We showcase Gimitest’s features in single-agent and multi-agent settings, demonstrating its usability for various policy evaluation tasks and environments. Specifically, we explore three single-agent testing scenarios: failure detection with three SBST methods, AT, and MT. Additionally, we highlight Gimitest’s support for parallel MARL, turn-based MARL, and automated code generation. We use the official Farama Gymnasium (Towers et al., 2023) and PettingZoo (Terry et al., 2021) environment versions. For failure detection, we use the Lunar Lander environment; for AT, we use Mountain Car ; for MT and automated testing, we use Cart Pole ; for turn-based MARL SBST, we use Connect Four ; and for parallel MARL SBST, we use Waterworld .We provide the trained policies in our repository with further details on how to run the experiments. 
+
+6.1 Failure Detection via SBST 
+
+In Lunar Lander , the task is to safely land a spacecraft on the Moon from a start position above a flat landing area. To do so, the agent can fire the different engines of the spacecraft. We test a well-trained policy made 11 publicly available by the RL community (Raffin, 2020). We reduce the possible initial scenarios by fixing the shape of the landscape and only varying the forces applied to the spacecraft within a range of [−1000 , 1000] 2.As for detecting failures, they occur if the lander crashes or is no longer visible. We use three SBST methods to find fault-triggering inputs: an evolutionary search that starts with a random population and then selects those with the lowest rewards to identify weak runs (ST); random testing (RT), which continuously generates random inputs to test the agent; and a fuzz-based search (FT), which implements the previously mentioned MDPFuzz (Pang et al., 2022) without coverage guidance. Roughly, this method maintains a pool of inputs that reveal weaknesses and prioritizes highly sensitive ones. Figure 8 summarizes the results. It shows the fault distribution over the input space ( [−1000 , 1000] 2) as well as all the safe executions. As expected, overall, the policy manages to safely land the spacecraft for most of the initial forces tested. If we now compare the faults found by the three methods, we observe that they are distributed differently. In particular, the evolutionary and fuzzing searches identify specific clusters of failures, while random testing reveals that the policy is especially unsafe when the spacecraft is pushed downwards to the right. Note that the frameworks conveniently execute the test cases thanks to the automated calls of the post-reset-configuration function of the GTest class implemented for this use case. − −      
+
+> F
+>  
+> −
+> −
+> −
+> −
+> 
+> 
+> 
+> 
+> 
+> F
+> 
+>   
+
+Figure 8: SBST: Distribution of the input tests for the Lunar Lander use case. The inputs describe the initial forces applied to the agent on the x and y axes. Passing inputs are shown in green, with fault-triggering ones colored blue, red, and orange for random ST, evolutionary ST, and FT, respectively. 
+
+6.2 Adversarial Testing 
+
+In the Mountain Car environment, the agent’s goal is to drive a car to the top of a hill from a valley. The policy fails to solve the problem if it could not have the vehicle to the top after 200 time steps. We attack the policy using the Fast Gradient Sign Method (FGSM) (Huang et al., 2017). That is, the agent is automatically attacked after each action thanks to the post-action method made available by Gimitest . Figure 9 shows the agent’s safe and adversarial states regarding the position and velocity of the car. We can see that most adversaries are detected at initial states (central red dots) and as the agent builds momentum to exit the valley (left red points). 12 − − −      
+
+> x
+> 
+> − 
+> −
+> 
+> 
+>  
+> 
+> x
+>   ̇  ̇
+
+Figure 9: Results of the Adversarial Testing experiment on the Mountain Car policy. Adversarial states are shown in red, and the ones for which the policy does not change its behavior are shown in green. The states are projected in 2D w.r.t the position of the car (horizontal axis) and its velocity (vertical axis) they describe. 
+
+6.3 Metamorphic Testing 
+
+We adopt the method from Eniser et al. (2022) to identify bugs in a policy trained on the Cart Pole 
+
+environment. In this approach, bugs are defined as simpler scenario versions causing failures. In other words, a test case c reveals a bug in the policy if the latter solves c but fails for the easier test case c′. As such, this method requires defining un/relaxation operations specific to the environment. In the Cart Pole environment, where the goal is to balance a pole on a moving cart, we simplify states by reducing the pole’s angle w.r.t the vertical axis. Our testing uncovers over 100 such bugs, typically with higher or negative initial pole angles and positions. While being outside the scope of this paper, these findings suggest that we could enhance the robustness of the agent through policy retraining or repair. 
+
+6.4 Policy Analysis 
+
+We exemplify the logging features of Gimitest by automatically collecting the actions performed by the policy tested in the Lunar Lander environment (see Subsection 6.1). Figure 10 displays the action frequencies for the three SBST methods. Automated via GTest’s post-step-test function, data reveals that evolutionary-based and fuzz-based approaches prompt more frequently left engine firing than random testing, which instead favors the main engine. 
+
+6.5 MARL Testing 
+
+Connect Four is a strategy game where two players take turns dropping colored discs into a vertical grid. The goal is to align four of your discs in a row, either horizontally, vertically, or diagonally, before your opponent. 
+
+Waterworld is a simulation in which archaea navigate their environment, striving to survive. These archaea, known as pursuers, aim to consume food (evaders) while avoiding poison. In this simulation, the pursuers are the agents, and both the food and poison are elements of the environment(Terry et al., 2021). We trained PPO policies in the turn-based MARL environment Connect Four and in the parallel environment Waterworld. In Connect Four, we tested the success rate of player agent 2 for differently positioned starting coins of player agent 1 (see Figure 11). Our testing results show that with the current trained MARL policies, 13 N    N  
+
+> 
+> 
+> 
+> 
+> 
+> 
+>      ! 
+
+#   Figure 10: Action frequencies of the Lunar Lander policy, when tested with random, evolutionary, and fuzz SBST methods. “NOP” refers to the do-nothing action, while “LEFT”, “MAIN” and “RIGHT” refer to firing the three engines of the spacecraft. player 2 always wins when the coin is set into columns 0, 3, 4, and 6, and in the other cases, player 2 loses. In Waterworld, we tested how well the trained MARL policies performed with different numbers of poisons and food sources (see Figure 12). We observed, for instance, that the agents rarely collected more than 8 reward points. 0        
+
+>          
+> 00
+> 0
+> 0
+> 0
+> 0
+> 0
+>     
+
+Figure 11: Connect Four results. The win rate for player 2 is on the y-axis, and the x-axis describes the different initial positions of player 1 coins. 
+
+6.6 Automated Test Code Generation 
+
+The automated testing pipeline (as described in Figure 14) can also be found in our repository. First, the GPT-4 analyzes the environment source code. Then, it extracts the essential environment parameters to generate tests that test different environment parameters such as gravity, mass, cart pole length, etc. and then creates the testing code that can be executed to gain test results. Our experiments indicate that automating RL testing via GPT-4 for the Cartpole environment is possible. Furthermore, we can automatically analyze via the GPT-4 vision model the failures by, for instance, recording the last frame of the episode, as shown in Figure 13. That could be especially interesting when we have a lot of testing data to categorize the different failure types. 
+
+## 7 Discussion 
+
+Gimitest supports multiple testing methods, including SBST, AT, and MT. This diversity allows for com-prehensive evaluation of RL policies from different angles. The tool accommodates both turn-based and parallel MARL environments, demonstrating flexibility in handling agent interactions. Leveraging GPT-4 14 2      
+
+>     
+> 2
+> 
+> 
+> 
+> 2
+> 
+> 
+> 2
+>     
+
+
+
+2
+
+
+
+
+
+>     
+
+Figure 12: Waterworld results. The x-axis represents the different numbers of evaders, and the y-axis represents the different numbers of poisons in the environment. The color indicates the number of collected rewards for the given evader-poison setting. 
+
+Figure 13: This recorded frame shows a failure. Analyzing this frame with GPT-4 helps categorize the failure, such as the spacecraft landed on the left side of the landing pad. 
+
+for automated test code generation and failure analysis streamlines the testing process. It reduces manual effort in extracting environment parameters and generating test cases. Gimitest facilitates logging and analyzing policy actions, aiding in understanding behavior under various testing conditions. We conducted the experiments on the ex3 cluster (Cai et al., 2021), which imposes no limitations on running Gimitest. Besides, the lack of off-the-shelf tools for enabling HPC for RL policy testing prevented us from comparing it with other tools. 
+
+## 8 Conclusion 
+
+We introduced Gimitest , a tool for testing RL policies in environments such as Farama Gymnasium and PettingZoo, which simplifies testing by modifying the reset() and step() methods and allows for customizable tests. Gimitest can be used for many types of policy testing. It is also available as open source under a permissive licence, making it easily accessible and adaptable for individual needs. Future extensions of Gimitest include supporting parallel execution for faster testing, integrating state-of-the-art explainable RL methods for easier debugging, and exploring automated test code generation using large language models. 15 Environment 
+
+Extract Parameters Test Generation Test Execution 
+
+RL policy 
+
+Test Results 
+
+Figure 14: General automated RL policy SBST framework. First, GPT-4 extracts the environment source code from the given environment via Gimitest’s functionality. Second, GPT-4 creates the test code which is executed automatically with the trained RL policy. Finally, the test results get outputted. 
+
+## 9 Acknowledgment 
+
+Following the journal’s policy, we disclose that generative AI technology, including GPT-4, was used to assist in revising this text. 
+
+## Conflict of Interest Statement 
+
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest. 
+
+## Author Contributions 
+
+The paper was written by DG, QM, HS, and AG. Gimitest was developed by DG and QM. The use case evaluation was implemented by QM and DG. 
+
+## Funding 
+
+This work is funded by the EU under grant agreement number 101091783 (MARS Project) and as part of the Horizon Europe HORIZON-CL4-2022-TWIN-TRANSITION-01-03. It is further funded by the Research Council of Norway (project AutoCSP, grant number 324674). 
+
+## Data Availability Statement 
+
+Gimitest can be downloaded from https://github.com/DennisGross/Gimitest .
+
+## References 
+
+Nadia Alshahwan, Mark Harman, and Alexandru Marginean. Software testing research challenges: An industrial perspective. In ICST , pp. 1–10. IEEE, 2023. Kai Arulkumaran, Marc Peter Deisenroth, Miles Brundage, and Anil Anthony Bharath. Deep reinforcement learning: A brief survey. IEEE Signal Process. Mag. , 34(6):26–38, 2017. Patrick Bareiß, Beatriz Souza, Marcelo d’Amorim, and Michael Pradel. Code generation tools (almost) for free? A study of few-shot, pre-trained language models on code. CoRR , abs/2206.01335, 2022. Earl T. Barr, Mark Harman, Phil McMinn, Muzammil Shahbaz, and Shin Yoo. The Oracle Problem in Software Testing: A Survey. 41(5):507–525, 2015. doi: 10.1109/TSE.2014.2372785. Varun Bhatt, Bryon Tjanaka, Matthew C. Fontaine, and Stefanos Nikolaidis. Deep surrogate assisted generation of environments. arXiv:2206.04199 , 2022. URL https://arxiv.org/abs/2206.04199 .Matteo Biagiola and Paolo Tonella. Testing of deep reinforcement learning agents with surrogate models. 
+
+ACM Trans. Softw. Eng. Methodol. , (73):1–33, 2024. 16 Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schulman, Jie Tang, and Wojciech Zaremba. Openai gym. CoRR , abs/1606.01540, 2016. X. Cai, A. M. Bruaset, E. G. Gran, and T. Larsen. eX3: Experimental Infrastructure for Exploration of Exascale Computing. Poster presented at ISC High Performance, 2021. Patrick P. K. Chan, Yaxuan Wang, and Daniel S. Yeung. Adversarial attack against deep reinforcement learning with static reward impact map. In Proceedings of the 15th ACM Asia Conference on Computer and Communications Security , ASIA CCS ’20, pp. 334–343, New York, NY, USA, 2020a. Association for Computing Machinery. ISBN 9781450367509. doi: 10.1145/3320269.3384715. URL https://doi.org/10. 1145/3320269.3384715 .Patrick P. K. Chan, Yaxuan Wang, and Daniel S. Yeung. Adversarial attack against deep reinforcement learning with static reward impact map. In AsiaCCS , pp. 334–343. ACM, 2020b. Sofia Charalampidou, Apostolos Ampatzoglou, Paris Avgeriou, Seren Sencer, Elvira-Maria Arvanitou, and Ioannis Stamelos. A theoretical model for capturing the impact of design patterns on quality: the decorator case study. In SAC , pp. 1231–1238. ACM, 2017. Tsong Yueh Chen, Fei-Ching Kuo, Huai Liu, Pak-Lok Poon, Dave Towey, T. H. Tse, and Zhi Quan Zhou. Metamorphic testing: A review of challenges and opportunities. ACM Comput. Surv. , 51(1), jan 2018. ISSN 0360-0300. doi: 10.1145/3143561. URL https://doi.org/10.1145/3143561 .T.Y. Chen, S.C. Cheung, and S.M. Yiu. Metamorphic Testing: A New Approach for Generating Next Test Cases. Technical Report HKUST-CS98-01, Department of Computer Science, Hong Kong University of Science and Technology, 1998. Liviu Ciortea, Cristian Zamfir, Stefan Bucur, Vitaly Chipounov, and George Candea. Cloud9: a software testing service. ACM SIGOPS Oper. Syst. Rev. , 43(4):5–10, 2009. Weiwei Cui and Biao Yuan. A hybrid genetic algorithm based on reinforcement learning for the energy-aware production scheduling in the photovoltaic glass industry. Comput. Oper. Res. , 163:106521, 2024. Arghavan Moradi Dakhel, Amin Nikanjam, Vahid Majdinasab, Foutse Khomh, and Michel C. Desmarais. Ef-fective test generation using pre-trained large language models and mutation testing. CoRR , abs/2308.16557, 2023. Junhua Ding, Xiaojun Kang, and Xin Hua Hu. Validating a Deep Learning Framework by Metamorphic Testing. In Proceedings - 2017 IEEE/ACM 2nd International Workshop on Metamorphic Testing, MET 2017 , pp. 28–34, 2017. Alexey Dosovitskiy, Germán Ros, Felipe Codevilla, Antonio M. López, and Vladlen Koltun. CARLA: an open urban driving simulator. In CoRL , volume 78 of Proceedings of Machine Learning Research , pp. 1–16. PMLR, 2017. Jan Eisenhut, Álvaro Torralba, Maria Christakis, and Jörg Hoffmann. Automatic metamorphic test oracles for action-policy testing. In International Conference on Automated Planning and Scheduling , 2023. URL 
+
+https://api.semanticscholar.org/CorpusID:259638200 .Hasan Ferit Eniser, Timo P. Gros, Valentin Wüstholz, Jörg Hoffmann, and Maria Christakis. Metamorphic relations via relaxations: an approach to obtain oracles for action-policy testing. In ISSTA , 2022. Ian J. Goodfellow, Jonathon Shlens, and Christian Szegedy. Explaining and harnessing adversarial examples. 
+
+arXiv preprint arXiv:1412.6572 , 2014. Dennis Gross, Nils Jansen, Sebastian Junges, and Guillermo A. Pérez. COOL-MC: A comprehensive tool for reinforcement learning and model checking. In SETTA , volume 13649 of Lecture Notes in Computer Science , pp. 41–49. Springer, 2022. 17 Dennis Gross, Christoph Schmidl, Nils Jansen, and Guillermo A. Pérez. Model checking for adversarial multi-agent reinforcement learning with reactive defense methods. In ICAPS , pp. 162–170. AAAI Press, 2023a. Dennis Gross, Thiago D. Simão, Nils Jansen, and Guillermo A. Pérez. Targeted adversarial attacks on deep reinforcement learning policies via model checking. In ICAART (3) , pp. 501–508. SCITEPRESS, 2023b. Rong Gu, Peter Gjøl Jensen, Danny Bøgsted Poulsen, Cristina Seceleanu, Eduard Enoiu, and Kristina Lundqvist. Verifiable strategy synthesis for multiple autonomous agents: a scalable approach. Int. J. Softw. Tools Technol. Transf. , 2022. Ernst Moritz Hahn, Mateo Perez, Sven Schewe, Fabio Somenzi, Ashutosh Trivedi, and Dominik Wojtczak. Mungojerrie: Reinforcement learning of linear-time objectives. CoRR , abs/2106.09161, 2021. Fitash Ul Haq, Donghwan Shin, and Lionel C. Briand. Many-objective reinforcement learning for online testing of dnn-enabled systems. In Proceedings of the 45th International Conference on Software Engineering ,ICSE ’23, pp. 1814–1826. IEEE Press, 2023. ISBN 9781665457019. doi: 10.1109/ICSE48619.2023.00155. URL https://doi.org/10.1109/ICSE48619.2023.00155 .Sandy H. Huang, Nicolas Papernot, Ian J. Goodfellow, Yan Duan, and Pieter Abbeel. Adversarial attacks on neural network policies. CoRR , abs/1702.02284, 2017. URL http://arxiv.org/abs/1702.02284 .Zubair Khaliq, Sheikh Umar Farooq, and Dawood Ashraf Khan. Artificial intelligence in software testing : Impact, problems, challenges and prospect. CoRR , abs/2201.05371, 2022. Maximilian A. Köhl, Michaela Klauck, and Holger Hermanns. Momba: JANI meets python. In TACAS (2) ,volume 12652 of Lecture Notes in Computer Science , 2021. Jernej Kos and Dawn Song. Delving into adversarial attacks on deep policies. arXiv:1705.06452 , 2017. URL 
+
+https://arxiv.org/abs/1705.06452 .Joel Z. Leibo, Edgar A. Duéñez-Guzmán, Alexander Vezhnevets, John P. Agapiou, Peter Sunehag, Raphael Koster, Jayd Matyas, Charlie Beattie, Igor Mordatch, and Thore Graepel. Scalable evaluation of multi-agent reinforcement learning with melting pot. In ICML 2021 , 2021. Yen-Chen Lin, Zhang-Wei Hong, Yuan-Hong Liao, Meng-Li Shih, Ming-Yu Liu, and Min Sun. Tactics of adversarial attack on deep reinforcement learning agents. arXiv:1703.06748 , 2019. URL https: //arxiv.org/abs/1703.06748 .Chengjie Lu, Yize Shi, Huihui Zhang, Man Zhang, Tiexin Wang, Tao Yue, and Shaukat Ali. Learning configurations of operating environment of autonomous vehicles to maximize their collisions. IEEE Transactions on Software Engineering , 49(1):384–402, 2023. doi: 10.1109/TSE.2022.3150788. Quentin Mazouni, Helge Spieker, Arnaud Gotlieb, and Mathieu Acher. A review of validation and verification of neural network-based policies for sequential decision making. In Rencontres des Jeunes Chercheurs en Intelligence Artificielle (RJCIA) , 2023. URL https://arxiv.org/abs/2312.09680 .Quentin Mazouni, Helge Spieker, Arnaud Gotlieb, and Mathieu Acher. Policy testing with mdpfuzz (replica-bility study). In Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis , ISSTA 2024, pp. 1567–1578, New York, NY, USA, 2024a. Association for Computing Machinery. ISBN 9798400706127. doi: 10.1145/3650212.3680382. URL https://doi.org/10.1145/3650212.3680382 .Quentin Mazouni, Helge Spieker, Arnaud Gotlieb, and Mathieu Acher. Testing for fault diversity in reinforcement learning. In 5th ACM/IEEE International Conference on Automation of Software Test (AST 2024) , 2024b. Phil McMinn. Search-based software test data generation: a survey. Software testing, Verification and reliability , 14(2):105–156, 2004. 18 Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Alex Graves, Ioannis Antonoglou, Daan Wierstra, and Martin Riedmiller. Playing atari with deep reinforcement learning. arXiv:1312.5602 , 2013. Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Andrei A. Rusu, Joel Veness, Marc G. Bellemare, Alex Graves, Martin A. Riedmiller, Andreas Fidjeland, Georg Ostrovski, Stig Petersen, Charles Beattie, Amir Sadik, Ioannis Antonoglou, Helen King, Dharshan Kumaran, Daan Wierstra, Shane Legg, and Demis Hassabis. Human-level control through deep reinforcement learning. Nat. , 518(7540):529–533, 2015. Christian Murphy, Gail E. Kaiser, Lifeng Hu, and Leon Wu. Properties of machine learning applications for use in metamorphic testing. In Proceedings of the Twentieth International Conference on Software Engineering & Knowledge Engineering (SEKE’2008), San Francisco, CA, USA, July 1-3, 2008 , pp. 867–872. Knowledge Systems Institute Graduate School, 2008. doi: 10.7916/D8XK8PFD. Kohei Ohashi, Kosuke Nakanishi, Wataru Sasaki, Yuji Yasui, and Shin Ishii. Deep adversarial reinforcement learning with noise compensation by autoencoder. IEEE Access , 9:143901–143912, 2021. OpenAI. GPT-4 technical report. CoRR , abs/2303.08774, 2023. Ciprian Paduraru, Miruna Paduraru, and Alin Stefanescu. Riverfuzzrl - an open-source tool to experiment with reinforcement learning for fuzzing. In ICST , pp. 430–435. IEEE, 2021. Qi Pang, Yuanyuan Yuan, and Shuai Wang. Mdpfuzz: testing models solving markov decision processes. In 
+
+ISSTA , pp. 378–390. ACM, 2022. Kexin Pei, Yinzhi Cao, Junfeng Yang, and Suman Jana. Deepxplore: Automated whitebox testing of deep learning systems. Commun. ACM , 2019. doi: 10.1145/3361566. Justin K. Pugh, Lisa B. Soros, and Kenneth O. Stanley. Quality diversity: A new frontier for evolutionary computation. Frontiers in Robotics and AI , 3, 2016. ISSN 2296-9144. doi: 10.3389/frobt.2016.00040. URL 
+
+https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2016.00040 .Antonin Raffin. Rl baselines3 zoo. https://github.com/DLR-RM/rl-baselines3-zoo , 2020. Tim Rentsch. Object oriented programming. ACM Sigplan Notices , 17(9):51–57, 1982. Max Schäfer, Sarah Nadi, Aryaz Eghbali, and Frank Tip. An empirical evaluation of using large language models for automated unit test generation. IEEE Trans. Software Eng. , 50(1):85–105, 2024. Sergio Segura, Gordon Fraser, Ana B. Sanchez, and Antonio Ruiz-Cortés. A Survey on Metamorphic Testing. 
+
+IEEE Transactions on Software Engineering , 42(9):805–824, 2016. ISSN 1939-3520. doi: 10.1109/TSE. 2016.2532875. URL https://ieeexplore.ieee.org/abstract/document/7422146 .Helge Spieker and Arnaud Gotlieb. Adaptive metamorphic testing with contextual bandits. Journal of Systems and Software , 165:110574, 2020. ISSN 0164-1212. doi: 10.1016/j.jss.2020.110574. Helge Spieker, Nassim Belmecheri, Arnaud Gotlieb, and Nadjib Lazaar. Evaluating Human Trajectory Predic-tion with Metamorphic Testing. In Proceedings of the 9th ACM International Workshop on Metamorphic Testing , MET 2024, pp. 34–40. Association for Computing Machinery, 2024. ISBN 9798400711176. doi: 10.1145/3679006.3685071. URL https://dl.acm.org/doi/10.1145/3679006.3685071 .Marcel Steinmetz, Daniel Fiser, Hasan Ferit Eniser, Patrick Ferber, Timo P. Gros, Philippe Heim, Daniel Höller, Xandra Schuler, Valentin Wüstholz, Maria Christakis, and Jörg Hoffmann. Debugging a policy: Automatic action-policy testing in AI planning. In ICAPS , pp. 353–361. AAAI Press, 2022. Jianwen Sun, Tianwei Zhang, Xiaofei Xie, Lei Ma, Yan Zheng, Kangjie Chen, and Yang Liu. Stealthy and efficient adversarial attacks against deep reinforcement learning. 2020. URL https://arxiv.org/abs/ 2005.07099 .L. Sun and Z. Q. Zhou. Metamorphic Testing for Machine Translations: MT4MT. In 2018 25th Australasian Software Engineering Conference (ASWEC) , pp. 96–100, November 2018. doi: 10.1109/ASWEC.2018.00021. 19 Richard S Sutton and Andrew G Barto. Reinforcement learning: An introduction . MIT press, 2018. Christian Szegedy, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan, Ian Goodfellow, and Rob Fergus. Intriguing properties of neural networks. arXiv:1312.6199 , 2014. URL https://arxiv.org/abs/ 1312.6199 .Martin Tappler, Filip Cano Cordoba, Bernhard Aichernig, and Bettina Könighofer. Search-based testing of reinforcement learning. In 31st International Joint Conference on Artificial Intelligence and the 25th European Conference on Artificial Intelligence: IJCAI-ECAI 2022 , pp. 503–510. ijcai. org, 2022. Justin K. Terry, Benjamin Black, Nathaniel Grammel, Mario Jayakumar, Ananth Hari, Ryan Sullivan, Luis S. Santos, Clemens Dieffendahl, Caroline Horsch, Rodrigo Perez-Vicente, Niall L. Williams, Yashas Lokesh, and Praveen Ravi. Pettingzoo: Gym for multi-agent reinforcement learning. In NeurIPS , 2021. Jiayi Tian, Ming Yin, and Jijiao Jiang. Fault self-healing: A biological immune heuristic reinforcement learning method with root cause reasoning in industrial manufacturing process. Eng. Appl. Artif. Intell. ,133:108553, 2024. Yuchi Tian, Kexin Pei, Suman Jana, and Baishakhi Ray. Deeptest: automated testing of deep-neural-network-driven autonomous cars. In ICSE , pp. 303–314. ACM, 2018. Mark Towers, Jordan K. Terry, Ariel Kwiatkowski, John U. Balis, Gianluca de Cola, Tristan Deleu, Manuel Goulão, Andreas Kallinteris, Arjun KG, Markus Krimmel, Rodrigo Perez-Vicente, Andrea Pierré, Sander Schulhoff, Jun Jet Tai, Andrew Tan Jin Shen, and Omar G. Younis. Gymnasium, March 2023. URL 
+
+https://zenodo.org/record/8127025 .Junjie Wang, Yuchao Huang, Chunyang Chen, Zhe Liu, Song Wang, and Qing Wang. Software testing with large language models: Survey, landscape, and vision. IEEE Trans. Software Eng. , 50(4):911–936, 2024. Elaine J. Weyuker. On testing non-testable programs. Comput. J. , 25(4):465–470, 1982. doi: 10.1093/ COMJNL/25.4.465. URL https://doi.org/10.1093/comjnl/25.4.465 .Xiaoyuan Xie, Joshua W.K. Ho, Christian Murphy, Gail Kaiser, Baowen Xu, and Tsong Yueh Chen. Testing and validating machine learning classifiers by metamorphic testing. Journal of Systems and Software , 84 (4):544–558, 2011. ISSN 2158987413. doi: 10.1016/j.jss.2010.11.920. URL http://dx.doi.org/10.1016/ j.jss.2010.11.920 .Kenny Young and Tian Tian. Minatar: An atari-inspired testbed for more efficient reinforcement learning experiments. CoRR , abs/1903.03176, 2019. Xiaoting Zhou, Lubin Wu, Yu Zhang, Zhen-Song Chen, and Shancheng Jiang. A robust deep reinforcement learning approach to driverless taxi dispatching under uncertain demand. Inf. Sci. , 646:119401, 2023. Ziyuan Zhou and Guanjun Liu. Robustness testing for multi-agent reinforcement learning: State perturbations on critical agents. In ECAI , 2023. Changxi Zhu, Mehdi Dastani, and Shihan Wang. A survey of multi-agent deep reinforcement learning with communication. Auton. Agents Multi Agent Syst. , 38(1):4, 2024. A. Zolfagharian, M. Abdellatif, L. C. Briand, M. Bagherzadeh, and R. S. A search-based testing approach for deep reinforcement learning agents. IEEE Transactions on Software Engineering , 49(07):3715–3735, jul 2023. ISSN 1939-3520. doi: 10.1109/TSE.2023.3269804. 20
