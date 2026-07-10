@@ -1,0 +1,69 @@
+{
+  "label": "2026-07-10",
+  "date": "2026-07-10",
+  "generated_at": "2026-07-10T21:30:21",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202607/10/2607.08193v1-open-ended-multi-agent-autocurricula-via-visual-inspection-of-policies-with-multi-modal-llms",
+      "section": "deep",
+      "title_en": "Open-ended Multi-agent Autocurricula via Visual Inspection of Policies with Multi-modal LLMs",
+      "authors": "Lorenzo Pantè, Andrea Fanti, Roberto Capobianco",
+      "date": "2026-07-09",
+      "pdf": "https://arxiv.org/pdf/2607.08193v1",
+      "score": "9.0",
+      "evidence": "基于视觉策略检查的多智能体开放式自动课程学习",
+      "tldr": "强化学习开放课程生成需评估任务难度。本文提出视觉检查策略方法VIP，通过视频语言模型直接分析策略行为视频，为多智能体推荐课程。在星际争霸多智能体挑战上，VIP使用轻量级VLM生成的课程优于文本或标量分数方法。该方法简单有效，为开放课程设计提供新视角。",
+      "tags": "query:marl",
+      "abstract_en": "Open-ended curricula in Reinforcement Learning (RL) aim to train generally-capable agents by identifying tasks that facilitate learning increasingly complex skills. A major challenge when designing such curricula is assessing task difficulty relative to the agent's current learning progress. While previous work has explored using scalar task scores or textual summaries of the agent's behavior, here we study a different approach: directly inspecting policy behavior via recorded episode videos. We introduce a simple yet effective instantiation of this approach which leverages a Video Language Model (VLM) to both process these videos and provide curriculum recommendations, which we call Visual Inspection of Policies (VIP). Since videos can naturally contain any number of controllable agents, we empirically study VIP on the StarCraft Multi-Agent Challenge (SMAC). We show that even with a lightweight and openly accessible VLM (VideoLLaMa2-7B), VIP can use policy videos to generate more effective curricula than both its text-only ablation and methods that rely on scalar task scores.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/10/2607.08012v1-provably-optimal-learning-algorithms-for-assistance-games",
+      "section": "deep",
+      "title_en": "Provably Optimal Learning Algorithms for Assistance Games",
+      "authors": "Nivasini Ananthakrishnan, Mark Bedaywi, Michael I. Jordan, Stuart Russell, Nika Haghtalab",
+      "date": "2026-07-09",
+      "pdf": "https://arxiv.org/pdf/2607.08012v1",
+      "score": "8.0",
+      "evidence": "重复辅助博弈的分散式算法及可证明遗憾界",
+      "tldr": "针对反复交互的辅助博弈问题，本文定义了辅助遗憾指标，并提出了首个可证明高效的分布式学习算法。该算法为知情的人类和不知情的助理分别设计，达到(1-1/e)近似的遗憾率Õ(T^{3/4})。同时证明优于(1-1/e)的近似是计算困难的。利用共享随机串可进一步优化至Õ(T^{1/2})，该速率最优。",
+      "tags": "query:marl",
+      "abstract_en": "This paper studies an online variant of the assistance games framework, where an informed agent and an uninformed agent repeatedly interact over $T$ timesteps to optimize a common reward function. While the informed agent (the human) observes a latent state of the world, the uninformed agent (the assistant) observes only the human's actions. We provide the first provably efficient learning algorithms for repeated assistance games. We introduce the notion of assistance regret: the gap between the cumulative utility of interactions and that of the optimal joint policies in hindsight, which map latent states to action pairs. We present decentralized algorithms for both the human and the assistant that achieve a $(1-1/e)$-approximate assistance regret rate of $\\widetilde{O}(T^{3/4})$, with runtime polynomial in the size of the action and state spaces. These algorithms are general; in particular, they accommodate any no-regret algorithm for the assistant. We prove that achieving a regret approximation factor better than $(1-1/e)$ is computationally intractable. Furthermore, we demonstrate how these generic no-regret algorithms can be tailored to a pseudo-decentralized setting -- using a shared random string -- to achieve a rate of $\\widetilde{O}(T^{1/2})$, optimal up to logarithmic factors.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/10/2607.05369v1-gap-a-graph-as-policy-multi-agent-self-learning-harness-for-variational-automation-tasks",
+      "section": "quick",
+      "title_en": "GaP: A Graph-as-Policy Multi-Agent Self-Learning Harness For Variational Automation Tasks",
+      "authors": "Kaiyuan Chen, Shuangyu Xie, Letian Fu, Justin Yu, William Pacini, Sandeep Bajamahal, Hudson Kim, Jaimyn Drake, Daehwa Kim, Haoru Xue, Jonathan Francis, Christian Juette, Peter Schaldenbrand, Muhammet Yunus Seker, Ruwan Wickramarachchi, Uksang Yoo, Guanzhi Wang, Adithyavairavan Murali, Balakumar Sundaralingam, S. Shankar Sastry, Spencer Huang, Yuke Zhu, Linxi \"Jim\" Fan, Ken Goldberg",
+      "date": "2026-07-06",
+      "pdf": "https://arxiv.org/pdf/2607.05369v1",
+      "score": "7.0",
+      "evidence": "多智能体自学习框架，利用有向计算图生成策略",
+      "tldr": "针对可变自动化任务中模型无关策略可靠性不足的问题，提出Graph-as-Policy (GaP)多代理自学习框架。GaP从模块化技能库生成计算图，并通过内部仿真环境并行迭代优化图结构与参数。在8个新基准（4仿真4真实）上，GaP的成功率显著优于基线方法。该工作实现了可解释编程与开放世界适应性的结合，提升了商业应用的可靠性。",
+      "tags": "query:marl",
+      "abstract_en": "For robots to work reliably in commercial and industrial applications, can recent advances in agentic coding systems combine interpretable robot programming with the open-world adaptability of model-free policies? We focus on \"Variational Automation\" (VA), a class of tasks that have larger variations in object geometry and pose than fixed automation. Model-free policies often struggle to close the reliability gap for VA tasks, which must be executed persistently and reliably in commercial and industrial applications. Motivated by prior work on Task and Motion Planning (TAMP) and the Robot Operating System (ROS), we introduce Graph-as-Policy (GaP), a multi-agent coding harness that generates directed computation graphs with perception, planning, and control nodes from a Modular Open Robot Skill Library (MORSL). GaP then generates an internal simulation environment to rehearse task instances with different graphs in parallel to iteratively refine the graph structure and parameters to improve success rates and throughput. Evaluation with 8 new open VA task benchmarks, 4 in-simulation and 4 in real-world, suggests that GaP can achieve success rates that significantly outperform baselines. Details, code, and data can be found online: https://graph-robots.github.io/gap",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/10/2607.08137v1-securing-autonomous-vehicle-systems-via-twin-aware-federated-reinforcement-learning",
+      "section": "quick",
+      "title_en": "Securing Autonomous Vehicle Systems via Twin-Aware Federated Reinforcement Learning",
+      "authors": "Zifan Zhang, Minghong Fang, Dianwei Chen, Zhuqing Liu, Prashant Khanduri, Xianfeng Yang, Anupam Das, Yuchen Liu",
+      "date": "2026-07-09",
+      "pdf": "https://arxiv.org/pdf/2607.08137v1",
+      "score": "7.0",
+      "evidence": "面向多自动驾驶车辆的联邦强化学习",
+      "tldr": "联邦强化学习在自动驾驶中面临投毒攻击威胁，现有防御不足。本文提出SecAgg防御框架，结合数字孪生排练学习和历史参数聚合，仅聚合良性梯度。理论证明其在攻击下仍能收敛，在高速公路数字孪生实验中有效提升系统鲁棒性。该工作为安全关键场景下的联邦学习提供了可靠方案。",
+      "tags": "query:marl",
+      "abstract_en": "Federated reinforcement learning (FRL) is crucial for enabling collaborative learning across multiple agents without sharing raw data, thereby enhancing privacy and scalability in the decision-making process within dynamic vehicular environments. However, poisoning attacks pose a significant threat to the security and reliability of FRL-based systems, particularly in safety-critical autonomous driving, where this vulnerability remains largely unexplored. These attacks can compromise the global control model by subtly injecting malicious system parameters, leading to potential hazards. To counter these challenges, we present \\alg (\\underline{Sec}ure \\underline{A}ggregation with \\underline{p}oisoning-\\underline{p}revention and historical reinforcement) as a defensive framework aimed at enhancing the robustness of FRL systems designed for safety-critical driving scenarios. \\alg strategically integrates digital twins for rehearsal-based learning and leverages historical aggregated model parameters along with a selected central gradient to ensure that only benign data is aggregated, effectively mitigating the influence of malicious agents. Theoretical guarantees are provided for the convergence performance of \\alg in the presence of poisoning attacks. We also validate the effectiveness of \\alg using developed digital twins that model realistic highway environments to evaluate the control of autonomous vehicles under adversarial conditions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
