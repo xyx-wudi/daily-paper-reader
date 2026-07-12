@@ -6,24 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-11
-- 运行时间：2026-07-11 21:06:44 UTC
+- 最新运行日期：2026-07-12
+- 运行时间：2026-07-12 20:53:41 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
+- 本次总论文数：2
+- 精读区：1
 - 速读区：1
 
 ### 今日简报（AI）
-今日速读一篇关于基础模型赋能集体智能的论文（7.0分）。核心方向：探讨基础模型如何增强群体协作与决策智能。建议进一步关注基础模型在分布式推理或人机协作中的实际应用案例。
-- 详情：[/202607/11/README](/202607/11/README)
+1) 今日精读一篇关于基础模型实现集体智能的高分论文，速读分层搜索代理中的容量问题。  
+2) 最值得关注的是《Collective Intelligence with Foundation Models》中如何让多个大模型协同决策的机制，评分高达9.0。  
+3) 建议优先精读该论文的核心框架，并思考如何将集体智能方法应用到实际的多模型协作场景中。
+- 详情：[/202607/12/README](/202607/12/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Collective Intelligence with Foundation Models](/202607/12/2607.07729v1-collective-intelligence-with-foundation-models)  
+   标签：评分：9.0/10、query:marl
+   evidence：多智能体协作推理与聚合框架
 
 ### 速读区论文标签
-1. [Collective Intelligence with Foundation Models](/202607/11/2607.07729v1-collective-intelligence-with-foundation-models)  
-   标签：评分：7.0/10、query:marl
-   evidence：多智能体协作推理框架，无显式强化学习但属于多智能体协作系统
+1. [Think Big, Search Small: Where Capacity Matters in Hierarchical Search Agents?](/202607/12/2607.07548v1-think-big-search-small-where-capacity-matters-in-hierarchical-search-agents)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体LLM搜索中的去中心化执行
 
 
 <div class="dpr-home-promo-card">

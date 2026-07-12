@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-12",
+  "date": "2026-07-12",
+  "generated_at": "2026-07-12T20:53:47",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/12/2607.07729v1-collective-intelligence-with-foundation-models",
+      "section": "deep",
+      "title_en": "Collective Intelligence with Foundation Models",
+      "authors": "J. de Curtò, I. de Zarzà",
+      "date": "2026-07-06",
+      "pdf": "https://arxiv.org/pdf/2607.07729v1",
+      "score": "9.0",
+      "evidence": "多智能体协作推理与聚合框架",
+      "tldr": "基础模型规模扩大促使多模型协作推理成为提升AI安全可靠性的关键方向。本文提出多智能体框架：求解器独立生成草稿，评论者进行结构化评论与修订，聚合器合成共识，并设评分模块评估语义、数值和过程。在涵盖微积分、物理等领域的基准上，异构框架（不同专业模型）的逐步准确率达0.64，高于个体0.54，是同质框架的2.3倍且方差更低。贡献在于证明模型异质性对推理质量的决定性作用，为透明可审计的AI决策提供架构原则。",
+      "tags": "query:marl",
+      "abstract_en": "As foundation models grow in scale and diversity, coordinating multiple models into cooperative reasoning systems offers a path toward safer, more reliable AI. This chapter presents a multi-agent framework where solver models generate independent drafts, each undergoes structured critique and revision by a critic agent, and an aggregator agent synthesizes a final consensus solution. A scoring module provides semantic, numerical, and procedural evaluation across all agents. Through ablation studies on a benchmark spanning calculus, physics, chemistry, biology, economics, optimization, statistics, and mathematics, we isolate the contributions of framework architecture versus model diversity. We compare four configurations: (1) Individual Baseline, (2) Homogeneous Framework using one shared model, (3) Redundant Homogeneous Solvers using multiple instances of the same model, and (4) Heterogeneous Framework with diverse specialized models. Results show that while framework structure and redundant sampling yield modest gains, model heterogeneity is the critical factor driving substantial performance improvements. The heterogeneous configuration achieves superior step-wise accuracy (0.64 vs. 0.54 for individual models; 2.3x improvement over homogeneous configurations) with reduced variance across categories and difficulty levels. Step-wise reasoning quality (correctness of intermediate steps, not just final answers) improves dramatically only with model diversity, showing that heterogeneous agents provide complementary error detection and reasoning refinement essential for explainability and auditability. We discuss architectural principles, evaluation methodology, and implications for Global Applied AI, showing how heterogeneous multi-agent coordination supports transparent, auditable, high-confidence decision-making across scientific and industrial domains.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/12/2607.07548v1-think-big-search-small-where-capacity-matters-in-hierarchical-search-agents",
+      "section": "quick",
+      "title_en": "Think Big, Search Small: Where Capacity Matters in Hierarchical Search Agents?",
+      "authors": "Qinnan Cai, Yibo Zhao, Xiang Li",
+      "date": "2026-07-08",
+      "pdf": "https://arxiv.org/pdf/2607.07548v1",
+      "score": "6.0",
+      "evidence": "多智能体LLM搜索中的去中心化执行",
+      "tldr": "多智能体搜索代理中不同角色对模型容量的需求差异未被充分研究。本文通过角色分解，将搜索代理分为委托、执行和答案生成三个角色，并控制容量扫描。实验发现委托容量是性能瓶颈，扩展委托可提升EM约11点，而执行器扩展仅提升2.6点。使用1.7B参数的执行器通过轨迹蒸馏可匹配大模型性能且节省token。结论建议集中容量于委托角色，缩减执行器实现高效搜索。",
+      "tags": "query:marl",
+      "abstract_en": "Large language model based search agents increasingly adopt multi-agent architectures in which a main agent decomposes a complex question into sub-queries and dispatches them to parallel sub-agents. However, existing systems instantiate all roles from a single model of identical scale, leaving open how model capacity should be distributed across roles. We factorize hierarchical search into three roles: a delegation role responsible for task decomposition, an execution role responsible for retrieval and evidence extraction, and an answer generation role held fixed as a confound control. We then conduct controlled capacity sweeps along the delegation and execution axes on five multi-hop QA benchmarks. The experiments yield three findings. First, role factorization consistently outperforms a single-agent baseline, improving exact match from 4.5 to 8.6 points across six model scales. Second, capacity sensitivity is asymmetric: scaling the delegation backbone improves EM by ~11 points, whereas scaling the execution sub-agent moves EM by only ~2.6 points, identifying decomposition as the capability bottleneck. Third, a 1.7B-parameter executor trained via quality-filtered trajectory distillation matches a frontier sub-agent in accuracy while consuming 37% fewer sub-agent tokens, advancing the Pareto frontier. These results suggest a concrete recipe for building hierarchical search agents: concentrate capacity at delegation and downsize execution without sacrificing accuracy. Our code is available at https://github.com/QinnanCai0115/role-factorized-search.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
