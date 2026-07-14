@@ -1,0 +1,230 @@
+Title: Multi-Agent Reinforcement Learning for C-V2X RAT Selection
+
+URL Source: https://arxiv.org/pdf/2607.11744v1
+
+Published Time: Tue, 14 Jul 2026 03:05:50 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# Multi-Agent Reinforcement Learning for C-V2X RAT Selection 
+
+Moritz Schaffenroth, Uwe K¨ olbel, Heike Lepke, Alexander Prinz, Alfred H¨ oß 
+
+Department of Electrical Engineering, Media and Computer Science Ostbayerische Technische Hochschule Amberg-Weiden 
+
+Amberg, Germany 
+
+{m.schaffenroth, u.koelbel, h.lepke, a.prinz, a.hoess }@oth-aw.de 
+
+Abstract —Vehicles are increasingly equipped with advanced V2X communication capabilities. While early V2X apps utilized services such as Cooperative Awareness Messages, recent de-velopments have allowed more advanced applications including cooperative driving, shared perception, and sensor-sharing ser-vices. The broader mix of applications leads to heterogeneous requirements for latency and reliability. At the same time multi-ple communication technologies for V2X are available with pros and cons. Hybrid V2X communication can exploit the distinct advantages at the right moment to fulfill the requirements of the applications. This work studies the decision problem between cellular Uu link, NR-V2X PC5 sidelink, and the simultaneous use of both channels. We address this problem by using the multi-agent reinforcement learning algorithm MAPPO and compare it to five baselines consisting of a deep reinforcement learning (DRL) approach, a static decision tree approach and static channel selection strategies. The methods are evaluated in an urban scenario and with a set of selected communication use cases. The evaluation results show that when compared to the DRL approach, the on-time delivery ratio improves from 0.508 to 0.535 in a single-controlled-vehicle setting and from 0.548 to 0.567 when all vehicles follow the learned policy and reduces the training time by half. The gains result mainly from the advanced applications scenarios, as opposed to scenarios involving exclu-sively CAM messaging. This indicates future applications will benefit from such adaptive communication strategies and that multi-agent modelling is useful for addressing the underlying decision problem. 
+
+Index Terms —Hybrid vehicular network, NR-V2X PC5, C-V2X, radio access technology selection, multi-agent reinforcement learning 
+
+I. I NTRODUCTION 
+
+The landscape of V2X enabled applications is rapidly expanding. Future use cases like see-through for passing and cooperative perception have heterogeneous quality-of-service (QoS) requirements and communication with a single technol-ogy e.g., PC5 or Uu link can lead to performance limitations in terms of latency, reliability, or coverage. While PC5 enables direct low latency communication with ultra-low latency: ∼1 m illiseconds [1], the Uu link (5G) pro-vides advantages such as higher bandwidth, extended com-munication range, connectivity to remote infrastructure but demands the availability of cellular network coverage. Recent work by Khalid et al. [2] has shown that hybrid V2X selection can improve the one-way end-to-end latency, reliability and packet reception ratio of the communication when compared to static technology selection. They proposed a selection algo-rithm based on a decision tree to select between 5G/UU, C-V2X, and dedicated short range communication (DSRC) based on CAM-message statistics. This approach is explainable but might be limited under non-stationary situations as it occurs in multi-agent settings. Yacheur et al. [3] formulate the decision problem as deep reinforcement learning (DRL) task and com-pare their solution to single radio access technology (RAT) selection and a multiple-criteria decision analysis (MCDM) algorithm and assess it under two situations: Congested and non-congested. They find that in their scenario the packet reception rate (PRR) increases from 66 % to more than 90 % .This work highlights the advantage use of DRL for the RAT selection problem. Mancini et al. [4] study joint access selection with DSRC and visible light communication (VLC) and a complex state that e.g., considers distances between vehicles. They train vehicles under three different situations: urban, countryside, and highway and combine the models via Federated Deep Reinforcement Learning (FedDRL). Their observation was a more stable training process and generalization over different scenarios. However, the hybrid Uu/PC5 selection is a multi-agent setting where multiple agents compete for limited resources such as channel occupancy time and influence each other through their channel choice. This competition is becoming increasingly relevant as the number of connected vehicles and number of applications grows. Prior work [5] on a related field has applied multi agent reinforcement learning to optimize radio resource selection fo-cusing on mitigating packet collisions and improving spectrum efficiency. However, their approach focuses on a single tech-nology whereas we focus on the selection between multiple technologies such as Uu link and PC5. This paper targets the channel selection between Uu and PC5 in an urban ns-3/SUMO simulation. In particular we compare a centralized RL approach and a mixed cooperative-competitive environment multi-agent reinforcement learning (MARL) formulation. The main contributions are as follows:  
+
+> •
+
+a MARL description of the problem of hybrid Uu/PC5 mode selection using a simulation stack based on the arXiv:2607.11744v1 [cs.MA] 13 Jul 2026 RL models (RLlib) 
+
+> ns3-ai Interface (state/action exchange)
+> ns-3 Based V2X Communication Simulation
+> SUMO Mobility Layer
+> observation
+> action
+
+Fig. 1: Simulation stack. VaN3Twin [6] ecosystem and observations and a reward function based on QoS requirements that penalizes hybrid duplication  
+
+> •
+
+The MARL formulation is evaluated using a multi-agent proximal policy optimisation (MAPPO) model [7] in a ns3/SUMO digital-twin simulation environment with a heterogeneous application mix and a varying number of vehicles. This model achieved a higher mean on-time delivery ratio than a centralised double deep Q-network (DDQN) baseline inspired by [3]. II. S IMULATION STACK 
+
+The digital twin for the communication simulation is built upon the ms-van3t / VaN3Twin ecosystem [8] [6]. This frame-work integrates a microscopic mobility simulation using the traffic simulator SUMO [9]. The communication simulation is based on the ns-3 network simulator [10]. On top of that stack we implemented our own custom channel selection model. In our setup, we used ns3-ai [11] to couple the C++ based ns-3 simulation with Python based reinforcement learning to exchange observations and actions. To support large scale parallel execution, we modified ns3-ai to support multiple simulation instances. The top layer of the simulation stack consists of rllib [12] based code which performs both inference and training for the channel selection models. An overview of the complete stack is provided in Fig. 1. III. RL FORMULATION 
+
+We consider two potential RATs for this work. The ob-servations are a 10-dimensional vector containing Uu and PC5 channel busy ratios, Uu SINR, ego speed, and six application-level parameters: priority, latency target, message size, periodic flag, interval, and communication range. The discrete action space consists of three options and is given as follows: 
+
+A =
+
+
+
+0, Uu link 
+
+1, PC5 
+
+2, Uu link & PC5 Our implementation follows the Centralized Training with Decentralized Execution (CTDE) paradigm, where during training a critic has access to global state information (global on-time delivery ratio, number of vehicles in range, global number of vehicles, channel busy rate, packet reception ratio per channel) and the combined reward of all agents. We use a shared actor and assume all vehicles face the same deci-sion problem. This architecture has the following advantages: Improved sample efficiency and better generalization. Every vehicle decides for every message. Since this occurs for each vehicle at different times, the execution is turn-based. We compare our approach to a DDQN model trained with a different reward function proposed by [3]. They consider in their reward message reception acknowledgments as well as a performance satisfaction measurement, and link quality, where the latter is a comparison of current and previous signal-to-noise-plus-interference ratio (SNIR) values. Since the paper does not clearly state in which setting the model was trained and to have a comparable setting we trained it as a shared policy and in a non-stationary setting. The observation space is identical for both models. We define a simpler reward which is a composite func-tion that balances individual QoS with overall efficiency. The reward consists of a local component that reflects the agent’s self-interest and a global component that incentivizes cooperation: 
+
+rit = (1 −λ)
+
+ X
+
+> m∈R it
+
+wm
+
+sm
+
+nm
+
+− γdup hit
+
++λd t, λ ∈ [0 , 1] ,
+
+(1) where 
+
+Rit set of messages generated by agent i whose outcome is resolved at timestep t,
+
+wm priority weight of message m,
+
+sm number of intended receivers that obtained message m
+
+within its latency deadline, 
+
+nm number of intended receivers within the application’s communication range, 
+
+hit number of hybrid duplicate receptions caused by agent 
+
+i at timestep t,
+
+γdup penalty coefficient for hybrid duplication, 
+
+dt global on-time delivery ratio across all controlled agents at timestep t.The weighting between global and local reward λ is 0.3 in our experiments. Hybrid duplicates refer to packets received via both channels, as there could be also duplicates over the same channel in case of re-transmissions. IV. E XPERIMENTAL SETUP 
+
+A. Simulated scenario 
+
+During the training of the two reinforcement learning mod-els, the Yacheur et al. DDQN model and our MAPPO model we use two SUMO road networks which we refer to as (a) Urban Map A (b) Urban Map B 
+
+Fig. 2: Road-network maps used in this study. Urban Map A and Urban Map B. Random traffic demand is generated for both maps using four application-mix profiles and two traffic density factors. The traffic generation script samples vehicle routes and departure times stochastically, using insertion periods of 2.5, 3.5, 5, 8, and 10 seconds. The traffic demand factors scale those numbers. In both training and evaluation, the traffic simulation is first advanced to a defined start time so that vehicles are already present in the scenario before communication decisions are executed. Evaluation is performed on both maps and they are illustrated in Fig. 2. For every combination of scenario, app-mix and start time, the evaluation is run 10 times under identical random seeds for all methods. We evaluate the learned policies under two different levels of control: Single-controlled-vehicle, only one ego vehicle is controlled by the reinforcement learning algorithm and all other vehicles are non-adaptive traffic and All-vehicles-controlled, where every vehicle in the simulation runs the same policy. Here agents influence each other through channel occupancy, interference and hybrid duplication. In this scenario the real multi-agent nature of the problem shows. The app-mixes are as follows: CAM-only, Mixed, Mostly-Uu and Mostly-PC5. CAM-only is a scenario where only CAM messages are exchanged. The remaining app-mixes consist of nine selected V2X use cases from [13], but have different default channel for non-adaptive traffic per app which leads to traffic that has different utilization on channels. We consider the following evaluation settings, which lead to 16 evaluation configurations: four app-mixes, two maps, two start times. 
+
+B. Communication setup 
+
+The compared methods use the same PHY/MAC settings. Uu at 3.5 GHz high frequency-band and 80 MHz bandwidth, and PC5 at 5.89 GHz high frequency-band and 20 MHz base-band using the NR-V2X Mode 2 and fixed modulation and coding scheme (MCS) of 10. 
+
+C. Method comparison 
+
+In our evaluation we compare the following methods:  
+
+> •
+
+static Uu-only RAT selection;  
+
+> •
+
+static PC5-only RAT selection;  
+
+> •
+
+static Hybrid RAT selection;  
+
+> •
+
+a rule-based decision-tree baseline inspired by [2];  
+
+> •
+
+a centralized learned reference policy (DDQN) trained under the assumption of non-adaptive surrounding traffic;  
+
+> •
+
+our MAPPO approach trained, where all vehicles simul-taneously learn to coordinate; We adjusted the rule-base decision-tree to map the DSRC channel to PC5 as we only consider PC5 as V2V commu-nication channel in this work. The DDQN model uses our observation space, but the Yacheur et al. reward signal as we use 5G-NR-V2X Mode 2 instead of DSRC. 
+
+D. Training 
+
+The training budget for both RL approaches is configured to be comparable. The MAPPO approach is trained on 60 itera-tions with 100-step episodes, which leads in our configuration to a total of 4.8 × 10 5 environment steps per training run. The DDQN model uses also 60 iterations, but with a message receive target of 100, and the episode steps were capped at 200 steps which lead to a total of ∼ 6.7 × 10 5 environment-steps. The DDQN checkpoints took on our local setup on average about 2.2 days to train. The MAPPO checkpoints in mean about 17.6 hours. 
+
+E. Metrics 
+
+The primary metric is on-time delivery ratio , defined as deadline compliant deliveries divided by the expected packets. We also report on-time reliability , mean delay of arrived packets and hybrid duplicate ratio as can be seen in Table I. V. R ESULTS 
+
+Figures 3a and 3b together with Table II show the overall results regarding the delivery and reliability of the models. The best checkpoint each of DDQN,MAPPO is used for illustrative purposes. one controlled vehicle all vehicles controlled 
+
+> Static Uu
+> Static PC5
+> Static Hybrid
+> Decision Tree
+> Best DDQN
+> Best MAPPO
+
+0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+> Mean delivery ratio
+
+(a) Mean on-time delivery ratio 
+
+> Static Uu
+> Static PC5
+> Static Hybrid
+> Decision Tree
+> Best DDQN
+> Best MAPPO
+
+0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+> Mean reliability ratio
+
+(b) Mean on-time reliability 
+
+Fig. 3: Means for on-time delivery ratio and on-time reliability. The baseline methods and the best DDQN/MAPPO model seeds are compared over 16 evaluation configurations per controlled-vehicle setting. TABLE I: Key performance indicators used for evaluation. 
+
+KPI Unit Definition 
+
+On-time delivery ratio latency-compliant deliveries / expected packets On-time reliability ratio latency-compliant deliveries / arrived packets Mean delay [s] mean end-to-end delay over ar-rived packets Hybrid duplicate rate [%] share of receptions where the same message arrives via both Uu and PC5 Best overall configurations # grouped evaluation configura-tions in which a method has the highest mean on-time de-livery ratio 
+
+TABLE II: Direct comparison between MAPPO and DDQN based on 10 models trained with different seeds each. Evalua-tion summary over 16 evaluation configurations per controlled-vehicle setting. Means are aggregated across configurations.                    
+
+> Controlled vehicles Method Best overall configu-rations Mean delivery ratio Delay [ms] Hybrid duplication [%]
+> one DDQN 70.508 96 12.119 MAPPO 90.535 102 9.645 all DDQN 30.548 57 8.762 MAPPO 13 0.567 58 8.892
+
+To determine if MAPPO performs better than the DDQN model, we trained 10 models each with pairwise seeds and performed a two-sided paired t-test on the matched evalua-tion configurations. MAPPO achieved a higher mean delivery ratio in both controlled-vehicle settings. Across both settings combined, MAPPO significantly outperformed DDQN (n = 320, MAPPO: M = 0.551, DDQN: M = 0.528, mean paired TABLE III: Winner counts by application mix and controlled vehicles. Winners are selected by the highest mean on-time delivery ratio.                                       
+
+> Controlled vehicles App-mix Static Uu-only Static PC5-only DDQN MAPPO
+> one CAM-only 22--Mixed 1-12Mostly-PC5 1--3Mostly-Uu --31all CAM-only 31--Mixed --13Mostly-PC5 --13Mostly-Uu --130.0 0.1 0.3 0.5 0.7
+> Lambda
+> 0.235
+> 0.240
+> 0.245
+> 0.250
+> 0.255
+> 0.260
+> 0.265
+> On-Time Delivery Ratio
+> 0.241
+> 0.262
+> 0.264
+> 0.233
+> 0.261
+
+Fig. 4: Impact of different λ values on the mean on-time delivery ratio during training under the selected scenarios. difference = 0.0227, t = 2.509, p = 0.0126). Here, n denotes the number of matched MAPPO–DDQN pairs, M the mean delivery ratio, t is the paired t-test statistic, and p is the corresponding two-sided p-value. The value n consists of 16 configurations × 2 controlled vehicle settings × 10 seeds = 320. This means despite fewer environment steps, MAPPO converges faster. In the comparison against the baseline methods we used the respectively best of the 10 trained models and compare it in Figure 3a. MAPPO leads in the one-controlled vehicle setting. In the more relevant all-vehicles controlled setting the lead is even better visible. In Figure 4 the impact of different lambda values on the on-time delivery ratio during training are displayed compared with different runs with the same seed. The best value was achieved at λ = 0 .3, which we used for the model comparison. An interesting finding is the occurrence of the wins by the static methods. The results are summarized in Table III. The wins of the simpler strategies mostly occur in the CAM-only app-mix. Yacheur et al. [3] observed that their MCDM RAT selection baseline approach achieves better PRR in low-density traffic compared to LTE-V2X. Our observations confirm this finding, indicating that simple methods are most effective in basic scenarios. VI. L IMITATIONS 
+
+We acknowledge several limitations of our study. Since we only used two maps, which are both from the same region we cannot determine the generalization property. Furthermore the DDQN model has some advantages, since it had longer training time due to the adaptive episode end and it has the hyperparameters from the Yacheur paper. Our MAPPO used default hyper-parameters for PPO provided by the RLlib library. Additionally, the DDQN model inspired by Yacheur et al. and our MAPPO model use different reward functions. We did not conduct an ablation study regarding the reward function. VII. C ONCLUSION 
+
+This paper presented a MARL based hybrid communication selection approach on heterogeneous QoS-dependent appli-cations. We evaluate it against heuristics as well as DRL based previous work and found improvements in terms of on-time delivery ratio in our evaluation scenario. In future work, we will apply the selection algorithm to a real-world testbed in order to examine the performance of the algorithm. Furthermore, in realistic scenarios a mix of adaptive and non-adaptive traffic should be analyzed. ACKNOWLEDGMENT 
+
+The authors would like to thank the German Federal Min-istry of Research, Technology and Space (BMBFTR) which funded the project under grant number 16MEE0385 and the EU HORIZON-KDT Joint Undertaking, which funded the ShapeFuture project under the grant agreement n° 101139996. REFERENCES [1] L. Miao, J. J. Virtusio, and K.-L. Hua, “Pc5-based cellular-v2x evolution and deployment,” Sensors , vol. 21, no. 3, 2021. [Online]. Available: https://www.mdpi.com/1424-8220/21/3/843 [2] I. Khalid, V. Maglogiannis, D. Naudts, A. Shahid, and I. Moerman, “Optimizing hybrid v2x communication: An intelligent technology selection algorithm using 5g, c-v2x pc5 and dsrc,” Future Internet ,vol. 16, no. 4, 2024. [Online]. Available: https://www.mdpi.com/1999-5903/16/4/107 [3] B. Y. Yacheur, T. Ahmed, and M. Mosbah, “Drl-based rat selection in a hybrid vehicular communication network,” in 2023 IEEE 97th Vehicular Technology Conference (VTC2023-Spring) , 2023, pp. 1–5. [4] L. Mancini, S. Labbi, K. A. Meraim, F. Boukhalfa, A. Durmus, P. Man-gold, and E. Moulines, “Joint channel selection using feddrl in v2x,” in 
+
+2024 IEEE Middle East Conference on Communications and Networking (MECOM) , 2024, pp. 268–273. [5] W. Chen, B. Gu, X. Tan, and C. Wei, “Radio resource selection in c-v2x mode 4: A multiagent deep reinforcement learning approach,” in 2022 International Conference on Computer Communications and Networks (ICCCN) , 2022, pp. 1–8. [6] R. Pegurri, D. Gasco, F. Linsalata, M. Rapelli, E. Moro, F. Raviglione, and C. Casetti, “Van3twin: the multi-technology v2x digital twin with ray-tracing in the loop,” 2026. [Online]. Available: https://arxiv.org/abs/2505.14184 [7] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, and Y. Wu, “The surprising effectiveness of ppo in cooperative multi-agent games,” in 
+
+Proceedings of the 36th International Conference on Neural Information Processing Systems , ser. NIPS ’22. Red Hook, NY, USA: Curran Associates Inc., 2022. [8] F. Raviglione, C. R. Carletti, M. Malinverno, C. Casetti, and C. Chiasserini, “ms-van3t: An integrated multi-stack framework for virtual validation of v2x communication and services,” Computer Communications , vol. 217, pp. 70–86, 2024. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0140366424000227 [9] M. Behrisch, L. Bieker, J. Erdmann, and D. Krajzewicz, “Sumo – simulation of urban mobility: An overview,” in Proceedings of SIMUL 2011, The Third International Conference on Advances in System Simulation , S. . U. o. O. Aida Omerovic, R. I. R. T. P. Diglio A. Simoni, and R. I. R. T. P. Georgiy Bobashev, Eds. ThinkMind, Oktober 2011. [Online]. Available: https://elib.dlr.de/71460/ [10] “ns-3: Discrete-event network simulator,” https://www. nsnam.org/, ac-cessed: 2026-03-18. [11] H. Yin, P. Liu, K. Liu, L. Cao, L. Zhang, Y. Gao, and X. Hei, “ns3-ai: Fostering artificial intelligence algorithms for networking research,” in 
+
+Proceedings of the 2020 Workshop on Ns-3 , ser. WNS3 ’20. New York, NY, USA: Association for Computing Machinery, 2020, p. 57–64. [Online]. Available: https://doi.org/10.1145/3389400.3389404 [12] E. Liang, R. Liaw, R. Nishihara, P. Moritz, R. Fox, K. Goldberg, J. Gonzalez, M. Jordan, and I. Stoica, “RLlib: Abstractions for distributed reinforcement learning,” in Proceedings of the 35th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, J. Dy and A. Krause, Eds., vol. 80. PMLR, 10–15 Jul 2018, pp. 3053–3062. [Online]. Available: https://proceedings.mlr.press/v80/liang18b.html [13] 5GAA Automotive Association, “C-v2x use cases and service level requirements, volume i,” 5G Automotive Association (5GAA), Tech. Rep. Version 2.0, Jan. 2025.
