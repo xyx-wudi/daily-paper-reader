@@ -6,28 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-15
-- 运行时间：2026-07-15 21:09:29 UTC
+- 最新运行日期：2026-07-16
+- 运行时间：2026-07-16 21:23:54 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：5
+- 精读区：3
+- 速读区：2
 
 ### 今日简报（AI）
-1) 今日精读《Unveiling Complex Collective Behaviors from Simple Rewards》（8.0分），速读《Implicit Midpoint Gradient Descent》（7.0分），聚焦集体行为涌现与博弈收敛。
-2) 最值得看的是：简单奖励可揭示复杂集体行为机制；隐式中点梯度下降实现零点博弈的无学习率收敛。
-3) 建议先精读集体行为论文，理解奖励设计驱动群体涌现的底层逻辑；再速读博弈优化方法，可扩展应用到多智能体系统。
-- 详情：[/202607/15/README](/202607/15/README)
+1) 今日精读两篇高分论文：多智能体主动3D重建与多AUV协同感知传输，速读聚焦自动驾驶弹性决策与微电网联邦强化学习。  
+2) 最值得深读的是COLMAR提出的多视角协作策略（9.0分）和多AUV隐蔽传输方案（9.0分），均实现高协同效率。  
+3) 建议优先关注多智能体协同中的“任务导向”与“隐私安全”平衡，可迁移至机器人或物联网场景。
+- 详情：[/202607/16/README](/202607/16/README)
 
 ### 精读区论文标签
-1. [Unveiling Complex Collective Behaviors from Simple Rewards](/202607/15/2607.12861v1-unveiling-complex-collective-behaviors-from-simple-rewards)  
+1. [COLMAR: Cooperative View Policy Learning for Multi-Agent Active 3D Reconstruction](/202607/16/2607.13524v1-colmar-cooperative-view-policy-learning-for-multi-agent-active-3d-reconstruction)  
+   标签：评分：9.0/10、query:marl
+   evidence：合作多智能体强化学习用于主动三维重建
+2. [Task-Oriented Sensing and Covert Transmissions for Collaborative Multi-AUV Systems](/202607/16/2607.13880v1-task-oriented-sensing-and-covert-transmissions-for-collaborative-multi-auv-systems)  
+   标签：评分：9.0/10、query:marl
+   evidence：明确提及多智能体强化学习和多AUV协作
+3. [Equilibrium stability as a driver of cooperation among Q-learners](/202607/16/2607.13607v1-equilibrium-stability-as-a-driver-of-cooperation-among-q-learners)  
    标签：评分：8.0/10、query:marl
-   evidence：多智能体强化学习中的群体可解释性
+   evidence：多智能体Q学习者在定价算法中的合作行为
 
 ### 速读区论文标签
-1. [Implicit Midpoint Gradient Descent: Fast and Learning rate free convergence for Zero-Sum Games](/202607/15/2607.09950v1-implicit-midpoint-gradient-descent-fast-and-learning-rate-free-convergence-for-zero-sum-games)  
+1. [Plug-and-Play Reweighting for Resilient Collaborative Decision-Making in Connected Autonomous Driving](/202607/16/2607.10037v1-plug-and-play-reweighting-for-resilient-collaborative-decision-making-in-connected-autonomous-driving)  
    标签：评分：7.0/10、query:marl
-   evidence：隐式中点梯度下降法用于零和博弈，与多智能体强化学习中的马尔可夫博弈相关
+   evidence：面向网联自动驾驶的弹性协作决策，采用基于注意力机制的框架
+2. [Constraint-Aware Aggregation for Federated Reinforcement Learning in Microgrid Energy Coordination](/202607/16/2607.12763v1-constraint-aware-aggregation-for-federated-reinforcement-learning-in-microgrid-energy-coordination)  
+   标签：评分：6.0/10、query:marl
+   evidence：面向微电网能量协调的协作式多智能体联邦强化学习
 
 
 <div class="dpr-home-promo-card">

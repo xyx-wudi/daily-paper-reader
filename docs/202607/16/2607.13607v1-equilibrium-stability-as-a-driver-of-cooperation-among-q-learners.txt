@@ -1,0 +1,1426 @@
+Title: Equilibrium stability as a driver of cooperation among Q-learners
+
+URL Source: https://arxiv.org/pdf/2607.13607v1
+
+Published Time: Thu, 16 Jul 2026 00:47:45 GMT
+
+Number of Pages: 35
+
+Markdown Content:
+# Equilibrium stability as a driver of cooperation among Q-learners 
+
+Janusz M. Meylahn 1
+
+Maximilian Schäfer 2
+
+July 16, 2026 
+
+Abstract 
+
+Algorithmic collusion among pricing algorithms has raised concerns about sustained supra-competitive prices and their implications for social welfare. Existing work has largely focused on the probability that reinforcement-learning algorithms converge to cooperative strategies, typically under the assumption that exploration vanishes over time. Motivated by the observation that algorithms deployed in practice are likely to continue exploring in order to remain adaptive to changing environments, we study learning dynamics under constant exploration. In this setting, the relevant question is no longer whether an algorithm converges to a particular strategy profile, but rather what fraction of time the algorithms spend playing cooperative strategies. Even in the benchmark case of the repeated Prisoner’s Dilemma with one-period memory, this yields high-dimensional stochastic learning dynamics, for which a complete analytic treatment is intractable. We show that cooperative strategies can be dominant in this time-averaged sense and derive a boundary predicting when such dominance arises, based on the expected dynamics of the Q-learning process. Extensive simulations show that this boundary is a strong predictor for non-defection-dominated behaviour under epsilon-greedy Q-learning. 
+
+Mathematics Subject Classification 2010: 68T05, 60J20, 91A05 JEL Classification: D21, D43, D83, L12, L13 Artificial Intelligence, Pricing-Algorithms, Collusion, Reinforcement Learning, Q-Learning 
+
+> 1
+
+University of Twente, Department of Applied Mathematics, Drienerloolaan 5, 7522 NB Enschede, The Netherlands. j.m.meylahn@utwente.nl 
+
+> 2
+
+Institut Mines-Télécom Business School, Department of Data Analytics, Economics, and Finance. 9Rue Charles Fourier, 91000 Evry, France. maximilian.schafer@imt-bs.eu 
+
+1arXiv:2607.13607v1 [cs.MA] 15 Jul 2026 1 Introduction 
+
+A large amount of recent work has highlighted the potential danger of algorithmic col-lusion among pricing algorithms (Assad et al., 2024; Brown and MacKay, 2023). Such collusion would lead to supra-competitive prices and is most likely to be legal under cur-rent antitrust law (MacKay and Weinstein, 2022; Harrington, 2018). Early work already showed that reinforcement-learning algorithms can coordinate on supra-competitive out-comes in oligopoly settings (Waltman and Kaymak, 2008), while more recent studies have shown that Q-learning algorithms may sustain elevated prices in combination with reward-punishment schemes consistent with collusive behaviour (Calvano et al., 2020; Klein, 2021); alongside proposals for auditing algorithms for collusion (Hartline et al., 2024). Whether algorithmic collusion poses a realistic threat to social welfare remains debated, with multi-ple studies reporting mixed evidence and questioning the robustness and interpretation of such cooperative outcomes (Asker et al., 2022; Lambin, 2024). Much of the reinforcement-learning literature studies algorithms with a constant learn-ing rate and allows for persistent stochasticity in the environment. This modelling choice is standard and well motivated: a constant learning rate ensures that the algorithm remains responsive to changes or non-stationarities in payoffs, while environmental noise guarantees continued exploration of the state space (Kushner and Huang, 1981a,b; Beck and Srikant, 2012). In this setting, stochasticity is exogenous to the algorithm and serves to support adaptability. By contrast, in the algorithmic collusion literature, stochasticity typically originates from the agents’ own exploration. Many studies assume that exploration rates decline over time, so that learning eventually becomes effectively deterministic (Calvano et al., 2020, 2021; Asker et al., 2022). While this facilitates convergence to stable pricing policies, it also reduces the ability of algorithms to adapt to changes in the environment or to the behaviour of other learning agents. This limitation is particularly salient in multi-agent settings, which are inherently non-stationary (den Boer et al., 2024; den Boer and Meylahn, 2024; Lambin, 2024). Moreover, real-world demand conditions are unlikely to be stable over long horizons, suggesting that pricing algorithms deployed in practice may need to continue exploring in order to remain effective. In this paper, we study cooperation among Q-learners with a memory of one period in the prisoner’s dilemma when both the exploration and learning rates are kept constant. Our focus on memory-one strategies builds on recent work characterising equilibrium struc-ture and learning dynamics in repeated prisoner’s dilemma games (Usui and Ueda, 2021; Meylahn and Janssen, 2022). With constant exploration and learning, the resulting learn-ing dynamics no longer converge to a particular strategy profile and stay there indefinitely. Instead, the system transitions persistently between strategy profiles. This observation motivates a shift in perspective: rather than asking whether learning converges to a co-operative outcome, we measure cooperation by the fraction of time the learning dynamics spend in cooperative versus non-cooperative strategy profiles. We provide a theoretical characterisation of these learning dynamics and propose a heuristic boundary predicting when cooperation dominates in this time-averaged sense. The boundary is derived from the relative stability of equilibrium strategy profiles in the presence of persistent fluctuations. Related work has shown that stochastic fluctuations can play a central role in sustaining or disrupting cooperation in learning and evolutionary 2dynamics, including in repeated prisoner’s dilemma settings (Barfuss and Meylahn, 2023; Dolgopolov, 2024; Xu and Zhao, 2024). This stability-based mechanism uncovers a novel route to cooperation among reinforcement-learning algorithms–one that does not rely on vanishing exploration or absorption into a cooperative equilibrium. Extensive simulations show that the proposed boundary predicts the empirical transition between cooperative and non-cooperative regimes with high accuracy This perspective complements existing work in the algorithmic collusion literature, where collusion is typically assessed by the probability of converging to supra-competitive pricing once learning has effectively ceased. We introduce a new perspective by focusing on the long-run fraction of time that algorithms price supra-competitively as the measure of collusion. From a regulatory standpoint, this distinction is important because the extent of harm to social welfare is a function not only of the price but also of the time that the price is used. Our results show that equilibrium stability can be used to predict the fraction of time spent pricing supra-competitively. Interpreted economically, this stability reflects the ro-bustness of algorithmic cartels to ongoing fluctuations induced by learning and exploration. Social welfare losses from algorithmic collusion thus depend not only on the existence of collusive strategies, but on their resilience to persistent noise in the learning process. We approach the problem by considering the joint dynamics of the state and Q-values as a Markov process. Here the state space is discrete while the Q-value space is continuous. Analysing the true dynamics of this process is intractable, but by projecting from the Q-value to the strategy profile space, we obtain a hidden Markov model with a finite state space. Our observable of interest is the distribution of occupation times over strategy profiles. We prove that there is a positive probability of observing a transition from any strategy profile to another strategy profile, where each of the strategies is a best response to some strategy. Strategy profiles with this property thus form part of a unique recurrent set of the dynamics. Based on this proof, we conjecture that the distribution of occupation times converges to a unique stationary distribution in the long time limit. By considering an idealised learning process where we only take into account the ex-pected learning dynamics and linking this to properties of the unique stationarity distribu-tion, we derive an analytic condition on the parameters for predicting when the stationary distribution places more mass on cooperative strategy profiles than on competitive strategy profiles. Concretely, this is based on comparing the optimal Q-value differences at different stationary points of the expected learning dynamics. This comparison captures the idea that the stability of a strategy profile is predominantly determined by the probability of observing a reversal in the order of the Q-values. The probability of such a reversal is higher when the optimal Q-value difference is smaller. Even though the stationary distribution of the occupation time is reached in the long time limit, the time it takes to be stationary depends on the choice of parameters. Most important in this regard are the learning and exploration rates. For our simulations, we thus fix a time horizon and identify the regions of the parameter space for which stationarity is reached within this time horizon. This gives us the region in which we can expect our theoretical framework to apply. We proceed by sweeping the parameter space and recording the average empirical occupation time in the stationary distribution for the strategy profiles that occur most commonly in the simulations. We compare the theoretical boundary to the simulation outcomes by overlaying it on 3heatmaps of average empirical occupation times. This visual comparison shows that the boundary closely aligns with the transition between cooperative and non-cooperative strat-egy profiles. To provide a more systematic evaluation, we interpret the boundary as a decision rule to predict the dominance of cooperative outcomes and assess its performance using standard statistical metrics for classification. Despite being based on a heuristic that abstracts from several intricacies of the learning dynamics, the boundary performs remarkably well, achieving macro F1 scores ranging from 0.85 to 0.95. 
+
+# 2 Related Literature 
+
+Here, we provide a targeted review of the literature, highlighting its relevance to debates on algorithmic collusion in economics and its connection to, and extension of, prior work on algorithmic interactions in the prisoner’s dilemma and on stochastic effects in reinforcement-learning-based cooperation. 
+
+Economic Literature on Algorithmic Collusion. A series of studies has nuanced the interpretation of simulation-based evidence of algorithmic collusion (Asker et al., 2024; Abada and Lambin, 2023; Epivent and Lambin, 2024; Abada et al., 2024b). More specifi-cally, Abada and Lambin (2023) and Lambin (2024) identify vanishing exploration sched-ules as a key driver of cooperative patterns in algorithmic pricing environments, arguing that observed reward-punishment schemes may be artefacts of the learning process. This perspective calls into question the economic interpretation of reward-punishment schemes emphasised by Calvano et al. (2020) and Klein (2021). Motivated by this critique, we study a setting with persistent exploration, in which learning does not converge to a single policy and cooperative behaviour must instead be assessed through time-averaged domi-nance rather than convergence. Within this perspective, we show that cooperative strategy profiles can dominate long-run behaviour and derive a predictive boundary based on the relative stability of equilibrium strategy profiles under ongoing fluctuations. In particular, our analysis compares the stability of a forgiving reward-punishment strategy (win-stay, lose-shift) with that of all-defection, yielding a mechanism for sustained cooperation that does not rely on exploration vanishing to zero. 
+
+Algorithmic interactions in memory-one prisoner’s dilemma games. Recent work has focused on analysing the dynamics of stateless Q-learners in the prisoner’s dilemma un-der a variety of self-play (in the sense of coupling between Q-tables) assumptions (Banchio and Mantegazza, 2022, 2023). The case where the players make use of a memory of one period as a state space has received significant attention recently. Conditions for the exis-tence of equilibria have been derived (Usui and Ueda, 2021; Meylahn and Janssen, 2022). Convergence and a basin of attraction analysis of a batched version of Q-learning have been shown for the prisoner’s dilemma (Meylahn, 2025) and a three-action variant thereof (Meylahn, 2023). The metagame of hyperparameter selection has been analysed (Carissimo et al., 2025), and conditions for the transition from defection to cooperation have been de-rived under a self-play assumption (Bertrand et al., 2025). Previous work has also focused on the relationship between the speed of learning and exploration rate decrease (den Boer et al., 2024). 4Fluctuations. The papers most closely related to our work are those that examine the interaction between fluctuations and cooperation. Two recent studies employ the framework of stochastic stability to analyse mechanisms of algorithmic cooperation in the prisoner’s dilemma without memory (Dolgopolov, 2024; Xu and Zhao, 2024). Closely related is the finding that intrinsic fluctuations can facilitate cooperation in batched versions of Q-learning (Barfuss and Meylahn, 2023). An alternative modelling approach treats actions as choices among memory-one strategies played for fixed periods, with reinforcement learning used to adapt strategy selection. When the strategy set includes Tit-for-Tat, Always-Defect, and Always-Cooperate, stochasticity can induce cycles between cooperation and defection (Galla, 2011). Similar dynamics arise when the Win-Stay, Lose-Shift strategy is included (Bladon et al., 2010). Our heuristic boundary builds on these fluctuation-based insights by identifying the Q-value differences that are critical for assessing the relative stability of competing equilibria. 
+
+# 3 Model 
+
+In this section, we introduce the environment and algorithm we will consider. Together they determine a Markovian process. To facilitate our analysis in Section 4, we also introduce a related idealised process. The environment we consider is the iterated prisoner’s dilemma, where two players, labelled i ∈ { 1, −1}, employ a state space which consists of all one-period histories and can thus condition their action-selection probabilities on the actions taken in the previous round. This means that we have S = {(D, D ), (D, C ), (C, D ), (C, C )} and Ai = A = {D, C }, where 
+
+D denotes the “defect” action and C denotes the “cooperate” action. We denote the state at time t ∈ { 0, 1, . . . } by st ∈ S and the actions taken at time t by at = ( a1 
+
+> t
+
+, a −1 
+
+> t
+
+), with 
+
+ait the action of player i. Note that st+1 = at, which thus defines our transition dynamics. The rewards r(a) = ( r1(a), r −1(a)) are independent of the state and are defined as 
+
+r1(a) = 
+
+
+
+P when a = ( D, D )
+
+T when a = ( D, C )
+
+S when a = ( C, D )
+
+R when a = ( C, C )
+
+, and r−1(a) = 
+
+
+
+P when a = ( D, D )
+
+S when a = ( D, C )
+
+T when a = ( C, D )
+
+R when a = ( C, C )
+
+, (3.1) with T > R > P > S . The players want to maximise the expected sum of discounted rewards, i.e., 
+
+E
+
+" ∞X
+
+> t=1
+
+δtrit
+
+#
+
+, (3.2) where δ ∈ (0 , 1) . We are interested in studying the dynamics of the system 
+
+Qit+1 (s, a ) = 
+
+
+
+(1 − α)Qit(s, a ) + α[(1 − δ)rt(a) for (s, a ) = ( st, a it) and a = at
+
++ δ max a′ Qit(st+1 , a ′)] 
+
+Qit(s, a ) else 
+
+,
+
+where we initialise the Q-values Qi 
+
+> 0
+
+as U [S, T ] (uniformly between S and T ), α ∈ (0 , 1) is the learning rate, and we normalise the payoffs by 1 − δ to ensure that the Q-values remain 5in Q = [ S, T ] for aesthetic purposes and without loss of generality. At each point in time, player i selects an action according to the ϵ-greedy mechanism, with ϵ ∈ (0 , 1) 
+
+ait =
+
+(
+
+arg max a∈A Qit(st, a ) with probability 1 − ϵ/ 2arg min a∈A Qit(st, a ) with probability ϵ/ 2 . (3.3) This means that a player plays their greedy action with probability 1 − ϵ and takes an action uniformly at random with probability ϵ. Our setting is thus parameterised by θ =(T, R, P, S, δ, ϵ, α ) ∈ Θ, where Θ denotes the space of allowed values for the parameters. We can split θ into the environmental parameters θe = ( T, R, P, S ) and the algorithmic hyperparameters θa = ( δ, ϵ, α ), such that θ = ( θe, θ a). The underlying Q-value dynamics together with the action-selection mechanism lead to trajectories of state-action pairs 
+
+{s0, a0, s 1, a1, . . . }, (3.4) where s0 is taken uniformly from S. Since we have st+1 = at, it is sufficient to consider 
+
+{s0, s 1, s 2, . . . }. (3.5) The state of the system as a whole consists of 
+
+(st, Qt) ∈ S × Q × Q , (3.6) where Qt = ( Q1 
+
+> t
+
+, Q −1 
+
+> t
+
+). The Q-table of a player can be projected onto the space of ϵ-greedy strategies Πϵ with a fixed ϵ using 
+
+π(Qit) = arg max 
+
+> a∈A
+
+Qit(( D, D ), a ), arg max 
+
+> a∈A
+
+Qit(( D, C ), a ),
+
+arg max 
+
+> a∈A
+
+Qit(( C, D ), a ), arg max 
+
+> a∈A
+
+Qit(( C, C ), a )
+
+!
+
+.
+
+For example, if player i has Qit(s, D ) > Q it(s, C ) for all s ∈ S , then they are playing the 
+
+ϵ-greedy All-Defect (AD) strategy with π(Qi) = ( D, D, D, D ). In our setting, there are 
+
+|Πϵ| = 16 such strategies and therefore 256 strategy profiles π ∈ Πϵ × Πϵ.We will predominantly be studying the dynamics of 
+
+(st, π(Qt)) ∈ S × Πϵ × Πϵ. (3.7) Note that the dynamics of (st, Qt) are Markovian, but that the dynamics of (st, π(Qt)) 
+
+are not, since the probability of observing a particular transition between ϵ-greedy strategy profiles depends on the exact Q-values. We are thus studying a hidden Markov model. The advantage of studying (st, π(Qt)) is that these dynamics occur in a discrete space. 
+
+Idealised Process. To derive our boundary predicting cooperation, we will analyse points of the dynamics at which the expected dynamics are stationary. To identify these, we make use of an idealised process, which we describe next. At every point in time, we can consider a single player i to be facing a stationary environment defined by the combi-nation of the prisoner’s dilemma and the opponent’s ϵ-greedy strategy π−it . This stationary 6environment defines an optimal best response BR (π−it ) which is unique for almost all 1
+
+T, R, P, S, δ , and ϵ. In an idealised learning process, each agent would have perfect infor-mation of this stationary environment and could thus update their strategy to or towards the best response at each learning step. The best-response function BR (·) induces a functional relation on Πϵ, called the Indi-vidual Best-Response (IBR) graph, in which Nash equilibria (NE) appear as self-loops or two-cycles (Meylahn, 2025). In previous work, it was shown that in the prisoner’s dilemma with a memory of one period there are three possible NE (Usui and Ueda, 2021; Meylahn and Janssen, 2022), namely, both players playing 
+
+πAD = ( D, D, D, D ), πGT = ( D, D, D, C ) or πWSLS = ( C, D, D, C ). (3.8) Each NE is associated with optimal Q-values, which we name QAD , Q GT and QWSLS , re-spectively. These are defined as the solution to Bellman’s optimality equation when both players are playing the strategy associated with the NE, i.e., the solution to 
+
+QNE (s, a ; θ) = ENE 
+
+h
+
+(1 − δ)ri(a) + δ max  
+
+> a∈A
+
+QNE (s′, a ; θ)
+
+i
+
+, (3.9) where the expectation is with respect to the dynamics induced by both players playing NE and s′ is the next state. Here we make the dependence on the parameters θ explicit. For both the idealised and true learning process, the expected dynamics of Qt are stationary at these values, that is, 
+
+E[Qt+1 |Qt = ( QNE , Q NE )] = ( QNE , Q NE ), (3.10) for NE ∈ { AD , GT , WSLS }.
+
+# 4 Theoretical Analysis 
+
+In this section, we give our theoretical analysis of the dynamics of the model described in Section 3. The Markovian dynamics of (st, Qt) are not necessarily ergodic, since it could be that there are regions of the Q-value space Q that cannot be reached once they have been left 2 (Meyn and Tweedie, 2012). We are interested in studying the fraction of time spent in each of the strategy profiles and the fraction of time spent in each of the four states. To this end, we introduce the empirical occupation time of strategy profiles for a trajectory up to time horizon Th
+
+τTh = {π0, π1, . . . πTh } (4.1) as 
+
+O(τTh , π) = 1
+
+ThThX
+
+> t=1
+
+1{πt=π}. (4.2) 
+
+> 1The best response is not unique for a set of parameters with Lebesgue measure zero.
+> 2Adding, for example, Gaussian noise to the rewards would likely make the dynamics ergodic.
+
+7O(τTh , π) captures the fraction of time that was spent in π during trajectory τTh . Similarly, and with a slight abuse of notation, 3 we define the empirical occupation time of the states to be 
+
+O(σTh , s ) = 1
+
+ThThX
+
+> t=1
+
+1{st=s}, (4.3) with σTh = {s0, s 1, . . . , s Th }.For Conjecture 4.2 we argue that the occupation time of strategy profiles converges to a unique stationary distribution when α is small enough. If this is the case, the distribution over states will also be stationary and unique. 
+
+Theorem 4.1 (Unique Recurrent Set) . Fix T, R, P, S, δ , and ϵ, then there exists αc such that for α < α c the set of strategy profiles 
+
+{(˜ π1, ˜π−1) : ˜ πi = BR (π) for some π ∈ Πϵ} (4.4) 
+
+form part of a unique recurrent set. 
+
+The proof of Theorem 4.1 is given in Appendix A, but we provide a brief sketch of the proof here. Starting at any (st, Qt), we observe any finite sequence of play of length K
+
+with positive probability. In particular, we may observe a sequence that looks as if it were generated by the players playing strategy profile (π1, π −1) for any π1, π −1 ∈ Π. From the perspective of player i, it thus seems as if they are facing an opponent playing π−i for those 
+
+K periods. Using Beck and Srikant (2012), we can establish that the Q-values that player 
+
+i learns during this sequence of play are sufficiently close to the Q-values corresponding to BR (π−i) that the player actually learns the best response. This occurs with positive probability when α is less than some critical value, which we calculate explicitly. Since this occurs with positive probability in a finite number of steps for any initial condition, we can split the time horizon into non-overlapping blocks of length K to conclude that we will return to all strategy profiles consisting of strategies that are a best response to some other strategy infinitely often. Note that there may be more strategy profiles in the unique recurrent set than the ones identified here. 
+
+Conjecture 4.2 (Unique Stationary Distribution) . Fix T, R, P, S, δ , and ϵ, then there exists 
+
+αc such that for α < α c
+
+lim  
+
+> Th→∞
+
+O(τTh , π) = ρ(θ, π) (4.5) 
+
+for all π and π0 and some ρ(θ, π).
+
+From Theorem 4.1 we know that the Q-values will return to the neighbourhood of a set of Q-values corresponding to strategy profiles of a particular kind infinitely often when 
+
+α < α c, but this does not immediately imply that a stationary distribution for the Markov process exists and is unique. A potential approach for showing that this is the case would be to use the Krylov-Bogolioubov Theorem Kryloff and Bogoliouboff (1937) to show that there exists at least one invariant probability measure of the process and then to use (Hairer, 2010, Corollary 2.7) to show that there exists at most one invariant measure. To apply these two results, the process must (1) take place in a Polish space, (2) there must be at least one 
+
+> 3The second argument of the function makes clear which occupation time is meant.
+
+8accessible point, (3) there must exist an initial condition x0 = ( s0, Q0) so that the sequence 
+
+Pn(x0, ·) is tight, and (4) the operator P of the process must be a strong Feller Markov operator. Now (1) is satisfied, (2) also holds as shown in the proof of Theorem 4.1 and (3) holds as the space is compact. It remains to be shown that P is a strong Feller operator. Verifying this condition is more involved, and it is unclear whether it holds. 4 However, our simulations suggest that Conjecture 4.2 holds. 0.0 0.1 0.2 0.3 0.4 0.5 0.5 0.6 0.7 0.8 0.9 1.0 0.0 0.1 0.2 0.3 0.4 0.5 0.5 0.6 0.7 0.8 0.9 1.0 
+
+Figure 1: Critical condition for the stability of WSLS being greater than that of AD. On the left, we plot the critical condition on δ as a function of ϵ for different values of R (with 
+
+T = 1 , S = 0 and P = 0 .1), and on the right we plot the critical condition on R as a function of P for different values of ϵ (with T = 1 , S = 0 and δ = 0 .8). The question we are interested in is when the fraction of time spent in cooperative strategy profiles dominates. Of the three NE, only WSLS leads to stable cooperation. So if ρ(θ, π) only places positive mass on NE 5, we would want to know when 
+
+ρ(θ, π WSLS ) > 0.5. (4.6) We will proceed heuristically to find a critical condition θc on the parameters that predicts when cooperative strategy profiles dominate the stationary distribution. To this end, note that the fraction of time spent in the three equilibria depends on their stability. The stability of an equilibrium depends on at least two components (Freidlin and Wentzell, 2012): 1. the size of the fluctuations in the equilibrium, 2. and the height of the barrier that the fluctuations must overcome to exit the equilib-rium. 
+
+> 4Note that the conjecture might be true even if the fourth condition doesn’t hold, as then other proof strategies are available.
+> 5This premise is not satisfied in our case, but the argument serves as a basis for deriving our heuristic boundary.
+
+9For our boundary, we will focus only on the second component. To motivate this, note that the exploration rate, which is the source of fluctuations, is the same in all equilibria. 6 It is thus reasonable to assume that the difference in stability between equilibria is predominantly determined by the second component. To exit an equilibrium, the Q-value orderings must be reversed in one of the four states. Intuitively, this is most likely to occur in the most vulnerable state, by which we mean the state with the smallest optimal Q-value difference, and the height of the barrier is characterised by the optimal Q-value differences in that state. For each equilibrium, we thus define the Q-value differences in each state as 
+
+∆QNE (s; θ) := QNE (s, arg max 
+
+> a∈A
+
+QNE (s, a ; θ); θ) − QNE (s, arg min 
+
+> a∈A
+
+QNE (s, a ; θ); θ). (4.7) To determine when cooperation will be dominant, we want to know when the WSLS equi-librium is more stable than the AD equilibrium 7. Our critical condition is thus defined by solving 
+
+min  
+
+> s∈S
+
+∆QWSLS (s; θ) = min  
+
+> s∈S
+
+∆QAD (s; θ) (4.8) for θ. Solving this, we find the critical condition for the discount factor 
+
+δc := 2( T + P − (R + S)) (1 − ϵ)[2( R − P ) + ϵ(P + S − (R + T ))] , (4.9) such that WSLS is more stable than AD when δ > δ c. The details of this derivation are given in Appendix B. In Figure 1, we plot the critical condition in two slices of the parameter space. The boundary behaves sensibly in the following sense. δc increases as ϵ increases and as R decreases, meaning that the required discount factor for cooperation dominating increases as the exploration rate increases and as the value of cooperation decreases. On the other hand, Rc increases as P increases and as ϵ increases. Note that the critical boundary derived here does not depend on the learning rate α. However, α does play a role in determining when our boundary applies on the timescale of our simulations (see Section 5.2). 
+
+# 5 Simulations 
+
+5.1 Simulation Details 
+
+In this subsection, we describe the payoff normalisation used in the simulations, specify which strategy profiles are tracked explicitly, and explain how interaction dynamics outside this focal set of tracked strategies are incorporated. 
+
+Payoff Normalisation 
+
+Throughout our simulations, we normalise payoffs by setting T = 1 and S = 0 . This nor-malisation imposes natural bounds on the remaining payoff parameters R and P , allowing us to simulate the full range of incentive structures consistent with the prisoner’s dilemma on a bounded parameter grid, which substantially improves computational tractability. 
+
+> 6This does not mean that the fluctuations in Q-value estimates are the same as these also depend on the rewards and continuation payoffs.
+> 7Note that AD is always a Nash equilibrium, while WSLS is only a Nash equilibrium in some parts of the parameter space (Meylahn, 2025).
+
+10 Focal Strategy Profiles 
+
+Rather than tracking occupation times for all 256 possible memory-one strategy profiles, we focus on a small set of theoretically and empirically salient profiles. Specifically, we consider the three Nash equilibrium strategy profiles emerging from our theoretical analysis, together with two additional profiles that appear frequently in preliminary simulations: All-Cooperate ( AC ) and Anti-Grim Trigger ( AGT ), in which both players cooperate following mutual defection and defect otherwise. This set defines the focal strategy class ˆΠϵ.The empirical relevance of AC and AGT can be summarised by the following stylised facts: 1. Best-response prevalence. Both AC and AGT arise as best responses to other strategies over nontrivial regions of the parameter space. In particular, AC can be a best response to GT , (D, C, D, D ), (D, C, D, C ), (D, C, C, C ), and (C, C, D, C ), while 
+
+AGT can be a best response to (D, C, C, C ) (see Table IV in Meylahn (2025)). By Theorem 4.1, this implies a positive probability of reaching mutual play of AC or 
+
+AGT .2. Proximity to the stag-hunt region. Both strategies occur predominantly when 
+
+R is close to T . In this region, the game approaches a stag hunt, in which both AC 
+
+and AGT are Nash equilibria Meylahn (2025). When R ≈ T , learning dynamics may therefore blur distinctions between underlying game classes, since Q-values encode only approximations of expected continuation payoffs. 3. Game-class boundaries. The strategy AGT rarely appears when P is close to zero, where the game approaches a snowdrift game in which AGT is not an equilibrium. By contrast, when P is close to zero and R is close to one, the game approaches a harmony game, in which AC is always an equilibrium, explaining its prevalence in that region of the parameter space. 
+
+Tracking Interaction Dynamics Outside the Focal Strategy Profiles 
+
+Our focus on a restricted set of strategy profiles is guided by two considerations: alignment with the theoretical analysis, which compares stability properties of specific profiles, and the desire to capture a substantial share of empirically observed behaviour while maintaining computational and representational tractability. At the same time, the total fraction of time spent in the five focal profiles varies across the parameter space. 8 This raises the question of whether untracked strategies might affect the interpretation of cooperative and non-cooperative regimes. To address this concern, we complement the profile-based analysis with a state-space perspective that examines occupation times of the four action states {(C, C ), (C, D ), (D, C ), (D, D )}.Because state occupation aggregates behaviour across all possible strategy profiles, this analysis provides a comprehensive and tractable robustness check that incorporates interac-tion dynamics beyond ˆΠϵ. As such, the state-space analysis ensures that our conclusions are informed by the full range of interaction dynamics, including those generated by strategies outside the focal set. 
+
+> 8Table 1 shows part of this variation and confirms that the five focal strategies dominate in the stationary distribution throughout our simulations.
+
+11 5.2 Accessible Parameter Range under a Finite Time Horizon 
+
+The theoretical analysis in Section 4 characterises stable cooperation under the assumption that the learning dynamics converge to a unique stationary distribution in the infinite time limit. In practice, however, computational constraints restrict simulations to a finite time horizon. Throughout our simulations, we therefore fix the horizon at Th = 200 M periods. Before evaluating the quality of the proposed decision boundary, it is necessary to assess under which conditions this finite horizon is sufficient for the learning dynamics to converge to a stationary distribution. Given Th = 200 M , we define the accessible parameter range 
+
+as the set of algorithmic hyperparameters for which the induced dynamics converge to a stationary distribution within the allotted time horizon. 
+
+Method to Scope the Accessible Parameter Range 
+
+Our approach is to simulate multiple trajectories from diverse initial conditions that span a large portion of the initial Q-value space. If all trajectories converge to the same empiri-cal occupation-time distribution–independently of initialisation–we treat the corresponding parameter configuration as having reached the unique stationary distribution within the chosen time horizon. 
+
+Initialisations. We consider ten initialisations. These include an optimistic initialisa-tion with Q0(s, a ) = 1 for all (s, a ), a pessimistic initialisation with Q0(s, a ) = 0 for all 
+
+(s, a ), and three initialisations at the optimal Q-values corresponding to the Nash equilib-rium strategy profiles AD , GT , and W SLS , i.e., Q0(s, a ) = QNE (s, a ; θ) for all (s, a ) and NE ∈ { AD , GT , WSLS }. In addition, we include five trajectories with Q-values initialised independently and uniformly at random on [0 , 1] .
+
+Stationarity measure. To assess convergence across initialisations, we compare empiri-cal occupation times over strategy profiles. Specifically, for a given parameter vector θ, we compute the maximum absolute difference in occupation times across all initialisations and across all strategy profiles in the focal set ˆΠϵ, which accounts for the bulk of the stationary distribution: 
+
+∆O(θ) := max  
+
+> i,j ∈I
+
+max  
+
+> π∈ˆΠϵ
+
+O(τ iTh (θ), (π, π ))) − O(τ jTh (θ), (π, π ))) , (5.1) where I denotes the set of initialisations described above and τ iTh (θ) denotes the trajectory generated from initialisation i up to time Th under parameters θ.We classify a parameter setting θ as stationary if ∆O(θ) < O c. In all simulations, we set the threshold to Oc = 0 .05 .
+
+Illustrative examples. Figure 2 illustrates the classification procedure. In the left panel, occupation times converge to the same constant across all initialisations within the simu-lation horizon, indicating convergence to a stationary distribution. In contrast, the right panel shows persistent differences across trajectories, implying that stationarity has not been reached. The middle panel illustrates a more ambiguous case. While trajectories may appear to approach similar occupation levels, the pronounced switching behaviour suggests slow 12 0×10 7 5×10 7 10 ×10 7 15 ×10 7 20 ×10 7          
+
+> Steps
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> τ it (θ)
+> 0×10 75×10 710 ×10 715 ×10 720 ×10 7
+> Steps
+> τ it (θ)
+> 0×10 75×10 710 ×10 715 ×10 720 ×10 7
+> Steps
+> τ it (θ)
+> ALLD WSLS AGT
+
+Figure 2: Examples of occupation-time trajectories for ten initialisations under three pa-rameter settings θ. Left: a well-mixed setting in which trajectories converge to the same occupation times within the simulation horizon. Middle: an intermediate case in which trajectories appear close to convergence but exhibit persistent switching across strategy profiles. Right: a non-mixing setting in which occupation times diverge across initialisa-tions even at long horizons. We select strategy profiles that have meaningful shares in at least one of three cases considered. mixing, with extended periods spent in different strategy profiles. In such cases, empirical occupation times over the considered finite horizon may be misleading. 
+
+Parameter grid. From preliminary simulations, we observe that convergence to station-arity depends primarily on the algorithmic parameters θa = ( δ, ϵ, α ). For this reason, we fix the environmental parameters θe = ( R, P ) for each θa rather than simulating the full five-dimensional parameter space when identifying the accessible parameter range 9.Previous work (Barfuss and Meylahn, 2023; Meylahn, 2025) shows that while AD always exists as an equilibrium, GT and W SLS exist only for subsets of the (R, P ) space. Given a choice of θa, we therefore select R and P as the centroid of the region in which all three equilibria coexist. For θa, we simulate over the grid G = Θ (m) 
+
+> α
+
+×Θ(n) 
+
+> ϵ
+
+×Θ(p) 
+
+> δ
+
+, where Θ(m) 
+
+> α
+
+= {0.01 , 0.02 , . . . , 0.20 },
+
+Θ(n) 
+
+> ϵ
+
+= {0.01 , 0.02 , . . . , 0.20 }, and Θ(p) 
+
+> δ
+
+= {0.65 , 0.70 , . . . , 0.85 }.
+
+Results 
+
+The heatmaps in Figure 3 display ∆O(θ) for all combinations of α ∈ Θ(m) 
+
+> α
+
+and ϵ ∈ Θ(n)
+
+> ϵ
+
+across different values of δ ∈ Θ(p) 
+
+> δ
+
+. Each heatmap also includes the isoquant ∆O(θ) = 0 .05 .We observe that the boundary separating stationary from non-stationary regions is sharp, relatively smooth, and approximately convex. The boundary appears to be governed by a nonlinear relationship among learning, ex-ploration, and discounting, consistent with a scaling of the form 
+
+ϵc ∼ δα . (5.2) 
+
+> 9
+
+Note that we do simulate the full parameter space when assessing the quality of the boundary. 
+
+13 0.05 0.10 0.15 0.20 
+
+> 
+
+δ = 0 .55 
+
+> 0.05
+
+δ = 0 .65    
+
+> 0.05
+> 0.05 0.10 0.15 0.20
+
+α
+
+> 0.05 0.10 0.15 0.20
+> 
+
+δ = 0 .75    
+
+> 0.05
+> 0.05 0.10 0.15 0.20
+
+α
+
+δ = 0 .85  
+
+> 0.05
+> 0.00.20.40.60.81.0∆O(θ)
+
+Figure 3: Heatmaps of ∆O(θ). Each panel shows values of ∆O(θ) across ten initialisations for all combinations of α and ϵ at a fixed value of δ. Regions with ∆O(θ) < 0.05 are classified as stationary at time T = 2 × 10 8.14 For larger values of δ, such as δ = 0 .85 , the boundary becomes less well defined, with a broad region in which trajectories resembling the intermediate case in Figure 2 are common. This observation motivates our choice of δ = 0 .85 as the upper bound for the discount factor in subsequent simulations. Excluding higher values of δ is further justified by the fact that the variance of Q-value estimates scales as (1 − δ)−1 (Devraj and Meyn, 2017), implying increasingly large fluctuations as δ approaches one. Similar effects have been documented for Q-learning in the prisoner’s dilemma (den Boer et al., 2024). Based on these results, we restrict α and ϵ to values greater than or equal to 0.1 in the main simulations analysing the heuristic boundary, while retaining the same values of δ.This restriction confines attention to regions of the parameter space in which stationarity is reliably attained, particularly for lower values of δ. For larger δ, the parameter combinations 
+
+(α, ϵ ) ∈ { (0 .1, 0.1) , (0 .1, 0.15) , (0 .15 , 0.1) } lie close to the boundary between stationary and non-stationary regimes and are therefore treated as boundary cases. 
+
+5.3 Assessing the Quality of the Heuristic Boundary 
+
+Parameter grid. To assess the quality of the heuristic boundary, we simulate over the grid 
+
+G = Θ (m) 
+
+> α
+
+× Θ(n) 
+
+> ϵ
+
+× Θ(p) 
+
+> δ
+
+× Θ(q) 
+
+> P
+
+× Θ(s) 
+
+> R
+
+,
+
+where Θ(m) 
+
+> α
+
+= Θ (n) 
+
+> ϵ
+
+= {0.1, 0.15 , 0.2} and Θ(p) 
+
+> δ
+
+= {0.55 , 0.65 , 0.75 , 0.85 }. For the payoff pa-rameters, we set Θ(q) 
+
+> P
+
+= {0.025 , 0.05 , . . . , 0.5} and Θ(s) 
+
+> R
+
+= {0.525 , 0.55 , . . . , 0.975 }, ensuring that the prisoner’s dilemma ordering T = 1 > R > P > S = 0 holds throughout. This yields 13 ,680 parameter combinations. For each combination, we simulate ten trajectories using the initialisations described in Section 5.2, resulting in 136 ,000 trajectories in total. We plot heatmaps of the average empirical occupation time at time Th defined as 
+
+ˆO(θ, π) = 1
+
+|I| 
+
+X
+
+> i∈I
+
+O(τTh , π), (5.3) for the five focal strategy profiles. We normalise by 
+
+ˆO(θ, ˆΠϵ) := X 
+
+> π∈ˆΠϵ
+
+ˆO(θ, π), (5.4) to make the occupation times comparable across different choices of θ.Figure 4 provides a visual assessment of the heuristic boundary for the case α = ϵ = 0 .1.Each heatmap reports the average empirical occupation time of one of the five focal strategy profiles across initialisations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+, and for different values of δ ∈ Θ(p) 
+
+> δ
+
+. Occupation times are normalised by the total time spent in the five focal strategies, which allows for consistent comparison of their relative shares within the focal set across parameter configurations Across the parameter space, the strategy GT is practically absent, a pattern that also holds for other values of θa. Since the normalised share of cooperative strategies equals one minus the normalised share of non-cooperative strategies–and since AD accounts for the vast majority of non-cooperative play–the quality of the heuristic boundary can be assessed primarily by inspecting the heatmaps for AD .15 0.60.8
+
+> δ = 0.55 R
+
+ˆO(θ, π AD )
+
+> 0.1
+> 0.5
+> 0.9
+
+ˆO(θ, π GT ) ˆO(θ, π W SLS )
+
+> 0.1
+> 0.5
+
+ˆO(θ, π AGT )
+
+> 0.1
+> 0.5
+
+ˆO(θ, π AC ) 
+
+> 0.60.8
+> δ = 0.65 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.1
+> 0.5
+> 0.60.8
+> δ = 0.75 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.25 0.50
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.25 0.50
+
+P 
+
+> 0.25 0.50
+
+P 
+
+> 0.1
+> 0.5
+> 0.9
+> 0.25 0.50
+
+P 
+
+> 0.1
+> 0.25 0.50
+
+P
+
+> 0.1
+> 0.00.20.40.60.81.0
+> Normalized Share
+
+α = 0 .1,  = 0 .1Figure 4: Heatmaps of average empirical occupation times for AD , GT , W SLS , AGT , and 
+
+AC at α = ϵ = 0 .1. Each heatmap shows the normalised average occupation time across initialisations for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+, with rows corresponding to different values of δ ∈ Θ(p) 
+
+> δ
+
+. Occupation times are normalised by the total time spent in the five focal strategies. The green line denotes the heuristic boundary, while the yellow lines indicate the 10% , 50% , and 90% isoquants of the normalised occupation shares. In the (R, P ) plane, the heuristic boundary is linear, whereas the empirical boundary inferred from occupation data is nonlinear and deviates increasingly from linearity as δ
+
+increases. This divergence coincides with approaching the non-stationary region of the pa-rameter space. Nevertheless, the heuristic boundary captures the main qualitative features of the empirical transition and, in particular, shifts in the same direction as the empirical boundary when ϵ varies. The results for α = ϵ = 0 .1 shown in Figure 4 are representative of the general pattern observed across parameter combinations. Heatmaps for all remaining cases are reported in Appendix C. 
+
+Evaluation Metric. To assess the quality of the heuristic boundary in Section 4, we evaluate its predictive performance using standard classification metrics. Interpreting the 16 boundary as a decision rule, Equation 4.9 yields a prediction of whether cooperation or defection dominates for a given parameter configuration. We measure predictive performance using the macro F1-score, which jointly captures precision and recall, is invariant to the choice of the positive class, and is robust to class imbalance across regions of the parameter space. The macro F1-score takes values in [0 , 1] ,where a value of 1 corresponds to perfect classification. As a natural benchmark, a trivial classifier that predicts the same outcome for all parameter combinations–such as always predicting defection–achieves a macro F1-score of at most 0.5. More generally, values close to 0.5 indicate that the decision rule fails to meaningfully discriminate between cooperative and non-cooperative regimes, while values substantially above 0.5 reflect increasing discrim-inatory power. In this sense, macro F1-scores above 0.8 indicate strong separation between regimes, and scores approaching 1 indicate near-perfect alignment between the boundary and the empirically observed transition. If the heuristic boundary is informative, it should therefore achieve macro F1-scores well above this trivial baseline and outperform nearby perturbations of the decision threshold. In particular, relative to small perturbations of the boundary, the heuristic boundary should locally maximise the macro F1-score. To determine whether cooperation or defection dominates for a given parameter com-bination, we employ two complementary outcome-labelling criteria. The first criterion is based on time-averaged occupation measures over the five focal strategy profiles described in Section 5.1. The second criterion relies on time-averaged occupation measures over the four joint-action states induced by the actions available to the Q-learning algorithms. 
+
+Strategy-profile approach Under the strategy–profile approach, we label an outcome as cooperative if the sum of normalised average occupation times across cooperative strategy profiles exceeds 50% . The normalisation divides each profile’s raw occupation time by the total time spent in the five focal strategy profiles. We classify AC , W SLS , and AGT as cooperative, and AD and GT as uncooperative. We classify GT as uncooperative because, in the presence of noise, its stationary distribution concentrates on mutual defection. If our proposed boundary constitutes a meaningful classifier, then using it as a decision rule to predict the dominance of cooperative strategy profiles should yield an F1 score close to one. Table 2 reports the macro F1-scores obtained for different combinations of the learning and exploration rates, pooling observations across the remaining dimensions of the param-eter grid G. The table shows excellent and stable F1-scores across the accessible parameter range. In Appendix E, we report recall and precision scores under an adversarial approach that computes the worst-case recall and precision over definitions of the positive class. Even under this adversarial evaluation, the performance of the boundary remains excellent. Appendix E also shows how the performance of the boundary as a decision rule degrades when considering parameter combinations outside the accessible parameter range discussed in Section 5.2. Each panel of Figure 5 reports the macro F1-score obtained by applying the decision boundary to subsamples of the parameter grid corresponding to different algorithmic hy-perparameters. Across all panels, the F1-score is consistently near 0.9. The macro F1-score is largely insensitive to the learning rate α and the exploration rate ϵ. By contrast, we 17 Table 1: Sum of focal profiles 
+
+ϵα 0.1 0.15 0.2 0.1 0.901 0.837 0.814 (0.144) (0.200) (0.225) 0.15 0.851 0.810 0.792 (0.199) (0.235) (0.246) 0.2 0.825 0.791 0.771 (0.232) (0.254) (0.260) 
+
+Note: The table reports the mean of the sum of occupation times across the five focal strategy profiles for each combination of the learning and ex-ploration rates. The mean is com-puted across all hyperparameter set-tings and payoff specifications within each learning–exploration rate combi-nation. Values in parentheses indicate standard deviations. 
+
+Table 2: F1 Scores 
+
+ϵα 0.1 0.15 0.2 0.1 0.918 0.924 0.920 [0.902, 0.933] [0.907, 0.940] [0.904, 0.936] 0.15 0.921 0.910 0.912 [0.904, 0.938] [0.891, 0.929] [0.893, 0.929] 0.2 0.908 0.908 0.914 [0.888, 0.927] [0.888, 0.926] [0.894, 0.931] 
+
+Note: The table reports the macro F1 score obtained when using the heuristic boundary as a classifier to predict the dominance of cooperative strategy profiles. Among the five focal strategy profiles, we classify AC , W SLS , and AGT as cooperative, and AD and GT as uncooperative. The macro F1 score is computed using all hyperparameter settings and payoff specifications within each learning–exploration rate combination. Values in brackets report 95% confidence in-tervals obtained via a bootstrapping procedure with 1,000 
+
+bootstrap samples. 
+
+observe a decline in performance as the discount factor increases. We attribute this effect to the findings discussed in Section 5.2, which suggest that higher discount factors push the dynamics toward regimes where the simulation horizon is insufficient for the theoretical framework to apply. 0.55 0.60 0.65 0.70 0.75 0.80 0.85              
+
+> Discount Factor δ
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> F1 Score
+> F1 Score by Discount Factor
+> 0.10 0.12 0.14 0.16 0.18 0.20
+> Exploration Rate 
+> F1 Score by Exploration Rate
+> 0.10 0.12 0.14 0.16 0.18 0.20
+> Learning Rate α
+> F1 Score by Learning Rate
+
+Figure 5: Macro F1 scores across algorithmic hyperparameters. For each value of a given hyperparameter, we compute macro F1 scores by aggregating over all remaining hyperpa-rameter combinations and payoff specifications. Error bars indicate 95% confidence intervals obtained via a bootstrapping procedure with 1,000 samples. Figure 6 illustrates how the macro F1 score varies as the decision boundary is perturbed along the R, P , and δ dimensions. For instance, the left panel replaces the boundary in R
+
+implied by Equation (4.9), Rc, with an alternative threshold R′, and reports the resulting macro F1 score as a function of the Euclidean distance ∥R′ − Rc∥. Across all dimensions, the decision boundary characterised by Equation (4.9) closely aligns with the empirical 18 −0.6 −0.4 −0.2 0.0 0.2 0.4                    
+
+> R−Rc
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> F1 Score
+> F1 Score Sensitivity in R
+> −0.6−0.4−0.20.00.2
+> P−Pc
+> F1 Score Sensitivity in P
+> −1.00 −0.75 −0.50 −0.25 0.00 0.25 0.50 0.75 1.00
+> δ−δc
+> F1 Score Sensitivity in δ
+
+Figure 6: Macro F1 scores under perturbations of the boundary in Equation (4.9) along different dimensions. Scores are aggregated over all hyperparameter settings and payoff specifications. Error bars indicate 95% confidence intervals from 1,000 bootstrap samples. Perturbations of the discount factor are truncated to [−1, 1] .maximisers of the macro F1 score. Moreover, the macro F1 score decreases monotonically as the boundary deviates from this benchmark, indicating that the proposed boundary is locally optimal and sharply identified. 
+
+State-space approach The state-space approach labels outcomes solely based on the fre-quency with which the learning dynamics visit the four joint-action states. We thus switch from focusing on ˆO(θ, π) to ˆO(θ, s ), which is defined analogously (see Equations (5.3)). This allows us to assess whether the quality of the decision boundary depends on the spe-cific choice of focal strategy profiles or whether it generalises more broadly. Because state occupation times aggregate behaviour across all possible strategy profiles, this approach provides a robustness check that is not tied to the restricted strategy profile set. The left panel of Figure 7 shows that occupation of asymmetric states is most pro-nounced near the decision boundary and in regions where the boundary predicts coop-eration. This pattern suggests that the prevalence of asymmetric profiles–and how they are treated in the definition of cooperation–can materially affect the performance of the proposed boundary. The right panel of Figure 7 shows that players split symmetrically between the roles of traitor and sucker. In the parameter regimes considered in our simulations, alternat-ing between the sucker and temptation payoffs yields an average payoff exceeding the Nash equilibrium payoff. This observation provides a rationale for classifying time spent in asym-metric states as cooperative. To avoid relying exclusively on a single definition of cooperation within the state-space approach, we compare three alternative outcome-labelling criteria. The first classifies an outcome as cooperative if the occupation time of state (D, D ) is below 50% . Although this criterion may be criticised for implicitly treating asymmetric states as cooperative, it is appropriate when the primary objective is to predict whether mutual defection dominates the interaction. The second approach defines an outcome as cooperative if the occupation time of the state (C, C ) is at least 50% . While this may appear to be the most natural definition, 19 −0.6 −0.4 −0.2 0.0 0.2         
+
+> R−Rc
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> Share Asymmetric State Occupations  Asymmetric State Occupations vs. Distance to Boundary
+> Exploration Rate
+> 0.1 0.15 0.2
+> 0.050 0.075 0.100 0.125 0.150 0.175 0.200 0.225
+> Share of ( C, D )
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> 0.200
+> 0.225
+> Share of ( D, C )Share of ( C, D ) vs ( D, C )
+> Exploration Rate
+> 0.1 0.15 0.2
+
+Figure 7: Asymmetric state occupations. The left panel plots the average total occupation time in (C, D ) and (D, C ) as a function of the distance to the decision boundary along the R dimension, separately for each exploration rate considered in the simulations. The right panel plots, for each simulation run, the share of time spent in state (D, C ) against the share of time spent in (C, D ), illustrating how players equally split between the roles of traitor and sucker. 0.55 0.60 0.65 0.70 0.75 0.80 0.85                    
+
+> Discount Factor δ
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> F1 Score
+> F1 Score by Discount Factor
+> (C, C )norm. ( C, C )(D, D )0.10 0.12 0.14 0.16 0.18 0.20
+> Exploration Rate 
+> F1 Score by Exploration Rate
+> (C, C )norm. ( C, C )(D, D )0.10 0.12 0.14 0.16 0.18 0.20
+> Learning Rate α
+> F1 Score by Learning Rate
+> (C, C )norm. ( C, C )(D, D )
+
+Figure 8: Macro F1 scores across algorithmic hyperparameters. For each value of a given hyperparameter, macro F1 scores are computed by aggregating over all remaining hyperpa-rameter combinations and payoff specifications. Error bars indicate 95% confidence intervals obtained via a bootstrapping procedure with 1,000 samples. Scores are reported for three outcome–labelling approaches: dominance of the (C, C ) state occupation (blue), dominance of normalised (C, C ) occupation (orange), and dominance of the (D, D ) state occupation (green). we anticipate that the prevalence of asymmetric profiles in the region where our boundary predicts cooperation will adversely affect the boundary’s performance under this criterion. Moreover, there is a more fundamental limitation to using (C, C ) dominance as the bench-mark for successful cooperation: the stationary distribution induced by W SLS , the strategy profile motivating our heuristic boundary, assigns a non-negligible share of time to (D, D ).The third approach therefore defines an outcome as cooperative if the occupation time of (C, C ) exceeds 50% of the occupation time that the stationary distribution induced by 
+
+W SLS assigns to (C, C ). This definition more closely mirrors the theoretical intuition 20 underlying our boundary, which is motivated by a forgiving cooperative strategy that sys-tematically restores cooperation following unilateral deviations from mutual cooperation. Figure 8 reports the macro F1-scores obtained under three alternative outcome-labelling approaches when applying the decision boundary to subsamples of the parameter grid corre-sponding to different algorithmic hyperparameters. The boundary exhibits strong predictive performance when the objective is to identify the dominance of mutual defection, achieving scores of approximately 0.95 .10 By contrast, performance deteriorates when predicting the dominance of mutual cooperation, with scores in the range of 0.6 to 0.7.However, when cooperation rates are normalised relative to the occupation times im-plied by the stationary distribution induced by W SLS , predictive performance improves substantially, with macro F1-scores increasing to between 0.7 and 0.9. This improvement relative to the non-normalised definition indicates that the apparent weakness of the bound-ary under stricter cooperation criteria primarily reflects a mismatch between the outcome metric and the underlying strategic dynamics, rather than a lack of discriminatory power of the boundary itself. The remaining performance gap between predicting mutual defection and normalised mutual cooperation reflects a substantive feature of the interaction dynamics: near and above the boundary, asymmetric strategy profiles account for a non-negligible share of the stationary distribution. As a consequence, cooperation criteria that discount asymmetric outcomes tend to conflate regions with qualitatively distinct but closely related dynamics. Taken together, these results suggest that the boundary is best interpreted as identifying the transition away from defection-dominated behaviour, rather than as a sharp predictor of full mutual cooperation. This interpretation is consistent with the theoretical motivation of the boundary and highlights the importance of outcome definitions that align with the underlying strategic dynamics. 
+
+# 6 Conclusion 
+
+We have shown and investigated a new form of cooperation between reinforcement learning algorithms. While previous work has looked at the likelihood with which algorithms learn a cooperative strategy, here we instead consider the fraction of time that is spent playing cooperative strategies. This shift in perspective is motivated by the need for algorithms to continue exploring and learning when implemented in practice, due to the possibility of non-stationarities in the environment (or opponent’s behaviour). Our simulations show that cooperation can also be dominant in this new perspective. Furthermore, we identify a mechanism leading to this domination based on the relative stability of equilibrium strategy profiles and derive a theoretical boundary predicting when cooperation will dominate. This boundary does not take into account all factors relevant for stability, but nevertheless predicts cooperation surprisingly well. The phenomenon of spending a majority of the time in cooperative strategy profiles does not yet constitute algorithm collusion, as it would be necessary to argue that the firms are incentivised and likely to use the algorithm (cf. (Abada et al., 2024a; den Boer and Meylahn, 2024; den Boer et al., 2024)). Nevertheless, our results are relevant for the algorithmic collusion literature, as they suggest that algorithmic collusion may not only   
+
+> 10 To visualise the quality of the boundary, we report heatmaps of (D, D )state occupation in Appendix D.
+
+21 be a matter of learning collusive strategies, but may require analysis of the robustness of such learnt strategies to fluctuations arising from the environment or from the algorithms’ exploration. 
+
+# 7 Declaration of generative AI use 
+
+During the preparation of this work, the authors used M365 Copilot and Claude in order to improve the language and phrasing as well as to assist in the coding of the experiments. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the published article. 
+
+# References 
+
+Abada, I., Harrington Jr, J. E., Lambin, X., and Meylahn, J. M. (2024a). Algorithmic collusion: Where are we and where should we be going? Available at SSRN 4891033 .Abada, I. and Lambin, X. (2023). Artificial intelligence: Can seemingly collusive outcomes be avoided? Management Science , 69(9):5042–5065. Abada, I., Lambin, X., and Tchakarov, N. (2024b). Collusion by mistake: Does algorith-mic sophistication drive supra-competitive profits? European Journal of Operational Research .Asker, J., Fershtman, C., and Pakes, A. (2022). Artificial intelligence, algorithm design, and pricing. In AEA Papers and Proceedings , volume 112, pages 452–456. American Economic Association 2014 Broadway, Suite 305, Nashville, TN 37203. Asker, J., Fershtman, C., and Pakes, A. (2024). The impact of artificial intelligence design on pricing. Journal of Economics & Management Strategy , 33(2):276–304. Assad, S., Clark, R., Ershov, D., and Xu, L. (2024). Algorithmic pricing and competition: Empirical evidence from the german retail gasoline market. Journal of Political Economy ,132(3):723–771. Banchio, M. and Mantegazza, G. (2022). Artificial intelligence and spontaneous collusion. 
+
+arXiv preprint arXiv:2202.05946 .Banchio, M. and Mantegazza, G. (2023). Adaptive algorithms and collusion via coupling. In Proceedings of the 24th ACM Conference on Economics and Computation , EC ’23, page 208, New York, NY, USA. Association for Computing Machinery. Barfuss, W. and Meylahn, J. M. (2023). Intrinsic fluctuations of reinforcement learning promote cooperation. Scientific Reports , 13(1):1309. Beck, C. L. and Srikant, R. (2012). Error bounds for constant step-size Q-learning. Systems & Control Letters , 61(12):1203–1208. 22 Bertrand, Q., Duque, J. A., Calvano, E., and Gidel, G. (2025). Self-play Q-learners can provably collude in the iterated prisoner’s dilemma. In International Conference on Machine Learning .Bladon, A. J., Galla, T., and McKane, A. J. (2010). Evolutionary dynamics, intrinsic noise, and cycles of cooperation. Physical Review E , 81(6):066122. Brown, Z. Y. and MacKay, A. (2023). Competition in pricing algorithms. American Eco-nomic Journal: Microeconomics , 15(2):109–156. Calvano, E., Calzolari, G., Denicolo, V., and Pastorello, S. (2020). Artificial intelligence, algorithmic pricing, and collusion. American Economic Review , 110(10):3267–3297. Calvano, E., Calzolari, G., Denicoló, V., and Pastorello, S. (2021). Algorithmic collusion with imperfect monitoring. International journal of industrial organization , 79:102712. Carissimo, C., Falniowski, F., Rahimi, S., and Nax, H. (2025). Algorithmic collusion is algorithm orchestration. arXiv preprint arXiv:2508.14766 .den Boer, A. V. and Meylahn, J. M. (2024). A (mathematical) definition of algorithmic collusion. Available at SSRN 5012923 .den Boer, A. V., Meylahn, J. M., and Schinkel, M. P. (2024). Artificial collusion: Examining supracompetitive pricing by Q-learning algorithms. Available at SSRN 4213600 .Devraj, A. M. and Meyn, S. (2017). Zap Q-learning. Advances in Neural Information Processing Systems , 30. Dolgopolov, A. (2024). Reinforcement learning in a prisoner’s dilemma. Games and Eco-nomic Behavior , 144:84–103. Epivent, A. and Lambin, X. (2024). On algorithmic collusion and reward–punishment schemes. Economics Letters , 237:111661. Freidlin, M. I. and Wentzell, A. D. (2012). Random Perturbations of Dynamical Systems .Springer Berlin Heidelberg, Berlin, Heidelberg. Galla, T. (2011). Cycles of cooperation and defection in imperfect learning. Journal of Statistical Mechanics: Theory and Experiment , 2011(08):P08007. Hairer, M. (2010). Convergence of markov processes. Lecture notes , 18(26):11. Harrington, J. E. (2018). Developing competition law for collusion by autonomous artificial agents. Journal of Competition Law & Economics , 14(3):331–363. Hartline, J. D., Long, S., and Zhang, C. (2024). Regulation of algorithmic collusion. In 
+
+Proceedings of the 2024 Symposium on Computer Science and Law , pages 98–108. Klein, T. (2021). Autonomous algorithmic collusion: Q-learning under sequential pricing. 
+
+The RAND Journal of Economics , 52(3):538–558. 23 Kryloff, N. and Bogoliouboff, N. (1937). La théorie générale de la mesure dans son ap-plication À l’Étude des systémes dynamiques de la mécanique non linéaire. Annals of Mathematics , 38(1):65–113. Kushner, H. J. and Huang, H. (1981a). Asymptotic properties of stochastic approximations with constant coefficients. SIAM Journal on Control and Optimization , 19(1):87–105. Kushner, H. J. and Huang, H. (1981b). Averaging methods for the asymptotic analysis of learning and adaptive systems, with small adjustment rate. SIAM Journal on Control and Optimization , 19(5):635–650. Lambin, X. (2024). Less than meets the eye: simultaneous experiments as a source of algorithmic seeming collusion. Available at SSRN 4498926 .MacKay, A. and Weinstein, S. N. (2022). Dynamic pricing algorithms, consumer harm, and regulatory response. Wash. UL Rev. , 100:111. Meylahn, J. M. (2023). Does an intermediate price facilitate algorithmic collusion? Avail-able at SSRN: 4594415 .Meylahn, J. M. (2025). Quantifying the likelihood of learning collusive strategy equilibria. 
+
+Chaos: An Interdisciplinary Journal of Nonlinear Science , 35(8). Meylahn, J. M. and Janssen, L. (2022). Limiting dynamics for Q-learning with memory one in symmetric two-player, two-action games. Complexity , 2022:1–20. Meyn, S. P. and Tweedie, R. L. (2012). Markov chains and stochastic stability . Springer Science & Business Media. Usui, Y. and Ueda, M. (2021). Symmetric equilibrium of multi-agent reinforcement learning in repeated prisoner’s dilemma. Applied Mathematics and Computation , 409:126370. Waltman, L. and Kaymak, U. (2008). Q-learning agents in a cournot oligopoly model. 
+
+Journal of Economic Dynamics and Control , 32(10):3275–3293. Xu, Z. and Zhao, W. (2024). On mechanism underlying algorithmic collusion. arXiv preprint arXiv:2409.01147 .24 A Proof of Theorem 4.1 
+
+Note that given any Qt, there is a positive probability of both players behaving as if they were playing any strategy in Πϵ for a finite number of rounds K, say πi for player i. This can be quantified by using, for example, the Kullback-Leibler divergence, but a simple lower bound is given by ϵ2K since both players explore with probability ϵ.In particular, a strategy profile π induces a stationary distribution on state-action pairs 
+
+ηπ(s, a ). Let 
+
+κK (t) = {at, . . . at+K } (A.1) denote a sequence of play of length K. Then κK gives rise to an empirical distribution on state-action pairs ˆηπ(κK ) and there exists a set of sequences of play of length K that minimize the total variation distance between the the empirical and true distributions 
+
+κπ 
+
+> K
+
+= arg min  
+
+> κK(t)
+
+dTV (ηπ, ˆηπ(κK (t))) . (A.2) Now at any time t, we have 
+
+P(κK (t) ∈ κπ 
+
+> K
+
+|Qt) ≥ ϵ2K .
+
+This is the case even if the strategies of the players, as encoded by their Q-value orderings, change during these K rounds, since there always remains a probability of ϵ2 of the players taking any combination of actions. From the perspective of a single player, they are facing a stationary environment during these K rounds. For any π−i the opponent could be behaving as, it is the case that there is a set of optimal Q-values Qπ−i
+
+encoding the BR (π−i).This means that we can use the results on the finite-sample complexity of Q-learning with a constant learning rate (Beck and Srikant, 2012). In particular, Theorem 2.1 of Beck and Srikant (2012) states that, if the Qit remain bounded for all i and t,
+
+P[|Qit − Qπ−i
+
+|∞ ≥ x] ≤ 1
+
+x
+
+
+
+(1 − α(1 − δ)) K + 32 δ
+
+1 − δ
+
+r α
+
+2 − α
+
+
+
+, (A.3) for any x > 0. Here, we have used that for us the iterates are bounded by Qit ≤ Qmax = 1 
+
+and Wmax = 4 Q2
+
+> max
+
+|S × A| = 32 .Given the parameters θ, we can calculate the minimum separation between optimal Q-values over all possible π−i, which we define as D(θ), i.e., 
+
+D(θ) = min 
+
+> s∈S ,π ∈Πϵ
+
+|Qπ(s, C ) − Qπ(s, D )|. (A.4) From Equation (A.3) we obtain that there is a positive probability of all Q-values of player i being within D(θ)/2 of Qπ−i
+
+within K rounds for some K and α < α c, for some 
+
+αc. In particular, 
+
+P
+
+h
+
+|Qit − Qπ−i
+
+|∞ < D(θ)2
+
+i
+
+≥ 1 − 2
+
+D(θ)
+
+
+
+(1 − α(1 − δ)) K + 32 δ
+
+1 − δ
+
+r α
+
+2 − α
+
+
+
+. (A.5) Thus the event |Qit − Qπ−i
+
+|∞ < D(θ)2 occurs with positive probability if 
+
+2
+
+D(θ)
+
+
+
+(1 − α(1 − δ)) K + 32 δ
+
+1 − δ
+
+r α
+
+2 − α
+
+
+
+< 1. (A.6) 25 The term (1 − α(1 − δ)) K can be made arbitrarily small by increasing K since α, δ ∈ (0 , 1) .This means that a large enough K to satisfy the inequality exists if 
+
+2
+
+D(θ)32 δ
+
+1 − δ
+
+r α
+
+2 − α < 1. (A.7) Solving for α, gives that such a K exists if 
+
+α < α c := 2D2(θ)(1 − δ)2
+
+D2(θ)(1 − δ)2 + 4096 δ2 . (A.8) This brings the Q-values of a player close enough to the optimal Q-values to guar-antee that they will have transitioned to the best-response strategy. Since this holds for both players, there is a positive probability that after K rounds the players are playing 
+
+(BR (π−1), BR (π1)) .We conclude that there is a positive probability of transitioning from any strategy profile to a strategy profile where both players are playing the best response to some strategy within 
+
+K rounds when K is large enough. The set of strategy profiles 
+
+Πa := {(˜ π1, ˜π−1) : ˜ πi ∈ BR (π) for some π ∈ Πϵ} (A.9) is thus accessible from all π and thus forms part of a communicating class Πc if α < α c.To obtain that they thus form part of a unique recurrent set, note that if α < α c, we can pick K such that the probability ζ of hitting Πc is bounded away from zero for any state the process could be in at the beginning of the K time periods. Splitting the time horizon into non-overlapping blocks of length K and applying the result in each block, we obtain that the strategy profiles in Πa will be visited infinitely often. This completes the proof. 
+
+# B Details of heuristic boundary derivation 
+
+In this appendix, we provide the details of the derivation of the critical boundary. By solving the Bellman optimality equation, assuming that both players play the AD strategy, we find that the optimal Q-values are 
+
+QAD (s, D ; θ) = 12 (ϵ(T − P ) + 2 P ) , (B.1) and 
+
+QAD (s, C ) = 12 (2 δP − δϵP + ϵR − δϵR + 2 S − 2δS − ϵS + δϵS + δϵT ) , (B.2) for all s ∈ S . Similarly, 
+
+QWSLS (s, D ; θ) = 14 [4 T + (2 δ(1 − ϵ) + ϵ){2P + δ(2 − ϵ)( R − P ) + δϵ (S − T ) − 2T }] (B.3) and 
+
+QWSLS (s, C ; θ) = 14 [2(2 − ϵ)R + 2 ϵS + δϵ {(2 − ϵ)P − 2R + ϵ(R − S + T )}] (B.4) 26 for s ∈ { (D, D ), (C, C )}, and 
+
+QWSLS (s, D ; θ) = 14 [(2 − δ(2 − ϵ))(2 − ϵ)P + 2 ϵT − δ(2 − ϵ){ϵ(T − S) − (2 − ϵ)R}] (B.5) and 
+
+QWSLS (s, C ; θ) = 14 [2 ϵ(R − S) + 4 S + 2 δ2(1 − ϵ){2R − (2 − ϵ)P − ϵ(R − S + T )}
+
++δ{(2 − ϵ)2P − 4S + ϵ(2( S + T ) − ϵ(R − S + T )) }] (B.6) for s ∈ { (D, C ), (C, D )}. Since the Q-values for the two actions are the same in all states when considering AD, we find that 
+
+min  
+
+> s∈S
+
+∆QAD (s; θ) = 12 [(2 − ϵ)P − 2S + ϵ(S + T − R)] . (B.7) For WSLS, the states are split into two pairs in terms of their Q-value difference so 
+
+∆QWSLS (s; θ) = R − T + ϵ
+
+2 (T + S − (P + R)) + δ
+
+2 (1 − ϵ){2R − (2 − ϵ)P − ϵ(T + R − S)}
+
+for s ∈ { (D, D ), (C, C )} and 
+
+∆QWSLS (s; θ) = 12 [(1 − δ(1 − ϵ))(2 − ϵ)P − 2S + ϵ(T + S − R) + δ(1 − ϵ){(2 − ϵ)R − ϵ(T − S)}]
+
+for s ∈ { (D, C ), (C, D )}. Now we have 
+
+∆QWSLS (( D, C ); θ) − ∆QWSLS (( D, D ); θ) = T − R + P − S > 0 (B.8) so that 
+
+∆QWSLS (( D, D ); θ) = ∆ QWSLS (( C, C ); θ) < ∆QWSLS (( D, C ); θ) = ∆ QWSLS (( C, D ); θ).
+
+(B.9) Therefore 
+
+min  
+
+> s∈S
+
+∆QWSLS (s; θ) = R − T + ϵ
+
+2 (T + S − (P + R)) + δ
+
+2 (1 − ϵ){2R − (2 − ϵ)P − ϵ(T + R − S)}.
+
+(B.10) By equating Equation (B.7) and Equation (B.10) and solving for δ, we obtain the boundary. 27 C Normalized All-Defection Heat Maps 
+
+In this appendix, we present heatmaps of the average empirical occupation time of AD 
+
+across all simulated pairs of the learning rate α and the exploration rate ϵ. These heatmaps visualize how frequently the interaction converges to persistent defection as algorithmic parameters vary. We focus on AD because, among the five focal strategy profiles, it is the only non-cooperative strategy that attains substantial occupation time in our simulations; by contrast, GT is almost never observed. As a result, occupation of AD serves as a clear and informative proxy for the failure of cooperation and provides a succinct evaluation of the effectiveness of the proposed decision boundary. 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.1
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.1
+> 0.5
+> 0.9
+
+ = 0 .2 
+
+> 0.1
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.65 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.75 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 0.1
+
+> 0.5
+> 0.9
+> 0.00.20.40.60.81.0
+> Normalized Share
+
+ˆO(θ, π AD ) for α = 0 .1
+
+Figure 9: Heatmaps of the average empirical occupation time of AD at α = 0 .1. Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. Raw occupation times are normalized by dividing by the total occupation time across the five focal strategy profiles (AD , GT , W SLS , AGT , and AC ). The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants of the normalized occupation share. Regions with high AD occupation coincide closely with the boundary’s prediction of non-cooperative outcomes. 28 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.1
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.1
+> 0.5
+> 0.9
+
+ = 0 .2 
+
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.65 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.75 R
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P
+
+> 0.1
+> 0.5
+> 0.9
+> 0.00.20.40.60.81.0
+> Normalized Share
+
+ˆO(θ, π AD ) for α = 0 .15 Figure 10: Heatmaps of the average empirical occupation time of AD at α = 0 .15 . Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. Raw occupation times are normalized by dividing by the total occupation time across the five focal strategy profiles (AD , GT , W SLS , AGT , and AC ). The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants of the normalized occupation share. Regions with high AD occupation coincide closely with the boundary’s prediction of non-cooperative outcomes. 29 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.1
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.5
+> 0.9
+
+ = 0 .2 
+
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.65 R
+> 0.1
+> 0.5
+> 0.9
+> 0.5
+> 0.9
+> 0.5
+> 0.9
+> 0.60.8
+> δ = 0.75 R
+> 0.10.5
+> 0.9
+> 0.1
+> 0.5
+> 0.9
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P
+
+> 0.1
+> 0.5
+> 0.9
+> 0.00.20.40.60.81.0
+> Normalized Share
+
+ˆO(θ, π AD ) for α = 0 .2Figure 11: Heatmaps of the average empirical occupation time of AD at α = 0 .2. Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. Raw occupation times are normalized by dividing by the total occupation time across the five focal strategy profiles (AD , GT , W SLS , AGT , and AC ). The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants of the normalized occupation share. Regions with high AD occupation coincide closely with the boundary’s prediction of non-cooperative outcomes. 30 D State Occupation Heat Maps for (D, D )
+
+In this appendix, we present heatmaps of the average empirical occupation time of the state (D, D ) across all simulated combinations of the learning rate α and the exploration rate ϵ. These heatmaps illustrate how frequently the state (D, D ) is visited as the algorith-mic parameters vary. In contrast to the analysis of strategy profiles, for which we report normalized shares, we use raw (unnormalized) shares in this case. 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.5
+
+ = 0 .2 
+
+> 0.5
+> 0.60.8
+> δ = 0.65 R
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.60.8
+> δ = 0.75 R
+> 0.1
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.1
+> 0.5
+> 0.20.4
+
+P
+
+> 0.5
+> 0.00.20.40.60.81.0
+> Share
+
+ˆO(θ, π (D,D )) for α = 0 .1
+
+Figure 12: Heatmaps of the average empirical occupation time of (D, D ) at α = 0 .1. Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants. 31 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.5
+
+ = 0 .2 
+
+> 0.5
+> 0.60.8
+> δ = 0.65 R
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.60.8
+> δ = 0.75 R
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.5
+> 0.20.4
+
+P
+
+> 0.5
+> 0.00.20.40.60.81.0
+> Share
+
+ˆO(θ, π (D,D )) for α = 0 .15 Figure 13: Heatmaps of the average empirical occupation time of (D, D ) at α = 0 .15 . Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants. 32 0.60.8
+
+> δ = 0.55 R
+
+ = 0 .1
+
+> 0.5
+> 0.9
+
+ = 0 .15 
+
+> 0.5
+
+ = 0 .2 
+
+> 0.5
+> 0.60.8
+> δ = 0.65 R
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.60.8
+> δ = 0.75 R
+> 0.5
+> 0.9
+> 0.5
+> 0.5
+> 0.20.4
+
+P 
+
+> 0.60.8
+> δ = 0.85 R
+> 0.1
+> 0.5
+> 0.9
+> 0.20.4
+
+P 
+
+> 0.5
+> 0.20.4
+
+P
+
+> 0.5
+> 0.00.20.40.60.81.0
+> Share
+
+ˆO(θ, π (D,D )) for α = 0 .2Figure 14: Heatmaps of the average empirical occupation time of AD at α = 0 .2. Each heatmap reports the normalized average occupation time, averaged across initializations, for all combinations of P ∈ Θ(q) 
+
+> P
+
+and R ∈ Θ(s) 
+
+> R
+
+. Rows correspond to different values of 
+
+δ ∈ Θ(p) 
+
+> δ
+
+, and columns correspond to different values of ϵ ∈ Θ(n) 
+
+> ϵ
+
+. The green line indicates the heuristic boundary, while the yellow lines denote the 10% , 50% , and 90% isoquants. 33 E F1 Scores, Precision and Recall for Dominance of Cooper-ative Strategies 
+
+This appendix reports the macro F1 score, minimum precision, and minimum recall across combinations of the learning and exploration rates. For completeness, we also present results for two combinations of the learning and exploration rates that lie outside the accessible parameter range identified in Section 5.2, namely α = ϵ = 0 .025 and α = ϵ = 0 .05 . For these parameter combinations, we evaluate the classifier over the same values of the remaining free parameters as in the original grid G.Table 3 reports the macro F1 scores. These results replicate those in Table 2 while extending the analysis to the non-accessible parameter range. The table reveals a monotonic decline in the macro F1 score as the learning and exploration rates move further into the non-accessible region. A potential limitation of the macro F1 score is that it may mask poor performance in either recall or precision, depending on the definition of the positive class (dominance of cooperative versus defection strategy profiles). To address this concern, Tables 4 and 5 adopt an adversarial, worst-case evaluation approach. Specifically, for each parameter com-bination, we compute recall and precision under both possible definitions of the positive class and report the minimum value. Both metrics range from 0 to 1, with lower values indicating weaker performance. The results show strong performance across all metrics within the accessible parameter range, but substantially degraded performance outside this range. Table 3: F1 Scores 
+
+ϵα 0.025 0.05 0.1 0.15 0.2 0.025 0.819 – – – –[0.799, 0.838] – – – –0.05 – 0.849 – – –– [0.831, 0.867] – – –0.1 – – 0.918 0.924 0.920 – – [0.902, 0.933] [0.907, 0.940] [0.904, 0.936] 0.15 – – 0.921 0.910 0.912 – – [0.904, 0.938] [0.891, 0.929] [0.893, 0.929] 0.2 – – 0.908 0.908 0.914 – – [0.888, 0.927] [0.888, 0.926] [0.894, 0.931]                   
+
+> Note: The table reports the macro F1 score obtained when using the heuristic boundary as a classifier to predict the dominance of cooperative strategy profiles. Values in brackets indicate
+> 95% confidence intervals obtained via a bootstrapping procedure with 1,000 bootstrap samples. Performance degrades for parameter combinations outside the accessible range ( α=ϵ= 0 .025
+> and α=ϵ= 0 .05 ). For these combinations of the learning and exploration rates, the classifier is evaluated over the remaining free parameters of the original grid, Θ(p)
+> δ×Θ(q)
+> P×Θ(s)
+> R.
+
+34 Table 4: Minimum Precision Scores 
+
+ϵα 0.025 0.05 0.1 0.15 0.2 0.025 0.773 – – – –[0.755, 0.791] – – – –0.05 – 0.817 – – –– [0.801, 0.834] – – –0.1 – – 0.933 0.918 0.879 – – [0.922, 0.945] [0.889, 0.945] [0.847, 0.912] 0.15 – – 0.907 0.855 0.845 – – [0.875, 0.940] [0.818, 0.896] [0.807, 0.884] 0.2 – – 0.844 0.836 0.844 – – [0.799, 0.887] [0.794, 0.879] [0.801, 0.884] 
+
+Note: The table reports the minimum precision obtained when using the heuristic boundary as a classifier to predict the dominance of cooperative strategy profiles. Values in brackets indicate 
+
+95% confidence intervals obtained via a bootstrapping procedure with 1,000 bootstrap samples. With two classes, precision is computed for each class and the minimum value is reported. 
+
+Table 5: Minimum Recall Scores 
+
+ϵα 0.025 0.05 0.1 0.15 0.2 0.025 0.636 – – – –[0.598, 0.672] – – – –0.05 – 0.668 – – –– [0.632, 0.705] – – –0.1 – – 0.805 0.850 0.872 – – [0.768, 0.842] [0.815, 0.886] [0.837, 0.904] 0.15 – – 0.843 0.852 0.869 – – [0.804, 0.881] [0.811, 0.893] [0.830, 0.908] 0.2 – – 0.848 0.854 0.866 – – [0.802, 0.893] [0.808, 0.895] [0.819, 0.908] 
+
+Note: The table reports the minimum recall obtained when using the heuristic boundary as a classifier to predict the dominance of cooperative strategy profiles. Values in brackets indicate 
+
+95% confidence intervals obtained via a bootstrapping procedure with 1,000 bootstrap samples. With two classes, recall is computed for each class and the minimum value is reported. 
+
+35
