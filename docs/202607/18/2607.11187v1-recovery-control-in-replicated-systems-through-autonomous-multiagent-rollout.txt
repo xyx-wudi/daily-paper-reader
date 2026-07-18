@@ -1,0 +1,1336 @@
+Title: Recovery Control in Replicated Systems through Autonomous Multiagent Rollout
+
+URL Source: https://arxiv.org/pdf/2607.11187v1
+
+Published Time: Tue, 14 Jul 2026 02:08:55 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+> arXiv:2607.11187v1 [eess.SY] 13 Jul 2026 1
+
+# Recovery Control in Replicated Systems through Autonomous Multiagent Rollout 
+
+Kim Hammar and Yuchao Li 
+
+Abstract —We study recovery control in replicated computing systems. Such systems consist of replicas that collectively provide a service to a client population. This redundancy enables the system to withstand failures provided that failed replicas are recovered faster than new failures occur. We show that the problem of deciding when to initiate recovery of selected replicas can be formulated as a partially observable Markov decision problem (POMDP) with a multiagent structure. We exploit this structure to apply a multiagent rollout method for approximating optimal control policies. Our method uses precomputed signaling information that reduces the need for replica coordination and facilitates parallel computations. Experiments show that our method scales to systems with up to 70 replicas and reduces costs compared to the recovery policies currently used in practice. 
+
+Index Terms —Reinforcement learning, multiagent, recovery. 
+
+I. I NTRODUCTION 
+
+# AS our reliance on on-line services grows, there is an in-creasing demand for reliable systems that provide correct service without disruption. Research on fault-tolerant systems has almost a century-long history, with the seminal work by von Neumann [1], and Moore and Shannon [2] in 1956. The early work focused on tolerance against hardware failures. Since then, the field has broadened to include tolerance against software bugs, operator mistakes, and cyberattacks; see e.g., Lamport et al. [3] and Avizienis [4]. The common approach to building a fault-tolerant service is redundancy , whereby the service is provided by a set of service replicas . Through such redundancy, failed replicas can be substituted by healthy replicas as long as they can coordinate their service responses. This coordination problem is known as consensus .1
+
+Given a suitable consensus protocol, a distributed system with N service replicas can tolerate up to f < N faulty replicas, where a faulty replica can behave arbitrarily, i.e., Byzantine. For example, a faulty replica can stop responding to service requests (e.g., due to a power outage) or send incorrect responses to clients (e.g., due to a cyberattack). Tolerating failures in this setting means that despite the presence of up to f faulty replicas, the system as a whole is still guaranteed to provide correct responses to service requests by clients. 
+
+This research is supported by the Swedish Research Council; 2024-06436. K. Hammar is with the Department of Computing, Imperial College, London, United Kingdom, k.hammar@imperial.ac.uk .Y. Li is with the Fulton School of Engineering, Arizona State University, Tempe, AZ. yuchaoli@asu.edu .Manuscript received Month Day, 2026. 
+
+> 1
+
+Here we refer to the classical notion of consensus from distributed systems theory, where a finite set of nodes must eventually agree on a value despite failures; see e.g., Lamport et al. [3]. This is distinct from the notion of consensus studied in control theory, which focuses on states gradually converging to the same value over time; see e.g., Olfati-Saber et al. [5]. . . .  
+
+> Service requests Responses
+> Clients
+
+# . . .                      
+
+> u1z1u2z2u3z3uNzN
+> Agent 1
+> Replica 1
+> x1= 0
+> Replica 2
+> x2= 0
+> Replica 3
+> x3= 1
+> Replica N
+> x4= 0
+> Agent 2Agent 3Agent N
+> Consensus protocol & control coordination
+
+Fig. 1. Multiagent recovery control in a system with N replicas that provide a service to clients, e.g., a web service. Each replica i ∈ { 1, . . . , N } has a state xi, which is 1 if the replica is faulty (e.g., due to a cyberattack or operator mistake); 0 otherwise. Replicas are coordinated through a consensus protocol that ensures correct service as long as at most f < N replicas are faulty. Each replica i is equipped with an agent that monitors the replica via the observation zi and applies the recovery control ui.
+
+While the system can only tolerate f replicas being faulty si-multaneously , it can withstand any number of failures provided that replicas are recovered quickly enough. However, deciding when to recover replicas is challenging because it requires bal-ancing recovery costs against service requirements. Moreover, the failure state of a replica is often not fully observable due to limited monitoring capabilities. In addition, failures are not independent events, i.e., observing the failure of one replica increases the likelihood of additional failures. For instance, two replicas may be located in the same geographic region, so a regional outage could affect both simultaneously, or they might run the same operating system and therefore be vulnerable to the same types of cyberattacks. Due to these challenges, current approaches to recovery control mostly rely on inefficient recovery policies, such as heuristic rule-based recovery (see e.g., [6]) and periodic recovery (see e.g., [7], [8]). While simple to implement, these policies do not adapt well to varying failure patterns and can waste resources or delay recovery. For example, in a periodic recovery scheme, a replica might be recovered every week even if it is functioning correctly, leading to unnecessary recovery costs and/or slow responses to failure events. In this paper, we address these limitations and present a scalable method for approximating optimal recovery policies. Compared to heuristic approaches, our method can signifi-cantly reduce operational costs by avoiding unnecessary recov-eries and minimizing service disruption. In particular, we for-mulate the recovery problem as a partially observable Markov decision problem (POMDP) with a multiagent structure, i.e., 2
+
+a POMDP where the control consists of multiple components. We exploit this structure to apply a multiagent rollout method where each replica is controlled by an agent that decides when to initiate recovery based on partial observations; see Fig. 1. This method is applicable to a broad class of POMDPs and extends beyond the recovery problem studied in this paper. In the simplest instantiation of our method, each agent decides when to initiate recovery of its replica by performing a lookahead optimization using a base policy (e.g., a periodic recovery policy) to simulate future controls and predict the controls of the agents that have not yet selected their controls. The agents perform these optimizations sequentially (one at a time), where each agent is informed of the controls selected by the preceding agents. This sequential decomposition reduces the complexity of the control minimization from O(2 N ) to 
+
+O(N ), where N is the number of replicas. We also present an extension of our method wherein each agent selects its recovery control autonomously based on precomputed signal-ing information. This extension allows the agents to compute their controls in parallel, which enables our method to scale to systems where standard rollout is computationally intractable. The multiagent rollout formulation that forms the basis of our method was first presented by Bertsekas; see textbooks [9], [10] and paper [11]. It is based on an approach for problem reformulation to trade off control space complexity with state space complexity, first proposed by Bertsekas and Tsitsiklis [12, Section 6.1.4]. Multiagent rollout methods have since been applied across a wide range of domains, including coordination of warehouse robots [13], repair scheduling for fleets of robots [14], taxi routing [15], resource allocation [16], target tracking [17], antenna tilt optimization [18], multivehi-cle routing [19], and robotic arm path planning [20]. These studies highlight the versatility of multiagent rollout for problems where distributed decisions must be coordinated in real time. To our knowledge, we are the first to apply multiagent rollout to the recovery control problem studied in this paper. Moreover, we characterize theoretical conditions under which our method has an approximate cost-improvement property. Two further distinctions are that our method uses signaling and that we evaluate it both in simulation and on a physical testbed. By contrast, the referenced studies are limited to simulation and most of them do not use signaling. We note that multiagent rollout relates to the theory of teams (see e.g., Marschak [21]), decentralized control (see e.g., Sandell et al. [22]), and the notion of person-by-person optimality (see e.g., Bauso et al. [23]), all of which are well-developed research areas with a long history. For recent developments in these areas, see e.g., Ballotta et al. [24], Doerr et al. [25], Trajanovski et al. [26], and Gattami [27]. While related to this paper on a methodological level, all of these references study fundamentally different problems than the distributed recovery control problem studied in this paper. In the context of distributed recovery control in replicated computing systems, the only prior work that adopts a decision-theoretic formulation rather than a heuristic one is the ap-proach by Hammar and Stadler [28], [29]. However, their method assumes that failures are independent across replicas, an assumption that does not hold in our setting. Other models that have similarities with the one studied in this paper include the singleagent recovery-control model by Kreidl and Frazier [30] and the distributed failure-detection model by Kreidl, Tsitsiklis, and Zoumpoulis [31]. Compared to those papers, the main difference is that our model is designed for dis-tributed recovery control, whereas the referenced papers study centralized control and decentralized detection, respectively. Finally, we note that a large body of research has studied fault detection and recovery of control systems, see e.g., the work by Teixeira et al. [32], Burbano et al. [33], Xu et al. [34], and Gertler [35]. Our work differs from these papers by studying recovery control of a computing infrastructure (e.g., a cloud system) rather than a physical process (e.g., a power plant). In summary, our main contributions are as follows:  
+
+> •
+
+We develop a novel method for distributed recovery control in replicated computing systems. Our method is based on autonomous multiagent rollout with signaling.  
+
+> •
+
+We characterize the computational complexity of our method and define theoretical conditions under which it has an approximate cost improvement property.  
+
+> •
+
+We validate our method through extensive simulations and testbed experiments. The results show that our method improves scalability compared to other rollout methods and improves performance compared to the recovery control policies currently used in practice. II. S YSTEM MODEL 
+
+We consider a replicated system with N nodes , which are connected through an authenticated network , i.e., a network where nodes can verify the sender of a message using digital signatures. We assume an upper bound on the communication delay between nodes, but allow for temporary periods of instability where the bound is violated. In other words, we consider the partially synchronous system model .2 Within this model, any message sent between two healthy nodes is eventually delivered. However, the time to deliver a message cannot be predicted. As is well known, this is the weakest model in which distributed consensus is theoretically feasible; see Fischer, Lynch, and Paterson for a proof [38, Thm. 1]. Each node is segmented into two domains: a privileged domain , which can only fail by crashing, and an application domain , which can fail in arbitrary (i.e., Byzantine) ways. 3
+
+In other words, we consider the hybrid failure model , as originally proposed by Correia et al. [41]. The privileged domain runs a control agent and the application domain runs a 
+
+service replica . The agent monitors the replica through failure alerts (e.g., from an anomaly detector) and decides when to recover the replica by restarting it with a new operating system; see Fig. 2. The replicas are coordinated through a 
+
+> 2For technical details about the partially synchronous system model, we refer to the textbook by Cachin et al. [36] and the paper by Dwork et al. [37].
+> 3The separation between the privileged and application domains can be realized in several ways. One option is to use a secure coprocessor to execute the privileged domain; see e.g., [7]. Another option is implementing the privileged domain using dedicated hardware modules, such as a smartcard or an FPGA; see e.g., [39]. A third option, which does not require special hardware, is to separate the two domains using a secure virtualization layer that can be formally verified; see e.g., [40]. 3
+
+consensus protocol, which guarantees correct service to clients if no more than f < N replicas are faulty at the same time. While the control agents themselves can crash, they cannot exhibit arbitrary (Byzantine) behavior like the service replicas. As a consequence, crashed agents can be detected and replaced using a timeout-based crash detector. Recovering service repli-cas is more difficult because their Byzantine behavior can mask or mimic correct operation, making it hard to distinguish faulty replicas from healthy ones. For this reason, our focus is on the more challenging problem of recovering the service replicas. We formalize this problem in the next section. Application domain        
+
+> Privileged domain
+> Agent μi
+> Node i
+> Failure alerts zik
+> Recovery controls uik
+> Service replica i
+> Failure state xi
+> Consensus prototcol & control coordination
+> Fig. 2. Architecture of a node in our system model. The node is segmented into a privileged domain that runs a control agent and an application domain that runs a service replica. This segmentation allows us to consider different failure assumptions: the privileged domain can only fail by crashing, while the application domain can fail in arbitrary (i.e., Byzantine) ways.
+
+III. F ORMULATING RECOVERY CONTROL AS A POMDP We formulate recovery control in a replicated computing system as an infinite-horizon POMDP with a discounted cost criterion. We denote the set of states by X, the set of controls by U , and the set of observations by Z, all being finite. Transitions from state x to state y under control u occur at discrete times k according to transition probabilities pxy (u).Each transition is associated with a cost g(x, u, y ) and an observation z, which is generated with probability p(z | y, u ).In the context of our system model, the state at time k is a vector xk = ( x1
+
+> k
+
+, . . . , x Nk ), where xik = 1 if replica i is faulty and xik = 0 otherwise. The initial state is x0 = (0 , . . . , 0) .Similarly, the control is a vector uk = ( u1
+
+> k
+
+, . . . , u Nk ), where 
+
+uik = 1 means to recover replica i and uik = 0 means to wait. If replica i is faulty ( xik = 1 ), then it remains so until recovery (uik = 1 ), at which point the state xik+1 is set to 0. Otherwise, we define the probability that the ith replica fails as 
+
+min 
+
+pF
+
+1 + 
+
+> N
+
+X
+
+> j=1
+
+Aji xjk
+
+ , 1
+
+ , (1) where pF ∈ (0 , 1) is a configurable parameter that models the propensity for failures and A is an N × N binary matrix that encodes failure dependencies between replicas. Specifically, 
+
+Aji = 1 means that the failure of replica j increases the probability that replica i will fail. Conversely, Aji = 0 means that the failure probability of replica i is independent of the state of replica j. In our model, we set the diagonal entries of A to one, i.e., Aii = 1 . Conceptually, A can be viewed as the adjacency matrix of a graph where an edge from node j
+
+to node i means that i is failure-dependent on j; see Fig. 3. 20 40 60 80 100 120 140 160 180 200                                        
+
+> 0.5
+> 1
+> pF= 0 .01
+> pF= 0 .02
+> pF= 0 .04
+> Probability that replica 3has failed by time k
+> Time step k
+> 1
+> 3
+> 5
+> 2
+> 4
+> 020 40 60 80 100 120 140 160 180 200
+> 0.5
+> 1
+> pF= 0 .01
+> pF= 0 .02
+> pF= 0 .04
+> Probability that replica 3has failed by time k
+> Time step k
+> 1
+> 3
+> 5
+> 2
+> 4
+> Fig. 3. Probability that replica 3has failed by time kin a system with
+> N= 5 replicas, assuming no recoveries occur. The two plots relate to different configurations of the failure-dependency matrix A, as illustrated by the graphs to the right of each plot. An edge from node jto node iin the graph means that Aji = 1 . Curves relate to different values of the parameter pF; cf. Eq. (1).
+
+Due to limited monitoring capabilities, the state xk is not observable. Rather, the control agents observe the vector 
+
+zk = ( z1
+
+> k
+
+, . . . , z Nk ), where zik ∈ { 0, 1, . . . , w } models the number of failure alerts related to replica i at time k. The distribution of these alerts is denoted by p(z | y, u ) and depends on the system state and the applied control. We estimate this distribution based on empirical measurements of failure alerts on our testbed; see Section VI-A for details. When selecting controls, the objective is to prevent un-mitigated failures, minimize service disruption, and avoid unnecessary recovery controls. To capture these tradeoffs, we model the stage cost of the POMDP as 
+
+g(x, u, y ) = 
+
+> disruption cost
+
+z }| {
+
+λϕ (x, u ) + 
+
+> N
+
+X
+
+> i=1
+
+ failure cost 
+
+z }| {
+
+ηx i(1 − ui) + 
+
+> recovery cost
+
+z }| {
+
+ui(1 − xi)
+
+
+
+,
+
+(2) where 0 ≤ η, λ < ∞ are weighting factors and ϕ is given by 
+
+ϕ(x, u ) = 
+
+
+
+1 if 
+
+> N
+
+X
+
+> i=1
+
+(xi + (1 − xi)ui)
+
+!
+
+> f, 
+
+0 otherwise. (3) This stage cost expresses that costs are incurred for unmit-igated failures ( xi = 1 and ui = 0 ), unnecessary recovery controls ( ui = 1 and xi = 0 ), and service disruption, which occurs when the number of replicas that are either faulty or being recovered exceeds the tolerance threshold f ; cf. Eq. (3). 
+
+Belief Space Formulation 
+
+While the preceding formulation involves imperfect state information, it can be formulated as an equivalent problem with perfect state information; see e.g., [42]. In this formula-tion, the system is described by the belief state bk, which is a vector with 2N components, 4 where each component bk(x) is        
+
+> 4The belief is defined over the state space X={0,1}Nto capture dependencies among the failure states of different replicas. When these states are independent, a compact belief representation of dimension Nis possible. 4
+
+the conditional probability that the state is x at time k, given the history of controls and observations. We use bik to denote the belief that the state of replica i is 1, i.e., 
+
+bik = X
+
+> x∈Xi
+
+bk(x), (4) where Xi ⊂ X is the subset of states where xi = 1 .The belief state belongs to the belief space B and is recursively updated through a belief estimator F as 
+
+bk = F (bk−1, u k−1, z k). (5) The principled way to define F is via the recursion 
+
+bk(y) = p(zk | y, u k−1) P 
+
+> x∈X
+
+bk−1(x)pxy (uk−1)
+
+P
+
+> x′∈X
+
+P 
+
+> y′∈X
+
+p(zk | y′, u k−1)bk−1(x′)px′y′ (uk−1) .
+
+(6) We adopt the belief-space formulation and consider recov-ery policies μ that map the belief space B to the control space 
+
+U . The cost function of such a policy is defined as 
+
+Jμ(b0) = lim  
+
+> H→∞
+
+E
+
+(H−1X
+
+> k=0
+
+αk ˆg bk, μ (bk))
+
+, (7) where E{·} denotes the expected value, α ∈ (0 , 1) is a discount factor, and the stage cost ˆg(b, u ) is defined as 
+
+ˆg(b, u ) = X
+
+> x∈X
+
+b(x) X
+
+> y∈X
+
+pxy (u)g(x, u, y ). (8) The optimal cost function J∗, derived by optimizing over all possible policies μ, uniquely satisfies the Bellman equation 
+
+J∗(b) = min 
+
+> u∈U
+
+"
+
+ˆg(b, u ) + α X
+
+> z∈Z
+
+ˆp(z | b, u )J∗(F (b, u, z )) 
+
+#
+
+,
+
+(9) where the probability ˆp(z | b, u ) is defined as 
+
+ˆp(z | b, u ) = X
+
+> x∈X
+
+b(x) X
+
+> y∈X
+
+pxy (u)p(z | y, u ). (10) We say that a policy μ∗ is optimal if Jμ∗ = J∗. Although such a policy exists (see e.g., [43, Thm. 7.6.1] or [44, § 5.6]), there are no efficient algorithms to obtain it. Consequently, approximations are required in practice. We present two such approximation methods in the following sections. IV. C ENTRALIZED CONTROL : S INGLEAGENT ROLLOUT 
+
+While the problem in the preceding section can in principle be solved using dynamic programming, the amount of required computation grows exponentially with the number of service replicas; see Fig. 4. For this reason, we use approximation techniques. In particular, we use the rollout methodology as originally formulated by Bertsekas [9]. 1 2 3 4 5 6                   
+
+> 10 1
+> 10 4
+> 10 7Size of Uand X
+> Size of Zwith w= 3
+> Size of Zwith w= 7
+> Number of replicas N
+> Fig. 4. Size of the control, state, and observation spaces as a function of the number of replicas N. The value w+ 1 is the number of possible failure alerts that can be observed at each replica.
+
+The starting point of our rollout method is a base policy μ,which can be chosen freely. It can, for example, be designed based on off-line optimization (see e.g., [45]) or heuristics (see e.g., [46]). In the context of recovery control, a natural choice may be a policy that recovers replicas periodically. Such a recovery policy was used by Castro and Liskov [7]. Regardless of the type of base policy, we can start from a belief bk and simulate POMDP trajectories of the form 
+
+bk, u k, b k+1 , u k+1 , . . . , b k+m−1, u k+m−1, b k+m,
+
+where m ≥ 1 is the rollout horizon and each control is given by ul = μ(bl). Such simulations allow us to estimate the expected cost-to-go of the base policy from any belief bk as 
+
+˜Jμ(bk)= 1
+
+L
+
+> L
+
+X
+
+> s=1
+> k+m−1
+
+X
+
+> l=k
+
+αl−k ˆg bl,s , μ (bl,s ) + αm ˜J(bk+m,s ),
+
+(11) where L ≥ 1 is the number of simulations. Here 
+
+(bk,s , . . . , b k+m,s ) is the belief trajectory of the sth simulation and ˜J is a (bounded) cost function approximation , which can be designed based on off-line approximation techniques. For example, ˜J can be obtained through aggregation methods (see e.g., [45], [47], [48]) or deep learning (see e.g., [16]). Given the base policy μ and its cost-to-go estimate ˜Jμ
+
+[cf. Eq. (11)], we compute a rollout policy ˜μ through looka-head optimization as 
+
+˜μ(bk) ∈ arg min  
+
+> uk∈U
+
+"
+
+ˆg(bk, u k) + min 
+
+> μk+1 ,...,μ k+ℓ−1
+
+E
+
+> zk+1 ,...,z k+ℓ
+
+ k+ℓ−1X
+
+> j=k+1
+
+αj−k ˆg(bj , μ j (bj )) + αℓ ˜Jμ(bk+ℓ)
+
+#
+
+, (12) where ℓ ≥ 1 is the lookahead horizon. This rollout policy possesses the fundamental cost improvement property. To state this property formally, let us denote by e : B → ℜ the unit function that takes the value 1 identically on B, i.e., e(b) ≡ 1.Consider the following optimization problem 
+
+inf  
+
+> c∈ℜ
+
+∥ ˜Jμ + ce − Jμ∥ (13a) 
+
+s. t. min 
+
+> u∈U
+
+"
+
+ˆg(b, u ) + α X
+
+> z∈Z
+
+ˆp(z | b, u ) ˜Jμ(F (b, u, z )) 
+
+#
+
+≤ ˜Jμ(b) + (1 − α)c, for all b ∈ B, (13b) where ∥·∥ is the maximum norm. Let ϵ denote the infimum of this optimization problem. Given this notation, we have the following result, which we prove in Appendix B. 5
+
+Proposition 1. The rollout policy ˜μ approximately improves the base policy μ with error at most αℓϵ, i.e., 
+
+J˜μ(b) ≤ Jμ(b) + αℓϵ, for all b ∈ B, 
+
+where 0 ≤ ϵ < ∞ is defined by the infimum (13) .
+
+Proposition 1 provides a performance guarantee for the rollout policy. It implies that the rollout policy will generally perform at least as well, and typically better than the base policy. Moreover, it can be shown that the performance gap between the rollout policy and the optimal policy decreases exponentially with the lookahead horizon ℓ; see Bertsekas for a proof [49, Prop. 5.1.1]. Another appealing property of the rollout method is that the computational cost can be scaled by tuning the number of lookahead steps ( ℓ), the number of simulations ( L), and the rollout horizon ( m), as stated below. 
+
+Proposition 2. If the belief estimator is implemented via Eq. (6) and the evaluations of pxy (u), p(z | y, u ), g(x, u, y ),and ˜J(b) are constant-time operations, then the computation required by Eq. (12) is of order 
+
+O  (2 N |Z|)ℓLm |X|2 ,
+
+where | · | denotes the cardinality of a set. Proof. Since the evaluations of pxy (u), p(z | y, u ), g(x, u, y ),and ˜J(b) are constant-time operations by assumption, it fol-lows that the computations required by Eq. (6) and Eq. (8) are both of order O(|X|2). Furthermore, because Eqs. (11)–(12) invoke Eq. (8) at most once per invocation of Eq. (6), Eq. (8) does not affect the order of the computation. As a result, the computation required by Eq. (11) is of order O(Lm |X|2).Now consider Eq. (12). The lookahead can be represented as a tree with branching factor |U || Z| = 2 N |Z|. For each edge of this tree, Eq. (12) invokes the belief estimator. The number of edges in the lookahead tree is Pℓj=1 (2 N |Z|)j = O((2 N |Z|)ℓ).Thus, the complexity of constructing the tree is of order 
+
+O((2 N |Z|)ℓ|X|2). Moreover, for each of the beliefs reached after ℓ lookahead steps, Eq. (12) invokes Eq. (11), which requires O  (2 N |Z|)ℓLm |X|2 computations in total. Hence, the complexity of computing Eq. (12) is of order 
+
+O  (2 N |Z|)ℓLm |X|2| {z }
+
+> Cost-to-go computation
+
++ O  (2 N |Z|)ℓ|X|2| {z }
+
+> Lookahead tree construction
+
+,
+
+which is dominated by the first term since Lm ≥ 1.
+
+Remark 1. The belief estimator F can be implemented using approximation schemes to reduce the computational cost. For example, if F is implemented by a particle filter with M
+
+particles, then the computation per belief update is of order 
+
+O(M ) rather than O(|X|2), which reduces the complexity of computing Eq. (12) to O  (2 N |Z|)ℓLmM .
+
+Despite the scalable computational complexity, practical computation of the rollout policy [cf. Eq. (12)] involves two major challenges. First, the size of the control space U is 
+
+2N , which means that the complexity of the minimization (12) increases exponentially with the number of replicas N .Second, the minimization (12) requires complete coordination among the service replicas (e.g., the selection of control u1
+
+depends on u2, . . . , u N ), which may be impractical. In the following section, we present a variant of rollout that reduces the computational complexity and the need for coordination. We refer to this rollout method as multiagent rollout .V. D ISTRIBUTED CONTROL : M ULTIAGENT ROLLOUT 
+
+The key idea of multiagent rollout is to reformulate the con-trol problem as an equivalent problem where the complexity of the control space U is reduced at the expense of additional (observable) states, as originally proposed by Bertsekas and Tsitsiklis [12, Section 6.1.4]. This tradeoff is favorable since the complexity of rollout [cf. Eq. (12)] is proportional to 
+
+|U | = 2 N but is independent of the number of observable states; cf. Prop. 2 and Remark 1. Specifically, we reformulate the original problem by introducing the intermediate states 
+
+(bk, u 1
+
+> k
+
+), (bk, u 1
+
+> k
+
+, u 2
+
+> k
+
+), . . . , (bk, u 1
+
+> k
+
+, . . . , u N −1 
+
+> k
+
+) for all k. 
+
+Given these intermediate states, the control components 
+
+u1
+
+> k
+
+, . . . , u Nk are selected sequentially. That is, given the belief 
+
+bk, we start by selecting the control u1
+
+> k
+
+. Then, given the belief 
+
+bk and the control u1
+
+> k
+
+, we select the control u2
+
+> k
+
+, and so on; see Fig. 5. Conceptually, each control component uik is selected by a separate “ agent ”. It is evident that this reformulated problem is equivalent to the original, since any control that is possible in one problem is also possible in the other problem, while the cost structure of the two problems is the same. . . . 1 2 3 N                   
+
+> u1
+> ku2
+> ku3
+> kuNk
+> bk(bk, u 1
+> k)(bk, u 1
+> k, u 2
+> k)(bk, u 1
+> k, . . . , u N−1
+> k)
+> Fig. 5. Illustration of the reformulated (multiagent) problem. The control components u1
+> k, . . . , u Nkare selected sequentially by separate agents, where the selection of uikis done in the intermediate state (bk, u 1
+> k, u 2
+> k, . . . , u i−1
+> k).
+
+Remark 2. The order in which the controls are selected is not restricted to 1, 2, . . . , N and can be optimized; see [9]. 
+
+The motivation for the reformulated problem is that the computation required by the control minimization (12) is reduced from being in the order of O(2 N ) to O(N ), where 
+
+N is the number of replicas. (This reduction is formalized in Prop. 4 below.) Applying the rollout method [cf. Eq. (12)] to the reformulated problem with ℓ = 1 , we obtain Eq. (14), which is stated at the top of the next page. (We use μi(bk) to denote the ith control component selected by the policy μ.) Despite the significant reduction in computational cost, the cost improvement property of multiagent rollout is maintained. To formalize this property, let ˜μ denote the multiagent rollout policy and consider the following optimization problem 
+
+inf  
+
+> c∈ℜ
+
+∥ ˜Jμ + ce − Jμ∥ (16a) 
+
+s. t.
+
+"
+
+ˆg b, ˜μ(b) + α X
+
+> z∈Z
+
+ˆp z | b, ˜μ(b) ˜Jμ
+
+
+
+F  b, ˜μ(b), z #
+
+≤ ˜Jμ(b) + (1 − α)c, for all b. (16b) 6
+
+˜μ1(bk) ∈ arg min  
+
+> u1
+> k∈{ 0,1}
+
+"
+
+ˆg
+
+
+
+bk,  u1
+
+> k
+
+, μ 2(bk), μ 3(bk), . . . , μ N (bk)
+
++ α E
+
+> zk+1
+
+
+
+˜Jμ(bk+1 )
+
+#
+
+, (14a) 
+
+˜μ2(bk) ∈ arg min  
+
+> u2
+> k∈{ 0,1}
+
+"
+
+ˆg
+
+
+
+bk,  ˜μ1(bk), u 2
+
+> k
+
+, μ 3(bk), μ 4(bk), . . . , μ N (bk)
+
++ α E
+
+> zk+1
+
+
+
+˜Jμ(bk+1 )
+
+#
+
+, (14b) ...
+
+˜μN (bk) ∈ arg min  
+
+> uNk∈{ 0,1}
+
+"
+
+ˆg
+
+
+
+bk,  ˜μ1(bk), ˜μ2(bk), . . . , ˜μN −1(bk), u Nk
+
+
+
++ α E
+
+> zk+1
+
+
+
+˜Jμ(bk+1 )
+
+#
+
+. (14c) 
+
+˜μi(bk) ∈ arg min  
+
+> uik∈{ 0,1}
+
+"
+
+ˆg
+
+
+
+bk,  bμ1(bk), . . . , bμi−1(bk), u ik, μ i+1 (bk), . . . , μ N (bk)
+
++ α E
+
+> zk+1
+
+
+
+˜Jμ(bk+1 )
+
+#
+
+. (15) Denote by ˆϵ the infimum above. Given this notation, we have the following result, which we prove in Appendix C. 
+
+Proposition 3. The multiagent rollout policy ˜μ computed via Eq. (14) approximately improves the base policy μ with error at most ˆϵ, i.e., 
+
+J˜μ(b) ≤ Jμ(b) + ˆ ϵ, for all b ∈ B, 
+
+where 0 ≤ ˆϵ < ∞ is defined by the infimum (16) .
+
+Compared with the performance improvement of standard rollout with one-step lookahead, the error term αϵ in Prop. 1 is replaced by ˆϵ. Since the feasible set defined by Eq. (13b) is larger than that defined by Eq. (16b), we have ϵ ≤ ˆϵ. Therefore, the improvement guarantee of multiagent rollout, as stated in Prop. 3, is weaker than that of standard rollout with one-step lookahead given in Prop. 1. However, our experimental eval-uation in §VI shows that both standard rollout and multiagent rollout attain comparable performance in practice. In addition to preserving the approximate cost improvement property, multiagent rollout significantly reduces the compu-tational cost. In particular, the factor |U | = 2 N in Prop. 2 is reduced to 2N , as stated below. The proof follows the same arguments as the proof of Prop. 2 and is omitted for brevity. 
+
+Proposition 4. If the belief estimator is implemented via Eq. (6) and the evaluations of pxy (u), p(z | y, u ), g(x, u, y ),and ˜J(b) are constant-time operations, then the computation required by Eq. (14) is of order 
+
+O  N |Z|Lm |X|2 .
+
+While multiagent rollout reduces the amount of required computation, it requires significant coordination among the agents, which means that the computations cannot be paral-lelized. Specifically, multiagent rollout requires that the opti-mization of the control component ui takes into account the controls ˜μ1(bk), ˜μ2(bk), . . . , ˜μi−1(bk); cf. Eq. (14). In prac-tice, it may be more practical to have agent i select its control before knowing the rollout controls of some of the agents 
+
+1, . . . , i − 1 and instead use the controls bμ1(bk), . . . , bμi−1(bk)
+
+in their place, where bμ is a signaling policy that embodies agent coordination. In other words, the agents compute their controls in parallel and use the signaling policy to predict the controls of the preceding agents. We call this method 
+
+autonomous multiagent rollout and define it in Eq. (15) at the top of the page. The benefit of this method is that it provides additional speedup through parallelization. However, it does not possess the cost improvement property. Hence, autonomous multiagent rollout may work well for some problems and not work well for other problems. The major determinants of the performance of this method are a) to what extent agent coordination is needed to select effective controls; and b) the accuracy of the signaling policy bμ. In practice, the signaling policy can be designed off-line based on heuristics or approximation architectures, such as neural networks. We evaluate different designs of the signaling policy in the next section. VI. E XPERIMENTAL EVALUATION 
+
+In this section, we present an experimental evaluation of the rollout methods described above. Our study focuses on the tradeoff between computational time and cost. 
+
+A. Experiment Setup 
+
+All computations are performed on an M4 pro processor with 12 CPU cores. When computing the expected cost of a policy, we take the average based on 100 simulated POMDP executions of length 100 . We instantiate the POMDP described in Section III as follows. We set the failure probability to be 
+
+pF = 0 .05 and the dependency matrix A to be the adjacency matrix of a random Erd˝ os–R´ enyi graph with parameter p =0.5. Similarly, we define the tolerance threshold to be f =
+
+⌊ N −12 ⌋; cf. Eq. (3). Moreover, we define the weighting factors in the stage cost to be η = 0 .2 and λ = 1 .5; cf. Eq. (2). Lastly, we define the discount factor to be α = 0 .95 .We consider two variants of the belief estimator F in Eq. (5): the filter in Eq. (6) and a particle filter defined as 
+
+ˆbk(x) = 1
+
+M
+
+> M
+
+X
+
+> s=1
+
+δxˆxsk , for all x ∈ X, (17) where δxy = 1 if x = y and δxy = 0 if x̸ = y. The states (particles) ˆx1
+
+> k
+
+, . . . , ˆxMk are sampled with probability 70 200 400 600 800 1,000                                                                      
+
+> Healthy ( xi= 0 )Faulty ( xi= 1 )
+> 0200 400 600 800 1,000 0200 400 600 800 1,000 0200 400 600 800 1,000
+> Number of failure alerts z1Number of failure alerts z2Number of failure alerts z3Number of failure alerts z4
+> Probability Probability Probability Probability
+> Fig. 6. Empirical observation distributions based on our testbed measurements. The measurements are available at
+> https://github.com/Kim-Hammar/csle .We plot the distributions as p(zi|xi)rather than p(z|x, u )since the distributions across replicas are independent given the local state xiand do not depend on the control u. The figure shows the observation distribution of four example replicas, i.e., i∈ { 1,2,3,4}. For details about our testbed setup, see Appendix G.
+
+proportional to the numerator in Eq. (6). In our experiments, we use M = 50 particles. Moreover, when using particle filtering, we approximate the expected values in Eq. (12) and Eq. (14) by taking the average values of 100 simulations. We instantiate the rollout method [cf. Eq. (12)] with L = 10 
+
+simulations and define the base policy μ as 
+
+μi(bk) = 
+
+(1 bik > 0.9,
+
+0 otherwise, i ∈ { 1, . . . , N }. (18) Similarly, we define the cost function approximation in Eq. (11) as ˜J(b) = ˆ g(b, μ (b)) . Finally, we use the rollout horizon m = 5 and the lookahead horizon ℓ = 1 .
+
+Signaling policies. We consider two signaling policies:  
+
+> •
+
+Base signaling policy bμ(b).
+
+– This signaling policy uses the base policy μ to predict the controls of the other agents.  
+
+> •
+
+Neural network signaling policy bμθ (b).
+
+– This signaling policy is represented by a neural net-work that is trained off-line to imitate the multiagent rollout policy; cf. Eq. (14). See Appendix E for details about the neural network training. 
+
+System identification. We identify the observation distribution 
+
+p(z | y, u ) of the POMDP from measurement data obtained by deploying N = 50 service replicas on our testbed and running a sequence of emulated failure events; see Fig. 7. We define the length of a time step in our testbed to be 30 
+
+seconds. During each step, we emulate failure events at a subset of replicas. We then measure the observation zk by reading log files. We repeat this procedure for 24 , 386 time steps and use the empirical distribution of failure alerts to define the observation distribution p(z | y, u ) in the POMDP. The observation space is defined as Z = {0, 1, . . . , 999 }N ,i.e., the maximum number of alerts per replica is 999 . For details about our testbed setup, see Appendix G. Figure 6 shows the estimated observation distribution p(z |
+
+y, u ). We note that the observation distributions are con-ditionally independent across replicas. The reason for this conditional independence is that the failure alerts are generated by local monitoring systems that depend only on the local state of each replica. Moreover, we see in Fig. 6 that the distributions differ between replicas. The reason for these differences is that while the replicas run the same service, they have different software versions. We also note that the observation distributions of a replica i in the healthy state   
+
+> Fig. 7. The testbed that we use for system identification and evaluation [28]. It consists of physical servers connected through an IP network. We use these servers to run service replicas (in virtual containers), emulate failure events (in the form of cyberattacks, network partitions, and power outages), measure fail-ure alerts, and execute recovery controls. The software platform that we use for emulation is available at https://github.com/Kim-Hammar/csle .
+
+(xi = 0 ) and the faulty state ( xi = 1 ) overlap. However, the observation distribution in the faulty state tends to put more probability mass on large values of zi, as expected. 
+
+B. Evaluation results 
+
+In this section, we present our evaluation results. We start by presenting the results from two simulation studies. In the first study, we compare the scalability of autonomous multiagent rollout with the standard multiagent rollout and the singleagent version. In the second study, we compare the cost of the rollout policy with that of the base policy. After these two simulation studies, we present the results of a comprehensive testbed evaluation where we compare the performance of the rollout policies with that of the periodic policies used in practice. (Details about our testbed are provided in Appendix G.) 
+
+Scalability evaluation. As described in Section V, the main benefit of multiagent rollout compared to singleagent rollout is that it scales to systems with a large number of service replicas. Figure 8 shows the compute time of different rollout methods as a function of the number of replicas N .We observe that singleagent rollout [cf. Eq. (12)] with the belief estimator in Eq. (6) becomes computationally intractable for systems with more than N = 3 replicas. The reason for this intractability is the combinatorial explosion of the observation space as N grows. In particular, as expressed in Prop. 2, the branching factor of a lookahead step of the rollout method is 
+
+|U || Z|, where |Z| = 1000 N in our case. 81 2 3 4 5 6 7 8           
+
+> 500
+> 1,000
+> 1,500
+> 2,000
+> Singleagent rollout with belief estimator (6)
+> Singleagent rollout with belief estimator (22)
+> Compute time (sec)
+> 510 15 20 25 30
+> 500
+> 1,000
+> Singleagent rollout with belief estimator (22)
+> Multiagent rollout with belief estimator (22)
+> 510 15 20 25 30
+> 100
+> 200
+> 300
+> Multiagent rollout with belief estimator (22)
+> Autonomous multiagent rollout with belief estimator (22)
+> Number of replicas N
+
+Fig. 8. Compute time of different rollout methods as a function of the number of replicas N . All rollout methods are instantiated with lookahead horizon 
+
+ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations; cf. Eq. (12). The particle filter is instantiated with M = 50 particles; cf. Eq. (17). The numbers correspond to the average compute time across 3 executions. 
+
+The particle filter in Eq. (17) in combination with simulation-based estimation of the expected value in Eq. (12) allows to circumvent this computational intractability, as shown in the red curve of the upper plot of Fig. 8. However, even with these approximation techniques, singleagent rollout quickly becomes impractical as N grows, with compute times increasing steeply already for N > 8. The reason for this rapid increase is the combinatorial explosion of the control space, which has size |U | = 2 N , as illustrated in Fig. 4. In contrast, the compute times of multiagent rollout [cf. Eq. (14)] grow moderately with the number of replicas (near linear), as shown in the middle plot of Fig. 8. Au-tonomous multiagent rollout [cf. Eq. (15)] further reduces the compute times through parallelization. As shown in the lower plot of Fig. 8, this parallelization results in a compute time that is nearly constant as the number of replicas ( N ) increases. 
+
+Cost evaluation. To compare the cost incurred by the rollout policies and the base policy, we consider two scenarios: 
+
+• Simulation scenario 1 : In this scenario, we configure the POMDP as described in Section VI-A. 
+
+• Simulation scenario 2 : In this scenario, we configure the POMDP as described in Section VI-A except that we set the parameter λ to 20 instead of 1.5. This change means that the stage cost [cf. Eq. (2)] is dominated by a term that depends on the state and control of all N replicas. As a consequence, the importance of coordination among the agents is larger in this scenario. Figure 9 shows a comparison between the cost of the base policy μ and the rollout policy ˜μ for increasing numbers of replicas N in scenario 1. We observe that singleagent rollout and multiagent rollout consistently improve upon the base policy across all system sizes, as expected from Prop. 1 and Prop. 3. For instance, with N = 7 replicas, the base policy incurs a cost of 56 .8, whereas singleagent rollout reduces this cost to 38 .2, corresponding to an improvement of about 
+
+33% . Similar experimental results for singleagent rollout were 0                                                                                 
+
+> 20
+> 40
+> 60
+> 19 .1
+> 10 .6
+> 31 .3
+> 21 .2
+> 30 .7
+> 20 .2
+> 40
+> 27
+> 44 .7
+> 30 .1
+> 54 .4
+> 36 .9
+> 56 .8
+> 38 .2
+> Base policy μSingleagent rollout policy ˜μCost
+> N= 1 N= 2 N= 3 N= 4 N= 5 N= 6 N= 7
+> 0
+> 50
+> 100
+> 150
+> 44 .730 .2
+> 77 .7
+> 55 .2
+> 93 .9
+> 69 .2
+> 116 .9
+> 96 .4
+> 124 .6
+> 105 .4
+> 139 .3127 .8
+> 149 .3141 .8
+> Base policy μMultiagent rollout policy ˜μCost
+> N= 5 N= 10 N= 15 N= 20 N= 25 N= 30 N= 35
+> 0
+> 100
+> 200
+> 300
+> 77 .759 .8
+> 116 .9110 .8
+> 139 .3131 .2
+> 178 .9166 .7190 .9186 .8
+> 245 .2232 .8
+> 287 .1266 .8
+> Base policy μ
+> Autonomous multiagent rollout policy ˜μwith base signaling Cost
+> N= 10 N= 20 N= 30 N= 40 N= 50 N= 60 N= 70
+> 0
+> 100
+> 200
+> 300
+> 77 .755 .4
+> 116 .999 .8
+> 139 .3128 .2
+> 178 .9159 .9
+> 190 .9181 .8
+> 245 .2223 .7
+> 287 .1
+> 247 .2
+> Base policy μ
+> Autonomous multiagent rollout policy ˜μwith neural network signaling Cost
+> N= 10 N= 20 N= 30 N= 40 N= 50 N= 60 N= 70
+
+Fig. 9. Simulation scenario 1: Comparison between the cost of the base policy μ [cf. Eq. (18)] and different rollout policies ˜μ. For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). We instantiate the rollout method with M = 50 particles, lookahead horizon ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations. 
+
+observed by Liu et al. [50]. Likewise, for N = 30 , the base policy incurs a cost of 139 .3, whereas multiagent rollout reduces this cost to 127 .8, corresponding to an improvement of about 9%. We also note that autonomous multiagent rollout with both of the signaling policies described in Section VI-A achieves a lower cost than the base policy, but a slightly higher cost than multiagent rollout. The difference in cost achieved by autonomous multiagent rollout when changing the signaling policy from the base policy bμ to the neural network signaling policy bμθ is relatively small. This indicates that the need for coordination among the agents is rather low in this scenario. Figure 10 shows a comparison between the cost of the base policy μ and the rollout policy ˜μ for increasing numbers of replicas N in scenario 2. Similar to the results of scenario 
+
+1, we observe that singleagent rollout and multiagent rollout consistently improve upon the base policy across all system sizes. For instance, with N = 7 replicas, the base policy incurs a cost of 288 .7, whereas singleagent rollout reduces this cost to 86 .7, corresponding to an improvement of about 
+
+70% . Similarly, for N = 15 , the base policy incurs a cost of 
+
+311 .4, whereas multiagent rollout reduces this cost to 179 .3,corresponding to an improvement of about 42 %. However, in contrast to scenario 1, we note that the cost incurred by autonomous multiagent rollout with the base policy as signaling policy leads to a higher cost than the base policy. For example, with N = 70 replicas, the base policy incurs a cost of 413 .2, whereas autonomous multiagent rollout with the base policy as signaling policy increases this cost to 
+
+590 .6, corresponding to an increase of about 43 %. On the 90                                                                           
+
+> 100
+> 200
+> 300
+> 178 .3
+> 13 .62
+> 191 .6
+> 23 .5
+> 285 .6
+> 28 .7
+> 282 .2
+> 34 .6
+> 260 .4
+> 61 .5
+> 291 .1
+> 98 .7
+> 288 .7
+> 86 .7
+> Base policy μSingleagent rollout policy ˜μCost
+> N= 1 N= 2 N= 3 N= 4 N= 5 N= 6 N= 7
+> 0
+> 100
+> 200
+> 300
+> 400
+> 260 .4
+> 68 .4
+> 306 .5
+> 169 .3
+> 311 .4
+> 179 .3
+> 314 .8
+> 271 .4
+> 308 .7281 .4
+> 317 .9299 .2315 .6303 .3
+> Base policy μMultiagent rollout policy ˜μCost
+> N= 5 N= 10 N= 15 N= 20 N= 25 N= 30 N= 35
+> 0
+> 200
+> 400
+> 600
+> 306 .5
+> 382 .7
+> 314 .8
+> 520 .3
+> 317 .9
+> 583 .6
+> 343
+> 509 .2
+> 356 .1
+> 531 .7
+> 378 .4
+> 539 .7
+> 413 .2
+> 590 .6
+> Base policy μ
+> Autonomous multiagent rollout policy ˜μwith base signaling Cost
+> N= 10 N= 20 N= 30 N= 40 N= 50 N= 60 N= 70
+> 0
+> 200
+> 400 306 .5263 .9
+> 314 .8292 .8317 .9298 .7
+> 343 309 .7
+> 356 .1
+> 314 .7
+> 378 .4339 .7
+> 413 .2
+> 363 .5
+> Base policy μ
+> Autonomous multiagent rollout policy ˜μwith neural network signaling Cost
+> N= 10 N= 20 N= 30 N= 40 N= 50 N= 60 N= 70
+
+Fig. 10. Simulation scenario 2: Comparison between the cost of the base policy μ [cf. Eq. (18)] and different rollout policies ˜μ. For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). We instantiate the rollout method with M = 50 particles, lookahead horizon ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations. 0                  
+
+> 200
+> 400 306 .5263 .9264 .7
+> 317 .9298 .7305 .5
+> 356 .1
+> 314 .7325 .1
+> 413 .2
+> 363 .5379 .8
+> Base policy μ
+> Autonomous multiagent rollout policy ˜μwith neural network signaling
+> Neural network signaling policy ̂μθCost
+> N= 10 N= 30 N= 50 N= 70
+
+Fig. 11. Simulation scenario 2: Comparison between the cost of the base pol-icy μ [cf. Eq. (18)], the autonomous multiagent rollout policy ˜μ [cf. Eq. (15)], and the neural network signaling policy bμθ . For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). We instantiate the rollout method with M = 50 particles, lookahead horizon ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations. 
+
+other hand, when using the neural network signaling policy, autonomous multiagent rollout incurs a lower cost than the base policy. Similar experimental results were observed by Bhattacharya et al. when applying the autonomous multiagent rollout method to a robot-repair problem [14]. Finally, Fig. 11 compares the performance of the au-tonomous multiagent rollout policy [cf. Eq. (15)] with the neural network signaling policy. We observe that both the rollout and signaling policies outperform the base policy, with the rollout policy achieving the best overall performance. 
+
+Testbed evaluation. To evaluate the potential benefit of our rollout method compared to the periodic recovery control policies used in practice, we run our method on a testbed where we execute real service replicas and failure events. For details about our testbed setup, see Appendix G. 0               
+
+> 100
+> 200
+> 300
+> 400
+> 209 245
+> 362
+> 146 173 197
+> Base policy μ
+> Periodic policy ∆ = 5
+> Periodic policy ∆ = 20
+> Multiagent rollout policy ˜μ
+> Autonomous multiagent rollout policy ˜μwith neural network signaling
+> Neural network signaling policy ̂μθ
+> Cost
+> 0
+> 5
+> 10
+> 15
+> 3.45 2.3
+> 15 .1
+> 1.31.51.4
+> Time-to-recovery
+> 0
+> 2
+> 4
+> 1.28 1.3
+> 0.4
+> 3.32.9
+> 4.4
+> Recovery frequency
+
+Fig. 12. Testbed scenario 1: a system with N = 10 service replicas. The figure shows a performance comparison between multiagent rollout policies [cf. Eqs. (14)–(15)], the base policy [cf. Eq. (18)], the neural network signaling policy bμθ , and periodic recovery policies with period ∆. For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). We instantiate the rollout method with M = 50 particles, lookahead horizon 
+
+ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations. 
+
+The testbed evaluation is different from the simulation studies in the following ways. First, in the simulation studies, the recovery controls are artificial in the sense that they have no effect on an operational system. By contrast, in the testbed evaluation, each control ui corresponds to the recovery of an operational service replica. Second, the observations in the simulations are sampled from the distribution in Fig. 6. By contrast, in the testbed evaluation, each observation zi is measured from logs generated by an operational system. As a consequence, the evaluation on the testbed takes much longer than the simulation-based evaluations. In particular, each time step on the testbed takes around 30 seconds to complete the recovery and allow the effects to propagate through the system. In our evaluation, we run more than 5000 time steps to evaluate the performance of different control policies under different conditions. Consequently, the evaluation takes about two days of continuous execution on our testbed. We run two testbed scenarios: 
+
+• Testbed scenario 1 : In this scenario, we run a system with N = 10 service replicas on our testbed. Due to the relatively small number of replicas, we can apply both multiagent rollout and autonomous multiagent rollout. 
+
+• Testbed scenario 2 : In this scenario, we run a system with 
+
+N = 50 service replicas on our testbed. Due to the large number of replicas, the only practical rollout method is the autonomous multiagent rollout method. In both scenarios, we configure the parameters of the POMDP in the same way as in Simulation scenario 2, except for the failure-dependency matrix A, which depends on the 10 
+
+testbed configuration. 5 We compare the performance of the rollout policies with the base policy μ [cf. Eq. (18)] and two periodic recovery policies. The first periodic policy recovers a replica every ∆ = 5 time steps, and the second policy recovers a replica every ∆ = 20 time steps. (We introduce an offset between replicas so that they do not recover simultaneously.) We consider three evaluation metrics: the cost [cf. Eq. (2)], the time-to-recovery (i.e., the average time from failure to recovery of a replica), and the recovery frequency (i.e., how many replicas are recovered per time step on average). The evaluation results are shown in Figs. 12–13. We ob-serve that multiagent rollout significantly outperforms both the base policy and the periodic policies across all metrics. For example, the average time-to-recovery of multiagent rollout in Testbed scenario 1 is 1.3, whereas the average time-to-recovery of the periodic policy with recovery period ∆ = 20 
+
+is 15 .1. Similarly, the cost of autonomous multiagent rollout is 173 , whereas the cost of the base policy is 209 .Moreover, we note that multiagent rollout incurs a slightly lower cost than that of the autonomous version in scenario 1
+
+(146 versus 173 ). However, the multiagent rollout method is only applicable to systems with a relatively small number of service replicas. In particular, we were unable to evaluate the multiagent rollout policy in Testbed scenario 2 due to com-putational reasons. By contrast, the autonomous multiagent rollout method scales favorably to systems with many replicas. When comparing the autonomous multiagent rollout policy with the neural network signaling policy and the base policy, we observe that autonomous multiagent rollout achieves the lowest cost in both scenarios. However, the difference in cost between the neural network signaling policy and the autonomous multiagent rollout policy is relatively low. VII. D ISCUSSION OF THE EVALUATION RESULTS 
+
+In summary, our main experimental findings are:  
+
+> •
+
+Multiagent rollout is more scalable than singleagent rollout for systems with combinatorial control spaces. 
+
+– In our setup, singleagent rollout becomes computa-tionally intractable for systems with more than a few replicas ( N > 8) due to the combinatorial explosion of the control space. In contrast, multiagent rollout scales near-linearly, and autonomous multiagent roll-out achieves nearly constant compute time as the number of replicas grows; see Fig. 8.  
+
+> •
+
+Rollout policies consistently outperform the base policy. 
+
+– Across all system sizes and evaluation scenarios, the rollout policy with a suitable signaling policy leads to a significant cost reduction compared to the base policy. A theoretical explanation for the large cost reduction is provided in the textbook [52] by Bert-sekas, where it is shown that the rollout computation                                                     
+
+> 5Our testbed supports 10 different software versions for the replicas; the versions are listed in [51, Table 4.5]. When we start a replica in the testbed, we select the version uniformly at random. If replicas iand jshare the same software version, they are vulnerable to the same types of failures. We model this dependency by setting Aij =Aji = 1 if replicas iand jrun the same version, and Aij =Aji = 0 otherwise. 0
+> 200
+> 400
+> 600
+> 373
+> 577 592
+> 325 337
+> Base policy μ
+> Periodic policy ∆ = 5
+> Periodic policy ∆ = 20
+> Autonomous multiagent rollout policy ˜μwith neural network signaling
+> Neural network signaling policy ̂μθ
+> Cost
+> 0
+> 10
+> 20
+> 1.5
+> 4.24
+> 19 .2
+> 0.70.7
+> Time-to-recovery
+> 0
+> 5
+> 10
+> 15 14 .4
+> 7.7
+> 2
+> 12 .713 .6
+> Recovery frequency
+> Fig. 13. Testbed scenario 2: a system with N= 50 service replicas. The figure shows a performance comparison between the autonomous multiagent rollout policy [cf. Eq. (15)], the base policy [cf. Eq. (18)], the neural network signaling policy bμθ, and periodic recovery policies with period ∆∈ { 5,20 }.For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). We instantiate the rollout method with M=50 particles, lookahead horizon ℓ= 1 , rollout horizon m= 5 , and L= 10 simulations.
+
+performs one step of Newton’s method for solving Bellman’s equation. As a consequence, if the base policy is sufficiently close to optimal, the rollout policy can exhibit a superlinear rate of convergence to the optimal, just like Newton’s method.  
+
+> •
+
+Autonomous multiagent rollout with a learned signaling policy is nearly as effective as multiagent rollout. 
+
+– While the multiagent rollout policy performs bet-ter than the autonomous version in all evaluation scenarios, the performance difference is relatively small; cf. Figs. 9–12. In particular, when taking both scalability and performance into account, the autonomous multiagent rollout method stands out as the most suitable for large-scale systems; see Fig. 8.  
+
+> •
+
+Autonomous multiagent rollout significantly outperforms the periodic recovery policies used in practice. 
+
+– The testbed evaluation shows that our method re-duces costs by up to 45% compared to the periodic policies currently used in practice; cf. Fig. 13. VIII. C ONCLUSION 
+
+We addressed the problem of recovery control in replicated computing systems. We formulated this problem as a POMDP with a multiagent structure. We exploited this structure to apply a multiagent rollout method for approximating opti-mal recovery control policies. Through this formulation, our method overcomes the combinatorial complexity that renders standard rollout methods intractable for systems with more than a few replicas. Moreover, by using precomputed signaling information, our method reduces the need for replica coordi-nation and facilitates parallel computations. We evaluated our 11 
+
+system through extensive simulations and testbed experiments. The evaluation results confirm that our method scales to systems with a large number of replicas and significantly reduces operational costs compared to the heuristic recovery policies commonly used in operational systems. Furthermore, we characterized the computational complexity of our method and defined theoretical conditions under which it has an approximate cost improvement property. ACKNOWLEDGMENT 
+
+The authors are deeply grateful to Prof. Dimitri Bertsekas, who passed away on June 3, 2026, for his insightful comments and encouragement during the development of this paper. APPENDIX ADYNAMIC PROGRAMMING PRELIMINARIES 
+
+Before presenting the proofs of Props. 1 and 3, we state some standard definitions and results from dynamic program-ming that will be used repeatedly in the analysis. In our terminology, all equations, inequalities, and convergence limits involving functions are meant to be pointwise. Let T and Tμ be Bellman operators defined as 
+
+(T J )( b) = min 
+
+> u∈U
+
+"
+
+ˆg(b, u ) + α X
+
+> z∈Z
+
+ˆp(z | b, u )J(F (b, u, z )) 
+
+#
+
+,
+
+(TμJ)( b) = ˆ g(b, μ (b)) + α X
+
+> z∈Z
+
+ˆp(z | b, μ (b)) J(F (b, μ (b), z )) ,
+
+for all beliefs b ∈ B. As is well known, these operators are monotonic, i.e., if J ≤ J′, then T J ≤ T J ′ and 
+
+TμJ ≤ TμJ′; see, e.g., [44, Lem. 1.1.1]. Moreover, they have the constant shift property, i.e., T ℓ(J + ϵe ) = T ℓJ + αℓϵe and 
+
+T ℓμ(J + ϵe ) = T ℓμJ + αℓϵe , where e is the unit function i.e., 
+
+e(b) ≡ 1, and ℓ ≥ 1 is an integer; see e.g., [44, Lem. 1.1.2]. Furthermore, our proof relies on the following classical results; cf. [44, Prop. 1.2.4]. 
+
+Proposition 5. For every policy μ, we have the following: 
+
+(a) Its associated cost function Jμ satisfies Jμ = TμJμ.
+
+(b) If a bounded function J satisfies TμJ ≤ J, then Jμ ≤ J.
+
+The proof of part (b) was originally given by Bertsekas and can be found in [53, Prop. 1b]. APPENDIX BPROOF OF PROPOSITION 1We start by establishing the existence of a constant c such that inequality (13b) holds. Since the functions ˜Jμ and ˆg are bounded [cf. Eqs. (2) and (11)], we can choose a constant c
+
+sufficiently large to satisfy the inequality. As a result, ϵ < ∞.Assume that the infimum in Eq. (13) is attained at ˆc.Consider the function ˆJμ = ˜Jμ+ˆ ce . Inequality (13b) states that 
+
+T ˆJμ ≤ ˆJμ. By monotonicity of T , we have T ℓ ˆJμ ≤ T ℓ−1 ˆJμ.Similarly, applying T˜μ to both sides, we have 
+
+T˜μ(T ℓ ˆJμ) ≤ T˜μ(T ℓ−1 ˆJμ). (19) Equation (12) implies that T˜μ(T ℓ−1 ˜Jμ) = T ℓ ˜Jμ, which means that T˜μ(T ℓ−1 ˆJμ) = T ℓ ˆJμ. Combining this equality with inequality (19), we obtain T˜μ(T ℓ ˆJμ) ≤ T ℓ ˆJμ. This inequality means that J˜μ ≤ T ℓ ˆJμ; cf. Prop. 5b. In view of Eq. (13), we have T ℓ ˆJμ ≤ T ℓ(Jμ + ϵe ) ≤ T ℓJμ + αℓϵe , where the last inequality follows from the constant shift property. From the definitions Tμ and T , we have T J μ ≤ TμJμ = Jμ, which implies that T ℓJμ ≤ T ℓμJμ = Jμ, where the equalities are due to Prop 5a. Consequently, T ℓJμ + αℓϵe ≤ Jμ + αℓϵe . As a result, we obtain the desired inequality J˜μ ≤ Jμ + αℓϵe .Lastly, let us consider the case where the infimum of Eq. (13) is not attained. In this case, there exists a sequence 
+
+{ˆck} such that each ˆck satisfies the constraint (13b), and ϵk
+
+converges to ϵ, where ϵk = ∥ ˜Jμ + ˆ cke − Jμ∥. Using the preceding arguments with ˆck in place of ˆc, and ϵk in place of ϵ, we can show that J˜μ ≤ Jμ + αℓϵke for all k. Taking the limit on the right-hand side, we get the desired inequality. APPENDIX CPROOF OF PROPOSITION 3We start by showing that ˆϵ < ∞; cf. Eq. (16). To see this, consider c = ∥T˜μ ˜Jμ− ˜Jμ∥/(1 −α). Clearly, the value c satisfies the constraint (16b), which implies that ˆϵ < ∞.Suppose that the infimum in Eq. (16) is attained at ˆc.Consider the function ˆJμ = ˜Jμ+ˆ ce . Inequality (16b) states that 
+
+T˜μ ˆJμ ≤ ˆJμ, which implies J˜μ ≤ ˆJμ; cf. Prop. 5.b. In addition, Eq. (16) implies that ˆJμ ≤ Jμ + ˆ ϵe . Combining this inequality with J˜μ ≤ ˆJμ, we obtain the desired result J˜μ ≤ Jμ + ˆ ϵe .The case where the infimum ˆϵ is not attained follows similarly to that of Prop. 1 and is thus omitted. APPENDIX DNOTATION 
+
+Our notation is summarized in Table I. APPENDIX ENEURAL NETWORK TRAINING 
+
+To obtain the signaling policy bμθ , we implement a neural network with 4 hidden layers, each containing 64 neurons. The network parameters are denoted by θ ∈ ℜ d. All hidden layers use the ReLU activation function, while the output layer consists of N neurons with Sigmoid activations. Thus, the neural network outputs a vector in ℜN where the ith component is a value in [0 , 1] and can be interpreted as the probability of applying control 1 to replica i.Since the belief space B has dimension 2N in our model, it is computationally infeasible to have the input layer of the neural network match the dimension of B. For this reason, we define the input layer to have N neurons instead of 2N . To encode a belief vector b as input, we map it to the vector of marginal failure probabilities under belief b [cf. Eq. (4)], i.e., 
+
+(b1, b 2, . . . , b N ).
+
+To train the parameters of the neural network, we start by generating a training dataset of belief-control pairs. We do so by simulating the POMDP and applying the controls prescribed by the multiagent rollout policy; cf. Eq. (14). Such simulations allow us to collect a dataset of the form 
+
+(bj , ˜uj ), j = 1 , . . . , q, (20) 12                                                                                         
+
+> Notation(s) Description
+> X, Z, U, B State, observation, control, and belief spaces; cf. Section III.
+> NNumber of replicas; cf. Section II.
+> fTolerance threshold; cf. Eq. (3).
+> iReplica index; cf. Section II.
+> MNumber of particles; cf. Eq. (17)
+> ˆbBelief estimated via particle filtering; cf. Eq. (17)
+> wMaximum number of failure alerts per replica; cf. Fig. 4.
+> FBelief estimator; cf. Section III.
+> x, y State values; cf. Section III.
+> pxy (u)Probability of the state transition x→yunder control u; cf. Section III.
+> p(z|y, u )Probability of the observation zgiven state yand control u; cf. Section III.
+> g(x, u, y )Stage cost function; cf. Section III.
+> ˆg(b, u )Expected stage cost given belief band control u; cf. Section III.
+> XiSet of states where xi= 1 ; cf. Section III.
+> biMarginal belief that xi= 1 ; cf. Eq. 4.
+> ˆp(z|b, u )Probability of observation zgiven belief band control u; cf. Section III.
+> pFFactor for the failure probability; cf. Eq. (1).
+> AFailure-dependency matrix; cf. Eq. (1).
+> λFactor for the service disruption cost; cf. Eq. (2).
+> ηFactor for the failure cost; cf. Eq. (2).
+> ϕ(x, u )Function determining the service disruption cost; cf. Eq. (3).
+> αDiscount factor; cf. Section III.
+> kTime step; cf. Section III.
+> xi, b i, u i, z iState, belief, control, and observation related to replica i; cf. Section III.
+> xk, b k, u k, z kState, belief, control, and observation at time step k; cf. Section III.
+> J∗Optimal cost function; cf. Section III.
+> JμCost function of policy μ; cf. Section III.
+> μBase policy; cf. Eq. (12).
+> ˜μRollout policy and its variants; cf. Eq. (12).
+> μiControl component prescribed for replica iby policy μ.
+> LNumber of rollout simulations; cf. Eq. (12).
+> mRollout horizon; cf. Eq. (12).
+> ℓLookahead horizon; cf. Eq. (12).
+> ˜JTerminal cost function approximation; cf. Eq. (11).
+> ˜JμEstimated cost function of the base policy μ; cf. Eq. (11).
+> bμBase signaling policy; cf. Section V.
+> bμθNeural network signaling policy; cf. Section VI-A.
+> θParameters of a neural network; cf. Appendix E.
+> γLearning rate for neural network training; cf. Appendix E.
+> MMinibatch for neural network training; cf. Appendix E.
+> rMinibatch size for neural network training; cf. Appendix E.
+> LLoss function for neural network training; cf. Appendix E.
+> ˆuiControl predicted for replica iby the neural network; cf. Appendix E.
+> ˜ujjth example of multiagent control for neural network training; cf. Appendix E.
+> qSize of training dataset; cf. Appendix E.
+> ∥·∥ Maximum norm; cf. Prop. 1.
+> E{·} Expectation operator; cf. Section III.
+> δij Kronecker’s delta; cf. Eq. (17).
+
+TABLE I NOTATION .
+
+where bj is the jth belief state in the dataset, ˜uj is the corresponding control prescribed by multiagent rollout, and 
+
+q is the size of the dataset. For the experiments reported in this paper, we use a dataset of size q = 10 5.Given the dataset in Eq. (20), we train the parameters θ via incremental gradient descent to minimize the component-wise cross-entropy loss function 
+
+Lj (θ) = − 1
+
+N
+
+NX
+
+i=1 
+
+
+
+˜uij ln ˆ uij + (1 − ˜uij ) ln(1 − ˆuij )
+
+
+
+, (21) where Lj (θ) is the loss for the belief-control pair (bj , ˜uj ) in the training dataset and ˆuj is the output of the neural network. Using the loss function in Eq. (21), we iteratively update the parameters θ according to 
+
+θt+1 = θt − γ X
+
+j∈M 
+
+∇L j (θt), t = 1 , 2, . . . , (22) where t is the training iteration, γ is the step size, and M is a set of r < q indices of sampled belief-control pairs from the dataset in Eq. (20). For the experiments reported in this paper, we use batch size r = 512 and learning rate γ = 0 .0001 .After training the parameters θ, we use the neural network to implement the signaling policy bμθ as follows 
+
+bμiθ (b) = 
+
+(1 if ˆui > 0.5,
+
+0 otherwise , (23) where ˆu is the probability vector ˆu ∈ [0 , 1] N that is output by the neural network. Figure 14 shows the loss and accuracy of the neural network during training. 10 20 30 40 50 60 70 80 90 100 
+
+0.4
+
+0.6
+
+0.8
+
+Validation dataset Training dataset 
+
+Loss 
+
+Training epoch 
+
+Simulation scenario 1 
+
+50 100 150 200 250 300 
+
+0.5
+
+0.6
+
+0.7
+
+0.8
+
+Validation dataset Training dataset 
+
+Loss 
+
+Training epoch 
+
+Simulation scenario 2 
+
+Fig. 14. Loss of the signaling policy bμθ on the training and validation datasets with N = 10 ; cf. Eq. (21). The dataset in Eq. (20) is divided into two parts: 
+
+80% is used for training and 20% is reserved for validation. A training epoch refers to one complete pass of the incremental gradient algorithm [cf. Eq. (22)] through the entire training dataset. 
+
+APPENDIX FAUXILIARY COMPUTATIONAL RESULTS 
+
+In this appendix, we provide additional experimental results that provide insights into computational aspects of our method but are not central to the main research questions addressed in the paper. In particular, these results illustrate the impact of various configuration parameters of our method. Figure 15 shows the compute time of the singleagent rollout method for varying configurations of the lookahead horizon ℓ,the rollout horizon m, the number of simulations L, and the number of belief particles M . As expected, increasing any of these parameters results in additional compute time. However, we observe that increasing m, L, M has a low impact on the compute time. In particular, these parameters can be scaled up to 10 3 while still keeping the total compute time below 5 seconds for N ≤ 3. By contrast, the compute time grows exponentially when increasing the lookahead horizon ℓ.Lastly, Fig. 16 presents a comparison between singleagent and multiagent rollout policies with different belief estima-tors. The results show that while all rollout policies offer a substantial improvement over the base policy, the difference in performance between singleagent rollout and multiagent rollout is marginal. Moreover, the performance difference when changing the belief estimator is relatively low. APPENDIX GEXPERIMENTAL TESTBED 
+
+We implement the replicated computing system in Fig. 1 as a proof-of-concept on our testbed. The implementation includes three layers, as described below. 
+
+The physical layer. The physical layer contains a cluster with 
+
+13 nodes connected through an Ethernet network; see Fig. 7. Specifications of the nodes can be found in [51, Table 4.4]. Nodes communicate via message passing over authenticated channels. Each node runs ( i) a service replica in a Docker container [54]; ( ii ) a control agent μi; and ( iii ) the Snort 13 1 1.5 2 2.5 3 3.5 4                                                                       
+
+> 10 −2
+> 10 0
+> 10 2N= 1
+> N= 2
+> N= 3
+> Compute time (sec) of singleagent rollout
+> Lookahead horizon ℓ
+> 0
+> 2
+> 4
+> 6
+> 0.001 0.002 0.01 0.02 0.037 0.07 0.10.24 0.55 0.85
+> 2.24
+> 5.33
+> N= 1 N= 2 N= 3
+> Compute time (sec) of singleagent rollout
+> m= 5 m= 50 m= 500 m= 5 ,000
+> 0
+> 2
+> 4
+> 6
+> 0.001 0.003 0.01 0.017 0.03 0.075 0.10.23 0.53 0.83
+> 2.21
+> 5.09
+> N= 1 N= 2 N= 3
+> Compute time (sec) of singleagent rollout
+> L= 10 L= 100 L= 1000 L= 10 ,000
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.001 0.002 0.003 0.002 0.005 0.01 0.008 0.04 0.06 0.09
+> 0.24
+> 0.54
+> N= 1 N= 2 N= 3
+> Compute time (sec) of singleagent rollout
+> M= 5 M= 50 M= 500 M= 5 ,000
+
+Fig. 15. Compute time of rollout with different configurations of the lookahead horizon ℓ, the rollout horizon m, the number of simulations L, and the number of particles M for the singleagent rollout method; cf. Eqs. (12) and (17). For all policies, we use particle filtering to implement the belief estimator; cf. Eq. (17). Unless indicated otherwise, we use lookahead horizon 
+
+ℓ = 1 , rollout horizon m = 5 , L = 10 simulations, and M = 50 particles. 0                           
+
+> 20
+> 40
+> 19 .1
+> 10 .6
+> 31 .3
+> 21 .1
+> 30 .7
+> 19 .4
+> 40
+> Base policy μ
+> Singleagent rollout policy ˜μwith belief estimator (6)
+> Cost
+> 0
+> 10
+> 20
+> 30
+> 10 .610 .6
+> 21 .121 .219 .419 .4
+> 27 .1
+> Singleagent rollout policy ˜μwith belief estimator (6)
+> Singleagent rollout policy ˜μwith belief estimator (28)
+> Cost
+> 0
+> 10
+> 20
+> 30
+> 10 .610 .6
+> 21 .221 .219 .420 .2
+> 27 .127
+> Singleagent rollout policy ˜μwith belief estimator (28)
+> Multiagent rollout policy ˜μwith belief estimator (28) Cost
+> N/A
+> N/A
+> N= 1 N= 2 N= 3 N= 4
+
+Fig. 16. Simulation scenario 1: cost of the base policy μ and rollout policies with different belief estimators. Bar groups indicate the number of replicas N .Numbers and error bars indicate the mean and the standard deviation from 100 
+
+simulations with different random seeds. Each simulation includes 100 time steps. All rollout methods are instantiated with M = 50 particles, lookahead horizon ℓ = 1 , rollout horizon m = 5 , and L = 10 simulations. The bar colors relate to different control policies. A missing bar and the text “N/A” indicates that a result could not be obtained within 2 hours of computation. 
+
+intrusion detection system with ruleset v2.9.17.1 [55]. The container images are available in [51, Table 4.5]. Network connectivity between replicas is emulated with virtual links implemented by Linux bridges and network namespaces, which create copies of the physical host’s net-work stack. If an emulated network spans multiple physical servers, the traffic is tunneled over the physical network using VXLAN. In other words, the physical network provides a substrate, on top of which the emulated networks are overlaid. Replicas are interconnected through Gbit/s connections with 
+
+0.05% packet loss (emulated with NetEm). They are connected to clients via 100 Mbit/s connections with 0.1% packet loss. 
+
+The virtualization layer. Each service replica is a state ma-chine and runs a web service; see Schneider for a tutorial on state machines [56]. This service offers two deterministic operations: ( i) a read operation , which returns the current state of the service; and ( ii ) a write operation , which updates the state. Replicas run the MINBFT consensus protocol to coordi-nate these operations; see [57] for details about MINBFT. The throughput of our implementation of MINBFT is analyzed in [51, Fig. 4.13]. Clients access the service by issuing requests that are sent to all replicas. Each request has a unique identifier that is digitally signed. After sending a request, the client waits for a quorum of f + 1 identical replies with valid signatures. The client population is emulated through processes that send service requests to the replicas. Client arrivals are con-trolled by a Poisson process with exponentially distributed service times. The sequence of service invocations is selected according to a Markov process; see [51] for details. We emulate two types of failure events at each time step: crashes and cyberattacks. The attacks are listed in [51, Tables 4.5-4.6]. A crashed replica does not participate in the consen-sus protocol until it is recovered. After compromising a replica through an emulated attack, we randomly choose between a) having the replica participate in the consensus protocol; b) not participating; and c) participating with random messages. 
+
+The control layer. Control agents collect failure alerts from Snort [55] and decide when to recover replicas. When a replica is recovered, it starts with a new container, and its state is initialized with the (identical) state from f + 1 other replicas. REFERENCES [1] J. von Neumann, “Probabilistic logics and synthesis of reliable organ-isms from unreliable components,” in Automata Studies , C. Shannon and J. McCarthy, Eds. Princeton University Press, 1956, pp. 43–98. [2] E. F. Moore and C. E. Shannon, “Reliable circuits using less reliable relays,” Journal of the Franklin Institute , vol. 262, no. 3, pp. 191–208, 1956. [3] L. Lamport, R. Shostak, and M. Pease, “The Byzantine generals problem,” ACM Transactions on Programming Languages and Systems ,vol. 4, no. 3, p. 382–401, jul 1982. [4] A. Aviˇ zienis, “Design of fault-tolerant computers,” in Proceedings of the November 14-16, 1967, Fall joint computer conference , 1967, pp. 733–743. [5] R. Olfati-Saber, J. A. Fax, and R. M. Murray, “Consensus and coop-eration in networked multi-agent systems,” Proceedings of the IEEE ,vol. 95, no. 1, pp. 215–233, 2007. [6] A. Saidane, V. Nicomette, and Y. Deswarte, “The design of a generic intrusion-tolerant architecture for web servers,” IEEE Transactions on Dependable and Secure Computing , vol. 6, no. 1, pp. 45–58, 2009. 14 
+
+[7] M. Castro and B. Liskov, “Practical Byzantine fault tolerance and proactive recovery,” ACM Transactions on Computer Systems , vol. 20, no. 4, p. 398–461, Nov. 2002. [8] R. Kotla, L. Alvisi, M. Dahlin, A. Clement, and E. Wong, “Zyzzyva: Speculative Byzantine fault tolerance,” ACM Transactions on Computer Systems , vol. 27, no. 4, Jan. 2010. [9] D. Bertsekas, Rollout, Policy Iteration, and Distributed Reinforcement Learning . Athena Scientific, 2021. [10] ——, A Course in Reinforcement Learning . Athena Scientific, 2025, 2nd edition. [11] ——, “Multiagent reinforcement learning: Rollout and policy iteration,” 
+
+IEEE/CAA Journal of Automatica Sinica , vol. 8, no. 2, pp. 249–272, 2021. [12] D. P. Bertsekas and J. N. Tsitsiklis, Neuro-Dynamic Programming .Athena Scientific, 1996. [13] W. Emanuelsson, A. P. Riveiros, Y. Li, K. H. Johansson, and J. M˚ artensson, “Multiagent rollout with reshuffling for warehouse robots path planning,” IFAC-PapersOnLine , vol. 56, no. 2, pp. 3027–3032, 2023, 22nd IFAC World Congress. [14] S. Bhattacharya, S. Kailas, S. Badyal, S. Gil, and D. Bertsekas, “Multi-agent rollout and policy iteration for POMDP with application to multi-robot repair problems,” in Proceedings of the 2020 Conference on Robot Learning , ser. Proceedings of Machine Learning Research, J. Kober, F. Ramos, and C. Tomlin, Eds., vol. 155. PMLR, 16–18 Nov 2021, pp. 1814–1828. [15] D. Garces, S. Bhattacharya, D. Bertsekas, and S. Gil, “Approximate mul-tiagent reinforcement learning for on-demand urban mobility problem on a large map,” in 2024 IEEE International Conference on Robotics and Automation (ICRA) , 2024, pp. 6843–6849. [16] F. S. Samani, K. Hammar, and R. Stadler, “Online policy adaptation for networked systems using rollout,” in NOMS 2024-2024 IEEE Network Operations and Management Symposium , 2024, pp. 1–9. [17] T. Li, L. W. Krakow, and S. Gopalswamy, “Optimizing consensus-based multi-target tracking with multiagent rollout control policies,” in 
+
+2021 IEEE Conference on Control Technology and Applications (CCTA) ,2021, pp. 131–137. [18] F. Ruggeri, W. Emanuelsson, A. Terra, R. Inam, and K. H. Johansson, “Rollout-based Shapley values for explainable cooperative multi-agent reinforcement learning,” in 2024 IEEE International Conference on Machine Learning for Communication and Networking (ICMLCN) ,2024, pp. 227–233. [19] J. W. Weber, D. R. Giriyan, D. R. Parkar, D. P. Bertsekas, and A. W. Richa, “Distributed online rollout for multivehicle routing in unmapped environments,” in Proceedings of the 23rd International Conference on Autonomous Agents and Multiagent Systems , ser. AAMAS ’24. Richland, SC: International Foundation for Autonomous Agents and Multiagent Systems, 2024, p. 1910–1918. [20] Y. Li, F. Chen, Y. Li, C. Fan, and D. Bertsekas, “On-line pol-icy iteration with trajectory-driven policy generation,” arXiv preprint arXiv:2604.15004 , 2026. [21] J. Marschak, “Elements for a theory of teams,” Management Science ,vol. 1, no. 2, pp. 127–137, 1955. [22] N. Sandell, P. Varaiya, M. Athans, and M. Safonov, “Survey of decen-tralized control methods for large scale systems,” IEEE Transactions on Automatic Control , vol. 23, no. 2, pp. 108–128, 1978. [23] D. Bauso and R. Pesenti, “Generalized person-by-person optimization in team problems with binary decisions,” in 2008 American Control Conference , 2008, pp. 717–722. [24] L. Ballotta, M. R. Jovanovi´ c, and L. Schenato, “Can decentralized control outperform centralized? the role of communication latency,” 
+
+IEEE Transactions on Control of Network Systems , vol. 10, no. 3, pp. 1629–1640, 2023. [25] B. Doerr and R. Linares, “Decentralized control of large collaborative swarms using random finite set theory,” IEEE Transactions on Control of Network Systems , vol. 8, no. 2, pp. 587–597, 2021. [26] S. Trajanovski, Y. Hayel, E. Altman, H. Wang, and P. Van Mieghem, “Decentralized protection strategies against SIS epidemics in networks,” 
+
+IEEE Transactions on Control of Network Systems , vol. 2, no. 4, pp. 406–419, 2015. [27] A. Gattami, “Team decision problems with convex quadratic con-straints,” IEEE Transactions on Control of Network Systems , vol. 4, no. 3, pp. 555–563, 2017. [28] K. Hammar and R. Stadler, “Intrusion tolerance for networked systems through two-level feedback control,” in 2024 54th Annual IEEE/IFIP International Conference on Dependable Systems and Networks (DSN) ,2024, pp. 338–352. [29] ——, “Intrusion tolerance as a two-level game,” in Decision and Game Theory for Security , A. Sinha, J. Fu, Q. Zhu, and T. Zhang, Eds. Cham: Springer Nature Switzerland, 2025, pp. 3–23. [30] O. Kreidl and T. Frazier, “Feedback control applied to survivability: a host-based autonomic defense system,” IEEE Transactions on Reliabil-ity , vol. 53, no. 1, pp. 148–166, 2004. [31] O. P. Kreidl, J. N. Tsitsiklis, and S. I. Zoumpoulis, “On decentralized detection with partial information sharing among sensors,” IEEE Trans-actions on Signal Processing , vol. 59, no. 4, pp. 1759–1765, 2011. [32] A. M. H. Teixeira, J. Ara´ ujo, H. Sandberg, and K. H. Johansson, “Dis-tributed sensor and actuator reconfiguration for fault-tolerant networked control systems,” IEEE Transactions on Control of Network Systems ,vol. 5, no. 4, pp. 1517–1528, 2018. [33] L. Burbano, K. Garg, S. J. Leudo, A. A. Cardenas, and R. G. Sanfelice, “Online attack recovery in cyberphysical systems,” IEEE Security & Privacy , vol. 21, no. 4, pp. 20–28, 2023. [34] Y. Xu, S. Yin, S. X. Ding, H. Luo, and Z. Zhao, “Performance degradation monitoring and recovery of vision-based control systems,” 
+
+IEEE Transactions on Control Systems Technology , vol. 29, no. 6, pp. 2712–2719, 2021. [35] J. Gertler, “Survey of model-based failure detection and isolation in complex plants,” IEEE Control Systems Magazine , vol. 8, no. 6, pp. 3–11, 1988. [36] C. Cachin, R. Guerraoui, and L. Rodrigues, Introduction to Reliable and Secure Distributed Programming , 2nd ed. Springer Publishing Company, Incorporated, 2011. [37] C. Dwork, N. Lynch, and L. Stockmeyer, “Consensus in the presence of partial synchrony,” Journal of the ACM , vol. 35, no. 2, p. 288–323, apr 1988. [38] M. J. Fischer, N. A. Lynch, and M. S. Paterson, “Impossibility of distributed consensus with one faulty process,” Journal of the ACM ,vol. 32, no. 2, p. 374–382, apr 1985. [39] T. Distler, “Byzantine fault-tolerant state-machine replication from a systems perspective,” ACM Computing Surveys , vol. 54, no. 1, feb 2021. [40] T. Distler, R. Kapitza, and H. Reiser, “State transfer for hypervisor-based proactive recovery of heterogeneous replicated services,” FERS-Mitteilungen , vol. 29, no. 1, 2011. [41] M. Correia, L. C. Lung, N. Neves, and P. Verissimo, “Efficient Byzantine-resilient reliable multicast on a hybrid failure model,” in 21st IEEE Symposium on Reliable Distributed Systems, 2002. Proceedings. ,2002, pp. 2–11. [42] K. J. ˚Astr¨ om, “Optimal control of Markov processes with incomplete state information,” Journal of Mathematical Analysis and Applications ,vol. 10, no. 1, pp. 174–205, 1965. [43] V. Krishnamurthy, Partially Observed Markov Decision Processes: From Filtering to Controlled Sensing . Cambridge University Press, 2016. [44] D. Bertsekas, Dynamic Programming and Optimal Control: Vol. II ,4th ed. Athena Scientific, 2012. [45] K. Hammar, Y. Li, T. Alpcan, E. C. Lupu, and D. Bertsekas, “Adaptive network security policies via belief aggregation and rollout,” IEEE Transactions on Information Forensics and Security , pp. 1–1, 2026, 10.1109/TIFS.2026.3709131. [46] S. Bhattacharya, S. Kailas, S. Badyal, S. Gil, and D. Bertsekas, “Multi-agent reinforcement learning: Rollout and policy iteration for POMDP with application to multirobot problems,” Transactions on Robotics ,vol. 40, p. 2003–2023, Jan. 2024. [47] Y. Li, K. Hammar, and D. Bertsekas, “Feature-based belief aggregation for partially observable Markov decision problems,” arXiv preprint arXiv:2507.04646 , 2025. [48] K. Hammar and T. Alpcan, “Scalable solutions to zero-sum partially observable stochastic games through belief aggregation with approxi-mation guarantees,” Proceedings of the AAAI Conference on Artificial Intelligence , vol. 40, no. 20, p. 17023–17031, Mar. 2026. [49] D. Bertsekas, Reinforcement Learning and Optimal Control . Athena Scientific, 2019. [50] H. Liu, Y. Li, K. H. Johansson, J. M˚ artensson, and L. Xie, “Rollout approach to sensor scheduling for remote state estimation under integrity attack,” Automatica , vol. 144, p. 110473, 2022. [51] K. Hammar, “Optimal security response to network intrusions in IT systems,” Ph.D. dissertation, KTH Royal Institute of Technology, 2024. [52] D. Bertsekas, Lessons from AlphaZero for Optimal, Model Predictive, and Adaptive Control . Athena Scientific, 2022. [53] D. P. Bertsekas, “Monotone mappings with application in dynamic programming,” SIAM Journal on Control and Optimization , vol. 15, no. 3, pp. 438–464, 1977. [54] D. Merkel, “Docker: lightweight Linux containers for consistent devel-opment and deployment,” Linux journal , vol. 2014, no. 239, p. 2, 2014. 15 
+
+[55] M. Roesch, “Snort - lightweight intrusion detection for networks,” in 
+
+Proceedings of the 13th USENIX Conference on System Administration ,ser. LISA ’99. USA: USENIX Association, 1999, p. 229–238. [56] F. B. Schneider, “Implementing fault-tolerant services using the state machine approach: A tutorial,” ACM Computing Surveys , vol. 22, no. 4, p. 299–319, dec 1990. [57] G. S. Veronese, M. Correia, A. N. Bessani, L. C. Lung, and P. Verissimo, “Efficient Byzantine fault-tolerance,” IEEE Transactions on Computers ,vol. 62, no. 1, pp. 16–30, 2013.

@@ -6,26 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-17
-- 运行时间：2026-07-17 21:30:48 UTC
+- 最新运行日期：2026-07-18
+- 运行时间：2026-07-18 21:01:36 UTC
 - 运行状态：成功
-- 本次总论文数：2
+- 本次总论文数：1
 - 精读区：1
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-今日推荐2篇论文，涵盖随机博弈的PAC学习与多Agent系统延迟感知编排。精读论文《PAC Learning in Turn-Based Stochastic Games》提出去中心化隐私方法，核心是利用期望条件距离实现可达性目标。普通读者可关注隐私保护与博弈论结合的研究方向。
-- 详情：[/202607/17/README](/202607/17/README)
+今日精读1篇关于复制系统恢复控制的高分论文，聚焦自主多智能体rollout方法。最值得关注的方向是：利用多智能体协作提升系统故障恢复效率，核心结论表明该方法比传统策略更优。建议深入了解多智能体rollout在分布式系统容错中的应用，可结合现有备份机制进行实验验证。
+- 详情：[/202607/18/README](/202607/18/README)
 
 ### 精读区论文标签
-1. [PAC Learning in Turn-Based Stochastic Games with Reachability Objectives: A Decentralized Private Approach via Expected Conditional Distance](/202607/17/2607.14877v1-pac-learning-in-turn-based-stochastic-games-with-reachability-objectives-a-decentralized-private-approach-via-expected-conditional-distance)  
+1. [Recovery Control in Replicated Systems through Autonomous Multiagent Rollout](/202607/18/2607.11187v1-recovery-control-in-replicated-systems-through-autonomous-multiagent-rollout)  
    标签：评分：8.0/10、query:marl
-   evidence：回合制随机博弈，可达目标，分散式学习
+   evidence：多智能体rollout方法用于复制系统的分散控制
 
 ### 速读区论文标签
-1. [Learning Latency-Aware Orchestration for Multi-Agent Systems](/202607/17/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems)  
-   标签：评分：7.0/10、query:marl
-   evidence：基于学习的多智能体系统协调
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
