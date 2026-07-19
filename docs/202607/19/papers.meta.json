@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-19",
+  "date": "2026-07-19",
+  "generated_at": "2026-07-19T20:37:17",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/19/2607.10791v1-red-segaresilient-decentralized-stochastic-proximal-optimization-with-gradient-sketching-over-time-varying-networks",
+      "section": "quick",
+      "title_en": "RED-SEGA:Resilient Decentralized Stochastic Proximal Optimization with Gradient Sketching over Time-Varying Networks",
+      "authors": "Jinhui Hu, Guo Chen, Huaqing Li, Liang Ran, Hexi Liang, Tao Han, Tingwen Huang",
+      "date": "2026-07-12",
+      "pdf": "https://arxiv.org/pdf/2607.10791v1",
+      "score": "7.0",
+      "evidence": "多智能体系统中的去中心化优化方法，采用梯度草图技术",
+      "tldr": "在拜占庭容错去中心化随机优化中，现有方差减少方法依赖随机数据采样，在数据稀疏高维任务中效率低下。本文通过梯度草图技术实现方差减少，提出Gossip-SEGA算法，并进一步开发其拜占庭健壮版本RED-SEGA，用范数惩罚近似替代加权平均。理论证明RED-SEGA在时变网络中实现可靠节点共识和线性收敛速率。数值实验验证了算法的有效性和健壮性，为高维结构风险最小化提供了新方案。",
+      "tags": "query:marl",
+      "abstract_en": "Variance reduction is indispensable in Byzantine-resilient decentralized stochastic optimization over multi-agent systems (MASs) for its ability to mitigate gradient noise and thereby enhance the resilient aggregation process. However, most existing Byzantine-resilient decentralized variance-reduced (VR) stochastic gradient algorithms rely on random data sampling, which proves inefficient in data-scarce yet high-dimensional tasks, for instance, image deblurring. This paper pursues an alternative technical line that achieves variance reduction via gradient sketching. To this end, we first formulate a class of structural risk minimization (SRM) problems, where the local objectives are not necessarily decomposable and their gradients may be unavailable. To solve the SRM problems in a decentralized manner, we integrate a gradient-sketching technique into decentralized stochastic proximal gradient descent with gossip communication to propose a decentralized VR stochastic gradient algorithm, dubbed Gossip-SEGA.Since Gossip-SEGA does not provide any resilience against Byzantine attacks, a resilient extension of Gossip-SEGA,namely RED-SEGA,is developed via replacing the weighted average in Gossip-SEGA by a norm-penalized approximation. Theoretically, we derive sufficient conditions for both consensus (among reliable agents) and linear convergence rate of RED-SEGA over time-varying networks. The effectiveness and resilience of the proposed algorithms are validated through numerical experiments.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/19/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems",
+      "section": "quick",
+      "title_en": "Learning Latency-Aware Orchestration for Multi-Agent Systems",
+      "authors": "Xi Shi, Mengxin Zheng, Qian Lou",
+      "date": "2026-07-15",
+      "pdf": "https://arxiv.org/pdf/2607.13359v1",
+      "score": "7.0",
+      "evidence": "多智能体系统延迟感知编排，结合学习方法",
+      "tldr": "多智能体系统（MAS）通过结构化工作流协调LLM智能体，但多步执行和重复模型调用导致高推理延迟。现有方法忽略延迟优化，而单纯降低总成本无法减少端到端延迟。本文提出延迟感知多智能体系统（LAMaS），在训练时通过关键路径感知的信用分配学习延迟感知执行图，推理时用轻量级控制器动态消除冗余交互。实验表明，LAMaS在保持竞争性准确率的同时将端到端延迟降低50%以上，且具有模块化可迁移性。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) coordinate multiple LLM-powered agents through structured workflows, gaining reasoning power but incurring high inference latency from multi-step execution and repeated model invocations. Existing orchestration methods primarily optimize task performance and inference cost, leaving latency largely unaddressed. In MAS, end-to-end latency is governed by the critical execution path, so reducing total cost alone does not reliably reduce latency. Moreover, optimizing latency while preserving accuracy remains non-trivial: naive latency optimization can misassign operator-level credit and degrade task accuracy. To address this gap, we propose Latency-Aware Multi-agent System (LAMaS), a latency-aware orchestration framework for learning-based multi-agent systems. LAMaS addresses this challenge at two levels: at training time, it learns latency-aware execution graphs through constrained optimization with critical-path-aware credit assignment; at inference time, since a graph committed at training time cannot exploit runtime evidence, it complements graph construction with a lightweight controller that adaptively eliminates redundant future agent interactions as execution unfolds. Experiments on four benchmarks show that LAMaS achieves the best latency among evaluated learning-based MAS baselines, reducing end-to-end latency by over 50\\% while maintaining competitive or better accuracy. LAMaS is also modular and transfers to other MAS with minimal changes, consistently yielding latency reductions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
