@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-20",
+  "date": "2026-07-20",
+  "generated_at": "2026-07-20T21:35:57",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/20/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems",
+      "section": "quick",
+      "title_en": "Learning Latency-Aware Orchestration for Multi-Agent Systems",
+      "authors": "Xi Shi, Mengxin Zheng, Qian Lou",
+      "date": "2026-07-15",
+      "pdf": "https://arxiv.org/pdf/2607.13359v1",
+      "score": "7.0",
+      "evidence": "针对多智能体系统的学习驱动的延迟感知编排",
+      "tldr": "多智能体系统因多步执行和重复模型调用产生高延迟，现有方法未聚焦于端到端延迟。本文提出LAMaS框架，训练时通过关键路径感知的约束优化学习延迟感知图，推理时动态消除冗余交互。在四个基准上延迟降低超50%且精度持平。该框架模块化，可迁移至其他MAS。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) coordinate multiple LLM-powered agents through structured workflows, gaining reasoning power but incurring high inference latency from multi-step execution and repeated model invocations. Existing orchestration methods primarily optimize task performance and inference cost, leaving latency largely unaddressed. In MAS, end-to-end latency is governed by the critical execution path, so reducing total cost alone does not reliably reduce latency. Moreover, optimizing latency while preserving accuracy remains non-trivial: naive latency optimization can misassign operator-level credit and degrade task accuracy. To address this gap, we propose Latency-Aware Multi-agent System (LAMaS), a latency-aware orchestration framework for learning-based multi-agent systems. LAMaS addresses this challenge at two levels: at training time, it learns latency-aware execution graphs through constrained optimization with critical-path-aware credit assignment; at inference time, since a graph committed at training time cannot exploit runtime evidence, it complements graph construction with a lightweight controller that adaptively eliminates redundant future agent interactions as execution unfolds. Experiments on four benchmarks show that LAMaS achieves the best latency among evaluated learning-based MAS baselines, reducing end-to-end latency by over 50\\% while maintaining competitive or better accuracy. LAMaS is also modular and transfers to other MAS with minimal changes, consistently yielding latency reductions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/20/2607.14574v1-collaborative-spatial-learning-with-multi-llm-agents-in-networked-social-experiments",
+      "section": "quick",
+      "title_en": "Collaborative Spatial Learning with Multi-LLM Agents in Networked Social Experiments",
+      "authors": "Hao He, Chris J. Kuhlman, Xinwei Deng",
+      "date": "2026-07-16",
+      "pdf": "https://arxiv.org/pdf/2607.14574v1",
+      "score": "7.0",
+      "evidence": "多LLM智能体协作学习在网络实验中的应用",
+      "tldr": "在研究群体协作的探索-利用权衡时，网络结构影响信息传播效率。本文让16个大型语言模型(LLM)智能体在8种Mason-Watts网络拓扑上执行二维搜索任务，发现当指令首轮随机化时，LLM群体表现出显著的网络效率效应（短路径网络收益更高），而默认初始化下无此效应。添加一句随机化指令可使集体收益提升超过网络拓扑间差异的三倍。此外，贝叶斯优化智能体收益更高。该工作揭示了LLM智能体协作行为对初始策略的敏感性，为理解人工智能社会学习提供新视角。",
+      "tags": "query:marl",
+      "abstract_en": "Collective problem solving often requires that group members consider the tradeoff between exploitation of known solutions and exploration for new ones, where information of known solutions can be disseminated among individual members through communication networks. The Mason--Watts experiment (PNAS 2012) showed that human groups in shorter-path networks outperform those in longer-path networks on a two-dimensional search task. In this work, we focus on the investigation of such network-efficiency effects in the setting of a group of large language model (LLM) agents. Specifically, we consider groups of sixteen LLM agents playing the Mason--Watts experiment on the eight Mason--Watts network topologies. Moreover, we develop mechanistic Bayesian optimization agents such that the performance of LLM agents can be compared with both the mechanistic agents and the human experimental data. Our computational experiments indicate that the LLM agents show a significant network-efficiency effect when instructed to randomize their first-round choices, but not under the default initialization. In this experiment, adding a one-sentence first-round randomization instruction improves collective payoff by more than three times the estimated payoff difference across the eight network topologies. Also, the Bayesian optimization agents obtain higher payoffs than the evaluated LLM agents on this spatial search task. We further compare the agents' exploration--exploitation behavior, copying, and spatial diversity.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

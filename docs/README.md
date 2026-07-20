@@ -6,29 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-19
-- 运行时间：2026-07-19 20:37:11 UTC
+- 最新运行日期：2026-07-20
+- 运行时间：2026-07-20 21:35:52 UTC
 - 运行状态：成功
 - 本次总论文数：2
 - 精读区：0
 - 速读区：2
 
 ### 今日简报（AI）
-今日速读2篇论文，聚焦分布式随机优化与多智能体系统编排。  
-值得关注《RED-SEGA》的弹性优化与《Learning Latency-Aware Orchestration》的延迟感知策略。  
-建议深入对比两类方法在动态网络与延迟场景下的实际权衡。
-- 详情：[/202607/19/README](/202607/19/README)
+1) 今日速读两篇高分论文，聚焦多智能体系统延迟优化与多LLM智能体空间协作实验。
+2) 值得注意的方向：延迟感知编排显著提升多智能体协调效率；多LLM智能体在网络社会实验中实现协同空间学习。
+3) 建议关注这两类智能体协作方法，未来可结合实际调度或社交实验场景尝试应用。
+- 详情：[/202607/20/README](/202607/20/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [RED-SEGA:Resilient Decentralized Stochastic Proximal Optimization with Gradient Sketching over Time-Varying Networks](/202607/19/2607.10791v1-red-segaresilient-decentralized-stochastic-proximal-optimization-with-gradient-sketching-over-time-varying-networks)  
+1. [Learning Latency-Aware Orchestration for Multi-Agent Systems](/202607/20/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems)  
    标签：评分：7.0/10、query:marl
-   evidence：多智能体系统中的去中心化优化方法，采用梯度草图技术
-2. [Learning Latency-Aware Orchestration for Multi-Agent Systems](/202607/19/2607.13359v1-learning-latency-aware-orchestration-for-multi-agent-systems)  
+   evidence：针对多智能体系统的学习驱动的延迟感知编排
+2. [Collaborative Spatial Learning with Multi-LLM Agents in Networked Social Experiments](/202607/20/2607.14574v1-collaborative-spatial-learning-with-multi-llm-agents-in-networked-social-experiments)  
    标签：评分：7.0/10、query:marl
-   evidence：多智能体系统延迟感知编排，结合学习方法
+   evidence：多LLM智能体协作学习在网络实验中的应用
 
 
 <div class="dpr-home-promo-card">
