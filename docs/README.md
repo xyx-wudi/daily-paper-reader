@@ -6,50 +6,38 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-21
-- 运行时间：2026-07-21 21:26:50 UTC
+- 最新运行日期：2026-07-22
+- 运行时间：2026-07-22 21:35:31 UTC
 - 运行状态：成功
-- 本次总论文数：10
-- 精读区：7
-- 速读区：3
+- 本次总论文数：5
+- 精读区：5
+- 速读区：0
 
 ### 今日简报（AI）
-今日精读10篇论文，重点聚焦多智能体强化学习与中继网络能效优化。最值得关注的是《Cooperative MARL-Based Energy-Efficient Power Control》与《On Optimal Event-Triggered Distributed Control》，分别在协作通信能效控制和随机多智能体系统事件触发控制领域提出新方法。建议优先精读这两篇高分论文，并速读《RELIC》以了解可解释技能组合生成。
-- 详情：[/202607/21/README](/202607/21/README)
+1) 今日精读5篇论文，其中两篇获得满分，聚焦多智能体强化学习前沿。  
+2) 最值得关注的两个方向：去中心化多智能体强化学习在关键基础设施中的应用，以及面向连续状态动作空间的网络化可扩展策略优化。  
+3) 建议优先精读这两篇满分论文，理解其方法对现实复杂系统的潜在提升。
+- 详情：[/202607/22/README](/202607/22/README)
 
 ### 精读区论文标签
-1. [Cooperative MARL-Based Energy-Efficient Power Control for Two-Hop Relaying Networks](/202607/21/2607.16703v1-cooperative-marl-based-energy-efficient-power-control-for-two-hop-relaying-networks)  
+1. [Decentralized Multi-agent Reinforcement Learning for Resilient Critical Infrastructures](/202607/22/2607.18359v1-decentralized-multi-agent-reinforcement-learning-for-resilient-critical-infrastructures)  
    标签：评分：10.0/10、query:marl
-   evidence：协作多智能体强化学习用于中继网络的能效功率控制
-2. [On Optimal Event-Triggered Distributed Control for Stochastic Multi-Agent Systems via Reinforcement Learning](/202607/21/2607.17635v1-on-optimal-event-triggered-distributed-control-for-stochastic-multi-agent-systems-via-reinforcement-learning)  
+   evidence：直接针对去中心化多智能体强化学习
+2. [Scalable Policy Optimization for Networked Multi-Agent Reinforcement Learning with Continuous State-Action Spaces](/202607/22/2607.18554v1-scalable-policy-optimization-for-networked-multi-agent-reinforcement-learning-with-continuous-state-action-spaces)  
+   标签：评分：10.0/10、query:marl
+   evidence：网络化多智能体连续空间强化学习
+3. [A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space](/202607/22/2607.18597v1-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space)  
+   标签：评分：10.0/10、query:marl
+   evidence：提出SAFE框架，通过自演化默认动作解决连续动作空间合作多智能体任务
+4. [Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents](/202607/22/2607.18719v1-strategy-following-multi-agent-deep-reinforcement-learning-considering-control-strategies-provided-to-other-agents)  
    标签：评分：9.0/10、query:marl
-   evidence：基于强化学习的随机多智能体系统最优分布式控制
-3. [Ant swarm functional control via stigmergic Reinforcement Learning agents](/202607/21/2607.17709v1-ant-swarm-functional-control-via-stigmergic-reinforcement-learning-agents)  
+   evidence：考虑其他智能体策略跟随的多智能体深度强化学习
+5. [Comparative Study of Multi-Agent Actor-Critic Algorithms in Parameterized Action Reinforcement Learning](/202607/22/2607.19117v1-comparative-study-of-multi-agent-actor-critic-algorithms-in-parameterized-action-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：集中训练分散执行设置
-4. [Value-Aware Prediction for Robust Multi-Agent Coordination Under Communication Loss](/202607/21/2607.17914v1-value-aware-prediction-for-robust-multi-agent-coordination-under-communication-loss)  
-   标签：评分：9.0/10、query:marl
-   evidence：通信丢失下多智能体协调的值感知预测
-5. [PRIME: Plasticity Recovery in Multi-Agent Environments for UAV-Assisted Emergency Communication Networks](/202607/21/2607.17922v1-prime-plasticity-recovery-in-multi-agent-environments-for-uav-assisted-emergency-communication-networks)  
-   标签：评分：9.0/10、query:marl
-   evidence：多智能体强化学习中的可塑性恢复，共享参数训练
-6. [Aggregate in the Advantage, Not the Ratio: A Canonical-Form Analysis of Cooperative Multi-Agent Policy Optimization](/202607/21/2607.17924v1-aggregate-in-the-advantage-not-the-ratio-a-canonical-form-analysis-of-cooperative-multi-agent-policy-optimization)  
-   标签：评分：9.0/10、query:marl
-   evidence：直接研究合作多智能体策略优化，分析优势与比率的聚合方式
-7. [MADA-RL: Multi-Agent Debate-Aware Reinforcement Learning for Parameter-Efficient Reasoning in Compact Models](/202607/21/2607.18006v1-mada-rl-multi-agent-debate-aware-reinforcement-learning-for-parameter-efficient-reasoning-in-compact-models)  
-   标签：评分：9.0/10、query:marl
-   evidence：多智能体辩论感知强化学习
+   evidence：多智能体actor-critic算法比较
 
 ### 速读区论文标签
-1. [RELIC: Revealed Principles for Learning Interpretable Composable Skills in Multi-Agent Planning](/202607/21/2607.16745v1-relic-revealed-principles-for-learning-interpretable-composable-skills-in-multi-agent-planning)  
-   标签：评分：8.0/10、query:marl
-   evidence：隐私约束下多智能体协调的可解释可组合技能学习
-2. [Reinforcement Learning: From Algorithms To Foundation Models](/202607/21/2607.17560v1-reinforcement-learning-from-algorithms-to-foundation-models)  
-   标签：评分：8.0/10、query:marl
-   evidence：论文涵盖博弈中的多智能体强化学习，包括马尔可夫博弈和均衡概念
-3. [Evolution of cooperation with temporal information](/202607/21/2607.16816v1-evolution-of-cooperation-with-temporal-information)  
-   标签：评分：6.0/10、query:marl
-   evidence：研究多智能体系统中时间信息对合作演化的影响，与合作多智能体强化学习相关
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
