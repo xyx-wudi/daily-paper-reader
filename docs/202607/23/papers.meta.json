@@ -1,0 +1,69 @@
+{
+  "label": "2026-07-23",
+  "date": "2026-07-23",
+  "generated_at": "2026-07-23T20:38:34",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202607/23/2607.19555v1-chmas-a-coupled-hierarchical-framework-for-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "CHMAS: A Coupled Hierarchical Framework for Multi-Agent Reinforcement Learning",
+      "authors": "Dongming Wang, Jie Xu, Yanyu Zhang, Wei Ren",
+      "date": "2026-07-21",
+      "pdf": "https://arxiv.org/pdf/2607.19555v1",
+      "score": "9.0",
+      "evidence": "耦合分层多智能体强化学习框架，集中式策略规划与分布式执行",
+      "tldr": "多智能体强化学习面临全局协调与局部执行的时空尺度平衡挑战。本文提出耦合层次多智能体系统，将决策分解为集中式战略规划与分布式战术执行，并建立双向信息流。战略层每T步生成引导动作，战术层融合引导与局部观测，通过耦合系数λ使战术奖励反馈影响战略目标。异步更新协议保证战略参数每N_f个战术回合更新一次，理论证明其战略层收敛率为O(log K/√K)。在多元觅食任务中成功学得空间划分探索策略，验证了层次耦合的稳定性。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent reinforcement learning (MARL) systems face fundamental   challenges in balancing global coordination with local execution   across different temporal scales. This paper introduces the Coupled   Hierarchical Multi-Agent System (CHMAS), a novel framework that   decomposes multi-agent decision-making into centralized strategic   planning and distributed tactical execution with bidirectional   information flow. The strategic layer integrates all agents' states   with an exclusive global environmental state to generate guidance   actions every $T$ timesteps, while tactical agents execute   distributed policies augmented by strategic guidance and local   neighborhood observations. Unlike existing hierarchical approaches   with unidirectional control, CHMAS establishes a feedback mechanism   where accumulated tactical rewards influence strategic objectives   through a coupling coefficient $λ$, ensuring strategic plans   remain grounded in tactical feasibility. To address the   non-stationarity inherent in hierarchical learning, we propose an   asynchronous update protocol where strategic parameters update every   $N_f$ tactical episodes, allowing tactical policies to converge to   quasi-stationary points between strategic changes. We present both a   general bi-level formulation capturing full system dynamics and a   tractable additive approximation enabling rigorous analysis.   Theoretical analysis proves that this asynchronous scheme achieves   $\\mathcal{O}(\\log K/\\sqrt{K})$ convergence for the strategic layer   after $K$ strategic updates under standard assumptions. Experimental   validation in a multi-agent foraging domain demonstrates successful   learning of spatially partitioned exploration strategies, with both   layers converging stably despite hierarchical coupling.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/23/2607.19809v1-dreamer-cpc-message-learning-with-world-models-for-decentralized-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning",
+      "authors": "Taisuke Takayama, Naoto Yoshida, Tadahiro Taniguchi",
+      "date": "2026-07-22",
+      "pdf": "https://arxiv.org/pdf/2607.19809v1",
+      "score": "9.0",
+      "evidence": "提出基于世界模型和消息学习的分散式多智能体强化学习方法",
+      "tldr": "分散式MARL中，现有通信方法仅基于当前观察，无法传递历史累积信息。提出Dreamer-CPC，将集体预测编码消息学习集成到DreamerV3世界模型，使各智能体从历史潜状态推断并交换消息。在Observer和CatchApple任务中，Dreamer-CPC显著优于IPPO-CPC及无通信基线，尤其在CatchApple中回合回报提升4-5倍。结果表明，基于世界模型潜动力学的通信能在观察缺失时有效支持分散式决策。",
+      "tags": "query:marl",
+      "abstract_en": "In multi-agent reinforcement learning (MARL), inter-agent communication is effective for improving performance under partial observability. Representation learning-based approaches enable decentralized agents to learn messages grounded in their own observations, but they rely only on current observations and cannot convey information accumulated over time. We propose Dreamer-CPC, a decentralized model-based MARL method that integrates message learning based on Collective Predictive Coding (CPC) into the world model of DreamerV3. Each agent independently maintains a world model and a message module, and infers and exchanges messages from the latent states of the world model that reflect the history of past observations and actions. We evaluated Dreamer-CPC in two environments: Observer, a non-cooperative information-sharing task, and CatchApple, a newly introduced task in which task-relevant observations are temporarily missing. In both environments, Dreamer-CPC outperformed IPPO-CPC, an existing CPC-based method that generates messages from current observations, as well as no-communication baselines. In particular, in CatchApple, Dreamer-CPC achieved 4 to 5 times the episode return of IPPO-CPC, demonstrating effective coordination where other methods fail due to missing observations. These results suggest that communication grounded in the latent dynamics of world models can support decentralized decision-making when current observations alone are insufficient.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/23/2607.19985v1-coordinating-from-memory-graph-structured-experience-reuse-for-multi-agent-adaptation-in-dynamic-manufacturing",
+      "section": "deep",
+      "title_en": "Coordinating from Memory: Graph-Structured Experience Reuse for Multi-Agent Adaptation in Dynamic Manufacturing",
+      "authors": "Chengxiao Dai, Zhanhui Lin, Zhaokun Yan, Youyang Ni, Chenjun Lei, Luyan Zhang",
+      "date": "2026-07-22",
+      "pdf": "https://arxiv.org/pdf/2607.19985v1",
+      "score": "9.0",
+      "evidence": "动态制造环境中的多智能体强化学习协调",
+      "tldr": "动态制造环境需多智能体系统应对频繁扰动，现有方法独立处理每次扰动浪费历史经验。提出图结构经验记忆框架GSEM，将历史协调编码为异构图，用图神经网络检索相似经验指导策略适应。在动态柔性作业车间调度基准上，相比最强基线，完工时间降低4.1%-10.0%，适应时间减少33%-38%，且优势随扰动频率增大而增加。消融和跨扰动实验验证了图结构编码和相似度检索的必要性及跨扰动泛化能力。",
+      "tags": "query:marl",
+      "abstract_en": "Dynamic manufacturing environments require multi-agent systems to coordinate effectively under frequent operational disturbances such as machine failures, urgent job arrivals, and processing time variations. Existing multi-agent reinforcement learning approaches treat each disturbance episode independently, discarding valuable coordination experience that could accelerate future adaptation. In this paper, we propose a Graph-Structured Experiential Memory (GSEM) framework for multi-agent coordination in dynamic manufacturing. The framework encodes historical coordination episodes as heterogeneous relational graphs that capture task dependencies, machine states, and inter-agent collaboration patterns. When a new disturbance occurs, a graph neural network-based retrieval mechanism identifies structurally similar past episodes, enabling experience-guided policy adaptation rather than learning from scratch. Experiments on dynamic flexible job-shop scheduling benchmarks with three disturbance types show that GSEM reduces makespan by 4.1%-10.0% and adaptation time by 33%-38% compared to the strongest memory-augmented baseline, with the advantage increasing under higher disturbance frequency. Ablation studies and cross-disturbance transfer experiments further validate the necessity of graph-structured encoding and similarity-based retrieval and demonstrate the cross-disturbance generalizability of learned coordination patterns.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/23/2607.13359v2-learning-latency-aware-orchestration-for-multi-agent-systems",
+      "section": "quick",
+      "title_en": "Learning Latency-Aware Orchestration for Multi-Agent Systems",
+      "authors": "Xi Shi, Mengxin Zheng, Qian Lou",
+      "date": "2026-07-15",
+      "pdf": "https://arxiv.org/pdf/2607.13359v2",
+      "score": "6.0",
+      "evidence": "基于学习的方法进行多智能体系统编排",
+      "tldr": "多智能体系统中高推理延迟由关键执行路径决定，现有方法忽视延迟。本文提出LAMaS框架，训练时通过关键路径感知的信用分配学习延迟感知执行图，推理时用轻量级控制器自适应消除冗余交互。实验表明延迟降低超50%且精度相当或更好。该框架模块化可迁移。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) coordinate multiple LLM-powered agents through structured workflows, gaining reasoning power but incurring high inference latency from multi-step execution and repeated model invocations. Existing orchestration methods primarily optimize task performance and inference cost, leaving latency largely unaddressed. In MAS, end-to-end latency is governed by the critical execution path, so reducing total cost alone does not reliably reduce latency. Moreover, optimizing latency while preserving accuracy remains non-trivial: naive latency optimization can misassign operator-level credit and degrade task accuracy. To address this gap, we propose Latency-Aware Multi-agent System (LAMaS), a latency-aware orchestration framework for learning-based multi-agent systems. LAMaS addresses this challenge at two levels: at training time, it learns latency-aware execution graphs through constrained optimization with critical-path-aware credit assignment; at inference time, since a graph committed at training time cannot exploit runtime evidence, it complements graph construction with a lightweight controller that adaptively eliminates redundant future agent interactions as execution unfolds. Experiments on four benchmarks show that LAMaS achieves the best latency among evaluated learning-based MAS baselines, reducing end-to-end latency by over 50\\% while maintaining competitive or better accuracy. LAMaS is also modular and transfers to other MAS with minimal changes, consistently yielding latency reductions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

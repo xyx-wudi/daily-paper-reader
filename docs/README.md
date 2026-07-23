@@ -6,38 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-22
-- 运行时间：2026-07-22 21:35:31 UTC
+- 最新运行日期：2026-07-23
+- 运行时间：2026-07-23 20:38:26 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：5
-- 速读区：0
+- 本次总论文数：4
+- 精读区：3
+- 速读区：1
 
 ### 今日简报（AI）
-1) 今日精读5篇论文，其中两篇获得满分，聚焦多智能体强化学习前沿。  
-2) 最值得关注的两个方向：去中心化多智能体强化学习在关键基础设施中的应用，以及面向连续状态动作空间的网络化可扩展策略优化。  
-3) 建议优先精读这两篇满分论文，理解其方法对现实复杂系统的潜在提升。
-- 详情：[/202607/22/README](/202607/22/README)
+今日阅读4篇论文，精读3篇、速读1篇，其中两篇多智能体强化学习论文获9.0高分。  
+最值得关注的是《CHMAS》的耦合分层框架与《Dreamer-CPC》的分布式世界模型消息学习方法。  
+建议优先精读这两篇高分论文，并尝试将其思想应用到实际多智能体协调任务中。
+- 详情：[/202607/23/README](/202607/23/README)
 
 ### 精读区论文标签
-1. [Decentralized Multi-agent Reinforcement Learning for Resilient Critical Infrastructures](/202607/22/2607.18359v1-decentralized-multi-agent-reinforcement-learning-for-resilient-critical-infrastructures)  
-   标签：评分：10.0/10、query:marl
-   evidence：直接针对去中心化多智能体强化学习
-2. [Scalable Policy Optimization for Networked Multi-Agent Reinforcement Learning with Continuous State-Action Spaces](/202607/22/2607.18554v1-scalable-policy-optimization-for-networked-multi-agent-reinforcement-learning-with-continuous-state-action-spaces)  
-   标签：评分：10.0/10、query:marl
-   evidence：网络化多智能体连续空间强化学习
-3. [A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space](/202607/22/2607.18597v1-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space)  
-   标签：评分：10.0/10、query:marl
-   evidence：提出SAFE框架，通过自演化默认动作解决连续动作空间合作多智能体任务
-4. [Strategy-Following Multi-Agent Deep Reinforcement Learning Considering Control Strategies Provided to Other Agents](/202607/22/2607.18719v1-strategy-following-multi-agent-deep-reinforcement-learning-considering-control-strategies-provided-to-other-agents)  
+1. [CHMAS: A Coupled Hierarchical Framework for Multi-Agent Reinforcement Learning](/202607/23/2607.19555v1-chmas-a-coupled-hierarchical-framework-for-multi-agent-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：考虑其他智能体策略跟随的多智能体深度强化学习
-5. [Comparative Study of Multi-Agent Actor-Critic Algorithms in Parameterized Action Reinforcement Learning](/202607/22/2607.19117v1-comparative-study-of-multi-agent-actor-critic-algorithms-in-parameterized-action-reinforcement-learning)  
+   evidence：耦合分层多智能体强化学习框架，集中式策略规划与分布式执行
+2. [Dreamer-CPC: Message Learning with World Models for Decentralized Multi-agent Reinforcement Learning](/202607/23/2607.19809v1-dreamer-cpc-message-learning-with-world-models-for-decentralized-multi-agent-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：多智能体actor-critic算法比较
+   evidence：提出基于世界模型和消息学习的分散式多智能体强化学习方法
+3. [Coordinating from Memory: Graph-Structured Experience Reuse for Multi-Agent Adaptation in Dynamic Manufacturing](/202607/23/2607.19985v1-coordinating-from-memory-graph-structured-experience-reuse-for-multi-agent-adaptation-in-dynamic-manufacturing)  
+   标签：评分：9.0/10、query:marl
+   evidence：动态制造环境中的多智能体强化学习协调
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Learning Latency-Aware Orchestration for Multi-Agent Systems](/202607/23/2607.13359v2-learning-latency-aware-orchestration-for-multi-agent-systems)  
+   标签：评分：6.0/10、query:marl
+   evidence：基于学习的方法进行多智能体系统编排
 
 
 <div class="dpr-home-promo-card">
