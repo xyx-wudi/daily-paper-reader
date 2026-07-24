@@ -1,0 +1,915 @@
+Title: Value Iteration for Stochastic Parity Games
+
+URL Source: https://arxiv.org/pdf/2607.18355v1
+
+Published Time: Wed, 22 Jul 2026 00:05:06 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+# Value Iteration for Stochastic Parity Games 
+
+Kittiphon Phalakarn 1 and Ichiro Hasuo 1,2,3 
+
+> 1
+
+National Institute of Informatics, Tokyo, Japan 
+
+{kphalakarn,hasuo}@nii.ac.jp  
+
+> 2
+
+SOKENDAI (The Graduate University for Advanced Studies), Kanagawa, Japan  
+
+> 3
+
+Imiron Co., Ltd., Tokyo, Japan 
+
+Abstract. We present the first (bounded) value iteration algorithm for the quantitative analysis of stochastic parity games , a fundamental model for probabilistic verification with ω-regular objectives. Existing algo-rithms are based on strategy iteration , which repeatedly computes op-timal strategies for one player while fixing the other, leading to high computational cost. Our algorithm instead operates directly on a lattice-theoretic characterization of winning probabilities, exploiting structural properties of (almost-sure qualitative) winning states under parity objec-tives. We prove correctness and convergence of the proposed algorithm. 
+
+Keywords: Stochastic parity game · Bounded value iteration · Proba-bilistic model checking · Fixed point. 
+
+## 1 Introduction 
+
+Stochastic Parity Games. Stochastic parity games (SPGs) are zero-sum, non-terminating games played on probabilistic transition systems between two play-ers, Even (denoted by □) and Odd (denoted by △). 4 Each state is assigned a natural number, called a priority . At each step, the player controlling the current state selects an available action , after which the game moves to a successor state according to a predefined probability distribution decided by the chosen action. Under the parity objective , an infinite path is winning for Even if the min-imum priority appearing infinitely often along the path is even; otherwise, the path is winning for Odd. Accordingly, each player aims to select actions so as to optimize their probability of winning. Stochastic parity games play a central role in several areas of computer sci-ence. Prior theoretical work establishes that SPGs are determined, meaning that for every state the winning probabilities of the two players sum to one [2, 31]. Moreover, SPGs admit optimal strategies that are pure (deterministic) and mem-oryless (positional) [14, 40]. Consequently, the decision problem for SPGs lies in the complexity class NP ∩ coNP .In addition, solving SPGs is polynomial-time equivalent to solving stochastic reachability, mean-payoff, discounted-payoff, and terminal-payoff games [3,8,11].  
+
+> 4
+
+The symbol □ has an even number of sides, while △ has an odd number. arXiv:2607.18355v1 [cs.GT] 20 Jul 2026 2 K. Phalakarn and I. Hasuo 
+
+Due to their expressiveness, SPGs have numerous applications, including reason-ing about cyber-physical systems, economic models, computer networks, software systems, and security [30, 37, 38]. 
+
+Previous Works: Strategy Iteration. Despite extensive theoretical results on SPGs, only a few algorithms are available for quantitatively solving SPGs, i.e., computing the winning probability from a given initial state. The first such approach was proposed by Chatterjee and Henzinger [10], followed by the other by Hahn et al. [22]. Both approaches are based on the same underlying technique, namely strategy iteration . The algorithm starts with an arbitrary strategy for one player, say Even. By fixing Even’s strategy, the SPG reduces to a Markov decision process (MDP). An optimal strategy for the other player, Odd, can then be computed for this MDP using existing techniques, e.g., [1, 16]. The resulting strategy for Odd is subsequently used to improve Even’s strat-egy so as to increase Even’s winning probabilities. The improved Even’s strategy is then used in the next iteration, where Odd’s optimal strategy is recomputed and Even’s strategy is further refined. This process repeats until Even’s strategy cannot be improved, at which point it is optimal and the corresponding winning probabilities are obtained. Due to its nature, strategy iteration can be computationally expensive, as it requires constructing optimal strategies in each iteration. Indeed, Hahn et al. [22] reported that a significant portion of the overall runtime is spent on repeatedly solving MDPs. 
+
+Bounded Value Iteration. Another widely used technique for computing win-ning probabilities is value iteration [12]. This technique has been applied to solve parity games on Markov chains and MDPs, but, to the best of our knowledge, not SPGs. In practical settings where approximate probabilities suffice, value it-eration is often preferred due to its favorable performance characteristics [23,24]. Value iteration is based on a lattice-theoretic fixed-point characterization of winning probabilities. The algorithm initializes a value for each state and repeatedly updates these values using local update rules. Owing to this local nature of the value updates, value iteration is generally more efficient in practice than global strategy-based methods. For stochastic reachability games (also known as simple stochastic games [15]), several variants of value iteration have been proposed [4, 5, 17, 27, 28, 33, 35, 36]. To provide precision guarantees, these algorithms compute both lower and upper approximations of the winning probabilities, a technique commonly referred to as bounded value iteration (BVI) .
+
+This Work: The First BVI for SPGs. In this work, we present the first bounded value iteration algorithm for the quantitative computation of winning probabilities in stochastic parity games. The main challenge stems from the fact that these winning probabilities do not correspond to the least or greatest fixed points of the one-step Bellman operator (cf. Definition 2.9), in contrast to simpler objectives such as reachability or safety. Consequently, value updates Value Iteration for Stochastic Parity Games 3
+
+based solely on local reasoning are insufficient for deriving converging lower and upper bounds. To address this issue, we incorporate global (qualitative) information, namely the (almost-sure qualitative) winning regions of each player under the parity ob-jective in suitably defined subgames. These subgames evolve dynamically with the current lower and upper approximations. Under an optimal play, Even avoids remaining in states that are almost-sure winning for Odd, and vice versa. Our value update operators are designed to capture this strategic behavior by ad-justing values in accordance with these global considerations. Although the structure of our algorithm may resemble that of [28, Algo-rithm 2], ours is based on fundamentally different principles and do not rely on any assumptions required in that work. Specifically, [28] requires that the win-ning probabilities correspond to the least or greatest fixed point of the one-step Bellman operator, whereas ours makes no such assumption; moreover, their ap-proach relies on reasoning over MDPs, while ours works directly on SPGs. More details are given in Section 4.5. 
+
+Contributions. Our main technical contribution is the first BVI algorithm for SPGs called SPG-BVI (Algorithm 2). We establish its correctness and conver-gence, and provide a detailed illustrative example of its execution. 
+
+Organization. The remainder of the paper is structured as follows. Section 2 introduces the necessary preliminaries, and Section 3 surveys related work. In Section 4, we present our SPG-BVI algorithm for SPGs together with proofs of correctness and convergence. Section 5 concludes the paper. 
+
+## 2 Preliminaries 
+
+Notation 2.1. For a finite set S, the set of all functions from S to [0 , 1] is denoted by [0 , 1] S , and the set of all discrete probability distributions on S is denoted by 
+
+Dist (S) := {d ∈ [0 , 1] S : P 
+
+> s∈S
+
+d(s) = 1 }.
+
+2.1 Stochastic Parity Games 
+
+Our definition on stochastic parity games is as follows. 5
+
+Definition 2.2 (stochastic parity game G). A stochastic parity game (SPG) 
+
+is G = ( S, S □, S △, A, Av , δ, P), where S = S□ ⊎ S△ is a finite set of states 
+
+partitioned into Even’s (S□) and Odd’s (S△) states, A is a finite set of actions ,
+
+Av : S → 2A \ {∅} defines available actions, δ : S × A → Dist (S) is a transition function , and P : S → N is a priority function .The semantics of SPGs is defined as usual [6,13]. Let Post (s, a ) := {s′ ∈ S :
+
+δ(s, a, s ′) > 0}. An infinite sequence ρ = s0a0s1a1 . . . ∈ (S × A)ω is an infinite     
+
+> 5We do not introduce the player Random as in [13]. Nonetheless, our definition and that of [13] are equivalent with respect to parity objectives. 4K. Phalakarn and I. Hasuo
+
+path through G if ai ∈ Av (si) and si+1 ∈ Post (si, a i) for all i ∈ N. A finite sequence ρ = s0a0s1a1 . . . s n ∈ (S × A)∗ × S is a finite path through G if it is a prefix of an infinite path. A strategy σ□ of Even is a function σ□ : S□ → A such that σ□(s) ∈ Av (s)
+
+for all s ∈ S□. A strategy σ△ of Odd is defined analogously. We restrict our consideration to strategies of this form (i.e., pure memoryless strategies) as they are complete for finite SPGs with the parity objective [14, 40]. The sets of all strategies of Even and Odd are denoted by Str □ and Str △, respectively. A pair of strategies is Σ = ( σ□, σ △) ∈ Str □ × Str △. For notational con-venience, we also refer to Σ = ( σ□, σ △) as the function Σ : S → A such that 
+
+Σ( s) = σ□(s) if s ∈ S□ and Σ( s) = σ△(s) if s ∈ S△.Given an SPG G, fixing a pair Σ of strategies results in a Markov chain GΣ
+
+with a transition function δΣ : S → Dist (S) where δΣ(s, s ′) = δ(s, Σ( s), s ′).Under Σ, actions ai within a path can be omitted. The probability PΣ of a finite path ρ = s0s1 . . . s n ∈ S∗ is given by PΣ(ρ) := Q 
+
+> i∈[0 ,n −1]
+
+δΣ(si, s i+1 ). As described in [6], the probability can be extended to all measurable sets of Sω . For a starting state s ∈ S and a subset S′ ⊆ S, we denote the probability of eventually reaching S′ from s and that of always staying in S′
+
+by PΣ 
+
+> s
+
+(F S′) and PΣ 
+
+> s
+
+(G S′), respectively. 
+
+Parity Objective. For an infinite path ρ = s0a0s1a1 . . . ∈ (S × A)ω , the set of states which are visited infinitely often in ρ is denoted by Inf (ρ) := {s ∈ S : ∀i ∈
+
+N, ∃j > i, s = sj }. For S′ ⊆ S, let P(S′) := {P (s′) : s′ ∈ S′}, where P : S → N
+
+is the priority function from Definition 2.2. The (Even) parity objective requires that the minimum priority visited in-finitely often along an infinite path is even. That is, we are interested in the measurable set Parity □ := {infinite path ρ : min( P(Inf (ρ))) is even }. The 
+
+Odd parity objective and the measurable set Parity △ are defined analogously. Throughout the paper, when a player is not specified, the parity objective refers to the Even parity objective. The goal of this work is to determine PΣ 
+
+> s
+
+(Parity □) under a pair of optimal strategies Σ = ( σ□, σ △), formally defined by the value function V : S → [0 , 1] as follows (the equality is proved in [40]). 
+
+Definition 2.3 (value function V). Let G be an SPG as in Definition 2.2. The value function is the function V : S → [0 , 1] defined by 
+
+V(s) := max 
+
+> σ□∈Str □
+
+min 
+
+> σ△∈Str △
+
+PΣ 
+
+> s
+
+(Parity □)= min 
+
+> σ△∈Str △
+
+max 
+
+> σ□∈Str □
+
+PΣ 
+
+> s
+
+(Parity □).
+
+Example 2.4. Figure 1 (left) illustrates an example of an SPG, where Even’s states and Odd’s states are shown as □ and △, respectively. We denote □i and 
+
+△i for Even’s and Odd’s state with priority i, respectively. Optimal strategies are in bold. Its value function is V : △2, □4 7 → 1 | □0 7 → 0.7 | △ 1, □2 7 → 0.2 | □3 7 → 0.Value Iteration for Stochastic Parity Games 5                   
+
+> 234
+> 012
+> αααβ
+> α
+> β
+> α
+> α
+> β
+> 0.7
+> 0.3
+> γ
+> 0.1
+> 0.9 β
+> 0.2
+> 0.8
+> 234
+> 012
+> ααα
+> αα
+> α
+> 234
+> 012
+> ααα
+> α
+> α
+> β
+> 0.7
+> 0.3
+> β
+> 0.2
+> 0.8
+
+Fig. 1. Left: an SPG, where the priority P(·) is shown within each state. The labels 1
+
+for δ(s, a, s ′) = 1 are omitted. We denote □i and △i for Even’s and Odd’s state with priority i, respectively. Optimal strategies are in bold. Middle and right: the subgames under Av ′ in iteration i = 2 and 3, respectively, following an execution of Algorithm 2. 
+
+End Component. The notion of end component [6] is first introduced in the context of MDPs and is then extended (e.g., as in [1, 17, 27, 28]) for stochastic games. We state the definition as follows. 
+
+Definition 2.5 (end component E = ( SE , Av E )). Let G be an SPG as in Definition 2.2. A pair E = ( SE , Av E ), where ∅̸ = SE ⊆ S and Av E : SE →
+
+2A \ {∅} such that Av E (s) ⊆ Av (s) for all s ∈ SE , is an end component (EC) if (i) ∀s ∈ SE , ∀a ∈ Av E (s), Post (s, a ) ⊆ SE , and (ii) ∀s′, s ′′ ∈ SE , there exists a finite path ρ = s0a0s1a1 . . . s n ∈ (SE × A)∗ × SE
+
+for some n ∈ N such that s0 = s′, sn = s′′ , and ai ∈ Av E (si) for all 0 ≤ i < n .Let S′ ⊆ S, Av ′ : S → 2A \ {∅} , and E = ( SE , Av E ) be an EC. We say 
+
+E is within (S′, Av ′) if SE ⊆ S′ and Av E (s) ⊆ Av ′(s) for all s ∈ SE . We say E is maximal within (S′, Av ′) if E is within (S′, Av ′) and there does not exist an EC E′ = ( SE′ , Av E′ ) within (S′, Av ′) such that (i) SE ⊊ SE′ , or (ii) 
+
+Av E (s) ⊊ Av E′ (s) for some s ∈ SE . We say E is bottom within (S′, Av ′) if E
+
+is within (S′, Av ′) and Post (s, a ) ⊆ S′ =⇒ Post (s, a ) ⊆ SE for all s ∈ SE
+
+and a ∈ Av ′(s). We denote the set of all bottom maximal ECs (BMECs) within 
+
+(S′, Av ′) by BMEC (S′, Av ′).Given S′ ⊆ S and Av ′ : S → 2A \ {∅} , the set BMEC (S′, Av ′) can be computed in polynomial time in the size of S′ and Av ′ [6]. 
+
+Example 2.6. Consider the SPG in Figure 1 (left). A pair E1 = ( SE1 , Av E1 ),where SE1 = {□0, △1} and Av E1 : □0 7 → { α} | △ 1 7 → { β}, is an EC. The EC 
+
+E1 is not maximal within (S, Av ) since there exists an EC E2 = ( SE2 , Av E2 ),where SE2 = {□0, △1, □2} and Av E2 : □0 7 → { α} | △ 1 7 → { α, β } | □2 7 → { α},and SE1 ⊊ SE2 . The EC E2 is maximal within (S, Av ). However, E2 is not bottom within (S, Av ) since Post (□0, β )̸ ⊆ SE2 . An EC E3 = ( SE3 , Av E3 ),where SE3 = {△ 2} and Av E3 : △2 7 → { α}, is bottom and maximal within 
+
+(S, Av ). In contrast, a pair E4 = ( SE4 , Av E4 ), where SE4 = {□3, □4} and Av E4 :
+
+□3 7 → { α} | □4 7 → { α, β }, is not an EC, as there is no finite path from □3 to □4
+
+inside E4.6 K. Phalakarn and I. Hasuo 
+
+2.2 Fixed Points in a Complete Lattice 
+
+Various quantitative probabilistic model checking problems, such as computing reachability probabilities, can be formulated as computations of suitable fixed points in suitable complete lattices [6]. We provide brief backgrounds on complete lattices and relevant results. For our setting, we are interested in the complete lattice (L := [0 , 1] S , ≤)
+
+where, for f, f ′ ∈ L, we write f ≤ f ′ if and only if f (s) ≤ f ′(s) for all s ∈ S.Its least element is ⊥ : S → [0 , 1] with ⊥(s) = 0 and its greatest element is 
+
+⊤ : S → [0 , 1] with ⊤(s) = 1 for all s ∈ S.A function Ψ : L → L is monotone if f ≤ f ′ implies Ψf ≤ Ψf ′. A lattice element f ∈ L is a fixed point of Ψ if f = Ψ f . The least fixed point of Ψ, denoted by μΨ, is a fixed point of Ψ satisfying, for any f ∈ L, f = Ψ f =⇒ μΨ ≤ f .The greatest fixed point of Ψ, denoted by νΨ, is defined in a similar manner. Below is a notable theorem regarding the least and greatest fixed points. 
+
+Theorem 2.7 ((special case of ) Kleene [7]). Let (L, ≤) be a complete lattice and Ψ : L → L be an ω-continuous function (i.e., Ψ(sup L′) = sup {Ψf : f ∈ L′}
+
+for any increasing ω-chain L′ ⊆ L). Then, the bottom-up Kleene sequence ⊥ ≤ 
+
+Ψ⊥ ≤ Ψ2⊥ ≤ · · · stabilizes at ω such that μΨ = Ψ ω ⊥ = Ψ ω+1 ⊥ = · · · .6
+
+Dually, let Ψ be an ωop -cocontinuous function (i.e., Ψ(inf L′) = inf {Ψf : f ∈
+
+L′} for any decreasing ω-chain L′ ⊆ L). Then, the top-down Kleene sequence 
+
+⊤ ≥ Ψ⊤ ≥ Ψ2⊤ ≥ · · · stabilizes at ω such that νΨ = Ψ ω ⊤ = Ψ ω+1 ⊤ = · · · .
+
+Value Iteration. When a problem is formulated as the computation of the least fixed point μΨ of Ψ, one can apply Theorem 2.7 to approximate this least fixed point: starting from ⊥ and iteratively applying Ψ to the current lattice element. This procedure is commonly known as value iteration . Note that Ψi⊥ ≤ μΨ
+
+holds for all i ∈ N.Since it could happen that Ψi⊥ < Ψω ⊥ = μΨ for all i ∈ N, it may not be possible to precisely compute μΨ via value iteration. Nevertheless, in practice, it is usually sufficient to compute an approximation that is ε-close to μΨ for some desired precision ε > 0. The rest of Section 2.2 targets at this problem. A straightforward approach is to stop the iteration when max s∈S ((Ψ i⊥)( s)−
+
+(Ψ i−1⊥)( s)) ≤ ε. However, it is shown in [20] that such Ψi⊥ is not guaranteed to be ε-close to μΨ. To our best knowledge, the bottom-up Kleene sequence alone is not sufficient to provide an ε-close approximation of μΨ.
+
+Bounded Value Iteration (BVI). When μΨ = νΨ (i.e., when Ψ has a 
+
+unique fixed point), one can perform value iteration from both ⊥ and ⊤. This procedure is known as bounded value iteration (also called interval iteration ). Note that Ψi⊤ ≥ νΨ holds for all i ∈ N. During this bounded iteration, when 
+
+max s∈S ((Ψ i⊤)( s) − (Ψ i⊥)( s)) ≤ 2ε, one can guarantee that 12 (Ψ i⊥ + Ψ i⊤) is 
+
+ε-close to μΨ = νΨ.                
+
+> 6For the bottom-up sequence, we define Ψω⊥:= sup {Ψi⊥:i∈N}and Ψω+( i+1) ⊥:= Ψ(Ψ ω+i⊥)for each i∈N. Those for the top-down sequence are defined dually. Value Iteration for Stochastic Parity Games 7
+
+We point out that not all functions Ψ have a unique fixed point. In the case where we would like to compute μΨ (or νΨ), it may be possible to construct Ψ′
+
+with a unique fixed point such that μΨ′ = νΨ′ = μΨ (or νΨ), and when possible, the construction may not be straightforward. Interested readers are referred to, e.g., [1, 6, 36] for further details. 
+
+2.3 Bellman Operator 
+
+Building on Section 2.2, we now review the Bellman operator , a key function used in computing value functions for a range of quantitative objectives. Our definition is based on a notion of state-action expectation as follows. 
+
+Definition 2.8 (state-action expectation ϕf (s, a )). Let G be an SPG as in Definition 2.2. The state-action expectation of a function f ∈ [0 , 1] S for a state-action pair (s, a ) ∈ S × A is ϕf (s, a ) := P 
+
+> s′∈S
+
+δ(s, a, s ′) · f (s′).
+
+Definition 2.9 (Bellman operator Φ). Let G be an SPG as in Definition 2.2. The Bellman operator is the function Φ : [0 , 1] S → [0 , 1] S where, for f ∈ [0 , 1] S
+
+and s ∈ S,
+
+(Φ f )( s) := 
+
+(
+
+max a∈Av (s) ϕf (s, a ) if s ∈ S□, and 
+
+min a∈Av (s) ϕf (s, a ) if s ∈ S△.
+
+It is well-known that (i) Φ is monotone, and (ii) the value function V (cf. Def-inition 2.3) is a fixed point of the Bellman operator Φ (i.e., V = Φ V). However, in general, V does not coincide with either the least or the greatest fixed point of Φ (i.e., V̸ = μΦ and V̸ = νΦ). For the reachability and safety objectives, we consider the following modifi-cation of the Bellman operator. 
+
+Definition 2.10 (modified Bellman operator Φ(S′,c )). Let G be an SPG as in Definition 2.2, S′ ⊆ S, and c ∈ [0 , 1] . The modified Bellman operator is the function Φ(S′,c ) : [0 , 1] S → [0 , 1] S where, for f ∈ [0 , 1] S and s ∈ S,
+
+(Φ (S′,c )f )( s) := 
+
+
+
+c if s ∈ S′,
+
+max a∈Av (s) ϕf (s, a ) if s ∈ S□ \ S′, and 
+
+min a∈Av (s) ϕf (s, a ) if s ∈ S△ \ S′.
+
+The optimal reachability probability PΣ 
+
+> s
+
+(F S′) under an optimal pair of strate-gies Σ is easily shown to be the least fixed point of Φ(S′,1) , i.e., PΣ 
+
+> s
+
+(F S′) = 
+
+μΦ(S′,1) . Dually, the optimal safety probability PΣ 
+
+> s
+
+(G S′) under an optimal pair of strategies Σ is easily shown to be the greatest fixed point of Φ(S\S′,0) , i.e., 
+
+PΣ 
+
+> s
+
+(G S′) = νΦ(S\S′,0) .8 K. Phalakarn and I. Hasuo 
+
+## 3 Related Work 
+
+3.1 Solving Qualitative SPGs 
+
+As our algorithm for solving the quantitative SPG problem relies on solving its qualitative counterpart, we review the relevant literature below. 
+
+Definition 3.1 (winning sets W□, W △). Let G be an SPG as in Definition 2.2 and V be the value function as in Definition 2.3. The (almost-sure qualitative) winning set of Even is the set W□ := {s ∈ S : V(s) = 1 }. The (almost-sure qualitative) winning set of Odd is the set W△ := {s ∈ S : V(s) = 0 }.
+
+Problem 3.2 (qualitative SPG problem). Given an SPG G, the qualitative SPG problem is to output the winning set W□ of Even. Note that the winning set W△ of Odd for an SPG G is the same as the winning set ˜W□ of Even for the SPG ˜G where ˜P(s) := P(s) + 1 for each s ∈ S.There are two approaches to solve the qualitative SPG problem: the nested fixed point algorithm [21] and the gadget construction [13]. 
+
+Nested Fixed Point Algorithm. The first approach is a recursive-style algo-rithm of Hahn et al. [21]. It can be considered as an adaptation of [32, 39] for non-stochastic parity games (i.e., with a transition function δ : S × A → S). We first define attractors ; they can be computed via iterative fixed-point algorithms. 
+
+Definition 3.3 (attractor Attr ). Let G be an SPG as in Definition 2.2. The 
+
+attractors are the functions Attr □,▷◁ and Attr △,▷◁ : 2 S → 2S , where ▷◁ ∈{> 0, = 1 }, defined by 
+
+Attr □,▷◁ (S′) := {s ∈ S : ∃σ□ ∈ Str □, ∀σ△ ∈ Str △, PΣ 
+
+> s
+
+(F S′) ▷◁ },
+
+Attr △,▷◁ (S′) := {s ∈ S : ∃σ△ ∈ Str △, ∀σ□ ∈ Str □, PΣ 
+
+> s
+
+(F S′) ▷◁ }.
+
+The algorithm QualitativeSPG in Algorithm 1 outputs (W□, L □) such that W□ is the winning set of Even (cf. Definition 3.1) and L□ = {s ∈ S :
+
+V(s) < 1} = S \ W□. We let G \ X denote the subgame G′ = ( S′, S □ \ X, S △ \
+
+X, A, Av ′, δ, P) where S′ := S \ X and Av ′ : S′ → 2A \ {∅} with Av ′(s′) := {a′ ∈
+
+Av (s′) : Post (s′, a ′) ⊆ S′} for all s′ ∈ S′.
+
+Gadget Construction. The second approach is to translate an SPG into a non-stochastic parity game via the gadget construction by Chatterjee et al. [13]. The construction is guaranteed to preserve the winning set of one player. After the construction, any algorithm solving non-stochastic parity games applies, e.g., [9, 18, 25, 26, 29, 32, 34, 39]. Nonetheless, the size of the constructed non-stochastic parity game can increase by a factor of O(max( P(S))) compared to the original SPG. This can lead to a longer solving time as observed in [21]. Value Iteration for Stochastic Parity Games 9
+
+Algorithm 1: the algorithm of [21] solving the qualitatve SPG problem.  
+
+> 1
+
+QualitativeSPG (G) 
+
+> 2
+
+if S = ∅ then return (∅, ∅) 
+
+> 3
+
+x ← min( P(S)); X ← { s ∈ S : P(s) = x} 
+
+> 4
+
+if x is even then  
+
+> 5
+
+(W ′
+
+> □
+
+, L ′
+
+> □
+
+) ← QualitativeSPG (G \ Attr □,> 0(X))  
+
+> 6
+
+if L′ 
+
+> □
+
+= ∅ then return (S, ∅) 
+
+> 7
+
+(W ′′  
+
+> □
+
+, L ′′ 
+
+> □
+
+) ← QualitativeSPG (G \ Attr △,> 0(L′
+
+> □
+
+))  
+
+> 8
+
+return (W ′′  
+
+> □
+
+, L ′ 
+
+> □
+
+∪ L′′ 
+
+> □
+
+) 
+
+> 9
+
+if x is odd then  
+
+> 10
+
+(W ′
+
+> □
+
+, L ′
+
+> □
+
+) ← QualitativeSPG (G \ Attr △,> 0(X))  
+
+> 11
+
+if W ′ 
+
+> □
+
+= ∅ then return (∅, S ) 
+
+> 12
+
+(W ′′  
+
+> □
+
+, L ′′ 
+
+> □
+
+) ← QualitativeSPG (G \ Attr □,=1 (W ′
+
+> □
+
+))  
+
+> 13
+
+return (W ′ 
+
+> □
+
+∪ W ′′  
+
+> □
+
+, L ′′ 
+
+> □
+
+) 
+
+> 14 15
+
+EvenWinSet (G) 
+
+> 16
+
+(W□, L □) ← QualitativeSPG (G); return W□ 
+
+> 17 18
+
+OddWinSet (G) 
+
+> 19
+
+return EvenWinSet ( ˜G) where ˜G has ˜P(s) := P(s) + 1 for each s ∈ S
+
+3.2 Solving Quantitative SPGs 
+
+Below is the definition of the problem, which is the focus of this work. 
+
+Problem 3.4 (quantitative SPG problem). Given an SPG G, an initial state sinit ∈ S, and a precision ε > 0, the quantitative SPG problem is to output a value that is ε-close to V(sinit ) (i.e., whose difference from V(sinit )
+
+is no more than ε). To the best of our knowledge, the only available approach to solve the quan-titative SPG problem is by strategy iteration (also called strategy improvement )[10, 22]. The algorithm of [22] was implemented and is available as part of the EPMC model checking tool [19]. Roughly speaking, strategy iteration begins with an arbitrary strategy σ□,0
+
+of Even. By fixing σ□,i for i ∈ N, the SPG becomes an MDP, where one can compute an optimal strategy σ△,i of Odd for the parity objective [1, 16]. By fixing σ△,i , one may improve σ□,i to σ□,i +1 such that the winning probabilities of Even increase. When σ□,i cannot be further improved, σ□,i is optimal for Even. The value V(sinit ) can then be computed accordingly. It is mentioned in [22] that computing an optimal strategy for a parity objec-tive of an MDP can become a bottleneck. Their experiment showed that more than half of the computation time was contributed to MDP solving. 10 K. Phalakarn and I. Hasuo 
+
+Algorithm 2: our SPG-BVI algorithm.  
+
+> 1
+
+SPG-BVI (G, s init , ε ) 
+
+> 2
+
+ℓ0 ← ⊥ ; u0 ← ⊤ ; i ← 0 
+
+> 3
+
+while ui(sinit ) − ℓi(sinit ) > 2ε do  
+
+> 4
+
+i ← i + 1; ℓi ← Φℓi−1; ui ← Φui−1 // Definition 2.9  
+
+> 5
+
+Let Av ′ : S → 2A \ {∅} be a function where 
+
+Av ′(s) := arg max a∈Av (s) ϕui (s, a ) for s ∈ S□ and 
+
+Av ′(s) := arg min a∈Av (s) ϕℓi (s, a ) for s ∈ S△ 
+
+> 6
+
+G′ ← (S, S □, S △, A, Av ′, δ, P) 
+
+> 7
+
+W ′ 
+
+> □
+
+← EvenWinSet (G′); W ′△ ← OddWinSet (G′) // Algorithm 1  
+
+> 8
+
+foreach E = ( SE , Av E ) ∈ BMEC (W ′
+
+> □
+
+, Av ′) do // Definition 2.5  
+
+> 9
+
+ℓi(s) ← max( ℓi(s), Exit △(E, ℓ i)) for each s ∈ SE 
+
+> 10
+
+foreach E = ( SE , Av E ) ∈ BMEC (W ′△, Av ′) do  
+
+> 11
+
+ui(s) ← min( ui(s), Exit □(E, u i)) for each s ∈ SE 
+
+> 12
+
+return 12 (ℓi(sinit ) + ui(sinit )) 
+
+## 4 Our BVI Algorithm for SPG 
+
+4.1 Intuition 
+
+Recall that the parity objective is determined by the set of states visited infinitely often. Any infinite path must eventually remain within some end component (EC) in order to visit a state infinitely often. We begin by defining the following classifications of ECs. 
+
+Definition 4.1 (Even-dominating and Odd-dominating ECs). Let G be an SPG as in Definition 2.2 and E = ( SE , Av E ) be an EC (cf. Definition 2.5). We say that E is Even-dominating if there exists a strategy σ□ ∈ Str □ such that (i) σ□(s) ∈ Av E (s) for all s ∈ SE ∩S□, and (ii) for all strategies σ△ ∈ Str △
+
+such that σ△(s) ∈ Av E (s) holds for all s ∈ SE ∩ S△, we have PΣ 
+
+> s
+
+(Parity □) = 1 
+
+for all s ∈ SE . An Odd-dominating EC is defined analogously. Intuitively, an EC E is Even-dominating if Even can ensure winning as long as both players remain within E. Since Odd loses by remaining within E, it is optimal for Odd to exit E (if possible). Similarly, E is Odd-dominating if Odd can ensure winning under the same condition, and it is optimal for Even to exit 
+
+E (if possible). Based on the above intuition, our algorithm considers Even-dominating and Odd-dominating ECs, and adjusts the bounds for the winning probabilities ac-cordingly. An example is provided in Section 4.3. 
+
+4.2 Algorithm 
+
+Here is our BVI algorithm for the quantitative SPG problem. Value Iteration for Stochastic Parity Games 11 
+
+Definition 4.2 ( SPG-BVI (G, s init , ε )). Our SPG-BVI algorithm for solv-ing the quantitative SPG problem is in Algorithm 2. The algorithm maintains two sequences of functions ℓi and ui : S → [0 , 1] for 
+
+i ∈ N. They act as the bottom-up and top-down sequences for the value function 
+
+V, respectively. The first elements are initialized as ℓ0 ← ⊥ and u0 ← ⊤ .In the i-th iteration ( i > 0), two new elements ℓi ← Φℓi−1 and ui ← Φui−1
+
+are generated. After that, the algorithm computes the restricted actions for both players. For s ∈ S□, an action a ∈ Av (s) is available in Av ′(s) if ϕui (s, a )
+
+is maximum among all actions in Av (s). For s ∈ S△, an action a ∈ Av (s) is available in Av ′(s) if ϕℓi (s, a ) is minimum among all actions in Av (s). Such restriction induces the estimated-optimal subgame G′.Next, the algorithm computes the winning sets W ′
+
+> □
+
+, W ′△ of Even and Odd (cf. Definition 3.1), respectively, for the estimated-optimal subgame G′. We then look at each bottom maximal EC (BMEC) within (W ′
+
+> □
+
+, Av ′) (cf. Definition 2.5), i.e., each E ∈ BMEC (W ′
+
+> □
+
+, Av ′). We show that such E is Even-dominating 
+
+(cf. Definition 4.1) in both G′ and G.
+
+Lemma 4.3. Let G be an SPG as in Definition 2.2, Av ′ : S → 2A \ {∅} such that Av ′(s) ⊆ Av (s) for all s ∈ S, G′ = ( S, S □, S △, A, Av ′, δ, P) be a sub-game of G, W ′ 
+
+> □
+
+is the winning set of Even (cf. Definition 3.1) for G′, and 
+
+E ∈ BMEC (W ′
+
+> □
+
+, Av ′) (cf. Definition 2.5). Then, E is an Even-dominating EC (cf. Definition 4.1) in both G′ and G.Proof. Consider an EC E = ( SE , Av E ) ∈ BMEC (W ′
+
+> □
+
+, Av ′). Because E is bot-tom within (W ′
+
+> □
+
+, Av ′), we obtain Post (s, a ) ⊆ W ′ 
+
+> □
+
+=⇒ Post (s, a ) ⊆ SE for all s ∈ SE and a ∈ Av ′(s). Due to the maximality of E within (W ′
+
+> □
+
+, Av ′), it must be the case that Av E includes all actions within SE , i.e., Post (s, a ) ⊆
+
+SE =⇒ a ∈ Av E (s) for all s ∈ SE and a ∈ Av ′(s).Since SE ⊆ W ′
+
+> □
+
+, any (almost-sure qualitative) winning strategy σ′ 
+
+> □
+
+: S → A
+
+(with σ′
+
+> □
+
+(s) ∈ Av ′(s) for s ∈ S□) of Even with respect to G′ (which induces W ′
+
+> □
+
+)gives Post (s, σ ′
+
+> □
+
+(s)) ⊆ W ′ 
+
+> □
+
+for all s ∈ SE ∩ S□. Also, Odd cannot escape W ′
+
+> □
+
+(i.e., Post (s, σ ′△(s)) ⊆ W ′ 
+
+> □
+
+for all s ∈ SE ∩ S△ and σ′△ : S → A with σ′△(s) ∈
+
+Av ′(s) for s ∈ S△). Notice that, for Σ′ = ( σ′
+
+> □
+
+, σ ′△), we get Post (s, Σ′(s)) ⊆ W ′
+
+> □
+
+for all s ∈ SE . This implies Post (s, Σ′(s)) ⊆ SE and Σ′(s) ∈ Av E (s) for all 
+
+s ∈ SE . Hence, such σ′ 
+
+> □
+
+gives a strategy such that E is Even-dominating. Thus, 
+
+E is Even-dominating in G′. As all ECs in G′ are ECs in G, therefore E is also Even-dominating in G. ⊓⊔
+
+For each E = ( SE , Av E ) ∈ BMEC (W ′
+
+> □
+
+, Av ′), we set the value ℓi(s) for each 
+
+s ∈ SE to be the maximum of ℓi(s) and the exit value Exit △(E, ℓ i) from E for Odd, defined below. 
+
+Definition 4.4 (exit value Exit ). Let G be an SPG as in Definition 2.2, 
+
+E = ( SE , Av E ) be an EC as in Definition 2.5, and f : S → [0 , 1] be a function. 12 K. Phalakarn and I. Hasuo 
+
+The exit values Exit □ and Exit △ with respect to E and f are defined as 
+
+Exit □(E, f ) := max {ϕf (s, a ) : s ∈ SE ∩ S□, a ∈ Av (s) \ Av E (s)},
+
+Exit △(E, f ) := min {ϕf (s, a ) : s ∈ SE ∩ S△, a ∈ Av (s) \ Av E (s)}
+
+with the convention that max ∅ = 0 and min ∅ = 1 .Dually, for each E = ( SE , Av E ) ∈ BMEC (W ′△, Av ′), it is Odd-dominating in both G′ and G. We set the value ui(s) for s ∈ SE to be min( ui(s), Exit □(E, u i)) .The while loop repeats until ℓi(sinit ) and ui(sinit ) are close within 2ε, at which point the algorithm stops and returns the middle point 12 (ℓi(sinit ) + ui(sinit )) .
+
+4.3 Example 
+
+We present a detailed example of executing SPG-BVI (Algorithm 2) with the SPG from Figure 1 (left). 
+
+Example 4.5. Let G be the SPG from Figure 1 (left). We represent a function f :
+
+S → [0 , 1] by a tuple, namely f = ( f (□0), f (△1), f (□2), f (△2), f (□3), f (□4)) .The algorithm begins with ℓ0 = (0 , 0, 0, 0, 0, 0) and u0 = (1 , 1, 1, 1, 1, 1) .For i = 1 , ℓ1 ← Φℓ0 = ℓ0 and u1 ← Φu0 = u0. Under ℓ1 and u1, we have 
+
+Av ′ = Av (i.e., no actions are removed) and G′ = G. The winning sets of both players are W ′ 
+
+> □
+
+= {△ 2, □4} and W ′△ = {□3}.The first Even-dominating BMEC is E = ( SE , Av E ) with SE = {△ 2} and 
+
+Av E : △2 7 → { α}. The exit value from E is Exit △(E, ℓ 1) = 1 (e.g., the set of exiting actions is empty). Thus, the algorithm sets ℓ1(△2) ← 1. Similarly, we have ℓ1(□4) ← 1 and u1(□3) ← 0. At the end of iteration i = 1 , we have 
+
+ℓ1 = (0 , 0, 0, 1, 0, 1) and u1 = (1 , 1, 1, 1, 0, 1) .For i = 2 , ℓ2 ← Φℓ1 = (0 .7, 0, 0.2, 1, 0, 1) and u2 ← Φu1 = (1 , 0.9, 1, 1, 0, 1) .The subgame G′ and its actions under Av ′ are shown in Figure 1 (middle). The winning sets of both players are W ′ 
+
+> □
+
+= {△ 2, □4} and W ′△ = {□0, △1, □2, □3}.The BMECs involving △2, □3, □4 do not result in any modifications of ℓ2 and 
+
+u2. When considering E = ( SE , Av E ) ∈ BMEC (W ′△, Av ′) with SE = {△ 1, □2}
+
+and Av E : △1 7 → { α} | □2 7 → { α}, it is Odd-dominating and Even must escape via β ∈ Av (□2) \ Av ′(□2). The exit value from E is Exit □(E, u 2) = 0 .2, hence we obtain u2(△1) ← 0.2 and u2(□2) ← 0.2. At the end of iteration i = 2 , we have ℓ2 = (0 .7, 0, 0.2, 1, 0, 1) and u2 = (1 , 0.2, 0.2, 1, 0, 1) .For i = 3 , the algorithm computes ℓ3 ← Φℓ2 = (0 .7, 0.2, 0.2, 1, 0, 1) and 
+
+u3 ← Φu2 = (0 .7, 0.2, 0.2, 1, 0, 1) . The subgame G′ and its actions under Av ′ are shown in Figure 1 (right). The winning sets of both players are W ′ 
+
+> □
+
+= {△ 2, □4}
+
+and W ′△ = {□3}. No further adjustments are made on both ℓ3 and u3. At the end of iteration i = 3 , we have ℓ3 = u3. Therefore, the while loop terminates. 
+
+4.4 Correctness and Convergence 
+
+We prove the correctness and convergence of our SPG-BVI algorithm (Algo-rithm 2) by showing that (i) ℓi ≤ ℓi+1 ≤ V ≤ ui+1 ≤ ui for all i ∈ N, and (ii) Value Iteration for Stochastic Parity Games 13 
+
+lim i→∞ ℓi = V = lim i→∞ ui. We only provide the proofs for the sequence ℓi.Similar arguments can be done for the sequence ui.
+
+Lemma 4.6. Assume the setting of Algorithm 2, E = ( SE , Av E ) be an EC, and 
+
+f : S → [0 , 1] be a function. Let f ′(s) := max( f (s), Exit △(E, f )) if s ∈ SE and 
+
+f ′(s) := f (s) otherwise. If f ≤ Φf , then f ′ ≤ Φf ′.Proof. Suppose f ≤ Φf . By the definition of f ′, we have f ≤ f ′. This implies 
+
+Φf ≤ Φf ′ by the monotonicity of Φ. If f ′(s) = f (s), then f ′(s) = f (s) ≤
+
+(Φ f )( s) ≤ (Φ f ′)( s). The remaining case is that s ∈ SE and f ′(s) = Exit △(E, f ).We distinguish cases whether s belongs to Even or Odd. If s ∈ SE ∩ S□, then there is an action ˆa ∈ Av E (s) where Post (s, ˆa) ⊆ SE
+
+(since E is an EC). Consider an arbitrary ˆa-successor s′, that is, s′ ∈ Post (s, ˆa),we have s′ ∈ SE and f ′(s′) ≥ Exit △(E, f ) by the definition of f ′. Hence, 
+
+ϕf ′ (s, ˆa) ≥ Exit △(E, f ). Therefore, 
+
+f ′(s) = Exit △(E, f ) ≤ ϕf ′ (s, ˆa) ≤ max  
+
+> a∈Av (s)
+
+ϕf ′ (s, a ) = (Φ f ′)( s).
+
+If s ∈ SE ∩ S△, then we consider each a ∈ Av (s) and distinguish whether 
+
+a ∈ Av E (s) or not. If a ∈ Av E (s), we have ϕf ′ (s, a ) ≥ Exit △(E, f ) as for 
+
+ˆa ∈ Av E (s) above. Otherwise, a ∈ Av (s) \ Av E (s). By the definition of the exit value (Definition 4.4), ϕf (s, a ) ≥ Exit △(E, f ). Since f ′ ≥ f , we have ϕf ′ (s, a ) ≥
+
+ϕf (s, a ) ≥ Exit △(E, f ). From both cases, we have ϕf ′ (s, a ) ≥ Exit △(E, f ) for any a ∈ Av (s). So, 
+
+f ′(s) = Exit △(E, f ) ≤ min  
+
+> a∈Av (s)
+
+ϕf ′ (s, a ) = (Φ f ′)( s). ⊓⊔
+
+Proposition 4.7. In the setting of Algorithm 2, ℓi ≤ Φℓi for all i ∈ N.Proof. We prove by induction on i. The base case i = 0 is trivially true as ℓ0 = ⊥.For the step case, we assume that the statement is true for i − 1: ℓi−1 ≤ Φℓi−1,and show that it is true for i.By the monotonicity of Φ and the induction hypothesis, we have Φℓi−1 ≤
+
+Φ(Φ ℓi−1). As Line 4 of Algorithm 2 performs ℓi ← Φℓi−1, this implies ℓi ≤ Φℓi
+
+after Line 4. Moreover, by Lemma 4.6, the update of ℓi in Line 9 preserves such property. Thus, ℓi ≤ Φℓi holds at the end of the iteration. ⊓⊔
+
+Proposition 4.8. In the setting of Algorithm 2, ℓi ≤ ℓi+1 for all i ∈ N.Proof. We instead show ℓi−1 ≤ ℓi for i > 0. First, Line 4 of Algorithm 2 performs 
+
+ℓi ← Φℓi−1. By Proposition 4.7, ℓi−1 ≤ Φℓi−1 = ℓi. Moreover, the update of ℓi in Line 9 is non-decreasing. Hence, ℓi−1 ≤ ℓi holds at the end of the iteration. ⊓⊔
+
+Lemma 4.9. In the setting of Algorithm 2, ℓi ≤ V for all i ∈ N.Proof. We prove by induction on i. The base case i = 0 is trivially true as ℓ0 = ⊥.For the step case, we assume that the statement is true for i − 1: ℓi−1 ≤ V , and show that it is true for i.14 K. Phalakarn and I. Hasuo 
+
+By the monotonicity of Φ and the induction hypothesis, we have Φℓi−1 ≤
+
+ΦV = V (cf. Definition 2.9). As Line 4 of Algorithm 2 performs ℓi ← Φℓi−1, this implies ℓi ≤ V after Line 4. The rest is to show that the update of ℓi in Line 9 preserves such property. Consider an EC E = ( SE , Av E ) ∈ BMEC (W ′
+
+> □
+
+, Av ′). By Lemma 4.3, E is Even-dominating in G, and staying in E results in the winning probability of 1
+
+(under some Even’s strategy). If an infinite path instead exits E, the winning probability is at least the value of the smallest exit of Odd, i.e., Exit △(E, ℓ i).Hence, all states in SE , either staying or exiting, have the winning probability of at least min(1 , Exit △(E, ℓ i)) = Exit △(E, ℓ i). Since ℓi ≤ V , Exit △(E, ℓ i) gives a lower bound for V(s), i.e., Exit △(E, ℓ i) ≤ V (s) for all s ∈ SE . As ℓi(s) ≤ V (s)
+
+and Exit △(E, ℓ i) ≤ V (s) for all s ∈ SE , we obtain max( ℓi(s), Exit △(E, ℓ i)) ≤V(s). Therefore, ℓi ≤ V holds at the end of the iteration. ⊓⊔
+
+By Proposition 4.8 and Lemma 4.9, the sequence ℓi is non-decreasing and bounded from above, so the limit lim i→∞ ℓi exists. The dual argument for ui is straightforward. 
+
+Definition 4.10. In the setting of Algorithm 2, we define ℓ∗ := lim i→∞ ℓi and 
+
+u∗ := lim i→∞ ui.
+
+Proposition 4.11. Assume the setting of Algorithm 2, and let Θ : [0 , 1] S ×
+
+[0 , 1] S → [0 , 1] S × [0 , 1] S denote the update performed in each iteration of the algorithm (i.e., Θ( ℓi, u i) = ( ℓi+1 , u i+1 )). Then, Θ( ℓ∗, u ∗) = lim i→∞ Θ( ℓi, u i).Proof. We work in the complete lattice ([0 , 1] S ×[0 , 1] S , ≤) where (f, g ) ≤ (f ′, g ′)
+
+if and only if f ≤ f ′ and g ≥ g′. We denote the difference between two pairs of functions by (f, g ) − (f ′, g ′) := max s∈S max(( f − f ′)( s), (g′ − g)( s)) .We first argue Θ( ℓ∗, u ∗) ≥ lim i→∞ Θ( ℓi, u i). By Proposition 4.8, Θ is mono-tone. For any i ∈ N, because (ℓ∗, u ∗) ≥ (ℓi, u i), we obtain Θ( ℓ∗, u ∗) ≥ Θ( ℓi, u i).This implies Θ( ℓ∗, u ∗) ≥ lim i→∞ Θ( ℓi, u i).Next, for any given ϵ > 0, there exists a sufficiently large n ∈ N such that 
+
+(ℓ∗, u ∗) − (ℓn, u n) < ϵ . Moreover, when ϵ is small enough, one can show that the restricted actions Av ′ (cf. Line 5 of Algorithm 2) constructed under (ℓ∗, u ∗) and 
+
+(ℓn, u n) are the same. This results in the same subgame G′ being analyzed. By Definition 4.4, the exit value of each BMEC differs by at most ϵ between the two cases. Hence, we get Θ( ℓ∗, u ∗) − Θ( ℓn, u n) < ϵ .Now we prove Θ( ℓ∗, u ∗) = lim i→∞ Θ( ℓi, u i). Suppose for the sake of con-tradiction that this does not hold. Then, Θ( ℓ∗, u ∗) > lim i→∞ Θ( ℓi, u i). Let 
+
+ϵ := Θ( ℓ∗, u ∗) − lim i→∞ Θ( ℓi, u i) > 0. By the aforementioned argument with  
+
+> ϵ
+> 2
+
+> 0, there is n ∈ N giving Θ( ℓ∗, u ∗) − Θ( ℓn, u n) < ϵ 
+
+> 2
+
+. This contradicts the fact that this gap equals ϵ, since we have just shown it is strictly less than ϵ 
+
+> 2
+
+. ⊓⊔
+
+Proposition 4.12. Assume the setting of Proposition 4.11. Then, Θ( ℓ∗, u ∗) = (ℓ∗, u ∗), i.e., (ℓ∗, u ∗) is a fixed point of Θ.Proof. Following Proposition 4.11, we have 
+
+Θ( ℓ∗, u ∗) = lim  
+
+> i→∞
+
+Θ( ℓi, u i) = lim 
+
+> i→∞
+
+(ℓi+1 , u i+1 ) = lim 
+
+> i→∞
+
+(ℓi, u i) = ( ℓ∗, u ∗). ⊓⊔Value Iteration for Stochastic Parity Games 15 
+
+We now prove that ℓ∗ and u∗ indeed coincide, which implies ℓ∗ = V = u∗.The proof follows the principle captured by [36] called the maximality inheritance principle .
+
+Lemma 4.13. In the setting of Algorithm 2, ℓ∗ = u∗.Proof. Suppose ℓ∗̸ = u∗. Since Lemma 4.9 and its dual give ℓ∗ ≤ u∗, then there is s ∈ S with ℓ∗(s) < u ∗(s). Let M := {s† ∈ S : ∀s ∈ S, (u∗ − ℓ∗)( s†) ≥
+
+(u∗ − ℓ∗)( s)} ⊆ S be the gap maximizer set . Note that M is well-defined due to the finiteness of S. For each s† ∈ M , we now distinguish cases on whether 
+
+s† ∈ S□ or s† ∈ S△, and show that, in both cases, gap maximality is inherited under all actions a† ∈ Av ′(s†) defined in Line 5. Assume s† ∈ S□. Since u∗ = Φ u∗ (by Proposition 4.12 and Θ includes an application of Φ), each action a† ∈ Av ′(s†) gives u∗(s†) = ϕu∗ (s†, a †). However, this action a† can be suboptimal for ℓ∗, giving ℓ∗(s†) = max a∈Av (s†) ϕℓ∗ (s†, a ) ≥
+
+ϕℓ∗ (s†, a †). So, (u∗ − ℓ∗)( s†) ≤ ϕu∗ (s†, a †) − ϕℓ∗ (s†, a †) = ϕ(u∗−ℓ∗)(s†, a †) ≤(⋆)
+
+max s′∈Post (s†,a †)(u∗ − ℓ∗)( s′) ≤ (u∗ − ℓ∗)( s†), where the inequality ≤(⋆) is due to the average is no greater than the maximum. Hence, by squeezing, (u∗ −ℓ∗)( s†) = (u∗ − ℓ∗)( s′) for all s′ ∈ Post (s†, a †). Therefore, we have Post (s†, a †) ⊆ M for each a† ∈ Av ′(s†).Now assume s† ∈ S△. Since ℓ∗ = Φ ℓ∗ (by Proposition 4.12 and Θ includes an application of Φ), each action a† ∈ Av ′(s†) gives ℓ∗(s†) = ϕℓ∗ (s†, a †). However, this action a† can be suboptimal for u∗, giving u∗(s†) = min a∈Av (s†) ϕu∗ (s†, a ) ≤
+
+ϕu∗ (s†, a †). So, (u∗ − ℓ∗)( s†) ≤ ϕu∗ (s†, a †) − ϕℓ∗ (s†, a †) ≤ (u∗ − ℓ∗)( s†). Thus, by squeezing, (u∗ − ℓ∗)( s†) = ( u∗ − ℓ∗)( s′) for all s′ ∈ Post (s†, a †). Therefore, we have Post (s†, a †) ⊆ M for each a† ∈ Av ′(s†).Combining both cases, we obtain ∀s† ∈ M, ∀a† ∈ Av ′(s†), Post (s†, a †) ⊆ M .Since we restrict the available actions to Av ′ for the subgame G′, any infinite path in G′ starting from s† ∈ M remains in M . Hence, M contains a state that is Even-winning in G′ (i.e., M ∩W ′
+
+> □
+
+̸ = ∅) or M contains a state that is Odd-winning in G′ (i.e., M ∩ W ′△̸ = ∅) (or both). Without loss of generality, we assume the former case; a symmetric reasoning applies to the latter case. Suppose M ∩W ′
+
+> □
+
+̸ = ∅. Because there is an infinite path, starting from M ∩W ′
+
+> □
+
+and staying in M ∩ W ′ 
+
+> □
+
+under Av ′, that makes Even wins, such path must end in some EC, i.e., there is an EC E = ( SE , Av E ) ∈ BMEC (W ′
+
+> □
+
+, Av ′) with SE ⊆ M .By Lemma 4.3, E is Even-dominating in both G′ and G.We then consider the relationship between ℓ∗ and Exit △(E, ℓ ∗). If Odd can-not exit E (i.e., Av (s) \ Av ′(s) = ∅ for all s ∈ SE ∩ S△), then Exit △(E, ℓ ∗) = 1 
+
+by Definition 4.4. This implies ℓ∗(s) = 1 for all s ∈ SE , contradicting the as-sumption that ℓ∗(s) < u ∗(s) ≤ 1 for all s ∈ SE ⊆ M .Otherwise, if Odd can exit E, then the set X := {s ∈ SE ∩ S△ : Av (s) \
+
+Av ′(s)̸ = ∅} is non-empty. Let s♭ := arg min s∈X ℓ∗(s) be a state in X with small-est ℓ∗. By the definition of Av ′ and ℓ∗ = Φ ℓ∗, for any s ∈ X ⊆ S△, a′ ∈ Av ′(s),and a ∈ Av (s) \ Av ′(s), we have ϕℓ∗ (s, a ) > ϕ ℓ∗ (s, a ′) = min a′∈Av (s) ϕℓ∗ (s, a ′) = (Φ ℓ∗)( s) = ℓ∗(s) ≥ ℓ∗(s♭). Thus, Exit △(E, ℓ ∗) > ℓ ∗(s♭), and Line 9 modifies 
+
+ℓ∗(s♭). This contradicts Proposition 4.12 that ℓ∗ is a fixed point of Θ. ⊓⊔16 K. Phalakarn and I. Hasuo 
+
+Theorem 4.14. Our proposed SPG-BVI (G, s init , ε ) surely terminates and re-turns a value that is ε-close to V(sinit ) for all inputs. Proof. Follows immediately from Lemma 4.9 (and its dual) and Lemma 4.13. ⊓⊔
+
+4.5 Comparison with [28] 
+
+The structure of our proposed Algorithm 2 may appear similar to that of [28, Algorithm 2]; however, the underlying ideas differ fundamentally. We highlight the key distinctions below. Firstly, [28] relies on the existence of a strategy recommender [28, Definition 1]. A strategy recommender is a procedure that generates a sequence (σ□,i , σ △,i )
+
+such that, for some i ∈ N, the pair is optimal. Such recommenders can be constructed for a range of objectives, including reachability, safety, total reward, and mean-payoff, since these objectives can be characterized as least or greatest fixed points of suitable operators. However, this approach does not extend to parity objectives. In contrast, our algorithm and correctness proofs do not rely on a strategy recommender and depend solely on restricted actions Av ′.Secondly, [28] adjusts the two bound sequences using reasoning based on MDPs. For example, in constructing the bottom-up sequence ℓi, they fix a strat-egy for Maximizer, thereby inducing an MDP controlled only by Minimizer, and compute an optimal response for Minimizer. Since the fixed Maximizer’s strategy may be suboptimal, the resulting winning probabilities can be smaller, yielding a sound lower bound. By leveraging a strategy recommender, these fixed strategies eventually become optimal, ensuring convergence of the bounds. In contrast, rather than relying on MDP-based reasoning, we solve the quali-tative SPG problem (Problem 3.2) to determine the winning sets of both players within the restricted subgame G′. By systematically refining the bounds of these winning sets, we establish convergence of our algorithm without requiring a strategy recommender. From this perspective, our approach can be viewed as a generalization of [28]. 
+
+## 5 Conclusions and Future Work 
+
+We introduced the first BVI algorithm for SPGs, enabling the computation of winning probabilities under parity objectives with precision guarantees. A central difficulty is that, unlike reachability or safety objectives, its value function is not characterized as either the least or greatest fixed point of the Bellman operator. Our technique resolves this by combining qualitative analysis with quantitative updates. The resulting algorithm is sound and converges with guarantees. As future work, we aim to extend the framework to richer objectives, partic-ularly quantitative rewards. We also plan to develop a deeper lattice-theoretic foundation for the underlying procedure, with the goal of characterizing fixed point uniqueness and enabling systematic generalizations of the approach.  
+
+> Acknowledgments. This work is supported by the ASPIRE grant No. JPMJAP2301, JST.
+
+Value Iteration for Stochastic Parity Games 17 
+
+## References 
+
+1. de Alfaro, L.: Formal verification of probabilistic systems. Ph.D. thesis, Stanford University, USA (1997) 2. de Alfaro, L., Majumdar, R.: Quantitative solution of omega-regular games. J. Comput. Syst. Sci. 68 (2), 374–397 (2004) 3. Andersson, D., Miltersen, P.B.: The complexity of solving stochastic games on graphs. In: ISAAC 2009. LNCS, vol. 5878, pp. 112–121. Springer (2009) 4. Azeem, M., Evangelidis, A., Kretínský, J., Slivinskiy, A., Weininger, M.: Optimistic and topological value iteration for simple stochastic games. In: ATVA 2022. LNCS, vol. 13505, pp. 285–302. Springer (2022) 5. Azeem, M., Kretínský, J., Weininger, M.: Sound value iteration for simple stochas-tic games. In: GandALF 2025. EPTCS, vol. 428, pp. 29–44. Open Publishing As-sociation (2025) 6. Baier, C., Katoen, J.: Principles of model checking. MIT Press (2008) 7. Baranga, A.: The contraction principle as a particular case of Kleene’s fixed point theorem. Discret. Math. 98 (1), 75–79 (1991) 8. Berthon, R., Katoen, J., Zhou, Z.: A direct reduction from stochastic parity games to simple stochastic games. In: CONCUR 2025. LIPIcs, vol. 348, pp. 9:1–9:21. Schloss Dagstuhl - Leibniz-Zentrum für Informatik (2025) 9. Calude, C.S., Jain, S., Khoussainov, B., Li, W., Stephan, F.: Deciding parity games in quasi-polynomial time. SIAM J. Comput. 51 (2), 17–152 (2022) 10. Chatterjee, K., Henzinger, T.A.: Strategy improvement and randomized subexpo-nential algorithms for stochastic parity games. In: STACS 2006. LNCS, vol. 3884, pp. 512–523. Springer (2006) 11. Chatterjee, K., Henzinger, T.A.: Reduction of stochastic parity to stochastic mean-payoff games. Inf. Process. Lett. 106 (1), 1–7 (2008) 12. Chatterjee, K., Henzinger, T.A.: Value iteration. In: 25 Years of Model Checking. LNCS, vol. 5000, pp. 107–138. Springer (2008) 13. Chatterjee, K., Jurdzinski, M., Henzinger, T.A.: Simple stochastic parity games. In: CSL 2003. LNCS, vol. 2803, pp. 100–113. Springer (2003) 14. Chatterjee, K., Jurdzinski, M., Henzinger, T.A.: Quantitative stochastic parity games. In: SODA 2004. pp. 121–130. SIAM (2004) 15. Condon, A.: The complexity of stochastic games. Inf. Comput. 96 (2), 203–224 (1992) 16. Courcoubetis, C., Yannakakis, M.: Markov decision processes and regular events. IEEE Trans. Autom. Control. 43 (10), 1399–1418 (1998) 17. Eisentraut, J., Kelmendi, E., Kretínský, J., Weininger, M.: Value iteration for simple stochastic games: Stopping criterion and learning algorithm. Inf. Comput. 
+
+285 (Part), 104886 (2022) 18. Friedmann, O., Lange, M.: Solving parity games in practice. In: ATVA 2009. LNCS, vol. 5799, pp. 182–196. Springer (2009) 19. Fu, C., Hahn, E.M., Li, Y., Schewe, S., Sun, M., Turrini, A., Zhang, L.: EPMC gets knowledge in multi-agent systems. In: VMCAI 2022. LNCS, vol. 13182, pp. 93–107. Springer (2022) 20. Haddad, S., Monmege, B.: Interval iteration algorithm for MDPs and IMDPs. Theor. Comput. Sci. 735 , 111–131 (2018) 21. Hahn, E.M., Schewe, S., Turrini, A., Zhang, L.: A simple algorithm for solving qualitative probabilistic parity games. In: CAV 2016. LNCS, vol. 9780, pp. 291– 311. Springer (2016) 18 K. Phalakarn and I. Hasuo 22. Hahn, E.M., Schewe, S., Turrini, A., Zhang, L.: Synthesising strategy improvement and recursive algorithms for solving 2.5 player parity games. In: VMCAI 2017. LNCS, vol. 10145, pp. 266–287. Springer (2017) 23. Hartmanns, A., Junges, S., Quatmann, T., Weininger, M.: A practitioner’s guide to MDP model checking algorithms. In: TACAS 2023. LNCS, vol. 13993, pp. 469–488. Springer (2023) 24. Hartmanns, A., Junges, S., Quatmann, T., Weininger, M.: The revised practi-tioner’s guide to MDP model checking algorithms. Int. J. Softw. Tools Technol. Transfer (2026) 25. Jurdzinski, M., Lazic, R.: Succinct progress measures for solving parity games. In: LICS 2017. pp. 1–9. IEEE Computer Society (2017) 26. Jurdzinski, M., Paterson, M., Zwick, U.: A deterministic subexponential algorithm for solving parity games. SIAM J. Comput. 38 (4), 1519–1532 (2008) 27. Kelmendi, E., Krämer, J., Kretínský, J., Weininger, M.: Value iteration for simple stochastic games: stopping criterion and learning algorithm. In: CAV 2018. LNCS, vol. 10981, pp. 623–642. Springer (2018) 28. Kretínský, J., Meggendorfer, T., Weininger, M.: Stopping criteria for value iteration on stochastic games with quantitative objectives. In: LICS 2023. pp. 1–14. IEEE (2023) 29. Lehtinen, K.: A modal μ perspective on solving parity games in quasi-polynomial time. In: LICS 2018. pp. 639–648. ACM (2018) 30. Marden, J.R., Shamma, J.S.: Game theory and control. Annu. Rev. Control. Robotics Auton. Syst. 1, 105–134 (2018) 31. Martin, D.A.: The determinacy of Blackwell games. J. Symb. Log. 63 (4), 1565– 1581 (1998) 32. McNaughton, R.: Infinite games played on finite graphs. Ann. Pure Appl. Logic 
+
+65 (2), 149–184 (1993) 33. Meggendorfer, T., Weininger, M.: Playing games with your PET: extending the partial exploration tool to stochastic games. In: CAV 2024. LNCS, vol. 14683, pp. 359–372. Springer (2024) 34. Parys, P.: Parity games: Zielonka’s algorithm in quasi-polynomial time. In: MFCS 2019. LIPIcs, vol. 138, pp. 10:1–10:13. Schloss Dagstuhl - Leibniz-Zentrum für Informatik (2019) 35. Phalakarn, K., Takisaka, T., Haas, T., Hasuo, I.: Widest paths and global propa-gation in bounded value iteration for stochastic games. In: CAV 2020. LNCS, vol. 12225, pp. 349–371. Springer (2020) 36. Phalakarn, K., Tsai, Y.C., Hasuo, I.: Widest path games and maximality inheri-tance in bounded value iteration for stochastic games. In: ATVA 2025. LNCS, vol. 16145, pp. 109–131. Springer (2025) 37. Svorenová, M., Kwiatkowska, M.: Quantitative verification and strategy synthesis for stochastic games. Eur. J. Control 30 , 15–30 (2016) 38. Tushar, W., Yuen, C., Saha, T.K., Nizami, S., Alam, M.R., Smith, D.B., Poor, H.V.: A survey of cyber-physical systems from a game-theoretic perspective. IEEE Access 11 , 9799–9834 (2023) 39. Zielonka, W.: Infinite games on finitely coloured graphs with applications to au-tomata on infinite trees. Theor. Comput. Sci. 200 (1-2), 135–183 (1998) 40. Zielonka, W.: Perfect-information stochastic parity games. In: FoSSaCS 2004. LNCS, vol. 2987, pp. 499–513. Springer (2004)
