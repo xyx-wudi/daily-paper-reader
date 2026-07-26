@@ -1,0 +1,54 @@
+{
+  "label": "2026-07-26",
+  "date": "2026-07-26",
+  "generated_at": "2026-07-26T20:36:53",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202607/26/2607.19774v1-defer-to-plan-adaptive-multi-agent-fusion-for-end-to-end-v2x-driving",
+      "section": "deep",
+      "title_en": "Defer to Plan: Adaptive Multi-Agent Fusion for End-to-End V2X Driving",
+      "authors": "Nuoran Li, Zhang Zhang, Yueran Zhao, Tianze Wang, Chao Sun",
+      "date": "2026-07-22",
+      "pdf": "https://arxiv.org/pdf/2607.19774v1",
+      "score": "8.0",
+      "evidence": "端到端协作驾驶系统，多智能体融合",
+      "tldr": "针对V2X协同驾驶中现有协同感知方法仅优化模块级感知、无法有效服务规划控制的问题，提出端到端协同驾驶系统直接优化规划任务。采用MotionNetwork融合时序信息，注意力压缩空间特征为紧凑token，自回归解码器自适应融合多智能体特征，并引入MoE增强异构特征表示。在闭环评估中驾驶得分79.72，超越CoDriving基线3.33%，且保持通信高效。",
+      "tags": "query:marl",
+      "abstract_en": "Vehicle-to-everything-aided autonomous driving (V2X-AD) significantly enhances driving performance through information sharing. However, existing collaborative perception methods only optimize module-level perception capabilities and fail to effectively serve the ultimate planning and control tasks. We propose an end-to-end collaborative driving system that directly optimizes planning task performance. The system employs MotionNetwork to fuse historical temporal information, utilizes attention mechanisms to efficiently compress spatial features into compact tokens, and adaptively fuses multi-agent features through an autoregressive decoder. Additionally, we introduce Mixture-of-Experts (MoE) architecture to enhance the model's representation capacity for heterogeneous features. Experiments demonstrate that our method achieves a driving score of 79.72, surpassing the state-of-the-art CoDriving baseline (77.15) by 3.33% in closed-loop evaluation while maintaining communication efficiency.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/26/2607.16619v2-sage-a-socially-aware-generative-engine-for-heterogeneous-multi-agent-navigation",
+      "section": "quick",
+      "title_en": "SAGE: A Socially-Aware Generative Engine for Heterogeneous Multi-Agent Navigation",
+      "authors": "Lan Hu, Minghui Liwang, Wenbo Zhu, Xinlei Yi, Yiguang Hong, Xianbin Wang, Zhenzhen Jiao, Seyyedali Hosseinalipour",
+      "date": "2026-07-18",
+      "pdf": "https://arxiv.org/pdf/2607.16619v2",
+      "score": "7.0",
+      "evidence": "异构多智能体导航与不对称交互建模",
+      "tldr": "异构多智能体导航中，现有方法难以建模不对称交互和软性社会规范。本文提出SAGE，使用有向异构图和图变换器编码类型特定的交互，结合扩散模型联合预测和规划轨迹。推理时通过无训练的安全-社会能量引导优化轨迹，集成碰撞、运动学、任务进度和角色社会合规项。实验在ETH/UCY、SDD和合成数据集上验证了SAGE在提升安全性、社会合规性和任务性能方面的有效性，可扩展至20个机器人，并支持无需重训练的权衡控制。",
+      "tags": "query:marl",
+      "abstract_en": "Safe and socially compliant navigation in open human-robot environments requires robots to reason about heterogeneous participants with different dynamics, autonomy levels, and social roles. Existing trajectory prediction and planning methods often rely on homogeneous interaction assumptions or enforce only geometric collision constraints, making it difficult to jointly model asymmetric interactions, coupled prediction-planning, and soft social norms. This paper proposes SAGE, a socially-aware generative engine for heterogeneous multi-agent navigation. SAGE represents robots and surrounding entities as a directed heterogeneous graph and employs a Heterogeneous Graph Transformer (HGT) to encode type-specific asymmetric interactions. Conditioned on the resulting context, a diffusion-based generative module jointly models future entity trajectories and robot trajectory plans. During inference, a training-free safety-social energy guidance mechanism refines sampled robot trajectories using differentiable collision, kinematic, task-progress, and role-conditioned social-compliance terms. Extensive experiments on real-world (ETH/UCY and SDD) and synthetic datasets verify the effectiveness of SAGE in improving safety and social compliance while maintaining task performance. The proposed guidance mechanism consistently reduces collision and social-violation rates, scales to teams of up to 20 robots, and enables explicit control of the safety-accuracy-task trade-off without retraining. These findings demonstrate the potential of SAGE as a scalable framework for socially-aware multi-agent navigation in complex environments.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/26/2607.16999v1-counterfactual-shapley-credit-assignment",
+      "section": "quick",
+      "title_en": "Counterfactual Shapley Credit Assignment",
+      "authors": "Mingxuan Li, Kaizhan-Lee, Elias Bareinboim",
+      "date": "2026-07-18",
+      "pdf": "https://arxiv.org/pdf/2607.16999v1",
+      "score": "7.0",
+      "evidence": "多智能体强化学习的信用分配",
+      "tldr": "针对强化学习中的信用分配问题，现有方法难以区分技能与运气的影响。本文提出反事实Shapley信用分配，基于因果理论定义φ-value来归因奖励，解决了稀疏因果、高随机性和延迟奖励三大挑战。结合φ-PPO和优先轨迹回放，在困难环境中实现了精准归因和优越的样本效率。",
+      "tags": "query:marl",
+      "abstract_en": "The Credit Assignment Problem (CAP) is fundamental to developing efficient and explainable Reinforcement Learning (RL) agents. Existing frameworks, whether relying on temporal contiguity or hindsight-conditioned reward reweighting, frequently fail to attribute properly between an agent's policy (skill) and environmental stochasticity (luck). A principled approach to CAP must isolate the true causal drivers of observed outcomes from spurious correlations and environmental randomness. We introduce Counterfactual Shapley Credit Assignment, a novel framework grounded in causal theory that attributes credit and blame via the Counterfactual Shapley Value ($φ$-value). By redistributing environmental rewards, $φ$-values enhance temporal credit assignment across three critical dimensions: sparse causality, high stochasticity, and delayed rewards, all while preserving the optimal policy. We derive a consistent estimator that computes $φ$-values efficiently, enabling a new class of policy gradient methods, $φ$-PPO, combined with Prioritized Trajectory Replay (PTR). Empirical results demonstrate that $φ$-values align precisely to the ground truth causes of task rewards with superior sample efficiency in challenging environments where prior state-of-the-art methods fail to converge.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
