@@ -6,29 +6,30 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-26
-- 运行时间：2026-07-26 20:36:44 UTC
+- 最新运行日期：2026-07-27
+- 运行时间：2026-07-27 21:10:53 UTC
 - 运行状态：成功
 - 本次总论文数：3
-- 精读区：1
-- 速读区：2
+- 精读区：3
+- 速读区：0
 
 ### 今日简报（AI）
-今日精选3篇前沿研究，聚焦车联网多智能体融合、社会感知导航及信用分配机制。最值得关注的是精读文章《Defer to Plan: Adaptive Multi-Agent Fusion for End-to-End V2X Driving》（8.0分），其自适应融合策略为端到端V2X驾驶提供了新范式。建议优先阅读该文，并留意反事实Shapley信用分配如何提升多智能体系统的可解释性。
-- 详情：[/202607/26/README](/202607/26/README)
+今日精读2篇论文，重点聚焦方差缩减Q学习在静态与动态网络中的表现，以及轻量级多智能体强化学习用于稀疏信号空中网络的弹性覆盖。最值得关注的是：方差缩减技术可有效提升Q学习在网络环境下的收敛效率；轻量级MARL为无人机网络在信号稀疏场景下的弹性覆盖提供了可行方案。建议普通读者从这两篇入手，了解强化学习在实际分布式系统中的性能优化方向。
+- 详情：[/202607/27/README](/202607/27/README)
 
 ### 精读区论文标签
-1. [Defer to Plan: Adaptive Multi-Agent Fusion for End-to-End V2X Driving](/202607/26/2607.19774v1-defer-to-plan-adaptive-multi-agent-fusion-for-end-to-end-v2x-driving)  
+1. [Variance-Reduced Q-Learning over Static and Time-Varying Networks](/202607/27/2607.21876v1-variance-reduced-q-learning-over-static-and-time-varying-networks)  
+   标签：评分：9.0/10、query:marl
+   evidence：基于网络的分散式Q学习与方差减少
+2. [Predictive Lightweight MARL for Resilient Coverage in Sparse-Signaling Aerial Networks](/202607/27/2607.22109v1-predictive-lightweight-marl-for-resilient-coverage-in-sparse-signaling-aerial-networks)  
    标签：评分：8.0/10、query:marl
-   evidence：端到端协作驾驶系统，多智能体融合
+   evidence：合作多智能体强化学习在无人机覆盖中的应用
+3. [One Hand Watches The Other: Dynamic Multi-Agent Cooperation for Sample-Efficient Bimanual Manipulation in Dynamic Environments](/202607/27/2607.22119v1-one-hand-watches-the-other-dynamic-multi-agent-cooperation-for-sample-efficient-bimanual-manipulation-in-dynamic-environments)  
+   标签：评分：8.0/10、query:marl
+   evidence：动态多智能体协作用于双臂操作
 
 ### 速读区论文标签
-1. [SAGE: A Socially-Aware Generative Engine for Heterogeneous Multi-Agent Navigation](/202607/26/2607.16619v2-sage-a-socially-aware-generative-engine-for-heterogeneous-multi-agent-navigation)  
-   标签：评分：7.0/10、query:marl
-   evidence：异构多智能体导航与不对称交互建模
-2. [Counterfactual Shapley Credit Assignment](/202607/26/2607.16999v1-counterfactual-shapley-credit-assignment)  
-   标签：评分：7.0/10、query:marl
-   evidence：多智能体强化学习的信用分配
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
