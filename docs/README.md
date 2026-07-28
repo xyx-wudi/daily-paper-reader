@@ -6,27 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-27
-- 运行时间：2026-07-27 21:10:53 UTC
+- 最新运行日期：2026-07-28
+- 运行时间：2026-07-28 21:40:15 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：3
+- 本次总论文数：5
+- 精读区：5
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读2篇论文，重点聚焦方差缩减Q学习在静态与动态网络中的表现，以及轻量级多智能体强化学习用于稀疏信号空中网络的弹性覆盖。最值得关注的是：方差缩减技术可有效提升Q学习在网络环境下的收敛效率；轻量级MARL为无人机网络在信号稀疏场景下的弹性覆盖提供了可行方案。建议普通读者从这两篇入手，了解强化学习在实际分布式系统中的性能优化方向。
-- 详情：[/202607/27/README](/202607/27/README)
+今日精读5篇论文，两篇9.0高分分别聚焦连续动作空间的自我进化默认动作和无人机辅助车联网的分布式多智能体强化学习。
+
+最值得看的方向：连续动作空间下的自进化默认动作机制，以及UAV-IoT-VANET中轨迹规划与路由增强的分布式MARL方法。
+
+建议深入研究这两篇论文的核心算法与场景适配，尤其是自我进化策略如何提升连续任务协同效率。
+- 详情：[/202607/28/README](/202607/28/README)
 
 ### 精读区论文标签
-1. [Variance-Reduced Q-Learning over Static and Time-Varying Networks](/202607/27/2607.21876v1-variance-reduced-q-learning-over-static-and-time-varying-networks)  
+1. [A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space](/202607/28/2607.18597v3-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space)  
    标签：评分：9.0/10、query:marl
-   evidence：基于网络的分散式Q学习与方差减少
-2. [Predictive Lightweight MARL for Resilient Coverage in Sparse-Signaling Aerial Networks](/202607/27/2607.22109v1-predictive-lightweight-marl-for-resilient-coverage-in-sparse-signaling-aerial-networks)  
+   evidence：SAFE：使用自演化默认动作的连续空间合作任务MARL框架
+2. [TRUAV: Distributed Multi-Agent Reinforcement Learning for Trajectory Planning and Routing Enhancement in UAV-Aided IoT-Enabled VANETs](/202607/28/2607.23734v1-truav-distributed-multi-agent-reinforcement-learning-for-trajectory-planning-and-routing-enhancement-in-uav-aided-iot-enabled-vanets)  
+   标签：评分：9.0/10、query:marl
+   evidence：使用独立Q学习的分布式MARL框架TRUAV用于无人机轨迹规划
+3. [GNN-based Multi-Agent Control of Traffic Shockwaves in Sparse Vehicular Ad-hoc Networks](/202607/28/2607.23792v1-gnn-based-multi-agent-control-of-traffic-shockwaves-in-sparse-vehicular-ad-hoc-networks)  
+   标签：评分：9.0/10、query:marl
+   evidence：基于GNN的去中心化多智能体强化学习交通控制
+4. [Decentralised Consensus Learning Networks: SME Rotation Without Centralised Reward](/202607/28/2607.24416v1-decentralised-consensus-learning-networks-sme-rotation-without-centralised-reward)  
+   标签：评分：9.0/10、query:marl
+   evidence：提出基于共识的去中心化多智能体学习框架，无需集中式奖励
+5. [Focus Is All You Need: Adaptive Goal-aware Attention Orchestration for Multi-Agent Graph Systems](/202607/28/2607.23678v1-focus-is-all-you-need-adaptive-goal-aware-attention-orchestration-for-multi-agent-graph-systems)  
    标签：评分：8.0/10、query:marl
-   evidence：合作多智能体强化学习在无人机覆盖中的应用
-3. [One Hand Watches The Other: Dynamic Multi-Agent Cooperation for Sample-Efficient Bimanual Manipulation in Dynamic Environments](/202607/27/2607.22119v1-one-hand-watches-the-other-dynamic-multi-agent-cooperation-for-sample-efficient-bimanual-manipulation-in-dynamic-environments)  
-   标签：评分：8.0/10、query:marl
-   evidence：动态多智能体协作用于双臂操作
+   evidence：多智能体图系统中的注意力编排
 
 ### 速读区论文标签
 - 本次无速读推荐。
