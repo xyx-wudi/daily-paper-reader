@@ -6,40 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-28
-- 运行时间：2026-07-28 21:40:15 UTC
+- 最新运行日期：2026-07-29
+- 运行时间：2026-07-29 21:26:31 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：5
-- 速读区：0
+- 本次总论文数：4
+- 精读区：2
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读5篇论文，两篇9.0高分分别聚焦连续动作空间的自我进化默认动作和无人机辅助车联网的分布式多智能体强化学习。
-
-最值得看的方向：连续动作空间下的自进化默认动作机制，以及UAV-IoT-VANET中轨迹规划与路由增强的分布式MARL方法。
-
-建议深入研究这两篇论文的核心算法与场景适配，尤其是自我进化策略如何提升连续任务协同效率。
-- 详情：[/202607/28/README](/202607/28/README)
+今日精读两篇高分论文，聚焦智能体任务开放性学习与多无人机协同导航的核心突破。  
+最值得关注PLO框架解决任务开放环境下的指针学习，以及系统化多智能体强化学习在复杂环境中的协同控制。  
+建议结合这两篇的开放适应性策略与合同机制，思考如何提升多智能体系统的鲁棒性。
+- 详情：[/202607/29/README](/202607/29/README)
 
 ### 精读区论文标签
-1. [A Self-Evolving Default Action for Cooperative Tasks with Continuous Action Space](/202607/28/2607.18597v3-a-self-evolving-default-action-for-cooperative-tasks-with-continuous-action-space)  
+1. [PLATO: Pointer Learner for Agent and Task Openness](/202607/29/2607.25082v1-plato-pointer-learner-for-agent-and-task-openness)  
    标签：评分：9.0/10、query:marl
-   evidence：SAFE：使用自演化默认动作的连续空间合作任务MARL框架
-2. [TRUAV: Distributed Multi-Agent Reinforcement Learning for Trajectory Planning and Routing Enhancement in UAV-Aided IoT-Enabled VANETs](/202607/28/2607.23734v1-truav-distributed-multi-agent-reinforcement-learning-for-trajectory-planning-and-routing-enhancement-in-uav-aided-iot-enabled-vanets)  
+   evidence：使用指针网络和中心化GNN评论家的开放智能体系统MARL算法
+2. [Cooperative Multi-UAV Navigation in Complex Environments via Systematic Multi-Agent Deep Reinforcement Learning](/202607/29/2607.25754v1-cooperative-multi-uav-navigation-in-complex-environments-via-systematic-multi-agent-deep-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：使用独立Q学习的分布式MARL框架TRUAV用于无人机轨迹规划
-3. [GNN-based Multi-Agent Control of Traffic Shockwaves in Sparse Vehicular Ad-hoc Networks](/202607/28/2607.23792v1-gnn-based-multi-agent-control-of-traffic-shockwaves-in-sparse-vehicular-ad-hoc-networks)  
-   标签：评分：9.0/10、query:marl
-   evidence：基于GNN的去中心化多智能体强化学习交通控制
-4. [Decentralised Consensus Learning Networks: SME Rotation Without Centralised Reward](/202607/28/2607.24416v1-decentralised-consensus-learning-networks-sme-rotation-without-centralised-reward)  
-   标签：评分：9.0/10、query:marl
-   evidence：提出基于共识的去中心化多智能体学习框架，无需集中式奖励
-5. [Focus Is All You Need: Adaptive Goal-aware Attention Orchestration for Multi-Agent Graph Systems](/202607/28/2607.23678v1-focus-is-all-you-need-adaptive-goal-aware-attention-orchestration-for-multi-agent-graph-systems)  
-   标签：评分：8.0/10、query:marl
-   evidence：多智能体图系统中的注意力编排
+   evidence：基于多智能体深度强化学习的协作多无人机导航
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Commitment To Cooperation With Self-Negotiated Contracts](/202607/29/2607.22750v1-commitment-to-cooperation-with-self-negotiated-contracts)  
+   标签：评分：7.0/10、query:marl
+   evidence：通过自协商合约实现多智能体合作
+2. [Moral Hazard in Multi-Agent Language Models](/202607/29/2607.23982v1-moral-hazard-in-multi-agent-language-models)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体协同博弈中的隐藏行动问题
 
 
 <div class="dpr-home-promo-card">

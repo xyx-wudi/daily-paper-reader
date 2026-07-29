@@ -1,0 +1,69 @@
+{
+  "label": "2026-07-29",
+  "date": "2026-07-29",
+  "generated_at": "2026-07-29T21:26:36",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202607/29/2607.25082v1-plato-pointer-learner-for-agent-and-task-openness",
+      "section": "deep",
+      "title_en": "PLATO: Pointer Learner for Agent and Task Openness",
+      "authors": "Alireza Saleh Abadi, Leen-Kiat Soh, Daniel Alan Redder, Adam Eck, Prashant Doshi",
+      "date": "2026-07-27",
+      "pdf": "https://arxiv.org/pdf/2607.25082v1",
+      "score": "9.0",
+      "evidence": "使用指针网络和中心化GNN评论家的开放智能体系统MARL算法",
+      "tldr": "开放多智能体系统面临智能体和任务动态变化的挑战，现有方法仅部分处理。本文提出PLATO，结合指针网络的actor和GNN critic，支持变化动作空间和交互结构。在MOASEI山火压制领域，PLATO展现了比先进基线更优的性能和零样本泛化能力。贡献在于首个同时处理智能体开放性和任务开放性的无界MARL方法。",
+      "tags": "query:marl",
+      "abstract_en": "Open agent systems (OASYS) are increasingly prevalent in real-world domains where the sets of agents and tasks change unpredictably over time. Such openness, including agent openness (AO) and task openness (TO), poses a fundamental challenge to multi-agent reinforcement learning (MARL), which typically assumes fixed state and action spaces. Existing methods address openness only partially: padding and masking approaches introduce artificial bounds, while recent graph-based or hypergraph methods handle one dimension of openness but still depend on restrictive assumptions. In this paper, we introduce Pointer Learner for Agent and Task Openness (PLATO), a pointer-network-based actor combined with a centralized graph neural network (GNN) critic, trained with multi-agent proximal policy optimization under a centralized training and decentralized execution paradigm. Our pointer-based actor outputs distributions directly over the current task set. This directly supports changing action spaces without masking or retraining. Our GNN critic encodes agent-task interactions as a graph that changes shape with task and agent composition. Together, these components consider AO and TO without the boundedness of existing approaches. We formalize PLATO in a Task-and-Agent-Open Markov Game (TaAgO-MG), extending prior task-open formulations, and prove it is well-defined over the resulting unbounded state and action spaces. We evaluate PLATO with the Methods for Open Agent Systems Evaluation Initiative (MOASEI) wildfire suppression domain, an environment designed for open multi-agent system evaluation, and we demonstrate strong performance and more consistent zero-shot generalization than state-of-the-art baselines in OASYS.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/29/2607.25754v1-cooperative-multi-uav-navigation-in-complex-environments-via-systematic-multi-agent-deep-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Cooperative Multi-UAV Navigation in Complex Environments via Systematic Multi-Agent Deep Reinforcement Learning",
+      "authors": "Yu Su, Nabil Aouf",
+      "date": "2026-07-28",
+      "pdf": "https://arxiv.org/pdf/2607.25754v1",
+      "score": "9.0",
+      "evidence": "基于多智能体深度强化学习的协作多无人机导航",
+      "tldr": "多无人机在复杂环境中的协同导航面临局部最优陷阱、稀疏奖励和跨场景泛化不足等挑战。本文提出基于多智能体深度强化学习的系统框架，通过组合记忆机制、分层演示利用和安全课程调度等方法，有效提升协作成功率与导航鲁棒性。在混合静态-动态障碍场景下实现零样本泛化，显著增强适应动态扰动的能力。该工作为多无人机自主协同提供了实用方案。",
+      "tags": "query:marl",
+      "abstract_en": "Cooperative navigation of multi-agent UAVs in complex environments faces key challenges including local optima traps, sparse rewards, learning imbalance among agents, and insufficient cross-scenario generalisation. This paper proposes a multi-agent deep reinforcement learning framework that addresses these issues through coordinated exploration, demonstration exploitation, safe curriculum scheduling, and structure-aware generalisation. First, a perception mechanism combining memory of visited states, directional novelty estimates, and penalty backpropagation enables agents to proactively detect and escape local optima. Second, a hierarchical collaborative demonstration buffer with tiered behaviour cloning manages trajectories by degree of team collaboration and applies differential supervision to the actor network, improving demonstration utilisation under sparse collaborative signals. Third, a safety-aware dual-condition curriculum scheduling mechanism reviews mastered scenarios through back-testing and experience pre-filling during training, suppressing catastrophic forgetting while ensuring both task performance and flight safety. For generalisation, local geometric features computed from sensor readings are abstracted into a domain parameter, through which a structure-aware gating network and mixture-of-experts mechanism condition the policy on local structural patterns rather than scenario-specific coordinates, enabling cross-scenario transfer without exposure to the target environment. The framework is further validated under mixed static-dynamic obstacle settings, showing robust adaptability to dynamic disturbances. Simulation results confirm strong performance in collaboration success rate, navigation robustness, zero-shot cross-scenario generalisation, and dynamic environment adaptability.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/29/2607.22750v1-commitment-to-cooperation-with-self-negotiated-contracts",
+      "section": "quick",
+      "title_en": "Commitment To Cooperation With Self-Negotiated Contracts",
+      "authors": "Tim Wyse, Kaitlin Bustos, Yulia Volkova, Max Kleiman-Weiner",
+      "date": "2026-07-23",
+      "pdf": "https://arxiv.org/pdf/2607.22750v1",
+      "score": "7.0",
+      "evidence": "通过自协商合约实现多智能体合作",
+      "tldr": "多智能体合作面临早期成本与延迟收益的错配，易产生背叛动机。受人类合同制度启发，本文让LLM智能体在CT游戏中自我协商合同，合同形式从形式化代码到自然语言。采用不同大小和提供商的LLM评估，自协商合同显著提升合作收益，优于常规交易。该机制为AI协作提供了基于承诺的可行方案。",
+      "tags": "query:marl",
+      "abstract_en": "As AI agents operate with increasing autonomy in a multi-agent world, they will need to learn to cooperate with other agents and with humans to generate mutual benefits. However, cooperation is a challenge because the costs of cooperation are often incurred early on, but the benefits are only realized later, creating an incentive to defect. How can AI agents cooperate with commitment? Here, we draw on inspiration from legal institutions and contracting that human societies have used to solve principal-agent problems of this kind. Contracts provide observable representations of agreements that enable credible commitments through the enforcement of terms. We study the role of contract-based cooperation using LLM-based agents in \\CT, a spatial-temporal game that combines bargaining with navigation towards a goal. We study a suite of contract representations that range from formal contracts that compile to code to natural contracts that require reinterpretation. We evaluate agents with a range of LLM backbones using different sizes and providers. We find that self-negotiated contracts can improve cooperative outcomes beyond what is possible with regular trading.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/29/2607.23982v1-moral-hazard-in-multi-agent-language-models",
+      "section": "quick",
+      "title_en": "Moral Hazard in Multi-Agent Language Models",
+      "authors": "Dane Malenfant",
+      "date": "2026-07-27",
+      "pdf": "https://arxiv.org/pdf/2607.23982v1",
+      "score": "6.0",
+      "evidence": "多智能体协同博弈中的隐藏行动问题",
+      "tldr": "多智能体协作中，个体付出成本披露信息但主要惠及他人，存在道德风险。本文引入对话道德风险博弈模拟此结构，评估七个开源模型的行为分解。基础模型常保留局部奖励而不查询或查询不传递信息；优化方法效果异质，仅OLMo-7B实现机制一致的权重改进，GEPA可能提高团队成功但减少查询。贡献在于揭示优化可能改变聚合奖励而未恢复预期协作机制，强调评估应报告机制级行为而非仅团队成功。",
+      "tags": "query:marl",
+      "abstract_en": "Cooperation can fail when socially valuable effort is costly, weakly observable, and mainly benefits others. Drawing on Holmström's team moral-hazard model, we introduce the Dialogue Moral Hazard Game, a controlled textual game that operationalizes this hidden-action structure for language agents. In each episode, an agent can preserve an immediate local reward or pay a query cost to reveal a hidden safety fact that primarily helps another agent's downstream decision. We evaluate seven open-weight language models and decompose behavior into query use, realized information transfer, local-reward preservation, unsafe choice, format validity, and team success. Base models commonly preserve local reward without team success or query without communicating information that changes the final decision. We then use supervised fine-tuning, RLOO, sequential SFT+RLOO, and GEPA prompt optimization as diagnostic update mechanisms. Their effects are heterogeneous: OLMo-7B shows the clearest mechanism-consistent weight-level improvement, whereas GEPA sometimes improves team success while reducing or eliminating costly queries. Thus, optimization can shift aggregate reward without recovering the intended cooperative mechanism, motivating evaluations that report mechanism-level behavior rather than team success alone.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
