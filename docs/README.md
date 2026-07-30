@@ -6,34 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-29
-- 运行时间：2026-07-29 21:26:31 UTC
+- 最新运行日期：2026-07-30
+- 运行时间：2026-07-30 20:54:32 UTC
 - 运行状态：成功
-- 本次总论文数：4
-- 精读区：2
+- 本次总论文数：5
+- 精读区：3
 - 速读区：2
 
 ### 今日简报（AI）
-今日精读两篇高分论文，聚焦智能体任务开放性学习与多无人机协同导航的核心突破。  
-最值得关注PLO框架解决任务开放环境下的指针学习，以及系统化多智能体强化学习在复杂环境中的协同控制。  
-建议结合这两篇的开放适应性策略与合同机制，思考如何提升多智能体系统的鲁棒性。
-- 详情：[/202607/29/README](/202607/29/README)
+今日推荐5篇论文，聚焦智能体开放性与多Agent协作方向，精读3篇。最值得关注的是《PLOER》（9.0分）提出的智能体开放学习新框架，以及《Learning Implicit Causal World Models》（8.0分）从多Agent演示中学习隐式因果世界模型。建议读者优先精读这两篇，了解开放环境智能体部署与多Agent因果建模的前沿方法。
+- 详情：[/202607/30/README](/202607/30/README)
 
 ### 精读区论文标签
-1. [PLATO: Pointer Learner for Agent and Task Openness](/202607/29/2607.25082v1-plato-pointer-learner-for-agent-and-task-openness)  
+1. [PLATO: Pointer Learner for Agent and Task Openness](/202607/30/2607.25082v2-plato-pointer-learner-for-agent-and-task-openness)  
    标签：评分：9.0/10、query:marl
-   evidence：使用指针网络和中心化GNN评论家的开放智能体系统MARL算法
-2. [Cooperative Multi-UAV Navigation in Complex Environments via Systematic Multi-Agent Deep Reinforcement Learning](/202607/29/2607.25754v1-cooperative-multi-uav-navigation-in-complex-environments-via-systematic-multi-agent-deep-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：基于多智能体深度强化学习的协作多无人机导航
+   evidence：使用集中式GNN评论家和指针网络演员的多智能体强化学习
+2. [Learning Implicit Causal World Models from Multi-Agent Demonstrations](/202607/30/2607.26336v1-learning-implicit-causal-world-models-from-multi-agent-demonstrations)  
+   标签：评分：8.0/10、query:marl
+   evidence：从多智能体演示中学习世界模型
+3. [UAV Swarming for Air-Ground ISAC via Cross-Region Cooperation](/202607/30/2607.26679v1-uav-swarming-for-air-ground-isac-via-cross-region-cooperation)  
+   标签：评分：8.0/10、query:marl
+   evidence：无人机群使用多智能体PPO进行合作感知与通信
 
 ### 速读区论文标签
-1. [Commitment To Cooperation With Self-Negotiated Contracts](/202607/29/2607.22750v1-commitment-to-cooperation-with-self-negotiated-contracts)  
+1. [From Proprietary to Open-Source: Bridging the Distribution Gap via Multi-Agent Protocol Distillation in Agentic Search](/202607/30/2607.24280v1-from-proprietary-to-open-source-bridging-the-distribution-gap-via-multi-agent-protocol-distillation-in-agentic-search)  
    标签：评分：7.0/10、query:marl
-   evidence：通过自协商合约实现多智能体合作
-2. [Moral Hazard in Multi-Agent Language Models](/202607/29/2607.23982v1-moral-hazard-in-multi-agent-language-models)  
+   evidence：多智能体协议蒸馏用于智能体搜索，涉及强化学习
+2. [Partner Capability Estimation for Task-Agnostic Adaptation in Ad-Hoc Teamwork](/202607/30/2607.27177v1-partner-capability-estimation-for-task-agnostic-adaptation-in-ad-hoc-teamwork)  
    标签：评分：6.0/10、query:marl
-   evidence：多智能体协同博弈中的隐藏行动问题
+   evidence：具有隐藏伙伴能力的多智能体临时团队中的去中心化执行
 
 
 <div class="dpr-home-promo-card">

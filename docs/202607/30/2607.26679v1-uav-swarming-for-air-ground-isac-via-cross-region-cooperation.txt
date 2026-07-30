@@ -1,0 +1,462 @@
+Title: UAV Swarming for Air-Ground ISAC via Cross-Region Cooperation
+
+URL Source: https://arxiv.org/pdf/2607.26679v1
+
+Published Time: Thu, 30 Jul 2026 00:40:19 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# UAV Swarming for Air-Ground ISAC via Cross-Region Cooperation 
+
+Linghui Miao, Shijian Gao The Hong Kong University of Science and Technology (Guangzhou), China 
+
+Abstract —To serve the volumetric air-ground space, uncrewed aerial vehicles (UAVs) are urgently needed. Yet, relying on them for integrated sensing and communication (ISAC) introduces two key challenges: 1) dynamic and imbalanced ground communica-tion demand, and 2) limited observation diversity for sensing. To address these issues, a cross-region cooperative framework is designed to coordinate UAV swarms. Specifically, a service-driven regional partitioning scheme is proposed to support traffic-aware UAV communication, and an adaptive handshaking mechanism is introduced to improve cooperative sensing accuracy by mitigating residual inter-region phase errors with controlled synchronization overhead. Based on these designs, a region-level multi-agent proximal policy optimization (MAPPO) framework with centralized training and decentralized execution (CTDE) is developed for cross-region cooperative decision-making. Simula-tion results demonstrate that the proposed method achieves a communication quality-of-service (QoS) of approximately 90% and reduces the Cram´ er-Rao bound (CRB) by about 45% compared to conventional baselines. 
+
+Index Terms —Air-ground networks, UAV swarms, multi-agent reinforcement learning, integrated sensing and communication, cross-region cooperation. 
+
+I. I NTRODUCTION 
+
+To support communication and sensing services in the volu-metric air-ground space, uncrewed aerial vehicles (UAVs) are emerging as key aerial nodes owing to their flexible deploy-ment, controllable three-dimensional mobility, and favorable line-of-sight air-ground links [1]. These features are well aligned with integrated sensing and communication (ISAC), supporting data transmission and target sensing over shared wireless resources [2]. Therefore, UAV-enabled ISAC has become a promising paradigm for low-altitude and mobile networks [3], [4]. Building on the mobility of UAV platforms, existing UAV-enabled ISAC studies have evolved from single-UAV designs to multi-UAV cooperation. Single-UAV-assisted ISAC systems have been studied through joint trajectory, reconfigurable intelligent surface (RIS) phase-shift, and resource-allocation optimization [5], [6]. However, a single UAV is inherently limited by its coverage range, onboard resources, and single-view sensing capability, which makes it difficult to scale to large-area or multi-user ISAC scenarios. To overcome these limitations, recent research has shifted toward multi-UAV co-operation, where properly exploiting collective spatial degrees of freedom can enhance both communication coverage and sensing accuracy in large-area and complex ISAC scenarios. Existing works have considered joint trajectory and resource allocation [7], [9], user association and beam management [8], and learning-based cooperative control for scalable multi-UAV decision-making [10]. While existing multi-UAV ISAC studies have advanced post-deployment UAV control, practical air-ground scenarios are also affected by spatially imbalanced and time-varying ground traffic demand. Related cluster-level coordination stud-ies on vehicular task offloading [11], space-air-ground task scheduling [12], and UAV mobility management [13] have shown that regional load heterogeneity is an important factor in network-level resource coordination. In UAV-enabled ISAC, such regional demand heterogeneity becomes coupled with sensing, since UAVs serving ground vehicles also act as sensing nodes. Meanwhile, relying only on UAVs near the target may restrict observation diversity, especially when these UAVs also need to maintain local communication services. Cooperative perception [14], distributed sensing [15], and network-level ISAC coordination [16] have demonstrated the benefits of multi-node cooperation for sensing enhancement. However, coherent sensing among distributed UAVs is sensi-tive to residual phase errors, and synchronization is recognized as a key factor in cooperative ISAC systems [17]. Motivated by these limitations, this paper proposes a cross-region cooperative UAV swarming framework for air-ground ISAC. In practical air-ground scenarios, ground vehicles are dynamically and unevenly distributed, leading to time-varying and imbalanced communication service demands across differ-ent regions. At the same time, accurate aerial-target sensing generally requires sufficient observation diversity among dis-tributed UAVs to establish favorable observation geometries. These two tasks are tightly coupled and often conflicting, since UAV positions and transmit powers affect both the quality of ground-user service and the effectiveness of sensing infor-mation acquisition. To address these issues, a service-driven regional partitioning scheme is first designed to divide the coverage area according to traffic-demand hotspots, enabling UAVs to better adapt their communication services to localized user demands. For sensing, cross-region UAV coordination is established for target localization, where an adaptive hand-shaking mechanism is introduced to mitigate residual inter-region phase errors with controlled synchronization overhead and energy cost. Based on these designs, a region-level multi-agent proximal policy optimization (MAPPO) framework with centralized training and decentralized execution (CTDE) is de-veloped for cross-region cooperative decision-making, aiming arXiv:2607.26679v1 [eess.SY] 29 Jul 2026 to balance communication quality-of-service (QoS), sensing accuracy, and UAV energy consumption. II. S YSTEM MODEL 
+
+As illustrated in Fig. 1, we consider an air-ground ISAC system supported by a UAV swarm, where UAVs serve ground vehicles and cooperatively sense an aerial target. Each UAV is equipped with a vertically downward directional antenna, and both main-lobe and side-lobe links are considered. Side-lobe links may contribute to cooperative sensing or cause inter-region communication interference. For tractability, each UAV beam is assumed to affect only its own service re-gion and neighboring regions. The service area is partitioned into M service-driven regions by Voronoi partitioning, where 
+
+M = {1, . . . , M } denotes the region set. The region centers correspond to representative service hotspots rather than in-stantaneous vehicle positions. Each region is associated with a subset of UAVs for local service, while the regional adjacency structure enables neighboring UAVs to assist aerial-target sensing. Inter-region handshaking is further used to reduce synchronization errors for coherent sensing. The system operates over discrete time slots t ∈ T =
+
+{1, . . . , T } with slot duration ∆t. Under the adopted slotted-time approximation, the positions of UAVs, vehicles, and the aerial target are treated as quasi-static within each slot and evolve across slots. Let N = {1, . . . , N } and U = {1, . . . , U }
+
+denote the overall sets of UAVs and ground vehicles, respec-tively. For region m ∈ M , let Nm ⊆ N denote the set of UAVs assigned to region m, and let Um(t) ⊆ U denote the set of ground vehicles associated with region m at slot t. The positions of UAV n, vehicle u, and the aerial target are denoted by ln(t) = [ xn(t), y n(t), z n(t)] T , qu(t) = [ xu(t), y u(t), 0] T ,and p(t) = [ xp(t), y p(t), z p(t)] T , respectively. To characterize cross-region interaction, let fMm denote the set of neighboring regions of region m. The neighboring-region UAV set asso-ciated with region m is defined as eNm = S  
+
+> ℓ∈fMm
+
+Nℓ. When the aerial target is located in region m, the effective sensing UAV set is given by 
+
+Cm = Nm ∪ eNm. (1) Based on the directional antenna model introduced above, 
+
+Θ denotes the half-power beamwidth of each UAV antenna. For a vehicle u ∈ U m(t), the off-boresight angle between the downward beam axis of UAV n and the link toward vehicle 
+
+u is denoted by ψn,u (t), where 
+
+cos ψn,u (t) = eTz (ln(t) − qu(t)) 
+
+∥ln(t) − qu(t)∥ , (2) and ez = [0 , 0, 1] T . The antenna gain between UAV n and vehicle u is modeled as 
+
+Gn,u (t) = 
+
+
+
+Gmain , n ∈ C m, ψ n,u (t) ≤ Θ/2,Gside , n ∈ C m, ψ n,u (t) > Θ/2,
+
+0, n / ∈ C m.
+
+(3) where Gmain and Gside denote the main-lobe and side-lobe gains, respectively. 𝜓 𝑧 𝑛  
+
+> sensing link sidelobe main lobe interference region 1 region 2
+> region 3
+> communication link
+
+Fig. 1: UAV-enabled ISAC system model with regional parti-tioning. UAVs move in response to ground-vehicle dynamics, while transmit power and handshaking frequency further affect sig-nal strength, energy consumption, and synchronization over-head. Therefore, UAV mobility, transmit power, and inter-region handshaking need to be jointly controlled to balance regional communication service, sensing accuracy, and energy consumption. III. U TILITY FUNCTIONS FOR UAV-S WARM ISAC Based on the system model described above, this section characterizes the utility functions for UAV-swarm ISAC, in-cluding communication service utility, cross-region coopera-tive sensing utility, and energy-aware utility, and then formu-lates the joint control problem. 
+
+A. Communication Service Utility 
+
+Let Pn(t) and Rn,u (t) denote the transmit power of UAV n
+
+and its distance to vehicle u, respectively. Under the line-of-sight (LoS) propagation assumption, the communication link follows the free-space path-loss model with carrier wavelength 
+
+λ ≈ c/f c, where c is the speed of light and fc is the carrier frequency. If UAV n serves kn(t) > 0 vehicles, its bandwidth and transmit power are equally allocated, i.e., B/k n(t) and 
+
+Pn(t)/k n(t) for each served vehicle. Vehicles served by the same UAV use orthogonal frequency resources, while UAVs in neighboring regions may reuse the same frequency resources and cause interference. Therefore, for UAV n ∈ Nm and vehicle u ∈ U m(t), the communication signal-to-interference-plus-noise ratio (SINR) is given by 
+
+γc
+
+> n,u
+
+(t) =  
+
+> Pn(t)
+> kn(t)
+
+Gn,u (t)
+
+ λ
+
+> 4πR n,u (t)
+
+2
+
+N0 Bkn(t) + P   
+
+> j∈C m\{ n}
+> Pj(t)
+> kj(t)
+
+Gj,u (t)
+
+ λ
+
+> 4πR j,u (t)
+
+2 , (4) where N0 denotes the additive white Gaussian noise (AWGN) power spectral density, B denotes the system bandwidth, and 
+
+kj (t) is the number of vehicles served by interfering UAV j.Accordingly, the achievable rate of vehicle u served by UAV 
+
+n is given by 
+
+Rc
+
+> n,u
+
+(t) = Bkn(t) log 2
+
+ 1 + γc
+
+> n,u
+
+(t) . (5) Each vehicle u ∈ U m(t) is associated with the UAV n ∈ N m
+
+that provides the largest SINR. For each UAV, the associated vehicles are then sorted in descending order of SINR. Due to equal bandwidth sharing, the maximum number of vehicles that UAV n can serve while satisfying Rth is denoted by 
+
+Kn(t). Let χu(t) ∈ {0, 1} denote the service satisfaction indicator of vehicle u, where χu(t) = 1 if vehicle u is admitted by its associated UAV and satisfies the minimum rate requirement, and χu(t) = 0 otherwise. The communication QoS of region m is defined as the satisfied service ratio: 
+
+Qm(t) = 1
+
+|U m(t)|
+
+X
+
+> u∈U m(t)
+
+χu(t). (6) 
+
+B. Cross-Region Cooperative Sensing Utility 
+
+We next formulate the cooperative sensing utility for the aerial target p. Assume that the target is located in region 
+
+m at slot t. The UAVs in region m and its neighboring regions participate in cooperative sensing. For UAV n ∈ C m,the antenna gain from UAV n to the aerial target is denoted by Gn,p (t), which follows the same directional antenna gain model as (3). The sensing signal-to-noise ratio (SNR) of UAV 
+
+n is modeled according to the monostatic radar link budget as γs
+
+> n
+
+(t) = Pn(t) Gn,p (t)2λ2σRCS 
+
+ (4 π)3 Rs
+
+> n,p
+
+(t)4N0B,where σRCS denotes the radar cross section (RCS) of the aerial target, and Rs
+
+> n,p
+
+(t) denotes the distance between UAV n and the aerial target at slot t.Cross-region coherent sensing is affected by residual phase errors among different regions. Local phase synchronization within each region is assumed to be maintained, and the target-located region m is taken as the phase-reference region. For each neighboring region ℓ ∈ fMm, the inter-region phase-error variance with respect to region m is expressed as    
+
+> σ2
+> ϵ,ℓ (t) = (2 πf c)2σ2
+> τ,ℓ (t) + (2 πT c)2σ2
+> f,ℓ (t) + σ2pn ,ℓ (t) + σ2cal ,ℓ (t),
+
+(7) where σ2
+
+> τ,ℓ
+
+(t), σ2
+
+> f,ℓ
+
+(t), σ2pn ,ℓ (t), and σ2cal ,ℓ (t) denote the variances of residual timing offset, carrier-frequency offset, oscillator phase noise, and calibration error, respectively. Inter-region handshaking periodically updates timing, fre-quency, and phase-reference information among neighboring regions. The residual phase error contains a non-trackable component caused by hardware impairments, estimation noise, quantization error, and oscillator phase noise, as well as a trackable component caused by timing offset, carrier-frequency offset, phase drift, and calibration latency. The former forms a residual error floor, whereas the latter decreases as the handshaking frequency increases. Thus, the residual inter-region phase-error variance is modeled as 
+
+σ2
+
+> ϵ,ℓ
+
+(t) = σ2 
+
+> ϵ,ℓ, 0
+
++ κℓ
+
+fH(t) , ℓ ∈ fMm, (8) where σ2 
+
+> ϵ,ℓ, 0
+
+denotes the residual phase-error floor that cannot be further reduced by increasing the handshaking frequency, and κℓ summarizes the handshaking-sensitive synchronization uncertainty caused by residual timing offset, carrier-frequency offset, slowly varying phase drift, and calibration latency. The residual inter-region phase errors affect the coherent sensing gain. For the target-located region m, the coherence factor is set to one, i.e., ηm(t) = 1 . For each neighboring region ℓ ∈ fMm, the coherence factor is modeled as ηℓ(t) = exp[ −σ2
+
+> ϵ,ℓ
+
+(t)/2] , which decreases with the residual phase-error variance. By accumulating the information contributions from UAVs in Cm, the Fisher information matrix (FIM) for target localization is given by 
+
+Js(t) = αcoh (t) X
+
+> n∈C m
+
+ιs
+
+> n
+
+(t)an(t)aTn (t), (9) where αcoh (t) is the coherent combining gain determined by the inter-region coherence factors, ιs
+
+> n
+
+(t) is the sensing information weight, and an(t) is the unit direction vector from UAV n to the target. The target localization accuracy is evaluated by the Cram´ er–Rao bound (CRB): 
+
+ΦCRB (t) = Tr 
+
+h
+
+(Js(t)) −1i
+
+. (10) 
+
+C. UAV-Swarm Energy Utility 
+
+Since UAVs need to adjust their positions according to the time-varying vehicle distribution and sensing geome-try, propulsion energy should be considered in addition to transmission energy [18]. Moreover, inter-region handshaking among UAVs is required to reduce synchronization errors for cross-region coherent sensing, which introduces additional handshaking energy consumption. For UAV n, let vn(t) = [ vn,x (t), v n,y (t), v n,z (t)] T denote its velocity at slot t. P fly  
+
+> n
+
+(t) is the propulsion power, so the propulsion energy of UAV n in slot t can be expressed as 
+
+Efly  
+
+> n
+
+(t) = P fly  
+
+> n
+
+(t)∆ t. Since each UAV transmits a unified ISAC signal, the transmission energy of UAV n is modeled as 
+
+Etx  
+
+> n
+
+(t) = Pn(t)∆ t. In addition, cross-region coherent sensing requires inter-region handshaking to update timing, frequency, and phase-reference information among participating regions. The handshake frequency fH(t) reduces the residual inter-region phase uncertainty, but it also consumes additional energy for signaling exchange. The handshaking energy is modeled as 
+
+EH(t) = ζHfH(t)∆ t, (11) where ζH is the energy coefficient that converts the handshak-ing frequency into synchronization-related power. D. Problem Formulation 
+
+For region m, the UAV velocity, transmit power, and handshaking frequency are jointly optimized to improve re-gional communication QoS, reduce the sensing CRB, and limit energy consumption. Let ωc, ωs, and ωe denote the weights of communication QoS, sensing accuracy, and energy consumption, respectively. The binary variable αm(t) ∈ { 0, 1}
+
+indicates whether region m participates in the cross-region cooperative sensing task at slot t, where αm(t) = 1 if region m participates in sensing and αm(t) = 0 otherwise. In addition, ηCRB and Emax are normalization constants for the sensing CRB and energy consumption, respectively. Then, the optimization problem is formulated as 
+
+P1:         
+
+> max
+> vn(t), P n(t),fH(t)
+> X
+> t∈T
+> "
+> ωcQm(t)−ωsαm(t) log(1 + Φ CRB (t))
+> ηCRB
+> −ωe
+> P
+> n∈N m
+>  Efly
+> n(t) + Etx
+> n(t)+αm(t)EH(t)
+> Emax
+> #
+
+s.t. ∥vn(t)∥ ≤ Vmax , ∀n ∈ N m, (12a) 
+
+0 ≤ Pn(t) ≤ Pmax , ∀n ∈ N m, (12b) 
+
+f min H ≤ fH(t) ≤ f max H , (12c) 
+
+zmin ≤ zn(t) ≤ zmax , ∀n ∈ N m, (12d) 
+
+lxy n (t) ∈ Ωm, ∀n ∈ N m, (12e) 
+
+∥ln(t) − lj (t)∥ ≥ dmin , ∀n, j ∈ N m, n ̸ = j, (12f) where the constraint (12a) restricts the UAV velocity, while (12b) and (12c) impose the feasible ranges of the transmit power and the handshaking frequency, respectively. Constraint (12d) keeps UAVs within the allowable altitude range. Con-straint (12e) ensures that the horizontal projection of each UAV remains inside its assigned service region, and (12f) guarantees the minimum safety distance between UAVs. Problem P1 is difficult to solve with conventional optimiza-tion methods due to its long-term objective, coupled decision variables, and non-convex constraints. The dynamic vehicle distribution further makes repeated real-time optimization impractical. Therefore, reinforcement learning is adopted to learn long-term control policies from environment interactions. Since the joint action space grows rapidly with the number of UAVs and each UAV makes decisions based on local observations, a multi-agent reinforcement learning (MARL) framework is employed for scalable cooperative decision-making. IV. C ROSS -R EGION COOPERATION VIA MARL This section presents the learning-based design for UAV-swarm cross-region cooperation. The Markov decision process is first formulated, followed by the cross-region cooperation mechanism and the MAPPO-based policy optimization proce-dure under the CTDE paradigm. 
+
+A. Region-Level Markov Decision Process 
+
+At each time slot t, each service region is treated as a local decision-making unit. The UAVs in Nm act as cooperative agents to serve local vehicles and, when required, contribute to cross-region cooperative sensing. The decision process of region m is modeled as a partially observable Markov decision process, characterized by (Sm, Om, Am, r m, P, γ ),where Sm is the centralized state space, Om is the local observation space, Am is the continuous action space, rm is the regional reward, P denotes the state transition probability, and γ ∈ (0 , 1) is the discount factor. For region m, the centralized state used by the critic is denoted by sm(t) ∈ S m and is constructed as 
+
+sm(t) = suav  
+
+> m
+
+(t), snbr  
+
+> m
+
+(t), sveh  
+
+> m
+
+(t), star  
+
+> m
+
+(t), ssync  
+
+> m
+
+(t) , (13) where the state includes intra-region UAV states, neighboring-region UAV states, regional vehicle-distribution information, target-related information, and synchronization/sensing feed-back such as fH(t), αm(t), ΦCRB (t), and the marginal CRB utility. For UAV n ∈ N m, the local observation used by the actor is denoted by on(t) ∈ O m and is given by 
+
+on(t) = oself  
+
+> n
+
+(t), oveh  
+
+> n
+
+(t), onbr  
+
+> n
+
+(t), otar  
+
+> n
+
+(t), ofb  
+
+> n
+
+(t) , (14) which contains the UAV’s self state, local vehicle information, neighboring-UAV information, target-related observation, and communication/sensing feedback. Each UAV outputs a con-tinuous action vector: 
+
+an(t) = {an,x (t), a n,y (t), a n,z (t), a n, H(t), a n,P (t)} , (15) where the first three dimensions control UAV mobility, an,P (t)
+
+controls the transmit power, and an, H(t) represents the local handshaking preference of UAV n. The regional reward fol-lows the objective in P1 . For region m, the reward at slot t is given by            
+
+> rm(t) = −Πm(t) + ωcQm(t)−ωsαm(t) log(1 + Φ CRB (t))
+> ηCRB
+> −ωe
+> P
+> n∈N m
+>  Efly
+> n(t) + Etx
+> n(t)+αm(t)EH(t)
+> Emax
+> ,
+
+(16) where Πm(t) denotes the penalty for violating constraints, including boundary violations and unsafe UAV distances. 
+
+B. Cross-Region Cooperation Mechanism 
+
+Based on the region-level actions defined above, we describe how cross-region cooperation is implemented in the proposed UAV-swarm cooperation framework. At each time slot, each region first performs local communication control for its own vehicles. When the aerial target is located in region m, the UAVs in the effective sensing set Cm participate in cooperative sensing. Thus, cross-region cooperation is implemented by allowing UAVs in neighboring regions to jointly adjust their mobility and transmit power for the sensing task, while still maintaining their local communication service. Specifically, UAVs in Nm provide the basic sensing observations from the target-located region, while UAVs in eNm provide additional sensing observations from neighboring regions. These UAVs act in a decentralized manner based on their local observations, but their actions jointly determine the sensing geometry, the inter-region interference, and the regional communication QoS. The sensing feedback, including the global CRB and the marginal CRB contribution of each participating region, is then used to guide subsequent cooperative decisions. To enable coherent sensing across regions, the participating UAVs further perform inter-region handshaking to reduce residual synchronization errors. Since handshaking is shared by the cooperative sensing process, UAV-specific handshaking frequencies are not used. Instead, each UAV outputs a local handshaking preference an, H(t), and these preferences are aggregated into a common handshaking action: 
+
+agH(t) = X 
+
+> i∈{ m}∪ fMm
+
+βH 
+
+> i
+
+(t) 1
+
+|N i|
+
+X
+
+> n∈N i
+
+an, H(t), (17) where βH 
+
+> i
+
+(t) is the normalized aggregation weight of region 
+
+i, and a larger weight is assigned to a region with a larger marginal CRB contribution. The aggregated action agH(t) is linearly mapped from [−1, 1] to [f min H , f max H ] to obtain the shared handshaking frequency fH(t).
+
+C. MAPPO-based Policy Optimization 
+
+Based on the regional reward in (16), MAPPO learns long-term control policies for UAV mobility, transmit power, and handshaking preference under the CTDE paradigm. The policy of each UAV is represented by an actor network 
+
+πθ (an(t)|on(t)) , which maps the local observation to a con-tinuous action distribution. Meanwhile, the centralized critic 
+
+Vψ (sm(t)) estimates the value function using the regional centralized state. The temporal-difference error is defined as 
+
+δt = rm(t) + γV ψ (sm(t + 1)) − Vψ (sm(t)) , (18) where γ ∈ (0 , 1) is the discount factor. The advantage function is estimated using generalized advantage estimation (GAE): 
+
+ˆAt = 
+
+> T−t−1
+
+X
+
+> l=0
+
+(γλ GAE )lδt+l, (19) where λGAE is the GAE parameter. The actor is updated using the clipped surrogate objective: 
+
+Lπ (θ) = Et
+
+h
+
+min 
+
+
+
+ρt(θ) ˆAt, clip ( ρt(θ), 1 − ϵppo , 1 + ϵppo ) ˆAt
+
+i 
+
+, (20) where ρt(θ) = πθ (an(t)|on(t)) /π θold (an(t)|on(t)) is the probability ratio between the current and old policies, and ϵppo 
+
+is the clipping parameter. The critic is trained by minimizing the value loss: 
+
+LV (ψ) = Et
+
+
+
+Vψ (sm(t)) − ˆRt
+
+2
+
+, (21) where ˆRt denotes the discounted return. V. S IMULATIONS 
+
+Simulations are conducted to evaluate the proposed region-level CTDE MAPPO method. The service area is a 1000 m ×
+
+1000 m square region partitioned into M = 5 service-driven regions. Each region is assigned two UAVs to support regional vehicular communication and cross-region cooperative sens-ing. The UAV altitude is constrained within [80 , 150] m , and 0200 400 600 800 1000        
+
+> X (m)
+> 0200 400 600 800 1000
+> Y (m)
+> 050 100 150
+> UAV Trajectory UAV-Target Link Start Position End Position Hotspots Target C0 (target) C1 (contributor) C2 (contributor) C3 (contributor) C4 (non-contributor) 1000 2000 3000 4000 5000 6000
+> Episode
+> 0510 15 20 25 30
+> Reward
+> Target -First Per-Cluster Reward
+> C0 C1 C2 C3 C4
+> Z (m)
+
+Fig. 2: 3-D UAV trajectories under cross-region cooperation. 1000 2000 3000 4000 5000 6000 
+
+Episode     
+
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> CRB
+> Without Handshaking Adaptive Handshaking Perfect Synchronization
+
+Fig. 3: CRB comparison under different synchronization set-tings. the maximum speed is 15 m /s. Fig. 2 illustrates the learned three-dimensional UAV trajectories. The learned policy does not simply drive all UAVs toward the target, but coordinates UAV mobility according to both local vehicle service and cross-region sensing geometry. The graph in the lower right corner further shows the reward convergence of each region. To evaluate the effectiveness of the handshaking mecha-nism, an ablation study is conducted under three synchroniza-tion settings: Without Handshaking, Adaptive Handshaking, and Perfect Synchronization. Without Handshaking removes inter-region synchronization enhancement, Adaptive Hand-shaking uses the learned handshaking frequency, and Perfect Synchronization serves as an ideal benchmark. As shown in Fig. 3, the Adaptive Handshaking scheme achieves a lower CRB than the Without Handshaking case and approaches the Perfect Synchronization benchmark. In the converged stage, Adaptive Handshaking reduces the CRB by about 45% com-pared with the Without Handshaking case. This verifies that the adaptive handshaking mechanism can effectively improve cross-region coherent sensing accuracy. As shown in Fig. 4, the proposed MAPPO method is com-pared with three benchmarks. Random Baseline selects actions randomly, and Greedy Baseline makes myopic decisions by selecting the action that maximizes the immediate reward at 0 250 500 750 1000 1250 1500 1750 2000 
+
+Episode 
+
+> 10 12 14 16 18 20 22 24
+> Reward
+
+Proposed MAPPO Without Handshaking Random Baseline Greedy Baseline (a) Reward convergence. 0 250 500 750 1000 1250 1500 1750 2000 
+
+Episode 
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> QoS
+
+Proposed MAPPO Without Handshaking Random Baseline Greedy Baseline 
+
+(b) QoS convergence. 
+
+Fig. 4: Performance comparison under different schemes. each step. Fig. 4(a) reports the reward averaged over all service regions, while Fig. 4(b) reports the global communication QoS over the entire service area. The proposed MAPPO method achieves the highest converged reward and rapidly improves the global QoS to approximately 89%. The QoS curves of MAPPO and Without Handshaking are the same because the handshaking frequency has no effect on communication QoS. In addition, the Greedy Baseline achieves the lowest observed QoS because its myopic step-wise decisions fail to capture the long-term communication-sensing tradeoff. VI. C ONCLUSION 
+
+This paper investigated an air-ground ISAC system sup-ported by a UAV swarm with cross-region cooperation. A service-driven regional partitioning scheme was designed to organize UAV service responsibility under imbalanced com-munication demand. In addition, an adaptive handshaking mechanism was introduced to characterize the trade-off be-tween cooperative sensing performance and synchronization energy cost. Subsequently, a region-level multi-agent learning framework was developed to jointly optimize the UAV motion and transmission resources. Simulation results demonstrated the effectiveness of the proposed method, achieving a com-munication QoS of approximately 90% and reducing the CRB by about 45% compared to conventional baselines. In future work, we will further investigate dynamic regional reconfiguration and flexible UAV-swarm cooperation in air-ground ISAC scenarios. REFERENCES [1] S. Gao et al. , “Integrated sensing, communication, and computation for low-altitude networks towards seamless connectivity and connected intelligence,” IEEE Internet of Things Magazine , vol. 9, no. 3, pp. 63–71, May 2026. [2] F. Liu et al. , “Integrated sensing and communications: Toward dual-functional wireless networks for 6G and beyond,” IEEE Journal on Selected Areas in Communications , vol. 40, no. 6, pp. 1728–1767, Jun. 2022. [3] J. Tang et al. , “Cooperative ISAC-empowered low-altitude economy,” 
+
+IEEE Transactions on Wireless Communications , vol. 24, no. 5, pp. 3837–3853, May 2025. [4] Z. Yang, S. Gao, X. Cheng, and L. Yang, “Synesthesia of machines (SoM)-enhanced ISAC precoding for vehicular networks with double dynamics,” IEEE Transactions on Communications , vol. 73, no. 9, pp. 7967–7984, Sept. 2025. [5] A. Amhaz, M. Elhattab, S. Sharafeddine, and C. Assi, “UAV-assisted NOMA for enhancing ISAC: A deep reinforcement learning solution,” 
+
+IEEE Communications Letters , vol. 29, no. 2, pp. 249–253, Feb. 2025. [6] A. M. Huroon et al. , “Multiagent deep reinforcement learning for AAV-RIS-assisted integrated sensing and communication,” IEEE Internet of Things Journal , vol. 12, no. 19, pp. 40083–40097, Oct. 2025. [7] Y. Qin, Z. Zhang, X. Li, W. Huangfu, and H. Zhang, “Deep reinforce-ment learning based resource allocation and trajectory planning in inte-grated sensing and communications UAV network,” IEEE Transactions on Wireless Communications , vol. 22, no. 11, pp. 8158–8169, Nov. 2023. [8] R. Zhang et al. , “A joint UAV trajectory, user association, and beam-forming design strategy for multi-UAV-assisted ISAC systems,” IEEE Internet of Things Journal , vol. 11, no. 18, pp. 29360–29374, Sept. 2024. [9] Y. Pan et al. , “Cooperative trajectory planning and resource allocation for UAV-enabled integrated sensing and communication systems,” IEEE Transactions on Vehicular Technology , vol. 73, no. 5, pp. 6502–6516, May 2024. [10] Q. Gao, R. Zhong, H. Shin, and Y. Liu, “MARL-based UAV trajectory and beamforming optimization for ISAC system,” IEEE Internet of Things Journal , vol. 11, no. 24, pp. 40492–40505, Dec. 2024. [11] Y. Hou, Z. Wei, R. Zhang, X. Cheng, and L. Yang, “Hierarchical task offloading for vehicular fog computing based on multi-agent deep rein-forcement learning,” IEEE Transactions on Wireless Communications ,vol. 23, no. 4, pp. 3074–3085, Apr. 2024. [12] Z. Wang, G. Sun, Y. Wang, H. Yu, and D. Niyato, “Cluster-based multi-agent task scheduling for space–air–ground integrated networks,” IEEE Transactions on Cognitive Communications and Networking , vol. 12, pp. 29–42, Mar. 2025. [13] I. A. Meer et al. , “Hierarchical multi-agent DRL-based dynamic cluster reconfiguration for UAV mobility management,” IEEE Transactions on Cognitive Communications and Networking , vol. 12, pp. 4957–4971, Dec. 2025. [14] Q. Wang, R. Chai, R. Sun, R. Pu, and Q. Chen, “ISAC-enabled multi-UAV cooperative perception and trajectory optimization,” IEEE Internet of Things Journal , vol. 11, no. 24, pp. 40982–40995, Dec. 2024. [15] K. Meng, C. Masouros, A. P. Petropulu, and L. Hanzo, “Cooperative ISAC networks: Performance analysis, scaling laws, and optimization,” 
+
+IEEE Transactions on Wireless Communications , vol. 24, no. 2, pp. 877– 892, Feb. 2025. [16] K. Meng, C. Masouros, G. Chen, and F. Liu, “Network-level inte-grated sensing and communication: Interference management and BS coordination using stochastic geometry,” IEEE Transactions on Wireless Communications , vol. 23, no. 12, pp. 19365–19381, Dec. 2024. [17] G. Liu et al. , “Cooperative sensing for ISAC: Challenges, system design, beam management, and performance validation,” IEEE Journal on Selected Areas in Communications , vol. 44, pp. 608–625, Sept. 2025. [18] Z. Wang, X.-P. Zhang, W. Ding, Y. Dong, and X. Chen, “A novel inte-grated sensing and communication scheme in UAVs-enabled vehicular networks with MARL-driven adaptive control,” IEEE Transactions on Mobile Computing , vol. 25, no. 1, pp. 132–147, Jan. 2025.
