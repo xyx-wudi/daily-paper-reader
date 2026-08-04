@@ -1,0 +1,2031 @@
+Title: MA-HEAD-Net: Adaptive Rule-Guided Multi-Agent DRL for AoI Minimization in UAV-Assisted Emergency Networks
+
+URL Source: https://arxiv.org/pdf/2608.01128v1
+
+Published Time: Tue, 04 Aug 2026 01:14:30 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# MA-HEAD-Net: Adaptive Rule-Guided Multi-Agent DRL for AoI Minimization in UAV-Assisted Emergency Networks 
+
+Yixin Zhang †, Zhuohui Yao †, Wenchi Cheng †, and Walid Saad ‡
+
+> †
+
+State Key Laboratory of Integrated Services Networks, Xidian University, Xi’an, China  
+
+> ‡
+
+Bradley Department of Electrical and Computer Engineering, Virginia Tech, Alexandria, VA, USA E-mail: yixinzhang@stu.xidian.edu.cn, yaozhuohui@xidian.edu.cn, wccheng@xidian.edu.cn, walids@vt.edu 
+
+Abstract —In post-disaster scenarios, unmanned aerial vehi-cles (UAVs) are critical for establishing emergency communi-cation networks. For time-critical rescue missions, information freshness is crucial, as decisions based on outdated data can lead to ineffective control actions. This paper investigates age of information (AoI) minimization for UAV-assisted emergency communications with heterogeneous emergency services. To char-acterize heterogeneous emergency services with bursty arrivals and different packet-size requirements, we model packet arrivals using a Markov-modulated Poisson process (MMPP) and adopt finite blocklength (FBL) theory to capture the coupling among transmission duration, packet completion, and AoI evolution. To balance delay-tolerant long-packet transmission and urgent short-packet response, we propose a mini-slot-embedded schedul-ing mechanism with adaptive checkpoint-interval selection. To solve the joint optimization problem of UAV trajectory control, user scheduling, and checkpoint-interval selection, we propose an adaptive rule-guided multi-agent deep reinforcement learn-ing (MADRL) framework, named Multi-Agent Hybrid Expert-Algorithmic Decision Network (MA-HEAD-Net). MA-HEAD-Net incorporates communication-domain rule priors into a gated multi-head policy, where adaptive gates adjust the influence of rule-prior logits and learned policy logits for different sub-tasks. The policy and gating components are jointly optimized under the multi-agent proximal policy optimization (MAPPO) training framework, enabling rule-guided decision making while preserving the flexibility of policy learning. Simulation results show that MA-HEAD-Net improves policy-formation efficiency compared with representative MADRL baselines and achieves better AoI performance than both learning-based and heuristic baselines, demonstrating its effectiveness in dynamic UAV-assisted emergency communication scenarios. 
+
+Index Terms —Unmanned aerial vehicle (UAV), emergency communications, age of information (AoI), trajectory optimiza-tion, adaptive rule-guided multi-agent deep reinforcement learn-ing (MADRL). 
+
+I. I NTRODUCTION 
+
+With the development of sixth-generation (6G) mobile net-works and the booming low-altitude economy (LAE), un-manned aerial vehicles (UAVs) have emerged as a promising technology for building intelligent and resilient aerial net-works. UAVs have been integrated into a diverse range of applications and industries, including logistics, agriculture, and urban transportation. Among these, UAV-assisted emergency communication is a particularly vital use case [1], [2]. In post-disaster scenarios where terrestrial communication infrastruc-ture is damaged or overloaded [3], [4], UAVs can establish reliable line-of-sight (LoS) links to provide on-demand and resilient connectivity [5], [6]. However, realizing the full potential of UAV networks is challenging due to dynamic environments, limited onboard energy, and strict real-time requirements. In time-critical rescue missions, especially within the golden 72 hours, information freshness is crucial [7]. Decisions based on outdated data, such as inaccurate information about survivor locations or environmental conditions, can lead to ineffective or incorrect control actions. Traditional metrics like delay fail to capture the timeliness of status updates. To this end, age of information (AoI) has been widely adopted as a more suitable performance metric to measure information freshness [8]. Moreover, emergency communication traffic is typically heterogeneous, consisting of delay-tolerant long packets and mission-critical short packets. The transmission of short packets requires special analysis under the finite blocklength (FBL) theory [9]. In the FBL regime, the decoding error probability is no longer negligible, thereby decreasing transmission reliability [10]. Therefore, minimizing AoI while ensuring reliability for mixed traffic types is crucial for robust decision-making in emergency UAV networks [11]. A number of studies have investigated AoI minimization in UAV-assisted networks. For single-UAV systems, iterative algorithms such as block coordinate descent (BCD) and suc-cessive convex approximation (SCA) are widely employed to jointly optimize hovering locations, visiting orders, and data collection duration for minimizing total AoI and energy consumption [12], [13]. Also, graph theory is utilized to plan trajectories for minimizing worst-case AoI in cellular-connected networks [14]. Furthermore, to handle large-scale networks with hybrid access protocols, meta-heuristic algo-rithms like particle swarm optimization (PSO) and genetic algorithms (GA) are adopted to solve high-dimensional trajec-tory design problems [15]. In multi-UAV scenarios, research extends to collaborative scheduling and conflict resolution. To manage the complexity of multi-agent coordination, density-based clustering combined with multi-population GA (MPGA) 979-8-3503-1090-0/23/$31.00 © 2023 IEEE arXiv:2608.01128v1 [cs.AI] 2 Aug 2026 is proposed to optimize task assignment and visiting sequences for minimizing peak and average AoI [16], [17]. For specific architectures, BCD is applied to optimize access control and beamforming in backscatter networks [18], while matching theory and Dinkelbach’s method are utilized for UAV de-ployment and trajectory planning in intelligent transportation systems [19]. However, these conventional approaches face several limitations in dynamic emergency scenarios [20]. First, iterative methods (e.g., SCA and BCD) and game-theoretic models typically rely on offline planning with the assump-tion of perfect global knowledge, which is unavailable in unpredictable disaster environments. Second, heuristic search algorithms (e.g., GA and PSO) suffer from the curse of dimensionality. As the number of UAVs grows, the search space expands rapidly, leading to large computational delays that prevent real-time re-planning. Third, methods based on static rules or matching theory lack the flexibility to adapt to environmental changes without re-running the entire optimiza-tion process. To address these challenges, deep reinforcement learning (DRL) has emerged as a promising solution, enabling UAVs to learn dynamic policies directly from interactions [21]. For single-UAV systems, [22] proposed a deep deterministic policy gradient (DDPG) approach to minimize AoI in urban environ-ments by optimizing trajectory and reconfigurable intelligent surface (RIS) phase shifts. To balance AoI and propulsion energy, [23] developed a twin-delayed DDPG (TD3) algorithm jointly optimizing flight speed and bandwidth allocation. Addi-tionally, [24] investigated off-policy and on-policy algorithms for minimizing the average sum AoI in RIS-assisted UAV networks by optimizing RIS phase shifts and UAV positioning. In the multi-UAV setting, the environment perceived by a single UAV changes dynamically as other UAVs update their policies simultaneously, which leads to the non-stationarity of the environment. Thus, multi-agent DRL (MADRL) has been proposed for decentralized cooperation. [25] developed a modified multi-agent DDPG (M2DDPG) to optimize trajectory and offloading policies for AoI minimization. Focusing on safety, [26] optimized cooperative trajectories under strict motion and collision constraints. To further enhance battery efficiency, [27] introduced a novel multi-team synchronization framework, where UAVs are divided into energy transmitters and data collectors, coordinated through MADRL to balance charging and sensing tasks. Furthermore, [28] proposed an MADRL-based UAV caching and energy management frame-work, where UAVs, unmanned ground vehicles (UGVs), RISs, and wireless power transfer are jointly integrated to optimize mobility, cache updating, and continuous service provisioning. For UAV-assisted emergency communication, low-latency performance depends not only on quick and reliable packet transmission, but also on whether the system can rapidly form effective scheduling and mobility decisions under changing AoI, traffic, channel, and mobility states. Despite the potential of DRL in handling such dynamic decision-making problems, relying solely on pure data-driven algorithms faces several limitations. The trial-and-error learning process often leads to high training costs and low sample efficiency, particu-larly in high-dimensional action spaces [29]. As a result, the policy may require a large number of interactions before learning effective low-latency scheduling behaviors. Further-more, unguided exploration poses severe safety risks, such as collisions or energy depletion, which are unacceptable in mission-critical emergency applications. Therefore, integrating domain knowledge into the learning module has emerged as a promising direction to improve policy-formation efficiency and reduce unsafe or inefficient exploration. Recent studies have explored several integration strategies. The first strategy imposes hard constraints via action masking. To ensure safety, the authors in [30] and [31] incorporated an action masking mechanism into MADRL frameworks, filtering out invalid actions (e.g., boundary violations or collisions) to ensure sat-isfaction of constraints. Similarly, the authors in [26] applied action masks to satisfy trajectory constraints under collision avoidance requirements in IoT networks. The second strategy utilizes reward shaping and task decomposition. To accelerate convergence, the authors in [32] incorporated prior knowledge into reward design to guide obstacle avoidance, while the authors in [33] proposed dynamic reward shaping based on state-action feedback to adaptively adjust guidance. Beyond scalar rewards, the authors in [34] introduced a multi-task MADRL framework, decomposing the complex resource al-location problem into sub-tasks to improve learning efficiency for AoI-aware networks. The third strategy adopts safe DRL algorithms. The authors in [35] proposed a safe DQN (SDQN)-based framework for AoI minimization, ensuring energy-safe UAV actions while balancing information freshness and energy consumption. In high-frequency bands, the authors in [36] and [37] adopted safe MADRL and safe TD3 algorithms, utilizing Lagrangian relaxation or cost critics to learn policies that satisfy safety thresholds. The fourth strategy combines imitation learning and generative knowledge guidance. To leverage expert demonstrations, the authors in [38] proposed an imitation-based DRL approach, using supervised learn-ing from radio maps to warm start the policy with expert demonstration data. To accelerate exploration, the authors in [39] developed a generative adversarial self-imitation learning (GASIL) algorithm, which generates high-quality expert-like demonstrations to guide the agent. The authors in [40] intro-duced a non-expert-policy-guided DRL approach to enhance obstacle avoidance without perfect expert demonstrations. Furthermore, the authors in [41] explored a lifelong DRL solution to transfer knowledge across non-stationary envi-ronments, which enables IoT devices to continuously adapt their policies to each new environment. The authors in [42] and [43] utilized behavior cloning (BC) to warm start agents for task assignment and deployment. Besides these methods, another line of studies directly combines external guidance with learned policies. Policy shaping uses human feedback to modify action preferences [44], while residual RL learns corrective control signals on top of a prior controller [45]. Jump-start reinforcement learning (JSRL) uses a guide policy to improve exploration [46], and soft action priors use teacher-like action priors for robust policy transfer [47]. However, existing knowledge-integrated RL methods still provide limited support for fast decision making in dynamic UAV-assisted emergency communication [48]. Action masking can ensure feasibility by removing unsafe or invalid actions, but it does not provide positive guidance among the remaining feasible actions. Reward shaping introduces prior knowledge through scalar feedback, and its effectiveness depends on the design and weighting of additional reward terms. Safe DRL improves constraint satisfaction, but usually requires penalty or safety-cost design and still relies on sufficient exploration before an effective policy is obtained. Imitation learning and BC can accelerate training, but they require expert trajectories and may be limited by the demonstrated behavior when the environment changes. Guidance-integrated methods are mainly designed for feedback integration, controller adaptation, ex-ploration improvement, or policy transfer. Their guidance is usually provided by human feedback, prior controllers, guide policies, or teacher policies, rather than being derived from the communication service process itself. As a result, these methods do not directly construct communication-domain rule priors from AoI evolution, packet urgency, UAV mobility, and service continuity. Therefore, they do not directly provide AoI-aware action guidance for dynamic multi-UAV emergency networks. Motivated by the above limitations, this paper develops MA-HEAD-Net as a lightweight adaptive rule-guided MADRL framework for dynamic multi-UAV emergency communica-tion. In addition to hard action masks for feasibility enforce-ment, MA-HEAD-Net constructs interpretable rule priors from the AoI-oriented communication process and converts them into state-dependent action-prior logits. These rule priors are designed according to AoI urgency, UAV mobility tendency, and service continuity, and are combined with learned pol-icy logits through decision-head-specific gates. In this way, domain knowledge provides direct action-level guidance with clear physical meanings, while the neural policy can still adapt through interaction. This design is intended to improve policy-formation efficiency and response timeliness in dynamic multi-UAV AoI optimization. The learned gates further indicate how the agents adjust their reliance on different rule priors across scheduling, movement, and checkpoint-interval decisions un-der dynamic network states, thereby providing an interpretable connection between communication-domain knowledge and neural policy learning. The main contributions are summarized as follows:  
+
+> •
+
+We establish a system model capturing heterogeneous traffic using a Markov-modulated Poisson process (MMPP) and finite blocklength (FBL) theory. To address the coexis-tence of delay-tolerant long packets and delay-sensitive short packets, we design a mini-slot-embedded scheduling mechanism with adaptive checkpoint-interval selection. By adjusting the checkpoint interval, the proposed mechanism changes the effective transmission segment length under the FBL model, thereby balancing long-packet transmission continuity and urgent short-packet preemption. We then formulate a multi-agent optimization problem to minimize long-term AoI by jointly optimizing user scheduling, UAV trajectory, and checkpoint-interval selection.  
+
+> •
+
+We develop MA-HEAD-Net, an adaptive rule-guided MADRL framework for UAV-assisted AoI minimization. While feasibility is ensured by action masks, MA-HEAD-Net further constructs interpretable communication-domain rule priors from the AoI-oriented decision process. These priors are transformed into state-dependent action-prior logits for user scheduling, UAV trajectory control, and checkpoint-interval selection, and are adaptively fused with learned policy logits through component-specific gating factors.  
+
+> •
+
+Simulation results show that MA-HEAD-Net improves policy-formation efficiency and reduces AoI compared with representative learning-based, heuristic, and ablation base-lines. The learned rule reliance further shows how the agents adjust the influence of different rule priors under dynamic network states, providing an interpretable view of the interaction between communication-domain knowledge and neural policy learning. The rest of this paper is organized as follows. Section II introduces the system model. Section III presents the mini-slot-based scheduling mechanism and problem formulation. Section IV details the proposed MA-HEAD-Net algorithm. Section V analyzes simulation results. Finally, Section VI concludes the paper. Emergency responder 
+
+> Sensor
+> Person in distress
+
+Fig. 1: UAV-assisted emergency communication system. II. S YSTEM MODEL 
+
+A. Communication and Traffic Models 
+
+As shown in Fig. 1, we consider a UAV-assisted post-disaster communication network with U rotary-wing UAVs, denoted by U = {1, · · · , U }, and K ground terminals (GTs), denoted by K = {1, · · · , K }. Because of their limited energy, UAVs operate over a finite mission duration, which is dis-cretized into T time slots of length τ . Let qk = ( xk, y k, z k)
+
+denote the fixed location of GT k. The UAVs operate at a constant altitude H, and the time-varying location of UAV 
+
+u at time slot t is qu(t) = ( xu(t), y u(t), H ). We consider both LoS and non-line-of-sight (NLoS) conditions for the air-to-ground communication channels. Following [49], the LoS probability from UAV u to GT k at time slot t, pLoS  
+
+> u,k
+
+(t), is given by 
+
+pLoS  
+
+> u,k
+
+(t) = 11 + as exp ( −bs (θu,k (t) − as)) , (1) where θu,k (t) = arctan (( H − zk)/r u,k (t)) is the elevation angle, ru,k (t) = 
+
+q
+
+(xu(t) − xk)2 + ( yu(t) − yk)2 is the hor-izontal distance between the UAV and the GT, as and bs are constants determined by the carrier frequency and environ-ment, respectively. The NLoS probability can then be obtained as pNLoS  
+
+> u,k
+
+(t) = 1 − pLoS  
+
+> u,k
+
+(t). The path loss for LoS and NLoS links is modeled as: 
+
+Lju,k (t) = 20 log 10 
+
+ 4πf cdu,k (t)
+
+c
+
+
+
++ ξj , j ∈ { LoS , NLoS },
+
+(2) where du,k (t) =
+
+q
+
+r2
+
+> u,k
+
+(t) + ( H − zk)2, fc is the carrier frequency, c is the speed of light, and ξLoS and ξNLoS are the additional path loss coefficients for LoS and NLoS links, respectively. The average path loss from UAV u to GT k,
+
+¯Lu,k (t), can be expressed as 
+
+¯Lu,k (t) = pLoS  
+
+> u,k
+
+(t)LLoS  
+
+> u,k
+
+(t) + pNLoS  
+
+> u,k
+
+(t)LNLoS  
+
+> u,k
+
+(t). (3) To avoid intra-UAV interference, we adopt a per-UAV time division multiple access (TDMA) scheme. At the beginning of each time slot, each UAV selects at most one GT as its scheduled transmission target. Let αu,k (t) ∈ { 0, 1} be the scheduling indicator, where αu,k (t) = 1 indicates that GT 
+
+k is selected by UAV u, and αu,k (t) = 0 otherwise. The corresponding signal-to-interference-plus-noise ratio (SINR) of GT k at time t, γu,k (t), can be represented as follows: 
+
+γu,k (t) = PuGu,k (t)
+
+σ2 + Iu,k (t) , (4) where Gu,k (t) = 10 − ¯Lu,k (t)/10 is the power gain from UAV 
+
+u to GT k, Pu is the UAV transmit power, σ2 is the noise power, and Iu,k (t) = Pu′∈U  
+
+> u′̸=u
+
+PKk′=1 αu′,k ′ (t)
+
+
+
+Pu′ Gu′,k (t)
+
+represents the co-channel interference from other UAVs. Given the short-packet nature of emergency control signals, we adopt the finite blocklength (FBL) theory. The achievable rate from UAV u to GT k at time t under the FBL regime is approximated as [9], [50]: 
+
+Ru,k (γu,k (t), n ) = W log 2 (1 + γu,k (t)) 
+
+−
+
+r Vu,k (t)
+
+n Q−1(εtar )log 2e
+
+!
+
+,
+
+(5) where W is the bandwidth, n is the blocklength, εtar is the target decoding error probability, Q−1(·) is the inverse of the Q-function, and Vu,k (t) = 1 − (1 + γu,k (t)) −2 denotes the channel dispersion. In this work, the blocklength is determined by the effective transmission duration under a fixed bandwidth, i.e., n = W τ used , where τused denotes the actual transmission time allocated to a packet or packet segment. Reducing the transmission duration shortens the time used by the current transmission, so that following packets can be served earlier with a shorter waiting time. However, with a fixed bandwidth, a shorter transmission duration also reduces the blocklength of the current packet. As indicated by (5), a smaller blocklength decreases the amount of data that can be reliably transmitted under the target decoding error probability εtar , and the current packet fails if the allocated duration is insufficient. Therefore, there is a tradeoff between reducing the waiting time of following packets and ensuring the successful transmission of the current packet under the FBL regime. To guarantee link quality, we set a minimum SINR threshold γth . The transmis-sion from UAV u to GT k at time t is regarded as valid only when γu,k (t) ≥ γth . Accordingly, the candidate covered GT set of UAV u is given by Kcov  
+
+> u
+
+(t) = {k ∈ K | γu,k (t) ≥ γth }.
+
+B. UAV Mobility and Energy Models 
+
+At each time slot t, UAV u selects a horizontal velocity vector vu(t) from a discrete action set V. This set is defined as V = {0} ∪ { vm}Mm=1 , where 0 denotes hovering and vm
+
+represents flying at a constant speed Vmax along the m-th uniformly discretized direction, i.e., ∥vm∥ = Vmax . The UAV’s location is updated as: 
+
+qu(t + 1) = qu(t) + vu(t) · τ. (6) UAV energy-aware coordination is critical for sustained emergency mission planning and trajectory optimization under constrained aerial operations [51]. The total energy consump-tion is modeled as the sum of two components: propulsion energy required for flight and communication-related energy for data processing and transmission. The propulsion power of the rotary-wing UAV u at time slot t, P prop  
+
+> u
+
+(t), is given by [49]: 
+
+P prop  
+
+> u
+
+(t) = 12 d0ρSAv 3 
+
+> u
+
++ P0 1 + 3v2
+
+> u
+
+U 2
+
+> tip
+
+!
+
++ Pi
+
+s
+
+1 + v4
+
+> u
+
+4v40
+
+− v2
+
+> u
+
+2v20
+
+! 12
+
+,
+
+(7) where vu is the flight speed of UAV u, P0 and Pi are two constants for blade profile power and induced power in the hovering state, respectively. Utip is the tip speed of the rotor blade, v0 is the mean rotor induced velocity in hover, d0 and S
+
+are the fuselage drag ratio and rotor solidity, ρ and A are the air density and rotor disc area, respectively. Considering the communication-related energy, the total instantaneous power 
+
+P total  
+
+> u
+
+(t) consumed at slot t is given by 
+
+P total  
+
+> u
+
+(t) = P prop  
+
+> u
+
+(t) + Pcir +
+
+PKk=1 αu,k (t) · Pu
+
+η , (8) where Pcir and η represent the constant circuit power and the power amplifier efficiency, respectively. Consequently, the Mini -slot                        
+
+> Time slot tTime slot t+ 1
+> LP SP
+> 12345678910 11 12
+> Checkpoint Checkpoint Checkpoint
+> LP SP LP
+> Checkpoint interval
+> ···
+> 13 14 15 lL
+> Checkpoint
+> SP LP SP mini
+
+Fig. 2: Mini-slot-based preemption mechanism within a single time slot t.remaining battery energy of UAV u, Eu(t), is updated at each time slot: 
+
+Eu(t + 1) = Eu(t) − P total  
+
+> u
+
+(t) · τ. (9) III. A DAPTIVE PREEMPTION MECHANISM WITH 
+
+EMBEDDED MINI -S LOTS 
+
+A. Mini-Slot-Embedded Preemptive Scheduling Mechanism 
+
+We consider two packet classes in the multi-UAV emergency communication scenario: delay-tolerant long packets (LPs), such as situation reports and image data, and mission-critical short packets (SPs), such as sensor data and emergency control messages. A fixed long time slot is efficient for continuous LP transmission and stable resource allocation, but newly generated SPs may have to wait until the end of the current slot before being served, leading to large waiting time and rapid AoI growth. Conversely, directly adopting short slots for all packets may result in short blocklengths, which can increase the decoding error probability and decrease transmis-sion reliability under the FBL regime. Therefore, a scheduling mechanism is needed to reduce the waiting delay of urgent SPs while preserving sufficient continuous service time and transmission reliability for LPs. To capture the bursty and time-varying packet arrival char-acteristics of different GTs, we model the packet arrival process using a two-state Markov-modulated Poisson process (MMPP). For each GT k, the arrival rate switches between a high-intensity state λH 
+
+> k
+
+and a low-intensity state λL 
+
+> k
+
+according to a continuous-time Markov chain. The transition probabil-ities from the low-intensity state to the high-intensity state and from the high-intensity state to the low-intensity state are approximated as pLH  
+
+> k
+
+= βLH  
+
+> k
+
+τ and pHL  
+
+> k
+
+= βHL  
+
+> k
+
+τ , respectively, where βLH  
+
+> k
+
+and βHL  
+
+> k
+
+denote the corresponding transition rates. The number of new packets generated by GT k in time slot t,denoted by Nk(t), follows Nk(t) ∼ Poisson (λk(t)τ ).The generated packets are stored according to their traffic types. For SPs, each GT maintains a latest-packet buffer to preserve the most recent state update. If a new SP arrives before the previous SP is successfully delivered, the new SP overwrites the old one and its generation timestamp is updated accordingly. If an SP transmission fails, the packet is not immediately discarded, but remains in the latest-packet buffer for possible retransmission until it is either successfully delivered or overwritten by a newer SP. For LPs, the generated packets are stored in a first-in first-out (FIFO) queue with capacity Qmax . A failed or unfinished LP remains in the queue for retransmission or continued transmission, and a newly arrived LP is discarded only when the FIFO queue is full. Based on the above traffic characteristics, we propose a mini-slot-embedded preemptive scheduling mechanism for low-latency SP services. As illustrated in Fig. 2, each standard time slot t with duration τ is divided into L mini-slots, each with duration τmini = τ /L , thereby enabling dynamic preemption opportunities for SPs. If a fixed checkpoint interval or fixed preemption frequency is used, it is difficult to adapt to dynamic changes in SP urgency, LP transmission progress, and channel conditions. Specifically, a short checkpoint in-terval can improve SP response speed, but it may frequently interrupt continuous LP transmission, divide the available LP service time into short segments, and decrease LP transmission reliability under the FBL regime. In contrast, a long checkpoint interval is beneficial for continuous LP transmission and reliable decoding, but it increases the waiting time of high-priority SPs and causes rapid SP AoI growth. This is a tradeoff between transmission time and reliability of LPs, and waiting time and opportunities of SPs under the FBL regime [52]. Therefore, we design the checkpoint interval as a dynamic decision variable, so that each UAV can adaptively balance SP preemption opportunities and LP continuous service time according to traffic urgency, LP service status, and chan-nel conditions. Since different UAVs have different service conditions, each UAV is allowed to independently select its checkpoint interval Lint  
+
+> u
+
+(t). Specifically, the preemption behavior of UAV u is controlled by the dynamic checkpoint interval Lint  
+
+> u
+
+(t), which determines the mini-slot boundaries where the UAV switches its transmission service. For the mini-slot index l = 1, . . . , L , a checkpoint is defined as 
+
+l ∈ L int  
+
+> u
+
+(t) = {l | l = mL int  
+
+> u
+
+(t), m ∈ Z+, l ≤ L}. At each checkpoint, UAV u can suspend the current LP transmission and prioritize pending urgent SPs. 
+
+B. SP Transmission and AoI Update 
+
+At each checkpoint, if the currently scheduled GT of UAV 
+
+u has a pending SP, this GT is prioritized for SP transmission, and the selected GT is denoted by kSP  
+
+> u
+
+(t, l ). If the currently associated GT has no pending SP, UAV u can opportunistically serve the most urgent covered GT with a pending SP, i.e., 
+
+kSP  
+
+> u
+
+(t, l ) ∈ K cov  
+
+> u
+
+(t). Otherwise, the ongoing LP transmission process is maintained. τ req 
+
+> u,k
+
+(t) = 
+
+pW V u,k (t)Q−1(εtar ) log 2 e +
+
+q
+
+W V u,k (t) ( Q−1(εtar ) log 2 e)2 + 4 W log 2(1 + γu,k (t)) DSP  
+
+> k
+
+(t)2W log 2(1 + γu,k (t)) 
+
+
+
+> 2
+
+. (10) Given the FBL constraint, the required transmission time of the selected SP depends on the packet size, the target decoding error probability, and the instantaneous channel condition. Specifically, τ req 
+
+> u,k
+
+(t) is obtained from (10), where DSP  
+
+> k
+
+(t)
+
+denotes the SP size of GT k in time slot t. Since the system schedules transmissions at the mini-slot level, the required number of mini-slots for transmitting this SP is given by 
+
+Lreq 
+
+> u,k
+
+(t) = 
+
+& τ req 
+
+> u,k
+
+(t)
+
+τmini 
+
+'
+
+, (11) where ⌈·⌉ is the ceiling function. The actual occupied trans-mission time is therefore 
+
+τ SP 
+
+> u,k
+
+(t) = Lreq 
+
+> u,k
+
+(t)τmini . (12) If the SP starts transmission at checkpoint (t, l ), the comple-tion mini-slot index is lend 
+
+> u,k
+
+(t) = l + Lreq 
+
+> u,k
+
+(t), and the corre-sponding completion timestamp can be given by T end 
+
+> u,k
+
+(t, l ) = (t − 1) τ + lend 
+
+> u,k
+
+(t)τmini .Mini -slot 
+
+SP arrival  SP success  SP checkpoint 
+
+LP arrival  LP success 
+
+> LP AoI SP AoI
+
+GT scheduling 
+
+One time slot 
+
+Fig. 3: The downlink AoI update process of SPs and LPs. On this basis, we define the successful update indicator 
+
+ISP 
+
+> S,k
+
+ t, l end 
+
+> u,k
+
+ ∈ { 0, 1}. It equals 1 if GT k is selected for SP transmission at checkpoint (t, l ) and the SP is successfully decoded after occupying the required Lreq 
+
+> u,k
+
+(t) mini-slots. Oth-erwise, it equals 0. Therefore, the successful update probability of the SP satisfies 
+
+Pr  ISP 
+
+> S,k
+
+ t, l end 
+
+> u,k
+
+ = 1  = X
+
+> u∈U
+
+I k = kSP  
+
+> u
+
+(t, l )   1 − εtar  ,
+
+(13) where I(·) is the indicator function. As shown in Fig. 3, the SP AoI update process is given by (14), where gSP  
+
+> k
+
+(t, l ) denotes the generation timestamp of the successfully delivered SP. Each GT maintains a latest-SP buffer, where only the most recent SP is kept for transmission. According to (14), the SP AoI is reset only after the buffered SP is fully transmitted and successfully decoded. Otherwise, it increases by τmini and the buffered SP can be rescheduled later. 
+
+C. LP Transmission and AoI Update 
+
+As shown in Fig. 2, SP preemption divides the LP ser-vice into several transmission segments within a time slot. Specifically, the LP of GT k is scheduled by UAV u when 
+
+αu,k (t) = 1 . Pending urgent SPs are served first, and the other available mini-slots are used for LP transmission. Each LP segment is treated as an independent coded segment under the FBL model, with its transmission rate and success probability determined by its own blocklength. Therefore, only successfully received LP segments contribute to the completed LP data amount, instead of counting the unfinished part of an interrupted transmission as valid data. Let lu,c denote the mini-slot index corresponding to the current checkpoint of UAV u. The mini-slot index of the next checkpoint is lnext  
+
+> u,c
+
+= min {lu,c + Lint  
+
+> u
+
+(t), L }. Within the checkpoint interval [lu,c , l next  
+
+> u,c
+
+), the system determines whether SP preemption is performed according to SP arrivals and prior-ities. Considering the mini-slots allocated to SP transmission, the available transmission duration for the LP segment in the current checkpoint interval is given by 
+
+τ seg 
+
+> u,k
+
+(t, l u,c ) =  lnext  
+
+> u,c
+
+− lu,c 
+
+ τmini − τ SP  
+
+> u
+
+(t, l u,c ), (15) where τ SP  
+
+> u
+
+(t, l u,c ) denotes the transmission duration occu-pied by SP preemption for UAV u within the checkpoint interval [lu,c , l next  
+
+> u,c
+
+), which can be given by τ SP  
+
+> u
+
+(t, l u,c ) =P 
+
+> k∈K
+
+I k = kSP  
+
+> u
+
+(t, l u,c )τ SP 
+
+> u,k
+
+(t). If no SP preemption occurs in this checkpoint interval, then τ SP  
+
+> u
+
+(t, l u,c ) = 0 . Accordingly, the blocklength of the LP segment is given by 
+
+nLP 
+
+> u,k
+
+(t, l u,c ) = W τ seg 
+
+> u,k
+
+(t, l u,c ). (16) Under this blocklength, the achievable rate of the LP segment, 
+
+RLP 
+
+> u,k
+
+ γu,k (t), n LP 
+
+> u,k
+
+(t, l u,c ), is obtained by substituting the segment blocklength nLP 
+
+> u,k
+
+(t, l u,c ) into (5). To track the LP transmission progress, we define Bsent  
+
+> k
+
+(t, l )
+
+as the cumulative successfully transmitted bits of the current LP of GT k up to mini-slot l in time slot t. Furthermore, we ∆SP  
+
+> k
+
+(t, l + 1) = 
+
+(
+
+T end 
+
+> u,k
+
+(t, l ) − gSP  
+
+> k
+
+(t, l ), if l + 1 = lend 
+
+> u,k
+
+(t) and ISP 
+
+> S,k
+
+ t, l end 
+
+> u,k
+
+ = 1 ,
+
+∆SP  
+
+> k
+
+(t, l ) + τmini , otherwise . (14) 
+
+∆LP  
+
+> k
+
+(t, l next  
+
+> u,c
+
+) = 
+
+(
+
+Tcurr (t, l next  
+
+> u,c
+
+) − gLP  
+
+> k
+
+(t), if ILP 
+
+> S,k
+
+(t, l next  
+
+> u,c
+
+) = 1 ,
+
+∆LP  
+
+> k
+
+(t, l u,c ) +  lnext  
+
+> u,c
+
+− lu,c 
+
+ τmini , otherwise . (18) define the LP segment success indicator ILP 
+
+> u,k
+
+(t, l next  
+
+> u,c
+
+) ∈ { 0, 1},which indicates whether the LP segment of GT k is suc-cessfully transmitted within the checkpoint interval [lu,c , l next  
+
+> u,c
+
+).Specifically, ILP 
+
+> u,k
+
+(t, l next  
+
+> u,c
+
+) = 1 only when GT k is allocated transmission resources in the current LP segment and this seg-ment is correctly decoded under the FBL regime. Otherwise, it equals 0. When GT k is scheduled by UAV u, the decoding success probability of the LP segment is 1 − εtar . Then, the cumulative successfully transmitted bits are updated as 
+
+Bsent  
+
+> k
+
+(t, l next  
+
+> u,c
+
+) = Bsent  
+
+> k
+
+(t, l u,c ) + ILP 
+
+> u,k
+
+(t, l next  
+
+> u,c
+
+)
+
+× RLP 
+
+> u,k
+
+ γu,k (t), n LP 
+
+> u,k
+
+(t, l u,c )τ seg 
+
+> u,k
+
+(t, l u,c ). (17) Eq. (17) shows that the accumulated LP bits are updated only at the end of a checkpoint interval, rather than continuously in every mini-slot. If the current LP segment is successfully decoded, its completed data bits are added to Bsent  
+
+> k
+
+(t, l next  
+
+> u,c
+
+).Otherwise, no new bits are counted, i.e., Bsent  
+
+> k
+
+(t, l next  
+
+> u,c
+
+) =
+
+Bsent  
+
+> k
+
+(t, l u,c ). In the latter case, the LP remains in the buffer, and the unfinished data are transmitted in the subsequent available transmission segments. Similar to the SP case, a complete LP update is achieved when the accumulated transmitted bits of GT k first reach the complete LP size after a transmission segment ends. Accordingly, the LP successful update indicator ILP 
+
+> S,k
+
+(t, l next  
+
+> u,c
+
+)
+
+equals 1 if there exists a UAV u such that ILP 
+
+> u,k
+
+(t, l next  
+
+> u,c
+
+) = 1 
+
+and Bsent  
+
+> k
+
+(t, l next  
+
+> u,c
+
+) ≥ DLP  
+
+> k
+
+(t). Based on this definition, the LP AoI update at the end of the checkpoint interval is given by (18), where Tcurr (t, l next  
+
+> u,c
+
+) = ( t − 1) τ + lnext  
+
+> u,c
+
+τmini denotes the ending timestamp of the current checkpoint interval, and 
+
+gLP  
+
+> k
+
+(t) denotes the generation timestamp of the LP completed at this checkpoint. The LP AoI is reset only when the accumulated transmitted bits reach the complete LP size after segment decoding. Otherwise, it increases by the duration of the checkpoint interval. Once the LP is successfully delivered, it is removed from the LP buffer. 
+
+D. Problem Formulation 
+
+To ensure timely packet transmission under dynamic chan-nel conditions and UAV mobility constraints, we formulate the AoI minimization problem in the UAV-assisted emergency communication system. The optimization problem aims to minimize the long-term weighted sum of AoI for both LPs and SPs across all GTs, subject to practical mobility, communica-tion, and scheduling constraints. We set the user scheduling, UAV flight trajectory, and checkpoint interval selections of different UAVs as the optimized variables. Mathematically, the AoI minimization problem, denoted by P1 , can be expressed as follows: 
+
+P1: min  
+
+> α,V,Lint
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+> K
+
+X
+
+> k=1
+
+ ∆LP  
+
+> k
+
+(t)∆LP th 
+
++ ∆SP  
+
+> k
+
+(t)∆SP th 
+
+
+
+(19a) s.t. αu,k (t) ∈ { 0, 1}, ∀u, k, t, (19b) 
+
+> K
+
+X
+
+> k=1
+
+αu,k (t) ≤ 1, ∀u, t, (19c) 
+
+> U
+
+X
+
+> u=1
+
+αu,k (t) ≤ 1, ∀k, t, (19d) 
+
+Eu(0) = Einit , E u(t) ≥ Emin , ∀u, t, (19e) 
+
+∥qu(t) − qu′ (t)∥2 ≥ dsafe , ∀u̸ = u′, ∀t, (19f) 
+
+0 ≤ xu(t) ≤ darea , 0 ≤ yu(t) ≤ darea , ∀u, t, (19g) 
+
+Lint  
+
+> u
+
+(t) ∈ L int , ∀u, t, (19h) (6) , (9) , (14) , (18) ,
+
+where α = {αu,k (t)}, V = {vu(t)}, and Lint = Lint  
+
+> u
+
+(t)
+
+represent the set of slot-level GT scheduling indicators, UAV trajectory control variables, and UAV-specific checkpoint in-terval selections, respectively. ∆LP  
+
+> k
+
+(t) and ∆SP  
+
+> k
+
+(t) denote the corresponding AoI values at the end of time slot t, obtained from the mini-slot-level AoI evolution. ∆LP th and ∆SP th rep-resent the AoI thresholds for LPs and SPs. Einit and Emin 
+
+represent the initial energy and the minimum safe energy threshold of UAV, darea and dsafe represent the area size and the minimum distance between UAVs, respectively. Constraints (19b)-(19d) ensure valid GT scheduling. Constraints (19e) and (19g) enforce energy budgets and boundary limits, while (19f) guarantees collision avoidance. Constraint (19h) restricts the checkpoint interval of each UAV to the candidate set Lint .However, due to the mixed-integer and non-convex nature of 
+
+P1 , obtaining an exact optimal solution is computationally intractable, especially in dynamic and uncertain environments of UAV-assisted emergency scenarios. Therefore, we propose a rule-assisted MADRL approach in the subsequent section to efficiently find high-quality policies. IV. P ROPOSED SOLUTION : A DAPTIVE RULE -G UIDED 
+
+MA-HEAD-N ET 
+
+To address the AoI minimization problem, we develop the Multi-Agent Hybrid Expert-Algorithmic Decision Network (MA-HEAD-Net), an adaptive rule-guided MADRL frame-work. By converting communication-domain rules into state-dependent action-prior logits and adaptively balancing them Ψtra  
+
+> u
+
+(v) = 
+
+(
+
+1, if qu(t) + τ v ∈ [0 , d area ]2 and ∥qu(t) + τ v − qu′ (t)∥ ≥ dsafe , ∀u′ ∈ N u,
+
+0, otherwise . (23) with learned policy logits, this framework improves policy-formation efficiency and supports timely decision making in dynamic emergency environments. 
+
+A. MDP Formulation 
+
+Adopting the centralized training with decentralized exe-cution (CTDE) paradigm, we formulate the problem as a decentralized partially observable Markov decision process (Dec-POMDP) defined by the tuple ⟨S , {O u}, {A u}, P, R, γ ⟩.
+
+1) Global State Space ( S): The global state st ∈ S,used by the shared critic during training, contains full system information: 
+
+st =
+
+n
+
+{qu(t), E u(t)}Uu=1 ,
+
+{qk, ∆LP  
+
+> k
+
+(t), ∆SP  
+
+> k
+
+(t),Q LP  
+
+> k
+
+(t), Q SP  
+
+> k
+
+(t)}Kk=1 
+
+o
+
+,
+
+(20) where QLP  
+
+> k
+
+(t) and QSP  
+
+> k
+
+(t) represent the queue length of LPs and SPs from GT k, respectively. 
+
+2) Local Observation ( Ou): Each UAV u obtains a local observation ou,t ∈ O u at each time step t, which comprises its own status, the relative information of neighbors in Nu,and the status of all GTs: 
+
+ou,t =
+
+n
+
+qu(t), E u(t), {qj (t) − qu(t)}j∈N u ,
+
+{qk − qu(t), ∆LP  
+
+> k
+
+(t), ∆SP  
+
+> k
+
+(t), Q LP  
+
+> k
+
+(t), Q SP  
+
+> k
+
+(t)}Kk=1 
+
+o
+
+.
+
+(21) 
+
+3) Action Space with Action Masking: The action space of UAV u consists of three sub-spaces: GT scheduling ku ∈K, flight trajectory selection vu ∈ V , and checkpoint-interval selection Lint  
+
+> u
+
+∈ L int . The composite action is defined as 
+
+au(t) =  ku(t), vu(t), L int  
+
+> u
+
+(t), (22) and the original action space is given by Au = K × V × L int .To ensure trajectory safety, we employ a dynamic trajectory mask Ψtra  
+
+> u
+
+to filter out invalid trajectory actions that may lead to boundary violations or collisions, as shown in (23). Similarly, GT scheduling is masked to valid candidates within the coverage set Kcov  
+
+> u
+
+(t). Based on the above masks, the feasible trajectory-action set and the feasible action space of UAV u at slot t are respectively given by Vfeas  
+
+> u
+
+(t) = {v ∈V | Ψtra  
+
+> u
+
+(v) = 1 }, and eAu(t) = Kcov  
+
+> u
+
+(t) × V feas  
+
+> u
+
+(t) × L int .
+
+During action selection, logits corresponding to infeasible actions outside eAu(t) are masked before sampling. 
+
+4) Reward Function ( R): The shared reward function rt is designed to minimize the system AoI while strictly penalizing safety violations and task failures. The immediate reward rt
+
+is given by: 
+
+rt = rsucc  
+
+> t
+
+−cAoI ·rAoI  
+
+> t
+
+−cth ·Ith  
+
+> t
+
+−cb ·Ib 
+
+> t
+
+−ccoll ·Icoll  
+
+> t
+
+−ce ·Ie
+
+> t
+
+, (24) where cAoI , cth , cb, ccoll , and ce are non-negative weight factors balancing different objectives. The reward components are defined as follows. First, to encourage efficient packet trans-mission, rsucc  
+
+> t
+
+counts the total number of successfully delivered packets from all GTs in time slot t, which is given by rsucc  
+
+> t
+
+=P
+
+> k∈K
+
+(cLP succ · sLP  
+
+> k
+
+(t) + cSP succ · sSP  
+
+> k
+
+(t)) , where cLP succ and cSP succ are the coefficients for successful LP and SP transmissions. Sec-ond, to minimize AoI, the weighted normalized AoI penalty is defined as rAoI  
+
+> t
+
+= P
+
+> k∈K
+
+
+
+cLP AoI · ∆LP  
+
+> k(t)∆LP th
+
++ cSP AoI · ∆SP  
+
+> k(t)∆SP th
+
+
+
+,where cLP AoI and cSP AoI are coefficients for AoIs of LPs and SPs. Third, a threshold violation penalty is applied, where 
+
+Ith  
+
+> t
+
+= P
+
+> k∈K
+
+I  ∆LP  
+
+> k
+
+(t) > ∆LP th 
+
+ + I  ∆SP  
+
+> k
+
+(t) > ∆SP th 
+
+ counts the number of AoI threshold violations. Regarding safety constraints, we use binary indicator functions that impose heavy penalties when violations occur. The boundary vio-lation indicator Ib 
+
+> t
+
+= 1 if any UAV flies outside the area 
+
+[0 , d area ]2, and 0 otherwise. Similarly, the collision indicator 
+
+Icoll  
+
+> t
+
+captures any inter-UAV safety collisions, calculated as 
+
+Icoll  
+
+> t
+
+= P 
+
+> u,u ′∈U ,u ̸=u′
+
+I(∥qu(t) − qu′ (t)∥ < dsafe ). Finally, an energy penalty is applied if an episode terminates due to energy depletion. The energy violation indicator is given by 
+
+Ie 
+
+> t
+
+= I ((min u∈U Eu(t) < E min ) ∧ (t < T )) , ensuring agents learn to manage their battery life effectively. This formulation ensures that agents satisfy safety constraints while optimizing the long-term AoI objective. 
+
+B. MA-HEAD-Net Architecture Overview 
+
+As illustrated in Fig. 4, MA-HEAD-Net adopts an adap-tive rule-guided MADRL architecture under the centralized-training and decentralized-execution (CTDE) paradigm. Dur-ing training, UAV agents share a centralized critic, while each UAV uses an actor to make decisions based on local observations. Each actor is composed of two coordinated streams, namely a rule-prior stream and a neural-policy stream. The rule-prior stream converts communication-domain rules into state-dependent action-prior logits brule , which provide action-level guidance. Meanwhile, the neural-policy stream maps local observa-tions into a shared latent representation, which is then fed into separate policy heads for GT scheduling, trajectory control, and checkpoint-interval selection. In addition, dedicated gating heads are introduced to adaptively combine the rule-prior logits with the corresponding neural-policy logits for different decision variables. The gating heads produce sub-task-specific gating factors, while learnable rule-strength parameters con-trol the overall strength of rule priors for different decision variables. The learned gates indicate how each UAV changes its reliance on communication-domain rule priors according to the observed system state, thereby balancing rule-guided action preferences with neural policy adaptability. UAV  1: MA -HEAD Actor  1               
+
+> UAV u:MA -HEAD Actor u
+> UAV U:MA -HEAD Actor U
+> Centralized Critic
+> Rule -Prior Module
+> GT scheduling
+> Rules
+> Trajectory control
+> Interval selection
+> Rule bias
+> Environment
+> Decision making
+> Replay Buffer
+> GT head
+> Trajectory head
+> Interval head
+> Learn ing Module
+> Rule -gating head
+> Shared neural network  Learned logits
+> Logit Mixing
+> Final lo git
+> Gating factor x
+> Masking &Softmax
+> Final policy
+> Joint policy
+> Action sampling rule
+> sch
+
+brule 
+
+> tra
+
+brule 
+
+> int
+
+blearn 
+
+> int
+
+zlearn 
+
+> tra
+
+zlearn 
+
+> sch
+
+zFig. 4: The architecture of the proposed MA-HEAD-Net framework. 
+
+C. Rule-Prior Module 
+
+The rule-prior module converts communication-domain rules into action-prior logits for three sub-tasks: GT schedul-ing, trajectory control, and checkpoint-interval selection. For each UAV agent u, the generated vector brule  
+
+> u,i
+
+(t), i ∈{sch , tra , int }, provides soft action-level guidance rather than directly determining the final action. The prior-strength co-efficients κi are learnable scalar parameters that control the overall strength of different rule priors. 
+
+1) GT Scheduling Prior: To reduce multi-agent interfer-ence, each UAV u coordinates with its neighbors Nu to solve a local assignment problem. The scheduling score Csch 
+
+> u,k
+
+(t) for GT k is defined as: 
+
+Csch 
+
+> u,k
+
+(t) = ∆LP  
+
+> k
+
+(t)/∆LP th 
+
+ln(1 + du,k (t)) · I(QLP  
+
+> k
+
+(t) > 0) . (25) UAV u finds the optimal matching k∗
+
+> u
+
+(t) that maximizes the score as k∗(t) = arg max k
+
+P 
+
+> j∈{ u}∪N u
+
+Csch  
+
+> j,k j
+
+(t). UAV u then selects its corresponding target GT k∗
+
+> u
+
+(t) from k∗(t) and generates the prior vector brule 
+
+> u, sch
+
+(t) for the scheduling sub-task. Its k-th element is defined as 
+
+brule 
+
+> u, sch ,k
+
+(t) = 
+
+(
+
+κsch , k = k∗
+
+> u
+
+,
+
+0, otherwise , (26) where κsch is a learnable coefficient that controls the overall strength of the scheduling prior. 
+
+2) Trajectory Control Prior: Given the assigned target k∗
+
+> u
+
+,the flight vector is d∗
+
+> u
+
+(t) = qk∗ 
+
+> u
+
+(t) − qu(t), where qk∗ 
+
+> u
+
+(t) de-notes the location of the target GT. We calculate the trajectory score Ctra  
+
+> u, v
+
+(t) for each trajectory action v ∈ V as the cosine similarity between the candidate action vector v and d∗
+
+> u
+
+(t) as 
+
+Ctra  
+
+> u, v
+
+(t) = d∗
+
+> u
+
+(t) · v(t)
+
+∥d∗
+
+> u
+
+(t)∥∥ v(t)∥ . (27) Based on the above trajectory score, the element corresponding to action v in the trajectory prior vector brule 
+
+> u, tra
+
+(t) is defined as 
+
+brule  
+
+> u, tra ,v
+
+(t) = κtra max  0, C tra  
+
+> u, v
+
+(t), (28) where κtra is a learnable coefficient that controls the overall strength of the trajectory prior. The term max(0 , C tra  
+
+> u, v
+
+(t)) 
+
+ensures that only beneficial directions toward the target GT receive positive guidance, while actions moving away from the target GT do not receive additional prior preference. It should be noted that the flight boundary and safety constraints of trajectory actions are handled by the action mask defined pre-viously. Therefore, this prior only characterizes the directional preference among feasible actions and does not introduce an additional feasibility judgment. 
+
+3) Load-Adaptive Checkpoint-Interval Selection Prior: Fi-nally, we design a load-adaptive checkpoint-interval selection prior. Specifically, the normalized SP load factor is first defined as 
+
+ϱSP (t) = min 
+
+
+
+1, QSP (t)
+
+QSP 
+
+> max
+
+
+
+, (29) where QSP (t) = P 
+
+> k∈K
+
+QSP  
+
+> k
+
+(t), and QSP  
+
+> max
+
+denotes the maxi-mum capacity of the SP queue. A larger ϱSP (t) indicates that the current SP traffic is more active, and the system needs to provide more frequent checkpoints. For a candidate checkpoint interval Lint  
+
+> l
+
+∈ L int , its normalized interval is defined as 
+
+¯Lint  
+
+> l
+
+= Lint  
+
+> l
+
+− Lint 
+
+> min
+
+Lint  
+
+> max
+
+− Lint 
+
+> min
+
+, (30) where Lint  
+
+> min
+
+and Lint  
+
+> max
+
+denote the minimum and maximum values in Lint , respectively. The checkpoint-interval score is defined as 
+
+Sint 
+
+> u,l
+
+(t) = 1 − ¯Lint  
+
+> l
+
+−  1 − ϱSP (t) . (31) According to this design, when the SP load is high, ϱSP (t)
+
+becomes large, and the prior tends to select shorter check-point intervals. When the SP load is low, the prior prefers longer checkpoint intervals to reduce unnecessary checkpoints. Accordingly, the element corresponding to the l-th candidate action in the checkpoint-interval prior vector brule 
+
+> u, int
+
+(t) is de-fined as 
+
+brule 
+
+> u, int ,l
+
+(t) = κint Sint 
+
+> u,l
+
+(t), (32) where κint is a learnable coefficient that controls the overall strength of the checkpoint-interval prior. In summary, the rule-prior module transforms communication-domain rules into prior vectors 
+
+brule  
+
+> u,i
+
+(t) ∈ R|A i| for three sub-tasks. These prior vectors have the same dimensions as the corresponding sub-action spaces. The prior scores are calculated according to the current state and rules. The prior-strength coefficients {κsch , κ tra , κ int }
+
+are learnable head-level parameters that control the overall strengths of the scheduling, trajectory, and checkpoint-interval rule priors, respectively. These rule-prior vectors are further incorporated into the policy logits through the rule-gated fusion mechanism described in the following subsection, where the learned gates adjust the state-dependent reliance on rule priors during action selection. It should be emphasized that the rule-prior module only provides soft guidance for action preferences and does not directly replace the action selection of the neural policy. Infeasible actions are filtered by the previously defined action mask, and the final action is still sampled from the fused policy distribution. For notational simplicity, the time subscript t is omitted in the following unless it is necessary to distinguish state transitions. 
+
+D. Selection Module: Adaptive Rule-Gated Logit Fusion 
+
+To balance communication-domain rule guidance and neural policy adaptation, we design an adaptive rule-gated logit fusion mechanism. The rule-prior vectors generated by the rule-prior module are treated as soft action-prior logits and are incorporated into the neural policy logits before action sampling. As shown in Fig. 4, for each UAV agent u and sub-task i, the actor network takes the local observation ou as input and generates the learned policy logits zlearn  
+
+> u,i
+
+. Meanwhile, a dedicated rule-gating head produces a sub-task-specific gating factor ζu,i ∈ [0 , 1] , which controls the relative contribution of the learned policy logits and the rule-prior logits for sub-task 
+
+i. Specifically, the gating factor is computed as 
+
+ζu,i = σ  (wgate  
+
+> u,i
+
+)Th(ou) + bgate 
+
+> u,i
+
+ , (33) where h(ou) denotes the latent representation extracted from the local observation, wgate  
+
+> u,i
+
+and bgate  
+
+> u,i
+
+are learnable parameters of the gating head, and σ(·) is the sigmoid function. The prior-strength coefficient κi has been incorporated into brule  
+
+> u,i
+
+in the rule-prior module to control the overall strength of the rule prior for sub-task i. The learned gate then determines the state-dependent reliance on the learned policy logits and the scaled rule-prior logits. The final fused logits are obtained by 
+
+zfinal  
+
+> u,i
+
+= ζu,i zlearn  
+
+> u,i
+
++ (1 − ζu,i )brule  
+
+> u,i
+
+. (34) This formulation combines the learned policy logits with the scaled rule-prior logits before action sampling. When ζu,i is small, the fused policy assigns a larger weight to the rule prior. When ζu,i becomes large, the policy relies more on the learned logits. Since the fusion is performed in the logit space, the final action is still sampled from the fused policy distribution, rather than being directly determined by the rule-prior module. Thus, the final policy for sub-task i of UAV u, πu,i , is obtained by applying the softmax function: 
+
+πu,i (au,i | ou) = Softmax  zfinal 
+
+> u,i
+
+ 
+
+> au,i
+
+. (35) Since the three sub-tasks are conditionally independent, the joint policy of UAV u, ΠHEAD  
+
+> u
+
+, is defined as the product of the sub-policies: 
+
+ΠHEAD  
+
+> u
+
+(au | ou) = Y
+
+> i∈I
+
+πu,i (au,i | ou). (36) 
+
+E. Learning Module: Multi-Agent PPO Algorithm 
+
+We adopt the multi-agent proximal policy optimization (MAPPO) algorithm based on the CTDE paradigm. The frame-work consists of U decentralized actors, each parameterized by 
+
+θu (consisting of the three policy heads and the adaptive rule-gating head), and a single shared centralized critic network parameterized by ϕ.
+
+1) Decentralized Actor Network: Each actor optimizes its local policy based on local observation ou. To ensure stable policy updates, we maximize the clipped surrogate objec-tive function. The clipped surrogate objective for agent u,
+
+Lclip  
+
+> u
+
+(θu), is defined as: 
+
+Lclip  
+
+> u
+
+(θu) = Et
+
+
+
+min  ρu,t (θu) ˆAt,
+
+clip( ρu,t (θu), 1 − ϵ, 1 + ϵ) ˆAt
+
+
+
+,
+
+(37) where ρu,t (θu) = ΠHEAD    
+
+> u(au,t |ou,t )ΠHEAD old
+> u(au,t |ou,t )
+
+represents the probability ratio between the new and old policies for UAV u. ϵ is the clipping hyperparameter that limits the policy update step size, preventing excessive updates from the previous policy 
+
+ΠHEAD old  
+
+> u
+
+. ˆAt is the advantage function, which measures how much better a specific action is compared to the average expectation. We utilize the generalized advantage estimation (GAE) to compute ˆAt:
+
+ˆAt = 
+
+> T−t
+
+X
+
+> j=0
+
+(γλ )j δt+j , (38) where γ is the discount factor and λ is the smoothing param-eter. The term δt = rt + γV ϕ(st+1 ) − Vϕ(st) represents the temporal-difference (TD) error computed by the centralized critic. To encourage exploration and prevent premature con-vergence, an entropy regularization term Hu is incorporated. Thus, the total actor loss is given by: 
+
+Lactor (θ) = 
+
+> U
+
+X
+
+> u=1
+
+ −L clip  
+
+> u
+
+(θu) − centropy · H u
+
+ , (39) where Hu = 1
+
+> |I|
+
+P 
+
+> i∈I
+
+H(πu,i ) represents the mean entropy across the three sub-task policies and centropy is the entropy coefficient. 
+
+2) Centralized Critic Network: The centralized critic Vϕ
+
+estimates the value function based on the global state st.The critic parameters ϕ are updated by minimizing the mean squared error (MSE) loss between the estimated value and the target return: 
+
+Lvalue (ϕ) = Et
+
+h
+
+(Vϕ(st) − Gt)2 i
+
+, (40) where Vϕ(st) is the current value estimate and Gt =
+
+Vϕold (st) + ˆAt is the target value function. 
+
+3) Joint Optimization Objective: The entire framework is trained end-to-end. The total loss function, Ltotal , is a weighted combination of the actor and critic losses: 
+
+Ltotal = Lactor (θ) + cvalue · L value (ϕ), (41) where cvalue is the coefficient for the value loss. Since the rule-gated fusion mechanism is differentiable, the gating-head parameters and the prior-strength coefficients 
+
+{κsch , κ tra , κ int } are updated jointly with the actor through the MAPPO objective. During training, the policy learns to adjust the relative reliance on the rule-prior logits and the learned policy logits according to the policy-gradient update. A smaller 
+
+ζu,i increases the reliance of the corresponding rule-prior logits, whereas a larger ζu,i gives more weight to the learned logits. In this way, MA-HEAD-Net implements adaptive rule-guided policy learning within the standard MAPPO optimiza-tion process. For clarity, the details of the MA-HEAD-Net algorithm are provided in Algorithm 1. 
+
+F. Complexity and Policy-Formation Efficiency Analysis 1) Computational Complexity: Standard MADRL methods may suffer from the curse of dimensionality when multiple sub-actions are modeled by a single compound action. In this problem, each UAV jointly determines user scheduling, trajectory control, and checkpoint-interval selection. If these sub-actions are represented by one joint action head, the action-output dimensionality of each UAV policy scales as 
+
+O(|K| · |V| · |L int |). In contrast, MA-HEAD-Net decomposes 
+
+Algorithm 1 Adaptive Rule-Guided MA-HEAD-Net Training Algorithm  
+
+> 1:
+
+Initialize actor parameters θ for U decentralized UAV actors, including policy heads, rule-gating heads, and prior-strength coefficients {κsch , κ tra , κ int }. 
+
+> 2:
+
+Initialize centralized critic parameter ϕ and rollout buffer 
+
+B. 
+
+> 3:
+
+for each episode do  
+
+> 4:
+
+Reset the environment and obtain initial local observa-tions {ou, 1}Uu=1 and global state s1. 
+
+> 5:
+
+for time step t = 1 , . . . , T do  
+
+> 6:
+
+for each UAV u = 1 , . . . , U do  
+
+> 7:
+
+Generate rule-prior logits brule  
+
+> u,t,i
+
+for each decision head i ∈ I = {sch , tra , int } according to the cur-rent local observation and communication-domain rules.  
+
+> 8:
+
+for each decision head i ∈ I do  
+
+> 9:
+
+Compute learned policy logits zlearn  
+
+> u,t,i
+
+and gating factor ζu,t,i from ou,t . 
+
+> 10:
+
+Fuse zlearn  
+
+> u,t,i
+
+and brule  
+
+> u,t,i
+
+to obtain zfinal  
+
+> u,t,i
+
+according to (34).  
+
+> 11:
+
+Apply the feasible-action mask and obtain the sub-policy πu,t,i according to (35).  
+
+> 12:
+
+end for  
+
+> 13:
+
+Construct the UAV-level factorized policy ΠHEAD 
+
+> u,t
+
+according to (36).  
+
+> 14:
+
+Sample the UAV action au,t from ΠHEAD  
+
+> u,t
+
+. 
+
+> 15:
+
+end for  
+
+> 16:
+
+Form the multi-UAV joint action at = {au,t }Uu=1 
+
+and execute it in the environment.  
+
+> 17:
+
+Receive reward rt, next local observations 
+
+{ou,t +1 }Uu=1 , and next global state st+1 . 
+
+> 18:
+
+Store the rollout data required for the MAPPO update in B. 
+
+> 19:
+
+end for  
+
+> 20:
+
+Compute GAE advantages ˆAt using the centralized critic according to (38).  
+
+> 21:
+
+for each PPO epoch do  
+
+> 22:
+
+Update actor parameters θ and critic parameter ϕ by minimizing Ltotal according to (41).  
+
+> 23:
+
+end for  
+
+> 24:
+
+Clear rollout buffer B. 
+
+> 25:
+
+end for 
+
+the compound decision into three heads, reducing the per-UAV action-output dimensionality to O(|K| + |V| + |L int |). Under decentralized execution, the total action-output dimensionality across UAVs scales linearly with U .The rule-prior and gate-fusion modules introduce additional computations for prior bias vectors and state-dependent gate values. Since these operations are performed separately over the three decomposed heads, their cost scales linearly with the number of sub-action logits, i.e., O(|K| + |V| + |L int |).Therefore, rule-prior generation and gate fusion introduce additional linear overhead, but they do not change the additive action-output complexity order of the multi-head policy. Although the above decomposition reduces the action-output dimensionality, the actual wall-clock inference time also depends on implementation details, network size, and hardware platform. Therefore, the proposed decomposition should be interpreted as improving the scalability of the action representation, especially when the number of GTs, possible actions, or UAVs increases. 
+
+2) Policy-Formation Efficiency: MA-HEAD-Net is de-signed to improve policy-formation efficiency through action masking and rule-prior guidance. Action masking excludes infeasible trajectory and scheduling decisions before action sampling, thereby reducing ineffective exploration without changing the actor-output dimensionality. The rule-prior mod-ule further provides state-dependent action-level guidance for user scheduling, trajectory control, and checkpoint-interval selection, helping the agents avoid purely random early ex-ploration and form more effective decisions at the beginning of training. The learned gates are optimized together with the neural policy and adaptively adjust the reliance on rule priors under different network states, rather than forcing the policy to directly follow fixed rules. In addition, the prior-strength coefficients of different sub-actions are learnable, allowing the scheduling, trajectory, and checkpoint-interval priors to have different influence levels during policy learning. Thus, the proposed fusion mechanism provides adaptive action-level guidance while preserving gradient-based policy learning. V. S IMULATION RESULTS AND ANALYSIS 
+
+In our simulations, we consider a multi-UAV-assisted emer-gency communication scenario, where U = 2 UAVs serve 
+
+K GTs randomly deployed within square areas whose side lengths range from 500 m to 2000 m. To model the diverse communication needs in the emergency scenario, the GTs are categorized into three types with proportions of [0.7, 0.2, 0.1] for people in distress, emergency responders, and sensors, respectively. The traffic from each GT is modeled by the MMPP to capture bursty arrivals characteristic of emergencies, with the MMPP parameters (λL, λ H, β LH , β HL )
+
+set as follows: [0.3, 1.6, 0.1, 0.5] for people in distress, [0.1, 0.5, 2, 0.005] for emergency responders, and [1, 5, 5, 0.0001] for sensors. Furthermore, each generated packet is classified as either a delay-tolerant LP or a latency-critical SP, with the corresponding type probabilities [0.33, 0.67] for people in distress, [0, 1] for emergency responders, and [0, 1] for sensors. Table I lists the remaining simulation parameters. The same reward coefficients are used for all learning-based baselines without algorithm-specific tuning for MA-HEAD-Net. To validate the effectiveness of MA-HEAD-Net, we compare it with learning-based, heuristic, and ablation baselines. The learning-based baselines include MAPPO [53], LSTM-enhanced MAPPO (LSTM-MAPPO) [53], [54], and heterogeneous-agent proximal policy optimization (HAPPO) [55]. The heuristic baselines include a lightweight AoI-aware sensing scheduling and trajectory optimization (AoI-STO-Lite) baseline [56], AoI-Hungarian matching (AoI-Hungarian) [57], [58], and Whittle-index-inspired Lyapunov scheduling (WI-Lyap) [59]. To examine the contribution of the rule-prior module and adaptive gate learning, we further include two ablation baselines. Rule-Only directly follows the rule priors without neural policy learning. Fixed Gate uses the same rule priors, neural policy structure, and initial fusion weights as MA-HEAD-Net, but keeps the gate values fixed throughout training. For a fair comparison, all learning-based methods and ablation variants adopt the same action masking mechanism, and all baselines are evaluated under the same feasible action constraints and safety constraints. TABLE I: Simulation Parameters 
+
+Parameter Value 
+
+Communication Simulation Settings 
+
+as, bs, ξLoS , ξNLoS 11.95, 0.14, 3dB, 23dB [60] 
+
+H, Vmax , Einit , Emin 50m, 20m/s,200kJ, 4kJ 
+
+P0, Pi, Pcir 79.86W, 88.63W, 0.2W 
+
+Utip , v0, d0 120m/s, 4.03m/s, 0.6 
+
+ρ, S, A 1.225kg/m 3, 0.05, 0.503m 2 [49] 
+
+W , Pu, σ2 1MHz, 20dBm, -104dBm 
+
+fc, εtar , γth 2GHz, 10 −5 [61], 5dB [60] 
+
+τ , τmini , ∆LP th , ∆SP th 1s, 5ms, 10s, 1s 
+
+DLP , DSP [0.5, 2]Mbits, [50,500]bits [62] 
+
+DRL Hyperparameter Settings 
+
+Base learning rate, gate learning rate 0.00005, 0.0001 Discount ( γ), GAE ( λ), clip range ( ϵ) 0.99, 0.95, 0.1 
+
+centropy , cvalue 0.05, 0.5 
+
+cAoI , cth , cb, ccoll , ce 0.2, 0.375, 2, 30, 20 
+
+cLP succ , cSP succ , cLP AoI , cSP AoI 20, 1, 0.2, 1 Episodes, steps per episode, epochs 1000, 1000, 4 Batch size, buffer size, max grad norm 256, 512, 0.5 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 4.0
+> 4.5
+> 5.0
+> 5.5
+> 6.0
+> Reward
+> ×10 4
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(a) K = 20 , darea = 1000 m. 0 200k 400k 600k 800k 1M  
+
+> Steps
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Reward
+> ×10 4
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(b) K = 20 , darea = 1500 m. 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Reward
+> ×10 5
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(c) K = 40 , darea = 1000 m. 0 200k 400k 600k 800k 1M  
+
+> Steps
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Reward
+> ×10 5
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(d) K = 40 , darea = 1500 m. 
+
+Fig. 5: Comparison of reward convergence. Figure 5 compares the reward convergence of MA-HEAD-Net and different baselines. When K = 20 and darea =
+
+1000 m, Rule-Only and AoI-STO-Lite can achieve competitive rewards, since the UAV-GT service relationships are less com-plex and local rule priors can provide useful action guidance. However, as K and darea increase, their performance becomes less stable or degrades, indicating that fixed rules alone are insufficient to handle more complex mobility, coverage, and long-term LP-SP AoI tradeoffs. In contrast, MA-HEAD-Net maintains high and stable rewards under different K and darea 
+
+settings. Compared with Fixed Gate, MA-HEAD-Net achieves higher final rewards, showing that adaptive gate learning is important for adjusting the reliance on rule-prior logits and learned policy logits. Compared with MAPPO, HAPPO, and LSTM-MAPPO, MA-HEAD-Net starts from a much higher reward level and reaches a stable high-reward region more rapidly, demonstrating the effectiveness of rule-prior guidance and adaptive fusion in improving policy-formation efficiency. 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 100
+> 200
+> 300
+> 400
+> 500
+> Average AoI of LPs (s)
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(a) Average AoI of LPs 0 200k 400k 600k 800k 1M  
+
+> Steps
+> 0
+> 25
+> 50
+> 75
+> 100
+> 125
+> 150
+> Average AoI of SPs (s)  MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(b) Average AoI of SPs 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 0%
+> 20%
+> 40%
+> 60%
+> 80%
+> 100%
+> Average PSR of LPs (%)
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(c) Average PSR of LPs 0 200k 400k 600k 800k 1M  
+
+> Steps
+> 40%
+> 50%
+> 60%
+> 70%
+> 80%
+> 90%
+> Average PSR of SPs (%)
+> MA-HEAD-Net
+> Fixed Gate
+> MAPPO
+> HAPPO
+> LSTM-MAPPO
+> Rule-Only
+> AoI-STO-Lite
+
+(d) Average PSR of SPs 
+
+Fig. 6: Comparison of AoI and PSR convergence with K = 20 
+
+and darea = 2000 m. Figure 6 compares the convergence of the average AoI and packet service rate (PSR) for LPs and SPs with K = 20 and 
+
+darea = 2000 m, where PSR denotes the ratio of successfully served packets to generated packets. As shown in Fig. 6(a) and Fig. 6(b), MA-HEAD-Net starts with much lower LP and SP AoI than MAPPO, HAPPO, and LSTM-MAPPO, and further reduces the AoI as training proceeds. This shows that the rule-prior guidance provides an effective initial policy bias, while the learned policy continues to improve the long-term AoI performance through training. Fig. 6(c) and Fig. 6(d) show that MA-HEAD-Net also starts with high LP and SP PSRs and gradually improves them during training, reaching the highest final PSRs among the learning-based methods. Compared with Fixed Gate, the proposed MA-HEAD-Net achieves better final AoI and PSR, indicating that adaptive gate learning further improves the initial rule-guided policy. Although Rule-Only and AoI-STO-Lite can maintain low SP AoI in some stages, they fail to achieve a balanced LP-SP performance, especially due to the severe LP starvation of AoI-STO-Lite. These results show that MA-HEAD-Net not only accelerates early policy formation, but also continues to improve toward a more balanced LP-SP service policy. 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Average rule reliance  K=20, Area=500
+> K=20, Area=1500
+> K=40, Area=500
+> K=40, Area=1500
+
+(a) Average rule reliance under differ-ent network scales. 0 200k 400k 600k 800k 1M 
+
+> Steps
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Rule reliance
+> UAV1: Scheduling
+> UAV2: Scheduling
+> UAV1: Trajectory
+> UAV2: Trajectory
+> UAV1: Interval
+> UAV2: Interval
+
+(b) Rule reliance of different UAVs and decision heads with K = 40 and 
+
+darea = 1500 m. 
+
+Fig. 7: Training dynamics of learned rule reliance. Figure 7 illustrates the training dynamics of learned rule reliance, which reflects the relative influence of rule priors during action fusion. As shown in Fig. 7(a), the average rule reliance generally decreases as training proceeds, indicating that the learned policy gradually reduces its reliance on local rule priors as it learns to make decisions based on long-term returns. In addition, the rule reliance tends to be lower and decreases more significantly when the area size or the number of GTs increases. This is because larger and denser scenarios introduce more complex coverage conditions, mobility deci-sions, and long-term AoI tradeoffs, which require the learned policy to capture decision patterns beyond handcrafted local priors. Fig. 7(b) further shows the rule reliance of different UAVs and decision heads under K = 40 and darea = 1500 m. Different heads show different trends, where the scheduling reliance generally decreases, the trajectory reliance shows different trends across the two UAVs with an increasing trend for UAV 2, and the checkpoint-interval reliance fluctuates with the SP-LP service tradeoff. These results indicate that MA-HEAD-Net does not uniformly follow or discard handcrafted rules, but adaptively adjusts different rule priors according to the conditions and decision components. Figure 8 compares the average AoI and PSR under different area sizes with K = 40 GTs. As the area size increases, the AoI of all methods generally increases and the PSR decreases. Compared with MAPPO, HAPPO, and LSTM-MAPPO, MA-HEAD-Net achieves lower LP/SP AoI and higher LP/SP PSR, especially in large-area scenarios, indicating that rule-prior guidance and adaptive fusion improve learning-based decision making under more challenging mobility and coverage condi-tions. Compared with Rule-Only and Fixed Gate, MA-HEAD-Net achieves a better LP-SP balance, showing that adaptive gate learning further improves the initial rule-guided policy. Although AoI-STO-Lite can obtain low SP AoI in some cases, it suffers from severe LP starvation and poor LP PSR. To evaluate the sensitivity to the MMPP traffic param-eters, we define the burstiness ratio as ρλ = λH/λ L. In this experiment, λL, βLH , and βHL are fixed, while λH is varied by changing ρλ. Fig. 9 illustrates the performance 500 1000 1500 2000 
+
+Area size (m 2)  
+
+> 0100 200 300 400 500
+> Average AoI of LPs (s)  MA-HEAD-Net Fixed Gate MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite AoI-Hungarian WI-Lyap 600 800 1000 10 20 30
+
+(a) Average AoI of LPs 500 1000 1500 2000 
+
+Area size (m 2)    
+
+> 020 40 60 80 100
+> Average AoI of SPs (s)  MA-HEAD-Net Fixed Gate MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite AoI-Hungarian WI-Lyap 1100 1300 1500 3456
+
+(b) Average AoI of SPs 500 1000 1500 2000 
+
+Area size (m 2)  
+
+> 020 40 60 80 100
+> Average PSR of LPs (%)
+> MA-HEAD-Net Fixed Gate MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite AoI-Hungarian WI-Lyap 600 800 1000 90 95 100
+
+(c) Average PSR of LPs 500 1000 1500 2000 
+
+Area size (m 2)   
+
+> 50 60 70 80 90 100
+> Average PSR of SPs (%)
+> MA-HEAD-Net Fixed Gate MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite AoI-Hungarian WI-Lyap 600 800 1000 93 94 95 96
+
+(d) Average PSR of SPs 
+
+Fig. 8: Comparison of average AoI and PSR versus the area size with K = 40 GTs. 2 4 6 8 10 
+
+MMPP burstiness ratio ;6
+
+> 0100 200 300 400 500
+> Average AoI of LPs (s)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(a) Average AoI of LPs 2 4 6 8 10 
+
+MMPP burstiness ratio ;6 
+
+> 10 20 30 40 50 60
+> Average AoI of SPs (s)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(b) Average AoI of SPs 2 4 6 8 10 
+
+MMPP burstiness ratio ;6
+
+> 020 40 60 80 100
+> Average PSR of LPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(c) Average PSR of LPs 2 4 6 8 10 
+
+MMPP burstiness ratio ;6 
+
+> 50 60 70 80 90
+> Average PSR of SPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(d) Average PSR of SPs 
+
+Fig. 9: Comparison of average AoI and PSR under different MMPP burstiness ratios ρλ.comparison of the average AoI and PSR for LPs and SPs under different MMPP burstiness ratios ρλ. As shown in Fig. 9(a), the LP AoI generally increases with ρλ, since stronger burstiness increases queueing pressure and reduces LP transmission opportunities. MA-HEAD-Net consistently achieves the lowest LP AoI, while AoI-STO-Lite suffers from severe LP starvation. Fig. 9(b) shows that the SP AoI does not increase monotonically with ρλ, because stronger burstiness also generates more fresh SP updates. Within a certain range of ρλ, MA-HEAD-Net can reduce SP AoI by promptly serving newly generated SP packets, while the SP AoI slightly increases when ρλ further increases. Although AoI-STO-Lite obtains lower SP AoI in some cases, it leads to much higher LP AoI. Fig. 9(c) and Fig. 9(d) show that both LP and SP PSRs decrease as ρλ increases, due to stronger queueing pressure and limited transmission resources under bursty arrivals. Nevertheless, MA-HEAD-Net maintains the highest PSRs for both LPs and SPs. These results confirm that MA-HEAD-Net achieves a better balance between LP service continuity and SP information freshness, and remains robust under different MMPP burstiness levels. 0.3 0.5 1 1.5 2
+
+Bandwidth (MHz) 
+
+> 0100 200 300 400 500
+> Average AoI of LPs (s)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(a) Average AoI of LPs 0.3 0.5 1 1.5 2
+
+Bandwidth (MHz)  
+
+> 10 20 30 40 50 60 70
+> Average AoI of SPs (s)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(b) Average AoI of SPs 0.3 0.5 1 1.5 2
+
+Bandwidth (MHz) 
+
+> 020 40 60 80 100
+> Average PSR of LPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(c) Average PSR of LPs 0.3 0.5 1 1.5 2
+
+Bandwidth (MHz)  
+
+> 55 60 65 70 75 80 85
+> Average PSR of SPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(d) Average PSR of SPs 
+
+Fig. 10: Comparison of average AoI and PSR under different bandwidths W .Figure 10 illustrates the performance comparison of the average AoI and PSR for LPs and SPs under different band-widths W . As shown in Fig. 10(a), the LP AoI decreases as 
+
+W increases, since a larger bandwidth increases the available blocklength and improves the achievable rate under the FBL model. MA-HEAD-Net keeps the LP AoI at a low level in the most bandwidth-limited case and continues to achieve the lowest LP AoI as W increases. In contrast, AoI-STO-Lite suffers from severe LP starvation, resulting in much higher LP AoI. As shown in Fig. 10(b), the SP AoI generally decreases with W because a larger bandwidth enables more reliable delivery of newly generated SP packets. MA-HEAD-Net achieves much lower SP AoI than MAPPO, HAPPO, and LSTM-MAPPO, while the lower SP AoI of AoI-STO-Lite is achieved at the cost of severely degraded LP performance. Fig. 10(c) and Fig. 10(d) show that the LP and SP PSRs generally improve as W increases, because a larger bandwidth increases the available blocklength n = W τ used and enables packets to be transmitted more reliably within the allocated transmission duration. MA-HEAD-Net maintains the highest PSRs for both LPs and SPs over most bandwidth settings, in-dicating that it can better balance LP service continuity and SP information freshness under different bandwidth conditions. To evaluate the impact of checkpoint-related control over-head, we vary the normalized overhead ratio as ρoh ∈0 2 5 10 15   
+
+> Checkpoint overhead ratio ;oh (%)
+> 0100 200 300 400 500
+> Average AoI of LPs (s)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(a) Average AoI of LPs 0 2 5 10 15    
+
+> Checkpoint overhead ratio ;oh (%)
+> 0100 200 300 400 500
+> Average AoI of SPs (s)  MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(b) Average AoI of SPs 0 2 5 10 15   
+
+> Checkpoint overhead ratio ;oh (%)
+> 020 40 60 80 100
+> Average PSR of LPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(c) Average PSR of LPs 0 2 5 10 15    
+
+> Checkpoint overhead ratio ;oh (%)
+> 020 40 60 80 100
+> Average PSR of SPs (%)
+> MA-HEAD-Net MAPPO HAPPO LSTM-MAPPO Rule-Only AoI-STO-Lite
+
+(d) Average PSR of SPs 
+
+Fig. 11: Comparison of average AoI and PSR under different checkpoint overhead ratios ρoh .
+
+{0, 2% , 5% , 10% , 15% }, where ρoh denotes the fraction of a checkpoint interval occupied by checkpoint-related control op-erations. Thus, ρoh = 0 corresponds to the ideal zero-overhead case, while a larger ρoh indicates a higher checkpoint-related control cost. Fig. 11 illustrates the performance comparison of the average AoI and PSR for LPs and SPs under different checkpoint overhead ratios ρoh . As shown in Fig. 11(a) and Fig. 11(b), the AoI performance of MA-HEAD-Net remains relatively stable as ρoh increases. The LP AoI remains at a low level, and the SP AoI only shows a slight increase under larger overhead ratios. In contrast, the SP AoI of MAPPO, LSTM-MAPPO, and HAPPO increases sharply as 
+
+ρoh increases, indicating that these learning-based baselines are more sensitive to the reduced effective data transmission time without rule-prior guidance. AoI-STO-Lite still suffers from severe LP starvation, although it can maintain a low SP AoI in some cases. Fig. 11(c) and Fig. 11(d) further show that MA-HEAD-Net maintains a stable LP PSR and a relatively high SP PSR under different overhead ratios. Although the SP PSR decreases as ρoh increases, MA-HEAD-Net still outperforms the baselines. These results indicate that the proposed adaptive mini-slot mechanism remains effective beyond the ideal zero-overhead setting, and can still maintain a good balance between SP response and LP service continuity when practical checkpoint-related control overhead is consid-ered. These results also suggest that the proposed mechanism is most efficient under low-to-medium checkpoint overhead ratios, while adaptive checkpoint-interval selection becomes important when the overhead ratio is large. VI. C ONCLUSION 
+
+In this paper, we have investigated AoI minimization in UAV-assisted emergency communication networks. We estab-lished a system model that captures bursty heterogeneous traffic using the MMPP and incorporates FBL theory to characterize short-packet transmission. Considering the coex-istence of delay-tolerant long packets and delay-sensitive short packets, we introduced a mini-slot scheduling mechanism with adaptive checkpoints to balance long-packet transmis-sion continuity and urgent short-packet preemption. To tackle the resulting joint optimization problem, we developed MA-HEAD-Net as an adaptive rule-guided MADRL framework. MA-HEAD-Net embeds AoI-oriented rule priors into a gated multi-head policy, where the learned gates adaptively balance rule-prior guidance and neural policy learning before action sampling. Under the MAPPO training framework, the policy network, gating components, and prior-strength coefficients are jointly optimized, enabling the agents to adjust their reliance on rule priors according to dynamic network states. Simulation results showed that MA-HEAD-Net achieved better AoI performance than representative learning-based, heuristic, and ablation baselines, while also improving policy-formation efficiency compared with learning-based MADRL baselines. These results confirm its effectiveness for timely decision-making in dynamic UAV-assisted emergency communication scenarios. REFERENCES [1] N. Zhao, W. Lu, M. Sheng, Y. Chen, J. Tang, F. R. Yu, and K.-K. Wong, “UAV-assisted emergency networks in disasters,” IEEE Wireless Communications , vol. 26, no. 1, pp. 45–51, 2019. [2] Y. Zhang and W. Cheng, “Trajectory and power optimization for multi-UAV enabled emergency wireless communications networks,” in 2019 IEEE International Conference on Communications Workshops (ICC Workshops) , 2019, pp. 1–6. [3] C. Kyrkou and T. Theocharides, “EmergencyNet: Efficient aerial image classification for drone-based emergency monitoring using atrous con-volutional feature fusion,” IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing , vol. 13, pp. 1687–1699, 2020. [4] Z. Yao, W. Cheng, W. Zhang, T. Zhang, and H. Zhang, “The rise of UAV fleet technologies for emergency wireless communications in harsh environments,” IEEE Network , vol. 36, no. 4, pp. 28–37, 2022. [5] M. Liu, J. Yang, and G. Gui, “DSF-NOMA: UAV-assisted emergency communication technology in a heterogeneous internet of things,” IEEE Internet of Things Journal , vol. 6, no. 3, pp. 5508–5519, 2019. [6] J. Alotaibi, O. S. Oubbati, M. Atiquzzaman, F. Alromithy, and M. R. Altimania, “Optimizing disaster response with UAV-mounted RIS and HAP-enabled edge computing in 6G networks,” Journal of Network and Computer Applications , vol. 241, p. 104213, 2025. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S1084804525001109 [7] Z. Yao, W. Cheng, W. Zhang, T. Zhang, and H. Zhang, “The rise of UAV fleet technologies for emergency wireless communications in harsh environments,” IEEE Network , vol. 36, no. 4, pp. 28–37, 2022. [8] M. Kim, S. Lee, C. Park, J. Lee, and W. Saad, “Ensuring data freshness for blockchain-enabled monitoring networks,” IEEE Internet of Things Journal , vol. 9, no. 12, pp. 9775–9788, 2022. [9] Y. Polyanskiy, H. V. Poor, and S. Verdu, “Channel coding rate in the finite blocklength regime,” IEEE Transactions on Information Theory ,vol. 56, no. 5, pp. 2307–2359, 2010. [10] Y. Zhang, W. Cheng, J. Wang, and W. Zhang, “Performance analy-sis and blocklength minimization of uplink RSMA for short packet transmissions in URLLC,” in GLOBECOM 2023 - 2023 IEEE Global Communications Conference , 2023, pp. 6765–6770. [11] Y. Zhang, W. Cheng, and W. Zhang, “Multiple access integrated adaptive finite blocklength for ultra-low delay in 6G wireless networks,” IEEE Transactions on Wireless Communications , vol. 23, no. 3, pp. 1670– 1683, 2024. [12] T. Liang, T. Zhang, Q. Wu, W. Liu, D. Li, Z. Xie, D. Li, and Q. Zhang, “Age of information based scheduling for UAV aided localization and communication,” IEEE Transactions on Wireless Communications ,vol. 23, no. 5, pp. 4610–4626, 2024. [13] X. Zhang, Z. Chang, T. Hämäläinen, and G. Min, “AoI-energy tradeoff for data collection in UAV-assisted wireless networks,” IEEE Transac-tions on Communications , vol. 72, no. 3, pp. 1849–1861, 2024. [14] G. Chen, C. Cheng, X. Xu, and Y. Zeng, “Minimizing the age of information for data collection by cellular-connected UAV,” IEEE Trans-actions on Vehicular Technology , vol. 72, no. 7, pp. 9631–9635, 2023. [15] X. Liu, H. Liu, K. Zheng, J. Liu, T. Taleb, and N. Shiratori, “AoI-minimal clustering, transmission and trajectory co-design for UAV-assisted WPCNs,” IEEE Transactions on Vehicular Technology , vol. 74, no. 1, pp. 1035–1051, 2025. [16] X. Gao, X. Zhu, and L. Zhai, “AoI-sensitive data collection in multi-UAV-assisted wireless sensor networks,” IEEE Transactions on Wireless Communications , vol. 22, no. 8, pp. 5185–5197, 2023. [17] C. Liu, Y. Guo, N. Li, and X. Song, “AoI-minimal task assignment and trajectory optimization in multi-UAV-assisted IoT networks,” IEEE Internet of Things Journal , vol. 9, no. 21, pp. 21 777–21 791, 2022. [18] Y. Long, S. Zhao, S. Gong, B. Gu, D. Niyato, and X. Shen, “AoI-aware sensing scheduling and trajectory optimization for multi-UAV-assisted wireless backscatter networks,” IEEE Transactions on Vehicular Technology , vol. 73, no. 10, pp. 15 440–15 455, 2024. [19] R. Han, Y. Wen, L. Bai, J. Liu, and J. Choi, “Age of information aware UAV deployment for intelligent transportation systems,” IEEE Transactions on Intelligent Transportation Systems , vol. 23, no. 3, pp. 2705–2715, 2022. [20] Z. Yao, W. Cheng, W. Zhang, and H. Zhang, “Resource allocation for 5G-UAV-based emergency wireless communications,” IEEE Journal on Selected Areas in Communications , vol. 39, no. 11, pp. 3395–3410, 2021. [21] J. Liu, Z. Yao, W. Cheng, L. Liang, and W. Zhang, “NS-D3QN enhanced sensing and communications for emergency UAV networks,” in ICC 2026 - IEEE International Conference on Communications , 2026, pp. 1–6. [22] X. Fan, M. Liu, Y. Chen, S. Sun, Z. Li, and X. Guo, “RIS-assisted UAV for fresh data collection in 3D urban environments: A deep reinforce-ment learning approach,” IEEE Transactions on Vehicular Technology ,vol. 72, no. 1, pp. 632–647, 2023. [23] M. Sun, X. Xu, X. Qin, and P. Zhang, “AoI-energy-aware UAV-assisted data collection for IoT networks: A deep reinforcement learning method,” IEEE Internet of Things Journal , vol. 8, no. 24, pp. 17 275– 17 289, 2021. [24] M. Sherman, S. Shao, X. Sun, and J. Zheng, “Optimizing AoI in UAV-RIS-assisted IoT networks: Off policy versus on policy,” IEEE Internet of Things Journal , vol. 10, no. 14, pp. 12 401–12 415, 2023. [25] Y. Yang, T. Song, J. Yang, H. Xu, and S. Xing, “Joint energy and AoI optimization in UAV-assisted MEC-WET systems,” IEEE Sensors Journal , vol. 24, no. 9, pp. 15 110–15 124, 2024. [26] X. Wang, M. Yi, J. Liu, Y. Zhang, M. Wang, and B. Bai, “Cooperative data collection with multiple UAVs for information freshness in the internet of things,” IEEE Transactions on Communications , vol. 71, no. 5, pp. 2740–2755, 2023. [27] O. S. Oubbati, M. Atiquzzaman, H. Lim, A. Rachedi, and A. Lakas, “Synchronizing UAV teams for timely data collection and energy trans-fer by deep reinforcement learning,” IEEE Transactions on Vehicular Technology , vol. 71, no. 6, pp. 6682–6697, 2022. [28] A. I. Ameur, O. S. Oubbati, A. Rachedi, A. Arishi, and M. Atiquzzaman, “Intelligent UAV caching and energy management in 6G networks,” 
+
+IEEE Transactions on Network Science and Engineering , vol. 13, pp. 3175–3192, 2026. [29] M. Kim, W. Saad, and D. Calin, “Efficient domain generalization in wireless networks with scarce multi-modal data,” arXiv preprint arXiv:2510.04359 , 2025. [30] D. Rizvi and D. Boyle, “Multi-agent reinforcement learning with action masking for UAV-enabled mobile communications,” IEEE Transactions on Machine Learning in Communications and Networking , vol. 3, pp. 117–132, 2025. [31] T. Bao, A. Syed, W. Sean Kennedy, and M. Erol-Kantarci, “Sustainable task offloading in secure UAV-assisted smart farm networks: A multi-agent DRL with action mask approach,” IEEE Transactions on Network and Service Management , vol. 22, no. 4, pp. 3191–3200, 2025. [32] W. Wang, X. Huang, and B. Cheng, “Deep Q-network based UAV autonomous obstacle avoidance with prior reward shaping,” in 2023 IEEE 5th International Conference on Power, Intelligent Computing and Systems (ICPICS) , 2023, pp. 147–151. [33] J. Wang, H. Ma, D. Zhao, and Q. Deng, “Dynamic reward shaping with state-action feedback for UAV control,” in 2024 4th International Conference on Electronic Information Engineering and Computer Com-munication (EIECC) , 2024, pp. 132–135. [34] M. Parvini, M. R. Javan, N. Mokari, B. Abbasi, and E. A. Jorswieck, “AoI-aware resource allocation for platoon-based C-V2X networks via multi-agent multi-task reinforcement learning,” IEEE Transactions on Vehicular Technology , vol. 72, no. 8, pp. 9880–9896, 2023. [35] H. Zhao, G. Lu, Y. Liu, Z. Chang, L. Wang, and T. Hämäläinen, “Safe DQN-based AoI-minimal task offloading for UAV-aided edge computing system,” IEEE Internet of Things Journal , vol. 11, no. 19, pp. 32 012– 32 024, 2024. [36] A. Termehchi, A. Syed, W. S. Kennedy, and M. Erol-Kantarci, “Dis-tributed safe multi-agent reinforcement learning: Joint design of THz-enabled UAV trajectory and channel allocation,” IEEE Transactions on Vehicular Technology , vol. 73, no. 10, pp. 14 172–14 186, 2024. [37] H. Sun, Y. Zhou, J. Tang, Z. Kang, X. Wang, and T. Q. S. Quek, “Average AoI-minimal trajectory design for UAV-assisted IoT data collection system: A safe-TD3 approach,” IEEE Wireless Communications Letters ,vol. 13, no. 2, pp. 530–534, 2024. [38] Y.-J. Chen and D.-Y. Huang, “Joint trajectory design and bs association for cellular-connected UAV: An imitation-augmented deep reinforce-ment learning approach,” IEEE Internet of Things Journal , vol. 9, no. 4, pp. 2843–2858, 2022. [39] H. Zhang, J. Huo, Y. Huang, J. Cheng, and X. Li, “Perception-aware-based UAV trajectory planner via generative adversarial self-imitation learning from demonstrations,” IEEE Internet of Things Journal , vol. 12, no. 3, pp. 3248–3260, 2025. [40] Y. Zhang, C. Yan, J. Xiao, and M. Feroskhan, “NPE-DRL: Enhancing perception constrained obstacle avoidance with nonexpert policy guided reinforcement learning,” IEEE Transactions on Artificial Intelligence ,vol. 6, no. 1, pp. 184–198, 2025. [41] Z. Gong, O. Hashash, Y. Wang, Q. Cui, W. Ni, W. Saad, and K. Sak-aguchi, “UAV-aided lifelong learning for AoI and energy optimization in nonstationary IoT networks,” IEEE Internet of Things Journal , vol. 11, no. 24, pp. 39 206–39 224, 2024. [42] H. Ren, Z. Chang, and G. Min, “Correlation-driven task assignment for multi-UAV networks via imitation learning,” IEEE Transactions on Vehicular Technology , vol. 74, no. 11, pp. 17 353–17 365, 2025. [43] X. Wang, Z. Ning, S. Guo, M. Wen, L. Guo, and H. V. Poor, “Dynamic UAV deployment for differentiated services: A multi-agent imitation learning based approach,” IEEE Transactions on Mobile Computing ,vol. 22, no. 4, pp. 2131–2146, 2023. [44] S. Griffith, K. Subramanian, J. Scholz, C. L. Isbell, and A. L. Thomaz, “Policy shaping: Integrating human feedback with reinforcement learn-ing,” in Advances in Neural Information Processing Systems , vol. 26, 2013. [45] T. Johannink, S. Bahl, A. Nair, J. Luo, A. Kumar, M. Loskyll, J. A. Ojea, E. Solowjow, and S. Levine, “Residual reinforcement learning for robot control,” in 2019 International Conference on Robotics and Automation (ICRA) , 2019, pp. 6023–6029. [46] I. Uchendu, T. Xiao, Y. Lu, B. Zhu, M. Yan, J. Simon, M. Bennice, C. Fu, C. Ma, J. Jiao, S. Levine, and K. Hausman, “Jump-start reinforcement learning,” in Proceedings of the 40th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 202. PMLR, 2023, pp. 34 556–34 583. [47] M. Centa and P. Preux, “Soft action priors: Towards robust policy trans-fer,” in Proceedings of the Thirty-Seventh AAAI Conference on Artificial Intelligence and Thirty-Fifth Conference on Innovative Applications of Artificial Intelligence and Thirteenth Symposium on Educational Advances in Artificial Intelligence , 2023, pp. 6953–6961. [48] Y. Zhang, W. Saad, and W. Cheng, “Neuro-symbolic rule-assisted deep reinforcement learning for AoI minimization in wireless extended reality systems,” in IEEE INFOCOM 2025 - IEEE Conference on Computer Communications Workshops (INFOCOM WKSHPS) , 2025, pp. 1–6. [49] Y. Zeng, J. Xu, and R. Zhang, “Energy minimization for wireless communication with rotary-wing UAV,” IEEE Transactions on Wireless Communications , vol. 18, no. 4, pp. 2329–2345, 2019. [50] Y. Zhang, W. Cheng, and W. Zhang, “Adaptive finite blocklength for low access delay in 6G wireless networks,” in GLOBECOM 2022 -2022 IEEE Global Communications Conference , 2022, pp. 6559–6564. [51] O. S. Oubbati, J. Alotaibi, F. Alromithy, M. Atiquzzaman, and M. R. Altimania, “A UAV-UGV cooperative system: Patrolling and energy management for urban monitoring,” IEEE Transactions on Vehicular Technology , vol. 74, no. 9, pp. 13 521–13 536, 2025. [52] Y. Zhang, W. Cheng, J. Wang, and W. Zhang, “Delay trade-off and adap-tive resource element framework for URLLC,” IEEE Communications Magazine , vol. 63, no. 8, pp. 154–160, 2025. [53] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, and Y. Wu, “The surprising effectiveness of PPO in cooperative multi-agent games,” in Thirty-sixth Conference on Neural Information Processing Systems Datasets and Benchmarks Track , 2022. [54] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural Computation , vol. 9, no. 8, pp. 1735–1780, 1997. [55] J. G. Kuba, R. Chen, M. Wen, Y. Wen, F. Sun, J. Wang, and Y. Yang, “Trust region policy optimisation in multi-agent reinforcement learning,” in International Conference on Learning Representations , 2022. [56] Y. Long, S. Zhao, S. Gong, B. Gu, D. Niyato, and X. Shen, “AoI-aware sensing scheduling and trajectory optimization for multi-UAV-assisted wireless backscatter networks,” IEEE Transactions on Vehicular Technology , vol. 73, no. 10, pp. 15 440–15 455, 2024. [57] H. W. Kuhn, “The hungarian method for the assignment problem,” Naval Research Logistics Quarterly , vol. 2, no. 1-2, pp. 83–97, 1955. [58] I. Kadota, A. Sinha, E. Uysal-Biyikoglu, R. Singh, and E. Modiano, “Scheduling policies for minimizing age of information in broadcast wireless networks,” IEEE/ACM Transactions on Networking , vol. 26, no. 6, pp. 2637–2650, 2018. [59] Y.-P. Hsu, “Age of information: Whittle index for scheduling stochastic arrivals,” in 2018 IEEE International Symposium on Information Theory (ISIT) , 2018, pp. 2634–2638. [60] M. Mozaffari, W. Saad, M. Bennis, and M. Debbah, “Mobile unmanned aerial vehicles (UAVs) for energy-efficient internet of things communica-tions,” IEEE Transactions on Wireless Communications , vol. 16, no. 11, pp. 7574–7589, 2017. [61] 3GPP, “Study on scenarios and requirements for next generation access technologies,” 3rd Generation Partnership Project (3GPP), Technical Report TR 38.913, 2020. [62] J. Li, H. Zhao, H. Wang, F. Gu, J. Wei, H. Yin, and B. Ren, “Joint optimization on trajectory, altitude, velocity, and link scheduling for minimum mission time in UAV-aided data collection,” IEEE Internet of Things Journal , vol. 7, no. 2, pp. 1464–1475, 2020.
