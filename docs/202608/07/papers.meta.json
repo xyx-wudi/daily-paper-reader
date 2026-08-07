@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-07",
+  "date": "2026-08-07",
+  "generated_at": "2026-08-07T01:58:41",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/07/2608.04663v1-calibrating-artificial-guilt-neurally-grounded-reward-shaping-for-prosocial-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Calibrating Artificial Guilt: Neurally Grounded Reward Shaping for Prosocial Multi-Agent Reinforcement Learning",
+      "authors": "Aaditya Mehta, Arya Shah",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04663v1",
+      "score": "9.0",
+      "evidence": "基于人类内疚数据的奖励塑形用于合作式多智能体强化学习",
+      "tldr": "多智能体强化学习常给个体奖励添加社会项，但尺度多靠手工调整。本文从人类fMRI和行为数据中拟合出内疚权重，并嵌入双智能体社会彩票环境的PPO训练。校准后的智能体在安全选择率上最接近人类水平，KL散度远低于其他塑形方案。结果表明人类神经行为先验可作为亲社会奖励塑形的定量约束。",
+      "tags": "query:marl",
+      "abstract_en": "Cooperative multi-agent reinforcement learning often adds social terms to individual rewards, yet the scale of those terms is usually chosen by hand. We ask whether a guilt signal can instead be calibrated from human neural and behavioural data and transferred to artificial agents. Using the public SoDec responsibility fMRI dataset (40 participants), we fit a subject-fixed-effects regression of momentary-happiness changes on outcome-type counts and recover a guilt weight as the Partner-negative minus Social-negative contrast ($\\hat{w}=1.118$, Cohen's $d=0.214$). We embed this weight in a two-agent Social Lottery environment and train independent Proximal Policy Optimization actor-critics under four shaping regimes: neurally calibrated, uniform constant, zero (selfish), and a unit-coefficient oracle. Across 1{,}000 evaluation episodes per condition, the calibrated agents track the human Social safe-choice rate most closely ($0.459$ vs.\\ human $0.484$; $\\mathrm{KL}=0.0012$), while the other three conditions deviate by one to three orders of magnitude in KL. Human neurobehavioural priors can therefore act as quantitative constraints on prosocial reward shaping.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/07/2608.04905v1-primal3-pathfinding-via-reinforcement-and-imitation-multi-agent-learning---leveraging-lacam3",
+      "section": "deep",
+      "title_en": "PRIMAL3: Pathfinding via Reinforcement and Imitation Multi-Agent Learning - Leveraging LaCAM3",
+      "authors": "Chengyang He, Tanishq Duhan, Gadiel Sznaier Camps, Fangyuan Wang, Yuhong Cao, Jiankai Sun, Ge Sun, Mac Schwager, Guillaume Sartoretti",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04905v1",
+      "score": "9.0",
+      "evidence": "面向协作路径规划的强化与模仿多智能体学习",
+      "tldr": "针对多智能体路径查找在瓶颈、死胡同及持续冲突等拓扑关键状态易协调失败的问题，PRIMAL3融合强化学习与模仿学习，构造同向跟随与异向冲突双图实现拓扑感知通信，并让策略熵识别不确定智能体，由LaCAM3依据置信度提供干预与标签平滑模仿目标；执行时以PIBT优先级细化动作，结合持久、学习与距离感知优先级，无需推理时专家。方法可扩展至十万智能体，性能大幅领先现有学习基线，且经实物系统验证，为大规模MAPF提供可行范式。",
+      "tags": "query:marl",
+      "abstract_en": "We present PRIMAL3, an ultra-large-scale learning-based framework for multi-agent pathfinding (MAPF) that integrates reinforcement learning, topology-aware communication, LaCAM3-guided training, and PIBT-based action refinement. PRIMAL3 targets failures at topologically critical states, where agents must coordinate decisively around bottlenecks, dead ends, and persistent conflicts. Each agent is represented using features derived from cut vertices, dead-end regions, shortest-path distances, and blocking estimates. Two complementary graphs capture agent interactions: a same-direction following graph propagates multihop context along compatible paths, while a different-direction conflict graph differentiates agents competing for shared space through masked attention and relative features. During training, we propose to let policy entropy identify uncertain agents, for which LaCAM3 provides confidence-triggered action interventions and label-smoothed imitation targets. During execution, a priority-aware PIBT module refines the proposed joint actions using persistent, learned, and distance-aware priorities together with policy-aware fallback preferences while maintaining collision-free execution. The resulting framework combines learned exploration with structured expert guidance without requiring LaCAM3 at inference. Experiments demonstrate that PRIMAL3 substantially outperforms state-of-the-art learning-based baselines and scales to ultra-large instances with up to city-level 100,000 agents. Real-world experiments further demonstrate the feasibility of deploying PRIMAL3 on physical robotic systems and ablation studies validate the individual contributions the components we proposed. Project page: https://marmotlab.github.io/PRIMAL3/",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/07/2608.02291v1-shared-prefixes-better-credit-adaptive-routing-for-multi-agent-reasoning",
+      "section": "quick",
+      "title_en": "Shared Prefixes, Better Credit: Adaptive Routing for Multi-Agent Reasoning",
+      "authors": "Yiqing Liu, Zihao Wang, Hantao Yao, Wu Liu, Yongdong Zhang",
+      "date": "2026-08-03",
+      "pdf": "https://arxiv.org/pdf/2608.02291v1",
+      "score": "6.0",
+      "evidence": "多智能体推理中的自适应路由与轨迹级回报信用分配算法",
+      "tldr": "多智能体推理通过迭代交换与优化提升可靠性，但现有自适应方法依赖查询级或轨迹级监督，难以精准估计算子效用。TreeCredit提出共享前缀信用分配框架，通过构建共享前缀协作树，基于后缀正确性与累计成本分配结构化信用，训练轻量级成对路由器，实现动态算子选择。在六个推理基准上，TreeCredit在保持精度提升的同时大幅降低推理成本，获得更优的精度-成本权衡。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent reasoning (MAR) improves reasoning reliability through iterative solution exchange and refinement. Existing adaptive MAR methods typically learn routing decisions from query-level labels or trajectory-level returns, but such coarse supervision cannot accurately estimate the state-conditioned utility of individual operators in multi-step collaboration. We propose TreeCredit, a shared-prefix credit assignment framework for efficient adaptive MAR. Its core insight is to estimate operator utility through state-matched downstream comparisons, rather than directly attributing trajectory-level outcomes to preceding decisions. TreeCredit constructs shared-prefix collaboration trees by expanding candidate operators from the same intermediate state and assigns each state--operator pair a correctness-prioritized suffix credit based on the terminal correctness and cumulative additional cost of its complete continuation. These structured credits are converted into state-local operator preferences to train a lightweight pairwise state router, which dynamically selects the next admissible operator during inference. Experiments on six reasoning benchmarks show that TreeCredit modestly improves accuracy while substantially reducing inference cost, achieving a better accuracy--cost trade-off than representative MAR methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/07/2608.04309v1-structured-llm-reasoning-for-zero-shot-human--robot-coordination-under-hidden-goals",
+      "section": "quick",
+      "title_en": "Structured LLM Reasoning for Zero-Shot Human--Robot Coordination Under Hidden Goals",
+      "authors": "Dong Hae Mangalindan, Anand Gokhale, Francesco Bullo, Vaibhav Srivastava",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04309v1",
+      "score": "6.0",
+      "evidence": "隐藏目标下的人机协作，使用Dec-POMDP并与MARL策略对比",
+      "tldr": "零样本人机协作中，智能体常因隐藏目标而难以预判对方意图。本文提出结构化LLM架构，基于Dec-POMDP将决策分解为动作条件Theory-of-Mind推理、层级规划、对话解释、动作验证及反馈再规划，用LLM替代不可解的推理和规划计算。人类实验表明，该方法较无ToM消融及离线训练的多智能体RL基线，交互步骤更少且事后信任评分更高。结果证明系统化分解团队决策问题、结合可行验证能提升协作效率与人类体验。",
+      "tags": "query:marl",
+      "abstract_en": "We present a structured large-language-model (LLM) architecture for zero-shot human--robot coordination in a cooperative construction task with private goal views. Guided by a Dec-POMDP formulation, the architecture decomposes decision-making into (i) action-conditioned Theory-of-Mind (ToM) inference, (ii) hierarchical planning, (iii) conversation interpretation, (iv) action verification, and (v) feedback-based replanning. We compare the proposed method with an ablation without ToM inference and a multi-agent reinforcement-learning policy trained offline over many goal pairs. In human-participant experiments, the proposed method required fewer interaction steps and yielded higher post-interaction trust ratings than both baselines. These results suggest that systematically decomposing the team decision problem, using LLMs as tractable surrogates for otherwise intractable inference and planning computations, and retaining conventional verification for physical feasibility can improve both task coordination and the human experience.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
