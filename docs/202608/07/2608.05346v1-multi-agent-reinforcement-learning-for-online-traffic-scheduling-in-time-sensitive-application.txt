@@ -1,0 +1,412 @@
+Title: Multi-Agent Reinforcement Learning for Online Traffic Scheduling in Time-Sensitive Application
+
+URL Source: https://arxiv.org/pdf/2608.05346v1
+
+Published Time: Fri, 07 Aug 2026 00:08:58 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# Multi-Agent Reinforcement Learning for Online Traffic Scheduling in Time-Sensitive Application 
+
+Marcos Carvalho ∗‡ , Fatih Temiz ‡, Shavbo Salehi ‡ Melike Erol-Kantarci, Fellow, IEEE ‡, Daniel F. Macedo ∗∗Universidade Federal de Minas Gerais, Brazil 
+
+> ‡
+
+School of Electrical Engineering and Computer Science, University of Ottawa, Ottawa, Canada E-mails: {marcoscarvalho, damacedo }@dcc.ufmg.br, {ftemi033, ssale038, melike.erolkantarci }@uottawa.ca 
+
+Abstract —Time-sensitive networking (TSN) is increasingly in-tegrated into mobile edge computing (MEC) to support appli-cations with stringent latency requirements, such as extended reality (XR). However, existing TSN scheduling solutions predom-inantly rely on static optimization techniques or centralized learn-ing models that are based on fixed traffic patterns, limiting their effectiveness in dynamic environments. In practice, MEC envi-ronments often host multiple co-located XR traffic flows whose characteristics evolve over time, creating complex inter-queue dependencies that current schedulers fail to capture. Address-ing these challenges requires adaptive, decentralized scheduling mechanisms capable of coordinating multiple TSN queues under varying traffic conditions. To this end, this paper proposes a multi-agent reinforcement learning (MARL) framework for TSN scheduling, where each TSN queue is modeled as an autonomous agent. The Heterogeneous-Agent Proximal Policy Optimization (HAPPO) algorithm is employed to explicitly model inter-agent dependencies and jointly optimize service delivery across queues. The simulation results demonstrate that the proposed approach reduces average frame waiting times by up to 26.8% and worst-case delays by approximately 16.8%, highlighting its effectiveness in dynamic XR-driven MEC scenarios. 
+
+Index Terms —Mobile Edge Computing, Multi-Agent Rein-forcement Learning, Time-Sensitive Networking, Ultra-Low La-tency Communication 
+
+I. I NTRODUCTION 
+
+Time-sensitive networking (TSN) has emerged as a key technology for meeting the ultra-low-latency communica-tion requirements of time-sensitive applications. TSN extends standard Ethernet by providing mechanisms such as IEEE 802.1Qbv [1], which defines a time-aware shaper that man-ages multiple queues at the egress ports of network devices. Recent studies have investigated the integration of TSN with mobile edge computing (MEC) environments for enhancing the capability of MEC in delivering timely services [2]. Many prior works focus on static industrial scenarios, where the number of flows is predefined, traffic is periodic, and packet characteristics such as size and inter-arrival time remain con-stant over time. Consequently, schedulers often rely on static optimization methods, such as satisfiability modulo theories and integer linear programming [3]. While effective in static contexts, these methods face significant scalability limitations due to their long adaptation time to network changes [4]. Cur-rent advances in reinforcement learning (RL) have improved TSN scheduling in more complex scenarios. For example, [5] proposes a categorical deep Q-network (DQN) to identify load-balanced routes by selecting paths that maximize scheduling success. Similarly, [6] introduces an RL-based scheduler using a graph neural network encoder to handle arbitrary topologies and capture dependencies between flows and link states. Likewise, [7] proposes a dynamic scheduling framework com-bining graph convolutional networks and deep deterministic policy gradient (DDPG) to schedule flows while meeting deadlines and improving admission rates adaptively. The work in [8] proposes the adaptive TSN (A-TSN) framework, which leverages a DQN to optimize time-slot allocation for periodic flows by selecting intervals that minimize latency based on bandwidth usage. Similarly, [9] applies proximal policy opti-mization (PPO) to optimize gate timing across different queues that minimize the end-to-end latency of frames. The study in [10] proposes using DDPG to adapt time slot durations for different queues across egress ports, mitigating frames that fail to transmit in their scheduled slots due to external factors such as time-synchronization errors (i.e., misbehavior). Existing RL-based TSN schedulers primarily rely on cen-tralized single-agent approaches, where a single policy con-trols all queues jointly. Such formulations do not explicitly model the interactions and coordination among queues serving applications with different quality of service requirements. In addition, existing TSN-RL studies primarily focus on con-ventional network applications and traffic models [11], while overlooking emerging XR-oriented services, which introduce significantly stricter latency requirements. To address these limitations, we investigate a scenario involving multiple XR applications with time-varying traffic and propose a novel multi-agent reinforcement learning (MARL)-based time-slot assignment scheme. In the proposed approach, each TSN queue is modeled as an agent associated with a specific XR application. Coordination among agents is achieved through centralized training, enabling cooperative decision-making and adaptive online scheduling. This paper adopts Heterogeneous-Agent Proximal Policy Optimization (HAPPO) [12], as it allows each agent to specialize while maintaining coordinated control. To show the performance of the MARL method, we compared our approach with single-agent methods and non-learning-based baselines to evaluate the performance of the cooperative multi-agent scheduling. Our results show that HAPPO significantly outperforms single-agent methods, re-ducing average frame waiting times by 26.8% and worst-case delays by 16.8%, while providing more balanced scheduling than heuristic baselines, resulting in reduced tail latencies for lower-load flows. arXiv:2608.05346v1 [cs.NI] 5 Aug 2026 II. S YSTEM MODEL AND PROBLEM FORMULATION 
+
+A. System Architecture Overview 
+
+In this work, we model the integration of TSN with a MEC server equipped with a TSN-capable network interface card (NIC) [2] as illustrated in Fig. 1. The server hosts co-located XR applications with heterogeneous requirements, ranging from full high-resolution video transmission in traditional AR to Semantic AR (SeAR). The latter employs edge-based seg-mentation to generate binary masks of relevant objects, which are then transmitted as small packets to the end device [13]. MEC          
+
+> Server
+> TSN-Capable
+> NIC
+> Application
+> Queue
+> Agent
+> Frame
+> Close
+> q0q1q2qn
+> Time-Slot t k
+> Open Close Close
+> q1q2q3
+> t1t2t3
+> q0...
+> tk
+> Online
+> Schedule
+> Time
+> tk+1
+> AR@90Hz
+> SeAR@60Hz
+> AR@70Hz
+
+Figure 1: Overall Multi-Agent Online TSN Scheduling The TSN-capable NIC comprises a set of queues, denoted by Q = {q0, q 1, . . . , q q }, where each queue qi ∈ Q is associ-ated with a specific traffic class. In this work, queue q0 and queue q1 are assigned to distinct AR applications, while queue 
+
+q2 is reserved for the SeAR application. Moreover, frames within each queue are managed and transmitted in the down-link (DL) direction following a first-in, first-out policy. Each queue is managed by an autonomous agent, and at each time slot, the agents decide which queue is granted transmission ac-cess. Unlike offline scheduling methods, this cooperative pro-cess enables online scheduling, where the next time slot is dy-namically determined based on the current state of all queues. 
+
+B. Traffic Model for Emerging Time-Sensitive Applications 
+
+The dynamic nature of XR traffic necessitates traffic models that differ from those used for conventional TSN applications, as traffic patterns may evolve over time in response to applica-tion behavior and network conditions. Accordingly, the frame arrival time is modeled by the equation below: 
+
+ta(f (qi) 
+
+> j
+
+) = t(qi) 
+
+> start
+
++ ( j − 1) T (qi) + ∆ (qi) 
+
+> j
+
+,
+
+where ta(f (qi) 
+
+> j
+
+) denotes the arrival time of the j-th frame in queue qi. The term t(qi) 
+
+> start
+
+represents the start time of the first enqueued frame. T (q) is the inter-frame interval determined by the application’s data generation rate in queue qi, and 
+
+∆(qi) 
+
+> j
+
+captures timing variations introduced by external factors such as application processing delays, resource contention and fragmentation [14]. 
+
+C. TSN Schedule and Latency Model 
+
+The scheduling process operates over a sequence of con-secutive time slots T = {t1, t 2, . . . , t N }, where each time slot has a fixed duration D. At each time slot, exactly one queue is selected for transmission over the DL communication link. A schedule si ∈ S is defined as an ordered sequence of queue-selection decisions: 
+
+si =  ai(t1), a i(t2), . . . , a i(tN ), (1) where ai(tk) ∈ Q denotes the queue selected for transmission during time slot tk. This formulation models the schedul-ing task as a sequential decision-making process, where a scheduling action is performed at every time slot based on the current network conditions. At time slot tk, each queue qi
+
+is represented by a feature vector capturing its current state as presented by the equation below: 
+
+vqi,t k = ⟨bi,k , w i,k , g i,k ⟩, (2) where bi,k is the backlog size, wi,k is the average waiting time of enqueued frames, and gi,k is the age of the oldest frame (AOF) in the queue. The waiting time of the j-th frame in queue qi, measures how long the frame waits for an opportunity to be transmitted, calculated using the following equation: 
+
+Wi(f (qi) 
+
+> j
+
+) = ts(f (qi) 
+
+> j
+
+) − ta(f (qi) 
+
+> j
+
+), (3) where ts(f (qi) 
+
+> j
+
+) is the service start time and ta(f (qi) 
+
+> j
+
+) is the arrival time. Based on the waiting time of each frame, we can determine the average waiting time across all frames, as defined in the equation below: 
+
+¯Wi = 1
+
+XiXiX
+
+> j=1
+
+Wi(f (qi) 
+
+> j
+
+), (4) where Xi is the total number of frames in queue qi during tk.While average waiting time provides a general measure of queueing delay, it does not capture worst-case behavior. To address this limitation, we define the AOF ( gi,k ) of queue qi
+
+at time-slot tk as the maximum waiting time among all frames currently buffered in the queue, as formalized below: 
+
+gi,k = max  
+
+> fj∈qi
+
+Wi(f (qi) 
+
+> j
+
+). (5) 
+
+D. Problem Formulation 
+
+In the context of XR applications, the network must ensure the timely delivery of frames, meaning that the AOF in the queue remains within acceptable limits. Consequently, the goal is to find the optimal schedule s∗ 
+
+> i
+
+that minimizes the AOF, as described by the equation below. 
+
+s∗ = arg min 
+
+> s∈SN
+
+X
+
+> k=1
+
+X
+
+> qi∈Q
+
+gi,k (6a) s.t. 
+
+> M
+
+X
+
+> j=1
+
+Iai(tk )= qj ≤ 1, ∀k ∈ { 1, . . . , N } (6b) The objective aggregates the AOF over all queues and schedul-ing time slots, capturing the temporal evolution of queueing delays throughout the scheduling horizon. The constraint in eq. (6b) guarantees mutual exclusion, ensuring that only one queue is scheduled for service during each time slot tk, where 
+
+I denotes the indicator function, which equals one if the condition is true and zero otherwise. III. HAPPO-BASED ONLINE TSN S CHEDULING IN 
+
+DYNAMIC MEC E NVIRONMENTS 
+
+A. POMDP Formulation 
+
+In this work, the problem is formulated as a multi-agent partially observable Markov decision process (POMDP), de-fined by the tuple ⟨M , O, A, P, r, γ ⟩. Here, M denotes the set of queue agents, each making decisions to cooperatively satisfy the latency requirements of co-located XR applications. 
+
+O represents the local observation, and A = QMi=1 Ai is the joint action space. P : S×A×S → [0 , 1] is the transition prob-ability function, r is the reward function, and γ is the discount factor balancing immediate and long-term rewards. Below, we describe the three essential components of each agent m ∈ M . 
+
+> •
+
+Observation : the local observation of each agent at the time-slot tk is defined in Equation 2.  
+
+> •
+
+Action : each agent m ∈ M outputs a scalar score amtk ∈
+
+[0 , 1] representing its preference for opening its queue at time-slot tk. The final schedule selects the agent with the highest score.  
+
+> •
+
+Reward function : the reward function is modeled as a team reward, defined by rt = min( Ri), where Ri is a vector containing the individual rewards of all agents. The individual reward for each agent i is computed by the equation below: 
+
+Ri =
+
+(−α λ i, if λi > 1,
+
+−λi, otherwise , (7) where λi is the delay ratio, calculated as the AOF in queue qi divided by the deadline of the application in that queue. The agents aim to maximize the expected cumulative discounted reward, defined as rt = PTt=1 γt−1rt, where 
+
+γ ∈ [0 , 1) is the discount factor that determines the relative importance of future rewards. Their actions are selected ac-cording to a policy function π : st → P (at), where P (at)
+
+denotes the probability distribution over the action space. In our context, each agent learns to jointly optimize the TSN schedule over time, aiming to minimize the AOF in its queue relative to the application’s deadline. However, solving this problem in a multi-agent setting is challenging due to the strong interdependence among queues. Since they share the same transmission medium, the action of one agent directly affects the performance of others, making each agent’s optimal policy dependent on the joint behavior and increasing the complexity of learning coordinated policies. 
+
+B. HAPPO-Based Solution 
+
+To solve the above multi-agent POMDP, we adopt the HAPPO [12] algorithm, a MARL approach designed for co-operative multi-agent environments. Unlike centralized single-agent RL methods, where a single policy jointly controls all queues, HAPPO enables each agent to learn an independent policy while still coordinating with the remaining agents. This design improves scalability and allows agents to specialize in distinct scheduling behaviors according to their local TSN queue conditions. Each agent maintains an actor network that selects actions based on local observations. A global critic evaluates the joint observations and actions to provide a coordinated learning signal, as presented in Alg 1. 
+
+Algorithm 1 HAPPO-based TSN Scheduling                                         
+
+> 1: Initialize actor networks {θi}ni=1 and global critic ϕ
+> 2: for k= 0 , . . . , K −1do
+> 3: Collect local queue observations {oit}ni=1
+> 4: Each agent moutputs a score amt∈[0 ,1]
+> 5: Select the queue associated with the highest score
+> 6: Execute transmission and collect global reward rt
+> 7: Store transitions (oit, a it, r t, o it+1 )
+> 8: Draw a random permutation σ(1 : M)of agents
+> 9: for i= 1 , . . . , M do
+> 10: Update actor θσ(m)using PPO-Clip
+> 11: end for
+> 12: Update global critic ϕ
+> 13: end for
+
+Moreover, HAPPO updates agents sequentially using arandom permutation instead of simultaneously. This reduces non-stationarity during training, improving coordination and enabling more stable latency-aware scheduling decisions. IV. P ERFORMANCE EVALUATION 
+
+A. Simulation Settings 
+
+We consider a TSN-MEC environment with three TSN queues. Queues q0 and q1 serve immersive video streams at 3840×1920 resolution with refresh rates of 90 Hz and 72 Hz, respectively, each supporting up to four users. Queue q2
+
+supports a SeAR application for 15 users at 1920×720 and 60 Hz, transmitting semantic information instead of full video streams. The inter-frame interval, inter-packet intervals, packet size, and deadlines of all applications for DL direction were derived from the work available in [13] using a Johnson SU distribution. To reduce the action space and accelerate RL, we fixed the TSN time-slot duration ( D) at 500 μs, which is sufficient to transmit multiple frames over a 1 Gbps link. The main RL parameters were set as follows: number of agents = 3, episode length = 150, hidden layer size = 64, number of layers = 2, learning rate = 1 × 10 −4, and discount factor γ = 0 .99 . We adopted values that are widely used in the literature to ensure stable training for all methods. We defined the additional penalty α (eq. 7) as 1.5. To ensure a dynamic environment, the number of active users is randomly selected at the beginning of each episode. For evaluation, a total of 4800 steps were executed, and all results are reported as average and standard deviation across five different runs. 
+
+Baselines : HAPPO is evaluated against centralized single-agent PPO and A2C [15] baselines to assess the benefits of multi-agent coordination while controlling for architectural differences. In addition, we include non-learning heuristics, namely backlog-aware and AOF-aware policies, to provide a benchmark against domain-specific rule-based schedulers. For the backlog-aware heuristic, the queue with the largest backlog at time slot tk is selected for service. In contrast, for the AOF-aware policy, the queue containing the oldest frame is selected for service. 
+
+B. Simulation Results 
+
+The performance results are presented in terms of RL convergence, average waiting time, and the reaction delay (RD) metric defined as RD i =
+
+E[gi(tk) | bi(tk) > 0 ∧ qi(tk) = open ] . RD i is a temporal metric that shows the expected AOF in queue qi, conditioned on the queue being non-empty and the queue qi is open. 
+
+Learning performance: Fig. 2 illustrates the training evo-lution, while Table I summarizes the convergence and stability metrics attained during the steady-state phase. 0.0 0.2 0.4 0.6 0.8 1.0   
+
+> Steps 1e6
+> 60
+> 50
+> 40
+> 30
+> 20
+> Average Accumulative Reward (μs)
+> HAPPO
+> PPO
+> A2C
+> 0.9 1.0
+> 1e6
+> 25.0
+> 22.5
+> 20.0
+> 17.5
+
+Figure 2: Average Cumulative Reward The results indicate distinct learning behaviors across the evaluated methods. PPO demonstrated the highest efficiency, reaching initial convergence at approximately 22.2k steps. Furthermore, PPO exhibited superior robustness, with its sen-sitivity to stochastic initialization being 27.32% lower than that of A2C. Most notably, PPO reduced temporal volatility (intra-run σ) by 71.97% compared to A2C, indicating a significantly more stable policy during steady-state execution. On the other hand, HAPPO required significantly more interactions than PPO to reach initial convergence, stabilizing at approximately 122.9k steps. Furthermore, HAPPO demonstrated the highest sensitivity to stochastic initialization among the evaluated methods, with an inter-seed variability 28.41% higher than that of A2C and 76.69% higher than PPO. Table I: Convergence and stability metrics.                 
+
+> Algo. Steps (k) Average Reward Inter-seeds-σIntra-run-σ
+> PPO 22.2 -20.77 1.33 0.95
+> HAPPO 122.9 -22.93 2.35 0.98 A2C 210.6 -23.33 1.83 3.39
+
+This suggests that while HAPPO achieves a stable intra-run policy, its performance is highly dependent on the initial seed and by the randomization of the agent update order. Finally, while all methods converged, PPO achieved the highest average reward post-convergence (-20.77), whereas A2C exhibited the lowest terminal performance (-20.45). This gap suggests that by optimizing a single objective without the coordination overhead of mechanisms like HAPPO, agents may avoid conservative updates or reward trade-offs, leading to superior learning performance. 
+
+Network-centric performance: Although PPO converged faster and A2C achieved the highest final reward, the network performance in Fig. ?? and Fig. ?? reveals a critical trade-off. As shown in Fig. 3, HAPPO outperforms single-agent methods by minimizing the average frame waiting time across all queues at the p99 percentile. While HAPPO maintains, on average, the average waiting time below the deadlines across all queues, single-agent methods fail to schedule transmissions in a timely manner, exceeding the deadlines in q0 and q1
+
+about 48.51% and 41.06%, respectively. Although PPO and A2C keep the average waiting time below the deadline in q2,their higher variance and elevated tail latencies indicate less predictable timing behavior, which negatively impacts overall system performance. This performance disparity stems from the limitations of centralized single-agent methods, which rely on a single monolithic policy mapping the entire state and thus fail to capture the complex inter-dependencies among queues. In contrast, HAPPO’s multi-agent framework decomposes the problem into coordinated agents that better capture these inter-dependencies and balance transmission across all queues. On the other hand, AOF-aware and backlog-aware heuristics prioritize queues based on instantaneous delay spikes or traffic volume, often at the expense of lower-load flows. For instance, while the AOF-aware heuristic keeps average waiting times below the application deadline across all queues, it does so by delaying packets in the lower-load queue q2. In contrast, HAPPO leverages a cooperative multi-agent design to prevent starving q2 for the sake of the high-resolution streams in q0
+
+and q1, ensuring more consistent deadline adherence across heterogeneous applications. Fig. 4 depicts the AOF frame when a queue is granted access to transmit (reaction delay). As the results show, at the 
+
+p99 percentile, all methods struggle to deliver the last frame on time across all queues. Such missed deadlines were ex-pected because of high workload, network contention, limited link capacity, and the fixed 500 μs time slot. Nevertheless, HAPPO minimizes these delays by ensuring that the last frame of each flow is delivered as close as possible to its deadline when compared with single agents. For example, in queue q1, HAPPO keeps the oldest frame 25.50% above the deadline, while PPO and A2C exceed it by 160.01% and 128.96%, respectively. Moreover, as observed previously, HAPPO demonstrates superior tail-latency management by ensuring that the SeAR traffic in q2 is not sacrificed to mitigate the higher-intensity workloads of the video streams in q0 and 
+
+q1. This improvement can be attributed to the cooperative coordination among the agents, in contrast to the centralized approach of single agents or the rigid, reactive logic of rule-based heuristics. V. C ONCLUSION 
+
+In this paper, we propose a MARL algorithm to improve traffic scheduling across multiple TSN queues for XR ap-plications. To meet the requirements of the XR applications, we utilized the HAPPO algorithm to coordinate services in the MEC environment. We evaluated MARL by comparing it with single-agent methods and rule-based heuristics, consid-ering convergence behavior, average frame waiting time, and HAPPO PPO A2C Backlog 
+
+> aware
+> AOF
+> aware
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> 16
+> 18
+> 20
+> 22
+> 24
+> 26
+> P99 Waiting Time (ms)  Deadline (11.11 ms)
+
+(a) Queue q0HAPPO PPO A2C Backlog  
+
+> aware
+> AOF
+> aware
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> 16
+> 18
+> 20
+> 22
+> 24
+> P99 Waiting Time (ms)  Deadline (13.88 ms)
+
+(b) Queue q1HAPPO PPO A2C Backlog  
+
+> aware
+> AOF
+> aware
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> 16
+> 18
+> 20
+> 22
+> 24
+> P99 Waiting Time (ms)  Deadline (16.75 ms)
+
+(c) Queue q2
+
+Figure 3: p99 of average waiting time 0 5 10 15 20 25 30 35 40 45 50  
+
+> Reaction Delay (ms)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Empirical Cumulative
+> Distribution Function
+> Reaction Delay - Queue 0
+> Deadline (11.11ms)
+> PPO
+> A2C
+> HAPPO
+> Backlog-aware
+> AOF-aware
+
+(a) Queue q00 5 10 15 20 25 30 35 40 45 50   
+
+> Reaction Delay (ms)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Empirical Cumulative
+> Distribution Function
+> Reaction Delay - Queue 1
+> Deadline (13.88ms)
+> PPO
+> A2C
+> HAPPO
+> Backlog-aware
+> AOF-aware
+
+(b) Queue q10 5 10 15 20 25 30 35 40 45 50   
+
+> Reaction Delay (ms)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Empirical Cumulative
+> Distribution Function
+> Reaction Delay - Queue 2
+> Deadline (16.75ms)
+> PPO
+> A2C
+> HAPPO
+> Backlog-aware
+> AOF-aware
+
+(c) Queue q2
+
+Figure 4: Age of oldest frame distribution. Vertical lines indicate the p99 value and the application deadlines across the queues. worst-case performance based on the AOF. The simulation results show that HAPPO delivers frames within deadlines at high percentiles and minimizes performance degradation when deadlines are missed. In contrast, the baselines struggle to meet deadlines and exhibit higher delays, highlighting the importance of agent cooperation for consistent service. Future work will evaluate the impact of adaptive time-slot duration in the model. ACKNOWLEDGMENT 
+
+This work was financed in part by the Coordenac ¸ ˜ ao de Aperfeic ¸oamento de Pessoal de N´ ıvel Superior - Brasil (CAPES) - Finance Code 001, CNPq (funding agency from the Brazilian federal government), FAPEMIG (Minas Gerais State Funding Agency), and S˜ ao Paulo Research Founda-tion (FAPESP) with Brazilian Internet Steering Committee (CGI.br), grants 2018/23097-3 and 2020/05182-3, NSERC Canada Research Chairs Program. The authors also gratefully acknowledge the support of the University of Ottawa Visiting Researchers Program/Office. REFERENCES [1] “IEEE Standard for local and metropolitan area networks—bridges and bridged networks—amendment 25: Enhancements for scheduled traffic,IEEE Standard 802.1qbv-2015, 2016, pp. 1–57,” 2016. [2] M. Carvalho and D. F. Macedo, “Performance analysis of the integra-tion of dynamic cloud computing environments and tsn networks,” in 
+
+2025 IEEE 11th International Conference on Network Softwarization (NetSoft) . IEEE, 2025, pp. 406–414. [3] T. St¨ uber, L. Osswald, S. Lindner, and M. Menth, “A survey of schedul-ing algorithms for the time-aware shaper in time-sensitive networking (tsn),” Ieee Access , vol. 11, pp. 61 192–61 233, 2023. [4] T. Zhang, G. Wang, C. Xue, J. Wang, M. Nixon, and S. Han, “Time-sensitive networking (tsn) for industrial automation: Current advances and future directions,” ACM Computing Surveys , vol. 57, no. 2, pp. 1–38, 2024. [5] J. Min, Y. Kim, M. Kim, J. Paek, and R. Govindan, “Reinforce-ment learning based routing for time-aware shaper scheduling in time-sensitive networks,” Computer Networks , vol. 235, p. 109983, 2023. [6] X. He, X. Zhuge, F. Dang, W. Xu, and Z. Yang, “Deepscheduler: En-abling flow-aware scheduling in time-sensitive networking,” in IEEE IN-FOCOM 2023-IEEE Conference on Computer Communications . IEEE, 2023, pp. 1–10. [7] S. T. Islam and A. B. Muslim, “Ai-based dynamic schedule calculation in time sensitive networks using gcn-td3,” in 2024 IFIP Networking Conference (IFIP Networking) . IEEE, 2024, pp. 714–719. [8] H. Dou, T. Zhu, F. Li, C. Liu, and L. Wang, “Deterministic scheduling for asymmetric flows in future wireless networks,” Symmetry , vol. 17, no. 8, p. 1246, 2025. [9] A. Roberty, Q. Besnard, S. B. H. Said, F. Ridouard, H. Bauer, and A. Geniet, “Configuring the ieee 802.1 q time-aware shaper with deep reinforcement learning,” in NOMS 2024-2024 IEEE Network Operations and Management Symposium . IEEE, 2024, pp. 1–7. [10] B. Zhou and L. Cheng, “Mitigation of scheduling violations in time-sensitive networking using deep deterministic policy gradient,” in Pro-ceedings of the 4th FlexNets Workshop on Flexible Networks Artificial Intelligence Supported Network Flexibility and Agility , 2021, pp. 32–37. [11] N. Zhou, Y. Yao, X. Liang, S. Yao, J. Wan, C. Yang, W. Gui, and W. Gao, “Convergence of reinforcement learning and time-sensitive networking for future industrial ai agent communication: Fundamentals, challenges, and opportunities,” IEEE Communications Surveys & Tutorials , 2026. [12] J. G. Kuba, R. Chen, M. Wen, Y. Wen, F. Sun, J. Wang, and Y. Yang, “Trust region policy optimisation in multi-agent reinforcement learning,” 
+
+arXiv preprint arXiv:2109.11251 , 2021. [13] D. G. Mor´ ın, D. Medda, A. Iossifides, P. Chatzimisios, A. G. Armada, A. Villegas, and P. Per´ ez, “An extended reality offloading ip traffic dataset and models,” IEEE Transactions on Mobile Computing , vol. 23, no. 6, pp. 6820–6834, 2023. [14] A. Shirmarz, F. L. Verdi, S. K. Singh, and C. E. Rothenberg, “From pixels to packets: Traffic classification of augmented reality and cloud gaming,” in 2024 IEEE 10th International Conference on Network Softwarization (NetSoft) . IEEE, 2024, pp. 195–203. [15] V. Mnih, A. P. Badia, M. Mirza, A. Graves, T. Lillicrap, T. Harley, D. Silver, and K. Kavukcuoglu, “Asynchronous methods for deep rein-forcement learning,” in International conference on machine learning .PmLR, 2016, pp. 1928–1937.

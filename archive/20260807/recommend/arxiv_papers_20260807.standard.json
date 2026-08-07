@@ -1,50 +1,54 @@
 {
   "mode": "standard",
-  "generated_at": "2026-08-07T01:55:00.383079+00:00",
+  "generated_at": "2026-08-07T21:11:01.442611+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
-    "deep_divecandidates": 2,
+    "deep_divecandidates": 4,
     "deep_cap": 6,
-    "deep_selected": 2,
-    "quick_candidates": 2,
+    "deep_selected": 4,
+    "quick_candidates": 3,
     "quick_skim_target": 11,
-    "quick_selected": 2
+    "quick_selected": 3
   },
   "deep_dive": [
     {
-      "id": "2608.04663v1",
+      "id": "2608.00679v1",
       "source": "arxiv",
-      "title": "Calibrating Artificial Guilt: Neurally Grounded Reward Shaping for Prosocial Multi-Agent Reinforcement Learning",
-      "abstract": "Cooperative multi-agent reinforcement learning often adds social terms to individual rewards, yet the scale of those terms is usually chosen by hand. We ask whether a guilt signal can instead be calibrated from human neural and behavioural data and transferred to artificial agents. Using the public SoDec responsibility fMRI dataset (40 participants), we fit a subject-fixed-effects regression of momentary-happiness changes on outcome-type counts and recover a guilt weight as the Partner-negative minus Social-negative contrast ($\\hat{w}=1.118$, Cohen's $d=0.214$). We embed this weight in a two-agent Social Lottery environment and train independent Proximal Policy Optimization actor-critics under four shaping regimes: neurally calibrated, uniform constant, zero (selfish), and a unit-coefficient oracle. Across 1{,}000 evaluation episodes per condition, the calibrated agents track the human Social safe-choice rate most closely ($0.459$ vs.\\ human $0.484$; $\\mathrm{KL}=0.0012$), while the other three conditions deviate by one to three orders of magnitude in KL. Human neurobehavioural priors can therefore act as quantitative constraints on prosocial reward shaping.",
+      "title": "HetGPS: Scalable Graph Multi-Agent Reinforcement Learning with Physics-Anchored Adaptive Safety for EV Charging",
+      "abstract": "Safety interventions for large populations of network-coupled agents must protect shared constraints without unnecessarily overriding task-oriented policy decisions. We present HetGPS, a hybrid graph-control framework synergizing learned graph risk with physics-anchored correction by separating intervention magnitude from corrective direction. An action-conditioned graph residual model schedules state-dependent intervention authority, while a physics model determines its direction. For electric vehicle (EV) charging, we couple this filter with a parameter-shared heterogeneous graph soft actor-critic policy, enabling topology-aware coordination with a learned model size independent of fleet size. Across five nested distribution networks with 200--3,218 EVs and 100 evaluation days, Adaptive Authority reduces bus--step voltage violations from 3.93--7.74\\% without filtering to 0.52--3.44\\%, while maintaining 99.06--100\\% departure success. Relative to the same physics-directed projection with fixed authority, it improves mean reward on all five networks and lowers the mean safety score on four. The deployed policy-and-risk model contains 383,702 learned parameters at every scale; at 3,218 EVs, a matched centralized SAC actor is about $170\\times$ larger. A policy trained on the eight-transformer system transfers zero-shot to the 16- and 32-transformer systems, attaining 0.57--0.75\\% violation rates and at least 99.99\\% departure success. These results show that learned graph risk can allocate intervention authority at scale while feeder physics anchors corrective action.",
       "authors": [
-        "Aaditya Mehta",
-        "Arya Shah"
+        "Xiangwei Wang",
+        "Nanduni Nimalsiri",
+        "Yu Xia",
+        "Peng Wang",
+        "Saman Halgamuge"
       ],
       "primary_category": "cs.AI",
       "categories": [
-        "cs.AI"
+        "cs.AI",
+        "cs.MA"
       ],
-      "published": "2026-08-05T10:21:11+00:00",
-      "link": "https://arxiv.org/pdf/2608.04663v1",
+      "published": "2026-08-01T13:59:49+00:00",
+      "link": "https://arxiv.org/pdf/2608.00679v1",
       "tags": [
         "keyword:MARL",
         "query:MARL"
       ],
       "llm_score": 9.0,
-      "llm_evidence_en": "cooperative MARL with reward shaping from human guilt data",
-      "llm_evidence_cn": "基于人类内疚数据的奖励塑形用于合作式多智能体强化学习",
-      "llm_evidence": "基于人类内疚数据的奖励塑形用于合作式多智能体强化学习",
-      "canonical_evidence": "基于人类内疚数据的奖励塑形用于合作式多智能体强化学习",
-      "llm_tldr_en": "This work calibrates a guilt weight from human fMRI data and embeds it into a two-agent social lottery, training independent PPO actor-critics. The neurally grounded reward outperforms hand-tuned social shaping in prosociality.",
-      "llm_tldr_cn": "针对合作式多智能体强化学习中社会奖励尺度常需手工设定的问题，本文提出从人类神经与行为数据中校准内疚信号并迁移至智能体。作者使用SoDec责任fMRI数据集拟合回归，得到内疚权重并嵌入双智能体社交彩票环境，用独立PPO演员-评论家算法训练。实验表明，神经驱动的奖励塑形相比手工调节更能促进亲社会合作行为，为多智能体奖励设计提供了数据驱动的新思路。",
-      "llm_tldr": "针对合作式多智能体强化学习中社会奖励尺度常需手工设定的问题，本文提出从人类神经与行为数据中校准内疚信号并迁移至智能体。作者使用SoDec责任fMRI数据集拟合回归，得到内疚权重并嵌入双智能体社交彩票环境，用独立PPO演员-评论家算法训练。实验表明，神经驱动的奖励塑形相比手工调节更能促进亲社会合作行为，为多智能体奖励设计提供了数据驱动的新思路。",
+      "llm_evidence_en": "Graph multi-agent reinforcement learning for EV charging",
+      "llm_evidence_cn": "面向电动汽车充电的图多智能体强化学习",
+      "llm_evidence": "面向电动汽车充电的图多智能体强化学习",
+      "canonical_evidence": "面向电动汽车充电的图多智能体强化学习",
+      "llm_tldr_en": "HetGPS combines a parameter-shared heterogeneous graph soft actor-critic policy with a physics-anchored safety filter for scalable multi-agent EV charging coordination.",
+      "llm_tldr_cn": "该工作面向大规模网络耦合智能体的安全干预问题，提出HetGPS混合图控制框架。该方法将参数共享的异构图软演员-评论家策略与物理锚定的自适应安全过滤器结合，通过分离干预幅度与修正方向来保护共享约束。模型规模不随车队规模变化，实现拓扑感知协同与安全决策。在五个嵌套电动汽车充电场景上的实验验证了其可扩展性与安全性。",
+      "llm_tldr": "该工作面向大规模网络耦合智能体的安全干预问题，提出HetGPS混合图控制框架。该方法将参数共享的异构图软演员-评论家策略与物理锚定的自适应安全过滤器结合，通过分离干预幅度与修正方向来保护共享约束。模型规模不随车队规模变化，实现拓扑感知协同与安全决策。在五个嵌套电动汽车充电场景上的实验验证了其可扩展性与安全性。",
       "llm_tags": [
         "query:marl"
       ],
       "matched_query_tag": "query:marl",
-      "matched_query_text": "cooperative multi-agent reinforcement learning",
-      "matched_requirement_id": "req-2",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
       "selection_source": "fresh_fetch"
     },
     {
@@ -74,13 +78,95 @@
         "query:MARL"
       ],
       "llm_score": 9.0,
-      "llm_evidence_en": "reinforcement and imitation multi-agent learning for cooperative pathfinding",
-      "llm_evidence_cn": "面向协作路径规划的强化与模仿多智能体学习",
-      "llm_evidence": "面向协作路径规划的强化与模仿多智能体学习",
-      "canonical_evidence": "面向协作路径规划的强化与模仿多智能体学习",
-      "llm_tldr_en": "PRIMAL3 integrates RL, imitation learning, topology-aware communication, LaCAM3 training, and PIBT refinement for scalable multi-agent pathfinding, focusing on bottlenecks and dead ends, yielding better coordination and scalability.",
-      "llm_tldr_cn": "多智能体路径规划问题中，现有方法在拓扑关键状态（如瓶颈、死胡同和持续冲突）易失败。本文提出PRIMAL3，融合强化学习、拓扑感知通信、LaCAM3引导训练和PIBT动作精化的超大规模学习框架，利用割点、死胡同区域等特征与两种交互图建模。实验表明PRIMAL3能有效提升关键状态下的协调决策能力，大规模场景下表现优越，为多智能体路径规划提供了可扩展的新范式。",
-      "llm_tldr": "多智能体路径规划问题中，现有方法在拓扑关键状态（如瓶颈、死胡同和持续冲突）易失败。本文提出PRIMAL3，融合强化学习、拓扑感知通信、LaCAM3引导训练和PIBT动作精化的超大规模学习框架，利用割点、死胡同区域等特征与两种交互图建模。实验表明PRIMAL3能有效提升关键状态下的协调决策能力，大规模场景下表现优越，为多智能体路径规划提供了可扩展的新范式。",
+      "llm_evidence_en": "Multi-agent pathfinding with reinforcement and imitation learning",
+      "llm_evidence_cn": "使用强化与模仿学习的多智能体路径规划",
+      "llm_evidence": "使用强化与模仿学习的多智能体路径规划",
+      "canonical_evidence": "使用强化与模仿学习的多智能体路径规划",
+      "llm_tldr_en": "PRIMAL3 is an ultra-large-scale learning-based MAPF framework combining RL, topology-aware communication, LaCAM3-guided training, and PIBT-based action refinement for decisive coordination at critical states.",
+      "llm_tldr_cn": "该工作提出PRIMAL3，面向超大规模多智能体路径规划，整合强化学习、拓扑感知通信、LaCAM3引导训练与PIBT动作细化。利用割点、死区、最短路径距离和阻塞估计表示关键状态，并通过两个互补图捕获智能体交互，实现瓶颈与死胡同处的协调决策。实验验证了该方法在大规模场景下的可扩展性与高效性，为解决MAPF关键状态失败提供了新思路。",
+      "llm_tldr": "该工作提出PRIMAL3，面向超大规模多智能体路径规划，整合强化学习、拓扑感知通信、LaCAM3引导训练与PIBT动作细化。利用割点、死区、最短路径距离和阻塞估计表示关键状态，并通过两个互补图捕获智能体交互，实现瓶颈与死胡同处的协调决策。实验验证了该方法在大规模场景下的可扩展性与高效性，为解决MAPF关键状态失败提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.05346v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Reinforcement Learning for Online Traffic Scheduling in Time-Sensitive Application",
+      "abstract": "Time-sensitive networking (TSN) is increasingly integrated into mobile edge computing (MEC) to support applications with stringent latency requirements, such as extended reality (XR). However, existing TSN scheduling solutions predominantly rely on static optimization techniques or centralized learning models that are based on fixed traffic patterns, limiting their effectiveness in dynamic environments. In practice, MEC environments often host multiple co-located XR traffic flows whose characteristics evolve over time, creating complex inter-queue dependencies that current schedulers fail to capture. Addressing these challenges requires adaptive, decentralized scheduling mechanisms capable of coordinating multiple TSN queues under varying traffic conditions. To this end, this paper proposes a multi-agent reinforcement learning (MARL) framework for TSN scheduling, where each TSN queue is modeled as an autonomous agent. The Heterogeneous-Agent Proximal Policy Optimization (HAPPO) algorithm is employed to explicitly model inter-agent dependencies and jointly optimize service delivery across queues. The simulation results demonstrate that the proposed approach reduces average frame waiting times by up to 26.8% and worst-case delays by approximately 16.8%, highlighting its effectiveness in dynamic XR-driven MEC scenarios.",
+      "authors": [
+        "Marcos Carvalho",
+        "Fatih Temiz",
+        "Shavbo Salehi",
+        "Melike Erol-Kantarci",
+        "Daniel F. Macedo"
+      ],
+      "primary_category": "cs.NI",
+      "categories": [
+        "cs.NI",
+        "cs.AI"
+      ],
+      "published": "2026-08-05T19:06:42+00:00",
+      "link": "https://arxiv.org/pdf/2608.05346v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multi-agent reinforcement learning for adaptive decentralized online scheduling in TSN-MEC with coordinated queues",
+      "llm_evidence_cn": "用多智能体强化学习实现TSN-MEC中多队列协调的在线流量调度",
+      "llm_evidence": "用多智能体强化学习实现TSN-MEC中多队列协调的在线流量调度",
+      "canonical_evidence": "用多智能体强化学习实现TSN-MEC中多队列协调的在线流量调度",
+      "llm_tldr_en": "Proposes a multi-agent reinforcement learning approach for adaptive decentralized online scheduling of time-sensitive XR traffic over multiple TSN queues, addressing evolving traffic patterns and inter-queue dependencies.",
+      "llm_tldr_cn": "针对时间敏感网络与移动边缘计算中多路共存的扩展现实流量动态变化、队列间依赖复杂、现有集中式调度难以适应的问题，提出面向在线流量调度的多智能体强化学习方法，采用自适应、去中心化的调度机制协调多个TSN队列。该方法面向动态环境设计，可应对流量演变与队列间依赖，为低时延应用的实时协同调度提供了可扩展的解决方案。",
+      "llm_tldr": "针对时间敏感网络与移动边缘计算中多路共存的扩展现实流量动态变化、队列间依赖复杂、现有集中式调度难以适应的问题，提出面向在线流量调度的多智能体强化学习方法，采用自适应、去中心化的调度机制协调多个TSN队列。该方法面向动态环境设计，可应对流量演变与队列间依赖，为低时延应用的实时协同调度提供了可扩展的解决方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.05588v1",
+      "source": "arxiv",
+      "title": "Search-Aided Joint Agent-Environment Reinforcement Learning for Robust Lifelong Multi-Agent Path Finding with Rotations",
+      "abstract": "Lifelong Multi-Agent Path Finding (LMAPF) requires repeatedly planning collision-free paths for agents that continuously receive new goals upon reaching their current ones. While many learning-based planners have been proposed for LMAPF, most rely on oversimplified kinematic assumptions that may overlook motion constraints critical to real-world performance. In this work, we study a more realistic LMAPF model derived from many real-world automated warehouse systems, termed LMAPF-R2, which incorporates robust safety constraints and in-place rotation constraints. These constraints substantially increase coordination difficulty, particularly in highly constrained spaces. To address these challenges, we propose Search-Aided Joint Reinforcement Learning (SJRL). We first augment neural policies with Causal PIBT, a single-step search-based planner that resolves agents' collisions and propagates their intentions. We then introduce a unified RL formulation that jointly optimizes agent and environment policies, where the environment policy learns graph edge costs to provide global movement guidance via backward Dijkstra search. Experiments demonstrate that SJRL achieves significant improvements over the strong search-based planner, Causal-PIBT, across multiple high-density maps. We further validate SJRL in a challenging mixed-reality warehouse environment with 8 physical robots and 248 virtual robots.",
+      "authors": [
+        "He Jiang",
+        "Jingtian Yan",
+        "Yulun Zhang",
+        "Yimin Tang",
+        "Tanishq Duhan",
+        "Rishi Veerapaneni",
+        "Guillaume Sartoretti",
+        "Jiaoyang Li"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-08-06T04:17:38+00:00",
+      "link": "https://arxiv.org/pdf/2608.05588v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Reinforcement learning for multi-agent path finding under cooperative and robust constraints",
+      "llm_evidence_cn": "面向多智能体路径规划的合作式强化学习",
+      "llm_evidence": "面向多智能体路径规划的合作式强化学习",
+      "canonical_evidence": "面向多智能体路径规划的合作式强化学习",
+      "llm_tldr_en": "This paper studies lifelong multi-agent path finding with rotation constraints and proposes a search-aided joint agent-environment reinforcement learning approach that improves coordination in constrained spaces, leading to more robust path planning in warehouse settings.",
+      "llm_tldr_cn": "针对当前终身多智能体路径规划方法忽略真实运动约束、难以处理受限空间协调的问题，本文提出LMAPF-R2模型，引入鲁棒安全约束和原地旋转约束，并设计搜索辅助的智能体-环境联合强化学习算法。实验表明该方法在复杂仓库场景下能有效提升路径规划的鲁棒性与成功率，为多智能体强化学习在实际物流系统中的应用提供了新的思路。",
+      "llm_tldr": "针对当前终身多智能体路径规划方法忽略真实运动约束、难以处理受限空间协调的问题，本文提出LMAPF-R2模型，引入鲁棒安全约束和原地旋转约束，并设计搜索辅助的智能体-环境联合强化学习算法。实验表明该方法在复杂仓库场景下能有效提升路径规划的鲁棒性与成功率，为多智能体强化学习在实际物流系统中的应用提供了新的思路。",
       "llm_tags": [
         "query:marl"
       ],
@@ -92,80 +178,116 @@
   ],
   "quick_skim": [
     {
-      "id": "2608.02291v1",
+      "id": "2608.05479v1",
       "source": "arxiv",
-      "title": "Shared Prefixes, Better Credit: Adaptive Routing for Multi-Agent Reasoning",
-      "abstract": "Multi-agent reasoning (MAR) improves reasoning reliability through iterative solution exchange and refinement. Existing adaptive MAR methods typically learn routing decisions from query-level labels or trajectory-level returns, but such coarse supervision cannot accurately estimate the state-conditioned utility of individual operators in multi-step collaboration. We propose TreeCredit, a shared-prefix credit assignment framework for efficient adaptive MAR. Its core insight is to estimate operator utility through state-matched downstream comparisons, rather than directly attributing trajectory-level outcomes to preceding decisions. TreeCredit constructs shared-prefix collaboration trees by expanding candidate operators from the same intermediate state and assigns each state--operator pair a correctness-prioritized suffix credit based on the terminal correctness and cumulative additional cost of its complete continuation. These structured credits are converted into state-local operator preferences to train a lightweight pairwise state router, which dynamically selects the next admissible operator during inference. Experiments on six reasoning benchmarks show that TreeCredit modestly improves accuracy while substantially reducing inference cost, achieving a better accuracy--cost trade-off than representative MAR methods.",
+      "title": "AI-Farol: Co-Evolutionary Dynamics in a Multi-Agent Two-Sided Learning Framework",
+      "abstract": "The El Farol Bar game is a classical model of coordination under uncertainty that traditionally treats the venue as a passive constraint. In this work, we reconceptualize the problem by modeling the bar as a strategic player endowed with AI-driven learning capabilities. We extend the original framework in two principal directions: first, by introducing partial observability, whereby agents observe only subsets of past attendees; and second, by transforming the bar from a passive capacity threshold into an active mechanism designer that adjusts pricing policies to balance revenue, utilization, and sustainability constraints. Agents employ AI-based learning to form beliefs and adapt attendance strategies under incomplete information, while the bar applies policy learning to optimize dynamic pricing. The resulting two-sided learning system frames coordination as a co-evolutionary process between boundedly rational agents and an adaptive institution, offering insights into congestion management, resource allocation, and mechanism design in complex adaptive systems.",
       "authors": [
-        "Yiqing Liu",
-        "Zihao Wang",
-        "Hantao Yao",
-        "Wu Liu",
-        "Yongdong Zhang"
+        "Iosif Polenakis",
+        "Kalliopi Kastampolidou",
+        "Theodore Andronikos"
       ],
-      "primary_category": "cs.AI",
+      "primary_category": "cs.GT",
       "categories": [
-        "cs.AI"
+        "cs.GT"
       ],
-      "published": "2026-08-03T14:22:23+00:00",
-      "link": "https://arxiv.org/pdf/2608.02291v1",
+      "published": "2026-08-05T23:55:49+00:00",
+      "link": "https://arxiv.org/pdf/2608.05479v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent two-sided learning with partial observability and adaptive strategies",
+      "llm_evidence_cn": "多智能体双侧学习框架，含部分可观测与策略自适应",
+      "llm_evidence": "多智能体双侧学习框架，含部分可观测与策略自适应",
+      "canonical_evidence": "多智能体双侧学习框架，含部分可观测与策略自适应",
+      "llm_tldr_en": "Reconceptualizes the El Farol bar game by modeling the venue as an AI-driven strategic player, adds partial observability, and studies co-evolutionary dynamics between agent attendance and bar pricing policies. Offers a fresh multi-agent learning perspective relevant to MARL.",
+      "llm_tldr_cn": "传统El Farol酒吧博弈将酒吧视为被动容量约束；本文将其重构为具备AI学习能力的战略玩家，引入部分可观测性并让酒吧主动调整定价以平衡收益、利用率与可持续性。智能体在不完全信息下自适应学习出席策略，与酒吧的定价策略共同演化。该框架为多智能体协调、机制设计与MARL的交叉研究提供了新的建模思路。",
+      "llm_tldr": "传统El Farol酒吧博弈将酒吧视为被动容量约束；本文将其重构为具备AI学习能力的战略玩家，引入部分可观测性并让酒吧主动调整定价以平衡收益、利用率与可持续性。智能体在不完全信息下自适应学习出席策略，与酒吧的定价策略共同演化。该框架为多智能体协调、机制设计与MARL的交叉研究提供了新的建模思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.01636v1",
+      "source": "arxiv",
+      "title": "A Forward-Inverse Dynamic Game Framework for Enhanced Multi-Agent Trajectory Planning",
+      "abstract": "This paper studies feedback Nash equilibrium (FBNE) seeking for multi-agent trajectory planning in nonlinear dynamical systems with unknown agents' objectives and state-dependent inter-agent coupling. While dynamic game theory provides a principled framework for such problems, existing approaches typically assume fully rational agents with known objectives or rely on fixed regularization, limiting their ability to capture bounded rationality and spatially varying interaction intensity in safety-critical settings. To this end, we propose a KL-regularized dynamic game with a state-dependent weight that adaptively balances optimality and behavioral priors. To infer unknown cost parameters from demonstrated behaviors, we develop a context-aware inverse game module based on maximum-entropy inverse reinforcement learning with physics-informed regularization, ensuring structural consistency with the forward game. We establish per-iteration well-posedness of the regularized local game and show that the adaptive weighting function remains Lipschitz continuous under bounded nominal-trajectory updates. Numerical simulations and multi-robot experiments on cooperative navigation and merging scenarios validate the effectiveness of the proposed framework.",
+      "authors": [
+        "Tianle Liu",
+        "Youcheng Niu",
+        "Jing Zeng",
+        "Shuo Li",
+        "Jinming Xu"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-08-03T03:15:37+00:00",
+      "link": "https://arxiv.org/pdf/2608.01636v1",
       "tags": [
         "keyword:MARL",
         "query:MARL"
       ],
       "llm_score": 6.0,
-      "llm_evidence_en": "multi-agent credit assignment algorithm with trajectory-level returns in adaptive multi-agent reasoning",
-      "llm_evidence_cn": "多智能体推理中的自适应路由与轨迹级回报信用分配算法",
-      "llm_evidence": "多智能体推理中的自适应路由与轨迹级回报信用分配算法",
-      "canonical_evidence": "多智能体推理中的自适应路由与轨迹级回报信用分配算法",
-      "llm_tldr_en": "TreeCredit assigns credit to operators in multi-agent reasoning via shared-prefix collaboration trees and state-matched downstream comparisons, improving adaptive routing when trajectory-level supervision is coarse.",
-      "llm_tldr_cn": "现有自适应多智能体推理方法多依赖查询级标签或轨迹级回报，难以估计多步协作中各操作符的价值。本文提出TreeCredit，通过共享前缀协作树在相同中间状态下比较下游结果，估计操作符效用。该方法避免了把轨迹级结果直接归因于前置决策，为多智能体推理中的信用分配提供了更细粒度且高效的方案。",
-      "llm_tldr": "现有自适应多智能体推理方法多依赖查询级标签或轨迹级回报，难以估计多步协作中各操作符的价值。本文提出TreeCredit，通过共享前缀协作树在相同中间状态下比较下游结果，估计操作符效用。该方法避免了把轨迹级结果直接归因于前置决策，为多智能体推理中的信用分配提供了更细粒度且高效的方案。",
+      "llm_evidence_en": "Dynamic game framework for multi-agent trajectory planning",
+      "llm_evidence_cn": "用于多智能体轨迹规划的动态博弈框架",
+      "llm_evidence": "用于多智能体轨迹规划的动态博弈框架",
+      "canonical_evidence": "用于多智能体轨迹规划的动态博弈框架",
+      "llm_tldr_en": "This paper proposes a KL-regularized dynamic game with state-dependent weights to model bounded rationality and unknown objectives in multi-agent trajectory planning, enabling feedback Nash equilibrium seeking.",
+      "llm_tldr_cn": "该论文针对多智能体轨迹规划中未知目标与状态相关耦合问题，提出KL正则化动态博弈框架，通过状态依赖权重自适应平衡最优性与行为先验。开发了上下文感知的逆向推断方法估计未知成本参数，实现了非线性系统中的反馈纳什均衡求解。该方法增强了对有界理性与时空变化交互强度的刻画，适用于安全关键场景。",
+      "llm_tldr": "该论文针对多智能体轨迹规划中未知目标与状态相关耦合问题，提出KL正则化动态博弈框架，通过状态依赖权重自适应平衡最优性与行为先验。开发了上下文感知的逆向推断方法估计未知成本参数，实现了非线性系统中的反馈纳什均衡求解。该方法增强了对有界理性与时空变化交互强度的刻画，适用于安全关键场景。",
       "llm_tags": [
         "query:marl"
       ],
       "matched_query_tag": "query:marl",
-      "matched_query_text": "multi agent reinforcement learning algorithms",
-      "matched_requirement_id": "req-7",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
       "selection_source": "fresh_fetch",
       "quick_tier": "6"
     },
     {
-      "id": "2608.04309v1",
+      "id": "2608.04634v1",
       "source": "arxiv",
-      "title": "Structured LLM Reasoning for Zero-Shot Human--Robot Coordination Under Hidden Goals",
-      "abstract": "We present a structured large-language-model (LLM) architecture for zero-shot human--robot coordination in a cooperative construction task with private goal views. Guided by a Dec-POMDP formulation, the architecture decomposes decision-making into (i) action-conditioned Theory-of-Mind (ToM) inference, (ii) hierarchical planning, (iii) conversation interpretation, (iv) action verification, and (v) feedback-based replanning. We compare the proposed method with an ablation without ToM inference and a multi-agent reinforcement-learning policy trained offline over many goal pairs. In human-participant experiments, the proposed method required fewer interaction steps and yielded higher post-interaction trust ratings than both baselines. These results suggest that systematically decomposing the team decision problem, using LLMs as tractable surrogates for otherwise intractable inference and planning computations, and retaining conventional verification for physical feasibility can improve both task coordination and the human experience.",
+      "title": "HELENA:Hierarchical Sparse Coordination over a Union of Complementary Topologies for MAS",
+      "abstract": "LLM-based multi-agent systems (MAS) typically optimize a single topology, restricting reasoning to a narrow trajectory and limiting comprehensive analytical capacity. Naively merging multiple topologies into a composite graph introduces redundant noise propagation across irrelevant connections, degrading solution quality. To address this dilemma, we propose \\textbf{Hierarchical Sparse Coordination over a Union of Complementary Topologies for MAS (HELENA)}, a multi-agent framework that balances diverse reasoning paths with sparse task-dependent execution. \\helena{} constructs a union MAS graph from complementary candidate topologies selected via Monte Carlo Tree Search and Determinantal Point Process, broadening the reasoning trajectory for comprehensive analysis of complex problems. A Hierarchical Sparse Coordination module then activates only a sparse subgraph at each step while agents exchange compressed latent briefs to suppress redundant noise propagation. Finally, a Local Self-Refinement stage identifies decision units with discrepancy evidence and rewrites them only when contrastive evidence simultaneously confirms a reliable solution-side failure and a challenger-side improvement. Experiments across eight benchmarks show that \\helena{} achieves state-of-the-art results on all benchmarks, with an average gain of \\pctup{3.47} over the strongest baseline and up to \\pctup{10.34} on MMLU-Pro, achieving larger improvements on harder benchmarks at a reasonable additional cost.",
       "authors": [
-        "Dong Hae Mangalindan",
-        "Anand Gokhale",
-        "Francesco Bullo",
-        "Vaibhav Srivastava"
+        "Zhifang Mao",
+        "Linyao Zheng",
+        "Xuhang Shi",
+        "Xiuquan Hou"
       ],
-      "primary_category": "cs.RO",
+      "primary_category": "cs.MA",
       "categories": [
-        "cs.RO",
-        "eess.SY"
+        "cs.MA"
       ],
-      "published": "2026-08-05T00:40:03+00:00",
-      "link": "https://arxiv.org/pdf/2608.04309v1",
+      "published": "2026-08-05T09:49:30+00:00",
+      "link": "https://arxiv.org/pdf/2608.04634v1",
       "tags": [
         "keyword:MARL",
         "query:MARL"
       ],
       "llm_score": 6.0,
-      "llm_evidence_en": "Human-robot cooperative coordination under hidden goals; Dec-POMDP and comparison to MARL policy",
-      "llm_evidence_cn": "隐藏目标下的人机协作，使用Dec-POMDP并与MARL策略对比",
-      "llm_evidence": "隐藏目标下的人机协作，使用Dec-POMDP并与MARL策略对比",
-      "canonical_evidence": "隐藏目标下的人机协作，使用Dec-POMDP并与MARL策略对比",
-      "llm_tldr_en": "Proposes a structured LLM architecture for zero-shot human-robot coordination in cooperative tasks, using Theory-of-Mind inference and hierarchical planning, outperforming a MARL baseline in human experiments.",
-      "llm_tldr_cn": "在人机协作的构建任务中，机器人和人类各自拥有私有目标视图，需要在不经训练的情况下实现零样本协调。该文基于Dec-POMDP设计结构化LLM架构，将决策分解为心智推断、分层规划、对话理解和动作验证等模块。人类实验显示该方法比无心智推断的消融和离线多智能体强化学习策略所用交互轮次更少，信任评分更高。这表明结合结构化推理与LLM能有效提升零样本人机协作效果。",
-      "llm_tldr": "在人机协作的构建任务中，机器人和人类各自拥有私有目标视图，需要在不经训练的情况下实现零样本协调。该文基于Dec-POMDP设计结构化LLM架构，将决策分解为心智推断、分层规划、对话理解和动作验证等模块。人类实验显示该方法比无心智推断的消融和离线多智能体强化学习策略所用交互轮次更少，信任评分更高。这表明结合结构化推理与LLM能有效提升零样本人机协作效果。",
+      "llm_evidence_en": "Multi-agent coordination framework with hierarchical sparse topology selection",
+      "llm_evidence_cn": "多智能体协调框架与层次化稀疏拓扑选择",
+      "llm_evidence": "多智能体协调框架与层次化稀疏拓扑选择",
+      "canonical_evidence": "多智能体协调框架与层次化稀疏拓扑选择",
+      "llm_tldr_en": "Proposes HELENA, a multi-agent framework that constructs a union graph from complementary topologies via MCTS and DPP, balancing diverse reasoning paths with sparse task-dependent execution.",
+      "llm_tldr_cn": "基于LLM的多智能体系统通常只优化单一拓扑，限制了推理能力；简单合并多个拓扑又会产生冗余噪声。本文提出HELENA框架，利用蒙特卡洛树搜索和行列式点过程选择互补候选拓扑，构建联合多智能体图，在多样推理路径与稀疏任务执行间取得平衡，从而提升整体分析能力。该方法为多智能体协同推理提供了新的拓扑构造思路。",
+      "llm_tldr": "基于LLM的多智能体系统通常只优化单一拓扑，限制了推理能力；简单合并多个拓扑又会产生冗余噪声。本文提出HELENA框架，利用蒙特卡洛树搜索和行列式点过程选择互补候选拓扑，构建联合多智能体图，在多样推理路径与稀疏任务执行间取得平衡，从而提升整体分析能力。该方法为多智能体协同推理提供了新的拓扑构造思路。",
       "llm_tags": [
         "query:marl"
       ],
       "matched_query_tag": "query:marl",
-      "matched_query_text": "cooperative multi-agent reinforcement learning",
-      "matched_requirement_id": "req-2",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
       "selection_source": "fresh_fetch",
       "quick_tier": "6"
     }
