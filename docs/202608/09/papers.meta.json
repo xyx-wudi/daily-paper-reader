@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-09",
+  "date": "2026-08-09",
+  "generated_at": "2026-08-09T20:38:57",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/09/2608.02291v1-shared-prefixes-better-credit-adaptive-routing-for-multi-agent-reasoning",
+      "section": "quick",
+      "title_en": "Shared Prefixes, Better Credit: Adaptive Routing for Multi-Agent Reasoning",
+      "authors": "Yiqing Liu, Zihao Wang, Hantao Yao, Wu Liu, Yongdong Zhang",
+      "date": "2026-08-03",
+      "pdf": "https://arxiv.org/pdf/2608.02291v1",
+      "score": "6.0",
+      "evidence": "多智能体协作中的细粒度信用分配方法，可迁移至多智能体强化学习",
+      "tldr": "多智能体推理依赖智能体间迭代交换方案，但现有自适应路由方法仅用查询级标签或轨迹级回报进行粗粒度监督，难以准确估计单个算子在协作中的效用。为此提出TreeCredit，通过共享前缀协作树构造状态匹配的下游比较，将结构化信用转化为状态局部偏好来训练轻量级路由器。在六个推理基准上，TreeCredit仅在适度提升准确率的同时大幅降低推理成本，实现更优的精度-开销权衡，为自适应多智能体路由提供了更精细的信用分配范式。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent reasoning (MAR) improves reasoning reliability through iterative solution exchange and refinement. Existing adaptive MAR methods typically learn routing decisions from query-level labels or trajectory-level returns, but such coarse supervision cannot accurately estimate the state-conditioned utility of individual operators in multi-step collaboration. We propose TreeCredit, a shared-prefix credit assignment framework for efficient adaptive MAR. Its core insight is to estimate operator utility through state-matched downstream comparisons, rather than directly attributing trajectory-level outcomes to preceding decisions. TreeCredit constructs shared-prefix collaboration trees by expanding candidate operators from the same intermediate state and assigns each state--operator pair a correctness-prioritized suffix credit based on the terminal correctness and cumulative additional cost of its complete continuation. These structured credits are converted into state-local operator preferences to train a lightweight pairwise state router, which dynamically selects the next admissible operator during inference. Experiments on six reasoning benchmarks show that TreeCredit modestly improves accuracy while substantially reducing inference cost, achieving a better accuracy--cost trade-off than representative MAR methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

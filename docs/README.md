@@ -6,22 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-08
-- 运行时间：2026-08-08 19:55:30 UTC
+- 最新运行日期：2026-08-09
+- 运行时间：2026-08-09 20:38:53 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：1
 - 精读区：0
-- 速读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202608/08/README](/202608/08/README)
+今日仅速读1篇论文，聚焦多智能体推理的效率优化。
+
+最值得关注的是《Shared Prefixes, Better Credit》提出的自适应路由方法，从共享前缀与信用分配角度提升多智能体协作推理表现。
+
+若想快速了解多智能体推理的实用技巧，这篇6.0分论文可作为入门参考。
+- 详情：[/202608/09/README](/202608/09/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Shared Prefixes, Better Credit: Adaptive Routing for Multi-Agent Reasoning](/202608/09/2608.02291v1-shared-prefixes-better-credit-adaptive-routing-for-multi-agent-reasoning)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体协作中的细粒度信用分配方法，可迁移至多智能体强化学习
 
 
 <div class="dpr-home-promo-card">
