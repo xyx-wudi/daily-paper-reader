@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-10",
+  "date": "2026-08-10",
+  "generated_at": "2026-08-10T19:58:56",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/10/2608.07280v1-why-study-emergent-behavior-when-you-can-regulate-it-aligning-multi-agent-systems-with-reward-prediction",
+      "section": "deep",
+      "title_en": "Why Study Emergent Behavior When You Can Regulate It? Aligning Multi-Agent Systems with Reward Prediction",
+      "authors": "Assaf Caftory, Almog Zemach, Moshe Butman, Doron Friedman",
+      "date": "2026-08-07",
+      "pdf": "https://arxiv.org/pdf/2608.07280v1",
+      "score": "9.0",
+      "evidence": "将偏好奖励建模扩展到多智能体强化学习",
+      "tldr": "多智能体系统中的涌现行为传统上仅被研究分析，难以主动调控。本文提出MARP框架，利用偏好奖励建模从回合级集体评估中学习共享奖励，替代手写奖励来引导分散智能体。在Harvest Game中，MARP比标准基线更贴近社会指标，并支持可持续性、平等与和平等复合目标。这表明涌现行为可作为数据驱动的调节目标，而不仅是研究现象。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent simulations are widely used to study complex social and ecological systems, where rich and often unexpected emergent behaviors arise from local interactions. A large body of prior work has focused on analyzing such emergent dynamics across domains. In this paper, we move beyond analyzing emergent behavior and introduce a learning-based mechanism for actively shaping it via social reward modeling. We introduce Multi-Agent Reward Prediction (MARP), a simple framework that extends preference-based reward modeling to multi-agent reinforcement learning. While the framework is designed to be applicable across multi-agent settings, the present empirical validation is limited to a single environment, and we therefore present MARP as a proof of concept within the studied domain. Rather than relying on handcrafted rewards, MARP learns a shared reward model from episode-level evaluations of collective outcomes, enabling decentralized agents to align their behavior with global social objectives.   We study MARP in the Harvest Game, a canonical sequential social dilemma modeling common-pool resource management and related real-world challenges. Our results show that MARP can be tuned to produce behavior that is more closely aligned with target social metrics than standard reward-based baselines, while the learned reward model captures subtle environmental structure without explicit programming. Crucially, MARP supports multiple and composite social objectives within a single training regime. By modifying only the high-level evaluation metric, the same framework seamlessly aligns agent behavior with diverse goals, including sustainability, equality, and peace, as well as combinations of individual and group-level objectives. These findings demonstrate that emergent multi-agent behavior can be treated not only as a phenomenon to study, but as a target of principled, data-driven regulation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/10/2608.06520v1-online-security-learning-in-cooperative-multi-agent-systems-under-hidden-byzantine-attacks",
+      "section": "deep",
+      "title_en": "Online Security Learning in Cooperative Multi-Agent Systems under Hidden Byzantine Attacks",
+      "authors": "Ximing Sun, Yue Wang",
+      "date": "2026-08-06",
+      "pdf": "https://arxiv.org/pdf/2608.06520v1",
+      "score": "8.0",
+      "evidence": "合作式多智能体系统中的在线安全学习，抵御拜占庭攻击，建立鲁棒MDP模型",
+      "tldr": "针对多智能体系统在隐蔽拜占庭攻击下的在线协同控制问题，学习器仅知计划动作和公共信号，需优化最坏情况安全性能。研究表明攻击者信息决定鲁棒MDP的矩形结构，并揭示安全遗憾由返回遗憾与累积响应差距组成，且该差距不可回避。提出的阶段绑定鲁棒估计-决策算法达到近乎最优遗憾上界，为可靠多智能体系统奠定理论与算法基础。",
+      "tags": "query:marl",
+      "abstract_en": "We study online cooperative control of a multi-agent system under Byzantine attacks. Namely, an unknown, fixed subset of agents are Byzantine comprised and can stealthily overwrite its own coordinates of the team's planned joint action after observing that plan. The learner observes planned actions, public rewards, and public states, but neither the overwrite nor the executed joint action. Our objective is security: to optimize the team performance against the worst overwrites and achieve the optimal security value. We first show that the attacker's information determines the geometry. An attacker that observes the planned action induces an exact $(s,a)$-rectangular robust Markov decision process (MDP) whose rows are convex hulls of overwrite-induced public-outcome laws, whereas a blind attacker induces an $s$-rectangular model. We then identify the information-theoretic limit of security learning, showing that the security regret decomposes exactly into return regret against the response generating the data and a cumulative response gap $D_K$. Two indistinguishable horizon-one instances force $Ω(K)$ expected security regret while return regret is zero, showing that dependence on $D_K$ is unavoidable. Finally, we develop a stage-tied robust estimation-to-decisions learner and prove a regret bound of $\\widetilde{\\mathcal O}\\!\\left(H^2S\\sqrt{AK}\\right)+\\mathbb E[D_K]$. Our studies thus provide comprehensive theoretical and algorithmic foundations of reliable multi-agent systems under Byzantine attacks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/10/2608.07252v1-inverse-reinforcement-learning-for-indefinite-mean-field-social-optimization-with-multiplicative-noise",
+      "section": "quick",
+      "title_en": "Inverse reinforcement learning for indefinite mean-field social optimization with multiplicative noise",
+      "authors": "Ying Cao, Xun Li, Bing-Chang Wang",
+      "date": "2026-08-07",
+      "pdf": "https://arxiv.org/pdf/2608.07252v1",
+      "score": "7.0",
+      "evidence": "针对大规模群体的均场社会优化逆强化学习，属于多智能体强化学习范畴",
+      "tldr": "本文研究乘性噪声与不定代价权重下的线性二次均值场社会优化逆强化学习问题，目标是从专家演示中恢复未知社会代价权重并复现最优控制策略。作者提出基于模型的两循环逆RL算法，分别处理个体与均值场动态，证明收敛性与闭环可镇定性，并刻画权重非唯一性。进一步推导无需系统动力学的无模型算法，仅需满足秩条件的轨迹数据，通过积分RL与最小二乘辨识实现。数值实验验证了方法的有效性。",
+      "tags": "query:marl",
+      "abstract_en": "This paper studies the inverse reinforcement learning (RL) problem for linear-quadratic mean-field (MF) social optimization. The considered system features multiplicative noise and indefinite cost weights, which violate standard convexity assumptions and pose analytical challenges. The goal is to recover unknown social cost weights from expert demonstrations and reproduce the optimal control policies. This requires solving coupled stochastic algebraic Riccati equations and Lyapunov equations with unknown system dynamics. To this end, we first propose a model-based inverse RL algorithm with two sequential loops that separately handle individual and MF dynamics, and we prove its convergence and closed-loop stabilizability. Moreover, we characterize the non-uniqueness of the recovered cost weights. To eliminate reliance on system dynamics, we develop a model-free inverse RL algorithm using integral RL and least-squares identification, which requires only measured trajectory data satisfying mild rank conditions. Finally, numerical simulations validate the effectiveness of the proposed approaches.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/10/2608.06735v1-ib-rl-isolated-bilateral-reinforcement-learning-for-strategic-dialogue-agents",
+      "section": "quick",
+      "title_en": "IB-RL: Isolated Bilateral Reinforcement Learning for Strategic Dialogue Agents",
+      "authors": "Senhao Wang, Chenghao Cai, Haitao Hu, Mingxing Huang, Xingguang Wang, Wenhao Li, Zecheng Lin",
+      "date": "2026-08-07",
+      "pdf": "https://arxiv.org/pdf/2608.06735v1",
+      "score": "6.0",
+      "evidence": "与自适应对手智能体进行强化学习的对话方法",
+      "tldr": "战略对话中对手会自适应，但现有RL通常训练固定对手，导致策略利用对手规律而非通用策略，形成静态对手失配。本文提出IB-RL，两角色联合rollout共同进化，但各用独立优势、动作掩码和更新路径优化自身奖励。在TeleSales上Success@1达89.6%，在Deal-or-NoDeal上对DeepSeek V4 Pro达成98.4%，均超最好单边基线。结果表明严格隔离的联合训练可显著提升对未见对手的泛化能力。",
+      "tags": "query:marl",
+      "abstract_en": "Reinforcement learning (RL) has achieved strong results in improving large language models (LLMs) on tasks with stationary, verifiable rewards, such as mathematical reasoning and code execution. In these settings, the environment follows fixed rules and does not adapt strategically to the agent. Strategic dialogue differs in this respect: the environment is another agent that adapts to the policy, and success depends on the interaction between the two sides. Despite this interactive nature, current RL approaches typically train a target agent against a fixed counterpart or simulator. We find that this training paradigm encourages the policy to exploit counterpart-specific regularities rather than learn strategies that generalize across counterparts. We call this problem the static-counterpart mismatch, which we quantify directly in our experiments. To address it, we propose Isolated Bilateral Reinforcement Learning (IB-RL), in which the two roles coevolve through joint rollouts while each role optimizes its own reward through fully independent advantages, action masks, and update paths. We evaluate frozen policies against fully independent held-out counterparts in both domains. On Vehicle TeleSales, IB-RL achieves 89.6% Success@1, compared to 84.6% for the best unilateral RL baseline. On Deal-or-NoDeal, it reaches 98.4% agreement against DeepSeek V4 Pro, compared to 86.4% for the best unilateral baseline. These results indicate that jointly training both roles with strict peragent isolation produces policies that generalize more effectively to unseen counterparts.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
