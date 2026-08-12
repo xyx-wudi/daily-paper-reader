@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-12",
+  "date": "2026-08-12",
+  "generated_at": "2026-08-12T21:20:23",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/12/2608.10526v1-coordinating-the-unknown-lipschitz-constant-in-multiplayer-bandits",
+      "section": "deep",
+      "title_en": "Coordinating the Unknown Lipschitz Constant in Multiplayer Bandits",
+      "authors": "Ricardo Parada, Chenzhang Zhao, William Chang",
+      "date": "2026-08-11",
+      "pdf": "https://arxiv.org/pdf/2608.10526v1",
+      "score": "8.0",
+      "evidence": "合作式多智能体老虎机，且学习开始后不通信的分散式设定",
+      "tldr": "在多玩家连续动作空间bandits中，Lipschitz常数未知时，玩家需从自身数据估计常数并离散化联合动作空间，但学习开始后无法通信，因此必须自主达成相同离散化。针对三种信息结构，算法通过估计常数和抖动量化实现协调。理论证明共同奖励或可观测动作可免费提供一致性；否则抖动量化也能达成一致，且不牺牲遗憾的领先阶。这一工作首次为未知光滑度下的多智能体协调提供了理论保证。",
+      "tags": "query:marl",
+      "abstract_en": "Motivated by decentralized applications, we study cooperative multi-agent bandits in continuous (Lipschitz) action spaces when the Lipschitz constant is unknown. We consider three information structures: (A)~unobserved actions with common rewards, (B)~observed actions with independent rewards, and (C)~unobserved actions with independent rewards. In each case we design and analyze an algorithm that estimates the Lipschitz constant, chooses a discretization of the joint action space, and applies a cooperative bandit method to the induced discrete problem. Players never communicate once learning starts, so the central difficulty is that they must reach the \\emph{same} discretization from their own data. We prove regret guarantees showing that common rewards and observable actions each supply this agreement for free, and that in their absence agreement can still be bought, through a dithered quantization of the estimate, at no cost in the leading order of the regret.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/12/2608.10529v1-robust-multi-agent-bandits-with-heavy-tailed-rewards-and-information-asymmetry",
+      "section": "quick",
+      "title_en": "Robust Multi-Agent Bandits with Heavy-Tailed Rewards and Information Asymmetry",
+      "authors": "Daphne Feng, Ricardo Parada, Lily Jiang, Sophia Yi, William Chang",
+      "date": "2026-08-11",
+      "pdf": "https://arxiv.org/pdf/2608.10529v1",
+      "score": "7.0",
+      "evidence": "信息不对称下的去中心化多智能体算法",
+      "tldr": "多臂老虎机是序列决策的核心框架，但传统研究多假设次高斯奖励，难以适应真实场景中的重尾分布和去中心化、信息不对称的交互。本文针对重尾奖励，在三种信息不对称机制（动作不可观测且奖励公共、动作可观测且奖励独立、动作不可观测且奖励独立）下研究多智能体老虎机问题，分别提出稳健的分布式算法，并证明其遗憾界几乎匹配集中式重尾情形的最优速率。在帕累托分布奖励环境中进行的实验验证了理论结果，揭示了三种机制在同步、协调与探索之间的权衡，为实际去中心化决策提供了重要指导。",
+      "tags": "query:marl",
+      "abstract_en": "The multi-armed bandit problem is a central framework in sequential decision-making, extensively studied under sub-Gaussian reward assumptions. However, real-world applications often involve heavy-tailed reward distributions and decentralized, information-asymmetric interactions. We study multi-agent multi-armed bandits with heavy-tailed rewards under three information-asymmetry regimes: unobserved actions with common rewards, observed actions with independent rewards, and unobserved actions with independent rewards. We develop robust decentralized algorithms for each setting and derive regret guarantees that nearly match centralized heavy-tailed rates. Experiments on a Pareto-distributed reward environment validate our theoretical findings and illustrate the trade-offs between synchronization, coordination, and exploration across the three regimes.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/12/2608.09258v1-task-oriented-formation-decision-via-reinforcement-learning-herding-an-attacking-swarm",
+      "section": "quick",
+      "title_en": "Task-Oriented Formation Decision via Reinforcement Learning: Herding an Attacking Swarm",
+      "authors": "Zhaozong Wang, Guibin Sun, Jinyong Chen, Rui Zhou",
+      "date": "2026-08-10",
+      "pdf": "https://arxiv.org/pdf/2608.09258v1",
+      "score": "6.0",
+      "evidence": "基于强化学习的多机器人围捕编队决策",
+      "tldr": "针对攻击者具备机动性优势且策略未知的驱赶任务，本文提出任务导向的编队决策方法。用低维参数向量编码编队形状，将决策转化为参数优化问题，并利用强化学习策略在线调节参数，使防御者编队自适应任务需求。实验表明该方法优于三个基线，可扩展至数十机器人，并在物理平台上验证了实用性。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-robot systems can accomplish tasks that are difficult for a single robot by organizing into task-specific formations. Different from existing studies on multi-robot shape formation, we here study the task-oriented formation decision problem, with a focus on the herding task. This task is challenging due to the attackers' superior maneuverability and their unknown strategies. To address these challenges, we propose the following novel results. First, we encode the formation shape using a low-dimensional parameter vector. This parametric representation reformulates the formation decision as a parameter optimization problem, thereby resolving the limited flexibility of predefined shapes. By optimizing these formation parameters, the defenders' maneuverability disadvantage is mitigated through a formation shape that continuously adapts to task requirements. Second, we develop a reinforcement learning-based policy to regulate the formation parameters. Trained offline in simulations covering diverse attacking strategies, the learned policy can effectively handle adversarial unpredictability during online deployment. Comparative simulations against three baselines demonstrate that our method can successfully accomplish challenging herding tasks. Additional scalability simulations further verify its applicability to simulated scenarios involving dozens of robots. We also validate the practical feasibility of our method on a physical robotic platform with 3 attackers and 7 defenders.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

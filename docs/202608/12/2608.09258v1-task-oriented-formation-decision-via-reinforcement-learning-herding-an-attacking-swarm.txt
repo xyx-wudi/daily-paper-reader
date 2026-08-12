@@ -1,0 +1,1477 @@
+Title: Task-Oriented Formation Decision via Reinforcement Learning: Herding an Attacking Swarm
+
+URL Source: https://arxiv.org/pdf/2608.09258v1
+
+Published Time: Tue, 11 Aug 2026 01:59:43 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+> IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 1
+
+# Task-Oriented Formation Decision via Reinforcement Learning: Herding an Attacking Swarm 
+
+Zhaozong Wang, Guibin Sun, Jinyong Chen, and Rui Zhou 
+
+Abstract —Multi-robot systems can accomplish tasks that are difficult for a single robot by organizing into task-specific forma-tions. Different from existing studies on multi-robot shape forma-tion, we here study the task-oriented formation decision problem, with a focus on the herding task. This task is challenging due to the attackers’ superior maneuverability and their unknown strategies. To address these challenges, we propose the following novel results. First, we encode the formation shape using a low-dimensional parameter vector. This parametric representation reformulates the formation decision as a parameter optimization problem, thereby resolving the limited flexibility of predefined shapes. By optimizing these formation parameters, the defenders’ maneuverability disadvantage is mitigated through a formation shape that continuously adapts to task requirements. Second, we develop a reinforcement learning-based policy to regulate the formation parameters. Trained offline in simulations covering diverse attacking strategies, the learned policy can effectively handle adversarial unpredictability during online deployment. Comparative simulations against three baselines demonstrate that our method can successfully accomplish challenging herding tasks. Additional scalability simulations further verify its appli-cability to simulated scenarios involving dozens of robots. We also validate the practical feasibility of our method on a physical robotic platform with 3 attackers and 7 defenders. 1
+
+Note to Practitioners —In many applications, it is necessary for a robot swarm to form a task-specific formation, such as herding attackers away from critical facilities. However, most existing herding methods typically rely on the superior maneuverability of robots or explicit dynamics of the target, which may not hold in adversarial settings. To address these limitations, this paper proposes a formation decision method that coordinates varying numbers of robots. The defenders execute this policy through a two-level hierarchical framework. First, at the formation level, an appropriate formation shape is determined in real time, and each defender is assigned a desired position. Second, at the robot level, each defender computes its control law to reach its assigned position while ensuring collision avoidance. In addition, a negotiation protocol is adopted to ensure the applicability of our method in distributed systems. More details of our method and experimental results are presented in this paper. 
+
+Index Terms —Task-oriented formation decision, herding prob-lem, reinforcement learning. 
+
+I. I NTRODUCTION This work was supported in part by the STI 2030-Major Projects under Grant 2022ZD0208804, in part by the National Natural Science Foundation of China under Grants 62473017 and 62503028. (Corresponding author: Rui Zhou.) 
+
+The authors are with the School of Automation Science and Electrical Engineering, Beihang University, Beijing 100191, China (e-mail: wangzz0925@buaa.edu.cn; sunguibinx@buaa.edu.cn; chenjinyong@buaa.edu.cn; zhr@buaa.edu.cn). 
+
+> 1
+
+https://github.com/WZZ-Wangzhaozong/formation decision herding 
+
+Figure 1. A group of blue defenders herding two red attackers. Robots with higher transparency correspond to earlier time steps. 
+
+# THE advancement in the theory of multi-robot systems (MRSs) has brought various applications [1], such as cargo transportation [2] and area monitoring [3], [4]. In particular, multi-robot shape formation has been widely stud-ied, as it effectively enhances collaboration efficiency [5]. Recent studies have further explored formation switching and reconfiguration to enhance the capabilities of MRSs in complex tasks [6], [7]. For example, in the herding task, a defensive formation can close in around the attackers to encircle them. However, while most existing studies still focus on how to drive robots to form a desired shape, the problem of determining the shape for specific tasks has rarely been investigated. Specifically, it remains a critical challenge to dynamically adjust the defensive formation to surround highly maneuverable attackers. Therefore, this paper investigates the formation decision problem for herding an attacking swarm. Existing multi-robot collaboration methods for this task can be categorized into two primary classes. The first class comprises distributed motion planning methods [8]–[10]. Rather than strictly enforcing geometric formations, these methods generate control policies at the robot level, where each robot independently herds the target toward the destination. The second class consists of formation-based methods [11], [12]. In these methods, the MRS switches among a set of predefined formations to ensure target containment and subsequently plans trajectories to transport the contained target. Despite these efforts, two challenges remain open for further investigation, as outlined below. The first challenge is to arXiv:2608.09258v1 [cs.RO] 10 Aug 2026 IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 2
+
+address the defenders’ maneuverability disadvantage relative to the attackers. Rather than enhancing their maneuverability, a more practical strategy is to organize defenders into a formation specifically designed for herding [11], [12]. For example, an arc-shaped formation was proposed in [12] to act as a barrier between the attackers and the protected area. This method divides the entire herding process into three separate stages and adopts a predefined formation in each stage. As a result, the methods in [11], [12] constrain the defensive formation to predefined shapes rather than allowing it to adapt, which inherently limits its responsiveness to evolving task requirements. Therefore, although these methods alleviate the demands on defenders, they fundamentally rely on superior maneuverability to offset the limited formation flexibility. The second challenge is how to adjust the formation shape when the attackers’ maneuvering strategies are unpredictable. In contrast to the aforementioned stage-based switching strate-gies in [11], [12], a recent study on formation decision es-tablishes a mapping between task requirements and formation shapes [13]. Subsequently, the MRS selects the most appropri-ate shape from a predefined formation library. However, the method in [13] exhaustively identifies only four shapes for an MRS comprising four robots, which limits its scalability to larger groups. In addition, to improve decision foresight, most existing studies explicitly model the motion of the target and utilize this to formulate policies for the robots [9], [14]. However, the strategies of attackers are typically unknown, making it difficult to predict their future behaviors. As a result, enabling the learned policy to respond effectively to unknown attacking strategies during online deployment remains a key challenge. Recent studies have increasingly adopted learning-based methods to address environmental uncertainty in chal-lenging applications, such as multi-robot cooperation in dense obstacle environments [15]. To address these challenges, this paper makes the following contributions: 1) We encode the formation shape using five parameters. Unlike the methods that linearly transform the forma-tion shape using stress matrices [16], [17], our low-dimensional parametric representation enables the for-mation to smoothly switch between open and closed configurations. This representation transforms the defend-ers’ formation decision into a parameter optimization problem. By optimizing these five parameters, the defen-sive formation can progressively enhance its surrounding advantage over the attackers while preserving a barrier against them. As a result, the defenders’ maneuverability disadvantage can be mitigated by a formation shape that continuously adapts to task requirements. 2) We develop a reinforcement learning (RL)-based policy that regulates the five formation parameters. This design liberates the policy to focus exclusively on high-level formation decisions, as the physical constraints are of-floaded to the low-level robot controllers. Specifically, we first formulate a state-dependent reward function to adaptively prioritize different herding objectives during policy optimization. Second, beyond the spatial relation-ships between the two sides, the observable velocities of the attackers are incorporated into the state space to capture their strategies. With these designs, the policy is trained offline in simulations covering a wide range of attacking behaviors. Therefore, the learned policy can respond to unseen strategies during online deployment. 3) To validate our method, we benchmark it against three baselines that directly control individual robots. Compar-ative simulations highlight the superior performance of our method in addressing the challenging herding task. Furthermore, numerical simulations show that our method can scale to scenarios involving dozens of robots. Finally, real-world experiments using 10 robots demonstrate the practical feasibility of the proposed method. The remainder of this paper is organized as follows. Sec-tion II reviews related work. Section III formulates the prob-lem, and Section IV presents the proposed method. Sections V and VI provide simulation and experimental results, respec-tively. Section VII concludes this paper. II. R ELATED WORK 
+
+This section provides an overview of related work, including research on herding problems, formation representation, for-mation control, and learning-based robotic decision-making. 
+
+A. Research on Herding Problems 
+
+Herding problems have been extensively explored in the literature, with herding typically referring to guiding a tar-get toward a desired destination. A closely related line of research is the pursuit-evasion (PE) game, in which robots are tasked with tracking and eliminating evasive targets [18], [19]. These studies have developed effective pursuit policies using either traditional control methods [18] or RL algorithms [19]. Different from the PE game, the herding problem prioritizes safeguarding a protected area over actively pursuing the target. To satisfy this requirement, the PE framework is extended in [8], where only one robot is deployed to guard the protected area, while the others continue to pursue the target. Although the method proposed in [8] is elegantly designed, it assumes that the target actively limits its motion to areas outside the robot’s occupied region. A more practical solution is to compress the targets’ reachable area and eliminate all feasible intrusion paths [9], [11]. However, these studies still rely on assumptions that are often unreliable in adversarial settings. For instance, the work in [11] assumes that the maneuvering strategy of the target is known. In addition, the method in [9] assumes the target remains stationary unless subjected to repulsion by robots. Some studies still require the robots to possess superior maneuverability [8], [14]. Few existing studies have addressed this problem through formation decisions. A notable exception is the “StringNet Herding” method [12], which coordinates robots into a geometric forma-tion that switches among a set of predefined shapes. However, this method limits the responsiveness of the MRS due to the formation constraints. To this end, this paper aims to flexibly fine-tune the formation and optimize it in real time. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 3
+
+B. Formation Representation 
+
+In this paper, formation decision refers to determining the appropriate shape for the MRS, for which formation represen-tation provides the foundation. Existing studies commonly employ three classes of forma-tion representation methods. The first class, which is also the most intuitive, defines a shape using a number of points equal to that of robots. A more concise variation is to designate a small subset of robots as the vertices of the shape [20], [21]. However, the representational fidelity of these methods depends heavily on the number of points used. Because their dimensionality scales with the number of robots, these point-based methods are unsuitable for subsequent decision-making in large-scale MRSs. The second class, commonly referred to as density control, models the spatial distribution of robots using mathematical functions [22], [23]. These methods generate a velocity field based on the error between the target and actual density functions, and each robot is driven by this field. Nevertheless, the mathematical forms of these functions are highly nonlin-ear, making them intractable to use directly as variables for formation decision. The third class of methods employs a fixed set of parameters to manage the formation shape. A representative approach is affine formation control [16], which scales, rotates, and shears the formation via an affine transformation matrix. More recently, the authors in [17] extend the affine formation control by incorporating additional adjustable parameters, thereby enabling a broader range of feasible formation shapes to be explored. One limitation of these matrix-based methods is that the transformed formation still depends on its initial configu-ration, rather than being uniquely determined by the adjustable parameters. For specific tasks, a few existing studies parame-terize the explicit features of the formation shape [24], [25]. For example, the method in [24] manipulates the horizontal-to-vertical ratio of a ribbon-like swarm to navigate through narrow channels. In summary, this paper aims to develop a concise and efficient parametric representation tailored to the herding task. 
+
+C. Formation Control 
+
+Formation control and formation decision are closely related but fundamentally distinct problems. The primary objective of formation control is to drive robots to achieve and maintain a given geometric pattern. A recent review systematically summarizes representative modeling and control techniques for UAV systems, which provide an important foundation for reliable vehicle and formation control [26]. Recent studies have further improved the safety, robustness, and fault toler-ance of formation execution. For example, range-only bearing estimation and control barrier functions have been combined for safety-critical formation control [27]. At the vehicle level, robust adaptive controllers have also been developed to ensure safe attitude control of aerial vehicles under faults and uncer-tainties [28]. These studies improve the reliability of formation execution but generally assume that the desired formation geometry or reference trajectory has already been specified. Representative formation control methods include leader– follower structures [13], [29], in which selected leaders per-form global planning while followers maintain prescribed relative relationships. Some studies further adjust specific formation characteristics according to environmental condi-tions [24], [25], [30], [31]. For example, the formation size can be adjusted according to passage width to ensure safe traversal [30], while the formation orientation can be rotated to align inter-robot gaps with approaching obstacles [31]. However, these methods generally modify predefined geomet-ric variables through predetermined rules, rather than jointly determining them through a formation decision policy. The formation decision considered in this paper is beyond such predefined geometric adjustments. It treats the overall formation geometry as an independent high-level decision variable and determines multiple coupled formation param-eters according to the evolving task requirements. Although learning-based methods have enhanced the autonomous ca-pabilities of individual robots [4] and facilitated multi-robot cooperation in complex environments [32], they primarily learn robot-level actions rather than formation-level decisions. In addition, few studies have formulated the formation decision problem for adversarial multi-robot herding tasks. To address this gap, this paper represents the defensive formation using a low-dimensional parameter vector and develops a policy to update the formation parameters. 
+
+D. Learning-Based Robotic Decision-Making 
+
+Learning-based methods have recently shown strong poten-tial in complex robotic decision-making problems. In [33], Transformer-based reinforcement learning methods for se-quential decision-making are systematically reviewed. To improve learning efficiency, a sample-efficient backtrack temporal-difference deep reinforcement learning method is developed in [34]. Moreover, reinforcement learning from human feedback is further investigated through cooperative policy-reward optimization for LLMs [35]. Learning-based methods have also been applied to multi-robot and constrained control scenarios. For example, the authors in [15] propose a constrained reinforcement learn-ing approach for cooperative control of multi-UAV systems in dense obstacle environments. In addition, Bayesian opti-mization is used to develop an online escape strategy for planetary rovers under entrapment conditions [36]. Perception-aware decision-making has also been investigated in robotic manipulation. The authors in [37] propose an occlusion-aware grasping method that explicitly considers inter-object occlu-sion relationships and estimates feasible grasping poses in complex multi-object scenes. Although these studies demon-strate the effectiveness of learning-based decision-making, they mainly focus on actions, trajectories, control inputs, or policy-reward optimization. They do not directly address how to adaptively determine formation-level geometric parameters for adversarial multi-robot herding. To bridge this gap, this paper formulates herding-oriented formation decision as a low-dimensional parameter optimization problem and learns a policy to update the formation parameters in real time. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 4
+
+Table I NOTATIONS AND THEIR MEANINGS .
+
+Notation Description 
+
+System Sets and Variables: 
+
+Vd, Va Sets of defenders and attackers, respectively 
+
+O, P, S Obstacles, protected area, and safe area 
+
+Nd, N a Number of defenders and attackers 
+
+p, v, u Position, velocity, and acceleration vectors of a robot 
+
+vmax , u max Maximum velocity and acceleration constraints 
+
+ρp, ρ s Radius of the protected area and safe area 
+
+Formation Parameters ( θ): 
+
+pc Translation parameter relative to the protected area 
+
+φ Parameter defining formation orientation 
+
+ζ Parameter for inter-robot distance 
+
+β Parameter defining formation opening 
+
+ˆθi Defender i’s local estimate of formation parameters 
+
+Reinforcement Learning (RL) Components: 
+
+s, a, r State space, action space, and reward function 
+
+ratt Radius of the attacking swarm 
+
+vatt , φ vatt Average velocity and direction of the attacking swarm 
+
+φnea Non-escape angle quantifying surrounding advantage 
+
+rter , f (·) Terminal and immediate reward terms 
+
+γ Discount factor in the DDPG framework 
+
+Control and Negotiation Parameters: 
+
+p∗ 
+
+> i
+
+Desired position for defender i
+
+uc 
+
+> i
+
+, uf
+
+> i
+
+, ua 
+
+> i
+
+Control terms: connectivity preservation, formation maintenance, and collision avoidance 
+
+G, E, L (G) Communication graph, edge set, and Laplacian matrix 
+
+cθ Negotiation gain for parameter consensus 
+
+λ2(G) Algebraic connectivity (second-smallest eigenvalue) 
+
+III. P RELIMINARIES AND PROBLEM FORMULATION 
+
+This section first introduces the considered herding scenario and the capabilities of both attackers and defenders. Second, we formulate the herding problem. 
+
+A. Preliminaries 
+
+We consider a scenario involving defenders, attackers, ob-stacles, and protected and safe areas, as shown in Fig. 2. This scenario is confined to a square region spanning [−renv , r env ]2.The set of defenders is denoted by Vd = {1, 2, . . . , N d}, where 
+
+Nd is the number of defenders. Similarly, the sets of attackers and obstacles are denoted by Va = {a1, a 2, . . . , a Na } and O =
+
+{o1, o 2, . . . , o No }, respectively. In practical scenarios, critical facilities may have irregular shapes. For generality, both the protected and safe areas are approximated by minimum bound-ing circles, defined as P = {p ∈ R2 : ∥p − pp∥ ≤ ρp}
+
+and S = {p ∈ R2 : ∥p − ps∥ ≤ ρs}, where (pp, ρ p) and 
+
+(ps, ρ s) are their centers and radii, respectively. The sensing, maneuvering, and communication capabilities of both sides are described as follows. 
+
+1) Sensing Ability: The positions of the protected area and the defenders are assumed to be known to the attackers throughout their intrusion process. On the defender side, a navigation system is deployed in P to detect the positions and velocities of attackers within the area Zsen d = {p ∈
+
+R2 : ∥p − pp∥ ≤ renv } and send this information to the defenders. To reflect real-world sensor limitations, the detected information is modeled by incorporating distance-dependent Gaussian noise. Specifically, the observations satisfy ˜p ∼N (p, σ 2 
+
+> p
+
+(r)I) and ˜v ∼ N (v, σ 2 
+
+> v
+
+(r)I), where r = ∥p − pp∥
+
+denotes the relative distance to the navigation system. The Attacking swarm              
+
+> Defensive formation 12345Protected area Safe area
+> Obstacle Obstacle Obstacle
+> σ=σv/p
+> Defensive formation Attack
+> 1catt nea (,,)hppp
+> ne
+
+att p
+
+> Protected area
+> diff
+
+
+
+> nea p
+> cp
+
+Figure 2. Herding process. The process consists of two phases: the defending phase comprising Steps 1–3 and the guiding phase comprising Steps 4– 5. Step 1: Defenders gather to form an open-arc formation. Step 2: The formation scales to enhance its surrounding capability. Step 3: The formation surrounds the attacking swarm. Step 4: The closed-loop formation transports the attackers. Step 5: The formation reaches the safe area S.
+
+distance-dependent standard deviation σ(r) is modeled as a piecewise function: 
+
+σ(r) = 
+
+
+
+0.0, r ≤ rsen 1
+
+σv/p · r−rsen 1 
+
+> rsen 2−rsen 1
+
+, rsen 1 < r ≤ rsen 2
+
+σv/p , r > r sen 2
+
+where σv/p denotes the maximum standard deviation. The thresholds rsen 1 and rsen 2 are set to renv  
+
+> 3
+
+and 2renv  
+
+> 3
+
+in this paper. 
+
+2) Maneuverability: The robots on both sides follow double-integrator dynamics, ˙p = v and ˙v = u, where 
+
+u = [ ux, u y ]⊤ denotes the acceleration input. The acceleration of each robot is constrained by ∥u∥ ≤ umax . In addition, the velocities are subject to the constraint ∥v∥ ≤ vmax . The attackers exhibit superior maneuverability, characterized by 
+
+vamax > v dmax and uamax > u dmax , where the subscripts a and 
+
+d denote the attackers and defenders, respectively. 
+
+3) Communication Ability: The attackers can communicate with each other regardless of distance. Conversely, defenders are restricted to communicating solely with their immediate neighbors under a distributed architecture. 
+
+B. Problem Formulation 
+
+This paper aims to use defenders to herd an attacking swarm into a designated safe area before the swarm enters the protected area. As depicted in Fig. 2, the herding process is divided into the defending and guiding phases. During the defending phase, the defensive formation adapts its configu-ration to eventually surround the attackers. Once the attackers are surrounded, the process transitions into the guiding phase to transport all attackers to the safe area. In the following, we present two assumptions required for our method. 
+
+Assumption 1: We assume that adjacent defenders create an impassable barrier for the attackers if the distance between the adjacent defenders is less than a given threshold rstr d .
+
+Assumption 2: Consistent with [9], [12], we assume that a navigation system is deployed in P to perceive all the attackers and broadcast this information to all defenders. In the herding scenarios, the attackers perform risk-aware navigation, enabling them to proactively avoid approaching IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 5
+
+defenders while advancing toward the protected area. The maneuvering strategy of the attackers is given by 
+
+uaj =kad g(∥rstr  
+
+> aj
+
+∥, r safe ad , r avo ad ) + kap 
+
+paj − pp
+
+∥paj − pp∥
+
++ kaa g(∥paj − pa′
+
+> j
+
+∥, r safe aa , r avo aa )
+
+(1) where the constants kad , kap , and kaa represent the weighting factors for avoiding defenders, entering the protected area, and avoiding internal collisions, respectively; ravo aa , rsafe aa , ravo ad ,and rsafe ad define the distance thresholds for activating the corresponding potential-field terms. Moreover, a′ 
+
+> j
+
+denotes the attacker closest to aj , and ∥rstr  
+
+> aj
+
+∥ is the minimum distance between aj and the defensive formation. The potential-field function g is defined in Eq. (2): 
+
+g(r, r 1, r 2) = 
+
+
+
+> 1
+> r−r1
+
+[
+
+1 + cos 
+
+(
+
+π r−r1
+
+> r2−r1
+
+)] 
+
+, r1 < r ≤ r2
+
+0, r > r 2
+
+(2) where r1 and r2 are given constants used to adjust the shape of g. Although the attacking strategy is fixed in the form of Eq. (1), we consider multiple combinations of these hyperparameters to enrich the diversity of attacking behaviors. In addition, the parameters kad , kap , kaa , ravo aa , rsafe aa , ravo ad ,and rsafe ad remain unknown to the defenders, rendering the attackers’ behaviors unpredictable. This setting requires our method to operate solely on observable information about the attackers. IV. F ORMATION DECISION METHOD FOR HERDING TASKS 
+
+In this section, we first introduce the proposed parametric representation of the defensive formation. Second, we develop an RL-based herding policy that regulates the formation pa-rameters in response to task requirements. 
+
+A. Parametric Representation for Defenders 
+
+The configuration of the defensive formation, including its position, shape, and size, is represented by the vector 
+
+θ = [p⊤ 
+
+> c
+
+φ ζ β]⊤
+
+where pc ∈ R2 represents the translation, while φ, ζ, and β
+
+are the parameters defining orientation, scaling, and opening, respectively. A visualization of this representation is shown in Fig. 3. It should be noted that pc is defined relative to the center of the protected area. The policy regulating the above parameters during the defending phase is learned using an RL algorithm, as detailed in the next subsection. Once all the attackers are surrounded by defenders, the de-fending phase transitions to the guiding phase. As long as the attackers remain contained within the closed-loop formation, there always exists a way to transport them to the safe area. To ensure this, we conservatively eliminate the possibility of attacker escape caused by deformation of the defensive formation. Accordingly, the parameters φ, ζ, and β are kept constant, and the formation only needs to adjust pc. In this setting, the closed-loop formation is treated as a rigid entity 32451 
+
+> cp
+> (a) Open-arc (b) Closed-loop
+
+
+
+  
+
+> cp
+> 12345
+> 
+> pa
+
+ da 
+
+
+
+
+
+> Center of StringNet Center of attacking swarm Center of protected area
+> ap r
+> a
+
+ 
+
+> da r
+> da
+> StringNet
+> nea
+
+
+
+> Attacker swarm Non-escape angle
+
+ 
+
+> Shape Center of StringNet Center of protected area
+> ζ
+> ad
+
+
+
+> ad r
+> dp r
+
+
+
+> att v
+
+
+
+> att v
+> Center of defenders Center of Attackers
+> dp
+
+ -π   
+
+> att r
+> Protected area Safe area
+> Figure 3. Illustration of open-arc and closed-loop formations.
+
+with a fixed radius, and the classical velocity obstacle method proposed in [38] is employed to adjust ˙pc, as detailed below: 
+
+˙pc = argmin   
+
+> v/∈No
+> ∪
+> j=1
+> VO j
+
+∥v − vref ∥
+
+with 
+
+vref = ¯ps − pc
+
+∥ ¯ps − pc∥ · min (vamax , v dmax 
+
+)
+
+where ¯ps = ps −pp and VO j encompasses all possible veloci-ties that could result in a collision with the obstacle oj within a look-ahead time ∆t. Notably, the term min (vamax , v dmax 
+
+)
+
+ensures that the collective motion remains feasible even in scenarios where vamax < v dmax .After the parameters and their update policy are determined, the next step is to control the defenders to realize the desired formation. The robot-level control law, which accounts for for-mation maintenance, connectivity preservation, and collision avoidance, is presented in Appendix A. In addition, formation parameter consensus is a fundamental requirement in dis-tributed multi-robot coordination. Recent studies have shown that the agreement behavior of systems can be significantly affected by the design of coordination mechanisms [39]. To enable distributed implementation, we introduce the following negotiation protocol for defender i:
+
+˙ˆθi = πi(si) + cθ
+
+∑
+
+> j∈N i
+
+( ˆθj − ˆθi
+
+). (3) Let θ∗ denote the ground-truth optimal parameter vector. Assuming that the policy is well trained, we have 
+
+( ˆθi − θ∗)⊤πi(si) ≤ 0,
+
+with equality only when ˆθi = θ∗. The convergence of the formation parameter estimates is established in Theorem 1. 
+
+Theorem 1: Under the negotiation protocol in Eq. (3), all defenders’ estimates satisfy 
+
+lim 
+
+> t→∞
+
+ˆθi = θ∗, ∀i ∈ V d.
+
+Proof 1: See Appendix B-A. 
+
+B. RL-Based Formation Parameter Decision 
+
+This subsection presents how to derive an RL-based policy that regulates θ during the defending phase. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 6b2. Network Update 
+
+Local Coordinates Global Coordinates Formation Shapes In the global coordinate system, threats may arise from arbitrary directions. Policy generalizes regardless of direction in the local coordinate system. 
+
+(a). Parametric Representation 
+
+Origin 
+
+x-axis 
+
+> y-axis
+
+Origin 
+
+> x-axis
+
+y-axis Policy generalizes across group scales with the parametric representation. 
+
+Transformation 
+
+Parameterization 
+
+Shape parameters 
+
+ζ, β, ratt 
+
+Spatial parameters 
+
+rad , φad , rdp , φdp 
+
+Strategic parameters 
+
+vatt , φvatt 
+
+State Space s (Fig. 5) 
+
+Formation shapes of two adversarial groups are encoded by a fixed set of parameters. 
+
+(b). Policy Learning 
+
+Next State sk+1 
+
+Reward Functions Reward r
+
+is finished? 
+
+sk, ak, sk+1 , r, d
+
+Replay Buffer 
+
+Yes No 
+
+b1. Sample Collection 
+
+(a). Parametric Representation 
+
+Action ak
+
+Providing samples. 
+
+> Simulation Initialization
+> def Update_targets_AC(): # Compute target Q value with torch.no_grad(): a_next = actor_target(s_) q_next = critic_target(s_, a_next) q_target = r + gamma * (1 - d) * q_next # Compute Q value
+> def Update_Critic(): # Compute target Q value with torch.no_grad(): a_next = actor_target(s_) q_next = critic_target(s_, a_next) q_target = r + gamma * (1 - d) * q_next # Compute Q value
+> def Update_Actor(): # Sample minibatch from Replay Buffer batch = random.sample(buffer, batch_size) s, a, r, s_, d = zip(*batch) # Policy gradient to maximize Q(s, μ(s)) actor_loss = -critic(s, actor(s)).mean() actor_optim.zero_grad() actor_loss.backward() actor_optim.step()
+
+Current State sk
+
+(a). Parametric Representation (c). Updating Robots in Both Groups (c). Robots Update broadcast to neighbors 
+
+> i
+
+u
+
+θk1
+
+ak
+
+θkl
+
+> k
+
+θ
+
+Robot Controller 
+
+> *
+> i
+
+pkθNegotiation Protocol: Eq. (3) ∫…
+
+Maneuvering Strategy: Eq. (1) ipjau
+
+> ja
+
+p Robot Integrator Robot Integrator 
+
+c2. Attackers c1. Defenders 
+
+Serving as modules.  
+
+> d**1
+
+{ }   Ni ip
+
+
+
+Figure 4. RL-based framework for formation parameter update. (a) Parametric representation of the defensive formation and the attacking swarm. The resulting policy can generalize across different attacking directions and group scales. (b) Learning process of the policy for updating the formation parameters. (c) Robot motions are computed based on their desired positions. 
+
+1) Overall Framework: The overall framework is illustrated in Fig. 4. First, the two adversarial groups are represented as formation shapes with specific geometric characteristics, allowing scenarios with different group scales to be described in a fixed-dimensional state space. Second, offline simula-tions covering diverse attacking strategies are constructed to serve as the policy learning environment. To implicitly embed the attacking strategy into the policy learning process, the observable velocity information of the attacking swarm is incorporated into the state space. Based on the above modeling, the policy is iteratively refined within the RL framework. At each time step, the current situation is transformed into the state vector sk, which is then fed into the actor network to generate an action ak
+
+for updating the formation. Subsequently, the attackers update themselves according to Eq. (1), and the resulting situation is transformed into the next state sk+1 . The reward r is then calculated from sk+1 based on several reward terms defined below. As a result, the tuple (sk, ak, sk+1 , r, d ) is stored in the replay buffer for subsequent training, where d encodes the episode outcome: d = 1 for successful herding, d = 2 
+
+for failure, and d = 0 if the episode continues or times out. Finally, the networks, including the actor, critic, and target networks, are updated using the Deep Deterministic Policy Gradient (DDPG) algorithm. 
+
+2) State and Action Spaces: The actor network learns a policy for updating θ, and the action space is defined as a = ˙θ.The state space should represent varying group sizes, in-trusion directions, and attacking strategies. First, to enable the policy to generalize across different group sizes, the first com-ponent of the state space consists of the shape parameters ζ,
+
+β, and ratt , where ratt denotes the distance from the center of the attacking swarm to its farthest attacker. Second, to handle intrusions from arbitrary directions, the spatial relationships among the defensive formation, the attacking swarm, and the protected area are transformed into a coordinate frame in which the formation orientation is aligned with a reference angle of 0◦, as shown in Fig. 4(a). The corresponding spatial parameters are rdp , φdp , rad , and φad , where r and φ denote the relative distance and angle between the corresponding en-tities. The subscripts a, d, and p refer to the attacking swarm, the defensive formation, and the protected area, respectively. Third, to enable the learned policy to respond to different attacking strategies, the observed velocities of the attackers are incorporated into the state space. Accordingly, the third component of the state space is the average velocity of the attacking swarm, denoted by vatt .Because the spatial angles may wrap across the −π to π
+
+boundary, directly using them would introduce discontinuities that hinder gradient-based optimization. Therefore, each angle is encoded using its sine and cosine. As a result, the state space is defined as 
+
+s =
+
+ ζ, β, ratt , rdp ,
+
+cos( φdp ), sin( φdp ), rad , cos( φad ),
+
+sin( φad ), ∥vatt ∥, cos( φvatt ), sin( φvatt )
+
+ .IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 7
+
+The state space is graphically illustrated in Fig. 5. Shape center of defenders Center of protected area    
+
+> ζ
+> ad
+> 
+> ad r
+> dp r
+> 
+> att v
+> 
+> att v
+> Center of defenders Center of attackers
+> dp
+> -π
+> att r
+> Figure 5. Schematic diagram of the state space.
+
+3) Reward Function: The reward for each state transition 
+
+sk
+
+> ak
+
+−−→ sk+1 is defined as r(sk, ak) = rter + f (sk+1 ), where 
+
+rter and f (sk+1 ) are the terminal and immediate rewards, respectively. Reward design plays a critical role in policy learning [40], and the two types of rewards are detailed as follows. The primary criterion for evaluating the current policy is its effectiveness in enabling the defensive formation to surround the attacking swarm. The terminal reward is defined as rter = 2000 for successful herding, rter = −2000 for failure, and rter = 0 if the episode continues or times out. In addition, the following four immediate reward terms are introduced to alleviate reward sparsity. It should be noted that these immediate rewards are set to non-positive values. This setup penalizes unnecessary time steps, encouraging the formation to complete the surrounding task as quickly as possible and thereby maximize the state-value function. First, the defensive formation should surround the attack-ing swarm as effectively as possible. To quantify the sur-rounding advantage, the concept of the “non-escape angle” 
+
+φnea ∈ (0 , 2π] is introduced. This angle defines an area that is impassable for all the attackers, which is the gray sector present in Fig. 6. Accordingly, the reward f sur is defined as: 
+
+f sur = φnea 
+
+2π − 1.0.
+
+In addition, when φnea approaches zero, the attacking swarm has nearly bypassed the defensive formation. In this case, subsequent surrounding becomes extremely difficult because the attackers possess superior maneuverability. To prevent such situations, an additional penalty term, f sur min = −1.0, is added to f sur when φnea < ˆφnea . Here, the lower-bound safety threshold ˆφnea is empirically set to π 
+
+> 20
+
+.Second, the defensive formation needs to prevent the at-tacking swarm from approaching the protected area. However, once the attackers are herded far enough away from the pro-tected area, further herding is unnecessary, and the formation needs to focus on increasing other advantages. Therefore, the reward f dis is defined as: 
+
+f dis = min (rap − ˆrap , 0.0)
+
+where ˆrap is a given distance determined by the size of the herding scenario. Here, the value of ˆrap is set to renv  
+
+> 2
+
+.Third, the defensive formation is expected to function as an effective barrier interposed between the protected area and the attacking swarm. Specifically, the formation should stay in front of the protected area rather than behind it. Considering this spatial constraint, we introduce the concept of the “nearest defending position” pnea , defined as pnea = patt ρp 
+
+> ∥patt ∥
+
+. Here, 
+
+patt denotes the center of the attacking swarm relative to the protected area, and ρp is the radius of the protected area. Accordingly, the reward f pos is defined as: 
+
+f pos = min( ρp − h1(pc, patt , pnea ), 0.0) 
+
+where h1(p, p1, p2) is used to compute the shortest distance from point p to the line segment connecting p1 and p2. This reward imposes a penalty when the formation moves outside the corridor defined by h1(pc, patt , pnea ) ≤ ρp. As shown in Fig. 6, the formation is required to move into the gray-blue corridor in the lower right and form a defensive barrier. Finally, the opening of the defensive formation should always be directed toward the attacking swarm. This en-sures that the formation can quickly respond to the swarm’s maneuvers. For example, in Fig. 6, the formation needs to rotate counterclockwise to directly face the attacking swarm. Consequently, the reward f ali is defined as: 
+
+f ali = min( φdiff − h2(φ, φ ad ), 0.0) 
+
+where h2(·, ·) is used to evaluate the difference between two angles, properly handling the 2π-periodicity (e.g., treating −π
+
+and π as identical). Here, the value of φdiff is set to π 
+
+> 60
+
+,which is designed to prevent the formation from adjusting its orientation too frequently for angle alignment. The four components operate together to drive the defensive formation to complete the surrounding task. During the initial herding phase, f pos and f ali regulate the formation position 
+
+pc and orientation φ to establish a barrier directly confronting the attacking swarm. Building on this posture, f sur adjusts the opening size of the formation to extend the barrier length, while f dis encourages the formation to drive the attackers away from the protected area as they approach. However, when the formation is close to surrounding the attackers, further emphasizing f pos , f ali , and f dis may cause the defenders to waste their already limited maneuverability on repeated posture adjustments, while neglecting the surrounding action. At this stage, the priority should be increasing the surrounding advantage. To resolve this conflict and eliminate the reliance on sensitive hand-tuned weights, we explicitly introduce a state-dependent switching mechanism. Once the formation can Attacking swarm               
+
+> Defensive formation
+> 12345
+> Protected area Safe area
+> Obstacle Obstacle Obstacle
+> f=α
+> Defensive formation Attacking swarm
+> 1catt nea (,,)hppp
+> Defensiv
+> nea
+> att p
+> Protected area
+> diff
+> 
+> nea p
+> cp
+> Figure 6. Schematic diagram of reward functions. The symbol —//— indicates that the two lines are parallel. In this diagram, the defensive formation needs to move to the lower right while rotating counterclockwise. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 8
+
+complete the encirclement by slightly closing its opening, the components f pos , f ali , and f dis are deactivated. As a result, the combined immediate reward f is defined as 
+
+f (s) = 
+
+
+
+ksur · f sur + kdis · f dis + kpos · f pos 
+
++kali · f ali , φnea ≤ πksur · f sur , φnea > π 
+
+(4) 
+
+where ksur , kdis , kpos , and kali represent the weighting coeffi-cients for their respective reward components. In Section V-B, we demonstrate that the state-dependent reward design is more effective than its static-weight counterpart in guiding policy learning for the herding task. 
+
+4) Policy Learning: Policy learning is conducted in simu-lations with a fixed number of simulated robots. In each step, a sample (sk, ak, sk+1 , r, d ) is stored in the replay buffer B,where sk and sk+1 denote the current and next states, ak is the action taken, r is the reward computed based on sk+1 ,and d indicates the termination state. We adopt the DDPG algorithm to train the policy in a continuous action space by leveraging the transition samples stored in the replay buffer 
+
+B. Since the low-dimensional state space eliminates the need to process high-dimensional variables, we employ lightweight fully connected neural networks for policy learning. Detailed network architectures are presented in Appendix C. 
+
+5) Online Deployment: We analyze the computational com-plexity of our method to demonstrate its feasibility for real-time deployment, as detailed in Appendix B-B. Online deploy-ment also requires the learned policy to generalize beyond the fixed group size used during policy learning. Its direct application to scenarios with substantially different group sizes is therefore inherently limited. Moreover, when the actual effective barrier threshold ˆrstr d differs from the nominal value 
+
+rstr d assumed during policy learning, Assumption 1 may no longer hold. To address these two deployment limitations, we introduce a scale-adaptive policy transfer mechanism and a barrier-threshold correction mechanism in Appendices D and E, respectively. V. S IMULATION RESULTS 
+
+In this section, we first present the policy learning process. Second, we conduct ablation studies to demonstrate the neces-sity of the velocity observation and the negotiation protocol. Third, the performance of our method is benchmarked against three baselines. Finally, we evaluate the scalability and robust-ness of our method across varying group sizes. 
+
+A. Simulation Settings 
+
+All simulations are conducted on a workstation with an Intel i7-13700KF CPU and an NVIDIA RTX 4080 GPU, using PyTorch with Python 3.11. The training batch size is set to 64, and the main parameters are summarized in Table II. It can be observed that the attackers exhibit 25% higher maneuverability than the defenders. The PyTorch implementation is available in the shared repository. 1 To further validate our method, we compare it with three baselines detailed as follows. 1) Voronoi-based method [8]. This method assigns defensive roles to a multi-robot team to protect the area from a single attacker.                                                       
+
+> Table II PARAMETER SETTINGS .
+> Parameter Value Parameter Value Parameter Value
+> ρs2.0 m ρp2.0 m σp2.0 m
+> σv0.4 m /svdmax 2.0 m /svamax 2.5 m /s
+> udmax 15 .0 m /s2uamax 20 .0 m /s2rstr d3.0 m
+> rcom d5.0 m rsafe d1 1.0 m rsafe d2 0.8 m
+> kap 5–8kad 8–12 kaa 2–4∆t0.1 s rsafe aa 1.0–2.0 m ravo aa 2.0–5.0 m
+> rsafe ad 0.9–1.8 m ravo ad 7.0–14 .0 m απ0.001
+> αq0.001 τ0.005 γ0.99
+> ksur 2.0kdis 1.0kpos 1.0
+> kali 1.0rref att 3.5 m
+
+2) Satellite-based method [9]. This method plans paths for defenders and assigns each robot a rotation center, generating satellite-like circular or spiral motions around the attacker or neighbors to compress the attacker’s reachable area. 3) Model predictive control (MPC)-based method [41]. This method addresses multi-pursuer multi-evader scenarios using MPC. Based on predicted state sequences, defenders are assigned to specific attackers and driven to form regular polygonal formations for coordinated encirclement. 
+
+B. Learning Process 
+
+Policy learning is conducted in simulations involving 8 defenders and 3 attackers, with each episode terminated when all attackers are surrounded or when at least one attacker breaches the protected area. During the first 2000 episodes, the attacking strategy is deterministic. This setup allows the policy to first learn an effective herding behavior under a stable ad-versarial condition. Subsequently, diverse attacking strategies are gradually introduced to enhance policy generalization. To validate the superiority of the state-dependent reward function in Eq. (4), we compare it with a static-weight counterpart using the same weights in two types of policy-learning simulations. These simulations differ in the random initialization range of the defenders’ center, which is marked by light-green regions in the right panels of Fig. 7. In the first setting, referred to as front initialization, the defenders are initialized between the attacking swarm and the protected area, allowing them to establish a defensive barrier without substantial posture adjustment. As shown in Fig. 7(a), the for-mation gradually reshapes from a nearly linear configuration into a closed circular configuration as the attackers approach. Under this relatively favorable initialization, both reward func-tions effectively guide policy learning, and their success rates gradually converge to 100% as the actor and critic networks are refined. These results validate the effectiveness of the four reward components shared by the two designs. However, the performance consistency between the two reward functions diminishes when the defenders are initialized behind the protected area. This setting is more challenging because the defensive formation must simultaneously adjust its position, orientation, and opening despite its limited ma-neuverability. As shown in Fig. 7(b), the policy learned with the static-weight reward function struggles to balance these objectives, resulting in a success rate below 60% . A typical IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 910 -10              
+
+> Static-weight Static-weight Static-weight Static-weight State-dependent State-dependent State-dependent State-dependent
+> T= 15.1 s T= 50.3 s T= 105.5 s T= 201.0 s
+
+10 
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate 
+
+> Success rate (state-dependent) Episode reward (state-dependent)
+
+Episode (a) Learning process with front-initialized defenders -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (static-weight)
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate Episode (b) Learning process with rear-initialized defenders -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (state-dependent) Episode reward (state-dependent) Success rate (static-weight)
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate 
+
+> Success rate (state-dependent) Episode reward (state-dependent)
+
+Episode -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (static-weight)
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate Episode (b) Learning process with rear-initialized defenders -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (state-dependent) Episode reward (state-dependent) Success rate (static-weight)
+
+35         
+
+> Static-weight Static-weight State-dependent State-dependent
+> T= 5.7 s T= 10.4 s
+> T= 15.1 s T= 201.0 s
+
+-5 -5 35 35 
+
+10 -10 10 -10 
+
+> rear-initialized positions
+
+10 -10         
+
+> Static-weight Static-weight State-dependent State-dependent
+> T= 6.4 s T= 8.8 s
+> T= 4.3 s T= 8.6 s
+
+10 -10 -5 -5 35 
+
+> front-initialized positions
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate 
+
+> Success rate (state-dependent) Episode reward (state-dependent)
+
+Episode (a) Learning process with front-initialized defenders -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (static-weight)
+
+0 2000 4000 6000 8000 10000 0.2 0.4 0.6 0.8 1.0 -1.0 0.0 0.2 Episode Reward (10 4)Success Rate Episode (b) Learning process with rear-initialized defenders -0.2 -0.4 -0.6 -0.8 
+
+> Success rate (state-dependent) Episode reward (state-dependent) Success rate (static-weight)
+
+(d) Trajectories with rear-initialized defenders 
+
+10 -10                     
+
+> Static-weight Static-weight Static-weight Static-weight State-dependent State-dependent State-dependent State-dependent
+> T= 6.4 s T= 8.8 s T= 5.7 s T= 10.4 s
+> T= 4.3 s T= 8.6 s T= 15.1 s T= 201.0 s
+
+10 -10 -5 -5 -5 -5 35 35 35 35 
+
+10 -10 10 -10 
+
+> front-initialized positions rear-initialized positions
+
+(c) Trajectories with front-initialized defenders (a) Learning process with front-initialized defenders 
+
+Figure 7. Learning process. For each subfigure, the left panel shows the cumulative reward and success rate during policy learning, while the right panel presents representative simulation snapshots corresponding to the state-dependent and static-weight reward functions. 
+
+failure mode is that the formation repeatedly intercepts the attackers without completing the encirclement. Specifically, the persistent effects of f ali and f pos drive the formation to remain aligned with the line connecting the attacking swarm and the protected area. Consequently, the formation rotates around the protected area instead of prioritizing the enclosure of the attackers. In contrast to its counterpart, the state-dependent reward function remains effective under this more challenging initialization condition. In the early stage, the defensive formation approaches and aligns with the attacking swarm to provide a favorable spatial configuration for the subsequent surrounding task. As the attackers become partially constrained, the policy places a higher priority on the surrounding task. By adaptively activating different reward components according to the current herding situation, the state-dependent reward function enables the learned policy to achieve more efficient herding performance. 
+
+C. Ablation Studies 
+
+This subsection evaluates the effectiveness of the negotiation protocol and velocity observations, and further examines the robustness of our method to communication failures and barrier-threshold violations. We consider two ablated variants. In the first variant, the negotiation protocol is disabled ( Ours w/o NP ), and each de-fender independently updates its local parameter estimate. To ensure that the defenders can initially organize into a coherent formation, their estimates of pc are initialized consistently, while the remaining parameter estimates deviate from each other. To evaluate the consensus error, we define a deviation set 
+
+Dσ = {σi − ¯σ ∣∣ i ∈ V d
+
+}, where ¯σ = 1
+
+> Nd
+
+∑ 
+
+> j∈V d
+
+σj represents the mean parameter estimate across the defenders, and σi
+
+specifies the parameter value estimated by defender i. In the second variant, the velocity observations are omitted ( Ours w/o VO ). Accordingly, ∥vatt ∥, cos( φvatt ), and sin( φvatt ) are fixed to vamax + vdmax , 1.0, and 0.0, respectively. The ablation results are shown in Fig. 8, where identical initial robot positions are used across the three simulations. As shown in Fig. 8(a), the attackers are successfully sur-rounded only when both the negotiation protocol and velocity observations are enabled. Without negotiation, the local pa-rameter estimates rapidly diverge, causing severe formation deformation and gaps through which attackers can escape. Without velocity observations, the formation remains coherent but responds prematurely to attacker maneuvers and fails to adjust its parameters appropriately. These results confirm the necessity of both components. Communication robustness is further evaluated through 100 randomized trials under different communication radii and packet loss rates, as reported in Table III. When rcom d = 4 .0 m , the success rate decreases from 73% to 43% as the packet loss rate increases from 
+
+20% to 80% . By contrast, when rcom d = 6 .0 m , the success rate remains at 61% even under an 80% packet loss rate. These results indicate that the negotiation protocol can tolerate moderate packet losses when sufficient local connectivity is maintained, whereas sparse communication may cause incon-sistent local estimates and distorted formation segments. We also conduct a sensitivity analysis of the barrier-threshold assumption and the correction mechanism intro-duced in Appendix E. Specifically, the effective barrier thresh-old is defined as ˆrstr d = λstr rstr d , where λstr ∈ [0 .5, 1.0] . Here, 
+
+λstr = 1 .0 corresponds to the nominal barrier assumption used during policy learning. For each value of λstr , 100 trials are performed to evaluate the herding success rate, and the statistical results are summarized in Table IV. The correction-only case degrades significantly when λstr ≤ 0.7, because IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 10 -2.4 2.6 -1.6 -0.07 -0.33 -0.25 3.0 0.10 0.58 0.20 
+
+> Ours w/o VO
+
+14.8 Time (s) 0 14.8 Time (s) 0 14.8 Time (s) 0 14.8 Time (s) 0 14.8 Time (s) 0
+
+-0.3 0.3 -0.8 -0.1 -0.63 -0.27 1.6 0.1 0.42 0.26 
+
+> Ours w/o NP
+
+13.5 Time (s) 0 13.5 Time (s) 0 13.5 Time (s) 0 13.5 Time (s) 0 13.5 Time (s) 0
+
+-2.3 1.7 -4.1 -0.04 -0.53 -0.23 2.5 0.09 0.45 0.25 mid. range 26.7 Time (s) 0 26.7 Time (s) 0 26.7 Time (s) 0 26.7 Time (s) 0 26.7 Time (s) 0
+
+(b) Evolution process of the formation parameters. (The yellow dashed line denotes the zero baseline.) 
+
+-0.08 0.1 -0.07 -0.02 -0.37 -0.11 0.22 0.01 0.32 0.15 
+
+> Dx (m)
+> Dy (m)
+> Dφ (rad)
+> Dζ (m)
+> Dβ (rad)
+> Ours w/o VO
+
+(a) Snapshots in ablation simulations 
+
+Dx (m) Dφ (rad) Dζ (m) Dβ (rad) 
+
+> Ours
+
+(b) Evolution process of the formation parameters. (The yellow dashed line denotes the zero baseline.)                               
+
+> Ours w/o NP Ours w/o NP Ours w/o NP Ours w/o NP
+> T= 3.4 s T= 6.8 s T= 10.2 s T= 13.5 s An attacker has breached.
+> Ours Ours Ours Ours
+> T= 6.7 s T= 13.4 s T= 20.1 s T= 26.7 s All attackers are surrounded.
+> Ours w/o VO Ours w/o VO Ours w/o VO Ours w/o VO
+> T= 3.7 s T= 7.4 s T= 11.1 s T= 14.8 s An attacker has breached.
+
+Dy (m) 0 35 10 -10 0 35 0 35 0 35 10 -10 10 -10 
+
+Figure 8. Ablation study results. (a) Simulation results (top: ours, middle: ours w/o NP, bottom: ours w/o VO). (b) Evolution of the formation parameters (top: ours, middle: ours w/o NP, bottom: ours w/o VO). Table III SUCCESS RATES (%) U NDER DIFFERENT COMMUNICATION RADII AND 
+
+PACKET LOSS RATES .Communication radius Packet loss rate λcom 
+
+0.20 0.40 0.60 0.80 
+
+rcom d = 4 .0 m 73 59 45 43 
+
+rcom d = 5 .0 m 86 68 67 56 
+
+rcom d = 6 .0 m 99 90 82 61 
+
+the reduced inter-defender spacing limits the spatial coverage of the defensive formation. Although the correction mech-anism can mitigate moderate threshold violations, it cannot fully compensate for severe reductions in the effective barrier threshold. To mitigate this, we introduce additional defenders to restore the group coverage required for forming a valid defensive barrier. With two additional defenders, the success rate remains no lower than 85% even at λstr = 0 .5. With four or six additional defenders, success rates of at least 97% are maintained across all tested thresholds. Therefore, the barrier threshold violations can be effectively compensated for by the correction mechanism with additional defenders. 
+
+D. Comparative Results 
+
+In this subsection, we benchmark our method against the three baseline methods [8], [9], [41] over 30 independent trials. Simulation settings for this evaluation are presented 
+
+Table IV SUCCESS RATES (%) U NDER DIFFERENT BARRIER THRESHOLDS .Strategy Threshold coefficient λstr 
+
+1.00 0.90 0.80 0.70 0.60 0.50 No correction 100 72 64 57 55 44 Correction 100 99 92 55 22 3Correction +2 defenders 100 100 100 97 87 85 
+
+Correction +4 defenders 100 100 100 100 100 97 
+
+Correction +6 defenders 100 100 100 100 100 99 
+
+as follows. First, Gaussian noise is incorporated into the observed information about the attackers only when evaluating our method, whereas the baseline methods are provided with ground-truth information. Second, given that the MPC-based method in [41] requires the defenders to form a polygonal formation around each individual attacker, the numbers of defenders and attackers are set to 9 and 3, respectively. Finally, herding performance is evaluated by DS and DP,denoting the attackers’ distances to the safe and protected areas, respectively. Accordingly, DS = 0 denotes task success, while DP = 0 signifies task failure. The three baselines require defenders to possess superior maneuverability. To verify their theoretical validity, we first evaluate these baselines across 15 trials under a relaxed scenario, where the attackers’ maximum acceleration ( uamax )and velocity ( vamax ) are restricted to 10.0 m/s2 and 1.5 m/s,IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 11 y (m) -10 10 -5 40 
+
+x (m) 034 
+
+> DS (m)
+
+15 0 Time (s) 029 
+
+> DP (m)
+
+15 0 Time (s) 
+
+> y (m)
+
+-10 10 -5 40 
+
+x (m) 030 
+
+> DS (m)
+
+34 0 Time (s) 035 
+
+> DP (m)
+
+34 0 Time (s) 
+
+> y (m)
+
+-10 10 -5 40 
+
+x (m)    
+
+> Final positions of defenders Final positions of attackers Initial positions of defenders Initial positions of attackers Protected area Safe area Obstacles Trajectories of defenders Trajectories of attackers
+
+034 
+
+> DS (m)
+
+59 0 Time (s) 070 
+
+> DP (m)
+
+59 0 Time (s) 
+
+> y (m)
+
+-10 10 -5 40 
+
+x (m) 035 
+
+> DS (m)
+
+18 0 Time (s) 030 
+
+> DP (m)
+
+18 0 Time (s) 
+
+> Intermediate positions of defenders Intermediate positions of attackers
+
+(a) MPC-based method (b) Satellite-based method (c) Voronoi-based method (d) Our method   
+
+> Condition 1 (Success) Condition 1 (Failed) Condition 2 (Success) Condition 2 (Failed)
+
+0162 Time (s) 044 Time (s) 0100 Time (s) 036 Time (s) MPC-based method Voronoi-based method Satellite-based method Our method (e) Statistical results and time 
+
+Figure 9. Comparative results against the baseline methods proposed in [8], [9], [41]. In (a)–(d), we depict results for the four evaluated methods, with each panel organized as follows: the top subfigure displays the trajectories, and the bottom subfigure presents the performance metrics. In (e), we provide statistical results across 30 simulation trials evaluated under two distinct scenarios: Condition 1, where the attackers possess inferior maneuverability ( uamax = 10 .0m/s2 and vamax = 1 .5 m /s), and Condition 2, where the attackers possess superior maneuverability ( uamax = 20 .0 m /s2 and vamax = 2 .5 m /s). 
+
+respectively. As illustrated in Fig. 9(e), all methods achieve high success rates under this condition. Compared with the other two baselines, the MPC-based baseline exhibits more robust performance and higher success rates. This comparative advantage demonstrates that explicitly maintaining organized formations can significantly enhance the collective capabilities of MRSs. Similar to our method, the MPC-based method drives defenders to form a polygonal formation around each attacker, resulting in multiple isolated subformations. This baseline method differs from ours in that it directly drives the defenders to positions around the attackers, rather than grad-ually encircling them from an open-arc formation. Although the attackers still execute aggressive evasive maneuvers as the defenders approach, the surrounding task is ultimately accom-plished largely due to the defenders’ superior maneuverability. Subsequently, we evaluate all the methods under the more challenging scenario (Condition 2), where the attackers pos-sess superior maneuverability. As illustrated in Fig. 9(a)– (c), with the increase in the attackers’ maneuverability, all the baselines fail to secure the protected area. This failure fundamentally stems from the fact that the baselines tend to perform surrounding actions too early. Specifically, the defend-ers prematurely approach the attackers before establishing a robust and continuous spatial encirclement. Consequently, the highly maneuverable attackers easily widen the gap, and then exploit the vast open space to bypass and leave the defenders behind. Ultimately, DP gradually decreases to zero, indicating that the attackers have breached the protected area. Conversely, our method achieves robust success by fun-damentally transforming a speed-dependent pursuit into geometry-dependent containment. Furthermore, our method achieves reliable herding even when the observed information regarding the attackers is noisy. This resilience is primarily attributed to a persistent concave barrier interposed between the attackers and the protected area. Rather than directing the defenders to rapidly minimize their distance to the attackers, IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 12 -40 -20 0                             
+
+> x(m) -40 -20 0
+> x(m)
+> (c) 6 defenders vs 2 attackers (d) 10 defenders vs 5 attackers
+> (c) 40 defenders vs 15 attackers.
+> y (m) -20 020 0
+> x(m) 066
+> DS (m) 74 0Time (s) 074
+> DP (m) 74 0Time (s) -40
+> (d) 50 defenders vs 20 attackers.
+> y (m) -20 020 080
+> x(m) 067
+> DS (m) 84 0Time (s) 075
+> DP (m) 84 0Time (s) 40
+> (b) 30 defenders vs 15 attackers.
+> y (m) -20 020 -80 0
+> x(m) 064
+> DS (m) 59 0Time (s) 072
+> DP (m) 59 0Time (s) -40
+> (a) 15 defenders vs 10 attackers.
+> y (m) -20 020 -80 0
+> x(m)
+> Final positions of defenders Final positions of attackers Initial positions of defenders Initial positions of attackers Protected area Safe area Obstacles Trajectories of defenders Trajectories of attackers
+> 055
+> DS (m) 62 0Time (s) 072
+> DP (m) 62 0Time (s) -40
+> Figure 10. Generalization of the learned policy across different group sizes. In each subfigure, the layout is as follows. Top: Simulation results. Bottom: Performance metrics.
+
+which may provoke aggressive and unpredictable evasive maneuvers, our method uses the concave geometry to exploit the attackers’ inherent intent to intrude into the protected area. Driven by this intent, the attackers naturally navigate deeper into the arc-shaped formation. By systematically restricting their spatial freedom without triggering extreme evasive reac-tions, the defenders smoothly transform this concave barrier into a closed topological trap, fully compensating for their inherent maneuverability disadvantage. In summary, the comparative results demonstrate the supe-riority of our method, which can effectively compensate for the limited maneuverability of defenders. 
+
+E. Scalability Analysis 
+
+In this work, both the defensive formation and the attack-ing swarm are encoded using the parametric representation. Consequently, the learned policy can generalize to large-scale scenarios with varying numbers of defenders and attackers. To validate this advantage, we conduct a series of simulations involving dozens of defenders and attackers. Specifically, Figs. 10(a)–(d) illustrate the following simulations: 15 de-fenders vs. 10 attackers; 30 defenders vs. 15 attackers; 40 defenders vs. 15 attackers; and 50 defenders vs. 20 attackers. The simulation results demonstrate that the learned policy successfully completes the task across varying group sizes. During the defending phase, the attacking swarm is ultimately confined within the closed-loop formation, while in the guiding phase, the formation maintains its shape and size as all the attackers are guided to the designated safe area. In addition to the four representative simulations shown above, we further conduct 100 randomized trials for each group configuration in Fig. 10. The success rates and runtime statistics are summarized in Table V. The reported runtime is measured during online execution and excludes visualization and file I/O. For each group scale, the average runtime per step is calculated by dividing the average runtime per episode by the average number of execution steps. As shown in Table V, the average runtime per step remains below 2.3 ms across all tested group scales. This computation time is far below the control period used in our real-robot implementation at 15 Hz ,i.e., approximately 66 .7 ms . The corresponding real-time ratio is therefore below 3.4% , demonstrating that our method satis-fies real-time execution requirements. This efficiency mainly stems from the fixed-dimensional parametric representation, which enables the actor network to perform formation-level decision-making in a state space whose dimension does not increase with the number of robots. Meanwhile, our method achieves success rates of no less than 97% across all tested group scales and exhibits strong scalability. In the remaining failure cases, the outermost at-tacker may stay slightly outside the closed formation, although the formation geometry has already indicated a successful en-circlement. This suggests that large-scale deployment requires a small safety margin between the commanded formation scale IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 13 T = 2.3 s T = 5.7 s T = 9.9 s T = 10.4 s                                                                    
+
+> -5 -5 -5 -5 35 35 35 35 (c) Representative trajectories with rear-initialized defenders
+> -20
+> T= 4.1 s T= 22.5 s T= 28.7 s T= 77.8 s
+> (b) Herding of attacking swarms from two directions -27 13 70 -7 25 -20 70 25 -20 70 25 -20 70 25
+> T= 5.2 s T= 8.9 s T= 18.6 s T= 29.8 s
+> (a) Herding of a V-shaped attacking formation -10 -10 -5 40 -5 40 -5 40 -5 40
+> T= 9.3 s T= 22.3 s T= 44.6 s T= 74.3 s
+> -15 5-7.5 37.5 -7.5 37.5 -7.5 37.5 -7.5 37.5 (c) Herding under sequential attacks by two swarms
+> Figure 11. Robustness evaluation results. The learned policy is further tested under three representative attack patterns. Table V RUNTIME AND SUCCESS STATISTICS UNDER DIFFERENT GROUP SCALES .Group scale Avg. steps per episode Avg. runtime per episode ( s)Avg. runtime per step ( ms )Success rate (%) 15D+10A 515 0.760 1.475 99 30D+15A 394 0.892 2.264 97 40D+15A 375 0.447 1.191 99 50D+20A 463 0.501 1.082 97
+
+and the actual robot-level execution. In our implementation, we multiply ζ by a factor of 1.1 to mitigate this issue. With this adjustment, the defensive formation provides wider effective coverage, and the corresponding outcome can change from failure to successful herding. 
+
+F. Robustness Evaluation under Different Attacking Patterns 
+
+To further evaluate the robustness of the learned policy, additional simulations are conducted under three organized attacking patterns, as shown in Fig. 11: a V-shaped formation, two sub-swarms approaching simultaneously from different directions, and two sub-swarms appearing sequentially. In the first case, the V-shaped formation enlarges the spatial distribution of the attackers and thereby increases the difficulty of encirclement. As shown in Fig. 11(a), the defensive for-mation correspondingly expands, progressively surrounds the attackers, and guides them toward the safe area. In the second case, two attacking swarms approach the pro-tected area from different directions, requiring the defenders to handle multiple spatially separated threats simultaneously. As shown in Fig. 11(b), we first divide the defenders into two subgroups according to the spatial distribution of the attackers. Each subgroup independently adjusts its configuration based on the policy to herd its assigned attacking swarm. The results show that the policy remains applicable at the subgroup level and enables both attacking swarms to be successfully herded. In the third case, two attacking swarms appear sequen-tially, which introduces temporal uncertainty into the herding process. After the first swarm is surrounded, the appearance of the second swarm changes the overall threat distribution. The formation opening is therefore adjusted to π/ 3, allowing the defenders to guide the first swarm toward the newly appearing swarm while preventing it from escaping. Once the two swarms merge, they are treated as a single integrated swarm, and the learned policy is applied to the merged group. As shown in Fig. 11(c), the defensive formation closes again and surrounds all attackers. This result demonstrates that the learned policy can respond not only to spatially different attacking patterns but also to sequentially appearing threats. These results indicate that our method is not limited to the nominal attacking pattern used during policy learning. Instead, the learned policy captures the geometric relationship between the two groups by representing them in a parametric manner. Therefore, even when the attackers exhibit different behaviors, the policy remains effective. VI. E XPERIMENT RESULTS 
+
+To further demonstrate the practical effectiveness of our method, we conduct experiments on an indoor platform con-sisting of 10 TurtleBot3 robots (7 defenders and 3 attackers). 
+
+A. Experiment Setting 
+
+As shown in Fig. 12(a), the experiment platform measures 4 m × 5 m and is equipped with a motion capture system to acquire the poses of the robots in real time. Since the TurtleBot3 robot is subject to nonholonomic kinematic con-straints, the control law ui, designed for an omnidirectional robot model, is converted into the linear and angular velocity commands vi and ωi, respectively, following the method in [42]. Accordingly, the control commands are computed as 
+
+vi = [cos ϑi, sin ϑi]ui and ωi = [ − sin ϑi, cos ϑi]ui, where 
+
+ϑi denotes the heading angle of the ith robot. In addition, IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 14                                                        
+
+> 
+> 
+> 
+> 
+> 
+> 
+> (b2) 7 vs 3
+> Workstation Wireless router Robot swarm Observed state Send instructions Robot state Control instruction
+> TurtleBot3 robots
+> maximum translational velocity: 0.22m/s
+> maximum rotational velocity: 2.84rad/s
+> length (front-to-back): 138mm
+> width (left-to-right): 178mm
+> height (top-to-bottom): 192mm (a) Experiment setup
+> 
+> 
+> 
+> 
+> 
+> 
+> (b1) 6 vs 2 T= 0 s T= 10 s T= 20 s T= 30 s
+> T= 40 s T= 50 s T= 60 s T= 68 s
+> T= 0 s T= 10 s T= 20 s T= 30 s
+> T= 40 s T= 50 s T= 60 s T= 67 s
+> (b) Snapshots of multi-robot herding experiment
+> 01.6
+> DS (m) 0Time (s) 67 02.2
+> DS (m) 0Time (s) 67 0100
+> SR (%) 0Time (s) 67 defending phase guiding phase
+> 01.6
+> DS (m) 0Time (s) 68 02.2
+> DS (m) 0Time (s) 68 0100
+> SR (%) 0Time (s) 68 defending phase guiding phase (c) Experimental performance
+> 6 vs 2 7 vs 3 6 vs 2 7 vs 3 6 vs 2 7 vs 3
+
+Figure 12. Experimental setup and results of the multi-robot herding validation. 
+
+the maximum linear and angular velocities of the defenders are set to vdmax = 0 .15 m /s and ωdmax = 0 .8 rad /s, respec-tively, while those of attackers are set to vamax = 0 .2 m /s
+
+and ωamax = 1 .5 rad /s. The remaining parameters are kept consistent with those used in the simulation. These commands are then transmitted to the robots via the ROS 2 network at 15 Hz . Our tests show that the computation time for these commands under distributed conditions is no more than 3 ms ,which is far below the approximately 66 .7 ms control period. To facilitate visual identification, the defender robots are marked with blue indicators, while the attacker robots are marked with red indicators. In addition to DS and DP, we define the surrounding ratio SR to better evaluate the herding performance in terms of the defensive formation’s enclosure relative to the attackers. 
+
+B. Multi-Robot Herding Experiment 
+
+As shown in Fig. 12(b), two experimental scenarios are designed to validate our method. In these two scenarios, the defenders are initially positioned on the left, while the attackers are located on the right. The cyan region on the left represents the protected area, and the green region on the right denotes the safe area. The first scenario demonstrates a herding task where 6 defenders coordinate to herd 2 attackers within an environment containing obstacles. Throughout the experiment, the attackers persistently attempt to breach the protected area. Despite being initialized behind the protected area, the defenders rapidly establish a defensive line midway between the attackers and the protected area during the initial interval of 0–10 s. As the attackers advance toward the protected area, the defenders coordinate to push the defensive formation forward to intercept them. Once the surrounding advantage is sufficiently enlarged, the two defenders at the ends move toward each other to form a closed-loop formation at 23 s to surround the attackers. As a result, the defensive formation successfully transports them to the safe area by 68 s. The performance metrics in the first experiment are illustrated in the upper panel of Fig. 12(c). As observed, although the attackers initially approach the protected area, they are effectively herded to the safe area and kept at a safe distance from the protected area. Furthermore, when approaching obstacles, the forma-tion proactively executes a collective avoidance maneuver to preserve its geometric rigidity. This strategy ensures that the surrounding ratio remains consistently at 100 %, thereby guaranteeing robust task execution. In comparison to the first experiment, we scale up the group sizes in the second to validate the generalization of our method. Specifically, this experiment involves 7 defenders coordinating to herd 3 attackers. As presented in Fig. 12(b), the expansion of the group sizes inevitably prolongs the con-vergence time of the defensive formation. However, due to the IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 15 
+
+establishment of a preliminary defensive barrier, the attackers are consistently prevented from breaching the defensive line. This provides a temporal window for the defenders at the two ends to execute outflanking maneuvers. Consequently, a closed-loop formation is achieved around 30 s, indicating the transition from the defending phase to the guiding phase. Finally, the attackers are successfully herded to the safe area at 67 s.These experiments demonstrate the strong potential of our method for practical herding applications. The video of these experiments can be found in the supplementary material. In addition to the two experiments discussed above, four extra experimental trials are provided in the video to further validate the performance and effectiveness of our method. VII. C ONCLUSION 
+
+In this paper, we proposed a task-oriented formation deci-sion method for MRSs, with a focus on the herding task. First, a parametric representation was introduced to encode the for-mation shape, which transformed the formation decision task into a parameter optimization problem. Second, we developed an RL-based policy to adjust these parameters based on task requirements. The learned policy determined an appropriate formation shape based on the available observations. Finally, we compared our method with three baselines [8], [9], [41] through 30 simulation trials and validated it in physical experiments involving 10 TurtleBot3 robots. The results show that our method can effectively compensate for the defenders’ limited maneuverability, even when the attackers’ strategies are unknown. Nevertheless, the proposed method still has several limitations. Although the negotiation protocol can tol-erate moderate packet losses with sufficient local connectivity, sparse communication may still lead to inconsistent parameter estimates and local formation distortion. In future work, we will develop a fully distributed formation-decision and herding method to reduce dependence on centralized sensing. APPENDIX ACONTROL LAW FOR INDIVIDUAL ROBOTS 
+
+Given the determined vector θ, the defenders are required to be distributed evenly within the formation shape. To prevent potential inter-robot collisions when the commanded inter-defender spacing satisfies ζ < r safe d1 , we propose a safety-aware distribution mapping F : θ → P ∗ = {p∗ 
+
+> i
+
+}Nd
+
+> i=1
+
+. This mapping yields a two-layer distribution. For the two-layer distribution, the adjacent defenders in the innermost layer should satisfy the collision-avoidance requirement. Therefore, when ζ < r safe d1 /2,the value of ζ is set to rsafe d1 /2. Accordingly, the distribution mapping is defined as: 
+
+ˆqi =
+
+
+
+qi + ( −1) i∆
+
+[
+
+cos (ψi + π
+
+> 2
+
+)
+
+sin (ψi + π
+
+> 2
+
+)]
+
+, ζ < r safe d1 ,
+
+qi, ζ ≥ rsafe d1 .
+
+Here, ∆ = 12
+
+√
+
+(rsafe d1 )2 − ζ2 represents the normal offset required to maintain the safety distance rsafe d1 . The base relative positions qi are recursively generated by: 
+
+qi =
+
+
+
+0, i = 1 
+
+qi−1 − ζ
+
+[
+
+cos ψi
+
+sin ψi
+
+]
+
+, i = 2 , 3, . . . , N d
+
+where ψi = φ + π 
+
+> 2
+
++ (2 i − Nd − 2) β
+
+2( Nd − 1) .Building on our previous work in [43], once defender i
+
+estimates its desired position, it computes its control law ui:
+
+ui = uf 
+
+> i
+
++ ua 
+
+> i
+
++ uc
+
+> i
+
+where uf
+
+> i
+
+, ua 
+
+> i
+
+, and uc 
+
+> i
+
+represent terms contributed by formation maintenance, collision avoidance, and connectivity preserva-tion, respectively. The first term uf 
+
+> i
+
+is detailed as follows: 
+
+uf 
+
+> i
+
+= kp(p∗ 
+
+> i
+
+− pi) + kv( ˙ pc − vi)
+
+where constants kp and kv denote the weights for eliminating the position and velocity errors, respectively. Each defender can derive the velocity of the formation center, ˙pc, based on its estimate of the formation parameters, ˆθi.The second term ua 
+
+> i
+
+is detailed as follows: 
+
+ua 
+
+> i
+
+= −ka
+
+∑
+
+> j∈O∪N i
+
+∂g (rij , r safe d1 , r safe d2 
+
+)
+
+∂pi
+
+where constant ka denotes the weight for obstacle and inter-agent collision avoidance, and Ni = {j ∈ V d : ( i, j ) ∈ E} 
+
+indicates the neighbor set. Notably, this term allows the for-mation to temporarily deviate from its desired configuration to avoid collisions. The first term ensures rapid convergence back to the desired configuration after the avoidance maneuvers. The third term uc 
+
+> i
+
+is responsible for connectivity preser-vation in distributed systems. To achieve this, the defender network is represented by an undirected graph G = ( Vd, E),where the edge set E = {(i, j ) : i, j ∈ V d, ∥pi − pj ∥ ≤ rcom d }
+
+represents communication links, and rcom d denotes the commu-nication range of defenders. The adjacency matrix of G is de-fined as A(G) = {aij }Nd×Nd , where aij = h(∥pi−pj ∥, r com d )
+
+is calculated using the following function: 
+
+h(r, r 0) = 
+
+
+
+12
+
+[
+
+1 + cos 
+
+(
+
+π rr0
+
+)] 
+
+, r ≤ r0
+
+0, r > r 0
+
+when ∥pi − pj ∥ approaches rcom d , aij tends to 0. This design reflects the continuous attenuation characteristics of signal strength with distance in practice. The Laplacian matrix is defined as L(G) = D(G) − A(G), where D(G) =diag {∑Nd 
+
+> j=1
+
+aij }. The graph G is connected if the second-smallest eigenvalue λ2(G) > 0 [44]. Otherwise, the graph is disconnected. As a result, the term uc 
+
+> i
+
+is detailed as follows: 
+
+uc 
+
+> i
+
+= −kc
+
+∑
+
+> C∈Q i
+
+∂g (λ2(GC ), δ 1, δ 2)
+
+∂λ 2(GC )
+
+∂λ 2(GC )
+
+∂pi
+
+where constant kc denotes the weight for connectivity preser-vation, and Qi denotes the maximal cliques set associated IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 16 
+
+with defender i. Physically, each clique C ∈ Q i represents a local, fully connected communication sub-swarm where all involved defenders can mutually interact. The fundamental principle of uc 
+
+> i
+
+is to guarantee global network integrity by rigidly maintaining these physical sub-swarms. For a detailed derivation and theoretical analysis of uc 
+
+> i
+
+, the reader is referred to our previous work [43]. APPENDIX BTHEORETICAL ANALYSIS 
+
+A. Proof of Theorem 1 
+
+Define the Lyapunov function 
+
+V = 12
+
+∑
+
+> i∈V d
+
+∥ ˆθi − θ∗∥2.
+
+Its derivative is 
+
+˙V = ∑
+
+> i∈V d
+
+( ˆθi − θ∗)⊤ ˙ˆθi.
+
+Substituting (3), 
+
+˙V = ∑
+
+> i
+
+( ˆθi − θ∗)⊤πi(si) + cθ (θ∗)⊤ ∑
+
+> i
+
+∑
+
+> j∈N i
+
+( ˆθj − ˆθi)+ cθ
+
+∑
+
+> i
+
+∑
+
+> j∈N i
+
+ˆθ⊤ 
+
+> i
+
+( ˆθj − ˆθi).
+
+The first term is non-positive. Since the graph is undirected, 
+
+∑
+
+> i
+
+∑
+
+> j∈N i
+
+( ˆθj − ˆθi) = 0,
+
+so the second term is zero. For the third term, 
+
+cθ
+
+∑
+
+> (i,j )∈E ,i<j
+
+[ ˆθ⊤ 
+
+> i
+
+( ˆθj − ˆθi) + ˆθ⊤ 
+
+> j
+
+( ˆθi − ˆθj )
+
+]
+
+= −cθ
+
+∑
+
+> (i,j )∈E ,i<j
+
+∥ ˆθi − ˆθj ∥2 ≤ 0.
+
+Thus ˙V ≤ 0, and ˙V = 0 if ˆθi = θ∗ for all defenders. Therefore, lim 
+
+> t→∞
+
+ˆθi = θ∗, ∀i ∈ V d.
+
+B. Complexity Analysis 
+
+Here, we analyze the computational complexity of our method to verify its real-time feasibility. Crucially, the com-putational load per robot does not directly scale with the total number of robots ( Nd and Na). This exceptional scal-ability fundamentally stems from two core designs: a fixed-dimensional state representation and a distributed commu-nication topology. The detailed analysis of the two main computational components, actor network inference and the negotiation protocol, is as follows. During the online phase, each defender locally gener-ates an action using the deployed actor network. Specifi-cally, the computational complexity of forward inference is 
+
+O(∑L−1 
+
+> l=1
+
+nlnl+1 ), where L is the total number of layers and 
+
+nl is the number of neurons in layer l. For this actor network, the complexity is O(12 × 128 + 128 × 128 + 128 × 5) .This calculation scales independently of the group sizes and simplifies to a small constant time complexity of O(1) .Following the inference process, the defenders use a ne-gotiation protocol to reach a consensus on their estimated formation parameters. The protocol requires each defender i to communicate with its neighbors j ∈ N i to compute the con-sensus term cθ
+
+∑ 
+
+> j∈N i
+
+( ˆθj − ˆθi). The complexity of this step for defender i is proportional to its number of neighbors, yielding 
+
+O(|N i|). Since our system operates in a distributed manner, each defender interacts solely with its immediate neighbors. Therefore, the neighbor count |N i| remains a bounded small integer that does not grow with the group size Nd.In summary, the forward inference of the neural network and the local negotiation protocol impose time complexities of 
+
+O(1) and O(|N i|), respectively. Therefore, the overall online computational load remains strictly bounded and remarkably low, which readily satisfies real-time control requirements. APPENDIX CDDPG F RAMEWORK 
+
+The DDPG framework consists of three main components: 
+
+• Actor network π. The actor network is a fully connected neural network consisting of four layers with 12, 128, 128, and 5 neurons, respectively, where the input and output dimensions correspond to the state and action spaces. ReLU activation functions are used in the hidden layers, and a Tanh activation is applied to the output layer, followed by action scaling to satisfy the environment-specific action bounds. 
+
+• Critic network q. The critic network is also fully con-nected and consists of four layers with 17, 128, 128, and 1 neurons, respectively. Its input is the concatenated state-action vector, and its output is a scalar Q-value. 
+
+• Target networks πtar and qtar . The target networks share the same architectures as the actor and critic networks, re-spectively, and are updated using soft updates to stabilize training. The loss functions are defined as: 
+
+{
+
+Jq = ∑ 
+
+> Bk∈B
+
+(q(sk, ak) − γqtar (sk+1 , πtar (sk+1 )) − r)2
+
+Jπ = − ∑  
+
+> Bk∈B
+
+q(sk, π(sk))
+
+where γ denotes the discount factor. In addition, the network parameters are updated according to: 
+
+
+
+qt+1 = qt − αq∇q Jq,
+
+πt+1 = πt − απ ∇π Jπ ,
+
+qt+1 tar = τ qt+1 + (1 − τ )qt
+
+> tar
+
+,
+
+πt+1 tar = τ πt+1 + (1 − τ )πt
+
+> tar
+
+,
+
+where αq and απ are the learning rates of the critic and actor networks, respectively. τ ≪ 1 is the soft update coefficient. APPENDIX DSCALE -A DAPTIVE POLICY TRANSFER MECHANISM 
+
+The objective is to enable a policy trained with a fixed number of robots to be transferable to scenarios with varying group sizes. Since both adversarial groups are represented as formation shapes with specific geometric characteristics, this transfer can be achieved through shape scaling. Accordingly, IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 17 
+
+we introduce a scale-adaptive policy transfer mechanism based on shape-scaling. The online deployment includes two alter-nating steps: policy inference and physical execution. First, for policy inference, this mechanism maps scenarios with different group sizes into an equivalent representation at the learning scale, which is then fed into the actor network. Second, the inferred actions are scaled back to the deployment scale for physical execution. Specifically, the scale-related parameters include ζ and ratt , for which two parameter groups are defined: (ζπ , r π
+
+> att
+
+) for policy inference and (ζdep , r dep att ) for physical execution. Only two scaling operations are involved: 
+
+rdep att → rπ 
+
+> att
+
+before policy inference and ζπ → ζdep during physical execution. The specific steps are presented as follows. 
+
+1) Scaling for Policy Inference: For an attacking swarm, the key geometric variable is its radius ratt . From the perspec-tive of formation geometry, the formation characteristic most closely related to ratt is the defensive arc length Ld = Ndζ.To match the scale of ratt with that of ζπ , the radius fed into the actor network is scaled as 
+
+rπ 
+
+> att
+
+= N π
+
+> d
+
+Nd
+
+rdep att 
+
+where N π 
+
+> d
+
+and Nd denote the numbers of defenders in learning and deployment, respectively. 
+
+2) Scaling for Physical Execution: After the nominal pa-rameter ζπ is updated, the Nd defenders are required to physically realize an arc-shaped defensive barrier with anominal length of N π 
+
+> d
+
+ζπ . Therefore, the scale parameter used to calculate the desired positions of defenders in Appendix A is given by 
+
+ζdep = N π
+
+> d
+
+Nd
+
+ζπ .
+
+This operation enables the pre-trained policy to effectively generalize to scenarios with similar group sizes. However, in large-scale group scenarios, the actual attacking swarm can be much larger than the reference one used in the policy learning environment. In this case, the nominal defen-sive arc length determined at the learning scale may provide insufficient physical coverage. To address this limitation, we introduce an additional factor to restore the physical coverage required in large-scale group scenarios. As a result, the scale parameter in large-scale group scenarios is formulated as 
+
+ζdep = χ(rdep att ) N π
+
+> d
+
+Nd
+
+ζπ
+
+where χ(rdep att ) = max ( rdep att 
+
+> rref att
+
+, 1) is the additional factor, and 
+
+rref att denotes the reference radius of the attacking swarm in policy learning. If rdep att > r ref att , then χ(rdep att ) > 1, and the defensive arc is enlarged proportionally to recover sufficient physical coverage. Otherwise, χ(rdep att ) = 1 , so the learning-scale defensive formation is sufficient for coverage and no further enlargement is required. APPENDIX ECORRECTION MECHANISM FOR BARRIER -T HRESHOLD 
+
+VIOLATION 
+
+In Assumption 1, we assume that adjacent defenders create an impassable barrier for the attackers if the distance between them is less than a given threshold rstr d . However, during online deployment, the effective barrier threshold may differ from its assumed value. Here, we focus on the more conservative case where the actual barrier threshold ˆrstr d is smaller than the assumed one, which means that ˆrstr d = λstr rstr d and 0 <λstr < 1. To restore the validity of the barrier assumption when ζdep > ˆrstr d , additional defenders are required to provide a stronger group advantage and compensate for the reduced effective threshold. To implement this idea, a group-advantage factor is intro-duced as ρg = max ( Nd 
+
+> Nπ
+> d
+
+, 1). When ζdep > ˆrstr d , the scale parameter is corrected according to 
+
+ζcor = min 
+
+( ζdep 
+
+ρgλstr 
+
+, ˆrstr d
+
+)
+
+.
+
+As a result, the corrected spacing always satisfies ζcor ≤ ˆrstr d ,which ensures that the barrier assumption remains valid un-der the reduced effective threshold. However, the correction mechanism cannot fully compensate for severe violations of the barrier-threshold assumption. When λstr is too small, the effective barrier threshold is overly restrictive, and the defensive formation no longer has sufficient spatial coverage to establish an impassable barrier. In this case, additional de-fenders are required to increase the available group advantage and restore sufficient defensive coverage. The performance of the correction mechanism is presented in Section V-C. REFERENCES [1] G. Sun, R. Zhou, Z. Ma, Y. Li, R. Groß, Z. Chen, and S. Zhao, “Mean-shift exploration in shape assembly of robot swarms,” Nature Commun. ,vol. 14, no. 1, Jun. 2023, Art. no. 3476. [2] T. C. Thayer, S. Vougioukas, K. Goldberg, and S. Carpin, “Multirobot routing algorithms for robots operating in vineyards,” IEEE Trans. Autom. Sci. Eng. , vol. 17, no. 3, pp. 1184–1194, Jul. 2020. [3] C. Zheng, Y. Mi, H. Guo, H. Chen, Z. Lin, and S. Zhao, “Optimal spatial–temporal triangulation for bearing-only cooperative motion esti-mation,” Automatica , vol. 175, May 2025, Art. no. 112216. [4] J. Tan, S. Xue, Q. Guan, Z. Guo, H. Cao, and B. Chen, “Fixed-time stochastic learning from human-UAV interaction with state-input constraints,” IEEE Trans. Ind. Electron. , vol. 73, no. 2, pp. 3071–3082, Feb. 2026. [5] G. Sun, J. L¨ u, K. Liu, Z. Wang, and G. Chen, “Mean-shift theory and its applications in swarm robotics: A new way to enhance the efficiency of multi-robot collaboration,” IEEE Ind. Electron. Mag. , early access, Nov. 17, 2025, doi: 10.1109/MIE.2025.3627087. [6] J. Hu, B. Chen, and B. K. Ghosh, “Formation–circumnavigation switch-ing control of multiple odin systems via finite-time intermittent control strategies,” IEEE Trans. Control Netw. Syst. , vol. 11, no. 4, pp. 1986– 1997, Dec. 2024. [7] X. Xing, Z. Zhou, Y. Li, B. Xiao, and Y. Xun, “Multi-UAV adaptive cooperative formation trajectory planning based on an improved MATD3 algorithm of deep reinforcement learning,” IEEE Trans. Veh. Technol. ,vol. 73, no. 9, pp. 12 484–12 499, 2024. [8] Z. Deng and Z. Kong, “Multi-agent cooperative pursuit-defense strategy against one single attacker,” IEEE Robot. Autom. Lett. , vol. 5, no. 4, pp. 5772–5778, Oct. 2020. [9] Y. Chen, Z. Zhang, Z. Wu, Y. Wu, B. He, H. Zhang, and Y. Wang, “Mul-tiple mobile robots planning framework for herding non-cooperative target,” IEEE Trans. Autom. Sci. Eng. , vol. 21, no. 4, pp. 7363–7378, Oct. 2024. [10] B. Lian, N. T. Nguyen, and F. L. Lewis, “Distributed cluster containment control of swarms via differential game-theoretic learning,” Unmanned Syst. , vol. 13, no. 05, pp. 1283–1294, Sep. 2025. [11] A. Pierson and M. Schwager, “Controlling noncooperative herds with robotic herders,” IEEE Trans. Robot. , vol. 34, no. 2, pp. 517–525, Apr. 2018. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 18 
+
+[12] V. S. Chipade and D. Panagou, “Multiagent planning and control for swarm herding in 2-d obstacle environments under bounded inputs,” 
+
+IEEE Trans. Robot. , vol. 37, no. 6, pp. 1956–1972, Dec. 2021. [13] J. Li, Y. Xu, X. Shi, and L. Li, “Deform: Adaptive formation reconfig-uration of multi-robot systems in confined environments,” IEEE Robot. Automat. Lett. , vol. 10, no. 5, pp. 4706–4713, May 2025. [14] H. Song, A. Varava, O. Kravchenko, D. Kragic, M. Y. Wang, F. T. Pokorny, and K. Hang, “Herding by caging: a formation-based motion planning framework for guiding mobile agents,” Auton. Robots , vol. 45, pp. 613–631, 2021. [15] J. Gu and Y. Wang, “A constrained reinforcement learning based approach for cooperative control of multi-UAV in dense obstacle en-vironments.” Sci. China Technological Sci. , vol. 69, no. 1, pp. 298–305, Jan. 2026. [16] S. Zhao, “Affine formation maneuver control of multiagent systems,” 
+
+IEEE Trans. Autom. Control. , vol. 63, no. 12, pp. 4140–4155, Dec. 2018. [17] X. Zhang, Q. Yang, F. Xiao, and J. Chen, “Linear formation control of multi-agent systems,” Automatica , vol. 171, Jan. 2025, Art. no. 111935. [18] J. Selvakumar and E. Bakolas, “Feedback strategies for a reach-avoid game with a single evader and multiple pursuers,” IEEE Trans. Cybern. ,vol. 51, no. 2, pp. 696–707, Feb. 2021. [19] Y. Liu, C. Liu, Y. Meng, B. Jiang, and X. Wang, “Observer-based multi-agent reinforcement learning for pursuit-evasion game with multiple unknown uncertainties,” IEEE Trans. Autom. Sci. Eng. , vol. 22, pp. 14 332–14 345, Apr. 2025. [20] X. Dong, Y. Hua, Y. Zhou, Z. Ren, and Y. Zhong, “Theory and experiment on formation-containment control of multiple multirotor unmanned aerial vehicle systems,” IEEE Trans. Autom. Sci. Eng. , vol. 16, no. 1, pp. 229–240, Jan. 2019. [21] Q. Yang, F. Xiao, J. Lyu, B. Zhou, and H. Fang, “Self-organized polygon formation control based on distributed estimation,” IEEE Trans. Ind. Electron. , vol. 71, no. 2, pp. 1958–1967, Feb. 2024. [22] C. Sinigaglia, A. Manzoni, F. Braghin, and S. Berman, “Robust optimal density control of robotic swarms,” Automatica , vol. 176, 2025, Art. no. 112218. [23] Y. Lei, Q. Quan, and Z. She, “Mean-field-based density control for swarm robotics passing-through a virtual tube,” IEEE Control Syst. Lett. ,vol. 8, pp. 3500–3505, 2024. [24] L. Yang, J. Jiang, X. Gao, Q. Wang, Q. Dou, and L. Zhang, “Autonomous environment-adaptive microrobot swarm navigation enabled by deep learning-based real-time distribution planning,” Nature Mach. Intell. ,vol. 4, no. 5, pp. 480–493, May 2022. [25] Y. Huang and S. Zhang, “Cooperative object transport by two robots connected with a ball-string-ball structure,” IEEE Robot. Automat. Lett. ,vol. 9, no. 5, pp. 4313–4320, May 2024. [26] E. A. Gedefaw, N. B. Abera, and C. M. Abdissa, “A review of modeling and control techniques for unmanned aerial vehicles,” Eng. Rep. , vol. 7, no. 6, 2025, Art. no. e70215. [27] J. Chen, M. Li, M. Marcantoni, B. Jayawardhana, and Y. Wang, “Range-only distributed safety-critical formation control based on contracting bearing estimators and control barrier functions,” IEEE Internet Things J. , vol. 12, no. 19, pp. 40 968–40 979, Oct. 2025. [28] Y. Fu, B. Wang, H. Zhao, M. Zhou, N. Li, and Z. Gao, “Adaptive safety attitude control of a hybrid VTOL UAV under transition flight subject to multiple faults and uncertainties,” Aerosp. Sci. Technol. , vol. 163, Aug. 2025, Art. no. 110284. [29] J. Tan, S. Xue, H. Li, Z. Guo, H. Cao, and B. Chen, “Hierarchical safe reinforcement learning control for leader-follower systems with prescribed performance,” IEEE Trans. Autom. Sci. Eng. , vol. 22, pp. 19 568–19 581, Aug. 2025. [30] L. Quan, L. Yin, T. Zhang, M. Wang, R. Wang, S. Zhong, X. Zhou, Y. Cao, C. Xu, and F. Gao, “Robust and efficient trajectory planning for formation flight in dense environments,” IEEE Trans. Robot. , vol. 39, no. 6, pp. 4785–4804, Dec. 2023. [31] W. Liu, J. Hu, H. Zhang, M. Y. Wang, and Z. Xiong, “A novel graph-based motion planner of multi-mobile robot systems with formation and obstacle constraints,” IEEE Trans. Robot. , vol. 40, pp. 714–728, 2024. [32] J. Gu, Y. Wang, W. Ji, Z. Wei, and J. Wang, “LLM-based dynamic event-triggered communication for multi-UAV formation control in urban environments,” IEEE Trans. Cognit. Commun. Netw. , vol. 12, pp. 4825– 4838, 2026. [33] W. Yuan, J. Chen, S. Chen, D. Feng, Z. Hu, P. Li, and W. Zhao, “Transformer in reinforcement learning for decision-making: a survey,” 
+
+Frontiers Inf. Technol. Electron. Eng. , vol. 25, no. 6, pp. 763–790, 2024. [34] Q. Liu, P. Chen, K. Lin, K. Zhao, J. Ding, and Y. Li, “Sample-efficient backtrack temporal difference deep reinforcement learning,” Knowl.-Based Syst. , vol. 330, 2025, Art. no. 114613. [35] Q. Liu, Z. Song, Y. Liang, Z. Xie, S. Zhang, J. Zhang, and Y. Li, “CoRLHF: Reinforcement learning from human feedback with coop-erative policy-reward optimization for LLMs,” Expert Syst. Appl. , vol. 301, no. 10, 2026, Art. no. 130113. [36] J. Guo, Y. Li, B. Huang, L. Ding, H. Gao, and M. Zhong, “An online optimization escape entrapment strategy for planetary rovers based on bayesian optimization,” J. Field Robot. , vol. 41, no. 8, pp. 2518–2529, Dec. 2024. [37] L. Li, A. Cherouat, H. Snoussi, and T. Wang, “Grasping with occlusion-aware ally method in complex scenes,” IEEE Trans. Autom. Sci. Eng. ,vol. 22, pp. 5944–5954, 2025. [38] P. Fiorini and Z. Shiller, “Motion planning in dynamic environments using velocity obstacles,” Int. J. Rob. Res , vol. 17, no. 7, pp. 760–772, 1998. [39] Q. Ma and S. Xu, “Intentional delay can benefit consensus of second-order multi-agent systems,” Automatica , vol. 147, Jan. 2023, Art. no. 110750. [40] S. Zhao, Mathematical Foundations of Reinforcement Learning . Sin-gapore: Springer, 2024. [41] Y. Chen, Y. Wu, H. Yang, J. Cao, Q. Wang, and Y. Liu, “A distributed pipeline for collaborative pursuit in the target guarding problem,” IEEE Robot. Automat. Lett. , vol. 9, no. 3, pp. 2064–2071, Mar. 2024. [42] S. Zhao, D. V. Dimarogonas, Z. Sun, and D. Bauso, “A general approach to coordination control of mobile agents with motion constraints,” IEEE Trans. Autom. Control , vol. 63, no. 5, pp. 1509–1516, May 2018. [43] J. Chen, R. Zhou, G. Sun, and J. Zhang, “Collision-free formation con-trol with global network integrity maintenance via preserving induced-subgraph connectivity,” IEEE Syst. J. , vol. 17, no. 3, pp. 4078–4089, Apr. 2023. [44] M. Fiedler, “Algebraic connectivity of graphs,” Czech. Math. J. , vol. 23, no. 2, pp. 298–305, 1973. 
+
+Zhaozong Wang received the B.S. degree from the University of Science and Technology Beijing, Beijing, China, in 2021, and the M.S. degree from Beihang University, Beijing, in 2023, where he is currently pursuing the Ph.D. degree with the School of Automation Science and Electrical Engineering. His current research interests include task as-signment of multi-agent systems and multi-agent reinforcement learning. 
+
+Guibin Sun received the B.Eng. degree in au-tomation from Inner Mongolia University, China, in 2017, and the Ph.D. degree in control science and engineering from Beihang University, Beijing, China, in 2022. From 2022 to 2025, he was a Postdoctoral Re-search Fellow of “Zhuoyue” Program with Beihang University. From 2021 to 2022, he was a Visiting Student with Westlake University, Hangzhou, China. He is currently an Associate Professor with the School of Automation Science and Electrical Engi-neering, Beihang University. He has authored more than 20 research papers in international journals, including Nature Communications, IEEE Magazine, and IEEE Transactions. His research interests include theories and applications of robot swarms, especially for large-scale swarms. Dr. Sun was the Session Chair for IROS 2024. IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING 19 
+
+Jinyong Chen received the B.E. and M.E. degrees from Beihang University, Beijing, China, in 2017 and 2020, respectively. He received the Ph.D. degree in control science and engineering from Beihang University, Beijing, China, in 2024. His current research interests include coordinated control theory and reinforcement learning, and AIOps. 
+
+Rui Zhou received the Ph.D. degree in spacecraft design from Harbin Institute of Technology, Harbin, China, in 1997. He is currently a Professor and a Ph.D. Supervi-sor of guidance, navigation and control at Beihang University, Beijing, China. His research interests include autonomous control theory, intelligent deci-sion systems, coordinated control and guidance, and information fusion for networked systems.

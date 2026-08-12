@@ -6,38 +6,31 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-11
-- 运行时间：2026-08-11 19:55:13 UTC
+- 最新运行日期：2026-08-12
+- 运行时间：2026-08-12 21:20:18 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：5
-- 速读区：0
+- 本次总论文数：3
+- 精读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读5篇多智能体强化学习论文，重点聚焦智能体个性化偏好与社会性奖励设计。  
-最值得关注的是满分论文《Multi-Agent RL via Agent-Specific Preference》以及9分论文《Calibrating Artificial Guilt》，前者解决智能体偏好冲突，后者用内疚感促进合作。  
-建议普通读者优先精读这两篇，可从偏好建模与亲社会激励角度理解多智能体协作新思路。
-- 详情：[/202608/11/README](/202608/11/README)
+今日聚焦多智能体博弈与强化学习，精读1篇、速读2篇，共3篇论文。  
+最值关注多臂老虎机中“未知Lipschitz常数”的协调策略（8.0分），以及重尾奖励下的鲁棒多智能体算法（7.0分）。  
+若想快速上手，建议优先精读高分论文的算法框架，再对比速读两篇的适用场景差异。
+- 详情：[/202608/12/README](/202608/12/README)
 
 ### 精读区论文标签
-1. [Multi-Agent Reinforcement Learning via Agent-Specific Preference](/202608/11/2608.08604v1-multi-agent-reinforcement-learning-via-agent-specific-preference)  
-   标签：评分：10.0/10、query:marl
-   evidence：直接研究多智能体强化学习，提出基于智能体偏好的合作学习方法
-2. [Calibrating Artificial Guilt: Neurally Grounded Reward Shaping for Prosocial Multi-Agent Reinforcement Learning](/202608/11/2608.04663v1-calibrating-artificial-guilt-neurally-grounded-reward-shaping-for-prosocial-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：基于人类神经数据校准奖励塑形的合作多智能体强化学习
-3. [Per-Shipment Multi-Agent Reinforcement Learning for Intermodal Freight Routing Under Hurricane Disruption](/202608/11/2608.07824v1-per-shipment-multi-agent-reinforcement-learning-for-intermodal-freight-routing-under-hurricane-disruption)  
-   标签：评分：9.0/10、query:marl
-   evidence：在集中训练分散执行的范式下训练IPPO求解去中心化部分可观测马尔可夫决策过程货物路由问题
-4. [Efficient Real-World Online Reinforcement Learning for Robot Manipulation via Centralized Training and Critic Decomposition](/202608/11/2608.09762v1-efficient-real-world-online-reinforcement-learning-for-robot-manipulation-via-centralized-training-and-critic-decomposition)  
-   标签：评分：9.0/10、query:marl
-   evidence：结合集中训练与分散执行及评论员分解，用于多智能体并行训练
-5. [MARA: Flow-Matching-Guided Multi-Agent Resource Allocation for Computational Resource Efficient Learning](/202608/11/2608.09130v1-mara-flow-matching-guided-multi-agent-resource-allocation-for-computational-resource-efficient-learning)  
+1. [Coordinating the Unknown Lipschitz Constant in Multiplayer Bandits](/202608/12/2608.10526v1-coordinating-the-unknown-lipschitz-constant-in-multiplayer-bandits)  
    标签：评分：8.0/10、query:marl
-   evidence：合作式多智能体自回归策略用于资源分配
+   evidence：合作式多智能体老虎机，且学习开始后不通信的分散式设定
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Robust Multi-Agent Bandits with Heavy-Tailed Rewards and Information Asymmetry](/202608/12/2608.10529v1-robust-multi-agent-bandits-with-heavy-tailed-rewards-and-information-asymmetry)  
+   标签：评分：7.0/10、query:marl
+   evidence：信息不对称下的去中心化多智能体算法
+2. [Task-Oriented Formation Decision via Reinforcement Learning: Herding an Attacking Swarm](/202608/12/2608.09258v1-task-oriented-formation-decision-via-reinforcement-learning-herding-an-attacking-swarm)  
+   标签：评分：6.0/10、query:marl
+   evidence：基于强化学习的多机器人围捕编队决策
 
 
 <div class="dpr-home-promo-card">
