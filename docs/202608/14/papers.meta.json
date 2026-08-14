@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-14",
+  "date": "2026-08-14",
+  "generated_at": "2026-08-14T21:22:32",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/14/2608.12436v1-multi-auv-ad-hoc-network-based-target-tracking-a-value-gradient-guidance-multi-agent-diffusion-reinforcement-learning-approach",
+      "section": "deep",
+      "title_en": "Multi-AUV Ad-hoc network-based Target Tracking: A Value Gradient Guidance Multi-Agent Diffusion Reinforcement Learning Approach",
+      "authors": "Jiaao Ma, Chuan Lin, Guangjie Han, Shengchao Zhu, Qian Zhu, Ying Liu, Zhenyu Wang",
+      "date": "2026-08-12",
+      "pdf": "https://arxiv.org/pdf/2608.12436v1",
+      "score": "9.0",
+      "evidence": "MARL通过集中训练实现去中心化协调，多智能体扩散强化学习",
+      "tldr": "多AUV自组网目标跟踪面临声通信受限、动态拓扑变化和海洋扰动，现有MARL方法因高维联合状态动作建模和噪声敏感策略导致训练不稳定。提出VGG-MADiffRL，以扩散模型为策略，用值梯度引导反向去噪生成高回报动作，并构建MDCA三层闭环架构协同优化。在协作跟踪实验中，该算法收敛更快，跟踪精度更高，训练过程更平滑。为动态水下环境下的多AUV协同跟踪提供了稳定高效的解决方案，具有工程应用价值。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-AUV ad-hoc network-based target tracking requires networked autonomous underwater vehicles (AUVs) to cooperatively track maneuvering targets under constrained acoustic communication, dynamic topology, and uncertain ocean disturbances. Although multi-agent reinforcement learning (MARL) enables decentralized coordination through centralized training, existing methods suffer from high-dimensional joint state-action modeling, noise-sensitive policy generation, leading to unstable training and degraded tracking. To address these issues, we propose VGG-MADiffRL, a value-gradient-guided multi-agent diffusion RL algorithm, and MDCA, a diffusion?based hierarchical control architecture. Leveraging underwater mission characteristics, we model sonar detection mechanisms and ocean current disturbances, formulating cooperative tracking for multi-AUV ad-hoc networks as an MDP. The proposed MDCA constitutes a three-tier closed-loop control framework: a global intelligent control layer, a local online training layer, and a physical action execution layer. This structure enables synergistic optimization across task allocation, local decision processes, and execution feedback. Within MDCA, the local online training layer is the policy learning framework; VGG-MADiffRL builds on diffusion policies and incorporates value gradients to guide action generation in the reverse denoising process, steering the generated actions towards higher expected returns. It employs twin value networks with joint optimization and soft target updates to mitigate overestimation and training oscillations, promoting more stable convergence. Experimental results show that VGG-MADiffRL consistently achieves faster convergence, higher tracking accuracy, and smoother training dynamics in cooperative tracking scenarios, validating its effectiveness and practical engineering value in dynamic underwater settings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/14/2608.12753v1-decentralized-multi-player-q-learning-in-episodic-markov-decision-processes-with-information-asymmetry",
+      "section": "deep",
+      "title_en": "Decentralized Multi-Player Q-Learning in Episodic Markov Decision Processes with Information Asymmetry",
+      "authors": "Larissa Xu, King Bi, William Chang",
+      "date": "2026-08-13",
+      "pdf": "https://arxiv.org/pdf/2608.12753v1",
+      "score": "9.0",
+      "evidence": "信息不对称下回合制马尔可夫决策过程中的分散式多玩家Q学习",
+      "tldr": "本文研究多玩家在信息不对称下无法通信的分散式强化学习问题，场景分为三类：未观察动作但有共同奖励、观察动作但奖励独立、以及两者都独立。学习过程中玩家不能通信，但可事先约定协议。针对前两类提出mQ-learning和mQ-learning-intervals，针对第三类提出两阶段探索-然后提交的mEXC与mEXC-Bellman算法。理论分析显示，前两类取得O~(√(H^4 S A_joint T))遗憾，第三类取得O~(H(SA_joint)^(1/3)T^(2/3))遗憾。这证明分散学习可匹配单智能体Q-learning速率，但联合动作空间指数增长限制了该方法适用于小规模玩家。",
+      "tags": "query:marl",
+      "abstract_en": "We study decentralized multi-player reinforcement learning in episodic tabular Markov decision processes (MDPs) under three forms of information asymmetry: (A) unobserved actions with common rewards, (B) observed actions with independent rewards, and (C) unobserved actions with independent rewards. Players cannot communicate during learning but may agree on a protocol a priori. For Problems A and B we propose \\texttt{mQ-learning} and \\texttt{mQ-learning-intervals}, achieving $\\tilde{O}(\\sqrt{H^4 S A_{\\text{joint}}\\, T})$ regret, where $H$ is the horizon, $S$ the state count, $T = KH$ the total steps, and $A_{\\text{joint}} = \\prod_{i=1}^M |\\mathcal{A}_i|$ the joint action space across $M$ players. For Problem C we give \\texttt{mEXC} and \\texttt{mEXC-Bellman}, two-phase explore-then-commit algorithms with regret $\\tilde{O}(H (S A_{\\text{joint}})^{1/3} T^{2/3})$. Against the centralized joint-action benchmark, decentralized learning under information asymmetry matches the single-agent Q-learning rate of \\cite{jin2018q} up to logarithmic factors. Because $A_{\\text{joint}}$ grows exponentially in $M$, the bounds are most meaningful for small $M$ or small per-player action sets.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/14/2608.12995v1-ogr-marl-option-guided-residual-multi-agent-reinforcement-learning-for-heterogeneous-usv-cooperative-pursuit-in-constrained-port-waterways",
+      "section": "deep",
+      "title_en": "OGR-MARL: Option-Guided Residual Multi-Agent Reinforcement Learning for Heterogeneous USV Cooperative Pursuit in Constrained Port Waterways",
+      "authors": "Mao Jiayang, Wang Lanfeng, Peng Zhao-Han",
+      "date": "2026-08-13",
+      "pdf": "https://arxiv.org/pdf/2608.12995v1",
+      "score": "9.0",
+      "evidence": "面向USV协同追击的合作多智能体强化学习应用，基于多种MARL主体",
+      "tldr": "针对受限港口水道中异构无人艇协作追捕受导航、交通和角色约束的问题，提出OGR-MARL框架。该框架集成共享逃逸信念、角色条件选项目标、自适应规则惩罚和残差策略学习，使多种MARL算法可在规则引导行为上学习纠错动作。在夏之门港口场景中，OGR-MASAC实例实现75%捕获率，兼具规则遵循和最优异构协调。零样本迁移至融合QGIS/AIS的复杂地图仍表现良好，验证了泛化潜力。",
+      "tags": "query:marl",
+      "abstract_en": "Heterogeneous USV cooperative pursuit in constrained port waterways requires evader interception under navigation, traffic, and role constraints. This paper proposes OGR-MARL, an option-guided residual multi-agent reinforcement learning framework that is decoupled from a specific MARL algorithm. OGR-MARL integrates shared evader belief, role-conditioned option targets, adaptive rule penalties, and residual policy learning, allowing different MARL algorithms to learn corrective actions on top of rule-guided behaviors rather than exploring constrained port environments from scratch. We instantiate OGR-MARL with representative continuous-control MARL backbones, including MADDPG, MATD3, MAPPO, and MASAC, yielding OGR-MADDPG, OGR-MATD3, OGR-MAPPO, and OGR-MASAC. Experiments in an abstract Xiazhimen port-waterway scenario show that the OGR-MASAC instantiation achieves a 75.0% capture rate, promising mission-effective rule compliance, and the best heterogeneous coordination among the tested methods. Without retraining, zero-shot transfer to a QGIS/AIS-informed Xiazhimen map achieves promising results, demonstrating the generalization potential of OGR-MARL in more complex port scenarios.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/14/2608.12534v1-entropy-augmented-multi-objective-policy-optimization-in-multiagent-systems",
+      "section": "deep",
+      "title_en": "Entropy-Augmented Multi-Objective Policy Optimization in Multiagent Systems",
+      "authors": "Jamie Santos, Ayhan Alp Aydeniz, Raghav Thakar, Kagan Tumer",
+      "date": "2026-08-12",
+      "pdf": "https://arxiv.org/pdf/2608.12534v1",
+      "score": "8.0",
+      "evidence": "面向多智能体团队协调的策略优化，利用熵奖励提升行为多样性",
+      "tldr": "多智能体系统在多目标优化中常用NSGA-II，但其仅关注目标空间多样性而忽视行为空间多样性，易导致行为同质化和过早收敛。提出熵增强策略评估方法，在适应度中引入熵奖励以鼓励行为多样性，同时保留Pareto优化框架。在火星车域实验中，较NSGA-II基准的hypervolume最多提升48%，证明行为多样性是提升多目标多智能体进化优化的有前景方向。",
+      "tags": "query:marl",
+      "abstract_en": "Autonomous agent teams deployed in settings such as marine and extraterrestrial outposts must coordinate actions to achieve optimal outcomes across multiple competing objectives. Multi-objective evolutionary algorithms such as NSGA-II optimize for diversity in the objective space, but neglect diversity in the behavior space, possibly leading to premature convergence and a collapse in behaviors that may differentiate policies in different external conditions. To address this, we introduce an entropy-augmented policy evaluation strategy that incorporates an entropy bonus into agent fitness scores, discouraging behavioral homogeneity across the evolving population. By augmenting policy evaluation with a behavior-space diversity signal while preserving the underlying Pareto optimization framework, our method is designed to encourage exploration of behaviorally distinct policies in multiagent domains. We evaluate our approach across rover-domain experiments with qualitatively distinct reward structures and observe hypervolume improvements of up to 48% relative to the NSGA-II baseline, suggesting that behavioral diversity is a promising and underexplored direction for improving multi-objective multiagent evolutionary optimization.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
