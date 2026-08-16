@@ -1,0 +1,6383 @@
+Title: Learning under Opponent Unawareness in Linear-Quadratic Stochastic Games
+
+URL Source: https://arxiv.org/pdf/2608.08268v1
+
+Published Time: Tue, 11 Aug 2026 00:51:53 GMT
+
+Number of Pages: 49
+
+Markdown Content:
+# Learning under Opponent Unawareness in Linear-Quadratic Stochastic Games 
+
+Dantong Chu ∗ Xuefeng Gao † Yufei Zhang ‡
+
+11 th August, 2026 
+
+Abstract 
+
+As firms increasingly deploy machine learning for strategic decision-making, understanding algorithmic interactions has become central to operations research and economics. This paper studies learning in infinite-horizon, nonzero-sum linear-quadratic stochastic games under a radi-cally uncoupled information structure, where players are either unaware of opponents or strategi-cally oblivious, observing only a common state and their own action history. Under this minimal information, we analyze an asynchronous decentralized learning process in which each player independently runs a single-agent ϵ-greedy iterated least-squares algorithm. We prove that, de-spite being unable to identify the system parameters, players’ learning dynamics converge almost surely to the complete-information Nash equilibrium and characterize the convergence rate. We then apply the framework to a dynamic Cournot competition with sticky prices. Numerical experiments validate the theoretical results and show that learning under limited information reduces firm profits under both low and high price stickiness, while total surplus declines and market concentration increases when price stickiness is high. Publicly revealing aggregate market output substantially accelerates convergence and mitigates these welfare losses. 
+
+Keywords: Radically Uncoupled, Multi-agent Learning, Linear Quadratic Stochastic Game, Dynamic Cournot Competition, Price Stickiness 
+
+# 1 Introduction 
+
+Driven by advances in machine learning and artificial intelligence, autonomous pricing and auto-mated trading algorithms have become ubiquitous across e-commerce and financial markets. In practice, these algorithms plausibly operate under a radically uncoupled information structure, termed as in Foster and Young (2006). Under this paradigm, agents/algorithms either do not rec-ognize the presence of their peers, lacking access to their actions, or remain strategically oblivious by treating competitors’ dynamic behavior as exogenous environmental noise. Such obliviousness arises both by necessity, when limited information (e.g., in over-the-counter markets) or substantial market noise obscures competitors’ signals, and by design, as it enables the use of computationally simpler single-agent learning algorithms. While this framework mirrors the informational reali-ties of modern tech and financial markets, it could pose severe economic risks. Recent literature on algorithmic collusion demonstrates that such uncoupled agents, despite independently employ-ing reinforcement learning algorithms, may inadvertently converge to seemingly collusive outcomes rather than to a competitive Nash equilibrium (see e.g. Abada and Lambin (2023)). 
+
+> ∗
+
+Department of Systems Engineering and Engineering Management, The Chinese University of Hong Kong, Hong Kong, China. Email:dtchu@link.cuhk.edu.hk 
+
+> †
+
+Department of Systems Engineering and Engineering Management, The Chinese University of Hong Kong, Hong Kong, China. Email:xfgao@se.cuhk.edu.hk 
+
+> ‡
+
+Department of Mathematics, Imperial College London, UK. Email: yufei.zhang@imperial.ac.uk 
+
+1arXiv:2608.08268v1 [math.OC] 8 Aug 2026 This gap reflects a fundamental limitation in our theoretical understanding. While radically uncoupled learning is known to converge in simple stateless repeated games (Ba et al., 2025; Bervoets et al., 2020; Xiong et al., 2024), convergence guarantees remain largely absent for stochas-tic (Markov) games, where the state evolves according to the current state and the joint actions of all players (Ozdaglar et al., 2022; Shapley, 1953). These state dynamics substantially compli-cate learning under radically uncoupled information, as players will misjudge their impact on the state in the absence of observations of their opponents (Zhang et al., 2021). Existing convergence guarantees are therefore largely limited to specialized settings, such as (two-player) zero-sum games (Chen et al., 2024; Sayin et al., 2021) and potential games (Maheshwari et al., 2025), and assume finite state and action spaces to make the analysis tractable. Little is known about convergence for general N -player stochastic games with continuous state and action spaces. In this paper, we study radically uncoupled learning in infinite-horizon, nonzero-sum linear-quadratic (LQ) stochastic games. LQ games are a fundamental class of models for dynamic strate-gic interactions in continuous state and action spaces and have been widely used in management science, economics, and financial engineering; see Section 1.1 for an application to dynamic Cournot competition and Dockner et al. 2000; Fershtman and Kamien 1987; Heston and Hu 2024; Muhle-Karbe and Oomen 2026 for related examples. By combining linear state dynamics with quadratic costs, LQ games admit closed-form equilibrium solutions and provide rigorous benchmarks for eval-uating learning algorithms in dynamic games. Our central question is to understand the behavior of radically uncoupled learning agents: When agents learn from their own experiences while remaining unaware of or strategically oblivious to their competitors, can decentralized learning dynamics lead to a Nash equilibrium? 
+
+1.1 A Motivating Application: Dynamic Cournot Competition 
+
+To motivate our learning framework, we consider a dynamic Cournot competition model with sticky prices as an illustrative application. This classical model captures multi-period quantity competition under market frictions and has been extensively studied (Fershtman and Kamien, 1987; Heston and Hu, 2024). Consider a discrete-time, infinite-horizon market comprising M firms. In each period 
+
+t ∈ N, each firm m chooses its output quantity qmt . The market price pt evolves according to the following discrete-time process: 
+
+pt+1 = sp t + (1 − s) a − b
+
+> M
+
+X
+
+> m=1
+
+qmt
+
+!
+
++ ωt, (1) where s ∈ (0 , 1) is the price stickiness coefficient, a > 0 is the demand intercept, b > 0 is the slope of the inverse demand function, and the noise term {ωt}∞ 
+
+> t=0
+
+is an i.i.d. random shock (e.g., consumer mood swings, market noise) with zero mean and variance σ2
+
+> ω
+
+. In this model, price adjusts gradually toward the level implied by the current demand function rather than instantaneously, with the speed of adjustment governed by a stickiness parameter s ∈ (0 , 1) (e.g., due to market inertia). The goal of each firm is to select a sequence of output quantities {qmt }∞ 
+
+> t=0
+
+to maximize its total discounted expected profit: 
+
+E
+
+" ∞X
+
+> t=0
+
+ρt
+
+
+
+pt+1 − cm − 12 qmt
+
+
+
+qmt
+
+#
+
+, (2) where ρ ∈ (0 , 1) is the discount factor, and the term ( cm + 12 qmt )qmt represents the production cost, consisting of a linear term cmqmt with private constant marginal cost parameter cm > 0 and a quadratic term 12 (qmt )2 reflecting increasing marginal production costs (Fershtman and Kamien, 1987). The feature of the sticky price places the model within the class of stochastic games rather than repeated games, as the price acts as a state variable. In new or emerging markets, firms may have limited information about their competitors or even be unaware of their existence. In particular, at time t + 1, each firm m observes only the historical 2price sequence {pk}t+1  
+
+> k=0
+
+and its own quantity decisions {qmk }tk=0 . Moreover, the key structural parameters of (1), including s, a, b, and σω, are also unknown to all firms. Under this information constraint, each firm behaves as if it were the sole major participant in the market and treats the effects of other firms’ actions as unobserved noise. Consequently, firm m forms a misspecified belief about price dynamics: 
+
+pt+1 = s′pt + (1 − s′)  a′ − b′qmt
+
+ + ω′
+
+> t
+
+, (3) where s′ denotes the firm’s perceived price stickiness coefficient, a′ and b′ are the perceived intercept and slope of the inverse demand function, and ω′ 
+
+> t
+
+represents the perceived market noise with mean zero and variance σ2
+
+> m
+
+. The firm’s objective remains to choose an output sequence {qmt }∞ 
+
+> t=0
+
+to maximize its total discounted expected profit (2), but subject to its perceived and misspecified price dynamics (3). Since the parameters of the perceived dynamics (3) are unknown, firm m adopts an online learning framework that balances exploration and exploitation. Specifically, each firm independently employs an ϵ-greedy learning algorithm based on least-squares estimation of the perceived model parameters (e.g., s′, a ′, b ′, σ2
+
+> m
+
+) over a sequence of expanding epochs. Within each epoch, firm m
+
+uses a linear feedback strategy of the form qmt = −Fmpt + fm + αmvmt , where Fm and fm are derived from the estimated model parameters, and vmt is an independent exploration noise scaled by the exploration coefficient αm. Linear inverse demand, quadratic costs, and linear strategies are standard assumptions in the Cournot competition literature; see, e.g., Bonatti et al. 2017; Gal-Or 1985; Hauk and Hurkens 2001; Vives 1984. The learning process described above provides a natural model for how firms adapt in emerging markets with limited information. In contrast, dynamic Cournot games with complete informa-tion are typically analyzed through feedback (closed-loop) Nash equilibria, which characterize firm behavior in mature markets (Fershtman and Kamien, 1987; Heston and Hu, 2024). This contrast raises two fundamental questions about market evolution. First, can the feedback Nash equilibrium of a mature market emerge from radically uncoupled learning? That is, when firms learn solely from their own experiences under model misspecification and without knowledge of competitors, do their behaviors converge to the complete-information equilibrium? Second, how does the learning process shape market outcomes, such as economic welfare and market concentration, during this transition? This paper addresses these questions by establishing convergence guarantees and characterizing the resulting market dynamics under different degrees of price stickiness. 
+
+1.2 Our Contributions 
+
+Motivated by the dynamic Cournot competition model with sticky prices in Section 1.1, we study online learning under radically uncoupled information in a broad class of infinite-horizon, N -player nonzero-sum LQ stochastic games. Each player observes only the common state and chooses her own actions, while the system dynamics and all information regarding other players remain un-known. Consequently, each player treats the environment as a single-agent problem and applies a canonical ϵ-greedy online learning algorithm following (Mania et al., 2019; Simchowitz and Fos-ter, 2020). We formalize this behavior through a radically uncoupled multi-agent ϵ-greedy iterated least-squares (ILS) algorithm with growing epochs. At each epoch, players estimate a perceived (and generally misspecified) model, compute linear policies from the estimated dynamics, and in-ject decaying exploration noise. The algorithm requires no information about other players and allows for heterogeneous update schedules and exploration rates. Our contributions are twofold: 
+
+• We establish the first convergence guarantee for radically uncoupled learning in LQ stochastic games with a common state affected by all players’ actions. The main challenge is that, without information about their opponents, players cannot disen-tangle their own impact on the state dynamics from that of other players, and will misattribute 3the effects of other players’ actions to system noise. This prevents them from identifying the true system dynamics, unlike in the single-agent setting (Simchowitz and Foster, 2020). We overcome this challenge through a key insight: although each player’s perceived model is mis-specified, the learned parameters implicitly capture the aggregate strategic effects of all other players. Consequently, each player effectively computes a noisy best response to the oppo-nents’ previous strategy profile. We further quantify the bias in this estimated best response induced by all players’ exploration noises and show that it vanishes asymptotically. Building on this insight, we prove that the multi-agent ϵ-greedy ILS algorithm converges to the complete-information Nash equilibrium under a stability condition and characterize its convergence rate, both in finite samples (with high probability) and asymptotically (almost surely) (Theorem 1). The result applies to asynchronous and random update schedules. The convergence rate reveals a fundamental interplay between the intrinsic stability of the Nash equilibrium, quantified by a stability constant ζ ∈ (0 , 1), and the players’ learning hyperpa-rameters including the epoch growth rate λ and the exploration-noise schedule. In particular, when all players adopt the optimal exploration-noise decay schedule from the single-agent setting, the convergence rate exhibits a bifurcation. If the equilibrium is sufficiently sta-ble, the algorithm (more precisely, the linear strategy parameters) achieves a last-iterate rate ˜O(t−1/4), matching the rate that enables optimal regret guarantees in the single-agent LQ learning benchmark (Simchowitz and Foster, 2020). Otherwise, the performance is limited by the game’s stability and the convergence rate is ˜O
+
+
+
+t ln ζ 
+
+> ln λ
+
+
+
+, reflecting the convergence behav-ior of the underlying idealized best-response dynamics. Finally, numerical experiments show that when the equilibrium is not globally stable, the learning dynamics may exhibit persistent oscillations. 
+
+• We apply our framework to a dynamic Cournot competition model with sticky prices and study the economic consequences of decentralized learning. Numerical experiments in duopoly markets validate the theoretical convergence rates and char-acterize transitional market outcomes under different degrees of price stickiness. We examine firm profits, total surplus, and market concentration along the path from initial learning to equilibrium. While firms experience profit losses relative to the equilibrium benchmark during the transition in both low- and high-stickiness markets, welfare implications differ substantially across regimes: total surplus declines persistently only under high price stickiness, and market concentration increases in both cases, with larger effects under high stickiness. These findings highlight the importance of accelerating convergence in markets with strong frictions. We fur-ther show that publicly releasing aggregate market quantity substantially improves learning speed and mitigates the adverse transitional effects. Finally, by considering a (weakly) non-linear inverse demand function, we demonstrate that the multi-agent ϵ-greedy ILS algorithm remains effective beyond the LQ setting, converging to an accurate linear approximation of the equilibrium. 
+
+1.3 Related Work 
+
+Our work relates to several broad research areas, including learning in games, multi-agent rein-forcement learning, and Cournot competitions. Given the vast literature in each area, we focus our discussion on the studies most closely related to our work. 
+
+Nash equilibrium computation for LQ games. A growing body of work has developed learn-ing algorithms for computing Nash equilibria in N -player LQ games. When the system parameters are known, existing approaches include policy-gradient methods (Hambly et al., 2023; Mazumdar et al., 2020; Plank and Zhang, 2026) and iterative Lyapunov- or Riccati-based schemes (Nortmann 4et al., 2024). (Hambly et al., 2023; Nortmann et al., 2024; Vamvoudakis, 2015) further analyze settings with unknown system parameters, but require access to joint state-action data from all players or coordinated exploration schemes that specify the behavior of all agents. Our work differs from this literature in two fundamental aspects. Conceptually, rather than de-signing algorithms to compute Nash equilibria, we study whether the learning dynamics of strategic agents converge to a complete-information Nash equilibrium under radically uncoupled information, where players are unaware of and cannot observe their opponents. Technically, this information constraint prevents players from identifying the true game model. Each player instead learns a misspecified single-agent model from noisy observations and applies a standard single-agent learn-ing algorithm, treating the strategic behavior of others as part of the environment. Our analysis therefore requires characterizing how the learned policy approximates a best response, quantifying the bias induced by exploration, and establishing convergence through a joint analysis of estimation error, exploration, and equilibrium stability. 
+
+Cournot games with incomplete information. Our analysis of dynamic Cournot competition is also related to the literature on Cournot games with incomplete information in economics and operations research. A substantial body of literature studies Cournot games where firms possess private information and face uncertain cost and demand (Bonatti et al., 2017; Gal-Or, 1985; Hauk and Hurkens, 2001). The primary focus of this literature is on how firms learn hidden market information and strategically signal to maximize profits. For example, Bonatti et al. (2017) considers a new market in which each firm has private marginal cost and observes only a common revenue process, but not its competitors’ quantities or costs. Using filtering techniques, they show that firms converge to the static complete-information Nash equilibrium despite learning only the average cost of their competitors. A key distinction from our work is that these studies assume the underlying market model, such as the inverse demand function, is known to all firms, so learning is limited to opponents’ private information such as their costs or demand shocks. In contrast, we allow both the market model and even the presence of competitors to be unknown. Consequently, firms must simultaneously learn a misspecified model of the environment and adapt their strategies, rendering filtering-based approaches inapplicable. 
+
+Learning in Cournot games. Several studies examine how firms learn and compete in repeated Cournot games with unknown demand or cost parameters using trial-and-error methods (Huck et al., 2004), neural networks (Barr and Saraceno, 2005), policy-gradient methods (Shi and Zhang, 2020), and no-regret learning (Ba et al., 2025; Nadav and Piliouras, 2010). In particular, reinforce-ment learning agents in repeated Cournot games may learn collusive behaviors (Kimbrough et al., 2005; Waltman and Kaymak, 2008), a phenomenon further studied in recent work (Deshpande and Jacobson, 2026; Lin et al., 2024). These studies, however, focus on repeated games with static market environments and therefore do not directly apply to the price-stickiness setting considered in this paper. With price stickiness, firms’ current decisions affect future market states, transforming the problem into a stochastic game rather than a repeated game. This dynamic state dependence substantially complicates the convergence analysis of learning dynamics compared with static games. 
+
+Notation. We denote by ∥A∥ the spectral norm of a matrix A, by σmin (A) its minimum singular value, by r(A) its spectral radius, and by A⊤ its transpose. For vectors, ∥ · ∥ 2 denotes the Euclidean norm. The notation ≽ (resp. ≻) refers to the Loewner order: X ≽ Y (resp. X ≻ Y ) means X −Y is positive semidefinite (resp. positive definite). We write Idm for the dm-dimensional identity matrix and 0 m×n for the m × n zero matrix. Finally, O(·) denotes standard asymptotic notation, and ˜O(·)suppresses logarithmic factors. 5The remainder of this paper is organized as follows. Section 2 formulates the infinite-horizon, nonzero-sum LQ stochastic games and derives the multi-agent ϵ-greedy ILS algorithm in the radically uncoupled setting. Section 3 defines the feedback Nash equilibrium under complete information. Section 4 states the main assumptions and establishes the convergence guarantees of the algorithm. Section 5 applies the results to analyze learning in dynamic Cournot competition with sticky prices. Section 6 provides a proof sketch of the main theorem in Section 4. Finally, Section 7 concludes. All technical proofs and supplementary materials are collected in the appendix. 
+
+# 2 Problem Formulation 
+
+This section introduces a general setup for LQ stochastic games in a radically uncoupled environment and outlines an online learning procedure for such games. 
+
+2.1 Setup of LQ Stochastic Games 
+
+Consider an M -player LQ stochastic game. For each player m, let umt ∈ Rdm denote its control input at time t, and let xt ∈ Rn denote the common state. The state evolves according to the linear dynamics 
+
+xt+1 = A0 + Ax t +
+
+> M
+
+X
+
+> m=1
+
+Bmumt + ωt, x0 = x, (4) where {ωt}∞ 
+
+> t=0
+
+is an i.i.d. sub-Gaussian noise sequence with mean zero and covariance matrix Cov( ωt) = Σ ω ≻ 0, x ∈ Rn is a given initial state, and the system parameters ( A0, A, {Bm}1≤m≤M , Σω)are unknown to all players. Each player is unaware of the existence of other players and observes only the historical state sequence {xk}t+1  
+
+> k=0
+
+and their own past controls {umk }tk=0 up to time t + 1. Player m aims to minimize the following discounted costs: 
+
+Jm
+
+ u = E
+
+" ∞X
+
+> t=0
+
+ρtYm
+
+ xt, x t+1 , u m
+
+#
+
+,
+
+with the cost function is given by 
+
+Ym(xt, x t+1 , u mt ) = x⊤ 
+
+> t
+
+Qmxt + ( xt+1 )⊤Hmumt + ( umt )⊤Rmumt + x⊤ 
+
+> t
+
+qm + ( umt )⊤rm, (5) where the coefficient matrices Qm ≽ 0n×n, Rm ≻ 0dm×dm , Hm, and vectors qm, rm are known to player m as private information but unknown to other players. Note that we include the cross term ( xt+1 )⊤Hmumt in the cost (5) to capture the dynamic Cournot competition model in Section 1.1. Due to these cross terms, the cost function may not be strongly convex in the state-control pair. This differs from the standard quadratic cost x⊤ 
+
+> t
+
+Qmxt +(umt )⊤Rmumt in the literature, where Qm and Rm are typically assumed to be positive definite to ensure strong convexity. The lack of strong convexity introduces additional technical challenges, including issues in the well-posedness of the game and the analysis of learning algorithms. Since each player is unaware of the impact of other players’ actions on the state dynamics, they form a misspecified model of the environment. Specifically, player m believes that the state evolves according to the perceived model 
+
+xt+1 = Θ ⊤
+
+> m
+
+zmt + ω′
+
+> t
+
+, x0 = x, (6) where zmt = [1 , x⊤ 
+
+> t
+
+, (umt )⊤]⊤, {ω′
+
+> t
+
+}∞ 
+
+> t=0
+
+is an i.i.d. sub-Gaussian sequence with mean zero and unknown covariance matrix Σ m, and Θ m = [ A′
+
+> 0
+
+, A ′, B ′
+
+> m
+
+]⊤ ∈ R(1+ n+dm)×n is the unknown (drift) coefficient. This model is misspecified because it omits the control inputs of all other players. Player 
+
+m will estimate (Θ m, Σm) from their own observations to compute their strategies. 6We focus on linear feedback strategies of the form umt = −Fmxt + fm + αmvmt , where Fm is the feedback matrix governing the response to the current state xt, fm is an offset term capturing state-independent actions, {vmt }∞ 
+
+> t=0
+
+is an i.i.d. sub-Gaussian noise sequence with mean zero and covariance matrix Idm , and αm ≥ 0 scales its magnitude. We denote a strategy for player m by the triple ( Fm, f m, α m), and refer to ( Fm, f m) as the deterministic component (i.e., the strategy when 
+
+αm = 0). Player m chooses αm to ensure suitable exploration, and selects ( Fm, f m) to minimize the cost objective given current information. To formulate each player’s optimization problem and facilitate the theoretical analysis, we re-strict strategy parameters to the following bounded admissible strategy sets :
+
+Am = {Fm ∈ Rdm×n : ∥Fm∥ ≤ κm}, Bm = {fm ∈ Rdm : ∥fm∥2 ≤ κ′
+
+> m
+
+}.
+
+The constants κm, κ ′ 
+
+> m
+
+> 0 bound the allowable feedback and offset, respectively, reflecting physical or economic constraints on player m’s ability to implement control. For the Cournot model of Section 1.1, κm and κ′ 
+
+> m
+
+directly represent production limits for price-based and active adjustments. The admissible sets Am and Bm constitute private information for player m and are unknown to other players. Given a perceived parameter pair (Θ m, Σm), the initial point x, and the exploration noise scale 
+
+αm, player m faces the following optimization problem inf 
+
+> (Fm,f m)∈A m×B m
+
+J(Θ m,Σm)
+
+> m
+
+ (Fm, f m); x, α m
+
+, (7) with J(Θ m,Σm)
+
+> m
+
+ (Fm, f m); x, α m
+
+ = E
+
+" ∞X
+
+> t=0
+
+ρtYm
+
+ xt, x t+1 , −Fmxt + fm + αmvmt
+
+#
+
+,
+
+where for each ( Fm, f m) ∈ A m × B m, the state xt evolves according to the perceived dynamics (6) under the parameters (Θ m, Σm) and the control law umt = −Fmxt + fm + αmvmt .To ensure (7) is finite, player m restricts the parameters to the following feasible parameter set 
+
+Sm:
+
+Sm =
+
+
+
+(Θ m, Σm) : −∞ < inf 
+
+> (Fm,f m)∈A m×B m
+
+J(Θ m,Σm)
+
+> m
+
+ (Fm, f m); x, α m
+
+ < ∞, for all x ∈ Rn, α m ≥ 0
+
+
+
+.
+
+(8) For any (Θ m, Σm) ∈ S m and x ∈ Rn, α m ≥ 0, there exists at least one optimal strategy (Φ m(Θ m, Σm, x, α m), ϕ m(Θ m, Σm, x, α m)) ∈ A m × B m to problem (7). Within this setting, the next section introduces an online learning procedure in which every player independently learns the environment and applies adaptive strategies to minimize her own discounted cost. 
+
+2.2 Radically Uncoupled Multi-agent ϵ−Greedy ILS Algorithm 
+
+We assume that each player independently follows an ϵ-greedy ILS scheme over a sequence of exponentially increasing epochs. In each epoch, a player implements a certainty-equivalent control strategy by applying the optimal linear feedback policy corresponding to their current estimate of the (potentially misspecified) system, together with an exploratory noise process to ensure sufficient exploration. The main components of the learning process are summarized below. 
+
+Update schedule and exploration. Let τ (k) 
+
+> m
+
+denote the length (in time steps) of the k-th epoch for player m, e.g. τ (k) 
+
+> m
+
+= λk for some λ > 1. At the end of epoch k, player m updates her strategy, which is then held fixed throughout the subsequent epoch of length τ (k+1)  
+
+> m
+
+. Player m also specifies a decaying sequence of exploration noise scales {α(k) 
+
+> m
+
+}∞
+
+> k=0
+
+. The decaying exploration schedule follows 7the standard single-agent online learning framework (Simchowitz and Foster, 2020), reflecting the assumption that each player behaves as if she were the sole decision-maker. Players may employ heterogeneous update schedules and exploration noise scales, leading to asynchronous learning. The precise conditions on τ (k) 
+
+> m
+
+and α(k) 
+
+> m
+
+(for convergence analysis) are given in Condition 1 in Section 4. 
+
+Regularized least-squares (RLS) estimation and fallback. At the initial update, each player independently selects a feasible initial parameter pair based on the information available at time zero. At the k-th update point, player m estimates the parameters of the perceived model (6) by solving a regularized least-squares problem using only data collected during the most recent epoch. Specifically, player m considers the estimate ˆΘ(k) 
+
+> m
+
+∈ arg min 
+
+> y∈R(1+ n+dm )×n
+
+βm∥y∥2 +  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+∥xt+1 − y⊤zmt ∥22
+
+ , (9) where ¯ τ (k) 
+
+> m
+
+= Pki=1 τ (i) 
+
+> m
+
+is the cumulative number of time steps completed by player m up to the end of the k-th update, and βm > 0 is a regularization constant. The estimate (9) admits the closed-form expression ˆΘ(k) 
+
+> m
+
+=
+
+
+
+V (k)
+
+> m
+
+−1
+
+  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt x⊤
+
+> t+1
+
+ , with V (k) 
+
+> m
+
+= βmI(1+ n+dm) +  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤. (10) Here we restrict the estimation to data from the most recent epoch. This reflects a natural behavioral assumption: without observing the opponents, players update their perceived model using recent observations that best represent the current environment. Similarly, the estimate of the perceived noise covariance matrix is ˆΣ(k) 
+
+> m
+
+= 1
+
+τ (k)
+
+> m
+
+  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(xt+1 − ( ˆΘ(k) 
+
+> m
+
+)⊤zmt )( xt+1 − ( ˆΘ(k) 
+
+> m
+
+)⊤zmt )⊤
+
+ . (11) Player m checks whether the estimated parameter pair ( ˆΘ(k) 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+) belongs to the feasible set 
+
+Sm in (8) to ensure the solvability of the corresponding control problem. If feasible, the estimate is accepted; otherwise, the player reuses the previous epoch’s parameter pair: ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+) ←
+
+
+
+( ˆΘ(k) 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+) if ( ˆΘ(k) 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+) ∈ S m,
+
+( ˜Θ(k−1)  
+
+> m
+
+, ˜Σ(k−1)  
+
+> m
+
+) otherwise .
+
+(12) 
+
+ϵ-Greedy strategy execution. Using the parameter estimate ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+), together with the initial state x¯τ (k)
+
+> m
+
+and the current exploration scale α(k) 
+
+> m
+
+, player m solves the LQ control problem (7) to obtain a minimizer (F (k) 
+
+> m
+
+, f (k) 
+
+> m
+
+) = (Φ m( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+, x ¯τ (k)
+
+> m
+
+, α (k) 
+
+> m
+
+), ϕ m( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+, x ¯τ (k)
+
+> m
+
+, α (k) 
+
+> m
+
+)) . (13) For the next epoch, player m implements the ϵ-Greedy strategy with an additive exploratory noise: 
+
+um, (k+1)  
+
+> t
+
+= −F (k) 
+
+> m
+
+xt + f (k) 
+
+> m
+
++ α(k) 
+
+> m
+
+vmt , (14) 8Algorithm 1 Radically Uncoupled Multi-agent ϵ-Greedy ILS Algorithm  
+
+> 1:
+
+Require: Epoch length {τ (k) 
+
+> m
+
+}k≥1, exploration noise scales {α(k) 
+
+> m
+
+}k≥0, RLS parameter βm,feasible set Sm, for 1 ≤ m ≤ M 
+
+> 2:
+
+for t = 0 , 1, 2, . . . , do  
+
+> 3:
+
+for m = 1 , 2, . . . , M do  
+
+> 4:
+
+Calculate max number of epochs up to time t: km = sup {k : ¯ τ (k) 
+
+> m
+
+≤ t} 
+
+> 5:
+
+if t = 0 then  
+
+> 6:
+
+Initialize: select ( ˜Θ(0)  
+
+> m
+
+, ˜Σ(0)  
+
+> m
+
+) ∈ S m 
+
+> 7:
+
+Compute F (0)  
+
+> m
+
+= Φ m( ˜Θ(0)  
+
+> m
+
+, ˜Σ(0)  
+
+> m
+
+, x, α (0)  
+
+> m
+
+) and f (0)  
+
+> m
+
+= ϕm( ˜Θ(0)  
+
+> m
+
+, ˜Σ(0)  
+
+> m
+
+, x, α (0)  
+
+> m
+
+) 
+
+> 8:
+
+else if t = ¯ τ (km) 
+
+> m
+
+then  
+
+> 9:
+
+Estimate and select ( ˜Θ(km) 
+
+> m
+
+, ˜Σ(km) 
+
+> m
+
+) via (12)  
+
+> 10:
+
+Compute F (km) 
+
+> m
+
+= Φ m( ˜Θ(km) 
+
+> m
+
+, ˜Σ(km) 
+
+> m
+
+, x t, α (km) 
+
+> m
+
+) and f (km) 
+
+> m
+
+= ϕm( ˜Θ(km) 
+
+> m
+
+, ˜Σ(km) 
+
+> m
+
+, x t, α (km) 
+
+> m
+
+) 
+
+> 11:
+
+end if  
+
+> 12:
+
+Apply control um, (km+1)  
+
+> t
+
+as in (14)  
+
+> 13:
+
+end for  
+
+> 14:
+
+Observe state xt+1 from (4)  
+
+> 15:
+
+end for 
+
+where {vmt }∞ 
+
+> t=0
+
+is an i.i.d. sub-Gaussian sequence with mean zero and covariance matrix Idm . The noise scale α(k) 
+
+> m
+
+is kept positive within each epoch to guarantee sufficient excitation, while gradu-ally decaying across epochs to anneal exploration as the player gains more information about the environment. Algorithm 1 summarizes the procedure executed concurrently by all players and models learning in the radically uncoupled environment described in Section 2.1. First, the algorithm satisfies the radically uncoupled requirement of Foster and Young (2006): each player’s updates depend solely on her own observed state trajectory and applied controls, without access to other players’ payoffs, actions, or admissible strategy sets. Second, the ϵ-greedy ILS scheme naturally captures the behavior of a player who treats the environment as a single-agent online LQ control problem. This choice is further justified by its optimality in the single-agent (average-reward) LQ setting: the ϵ-greedy ILS scheme achieves optimal regret with exponentially growing epochs and exploration noise decaying as ( τ (k+1)  
+
+> m
+
+)−1/4 (Simchowitz and Foster, 2020). The central question we address is whether the joint learning dynamics generated by Algorithm 1 converge to the complete-information feedback Nash equilibrium. To answer this question, we first characterize the feedback Nash equilibrium in the next section. 
+
+# 3 Feedback Nash Equilibrium under Complete Information 
+
+This section analyzes the LQ stochastic game introduced in Section 2.1 under complete information, assuming that the true system dynamics (4) and all players’ strategies are known to every player. We consider deterministic linear feedback strategies of the form umt = −Fmxt+fm with Fm ∈ A m
+
+and fm ∈ B m. Unlike the learning setting in Section 2.1, no exploration noise is introduced since players have complete information. Let A := QMm=1 Am and B := QMm=1 Bm be the joint feedback gains and offsets of all players, respectively, and let F = {Fm}1≤m≤M and f = {fm}1≤m≤M be generic elements in A and B, respectively. We write A−m := Q  
+
+> j̸=m
+
+Aj and B−m := Q  
+
+> j̸=m
+
+Bj , and denote by ( F−m, f −m) = ( {Fj }j̸ =m, {fj }j̸ =m) ∈ A −m × B −m the strategies of all players other than player m.Given other players’ strategies ( F−m, f −m) ∈ A −m × B −m and initial state x ∈ Rn, player m
+
+9considers the minimization problem inf 
+
+> (Fm,f m)∈A m×B m
+
+Jm
+
+ (Fm, f m); ( F−m, f −m), x , (15) with Jm
+
+ (Fm, f m); ( F−m, f −m), x  = E
+
+" ∞X
+
+> t=0
+
+ρtYm
+
+ xt, x t+1 , −Fmxt + fm
+
+#
+
+,
+
+where {xt}∞ 
+
+> t=0
+
+follows the dynamic (4) with the strategy profile ( Fm, f m, F −m, f −m): 
+
+xt+1 =
+
+A0 + X 
+
+> j̸=m
+
+Bj fj
+
+ +
+
+A − X 
+
+> j̸=m
+
+Bj Fj
+
+ xt + Bm(−Fmxt + fm) + ωt. (16) Note that, under complete information, player m knows the true state dynamics (16), in contrast to the radically uncoupled setting in Section 2.1, where player m perceives the state as evolving according to the misspecified model (6). Following the standard treatment of LQ games (Ba¸ sar and Olsder, 1998; Sun and Yong, 2019), we define a feedback Nash equilibrium as a strategy profile from which no player has an incentive to unilaterally deviate. 
+
+Definition 1. A policy profile (F ∗, f ∗) = ( {F ∗
+
+> m
+
+}1≤m≤M , {f ∗
+
+> m
+
+}1≤m≤M ) ∈ A × B is a feedback Nash equilibrium if for all 1 ≤ m ≤ M and x ∈ Rn, Jm
+
+ (F ∗
+
+> m
+
+, f ∗
+
+> m
+
+); ( F ∗−m, f ∗−m), x  is finite, and (F ∗
+
+> m
+
+, f ∗
+
+> m
+
+) = arg inf (Fm,f m)∈A m×B m Jm
+
+ (Fm, f m); ( F ∗−m, f ∗−m), x .
+
+To characterize best responses, we assume that given the strategy profile of other players, each player’s optimization problem (15) admits a unique optimal strategy. 
+
+Assumption 1. (Well-posedness of best responses) For all 1 ≤ m ≤ M , x ∈ Rn, and (F−m, f −m) ∈A−m × B −m, the infimum in problem (15) is attained at a unique minimizer that is independent of the initial state x. Moreover, this minimizer is continuous in (F−m, f −m).
+
+We denote the unique minimizer of problem (15) by ( ψm(F−m, f −m), φ m(F−m, f −m)) and refer to it as player m’s best response to the strategy profile ( F−m, f −m) of the other players. This defines a collective best-response map Ψ : A × B → A × B by Ψ(( F, f )) = 
+
+ψm(F−m, f −m) 1≤m≤M , φm(F−m, f −m) 1≤m≤M
+
+
+
+. (17) Because each component of Ψ is continuous, Ψ itself is continuous on the compact set A × B ;hence, by Brouwer’s fixed-point theorem, Ψ admits at least one fixed point. It follows directly from Definition 1 and the definition of Ψ that a feedback Nash equilibrium corresponds to a fixed point of this map. We state this existence and characterization in the following lemma. 
+
+Lemma 1. Under Assumption 1, there exists a fixed point (F ∗, f ∗) of Ψ, i.e., Ψ(( F ∗, f ∗)) = (F ∗, f ∗); moreover, a strategy profile is a feedback Nash equilibrium if and only if it is a fixed point of Ψ.
+
+To analyze the convergence of Algorithm 1, we further impose the following (global) stability condition on the Nash equilibrium. 
+
+Assumption 2. (Stability of the feedback Nash equilibrium) There exist constants μ > 0 and 
+
+0 < ζ < 1 such that for all (F, f ) ∈ A × B ,
+
+Ψ(( F, f )) − Ψ(( F ∗, f ∗)) μ, 1,2 ≤ ζ (F, f ) − (F ∗, f ∗) μ, 1,2,
+
+where (F ∗, f ∗) is a fixed point of Ψ, and ∥(F, f )∥μ, 1,2 := μ P Mm=1 ∥Fm∥ +  P Mm=1 ∥fm∥2
+
+ is a weighted composite norm over A × B .
+
+10 Assumption 2 implies that Ψ admits a unique fixed point, and hence a unique feedback Nash equilibrium for the LQ game: any fixed point ( F ′, f ′) of Ψ satisfies ∥(F ′, f ′) − (F ∗, f ∗) μ, 1,2 =
+
+Ψ(( F ′, f ′)) − Ψ(( F ∗, f ∗)) μ, 1,2 < (F ′, f ′) − (F ∗, f ∗) μ, 1,2, which forces ( F ′, f ′) = ( F ∗, f ∗). The stability constant ζ also plays a key role in establishing the convergence of the learning dynamics and characterizing its convergence rate (see Theorem 1). Without the stability condition, learning algorithms may fail to converge to the Nash equilibrium, even when it is unique (see Mazumdar et al. (2020) for examples involving gradient-based algorithms). We investigate two representative cases (that violate Assumption 2): a unique equilibrium exists but is locally unstable (i.e., the map Ψ is not a local contraction around the equilibrium; see Section 5.4 for a formal definition), or multiple locally stable equilibria coexist. In the former case, Section 5.4 shows that Algorithm 1 fails to converge and exhibits persistent oscillations. In the latter case, Appendix C.2 shows that the algorithm may converge to one of the equilibria or exhibit oscillatory behavior. 
+
+# 4 Main Convergence Result 
+
+This section shows that, under suitable conditions, the asynchronous ϵ-greedy ILS algorithm in Algorithm 1 converges to the feedback Nash equilibrium (Definition 1) and further characterizes its convergence rate. We shall assume the state dynamics (4) is stable under all admissible policy profiles. 
+
+Assumption 3. It holds that sup F ∈A A − MP
+
+> m=1
+
+BmFm < 1.
+
+Assumption 3 ensures that the state process {xt}∞ 
+
+> t=0
+
+in (4) remains stable under every admis-sible strategy profile (see (16)). If this assumption is violated, numerical examples in Section 5.4 demonstrate that the state may explode. Consequently, the ridge regression in (9) may fail to yield meaningful estimates, making the ϵ-greedy ILS algorithm unimplementable. We further assume the Lipschitz continuity of the optimal strategy map with respect to param-eter estimates. To state the assumption formally, we define for each player m and ( F−m, f −m) ∈A−m × B −m,Θ(F−m,f −m) 
+
+> m
+
+=
+
+A0 + X 
+
+> j̸=m
+
+Bj fj , A − X 
+
+> j̸=m
+
+Bj Fj , B m
+
+
+
+> ⊤
+
+, (18) which captures the aggregate effect of other players’ linear strategies on the state dynamics from player m’s perspective; see (16). 
+
+Assumption 4. For all 1 ≤ m ≤ M , there exist constants δm, L m ∈ (0 , ∞) such that for all 
+
+( ˜Θm, ˜Σm) with max ∥ ˜Θm − Θ(F−m,f −m) 
+
+> m
+
+∥, ∥ ˜Σm − Σω∥ ≤ δm, we have (a) ( ˜Θm, ˜Σm) ∈ S m.(b) For all initial state x and αm ∈ [0 , δ m], the control problem (7) admits a unique minimizer 
+
+(Φ m( ˜Θm, ˜Σm, x, α m), ϕm( ˜Θm, ˜Σm, x, α m)) satisfying 
+
+Φm( ˜Θm, ˜Σm, x, α m) − Φm(Θ (F−m,f −m) 
+
+> m
+
+, Σω, x, 0) ≤ Lm∆m,
+
+ϕm( ˜Θm, ˜Σm, x, α m) − ϕm(Θ (F−m,f −m) 
+
+> m
+
+, Σω, x, 0) 2 ≤ Lm∆m,
+
+where ∆m = max ∥ ˜Θm − Θ(F−m,f −m) 
+
+> m
+
+∥, ∥ ˜Σm − Σω∥, α m .
+
+Assumption 1 ensures that (Θ (F−m,f −m) 
+
+> m
+
+, Σω) ∈ S m for all ( F−m, f −m) ∈ A −m × B −m. As-sumption 4((a)) strengthens this by requiring that parameters sufficiently close to (Θ (F−m,f −m) 
+
+> m
+
+, Σω)11 remain feasible. Consequently, once estimation errors become sufficiently small, (12) accepts the new estimates and updates the parameters. Assumption 4((b)) requires the optimal strategy map to be locally Lipschitz continuous, with a neighborhood size δm and the Lipschitz constant Lm
+
+that are independent of the opponents’ strategies ( F−m, f −m). This regularity is needed for our convergence analysis, as it controls how estimation errors propagate through players’ best-response updates (see Step 2 of the proof sketch in Section 6). For standard LQ games without cross-product or linear terms (i.e., Hm, q m, r m, and A0 in (4) and (5) are zero), Assumption 4 follows from classical sensitivity analysis (Konstantinov et al., 1993), provided that the unconstrained minimizer of (15) lies in the interior of Am × B m. These results, however, rely on positive definiteness of the quadratic objective. To the best of our knowledge, corresponding sensitivity results for the more general class of LQ games considered here remain unavailable. For the dynamic Cournot competition model in Section 5, we establish explicit sufficient conditions ensuring Assumption 4; see Appendix B.3. For convergence analysis, we impose the following condition on the epoch lengths and exploration noise scales in Algorithm 1. 
+
+Condition 1. For all 1 ≤ m ≤ M and k ≥ 0, the epoch length and exploration noise used by player 
+
+m in epoch k satisfy 
+
+τ (k+1)  
+
+> m
+
+= τ (k+1) + ˜ τ (k+1) 
+
+> m
+
+, α(k) 
+
+> m
+
+= ¯ α(τ (k+1)  
+
+> m
+
+)−νm ,
+
+where τ (k+1) = τ + τ λ k+1 is the base epoch length with some λ > 1, τ > 0, and τ ≥ 0, ˜τ (k+1)  
+
+> m
+
+is an asynchronous shift taking values in [0 , ¯τ ] for some ¯τ > 0, and ¯α > 0 and νm ∈ (0 , 12 ) are the base exploration rate and decay rate, respectively. 
+
+Condition 1 captures the asynchronous learning of different players using a single-agent algo-rithm, due to their unawareness of competitors. Consistent with the single-agent online LQ learning literature (Simchowitz and Foster, 2020), we assume an exponential growth schedule for the base epoch length {τ (k)}∞
+
+> k=1
+
+, reflecting that players deploy their policies for increasingly longer durations as the learning proceeds. The choice λ = 2 recovers the standard doubling trick (Besson and Kauf-mann, 2018). Similarly, the decay rate νm ∈ (0 , 12 ) also follows the standard exploration schedule in single-agent learning, ensuring persistent excitation for consistent parameter estimation while allowing exploration to vanish asymptotically. Unlike single-agent learning, we incorporate a player- and epoch-dependent shift ˜ τ (k+1)  
+
+> m
+
+into the learning epochs to accommodate asynchronicity across players when updating their strategies (recall that strategy parameters are updated only at the end of each epoch). These shifts are allowed to be random (e.g., uniformly distributed on [0 , ¯τ ]), provided they are independent of the state noise {ωt}∞ 
+
+> t=0
+
+and the exploration noise {vmt }∞
+
+> t=0
+
+. While we assume bounded shifts for simplicity of presentation, our convergence analysis can be readily extended to settings with polynomially growing shifts. We are now ready to present the main convergence theorem. To facilitate the discussion, we introduce a few notations. Define km(t) = sup {k : ¯ τ (k) 
+
+> m
+
+≤ t}. Let ( F (km(t))  
+
+> m
+
+, f (km(t))  
+
+> m
+
+) denote the strategy parameters used by player m at time t. We write ( F (k(t)) , f (k(t)) ) to denote the strategy profile where player m employs the strategy ( F (km(t))  
+
+> m
+
+, f (km(t))  
+
+> m
+
+) at time t.
+
+Theorem 1. Suppose Assumptions 1-4 and Condition 1 hold. For any δ ∈ (0 , 1) , there exist constants c0, c 1 > 0 and T (δ) = O((log(1 /δ )) c1 ) such that, with probability at least 1 − δ, for all 
+
+t ≥ T (δ),
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 = O max {R1(t, δ ), R 2(t, δ ), R 3(t)}, (19) 
+
+where ∥ · ∥ μ, 1,2 is defined in Assumption 2, and 
+
+R1(t, δ ) =  (log t) 32 + (log 1 
+
+> δ
+
+)c0  t ln ζ  
+
+> ln λ
+
+, R2(t, δ ) = 
+
+q
+
+log t + log 1 
+
+> δ
+
+t−( 12 −max  
+
+> mνm)
+
+, R3(t) = t− min  
+
+> mνm
+
+.
+
+(20) 12 Consequently, it holds almost surely that as t → ∞ ,
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 = ˜O t−q, q := min 
+
+n
+
+− ln ζ
+
+ln λ , 12 − max  
+
+> m
+
+νm, min  
+
+> m
+
+νm
+
+o
+
+.
+
+Theorem 1 shows that Algorithm 1 converges to the complete-information equilibrium at a polynomial rate, both with high probability (in finite samples) and almost surely (asymptotically). The precise convergence rate is characterized by the interplay between the game characteristics and the hyperparameters governing each player’s learning dynamics: (1) The exponent − ln ζ  
+
+> ln λ
+
+of R1 is the idealized convergence rate that would be achieved if all players performed exact best-response oracle updates at the end of each epoch. Indeed, each best-response update contracts the error by a factor of ζ (the stability constant in Assumption 2). Since the epoch lengths grow geometrically with ratio λ, the number of updates completed by time t is approximately ln t/ ln λ. Hence, the error at time t scales as ζln t/ ln λ = tln ζ/ ln λ. A smaller value of λ leads to more frequent best-response updates and hence faster asymptotic convergence. (2) The above idealized rate is, however, degraded in our radically uncoupled learning setting, where players do not observe their opponents and perform estimation and exploration under misspecified models. Consequently, the convergence rate is constrained by the minimum of  
+
+> 12
+
+− max  
+
+> m
+
+νm and min  
+
+> m
+
+νm, which correspond to the bottleneck decay rates of least-squares estimation errors and exploration noise, respectively. The radically uncoupled structure is reflected in the dependence of the convergence rate on individual exploration schedules: each player must independently generate informative data through its own exploration, even though all players’ exploration noises simultaneously affect the state dynamics. If all players adopt νm = 14 , the optimal exploration noise decay rate for single-agent LQ learning (Simchowitz and Foster, 2020), then the convergence rate of Algorithm 1 exhibits a bifurcation phenomenon governed by the stability of the Nash equilibrium. When ζ ≤ λ− 14 (i.e., the equilibrium is sufficiently stable), the convergence rate (19) (with fixed δ) simplifies to 
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 = O p log t · t− 14
+
+.
+
+which is confirmed by our numerical experiments in Section 5.1. This rate coincides with the parameter convergence rate that enables optimal regret guarantees in single-agent LQ learning (Simchowitz and Foster, 2020). In contrast, when ζ > λ − 14 (i.e., the equilibrium is less stable), the convergence rate is dominated by the factor t ln ζ  
+
+> ln λ
+
+= ζ ln t  
+
+> ln λ
+
+, which depends on the effective number of strategy updates performed up to time t.
+
+# 5 Application: Dynamic Cournot Competition with Sticky Prices 
+
+In this section, we apply our LQ game framework to a dynamic Cournot competition model with sticky prices. The dynamic Cournot competition model introduced in Section 1.1 is a special case of the general LQ game in Section 2.1, with price serving as the state and quantities as the control actions. Specifically, the correspondence between the two formulations is established in the following three aspects. First, the price dynamics (1) can be expressed in the general form (4) by taking 
+
+A0 = (1 − s)a, A = s, Bm = −(1 − s)b, and Σ ω = σ2
+
+> ω
+
+. Second, a firm’s misspecified statistical model (3) coincides with (6) upon setting Θ m = [(1 − s′)a′, s ′, −(1 − s′)b′]⊤, Σm = σ2
+
+> m
+
+. Third, for player m, maximizing the total expected discounted profit is equivalent to minimizing the following discounted cost: 
+
+E
+
+" ∞X
+
+> t=0
+
+ρt
+
+ 12 qmt − pt+1 + cm
+
+
+
+qmt
+
+#
+
+. (21) 13 The running cost in (21) aligns with the general form in (5) by setting the parameters as Qm =0, R m = 12 , H m = −1, q m = 0 , r m = cm. Consequently, Algorithm 1 is directly applicable to this set-ting. Appendix B.1 provides further implementation details, including a verifiable characterization of the feasible set (8) for implementing (12) and a procedure for computing the greedy strategy. In the sequel, we first present numerical experiments for a duopoly Cournot game to confirm the theoretical convergence results and examine how the price stickiness parameter affects market outcomes along the transition path to equilibrium. We then show that publicly releasing aggregate quantity information significantly accelerates convergence and mitigates the adverse transition ef-fects identified above. Finally, we demonstrate that the multi-agent ϵ-greedy ILS algorithm remains effective under a weakly nonlinear inverse demand function and investigate cases violating Assump-tions 1-4 to illustrate the role of these conditions. For simplicity, we use Gaussian noise for both market disturbances and exploration noises. 
+
+5.1 Numerical Experiments in Duopoly Markets 
+
+Duopoly market is a common setting in the dynamic Cournot competition model with sticky prices (Fershtman and Kamien, 1987; Heston and Hu, 2024). In this section, we investigate the perfor-mance of Algorithm 1 under different levels of price stickiness and examine the resulting market outcomes. We use the following model and algorithm parameters: number of firms M = 2, discount factor 
+
+ρ = 0 .8, noise variance σ2 
+
+> ω
+
+= 1 .00, inverse demand parameters a = 60 .0 and b = 0 .3, cost parameters 
+
+c1 = 20 .0 and c2 = 30 .0, initial price p0 = 40, and production capacity limits κm = 1 .50, κ′ 
+
+> m
+
+= 500 for m = 1 , 2. We examine three price stickiness levels: s = 0 .2 (low stickiness, fast price adjustment), 
+
+s = 0 .5 (moderate stickiness), and s = 0 .8 (high stickiness, slow price adjustment). For each selected stickiness parameter, we perform 200 independent simulations of Algorithm 1 with hyperparameters 
+
+λ = 1 .1, τ = 300, τ = 2000, ¯ τ = 200, νm = 0 .25, ¯ α = 2 .0, and βm = 0 .01 for m = 1 , 2. In each simulation, every player performs 130 updates over a total of T ≈ 7.2 × 10 8 time steps. At each update, the asynchronous shift of each player is sampled independently from a uniform distribution on [0 , ¯τ ]. In all simulations, no negative prices or quantities are observed, indicating that such events occur with negligible probability. The chosen model parameters satisfy Assumptions 1–4, and the algorithm parameters satisfy Condition 1; see Appendix B.3 for details. Hence, Theorem 1 applies to the settings considered here. The equilibrium strategies ( F ∗, f ∗) and the stability coefficient ζ for each stickiness level are reported in Table 1, where we note that F ∗ 
+
+> 1
+
+= F ∗ 
+
+> 2
+
+.
+
+5.1.1 Convergence Rates of Learning Dynamics 
+
+To estimate the convergence rate, we define for each epoch k the relative error of the updated strategy parameters with respect to the equilibrium and take the maximum across the two players: RE (k) 
+
+> F
+
+= max 
+
+> m=1 ,2
+
+(
+
+|F (k) 
+
+> m
+
+− F ∗
+
+> m
+
+||F ∗
+
+> m
+
+|
+
+)
+
+, RE (k) 
+
+> f
+
+= max 
+
+> m=1 ,2
+
+(
+
+|f (k) 
+
+> m
+
+− f ∗
+
+> m
+
+||f ∗
+
+> m
+
+|
+
+)
+
+. (22) We regress the relative error against the elapsed time on a log-log scale. For each epoch k, we record the relative errors together with the corresponding elapsed time step (using the cumulative time of the player attaining the maximum error). To reduce Monte Carlo variability, we average both the relative errors and the elapsed time steps over 200 independent runs before fitting the power-law model RE (k(t)) = θ0t−θ1 using the final 50 epochs. The estimated decay exponent θ1 is remarkably close to the theoretical value of 0.25 across all tested values of s; see Table 1. This agreement is consistent with Theorem 1. Indeed, for every tested value of s, the estimated stability coefficient ζ satisfies ζ < λ −1/4 = 0 .9765, implying that 14 the equilibrium is sufficiently stable, and hence the convergence rate is governed by the decay of the estimation error and exploration noise. Figures 1 and 2 further illustrate the predicted t−1/4 decay for s = 0 .2 and s = 0 .8. Table 1: Equilibrium strategies, stability coefficients, and convergence rates with different price stickiness levels Stickiness F ∗ 
+
+> 1
+
+(F ∗ 
+
+> 2
+
+) f ∗ 
+
+> 1
+
+f ∗ 
+
+> 2
+
+Stability RE F RE f
+
+s ζ θ0 θ1 θ0 θ1
+
+0.2 -0.1160 16.8841 9.0615 0.5831 1.1209 0.2699 1.0407 0.2573 0.5 -0.3390 6.6769 -1.4260 0.5625 0.9550 0.2498 3.8618 0.2740 0.8 -0.6520 -7.0131 -15.6836 0.5324 1.6430 0.2486 1.0045 0.2547 10 4 10 6 10 8
+
+> Time
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> RE (k)
+> F
+> Full Sample Estimation Sample Fitted Line
+
+(a) s = 0 .210 4 10 6 10 8 
+
+> Time
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> RE (k)
+> F
+> Full Sample Estimation Sample Fitted Line
+
+(b) s = 0 .8
+
+Figure 1: Convergence of feedback gain F under different price stickiness levels 10 4 10 6 10 8
+
+> Time
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> RE (k)
+> f
+> Full Sample Estimation Sample Fitted Line
+
+(a) s = 0 .210 4 10 6 10 8 
+
+> Time
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> RE (k)
+> f
+> Full Sample Estimation Sample Fitted Line
+
+(b) s = 0 .8
+
+Figure 2: Convergence of offset f under different price stickiness levels 
+
+5.1.2 Market Outcomes under Low and High Price Stickiness 
+
+We now compare the market outcomes generated by the learning dynamics under low ( s = 0 .2) and high ( s = 0 .8) price stickiness. We focus on four key performance measures: average price, firm profits, economic welfare, and market concentration. We begin by introducing the corresponding performance measures under the complete-information Nash equilibrium ( F ∗, f ∗), which serves as the benchmark for evaluating the learning dynamics. Un-15 der the equilibrium strategy, the price process {pt}∞ 
+
+> t=0
+
+defined by (1) is asymptotically stationary, allowing the long-run market performance measures to be defined in terms of its stationary dis-tribution. As t → ∞ , the distribution of pt converges to a Gaussian distribution with mean and variance 
+
+μp = (1 − s)( a − b P2 
+
+> m=1
+
+f ∗
+
+> m
+
+)1 −  s + (1 − s)b P2 
+
+> m=1
+
+F ∗
+
+> m
+
+ , σ2 
+
+> p
+
+= σ2
+
+> ω
+
+1 −  s + (1 − s)b P2 
+
+> m=1
+
+F ∗
+
+> m
+
+2 .
+
+The expected stationary profit of firm m under the equilibrium is then given by Π∗ 
+
+> m
+
+= E
+
+h pt+1 − cm − 12 qmt
+
+qmt
+
+i
+
+, (23) where qmt = −F ∗
+
+> m
+
+pt + f ∗
+
+> m
+
+, pt+1 follows (1), and pt ∼ N (μp, σ 2 
+
+> p
+
+). To measure overall social welfare, including both producers and consumers, we use total surplus (TS), a standard welfare measure in Cournot games (Bonatti et al., 2017; Cellini and Lambertini, 2007): TS ∗ =
+
+> 2
+
+X
+
+> m=1
+
+Π∗ 
+
+> m
+
++ E
+
+h 12 (a − pt+1 )
+
+> 2
+
+X
+
+> m=1
+
+qmt
+
+i
+
+,
+
+where Π ∗ 
+
+> m
+
+is given by (23), and qm, p t+1 are defined as in (23). Finally, to measure market concen-tration, we use the Herfindahl–Hirschman Index (HHI), the standard measure in Cournot games (Bonatti et al., 2017): HHI ∗ = E
+
+
+
+> 2
+
+X
+
+> m=1
+
+qmt
+
+P2 
+
+> m=1
+
+qmt
+
+!2 ,
+
+with qm defined as in (23). The HHI captures how market output is distributed across firms, with higher values indicating greater concentration. Table 2 reports the values of μp, σ2 
+
+> p
+
+, Π ∗
+
+> 1
+
+, Π ∗
+
+> 2
+
+, TS ∗,and HHI ∗ with different price stickiness. Table 2: Equilibrium values of market indicators 
+
+s μp σ2 
+
+> p
+
+Π∗ 
+
+> 1
+
+Π∗ 
+
+> 2
+
+TS ∗ HHI ∗
+
+0.2 48.82 1.0213 395.62 168.71 772.63 0.5220 0.8 48.02 2.0874 386.24 160.08 784.42 0.5237 We now investigate the evolution of the above performance measures under the learning dy-namics. For each of the 200 independent simulations of Algorithm 1, we compute at every epoch the sample mean of each performance indicator W (average price, firm profits, TS, HHI) from 300 time points sampled uniformly throughout the epoch, representing and approximating the true epoch-average performance despite varying epoch lengths. Let W (k) denote this sample mean for epoch k. The deviation from the equilibrium benchmark is ∆ W (k) = W (k) − W ∗. We examine the bias E[∆ W (k)] to capture systematic over-/underestimation, where the expectation is taken over the 200 independent runs. To improve plot readability, all results reported below exclude the initial fifteen epochs. Figure 3 shows that the bias of the epoch-average price, E∆μ(k) 
+
+> p
+
+, is negative for s = 0 .2 (the price is systematically lower than the equilibrium level) but oscillates around zero for s = 0 .8. Turning to the firm level, the profits of the two firms exhibit systematic negative biases under both stickiness levels (Figure 4). The extent of these biases depends on the model parameters. Under our parameter choices, for firm 1, which has the lower marginal cost, the negative bias is substantially larger under 
+
+s = 0 .8 than under s = 0 .2. For firm 2, the magnitude of the negative bias is comparable across the two stickiness levels, but the bias exhibits greater fluctuation across epochs under s = 0 .8. 16 Epoch      
+
+> 20 40 60 80 100 120
+> Bias
+> -0.25 -0.2 -0.15 -0.1 -0.05 00.05 0.1 0.15
+> s=0.2 s=0.8
+
+Figure 3: Bias in average price Epoch      
+
+> 20 40 60 80 100 120
+> Bias
+> -10 -8 -6 -4 -2 02
+> s=0.2 s=0.8
+
+(a) Firm 1 Epoch       
+
+> 20 40 60 80 100 120
+> Bias
+> -5 -4 -3 -2 -1 01
+> s=0.2 s=0.8
+
+(b) Firm 2 
+
+Figure 4: Bias in firm profits Epoch      
+
+> 20 40 60 80 100 120
+> Bias
+> -12 -10 -8 -6 -4 -2 024
+> s = 0.2 s = 0.8
+
+Figure 5: Bias in total surplus Epoch       
+
+> 20 40 60 80 100 120 -2 0246810
+> Bias
+> ×10 −3
+> s=0.2 s=0.8
+
+Figure 6: Bias in HHI At the society level, the bias of total surplus (TS) is shown in Figure 5. TS exhibits a slight positive bias for s = 0 .2, while for s = 0 .8 it remains consistently below its equilibrium level (negative bias). Regarding market concentration, during the transition from an emerging to a mature market, the HHI remains above its equilibrium level and gradually declines toward it (Figure 6). This over-concentration phenomenon is consistent with observations in the literature on Cournot games with incomplete information (see Bonatti et al. (2017)). The extent of over-concentration is more pronounced under higher stickiness ( s = 0 .8). 17 Taken together, these results reveal both common features and important differences between the two price-stickiness regimes. From the perspective of individual firms, profits remain below their equilibrium benchmarks throughout the transition under both regimes. At the societal level, however, total surplus remains persistently below its equilibrium benchmark only under high price stickiness, while market concentration is elevated in both regimes and is substantially higher when price stickiness is high. These findings suggest that radically uncoupled learning is particularly costly in highly sticky markets, reducing both firm profitability and overall social welfare during the transition to equilibrium. Moreover, these qualitative patterns are robust across a range of model and algorithm parameters we test. In particular, we obtain similar results for markets with more than two firms and when players employ heterogeneous exploration noise decay rates. 
+
+5.2 Accelerating Convergence Through Aggregate Information 
+
+The findings of the previous section suggest that under high price stickiness, both firms and a market regulator have strong incentives to accelerate convergence to the equilibrium. One natural intervention is for the regulator to publicly release the aggregate market quantity Qt = PMm=1 qmt
+
+in real time. With this additional information, the information structure no longer falls within the radically uncoupled setting studied earlier: each firm can now observe the aggregate outputs of its competitors Q−mt := Qt − qmt , and thus explicitly account for their presence. This additional information enables firms to better infer the underlying market environment and competitors’ be-havior, leading them to adopt more informed best-response strategies. We therefore introduce a modified version of Algorithm 1 that exploits the publicly available aggregate market output. Al-though the algorithm is still executed independently by each firm, it is no longer radically uncoupled because it leverages the aggregate market quantity. As we show below, this additional information substantially accelerates convergence to the equilibrium. Firms continue to follow the asynchronous update schedules and exploration noise scales spec-ified in Algorithm 1. The main modification concerns the system estimation step in Section 2.2: instead of performing a single RLS regression, each firm now conducts two separate RLS regressions using the additional information on aggregate market output. The first regression directly estimates the true price dynamics (1) based on the observed aggregate output. The second regression esti-mates the aggregate policy profile of the competitors, allowing the firm to anticipate their strategic behavior and formulate a more accurate best-response strategy. Specifically, taking firm m as the representative firm, it assumes that the aggregate quantity of the other firms is linear in price: 
+
+Q−mt = −F ′−mpt + f ′−m + v−mt ,
+
+where F ′−m and f ′−m are the aggregated feedback coefficient and offset term of all other firms, and 
+
+v−mt is a residual term with perceived variance σ2
+
+> v, −m
+
+. At the k-th update time ¯ τ (k) 
+
+> m
+
+, firm m uses the data collected during the k-th epoch to perform the two regressions, obtaining estimates of the price dynamics parameters (ˆ s(k), ˆa(k), ˆb(k), ˆσ2,(k) 
+
+> ω
+
+) and the prediction of other firms’ aggregate behavior ( ˆF (k)
+
+> −m
+
+, ˆf (k)
+
+> −m
+
+, ˆσ2,(k)
+
+> v, −m
+
+). Based on these estimates, firm m then forms the following belief about the (controlled) price dynamics: 
+
+pt+1 = ˆ s(k)pt + (1 − ˆs(k))
+
+
+
+ˆa(k) − ˆb(k) qmt − ˆF (k)
+
+> −m
+
+pt + ˆf (k) 
+
+> −m
+
++ v−m, (k)
+
+> t
+
+
+
++ ω(k) 
+
+> t
+
+, (24) where Q−mt := − ˆF (k)
+
+> −m
+
+pt + ˆf (k) 
+
+> −m
+
++ v−m, (k) 
+
+> t
+
+represents the estimated aggregate behavior of other firms, and {ω(k) 
+
+> t
+
+}∞ 
+
+> t=1
+
+and {v−m, (k) 
+
+> t
+
+}∞ 
+
+> t=1
+
+are i.i.d. zero-mean sub-Gaussian sequences with variances ˆ σ2,(k)
+
+> ω
+
+and ˆ σ2,(k)
+
+> v, −m
+
+, respectively. Note that (24) can be rewritten in the form of (6) with Θ m = ˆΘ(k),c m and 18 Σm = ˆΣ(k),c m , where ˆΘ(k),c m = [(1 − ˆs(k))(ˆ a(k) − ˆb(k) ˆf (k)
+
+> −m
+
+), ˆs(k) + (1 − ˆs(k))ˆb(k) ˆF (k)
+
+> −m
+
+, −(1 − ˆs(k))ˆb(k)]⊤,
+
+ˆΣ(k),c m = ˆ σ2,(k) 
+
+> ω
+
++ ((1 − ˆs(k))ˆb(k))2 ˆσ2,(k)
+
+> v, −m
+
+.
+
+Firm m then applies the same fallback rule as in (12) to maintain feasibility of ( ˆΘ(k),c m , ˆΣ(k),c m ), computes the greedy strategy using the accepted parameters, and executes the resulting strategy with additive exploration noise in the next epoch, as in Algorithm 1. We test this modified algorithm using the same model and algorithm settings as in Section 5.1, focusing on the high-stickiness case s = 0 .8. We perform 200 independent runs, each consisting of 100 updates per player, corresponding to a total of T ≈ 4.2 × 10 7 time steps. The results show that the modified algorithm converges to equilibrium approximately six times faster, measured by the number of time steps required for the relative errors RE (k) 
+
+> F
+
+and RE (k) 
+
+> f
+
+in (22) to fall below 0.01. Moreover, Figures 7 and 8 show that during the transition phase the negative biases of both firms’ profits and total surplus are substantially smaller (cf. Figures 4 and 5). These findings suggest that publicly revealing the aggregate quantity accelerates market maturation by improving the efficiency of the learning dynamics and bringing them closer to the equilibrium. Intuitively, the acceleration from publicly releasing the aggregate quantity Qt arises from the improved information structure. In the radically uncoupled setting, each firm can only leverage its own exploration noise to improve estimation, whereas observing Qt allows firms to exploit the aggregate exploration signals of all market participants. Consequently, the regression estimation benefits from richer, more informative data. This improves the accuracy of parameter estimation and accelerates convergence to equilibrium. Epoch        
+
+> 20 30 40 50 60 70 80 90
+> Bias
+> -3 -2.5 -2 -1.5 -1 -0.5 00.5 1
+> Firm 1 Firm 2
+
+Figure 7: Bias in firm profits Epoch         
+
+> 20 30 40 50 60 70 80 90
+> Bias
+> -3.5 -3 -2.5 -2 -1.5 -1 -0.5 00.5
+
+Figure 8: Bias in total surplus 
+
+5.3 Robustness with Nonlinear Demand Functions 
+
+This section illustrates the robustness of Algorithm 1 when the true inverse demand function is weakly nonlinear. We consider the dynamic Cournot competition model as in Section 1.1, but replace the linear inverse demand with the nonlinear function a − b P Mm=1 qmt
+
+δ, where δ > 0 is a curvature parameter (Bulow and Pfleiderer, 1983). The true price dynamics become 
+
+pt+1 = sp t + (1 − s) a − b
+
+ MX
+
+> m=1
+
+qmt
+
+δ
+
+!
+
++ ωt, (25) which reduces to the linear case studied in Section 1.1 when δ = 1. We now focus on the nonlinear case with δ̸ = 1. Each firm m continues to maximize its discounted expected profit given by 19 (2). The complete-information Nash equilibria are nonlinear functions of price p, and are computed numerically by solving coupled Bellman equations. In the radically uncoupled learning setting, each firm continues to employ linear feedback strategies and adopt the misspecified linear model (3), since the true nonlinear form of the inverse demand function is unknown to the firm. Consequently, the firms’ behaviors follow Algorithm 1, except that the price evolves according to the true nonlinear dynamics (25). We set s = 0 .8 and consider two nonlinearity parameters δ = 0 .9 and δ = 1 .1, with all other parameters fixed as in Section 5.1. For each configuration, we first compute the feedback equilibrium numerically and conduct 50 independent simulations. In each simulation, we compare the trajectory generated by Algorithm 1 with a benchmark trajectory in which all firms follow the equilibrium strategy throughout. Both trajectories are driven by the same sequence of price shocks. Denote by 
+
+qmt the quantity produced by firm m under Algorithm 1 at time t, and by ¯ q mt the corresponding equilibrium quantity. For each epoch k, we uniformly sample 300 time points Tk, measure the trajectory error by Err (k) = max 
+
+> m=1 ,2
+
+1300 
+
+X
+
+> t∈T k
+
+ qmt − ¯q mt
+
+2,
+
+and report the average the error over the 50 independent simulations. Figure 9 shows the error in production quantities for δ = 0 .9 and δ = 1 .1. In both cases, the error gradually decreases and eventually stabilizes at a positive level. The error in the final epoch is 0 .1422 for δ = 0 .9 and 0 .0484 for δ = 1 .1, which are significantly smaller than the typical quantity levels observed during the simulations (in the range 10–30, depending on the firm and price level). The remaining error does not vanish because the true equilibrium strategy is nonlinear, while Algorithm 1 restricts the learned strategy to be linear. Nevertheless, the approximation error is small relative to the scale of production decisions. These results show that, even under weak nonlinearity, the radically uncoupled learning algorithm converges to an accurate linear approximation of the complete-information equilibrium. Epoch         
+
+> 80 90 100 110 120 130
+> Err (k)
+> 00.5 11.5 2δ= 0 .9
+> δ= 1 .1
+
+Figure 9: Errors in production quantities for different δ.
+
+5.4 Results Beyond Theoretical Assumptions 
+
+This section presents numerical experiments that illustrate the importance of the assumptions un-derpinning our theoretical analysis. Assumption 3 concerns the stability of the state process {xt}∞ 
+
+> t=0
+
+under all admissible strategy profiles; it affects the consistency of the RLS estimator and can be checked directly. The other three assumptions (Assumptions 1, 2, and 4) are about the game structure and are closely related. We therefore treat them as a group. They can be verified via sufficient conditions expressed solely in 20 terms of the model parameters (see conditions 2-3 in Appendix B.3) for the Cournot model). Alter-natively, we can detect violations by examining the number of equilibria and their local behavior. When an equilibrium ( F ∗, f ∗) exists, we call it locally stable if the collective best-response map Ψ is well-defined in a neighborhood of ( F ∗, f ∗) (i.e., problem (15) admits a unique minimizer for all 1 ≤ m ≤ M , x ∈ Rn, and ( F−m, f −m) sufficiently close to ( F ∗−m, f ∗−m)) and the spectral radius of its Jacobian matrix at ( F ∗, f ∗) satisfies r(DΨ( F ∗, f ∗)) < 1; otherwise it is locally unstable. Note that local stability is a weaker condition than Assumption 2. Thus, if the spectral radius of DΨat the equilibrium exceeds 1, then Assumption 2 must be violated. In addition, the existence of multiple equilibria also violates Assumption 2; we examine the behavior of Algorithm 1 in this case in Appendix C.2, where the algorithm may converge to one of the equilibria or exhibit oscillatory behavior. Here we consider two parameter configurations under the Cournot setting. The common pa-rameters across both groups are a = 40 .0, b = 2 .0, s = 0 .2, and σ2 
+
+> ω
+
+= 1 .00. 
+
+Group 1 (violation of state stability). This group violates Assumption 3 while satisfying the remaining assumptions, in particular having a globally stable equilibrium. The specific parameters are: 
+
+ρ = 0 .4, M = 2 , c 1 = 10 .0, c 2 = 20 .0, κ m = 0 .7, κ ′ 
+
+> m
+
+= 5000 ( m = 1 , 2) .
+
+Group 2 (violation of equilibrium stability). This group satisfies Assumption 3 but violates Assumption 2. The specific parameters (for a Cournot game with four players) are: 
+
+ρ = 0 .8, M = 4 , c 1 = c3 = 10 .0, c 2 = c4 = 20 .0, κ m = 0 .12 , κ ′ 
+
+> m
+
+= 500 (1 ≤ m ≤ 4) .
+
+Our numerical analysis suggests a unique equilibrium for this group. Computing the spectral radius of the Jacobian matrix at this equilibrium yields r(DΨ) = 1 .1160 > 1, so the equilibrium is not locally stable and Assumption 2 is violated. For each group, we execute 200 independent runs of Algorithm 1. Each player uses the same algorithm parameters as in Section 5.1, and the total number of time steps is set identically. We classify the outcome of each simulation into three categories: 
+
+• Explode : the state variable price pt grows without bound, causing the algorithm to fail. 
+
+• Oscillatory : the strategy parameters continue to fluctuate and do not settle near any fixed point. 
+
+• Converge to Equilibrium : the strategy parameters approach (a small neighborhood of) the feedback Nash equilibrium. Table 3 summarizes the percentage of simulations falling into each category for the two groups. Table 3: Distribution of learning outcomes Parameter Group Explode (%) Oscillatory (%) Converge to Equilibrium (%) Group 1 52.00 0.00 48.00 Group 2 0.00 100.00 0.00 The results reveal the following patterns. A violation of Assumption 3 means that some admissi-ble strategy profiles render the state process unstable. When the learning algorithm encounters such a profile, the state explodes; indeed, a substantial fraction of simulations for Group 1 (52%) exhibit explosive behavior. However, there also exist admissible strategy profiles that are stabilizing. In the remaining 48% of simulations, the particular realized sequence of strategy profiles {(F (k), f (k))}∞
+
+> k=0
+
+does not cause the state process to become unstable, and the algorithm runs without explosion even though Assumption 3 fails. In these non-explosive runs, since the other assumptions are satisfied, all paths converge to the feedback Nash equilibrium. 21 For Group 2, Assumption 3 holds, so no explosion occurs. However, because the equilibrium is not locally stable, none of the simulation paths converge to it. Instead, all trajectories exhibit a persistent best-response cycle : the strategy profile alternates between two distinct non-equilibrium points, each constituting the collective best response to the other. Similar cyclic behavior has been observed in evolutionary games with logit dynamics (Hommes and Ochea, 2012) and policy gradient methods for LQ games (Mazumdar et al., 2020). Figure 10 shows a representative trajectory in the later epochs, illustrating that the strategy parameters continue to cycle without settling. This demonstrates that a unique Nash equilibrium alone is insufficient to guarantee convergence; local stability is also essential. Epoch         
+
+> 110 120 130
+> F (k)1
+> -0.15 -0.1 -0.05 00.05 0.1
+> Epoch
+> 110 120 130
+> F (k)2
+> -0.15 -0.1 -0.05 00.05 0.1
+> Epoch
+> 110 120 130
+> F (k)3
+> -0.15 -0.1 -0.05 00.05 0.1
+> Epoch
+> 110 120 130
+> F (k)4
+> -0.15 -0.1 -0.05 00.05 0.1
+
+Figure 10: Oscillatory dynamics when Assumption 2 is violated (Group 2). The four subfigures correspond to four players. In each subfigure, the solid line is F (k) 
+
+> m
+
+and the dashed line is the equilibrium value F ∗
+
+> m
+
+.
+
+# 6 Sketched Proof of Theorem 1 
+
+This section outlines the main steps in proving Theorem 1. We first present the main ideas in the synchronous setting (Steps 1–3) and then discuss the additional technical challenges involved in extending the analysis to asynchronous updates (Step 4). Throughout this section, C denotes a generic finite constant independent of the epoch index k and the probability bound δ; its value may change from line to line. In the synchronous case, all players share the same update times: τ (k) 
+
+> m
+
+= τ (k) for every m. Let (F (k), f (k)) denote the strategy profile after the k-th update. From player m’s perspective, during epoch k the true state dynamics (4) induced by all players’ strategies become 
+
+xt+1 = (Θ (F (k−1)     
+
+> −m,f (k−1)
+> −m)
+> m
+
+)⊤zmt + ˜ ωmt ,
+
+where Θ (F (k−1)     
+
+> −m,f (k−1)
+> −m)
+> m
+
+is defined in (18) with ( F−m, f −m) = ( F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+), and {˜ωmt }∞ 
+
+> t=0
+
+is an i.i.d. sub-Gaussian sequence with mean zero and covariance matrix Σ ω + P 
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2Bj B⊤ 
+
+> j
+
+. Crucially, in contrast to the single-player case (Simchowitz and Foster, 2020), player m faces a misspecified model (6), and hence cannot identify the true system parameters ( A0, A, {Bm}, Σω). Instead, they will asymptotically learn the effective system parameters at the k-th epoch given by Θ(k),∗ 
+
+> m
+
+= Θ (F (k−1)     
+
+> −m,f (k−1)
+> −m)
+> m
+
+, Σ(k),∗ 
+
+> m
+
+= Σ ω + X 
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2Bj B⊤ 
+
+> j
+
+. (26) We show that this procedure corresponds to a biased best response to ( F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+), and quantify the decay rate of the resulting bias in (33). 22 Step 1: Estimation error bounds. We first quantify the estimation error of the RLS estimate ( ˆΘ(k) 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+) relative to the effective system parameters (Θ (k),∗ 
+
+> m
+
+, Σ(k),∗ 
+
+> m
+
+). Specifically, we establish the following high-probability error bound: for any δ ∈ (0 , 1), there exists Km(δ) = O(log log(1 /δ )) such that, with probability at least 1 − δ,
+
+∀k ≥ Km(δ), max 
+
+n ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+− Σ(k),∗
+
+> m
+
+o
+
+≤ C η (k) 
+
+> m
+
+(δ), (27) where the decay rate η(k) 
+
+> m
+
+(δ) is given by 
+
+η(k) 
+
+> m
+
+(δ) = 
+
+r k + log(1 /δ )
+
+λ(1 −2νm)k . (28) The proof builds upon the arguments in Simchowitz and Foster (2020), but requires substantially more involved analysis due to the presence of constant offsets in the dynamics and policies, which in-troduce non-excited directions, and the need to jointly estimate the drift and covariance parameters (Θ (k),∗ 
+
+> m
+
+, Σ(k),∗ 
+
+> m
+
+). Extending the analysis to asynchronous updates requires further technical efforts (see Step 4). 
+
+Step 2: From estimation error to strategy deviation. Bounding ∥Σ(k),∗ 
+
+> m
+
+− Σω∥ via (26) and combining it with (27) yield the following high-probability bound max {∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥, ∥ ˆΣ(k) 
+
+> m
+
+− Σω∥} ≤ C max 
+
+
+
+η(k) 
+
+> m
+
+(δ), max   
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2
+
+
+
+. (29) Since both η(k) 
+
+> m
+
+(δ) and α(k) 
+
+> m
+
+vanish as k grows, the right-hand side of (29) is smaller than the threshold δm in Assumption 4 for all sufficiently large k. Assumption 4((a)) then guarantees that player m accepts the current estimate, so the bound (29) also holds for the accepted parameter pair ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+). By Assumption 4((b)), for any δ ∈ (0 , 1), there exists K′
+
+> m
+
+(δ) ∈ N such that, with probability at least 1 − δ, for all k ≥ K′
+
+> m
+
+(δ), max 
+
+n
+
+F (k) 
+
+> m
+
+− Φm(Θ (k),∗ 
+
+> m
+
+, Σω, x, 0) , f (k) 
+
+> m
+
+− ϕm(Θ (k),∗ 
+
+> m
+
+, Σω, x, 0) 2
+
+o
+
+≤ C max 
+
+
+
+η(k) 
+
+> m
+
+(δ), max  
+
+> 1≤j≤M
+
+α(k−1) 
+
+> j
+
+
+
+,
+
+(30) where ( F (k) 
+
+> m
+
+, f (k) 
+
+> m
+
+) = (Φ m( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+, x, α (k) 
+
+> m
+
+), ϕ m( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+, x, α (k) 
+
+> m
+
+)). Now we observe the following key identity: (Φ m(Θ (k),∗ 
+
+> m
+
+, Σω, x, 0) , ϕ m(Θ (k),∗ 
+
+> m
+
+, Σω, x, 0)) = ( ψm(F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+), φ m(F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+)) , (31) where the best response map ( ψm, φ m) is given in (17). Indeed, consider the complete-information problem (15) with other players’ strategies ( F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+). In this case, the dynamic (16) can be rewritten in the form of (6) with Θ m = Θ (k),∗ 
+
+> m
+
+, Σ m = Σ ω, and umt = −Fmxt + fm, which means that the aggregate effect of the opponents’ linear strategies on the state evolution is captured by Θ (k),∗ 
+
+> m
+
+.Since player m faces the same objective in both settings, solving the complete-information problem is equivalent to solving the control problem (7) with the parameters (Θ (k),∗ 
+
+> m
+
+, Σω) and αm = 0. This implies that 
+
+Jm
+
+ (Fm, f m); ( F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+), x  = J(Θ (k),∗  
+
+> m,Σω)
+> m
+
+ (Fm, f m); x, 0, (32) and directly yields (31). Combining (30) and (31) allows for interpreting ( F (k) 
+
+> m
+
+, f (k) 
+
+> m
+
+) as a noisy best response to the opponents’ previous strategy profile ( F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+). The error can be controlled in a high prob-ability by η(k) 
+
+> m
+
+(δ) and max  
+
+> 1≤j≤M
+
+α(k−1)  
+
+> j
+
+. Specifically, we prove that, for any δ ∈ (0 , 1), there exists 
+
+K(δ) = O(log log(1 /δ )) such that, with probability at least 1 − δ,
+
+∀k ≥ K(δ), ∥(F (k), f (k)) − Ψ(( F (k−1) , f (k−1) )) ∥μ, 1,2 ≤ Cξ k(δ), (33) 23 where 
+
+ξk(δ) = pk + log(1 /δ ) λ−( 12 −max   
+
+> m{νm})k
+
++ λ−(min  
+
+> m{νm})k
+
+. (34) 
+
+Step 3: Convergence via the stability of the feedback Nash equilibrium. Under Assumptions 1–2, there exists a unique stable feedback Nash equilibrium ( F ∗, f ∗). On the event (33), we have 
+
+∥(F (k), f (k)) − (F ∗, f ∗)∥μ, 1,2 ≤ ∥ (F (k), f (k)) − Ψ(( F (k−1) , f (k−1) )) ∥μ, 1,2
+
++ ∥Ψ(( F (k−1) , f (k−1) )) − Ψ(( F ∗, f ∗)) ∥μ, 1,2
+
+≤ Cξ k(δ) + ζ∥(F (k−1) , f (k−1) ) − (F ∗, f ∗)∥μ, 1,2,
+
+where ζ ∈ (0 , 1) is given in Assumption 2. Solving this recursive inequality case-by-case, depending on the relative sizes of ζ, λ−( 12 −max  
+
+> mνm)
+
+, and λ− min  
+
+> mνm
+
+, and using the fact that the epoch lengths grow exponentially at rate λ to translate epoch counts into real time t prove Theorem 1 in the synchronous case. 
+
+Step 4: Asynchronous updates. When players update at different times (see Condition 1), we partition the timeline into synchronous and asynchronous phases, and analyze them separately. Synchronous phases are intervals during which all players have completed the same number of updates; the remaining time constitutes asynchronous phases. Asynchronous updates introduce several additional technical complications in our convergence analysis: (i) the estimation error decompositions contain extra terms from asynchronous phases that must be bounded separately; (ii) the epoch index km(t) in the expression ( F (k(t)) , f (k(t)) ) may differ across players; and (iii) random asynchronous shifts introduce an additional source of randomness, making update times random as well. Condition 1 ensures the asynchronous time in epoch k is 
+
+O(k) and that k/τ (k) 
+
+> m
+
+is summable, which allows us to control these extra terms and to replace individual indices by a common index when deriving rates. When the shifts are independent of the other randomness, we first condition on the σ-algebra generated by all shifts, carry out the analysis under this conditioning, and then remove the conditioning using the uniform boundedness of the shifts. By carefully handling these aspects, the convergence analysis in Steps 1–3 carries over to the asynchronous setting. 
+
+# 7 Conclusion 
+
+In this paper, we provide the first convergence analysis for a radically uncoupled learning procedure in LQ stochastic games. We demonstrate that the last-iterate convergence rate is fundamentally driven by the interplay of three factors: the decay of the estimation error, the decay of the explo-ration noise, and the stability of the Nash equilibrium. Furthermore, we apply this framework to a dynamic Cournot competition model with sticky prices, illustrating how varying levels of price stickiness alter market trajectories during transitions from emerging to mature phases within a highly restrictive informational environment. Several directions merit further investigation. First, it is of interest to rigorously justify the accelerated convergence induced by publicly revealing aggregate market output, as observed in our numerical experiments. Second, extending our analysis to other stochastic games with infinite state-action spaces would broaden its applicability and deepen the theoretical understanding of radically uncoupled learning in complex dynamic environments. Third, studying asymmetric in-formation settings, where players possess heterogeneous structural knowledge, may provide further economic insights. Finally, applying uncoupled learning procedures to other dynamic economic and operational models remains a promising direction for future research. 24 References 
+
+Abada, I. and Lambin, X. (2023). Artificial intelligence: Can seemingly collusive outcomes be avoided? Management Science , 69(9):5042–5065. Ba, W., Lin, T., Zhang, J., and Zhou, Z. (2025). Doubly optimal no-regret online learning in strongly monotone games with bandit feedback. Operations Research , 73(6):3219–3244. Barr, J. and Saraceno, F. (2005). Cournot competition, organization and learning. Journal of Economic Dynamics and Control , 29(1-2):277–295. Ba¸ sar, T. and Olsder, G. J. (1998). Dynamic noncooperative game theory . SIAM. Bervoets, S., Bravo, M., and Faure, M. (2020). Learning with minimal information in continuous games. Theoretical Economics , 15(4):1471–1508. Besson, L. and Kaufmann, E. (2018). What doubling tricks can and can’t do for multi-armed bandits. arXiv preprint arXiv:1803.06971 .Boggs, P. T. and Tolle, J. W. (1995). Sequential quadratic programming. Acta numerica , 4:1–51. Bonatti, A., Cisternas, G., and Toikka, J. (2017). Dynamic oligopoly with incomplete information. 
+
+The Review of Economic Studies , 84(2):503–546. Bulow, J. I. and Pfleiderer, P. (1983). A note on the effect of cost changes on prices. Journal of Political Economy , 91(1):182–185. Cellini, R. and Lambertini, L. (2007). A differential oligopoly game with differentiated goods and sticky prices. European Journal of Operational Research , 176(2):1131–1144. Chen, Z., Zhang, K., Mazumdar, E., Ozdaglar, A., and Wierman, A. (2024). Last-iterate con-vergence of payoff-based independent learning in zero-sum stochastic games. arXiv preprint arXiv:2409.01447 .De la Pe˜ na, V. H., Lai, T. L., and Shao, Q.-M. (2009). Self-normalized processes: Limit theory and Statistical Applications . Springer. Deshpande, S. and Jacobson, S. H. (2026). Strategic AI in cournot markets. arXiv preprint arXiv:2601.17263 .Dockner, E. J., Jorgensen, S., Long, N. V., and Sorger, G. (2000). Differential games in economics and management science . Cambridge university press. Fazel, M., Ge, R., Kakade, S., and Mesbahi, M. (2018). Global convergence of policy gradient methods for the linear quadratic regulator. In Proceedings of the 35th International Conference on Machine Learning , pages 1467–1476. PMLR. Fershtman, C. and Kamien, M. I. (1987). Dynamic duopolistic competition with sticky prices. 
+
+Econometrica: Journal of the Econometric Society , 55(5):1151–1164. Foster, D. P. and Young, H. P. (2006). Regret testing: Learning to play nash equilibrium without knowing you have an opponent. Theoretical Economics , 1(3):341–367. Gal-Or, E. (1985). Information sharing in oligopoly. Econometrica: Journal of the Econometric Society , 53(2):329–343. Hager, W. W. and Horowitz, L. L. (1976). Convergence and stability properties of the discrete riccati operator equation and the associated optimal control and filtering problems. SIAM Journal on Control and Optimization , 14(2):295–312. Hambly, B., Xu, R., and Yang, H. (2023). Policy gradient methods find the nash equilibrium in n-player general-sum linear-quadratic games. Journal of Machine Learning Research , 24(139):1–56. Hauk, E. and Hurkens, S. (2001). Secret information acquisition in cournot markets. Economic Theory , 18:661–681. Heston, S. L. and Hu, B. (2024). Dynamic duopolistic competition with sticky prices. Operations 
+
+25 Research , 73(5):2627–2635. Hommes, C. H. and Ochea, M. I. (2012). Multiple equilibria and limit cycles in evolutionary games with logit dynamics. Games and Economic Behavior , 74(1):434–441. Horn, R. A. and Johnson, C. R. (2012). Matrix analysis . Cambridge university press. Huck, S., Normann, H.-T., and Oechssler, J. (2004). Through trial and error to collusion. Interna-tional Economic Review , 45(1):205–224. Kimbrough, S. O., Lu, M., and Murphy, F. (2005). Learning and tacit collusion by artificial agents in cournot duopoly games. In Formal modelling in electronic commerce , pages 477–492. Springer. Konstantinov, M. M., Petkov, P. H., and Christov, N. D. (1993). Perturbation analysis of the discrete riccati equation. Kybernetika , 29(1):18–29. Lin, R. Y., Ojha, S., Cai, K., and Chen, M. F. (2024). Strategic collusion of LLM agents: Market division in multi-commodity competitions. arXiv preprint arXiv:2410.00031 .Maheshwari, C., Wu, M., Pai, D., and Sastry, S. (2025). Independent and decentralized learning in markov potential games. IEEE Transactions on Automatic Control , 70(11):7538–7553. Mania, H., Tu, S., and Recht, B. (2019). Certainty equivalence is efficient for linear quadratic control. Advances in neural information processing systems , 32. Mazumdar, E., Ratliff, L. J., Jordan, M. I., and Sastry, S. S. (2020). Policy-gradient algorithms have no guarantees of convergence in linear quadratic games. In Proceedings of the 19th Interna-tional Conference on Autonomous Agents and Multiagent Systems , pages 860–868. International Foundation for Autonomous Agents and Multiagent Systems. Muhle-Karbe, J. and Oomen, R. (2026). Pre-hedging. Operations Research , 74(3):1221–1240. Nadav, U. and Piliouras, G. (2010). No regret learning in oligopolies: Cournot vs. bertrand. In 
+
+International Symposium on Algorithmic Game Theory , pages 300–311. Springer. Nocedal, J. and Wright, S. J. (2006). Numerical optimization . Springer. Nortmann, B., Monti, A., Sassano, M., and Mylvaganam, T. (2024). Nash equilibria for linear quadratic discrete-time dynamic games via iterative and data-driven algorithms. IEEE Transac-tions on Automatic Control , 69(10):6561–6575. Ozdaglar, A., Sayin, M. O., and Zhang, K. (2022). Independent learning in stochastic games. In 
+
+International Congress of Mathematicians , volume 7, pages 5340–5373. Plank, P. and Zhang, Y. (2026). Learning distributed equilibria in linear-quadratic stochastic differential games: An α-potential approach. arXiv preprint arXiv:2602.16555 .Sayin, M., Zhang, K., Leslie, D., Basar, T., and Ozdaglar, A. (2021). Decentralized q-learning in zero-sum markov games. Advances in Neural Information Processing Systems , 34:18320–18334. Shapley, L. S. (1953). Stochastic games. Proceedings of the national academy of sciences ,39(10):1095–1100. Shi, Y. and Zhang, B. (2020). Multi-agent reinforcement learning in cournot games. In 2020 59th ieee conference on decision and control (cdc) , pages 3561–3566. IEEE. Simchowitz, M. and Foster, D. (2020). Naive exploration is optimal for online LQR. In Proceedings of the 37th International Conference on Machine Learning , pages 8937–8948. PMLR. Simchowitz, M., Mania, H., Tu, S., Jordan, M. I., and Recht, B. (2018). Learning without mixing: Towards a sharp analysis of linear system identification. In Proceedings of the 31st Conference On Learning Theory , pages 439–473. PMLR. Sun, J. and Yong, J. (2019). Linear–quadratic stochastic two-person nonzero-sum differential games: Open-loop and closed-loop nash equilibria. Stochastic Processes and their Applications ,129(2):381–418. Vamvoudakis, K. G. (2015). Non-zero sum nash Q-learning for unknown deterministic continuous-26 time linear systems. Automatica , 61:274–281. Vershynin, R. (2018). High-dimensional probability: An introduction with applications in data sci-ence . Cambridge university press. Vives, X. (1984). Duopoly information equilibrium: Cournot and bertrand. Journal of economic theory , 34(1):71–94. Waltman, L. and Kaymak, U. (2008). Q-learning agents in a cournot oligopoly model. Journal of Economic Dynamics and Control , 32(10):3275–3293. Xiong, Y., Chen, N., and Gao, X. (2024). Is thompson sampling susceptible to algorithmic collusion? 
+
+arXiv preprint arXiv:2405.17463 .Zhang, K., Yang, Z., and Ba¸ sar, T. (2021). Multi-agent reinforcement learning: A selective overview of theories and algorithms. Handbook of reinforcement learning and control , pages 321–384. 27 Additional Notation. 
+
+We use ∨ and ∧ to denote maximum and minimum, respectively: for real numbers a, b , a ∨ b =max {a, b } and a ∧ b = min {a, b }. The relation ak ≍ bk indicates that there exist positive constants 
+
+c, C such that cb k ≤ ak ≤ Cb k for all sufficiently large k. The unit sphere in Rn is denoted by Sn−1,i.e., the set of vectors v ∈ Rn with ∥v∥2 = 1. Throughout this appendix, 0 ≤ C < ∞ denotes a generic constant depending on model and algorithm parameters; its value may change from line to line. When a constant associated with a quantity X needs to be explicitly referenced, we use CX ,
+
+CX , and LX to denote upper bounds, lower bounds, and Lipschitz constants, respectively. All these constants are independent of the time index t, the epoch index k, and the probability bound δ.
+
+# A Proof of Theorem 1 
+
+The proof is divided into several parts. Appendix A.1 bounds the error of the RLS estimator for a representative player m in each epoch. Appendix A.2 bounds the deviation between the current strategy profile and the collective best response to the previous profile, i.e., ∥(F (k+1) , f (k+1) ) −
+
+Ψ(( F (k), f (k))) ∥μ, 1,2. Based on these results, Appendix A.3 completes the proof of Theorem 1. Appendix A.4 presents the proofs of the auxiliary lemmas in Appendix A.1. All analysis is conducted under Assumptions 1–4 and Condition 1. In every run of Algorithm 1 there are three independent sources of randomness: the state noise 
+
+{ωt}∞
+
+> t=0
+
+, the exploration noise {vmt }∞
+
+> t=0
+
+, and the asynchronous shifts {˜τ (k) 
+
+> m
+
+}∞
+
+> k=1
+
+. We first condition on the σ-algebra T = σ({˜τ (k) 
+
+> m
+
+: 1 ≤ m ≤ M, k ≥ 1}) generated by all shifts and carry out the subsequent analysis under this conditioning. Conditioning on T turns each epoch length τ (k) 
+
+> m
+
+into a deterministic constant satisfying τ (k) ≤ τ (k) 
+
+> m
+
+≤ τ (k) + ¯ τ for every m and k; all remaining randomness then comes only from the state and exploration noises. Throughout the rest of this section up to the end of the derivation of Theorem 1, every statement is understood under the conditional probability P(· | T ), and E denotes the corresponding conditional expectation. For brevity we keep the notation P and E without explicit conditioning. All constants that appear in the bounds are deterministic and depend only on the parameters of Condition 1; consequently they are uniform over all realizations of T . The unconditional statements of the theorem are recovered in Step 4 of Appendix A.3 by taking expectation over T via the law of total probability. 
+
+A.1 Estimation error of ( ˆΘ(k) 
+
+> m
+
+, ˆΣ(k) 
+
+> m
+
+)
+
+In this section we fix a representative player m and bound the errors of her k-th RLS estimates ˆΘ(k)
+
+> m
+
+and ˆΣ(k) 
+
+> m
+
+relative to the effective parameters (Θ (k),∗ 
+
+> m
+
+, Σ(k),∗ 
+
+> m
+
+) defined in (26). The analysis for other players is identical. The main result is the following proposition. 
+
+Proposition 1. Suppose Assumptions 3 and 4 and Condition 1 hold. For any δ ∈ (0 , 1) there exist 
+
+Km(δ) = O(log log(1 /δ )) and a constant C < ∞ such that P(Em(δ)) ≥ 1 − δ, where 
+
+Em(δ) = 
+
+n
+
+∀k ≥ Km(δ) : max ∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥, ∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥ ≤ C η (k) 
+
+> m
+
+(δ)
+
+o
+
+,
+
+with η(k) 
+
+> m
+
+(δ) defined in (28) .
+
+The proof of Proposition 1 requires addressing several key difficulties beyond the analysis for the classical single-player LQ problem (Simchowitz and Foster, 2020). First, due to the presence of constant offsets in the dynamics and linear cost terms, the regression vector zmt contains a non-excited direction (the constant 1), which requires extra care when establishing the growth rate of the information matrix. Second, the asynchronous periods introduce additional terms in the 28 decomposition of ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+, which must be bounded separately. Third, unlike the uncontrolled LQ setting where only the drift parameter error is estimated, here we must also bound the covariance estimation error ∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥.We introduce several auxiliary lemmas to handle these three difficulties. To prepare for their statements, we first allocate the failure probability and rewrite the state dynamics from player m’s viewpoint. 
+
+Probability allocation and dynamic characterization. For a given confidence δ ∈ (0 , 1) set δk = 6 δ/ [π2(k + 1) 2]; then P∞ 
+
+> k=0
+
+δk = δ. All high-probability statements that follow are first established for a single epoch k with failure probability proportional to δk. Summing these bounds over k via a union bound will yield the “for all large k” statement in Proposition 1. Under Algorithm 1, the state dynamics (4) can be rewritten from player m’s viewpoint as 
+
+xt+1 = (Θ ∗
+
+> m,t
+
+)⊤zmt + ˜ wmt , zmt = [1 , x ⊤ 
+
+> t
+
+, (um, (km(t))  
+
+> t
+
+)⊤]⊤, (35) where ˜ wmt is independent sub-Gaussian with mean zero and covariance matrix Σ ∗
+
+> m,t
+
+, and Θ∗ 
+
+> m,t
+
+=
+
+h
+
+A0 + X 
+
+> j̸=m
+
+Bj f (kj (t))  
+
+> j
+
+, A − X 
+
+> j̸=m
+
+Bj F (kj (t))  
+
+> j
+
+, B m
+
+i⊤
+
+, Σ∗ 
+
+> m,t
+
+= Σ ω + X 
+
+> j̸=m
+
+(α(kj (t))  
+
+> j
+
+)2Bj B⊤ 
+
+> j
+
+.
+
+Auxiliary lemmas. Lemmas 2-4 below address the three difficulties mentioned above. They employ two-sided bounds on sub-Gaussian matrices (Theorem 4.6.1 of Vershynin (2018)), the block martingale small-ball (BMSB) condition (Simchowitz et al., 2018), the self-normalised martingale inequality (Lemma E.2 of Simchowitz and Foster (2020) or Theorem 14.7 of De la Pe˜ na et al. (2009)), and Rayleigh quotient techniques; together they lead to the polylogarithmic threshold 
+
+O(log log(1 /δ )). Detailed proofs of Lemmas 2-4 are deferred to Appendix A.4. Lemma 5 is a direct consequence of Lemma E.2 of Simchowitz and Foster (2020). 
+
+Lemma 2 (Information matrix) . There exist constants CV , C V > 0 and KV,m (δ) = O(log log(1 /δ )) 
+
+such that for every k ≥ KV,m (δ), it holds for some event EV,k with P(EV,k ) ≥ 1 − δk/4 that 
+
+σmin 
+
+ V (k)
+
+> m
+
+ ≥ CV τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2, ∥V (k) 
+
+> m
+
+∥ ≤ CV τ (k) 
+
+> m
+
+, det( V (k) 
+
+> m
+
+) ≤ (CV τ (k) 
+
+> m
+
+)1+ n+dm .
+
+Lemma 3 (Asynchronous bias) . There exists KA,m (δ) = O(log log(1 /δ )) such that for all k ≥
+
+KA,m (δ), it holds for some event EA,k with P(EA,k ) ≥ 1 − δk/4 that 
+
+max 
+
+  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤ ,  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤zmt ( ˜ wmt )⊤
+
+ ≤ C k2+log(1 /δ ).
+
+Lemma 4 (Noise covariance) . There exists Kcov ,m (δ) = O(log log(1 /δ )) such that for every k ≥
+
+Kcov ,m (δ), it holds for some event Ecov ,k with P(Ecov ,k ) ≥ 1 − δk/4 that 
+
+1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+  ˜wmt ( ˜ wmt )⊤ − Σ(k),∗
+
+> m
+
+ ≤ Cη (k) 
+
+> m
+
+(δ).
+
+29 Lemma 5 (Self-normalised noise bounds) . For each k ≥ 1, it holds for some event Eω,k with 
+
+P(Eω,k ) ≥ 1 − δk/4 that 
+
+(V (k) 
+
+> m
+
+)−1¯τ (k) 
+
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt ( ˜ wmt )⊤ ≤ C
+
+vuut log det( V (k) 
+
+> m
+
+) + log(1 /δ k)
+
+σmin (V (k) 
+
+> m
+
+) , (36) 
+
+1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt ( ˜ wmt )⊤ ≤ C
+
+vuut (log det( V (k) 
+
+> m
+
+) + log(1 /δ k)) ∥V (k) 
+
+> m
+
+∥
+
+(τ (k) 
+
+> m
+
+)2 . (37) For the rest of this section we set Kjoint ,m (δ) := max {KV,m , K A,m , K cov ,m } = O(log log(1 /δ )) and define, for each k ≥ Kjoint ,m (δ), the joint good event Ek = EV,k ∩ EA,k ∩ Eω,k ∩ Ecov ,k . By the union bound, P(Ek) ≥ 1−δk. We now show that on Ek both the drift parameter error ∥ ˆΘ(k) 
+
+> m
+
+−Θ(k),∗ 
+
+> m
+
+∥
+
+and the covariance error ∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥ are bounded by Cη (k) 
+
+> m
+
+(δ). 
+
+Error bound for ˆΘ(k) 
+
+> m
+
+. By the definitions of ˆΘ(k) 
+
+> m
+
+in (10), Θ (k),∗ 
+
+> m
+
+in (26), and (35), ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+= −βm(V (k) 
+
+> m
+
+)−1Θ(k),∗
+
+> m
+
+| {z }
+
+> I1
+
++ ( V (k) 
+
+> m
+
+)−1¯τ (k) 
+
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤
+
+| {z }
+
+> I2
+
++ ( V (k) 
+
+> m
+
+)−1¯τ (k) 
+
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt ( ˜ wmt )⊤
+
+| {z }
+
+> I3
+
+. (38) We analyze each term on Ek:
+
+• By the eigenvalue lower bound in Lemma 2, ∥I1∥ ≤ βm∥Θ(k),∗    
+
+> m∥
+> σmin (V(k)
+> m)
+
+≤ C/ [τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2] ≤ Cη (k) 
+
+> m
+
+(δ). 
+
+• By Lemma 3 and the eigenvalue bound, ∥I2∥ ≤ C(k2+log(1 /δ ))    
+
+> σmin (V(k)
+> m)
+
+≤ C k2+log(1 /δ )    
+
+> τ(k)
+> m(α(k−1)
+> m)2
+
+. Because 
+
+τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 ≍ λ(1 −2νm)k grows exponentially with exponent 1 − 2νm > 12 − νm, while the numerator is polynomial in k and log(1 /δ ), there exists KΘ,m (δ) = O(log log(1 /δ )) such that for all k ≥ K′
+
+> Θ,m
+
+(δ) this term is bounded by Cη (k) 
+
+> m
+
+(δ). 
+
+• Substituting the eigenvalue bounds of Lemma 2 into (36) gives ∥I3∥ ≤ Cη (k) 
+
+> m
+
+(δ). Hence, for every k ≥ max {Kjoint ,m (δ), K Θ,m (δ)}, on the event Ek,
+
+∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ). (39) 
+
+Error bound for ˆΣ(k) 
+
+> m
+
+. By the definitions of ˆΣ(k) 
+
+> m
+
+in (11), Σ (k),∗ 
+
+> m
+
+in (26), and (35), ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+= Λ 1 + Λ 2 + Λ 3 + Λ 4 + Λ 5 + Λ 6 + (Λ 4 + Λ 5 + Λ 6)⊤, (40) where Λ1 = (Θ (k),∗ 
+
+> m
+
+− ˆΘ(k) 
+
+> m
+
+)⊤
+
+ 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤
+
+ (Θ (k),∗ 
+
+> m
+
+− ˆΘ(k) 
+
+> m
+
+), Λ2 = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+˜wmt ( ˜ wmt )⊤−Σ(k),∗ 
+
+> m
+
+,
+
+30 Λ3 = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤zmt (zmt )⊤(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+),
+
+Λ4 = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤zmt (zmt )⊤(Θ (k),∗ 
+
+> m
+
+− ˆΘ(k) 
+
+> m
+
+),
+
+Λ5 = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤zmt ( ˜ wmt )⊤, Λ6 = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ (k),∗ 
+
+> m
+
+− ˆΘ(k) 
+
+> m
+
+)⊤zmt ( ˜ wmt )⊤.
+
+We now bound the Λ i on Ek.
+
+• Λ2 is directly controlled by Lemma 4: ∥Λ2∥ ≤ Cη (k) 
+
+> m
+
+(δ). 
+
+• Asynchronous terms Λ 3, Λ4, Λ5. Using Lemma 3 and the bound ∥Θ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ C and 
+
+∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ), we obtain 
+
+∥Λ3∥ + ∥Λ5∥ ≤ C(k2 + log(1 /δ )) 
+
+τ (k)
+
+> m
+
+, ∥Λ4∥ ≤ C(k2 + log(1 /δ )) 
+
+τ (k)
+
+> m
+
+η(k) 
+
+> m
+
+(δ). (41) 
+
+• Remaining terms Λ 1, Λ6. On EV,k the empirical moment satisfies 1   
+
+> τ(k)
+> m
+> ¯τ(k)
+> m−1
+
+P 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤ ≤ C.Together with the cross term bound in Lemma 5 and ∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ) gives that 
+
+∥Λ1∥ ≤ C η(k) 
+
+> m
+
+(δ)2, ∥Λ6∥ ≤ C
+
+vuut log( τ (k) 
+
+> m
+
+) + log(1 /δ )
+
+τ (k)
+
+> m
+
+η(k) 
+
+> m
+
+(δ). (42) As with I2 in the analysis of ˆΘ(k) 
+
+> m
+
+, the exponential growth of the denominator guarantees the existence of KΣ,m (δ) = O(log log(1 /δ )) such that all error bounds in (41) and (42) are bounded by 
+
+Cη (k) 
+
+> m
+
+(δ) for all k ≥ KΣ,m (δ). Thus, k ≥ max {Kjoint ,m (δ), K Σ,m (δ)}, on the event Ek, we have 
+
+∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ). (43) 
+
+Proof of Proposition 1. Take Km(δ) = max Kjoint ,m (δ), K Θ,m (δ), K Σ,m (δ) = O(log log(1 /δ )). Define the event Em(δ) = T 
+
+> k≥Km(δ)
+
+Ek. By the union bound, P(Em(δ)c) ≤ P 
+
+> k≥Km(δ)
+
+P(Eck) ≤P 
+
+> k≥Km(δ)
+
+δk ≤ δ. On Em(δ), for all k ≥ Km(δ) the estimates (39) and (43) hold simultaneously, giving max {∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥, ∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥} ≤ Cη (k) 
+
+> m
+
+(δ). 
+
+A.2 Strategy Deviation of (F (k), f (k))
+
+We first translate the estimation error bounds obtained in Appendix A.1 into bounds on the accepted parameters ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+, α (k) 
+
+> m
+
+) relative to (Θ (k),∗ 
+
+> m
+
+, Σω, 0). 
+
+Lemma 6. Suppose Assumptions 3 and 4 and Condition 1 hold. For any δ ∈ (0 , 1) , there exist 
+
+K′
+
+> m
+
+(δ) = O(log log(1 /δ )) and a constant C < ∞ such that P(E′
+
+> m
+
+(δ)) ≥ 1 − δ, where 
+
+E′
+
+> m
+
+(δ) = 
+
+n
+
+∀k ≥ K′
+
+> m
+
+(δ), max ∥ ˜Θ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥, ∥ ˜Σ(k) 
+
+> m
+
+− Σω∥, α (k) 
+
+> m
+
+≤ C η(k) 
+
+> m
+
+(δ) ∨ max  
+
+> 1≤j≤M
+
+{α(k−1)  
+
+> j
+
+}o
+
+.
+
+31 Proof. Proof Let Em(δ) be the event from Proposition 1. On Em(δ), for all k ≥ Km(δ) we have 
+
+∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ) and ∥ ˆΣ(k) 
+
+> m
+
+− Σ(k),∗ 
+
+> m
+
+∥ ≤ Cη (k) 
+
+> m
+
+(δ). By definition of Σ (k),∗ 
+
+> m
+
+in (26), ∥Σ(k),∗ 
+
+> m
+
+−
+
+Σω∥ ≤ C max   
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2, so on the same event max {∥ ˆΘ(k) 
+
+> m
+
+− Θ(k),∗ 
+
+> m
+
+∥, ∥ ˆΣ(k) 
+
+> m
+
+− Σω∥} ≤ C η(k) 
+
+> m
+
+(δ) ∨ max   
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2. (44) From the definition of η(k) 
+
+> m
+
+(δ) in (28) and the fact that α(k) 
+
+> j
+
+≍ λ−νj k, there exists K′′ 
+
+> m
+
+(δ) = 
+
+O(log log(1 /δ )) such that for all k ≥ K′′ 
+
+> m
+
+(δ) the right-hand side of (44) is smaller than the constant 
+
+δm from Assumption 4. Take K′
+
+> m
+
+(δ) = max {Km(δ), K ′′ 
+
+> m
+
+(δ)}; then K′
+
+> m
+
+(δ) = O(log log(1 /δ )). Part 1) of Assumption 4 then guarantees ˜Θ(k) 
+
+> m
+
+= ˆΘ(k) 
+
+> m
+
+and ˜Σ(k) 
+
+> m
+
+= ˆΣ(k) 
+
+> m
+
+for all k ≥ K′
+
+> m
+
+(δ). Finally, the deterministic bound max {α(k) 
+
+> m
+
+, max   
+
+> j̸=m
+
+(α(k−1)  
+
+> j
+
+)2} ≤ C max  
+
+> 1≤j≤M
+
+{α(k−1)  
+
+> j
+
+} holds for all k.Let E′
+
+> m
+
+(δ) be the event Em(δ), but with the statement required only for k ≥ K′
+
+> m
+
+(δ). Since K′
+
+> m
+
+(δ) ≥
+
+Km(δ), we have P(E′
+
+> m
+
+(δ)) ≥ P(Em(δ)) ≥ 1 − δ.Now we consider the strategy profile ( F (k), f (k)), by which we mean that every player uses the strategy ( F (k) 
+
+> m
+
+, f (k) 
+
+> m
+
+) obtained after her k-th update. Due to the presence of asynchronous shifts, this profile may differ from the profile ( F (k(t)) , f (k(t)) ) that appears in Theorem 1; the two profiles coincide only during the synchronous phases. Here we first derive the deviation of ( F (k+1) , f (k+1) )from the collective best response Ψ(( F (k), f (k))) based on the error bound for the accepted param-eters established above. This strategy deviation serves as an intermediate result for the proof of Theorem 1; the actual profile ( F (k(t)) , f (k(t)) ) for arbitrary t will be handled in the next section. 
+
+Lemma 7. Suppose Assumptions 1-4 and Condition 1 hold. For any δ ∈ (0 , 1) , there exist K(δ) = 
+
+O(log log(1 /δ )) and LF f < ∞ such that P(E(δ)) ≥ 1 − δ, where 
+
+E(δ) = 
+
+n
+
+∀k ≥ K(δ), ∥(F (k+1) , f (k+1) ) − Ψ(( F (k), f (k))) ∥μ, 1,2 ≤ LF f ξk+1 (δ)
+
+o
+
+,
+
+with ξk(δ) defined in (34) and the norm ∥ · ∥ μ, 1,2 defined in Assumption 2. Proof. Proof Set K(δ) = max  
+
+> m
+
+K′
+
+> m
+
+(δ/M ), where K′
+
+> m
+
+(·) is from Lemma 6; then K(δ) = O(log log(1 /δ )). By definition, η(k) 
+
+> m
+
+(δ) ∨ max  
+
+> 1≤j≤M
+
+{α(k−1)  
+
+> j
+
+} ≤ C ξ k(δ) for all k ≥ 1. Since Θ (k+1) ,∗ 
+
+> m
+
+= Θ (F (k)  
+
+> −m,f (k)
+> −m)
+> m
+
+by (26), the equivalence in Assumption 1 gives 
+
+ψ(F (k)
+
+> −m
+
+, f (k)
+
+> −m
+
+) = Φ m(Θ (k+1) ,∗ 
+
+> m
+
+, Σω, x, 0) , φ(F (k)
+
+> −m
+
+, f (k)
+
+> −m
+
+) = ϕm(Θ (k+1) ,∗ 
+
+> m
+
+, Σω, x, 0) .
+
+On the event TMm=1 E′
+
+> m
+
+(δ/M ), for all k ≥ K(δ), 
+
+∥(F (k+1) , f (k+1) ) − Ψ(( F (k), f (k))) ∥μ, 1,2 = μ
+
+> M
+
+X
+
+> m=1
+
+∥F (k+1)  
+
+> m
+
+− Φm(Θ (k+1) ,∗ 
+
+> m
+
+, Σω, x, 0) ∥
+
++
+
+> M
+
+X
+
+> m=1
+
+∥f (k+1)  
+
+> m
+
+− ϕm(Θ (k+1) ,∗ 
+
+> m
+
+, Σω, x, 0) ∥2
+
+≤ C
+
+ MX
+
+> m=1
+
+Lm
+
+
+
+(μ + 1) ξk+1 (δ),
+
+where we used Lemma 6 and Assumption 4. Taking LF f = C(P 
+
+> m
+
+Lm)( μ+1) gives TMm=1 E′
+
+> m
+
+(δ/M ) ⊂
+
+E(δ). The probability estimate follows from P(E(δ)) ≥ P(TMm=1 E′
+
+> m
+
+(δ/M )) ≥ 1 − PMm=1 δ/M ≥
+
+1 − δ.32 A.3 Proof of Theorem 1 
+
+Let ( F ∗, f ∗) denote the unique feedback Nash equilibrium guaranteed by Assumptions 1-2, and let (μ, ζ ) be the corresponding constants. 
+
+Step 1. We first show that with high probability ( F (k), f (k)) converges to ( F ∗, f ∗). Set ak =
+
+∥(F (k), f (k)) − (F ∗, f ∗)∥μ, 1,2. By Lemma 7 and Assumption 2, for any δ ∈ (0 , 1) there exists K(δ) = 
+
+O(log log(1 /δ )) such that, with probability at least 1 − δ, for all k ≥ K(δ), 
+
+ak+1 ≤ ζa k + LF f ξk+1 (δ).
+
+Define the constants 
+
+r1 = λ−( 12 −max  
+
+> m{νm})
+
+ζ , r2 = λ− min  
+
+> m{νm}
+
+ζ .
+
+Let cK(δ) = 2 PMm=1 (κm + κ′
+
+> m
+
+) and ck+1 = ζc k + LF f ξk+1 (δ). Unfolding the recursion gives 
+
+ck = ζk−K(δ)cK(δ)
+
+| {z }
+
+> Term I (transient)
+
++LF f ζkkX
+
+> j=K(δ)+1
+
+pj + log(1 /δ ) r j
+
+> 1
+
+| {z }
+
+> Term II (estimation error)
+
++LF f ζkkX
+
+> j=K(δ)+1
+
+r j
+
+> 2
+
+|{z} 
+
+> Term III (exploration noise)
+
+.
+
+Term I: since K(δ) = O(log log(1 /δ )) and ζ < 1, ζ−K(δ) ≤ (log(1 /δ )) c0 for some c0 > 0, hence Term I = O (log(1 /δ )) c0 ζk.Term II: write pj + log(1 /δ ) ≤ pk + log(1 /δ ) for all j ≤ k. If r1 < 1 the series P 
+
+> j
+
+r j 
+
+> 1
+
+converges, giving Term II = O(pk + log(1 /δ ) ζk); if r1 = 1 then Term II = O(kpk + log(1 /δ ) ζk); if r1 > 1 the last term dominates and Term II = O(pk + log(1 /δ ) λ−( 12 −max  
+
+> m{νm})k
+
+). In all cases the dependence on δ is at most O(plog(1 /δ )). Term III: this term does not involve δ. If r2 < 1 it is O(ζk); if r2 = 1 it is O(kζ k); if r2 > 1 it is 
+
+O(λ− min  
+
+> m{νm}k
+
+). Since ak ≤ ck by induction, ak enjoys the same bounds. Consequently ak → 0 with probability at least 1 − δ, and for k ≥ K(δ) and each player m,
+
+μ∥F (k) 
+
+> m
+
+− F ∗
+
+> m
+
+∥ + ∥f (k) 
+
+> m
+
+− f ∗
+
+> m
+
+∥2 ≤ ak. (45) 
+
+Step 2. We now translate the rates to calendar time t. By Condition 1, we have τ (k) ≤ τ (k) 
+
+> m
+
+≤
+
+τ (k) + ¯ τ . Summing over epochs gives constants 0 < c ≤ C < ∞ such that cλ k ≤ ¯τ (k) 
+
+> m
+
+≤ Cλ k and 
+
+km(t) = log λ t + O(1) for all m and all large k. Choose T (δ) so that km(t) ≥ K(δ) for all t ≥ T (δ)and every m; the threshold satisfies T (δ) = O (log(1 /δ )) c1
+
+ for some c1 > 0. By (45), for t ≥ T (δ), 
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 ≤ M max  
+
+> 1≤m≤M
+
+{akm(t)}.
+
+Substituting the three bounds from Step 1 and converting epoch indices to time via ζkm(t) ≍ tln ζ/ ln λ,
+
+λ−( 12 −max   
+
+> m{νm})km(t)
+
+≍ t−( 12 −max  
+
+> m{νm})
+
+, λ− min   
+
+> m{νm}km(t)
+
+≍ t− min  
+
+> m{νm}
+
+, we obtain 
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 = O max {R1(t, δ ), R 2(t, δ ), R 3(t)},
+
+where R1, R 2, R 3 are defined in (20). 
+
+Step 3. The estimates in Steps 1-2 are derived under the conditional probability P(· | T ) and show that for any δ ∈ (0 , 1) there exists T (δ) such that the claimed bounds hold for all t ≥ T (δ)with P(· | T )-probability at least 1 − δ. To lift this to an unconditional statement, observe that all constants appearing in the bounds depend only on model parameters and the parameters in 33 Condition 1, hence are uniform over all realizations of the shifts. The thresholds in the auxiliary lemmas are chosen by making certain tail probabilities smaller than a prescribed fraction of δ;because the tail conditions involve only the deterministic lower bound τ (k) ≤ τ (k) 
+
+> m
+
+, the resulting thresholds work simultaneously for all realizations of T . Taking expectation over T yields the same bounds under the unconditional probability P.
+
+Step 4 (Almost-sure convergence with rate). From Steps 1-3, for any δ ∈ (0 , 1) there exist constants C < ∞ and T (δ) ∈ N such that, with probability at least 1 − δ, for all t ≥ T (δ), 
+
+∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 ≤ C max {R1(t, δ ), R 2(t, δ ), R 3(t)}, (46) where R1, R 2, R 3 are defined in Step 2. For each j ∈ N set δj = 2 −j and let Ej be the event on which the bound in (46) holds with 
+
+δ = δj for all t ≥ T (δj ). By construction P(Ej ) ≥ 1 − 2−j . Since P∞ 
+
+> j=1
+
+P(Ecj ) ≤ P∞ 
+
+> j=1
+
+2−j < ∞, the Borel–Cantelli lemma implies that P T ∞
+
+> J=1
+
+S∞ 
+
+> j=J
+
+Ecj
+
+ = 0. Equivalently, letting E = S∞
+
+> J=1
+
+T∞ 
+
+> j=J
+
+Ej ,we have P(E) = 1. On the almost-sure event E, there exists a (random) index j0 such that Ej occurs for every j ≥ j0.Set q = min 
+
+n
+
+− ln ζ  
+
+> ln λ
+
+, 12 − max  
+
+> m
+
+{νm}, min  
+
+> m
+
+{νm}
+
+o
+
+> 0. Now observe that, for any fixed j,
+
+tq
+
+(log t) 32 log log t max {R1(t, δ j ), R 2(t, δ j ), R 3(t)} → 0 as t → ∞ .
+
+Consequently, on the almost-sure event E, for any ε > 0 we can first choose j large enough so that 
+
+j ≥ j0 and then choose t large enough so that the right-hand side of (46) multiplied by tq    
+
+> (log t)32log log t
+
+is smaller than ε. Hence lim 
+
+> t→∞
+
+tq
+
+(log t) 32 log log t ∥(F (k(t)) , f (k(t)) ) − (F ∗, f ∗)∥μ, 1,2 = 0 almost surely .
+
+This shows that the strategy profile converges almost surely to the feedback Nash equilibrium (F ∗, f ∗) at the rate O
+
+
+
+t−q(log t) 32 log log t
+
+
+
+.
+
+A.4 Proofs of Auxiliary Lemmas in Appendix A.1 
+
+A.4.1 Proof of Lemma 2 
+
+We first recall a purely algebraic estimate that will be used repeatedly. 
+
+Lemma 8. Let H be a d × d symmetric positive semidefinite matrix. Suppose there exist matrices 
+
+Γ1 ∈ Rd×p and Γ2 ∈ Rd×q with p + q = d such that [Γ 1 Γ2] ∈ Rd×d is invertible and 
+
+[Γ 1 Γ2]⊤H[Γ 1 Γ2] = 
+
+ H0 0p×q
+
+0q×p H1
+
+
+
+,
+
+where H0 = Γ ⊤ 
+
+> 1
+
+HΓ1 ∈ Rp×p and H1 = Γ ⊤ 
+
+> 2
+
+HΓ2 ∈ Rq×q are symmetric positive definite. Then 
+
+σmin (H) ≥ σmin (H0) ∧ σmin (H1)4 ∥Γ1∥2 ∨ ∥ Γ2∥2 .
+
+Proof. Proof For any nonzero y ∈ Rd, write y = Γ 1u + Γ 2v uniquely with u ∈ Rp and v ∈ Rq.Then y⊤Hy = u⊤H0u + v⊤H1v ≥ σmin (H0)∥u∥22 + σmin (H1)∥v∥22, while ∥y∥22 = ∥Γ1u + Γ 2v∥22 ≤
+
+4( ∥Γ1∥2 ∨ ∥ Γ2∥2)( ∥u∥22 ∨ ∥ v∥22). If ∥u∥22 ≥ ∥ v∥22, then y⊤Hy/ ∥y∥22 ≥ σmin (H0)/[4( ∥Γ1∥2 ∨ ∥ Γ2∥2)]; the other case is analogous. Taking the infimum over y̸ = 0 gives the result. 34 Upper bound on ∥V (k) 
+
+> m
+
+∥ and the determinant. From the definition zmt = [1 , x ⊤ 
+
+> t
+
+, (umt )⊤]⊤ and the feedback umt = −F (k−1)  
+
+> m
+
+xt + f (k−1)  
+
+> m
+
++ α(k−1)  
+
+> m
+
+vmt , we have 
+
+∥zmt ∥22 ≤ C 1 + ∥xt∥22 + ∥vmt ∥22
+
+. (47) For the exploration noise, since {vmt } are i.i.d. sub-Gaussian, Bernstein’s inequality implies that for every k ≥ Kv2,m = O(log log(1 /δ )), it holds for some event Ev2,k with P(Ev2,k ) ≥ 1 − δk/40 that 
+
+P¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+∥vmt ∥22 ≤ 2dmτ (k) 
+
+> m
+
+.For the state, we rewrite (35) as 
+
+xt+1 = A0 
+
+> t
+
++ Acl  
+
+> t
+
+xt + ˜ wt, (48) where A0 
+
+> t
+
+= A0+PMm=1 Bmf (km(t))  
+
+> m
+
+, Acl  
+
+> t
+
+= A−PMm=1 BmF (km(t))  
+
+> m
+
+, and ˜ wt = ωt+PMm=1 Bmα(km(t))  
+
+> m
+
+vmt .Assumption 3 implies ∥Acl  
+
+> t
+
+∥ ≤ 1 − γ and ∥A0 
+
+> t
+
+∥2 ≤ CA, 0 uniformly. Since the state process {xt}∞
+
+> t=0
+
+is driven by sub-Gaussian innovations and the dynamics are uniformly stable, it is uniformly sub-Gaussian; hence ∥xt∥22 is uniformly sub-exponential for all t. By Young’s inequality, ∥xt+1 ∥22 ≤
+
+(1 − γ 
+
+> 2
+
+)∥xt∥22 + CA + Cw∥ ˜wt∥22. Iterating and summing over t = ¯ τ (k−1)  
+
+> m
+
+, . . . , ¯τ (k) 
+
+> m
+
+− 1 gives   
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+∥xt∥22 ≤ 2∥x¯τ (k−1) 
+
+> m
+
+∥22
+
+γ + 2CAτ (k)
+
+> m
+
+γ + 2Cw
+
+γ  
+
+> ¯τ(k)
+> m−2
+
+X 
+
+> j=¯ τ(k−1)
+> m
+
+bj,k ∥ ˜wj ∥22,
+
+where 0 ≤ bj,k = 1 − (1 − γ)¯τ (k)  
+
+> m−1−j
+
+≤ 1. The variable ∥x¯τ (k−1) 
+
+> m
+
+∥22 is uniformly sub-exponential and independent of the future noises { ˜wj }j≥¯τ (k−1) 
+
+> m
+
+; moreover, {∥ ˜wj ∥22} is an independent sequence of uniformly sub-exponential random variables. Hence, Bernstein’s inequality for weighted sums yields 
+
+P
+
+  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+∥xt∥22 > C xτ (k)
+
+> m
+
+ ≤ exp  −Cτ (k)
+
+> m
+
+. (49) Hence, for every k ≥ Kx2,m = O(log log(1 /δ )), it holds for some event Ex2,k with P(Ex2,k ) ≥
+
+1 − δk/40 that P¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+∥xt∥22 ≤ Cxτ (k) 
+
+> m
+
+. Set Ez,k = Ev2,k ∩ Ex2,k ; then P(Ez,k ) ≥ 1 − δk/20. For all k ≥ Kz,m = max {Kv2,m , K x2,m }, on Ez,k , by (47), we have 
+
+∥V (k) 
+
+> m
+
+∥ ≤ βm +  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+∥zmt ∥22 ≤ CV τ (k) 
+
+> m
+
+, det( V (k) 
+
+> m
+
+) ≤ ∥ V (k) 
+
+> m
+
+∥1+ n+dm ≤  CV τ (k)
+
+> m
+
+1+ n+dm .
+
+Lower bound on σmin (V (k) 
+
+> m
+
+). During the whole epoch k player m uses the fixed feedback (F (k−1)  
+
+> m
+
+, f (k−1)  
+
+> m
+
+), therefore the regression vector can be written as 
+
+zmt = Gm,k ¯xt + α(k−1)  
+
+> m
+
+Jmvmt , ¯xt = 1 xt
+
+⊤ ,
+
+where Gm,k =
+
+
+
+1 01×n
+
+0n×1 In
+
+f (k−1)  
+
+> m
+
+−F (k−1) 
+
+> m
+
+ and Jm =
+
+0(1+ n)×dm
+
+Idm
+
+
+
+. Both ∥Gm,k ∥ and ∥Jm∥ are bounded by 1 + κm + κ′
+
+> m
+
+. Inserting this into the definition of V (k) 
+
+> m
+
+and normalising by τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 yields 
+
+V (k)
+
+> m
+
+τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 =( α(k−1)  
+
+> m
+
+)−2Gm,k XkG⊤ 
+
+> m,k
+
++ JmWkJ⊤
+
+> m
+
++ ( α(k−1)  
+
+> m
+
+)−1 Gm,k CkJ⊤ 
+
+> m
+
++ JmC⊤ 
+
+> k
+
+G⊤
+
+> m,k
+
+ + βmIτ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 , (50) 35 with the empirical matrices 
+
+Xk = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+¯xt ¯x⊤ 
+
+> t
+
+, Wk = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+vmt (vmt )⊤, Ck = 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+¯xt(vmt )⊤.
+
+We will bound each of these three blocks on a suitable high-probability event. 
+
+Step 1: State covariance Xk. Set ˆ μk = 1 
+
+> τ(k)
+> m
+
+P¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+xt and ˆΓk = 1 
+
+> τ(k)
+> m
+
+P¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+(xt − ˆμk)( xt −
+
+ˆμk)⊤. The augmented covariance decomposes as 
+
+Xk =
+
+ 1 ˆμ⊤
+
+> k
+
+ˆμk ˆΓk + ˆ μk ˆμ⊤
+
+> k
+
+
+
+. (51) Thus it suffices to lower-bound σmin (ˆΓk) and to upper-bound ∥ˆμk∥2.Recall (48), the matrices A0 
+
+> t
+
+, A cl  
+
+> t
+
+are Ft-measurable, where Ft denotes the information available at time t before the noises ωt, {vjt }1≤j≤M are drawn; by Assumption 3 they satisfy ∥Acl  
+
+> t
+
+∥ ≤ 1 − γ
+
+uniformly. The effective noise ˜ wt is independent of Ft, conditionally sub-Gaussian, and its covariance matrix is uniformly bounded below by Σ ω ≻ 0. For any fixed direction q ∈ Sn−1 the scalar process dt = q⊤(xt+1 − xt) can be written as 
+
+dt = q⊤(A0 
+
+> t
+
++ ( Acl  
+
+> t
+
+− I)xt) + q⊤ ˜wt. The first term is Ft-measurable, while the second is a con-ditionally centred sub-Gaussian random variable whose conditional variance satisfies E[( q⊤ ˜wt)2 |Ft] ≥ σmin (Σ ω) > 0. By a standard Paley–Zygmund argument (Proposition 3.1 of Simchowitz et al. (2018)), this implies that the process {dt} satisfies the (1 , ν, p )-block martingale small-ball condition of Simchowitz et al. (2018) with constants ν, p > 0 that depend only on the sub-Gaussian norm of ˜wt and on σmin (Σ ω). Applying Proposition 2.5 of Simchowitz et al. (2018) to {dt}¯τ (k)  
+
+> m−2
+> t=¯ τ(k−1)
+> m
+
+and using a net argument (Corollary 4.2.11 of Vershynin (2018)) shows that for every k ≥ KΓ,m = O(log log(1 /δ )), it holds for some event EΓ,k with P(EΓ,k ) ≥ 1 − δk/20 that 
+
+σmin 
+
+ 1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−2
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(xt+1 − xt)( xt+1 − xt)⊤
+
+ ≥ CΓ > 0.
+
+Now for any q ∈ Sn−1 set at = q⊤(xt − ˆμk); then q⊤(xt+1 − xt) = at+1 − at and ( at+1 −
+
+at)2 ≤ 2a2 
+
+> t+1
+
++ 2 a2 
+
+> t
+
+. Summing this inequality from t = ¯ τ (k−1)  
+
+> m
+
+to ¯ τ (k) 
+
+> m
+
+− 2 and using that each at
+
+appears at most twice gives P¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+(q⊤(xt − ˆμk)) 2 ≥ 14
+
+P¯τ (k)  
+
+> m−2
+> t=¯ τ(k−1)
+> m
+
+(at+1 − at)2. Hence on EΓ,k ,
+
+σmin (ˆΓk) ≥ CΓ 
+
+> 4
+
+> 0.
+
+Now we derive the uniform bound for ∥ˆμk∥2. Similar to the argument leading to (49), for every 
+
+k ≥ Kμ,m = O(log log(1 /δ )), it holds for some event Eμ,k with P(Eμ,k ) ≥ 1−δk/20 that ∥ˆμk∥2 ≤ Cμ.
+
+Now apply Lemma 8 to the matrix in (51) with Γ 1 =
+
+ 1
+
+−ˆμk
+
+
+
+and Γ 2 =
+
+01×n
+
+In
+
+
+
+. On the event 
+
+E0,k := EΓ,k ∩ Eμ,k , we obtain 
+
+σmin (Xk) ≥ C ¯x > 0,
+
+where C ¯x depends only on CΓ and Cμ.
+
+Step 2: Exploration covariance Wk. The vectors {vmt }¯τ (k)  
+
+> m−1
+> t=¯ τ(k−1)
+> m
+
+are i.i.d. sub-Gaussian with co-variance matrix Idm . Stack them into an τ (k) 
+
+> m
+
+× dm matrix and apply Theorem 4.6.1 of Vershynin (2018). For any s > 0, with probability at least 1 − 2e−s2
+
+,
+
+1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+vmt (vmt )⊤ − Idm ≤ C
+
+s
+
+dm + s2
+
+τ (k)
+
+> m
+
++ dm + s2
+
+τ (k)
+
+> m
+
+!
+
+.
+
+36 Choose s = plog(40 /δ k) and suppose τ (k) 
+
+> m
+
+≥ C(dm + log(1 /δ k)), so that the right-hand side is at most 1 /2. Hence, for every k ≥ KW,m = O(log log(1 /δ )), it holds for some event EW,k with 
+
+P(EW,k ) ≥ 1 − δk/20 that 12 Idm ⪯ Wk ⪯ 32 Idm .
+
+Step 3: Assembly. Consider the leading block 
+
+fMk = ( α(k−1)  
+
+> m
+
+)−2Gm,k XkG⊤ 
+
+> m,k
+
++ JmWkJ⊤
+
+> m
+
+.
+
+On the event E0,k ∩ EW,k we have σmin (Xk) ≥ C ¯x and σmin (Wk) ≥ 1/2. Using Lemma 8 with Γ1 =
+
+I1+ n
+
+0
+
+
+
+and Γ 2 =
+
+h
+
+−f (k−1)  
+
+> m
+
+F (k−1)  
+
+> m
+
+Idm
+
+i⊤
+
+, a short calculation gives 
+
+σmin ( fMk) ≥ C fM := (C ¯x/¯α2) ∧ (1 /2) 8(1 + κm + κ′
+
+> m
+
+)2 > 0.
+
+It remains to control the cross term and the regularisation in (50). On the event Ez,k , we have 
+
+∥V (k) 
+
+> m
+
+∥ ≤ CV τ (k) 
+
+> m
+
+log( τ (k) 
+
+> m
+
+/δ k), det( V (k) 
+
+> m
+
+) ≤ (CV τ (k) 
+
+> m
+
+log( τ (k) 
+
+> m
+
+/δ k)) 1+ n+dm . Similar to the argument leading to (37) in Lemma 5, for every k ≥ K3,m = O(log log(1 /δ )), it holds for some event E3,k with 
+
+P(E3,k ) ≥ 1 − δk/20 that on E3,k ∩ Ez,k ,
+
+(α(k−1)  
+
+> m
+
+)−1 Gm,k CkJ⊤ 
+
+> m
+
++ JmC⊤ 
+
+> k
+
+G⊤
+
+> m,k
+
+ + βmIτ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 ≤ C
+
+ k2 + log 2(1 /δ )q
+
+τ (k) 
+
+> m
+
+α(k−1) 
+
+> m
+
+.
+
+Since τ (k) 
+
+> m
+
+≍ λk and α(k−1)  
+
+> m
+
+≍ λ−νmk with νm < 12 , the denominator τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2 ≍ λ(1 −2νm)k
+
+grows exponentially with exponent 12 − νm > 0, while the numerator contains only polynomial terms in k and log(1 /δ ). Hence there exists K3,m = O(log log(1 /δ )) such that for all k ≥ K3,m ≥ Kz,m 
+
+the right-hand side is at most C fM /4, which completes the control of the perturbation term. 
+
+Conclusion. Define the event EV,k = Ez,k ∩EΓ,k ∩Eμ,k ∩EW,k ∩E3,k . By the union bound P(EV,k ) ≥
+
+1−δk/4. On EV,k , for all k exceeding the maximum KV,m := max {Kz,m , K Γ,m , K μ,m , K W,m , K 3,m } =
+
+O(log log(1 /δ )), we have 
+
+σmin (V (k) 
+
+> m
+
+) ≥ CV τ (k) 
+
+> m
+
+(α(k−1)  
+
+> m
+
+)2
+
+with CV = C fM /2. Together with the upper bound obtained at the beginning, this completes the proof of Lemma 2. 
+
+A.4.2 Proof of Lemma 3 
+
+We first give a formal description of the asynchronous tail. For each epoch k ≥ 1 define the synchronous phase 
+
+S(k) = [ τ (k), ¯τ (k)], τ (k) = max  
+
+> 1≤j≤M
+
+¯τ (k−1)  
+
+> j
+
+, ¯τ (k) = min  
+
+> 1≤j≤M
+
+¯τ (k) 
+
+> j
+
+− 1.
+
+During S(k) every player employs the policy obtained after her ( k−1)-st update, so that the effective parameter Θ ∗ 
+
+> m,t
+
+equals the constant Θ (k),∗ 
+
+> m
+
+throughout S(k). The complementary set 
+
+T (k) 
+
+> m
+
+= [¯ τ (k−1)  
+
+> m
+
+, ¯τ (k) 
+
+> m
+
+− 1] \ S(k)
+
+is called the asynchronous tail; by Condition 1 its length satisfies |T (k) 
+
+> m
+
+| ≤ Cτ k for all large k. On 
+
+T (k) 
+
+> m
+
+we only have the deterministic bound ∥Θ∗ 
+
+> m,t
+
+−Θ(k),∗ 
+
+> m
+
+∥ ≤ CΘ, which follows from the compactness of the admissible strategy sets Am, Bm.37 Now we construct the required event. As established in the proof of Lemma 2, the state pro-cess {xt}∞ 
+
+> t=0
+
+is uniformly sub-Gaussian, which implies that the regression vectors {zmt }∞ 
+
+> t=0
+
+are also uniformly sub-Gaussian. It is obvious from its definition that { ˜wmt }∞ 
+
+> t=1
+
+is a uniformly sub-Gaussian sequence. Applying the standard sub-Gaussian maximal inequality over the interval [¯ τ (k−1)  
+
+> m
+
+, ¯τ (k) 
+
+> m
+
+−1] shows that for every k ≥ KA,m = O(log log(1 /δ )), it holds for some events EA1,k , E A2,k with 
+
+P(EA1,k ) ≥ 1 − δk/8 and P(EA2,k ) ≥ 1 − δk/8 that max     
+
+> ¯τ(k−1)
+> m≤t≤¯τ(k)
+> m−1
+
+∥zmt ∥2 ≤ Cz
+
+q
+
+log( τ (k) 
+
+> m
+
+/δ k), max     
+
+> ¯τ(k−1)
+> m≤t≤¯τ(k)
+> m−1
+
+∥ ˜wmt ∥2 ≤ Cw
+
+q
+
+log( τ (k) 
+
+> m
+
+/δ k).
+
+Set EA,k = EA1,k ∩ EA2,k ; then P(EA,k ) ≥ 1 − δk/4. On this event we bound the two quantities appearing in the lemma. For the first term, using that the summand is non-zero only on T (k) 
+
+> m
+
+and that |T (k) 
+
+> m
+
+| ≤ Cτ k,  
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+zmt (zmt )⊤(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤ ≤ X 
+
+> t∈T(k)
+> m
+
+∥zmt ∥22 ∥Θ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+∥ ≤ C k log( τ (k) 
+
+> m
+
+/δ k).
+
+For the second term,   
+
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+(Θ ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+)⊤zmt ( ˜ wmt )⊤ ≤ X 
+
+> t∈T(k)
+> m
+
+∥Θ∗ 
+
+> m,t
+
+− Θ(k),∗ 
+
+> m
+
+∥ ∥ zmt ∥2 ∥ ˜wmt ∥2 ≤ C k log( τ (k) 
+
+> m
+
+/δ k).
+
+Since k log( τ (k) 
+
+> m
+
+/δ k) = k O(k) + log(1 /δ ) + 2 log( k + 1)  ≤ C k2 + log(1 /δ ), both quantities are bounded by C(k2 + log(1 /δ )) on EA,k , as required. 
+
+A.4.3 Proof of Lemma 4 
+
+We treat the synchronous phase S(k) and the asynchronous tail T (k) 
+
+> m
+
+separately. Recall that |T (k) 
+
+> m
+
+| ≤ 
+
+Cτ k and |S(k)| ≥ τ (k) 
+
+> m
+
+− Cτ k.We first deal with the synchronous phase S(k). On S(k) all players use fixed strategies, hence the effective noise vectors ˜wmt are i.i.d. with zero mean and covariance matrix Σ (k),∗ 
+
+> m
+
+. Let yt =(Σ (k),∗ 
+
+> m
+
+)−1/2 ˜wmt for t ∈ S(k). Then {yt}t∈S(k) are i.i.d. sub-Gaussian with E[yt] = 0 and E[yty⊤ 
+
+> t
+
+] = In.Applying Theorem 4.6.1 of Vershynin (2018) exactly as in Step 2 of the proof of Lemma 2 shows that for every k ≥ Kc1,m = O(log log(1 /δ )), it holds for some event Ec1,k with P(Ec1,k ) ≥ 1 − δk/8that 
+
+1
+
+|S(k)|
+
+X
+
+> t∈S(k)
+
+yty⊤ 
+
+> t
+
+− In ≤ C
+
+s
+
+n + log(1 /δ k)
+
+|S(k)| .
+
+Multiplying by (Σ (k),∗ 
+
+> m
+
+)1/2 on both sides, using ∥Σ(k),∗ 
+
+> m
+
+∥ ≤ C and |S(k)| ≍ τ (k) 
+
+> m
+
+, we obtain 
+
+1
+
+τ (k)
+
+> m
+
+X
+
+> t∈S(k)
+
+  ˜wmt ( ˜ wmt )⊤ − Σ(k),∗
+
+> m
+
+ ≤ C
+
+s
+
+n + log(1 /δ k)
+
+τ (k)
+
+> m
+
+.
+
+For the asynchronous tail T (k) 
+
+> m
+
+, we use the sub-Gaussian maximal inequality as in the proof of Lemma 3. This shows that for every k ≥ Kc2,m = O(log log(1 /δ )), it holds for some event Ec2,k 
+
+with P(Ec2,k ) ≥ 1 − δk/8 that max     
+
+> ¯τ(k−1)
+> m≤t≤¯τ(k)
+> m−1
+
+∥ ˜wmt ∥22 ≤ C log( τ (k) 
+
+> m
+
+/δ k).
+
+38 On Ec2,k ,
+
+1
+
+τ (k)
+
+> m
+
+X 
+
+> t∈T(k)
+> m
+
+  ˜wmt ( ˜ wmt )⊤ − Σ(k),∗
+
+> m
+
+ ≤ |T (k) 
+
+> m
+
+|
+
+τ (k)
+
+> m
+
+
+
+max     
+
+> ¯τ(k−1)
+> m≤t≤¯τ(k)
+> m−1
+
+∥ ˜wmt ∥22 + C
+
+
+
+≤ C k log( τ (k) 
+
+> m
+
+/δ k)
+
+τ (k)
+
+> m
+
+.
+
+Now set Ecov ,k = Ec1,k ∩ Ec2,k and Kcov ,m = max {Kc1,m , K c2,m } = O(log log(1 /δ )). Then 
+
+P(Ecov ,k ) ≥ 1 − δk/4 and for all k ≥ Kcov ,m , on Ecov ,k ,
+
+1
+
+τ (k)  
+
+> m
+> ¯τ(k)
+> m−1
+
+X 
+
+> t=¯ τ(k−1)
+> m
+
+  ˜wmt ( ˜ wmt )⊤ − Σ(k),∗
+
+> m
+
+ ≤ C
+
+s
+
+n + log(1 /δ k)
+
+τ (k)
+
+> m
+
++ C k log( τ (k) 
+
+> m
+
+/δ k)
+
+τ (k)
+
+> m
+
+.
+
+Since τ (k) 
+
+> m
+
+≍ λk and νm < 12 , both terms on the right-hand side are of smaller order than η(k) 
+
+> m
+
+(δ)in (28). Hence, after possibly increasing Kcov ,m by an absolute constant, the total error is bounded by Cη (k) 
+
+> m
+
+(δ) for all k ≥ Kcov ,m .
+
+# B Algorithm Implementation and Sufficient Conditions in Section 5
+
+This section provides the implementation details of Algorithm 1 for the dynamic Cournot compe-tition model, followed by the theoretical analysis that establishes sufficient conditions for Assump-tions 1, 2, and 4. Appendix B.1 derives a directly verifiable characterization of the feasible set Sm
+
+and a practical method for computing the greedy strategy (Algorithm 2). Appendix B.2 identify conditions under which the optimal strategy of (21) is unique, independent of the initial price, and Lipschitz continuous with respect to the perceived parameters. Using these conditions together with the equivalence relationship (32), Appendix B.3 establishes a set of sufficient conditions that guar-antee Assumptions 1, 2, and 4. The proofs of the lemmas in Appendices B.1 and B.3 are collected in Appendix B.4. In the first two subsections, we focus on a representative firm m and consider its problem (21) under a perceived parameter pair (Θ m = [(1 − s′)a′, s ′, −(1 − s′)b′]⊤, Σm = σ2
+
+> m
+
+). 
+
+B.1 Algorithm Implementation 
+
+To derive an implementable way to check feasibility and calculate the greedy strategy in Algorithm 1, we first derive an explicit representation of the cost function (21) under the perceived model (3). For a given linear strategy ( Fm, f m, α m) with ( Fm, f m) ∈ A m × B m and αm ≥ 0, the price process implied by (3) becomes 
+
+pt+1 =  s′ + (1 − s′)b′Fm
+
+pt + (1 − s′)a′ − (1 − s′)b′fm − (1 − s′)b′αmvmt + ω′
+
+> t
+
+, (52) with initial price p0 = p. The exploration noise {vmt }∞ 
+
+> t=0
+
+and the perceived market noise {ω′
+
+> t
+
+}∞
+
+> t=0
+
+are mutually independent i.i.d. sub-Gaussian sequences with mean zero and variances 1 and σ2
+
+> m
+
+,respectively. Substituting (52) into the cost function (21) yields 
+
+JΘm,Σm
+
+> m
+
+ (Fm, f m); p, α m
+
+ =
+
+> ∞
+
+X
+
+> t=0
+
+ρt
+
+Qm(Fm)E[p2 
+
+> t
+
+] + Rm(Fm, f m)E[pt] + Om(Fm, f m)
+
+
+
+, (53) where {pt} evolves according to (52), and 
+
+Qm(Fm) = ( 12 + (1 − s′)b′)F 2 
+
+> m
+
++ s′Fm,Rm(Fm, f m) = −(1 + 2(1 − s′)b′)Fmfm − s′fm + ((1 − s′)a′ − cm)Fm,Om(Fm, f m) = ( 12 + (1 − s′)b′)f 2 
+
+> m
+
++ ( cm − (1 − s′)a′)fm + ( 12 + (1 − s′)b′)α2
+
+> m
+
+.
+
+The expressions (53) provide the foundation for a directly verifiable characterization of the feasible set Sm in (8) and a practical greedy strategy calculation method developed below. 39 B.1.1 Explicit Characterization of Sm
+
+We first provide a more explicit characterization of the feasible parameter set Sm defined in (8) for player m.For all Fm ∈ A m, write Am 
+
+> cl
+
+(Fm) = s′ + (1 − s′)b′Fm. This quantity characterizes the asymptotic stationarity and growth rate of {pt}: if |Am 
+
+> cl
+
+(Fm)| < 1, the process is asymptotically stationary; otherwise, |E[pt]| and E[p2 
+
+> t
+
+] grow exponentially at the rates |Am 
+
+> cl
+
+(Fm)|t and ( Am 
+
+> cl
+
+(Fm)) 2t, respec-tively. The cost (53) can be −∞ (i.e., infinite profit) if and only if either (i) Qm(Fm) < 0 and 
+
+√ρ |Am 
+
+> cl
+
+(Fm)| ≥ 1, or (ii) Qm(Fm) = 0 and P∞ 
+
+> t=0
+
+ρtRm(Fm, f m)E[pt] = −∞ . To exclude these pathological cases, we define the following set ˆSm
+
+ˆSm =
+
+(
+
+(Θ m, Σm) : ∀Fm ∈ A m, if Qm(Fm) < 0 then |Amcl (Fm)| < 1√ρ ,
+
+if Qm(Fm) = 0 then |Amcl (Fm)| < 1 
+
+> ρ
+
+.
+
+)
+
+. (54) The conditions in (54) rule out any possibility of unbounded negative cost. The following lemma, whose proof can be found in Appendix B.4, establishes that this auxiliary set coincides with the feasible set Sm required by Algorithm 1. 
+
+Lemma 9. For the dynamic Cournot competition model, the feasible set Sm defined in (8) is identical to the set ˆSm given by (54) .
+
+Because Qm(Fm) and Am 
+
+> cl
+
+(Fm) are respectively quadratic and linear functions of Fm, checking the conditions in (54) is straightforward. When implementing Algorithm 1 (line 8), we decide whether to accept an estimate candidate or fall back by verifying these conditions. 
+
+B.1.2 Greedy Strategy Calculation 
+
+This subsection describes how to compute the greedy strategy in (13) for Step 9 of Algorithm 1. Directly searching over the grid ( Fm, f m) ∈ A m × B m to solve (13) is computationally costly. To circumvent this issue, we exploit the problem structure, specifically the cost function (53), to develop a more efficient solution. At the k-th update epoch, for a given accepted parameter set ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+) ∈ ˆSm, an admissible strategy ( Fm, f m) ∈ A m × B m yields either a finite cost or an infinite positive cost. To determine when the cost is finite, we use the following lemma, which follows by applying the standard LQ formulas (or, equivalently, solving the Bellman equation) to the linear perceived dynamics (52) with the quadratic cost structure (53). 
+
+Lemma 10. For any given (Θ m, Σm) ∈ ˆSm, p > 0, and αm ≥ 0, the cost (53) is finite if and only if one of the following holds: 1. √ρ |Am 
+
+> cl
+
+(Fm)| < 1;2. ρ |Am 
+
+> cl
+
+(Fm)| < 1 and Qm(Fm) = 0 ;3. Qm(Fm) = 0 and Rm(Fm, f m) = 0 .In the first two cases, for a fixed Fm the cost is a quadratic function of fm.
+
+Thus, to minimize (21), firm m searches over strategies satisfying the conditions of Lemma 10 (otherwise the cost would be infinite). Because Am is one-dimensional, we first perform a grid search over Fm ∈ A m. For a fixed Fm, when the first two conditions of the lemma hold, the optimal 
+
+fm can be found analytically: since Bm = [ −κ′
+
+> m
+
+, κ ′
+
+> m
+
+] is a closed interval and the cost is quadratic in fm, the minimizer is either the unconstrained quadratic minimizer clipped to the interval, or one of the endpoints. In the third condition, the values of fm that satisfy Rm(Fm, f m) = 0 are directly computable because Rm is linear in fm. This procedure yields an efficient greedy strategy computation method, summarized in Algorithm 2. For other types of LQ games, particularly multi-dimensional ones, we provide Algorithm 3 for greedy strategy calculation in Appendix C. 40 Algorithm 2 Cournot Competition: Greedy Strategy Calculation for Firm m at Time ¯ τ (k) 
+
+> m
+> 1:
+
+Require: Accepted parameter pair ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+), exploration noise scale α(k) 
+
+> m
+
+, initial price p¯τ (k) 
+
+> m
+> 2:
+
+Initialize candidate set C = ∅ 
+
+> 3:
+
+for each Fm ∈ A m do  
+
+> 4:
+
+if √ρ |Am 
+
+> cl
+
+(Fm)| < 1 or ( ρ |Am 
+
+> cl
+
+(Fm)| < 1 and Qm(Fm) = 0) then  
+
+> 5:
+
+Compute fmin = arg min 
+
+> fm∈B m
+
+J ˜Θ(k)  
+
+> m,˜Σ(k)
+> m
+> m
+
+ (Fm, f m); p¯τ (k)
+
+> m
+
+, α (k)
+
+> m
+
+ 
+
+> 6:
+
+Evaluate Jmin = J ˜Θ(k)  
+
+> m,˜Σ(k)
+> m
+> m
+
+ (Fm, f min ); p¯τ (k)
+
+> m
+
+, α (k)
+
+> m
+
+ 
+
+> 7:
+
+Add ( Fm, f min , J min ) to C 
+
+> 8:
+
+end if  
+
+> 9:
+
+if Qm(Fm) = 0 then  
+
+> 10:
+
+for each fm ∈ B m such that Rm(Fm, f m) = 0 do  
+
+> 11:
+
+Compute J = J ˜Θ(k)  
+
+> m,˜Σ(k)
+> m
+> m
+
+ (Fm, f m); p¯τ (k)
+
+> m
+
+, α (k)
+
+> m
+
+ 
+
+> 12:
+
+Add ( Fm, f m, J ) to C 
+
+> 13:
+
+end for  
+
+> 14:
+
+end if  
+
+> 15:
+
+end for  
+
+> 16:
+
+Select the triple ( F ∗
+
+> m
+
+, f ∗
+
+> m
+
+, J ∗) in C with the smallest cost J∗ 
+
+> 17:
+
+return (F ∗
+
+> m
+
+, f ∗
+
+> m
+
+)
+
+B.2 An explicit characterization of the optimal strategy of (53) 
+
+In this section, we study the setting in which the optimal strategy of the problem (53) over the ad-missible set Am ×B m coincides with that of the corresponding unconstrained problem (the minimizer of (53) over R × R). When this coincidence occurs, the optimal strategy over Am × B m is unique and admits a closed-form solution that is independent of the initial price p and Lipschitz continuous with respect to the parameters (Θ m, Σm, α m). Leveraging the equivalence relationship (32), these favorable properties allow us to establish Assumptions 1, 2, and 4 under some sufficient conditions in Appendix B.3. The following lemma provides an explicit characterization of the optimal strategy for the unconstrained problem and states when it also solves the constrained problem. 
+
+Lemma 11. If 
+
+(1 − s′)b′ > 0, √ρ|s′| < 1, (55) 
+
+then for any p ∈ R, αm ≥ 0, the following hold. (1) The unconstrained problem inf  
+
+> (Fm,f m)∈R×R
+
+JΘm,Σm 
+
+> m
+
+(( Fm, f m); p, α m) has a finite optimal value, and the unique minimizer is given by 
+
+F Θm 
+
+> m
+
+= −s′(2 ρP Θm 
+
+> m
+
+(1 − s′)b′ + 1) 1 + 2(1 − s′)b′ + 2 ρP Θm 
+
+> m
+
+((1 − s′)b′)2 , (56) 
+
+f Θm 
+
+> m
+
+= (1 − ρs ′)((1 − s′)a′ − cm) + 2 ρP Θm 
+
+> m
+
+(1 − s′)b′(1 − s′)a′
+
+ 1 + 2(1 − s′)b′ + 2 ρP Θm 
+
+> m
+
+((1 − s′)b′)2(1 − ρ(s′ + (1 − s′)b′F Θm 
+
+> m
+
+)) , (57) 
+
+where 
+
+P Θm 
+
+> m
+
+= 
+
+> ρ
+> 2
+
+(s′)2 − ( 12 + (1 − s′)b′) + 
+
+q( 12 + (1 − s′)b′) − ρ 
+
+> 2
+
+(s′)22 − ρ((1 − s′)b′)2(s′)2
+
+2ρ((1 − s′)b′)2 . (58) 
+
+(2) If additionally (F Θm 
+
+> m
+
+, f Θm 
+
+> m
+
+) ∈ A m ×B m, then this pair is also the unique minimizer of the problem 
+
+(53) over Am × B m. In particular, the optimal value is finite, so (Θ m, Σm) ∈ S m.
+
+41 Proof. Proof We proceed in three steps. 
+
+Step 1: Riccati equation and closed-loop stability. Consider the Riccati equation 
+
+h(Pm) = 4 ρ((1 − s′)b′)2P 2 
+
+> m
+
++ 4 ( 12 + (1 − s′)b′) − ρ
+
+2 (s′)2Pm + ( s′)2 = 0 . (59) Under condition (55), the discriminant of the quadratic (59) satisfies ∆ > 0, and evaluating h(Pm) at 
+
+Pm = 0 and at Pm = − 12 +(1 −s′)b′ 
+
+> ρ((1 −s′)b′)2
+
+shows h(Pm) > 0 at both endpoints. Hence Vieta’s formulas yield two negative roots − 12 +(1 −s′)b′ 
+
+> ρ((1 −s′)b′)2
+
+< P (2)  
+
+> m
+
+< P (1)  
+
+> m
+
+< 0. Setting X(i) = 1 + 2(1 − s′)b′ + 2 ρP (i) 
+
+> m
+
+((1 − s′)b′)2
+
+and substituting the relation into (59) to obtain the quadratic equation satisfied by X(i), Vieta’s formulas give X(1) X(2) = ρ(s′(1 + (1 − s′)b′)) 2, hence X(1) > √ρ|s′(1 + (1 − s′)b′)| > X (2) > 0. Therefore Pm in (58) (i.e. P (1)  
+
+> m
+
+) is the unique root satisfying the required closed-loop stability condition √ρ|s′ + (1 − s′)b′F Θm 
+
+> m
+
+| < 1. 
+
+Step 2: Identifying the minimizer. We distinguish two cases according to Fm.First, by the characterization (53), for any Fm outside the interval 
+
+
+
+− s′+ 1√ρ 
+
+> (1 −s′)b′
+
+, 
+
+> 1√ρ−s′
+> (1 −s′)b′
+
+
+
+, we have 
+
+Qm(Fm) > 0, hence JΘm,Σm 
+
+> m
+
+(( Fm, f m); p, α m) = ∞ for all fm. Such strategies cannot be optimal. Second, restrict attention to Fm in this interval and admissible fm. To identify the optimal strategy, introduce the auxiliary controlled dynamics 
+
+pt+1 = (1 − s′)a′ + s′pt − (1 − s′)b′ ˜qmt − (1 − s′)b′αmvmt + ω′ 
+
+> t
+
+(60) for {˜qmt }t≥0 ∈ U Θm 
+
+> m
+
+, where 
+
+UΘm 
+
+> m
+
+=
+
+(
+
+˜qmt , t ≥ 0 ˜qmt is Ft-measurable , E
+
+" ∞X
+
+> t=0
+
+ρt(p2 
+
+> t
+
++ (˜ qmt )2)
+
+#
+
+< ∞
+
+)
+
+.
+
+For any Fm in this interval and any admissible fm, the sequence {˜qmt }t≥0 given by ˜ qmt = −Fmpt +fm
+
+lies in UΘm 
+
+> m
+
+, and (60) coincides with (52) under this {˜qmt }t≥0. Standard dynamic programming applied to the auxiliary problem inf  
+
+> (˜ qmt)t≥0∈U Θmm
+
+E
+
+" ∞X
+
+> t=0
+
+ρt   12 ˜qmt − pt+1 + cm
+
+ ˜qmt
+
+#
+
+,
+
+subject to (60), shows that the unique minimizer is the linear feedback strategy ˜ qm, ∗ 
+
+> t
+
+= −F Θm 
+
+> m
+
+pt +
+
+f Θm 
+
+> m
+
+.Combining the two cases, ( F Θm 
+
+> m
+
+, f Θm 
+
+> m
+
+) is the unique minimizer of JΘm,Σm 
+
+> m
+
+(( Fm, f m); p, α m) over 
+
+R × R, completing the proof of part (1). 
+
+Step 3: Constrained optimality. Finally, if ( F Θm 
+
+> m
+
+, f Θm 
+
+> m
+
+) ∈ A m × B m, then it is admissible for the constrained problem. Since it is the unique minimizer over the larger unconstrained domain, it must also be the unique minimizer over the subset Am × B m.
+
+B.3 Sufficient Conditions for Assumptions 1, 2, and 4 
+
+In this section, we provide directly verifiable sufficient conditions under which Assumptions 1, 2, and 4 hold for the Cournot competition model. We state two main conditions. Condition 2 ensures that each player’s best response is well-defined, thereby establishing Assumption 1 and guaranteeing the existence of a feedback Nash equilibrium; through a perturbation analysis, it also implies Assumption 4. Building on Condition 2, Condition 3 additionally guarantees the stability 42 of this equilibrium, i.e., Assumption 2. Together, the two conditions imply all three required assumptions. To facilitate the statement of the conditions, we first introduce the following constants: 
+
+CA,m := s − (1 − s)b X 
+
+> j̸=m
+
+κj , CA,m := s + (1 − s)b X 
+
+> j̸=m
+
+κj , (61) 
+
+CG := 12 + (1 − s)b − ρ((1 − s)b)2CP , (62) 
+
+CP :=  
+
+> 12
+
+(1 − ρC 2
+
+> A,m
+
+) + (1 − s)b −
+
+q  12 (1 − ρC 2
+
+> A,m
+
+) + (1 − s)b2 − ρ((1 − s)b)2C2
+
+> A,m
+
+2ρ((1 − s)b)2 , (63) 
+
+Cf,m := 
+
+ (1 − ρC A,m ) ∨ (2 ρ(1 − s)bC P + ρC A,m − 1) (1 − s)( a + b P 
+
+> j̸=m
+
+κ′ 
+
+> j
+
+) + (1 − ρC A,m )cm
+
+2CG − ρC A,m (1 + (1 − s)b) .
+
+(64) With these constants in place, we state the first condition. 
+
+Condition 2. For all 1 ≤ m ≤ M , the following hold: 1) √ρC A,m < 1,2) CA,m 
+
+1 + 2(1 − s)b − 2ρ((1 − s)b)2CP
+
+< κ m,3) Cf,m < κ ′
+
+> m
+
+.
+
+Part 1) of Condition 2 ensures that for each player, condition (55) holds under any admissible strategy profile of others, so that the unconstrained problem is well-posed and the unconstrained optimum exists. Parts 2) and 3) then guarantees this unconstrained optimal strategy falls strictly inside the admissible sets Am × B m. Consequently, Condition 2 implies Assumption 1, as stated in Lemma 12; the same lemma also establishes the existence of a feedback Nash equilibrium, charac-terized by the system therein. Its proof is deferred to Appendix B.4. For notational convenience, for any admissible strategy profile ( F−m, f −m) of the other players, define 
+
+A(F−m) = s + (1 − s)b X 
+
+> j̸=m
+
+Fj , A(f−m)0 = (1 − s)a − (1 − s)b X 
+
+> j̸=m
+
+fj .
+
+Lemma 12. Under Condition 2, the following hold: 1) Assumption 1 holds with (ψm(F−m, f −m), φ m(F−m, f −m)) given explicitly in (75) for all 1 ≤
+
+m ≤ M and (F−m, f −m) ∈ A −m × B −m.2) There exists a feedback Nash equilibrium, characterized by the solution to the coupled system 
+
+
+
+Fm = − A(F−m)(2 ρP m(1 − s)b + 1) 2( 12 + (1 − s)b) + 2 ρP m((1 − s)b)2 ,fm = (1 − ρA (F−m))( A(f−m)0 − cm) + 2 ρP m(1 − s)bA (f−m)0
+
+2 ( 12 + (1 − s)b) + ρP m((1 − s)b)2  1 − ρ(A(F−m) + (1 − s)bF m) ,Pm = 
+
+> ρ
+> 2
+
+(A(F−m))2 − ( 12 + (1 − s)b) + 
+
+q( 12 + (1 − s)b) − ρ 
+
+> 2
+
+(A(F−m))22 − ρ((1 − s)b)2(A(F−m))2
+
+2ρ((1 − s)b)2 ,
+
+(65) 
+
+for 1 ≤ m ≤ M .
+
+Via a perturbation argument, Condition 2 also establishes Assumption 4, as stated in Lemma 13 below; its proof is deferred to Appendix B.4. 43 Lemma 13. Under Condition 2, Assumption 4 holds. 
+
+To find a condition that guarantees the stability of the equilibrium characterized in Lemma 12, we introduce the following constants: 
+
+LP,m := 
+
+ |A(F ∗−m)| + CA,m 
+
+(1 + 2 ρC P )2 + 4(1 − s)b − 2ρ A(F ∗−m)2 + 4 ρ((1 − s)b)2 P ∗ 
+
+> m
+
+− CP
+
+ , (66) 
+
+LF,m = |A(F ∗−m)|ρ(1 − s)b(1 + (1 − s)b)LP,m 
+
+2CG 12 + (1 − s)b + ρP ∗
+
+> m
+
+((1 − s)b)2 + 12CG
+
+, (67) 
+
+Lf,m := 1 − ρA (F ∗−m) + 2 ρP ∗
+
+> m
+
+(1 − s)b
+
+2 12 + (1 − s)b + ρP ∗
+
+> m
+
+((1 − s)b)2 1 − ρ A(F ∗−m) + (1 − s)bF ∗
+
+> m
+
+ . (68) With these constants in place, we state the contraction condition. 
+
+Condition 3. Let (F ∗, f ∗, {P ∗
+
+> m
+
+}1≤m≤M ) be a solution of (65) . For all 1 ≤ m ≤ M , assume 1) 4  12 + (1 − s)b − 2ρ A(F ∗−m)2 + 4 ρ((1 − s)b)2 P ∗ 
+
+> m
+
+− CP
+
+ > 0,2) (1 − s)b P 
+
+> j̸=m
+
+LF,j < 1,3) (1 − s)b P 
+
+> j̸=m
+
+Lf,j < 1,where CP , LF,m , and Lf,m are given by (63) , (67) , and (68) , respectively. 
+
+Condition 3 is expressed solely in terms of the model parameters and the equilibrium quantities themselves. Part 1) ensures a non-degenerate denominator in the Lipschitz estimates, while parts 2) and 3) impose that the cumulative influence of other players through their feedback gains and offsets remains contracting. Lemma 14 below formalizes this implication, giving the stability coefficient 
+
+ζ explicitly; we omit the explicit expression for μ, which does not affect the convergence rate, for brevity. Its proof is deferred to Appendix B.4. 
+
+Lemma 14. Under Conditions 2 and 3, there exists a constant μ > 0 (depending on the model parameters) such that Assumption 2 holds with ζ given by 
+
+ζ = max 
+
+
+
+12 + 12 max 
+
+> 1≤j≤M
+
+n
+
+(1 − s)b X
+
+> m̸=j
+
+LF,m 
+
+o
+
+, max 
+
+> 1≤j≤M
+
+n
+
+(1 − s)b X
+
+> m̸=j
+
+Lf,m 
+
+o . (69) 
+
+B.4 Proofs of Auxiliary Lemmas in Appendix B 
+
+B.4.1 Proof of Lemma 9 
+
+Proof. Proof We prove the two inclusions separately. 
+
+Part 1: ˆSm ⊆ S m. Take any (Θ m, Σm) ∈ ˆSm. For all p and αm ≥ 0, the cost at (0 , 0) is finite, so the infimum is < ∞. For any admissible ( Fm, f m), the moments satisfy E[pt] ≍ (Am 
+
+> cl
+
+(Fm)) t and 
+
+E[p2 
+
+> t
+
+] ≍ (Am 
+
+> cl
+
+(Fm)) 2t. Consequently, in (53), the term with Qm(Fm) converges if Qm(Fm) = 0 or 
+
+ρ(Am 
+
+> cl
+
+)2 < 1; the term with Rm(Fm, f m) converges if Rm(Fm, f m) = 0 or ρ|Am 
+
+> cl
+
+| < 1. Now we examine each sign of Qm(Fm). If Qm(Fm) ≤ 0, the definition of ˆSm ensures that the cost is finite. If Qm(Fm) > 0, then when √ρ|Am 
+
+> cl
+
+| < 1 the cost is finite; otherwise it diverges to + ∞
+
+because the positive Qm-term dominates. Thus the cost is never −∞ . Lower semicontinuity on the compact set Am × B m implies the infimum is attained and finite. Therefore (Θ m, Σm) ∈ S m.
+
+Part 2: Sm ⊆ ˆSm. We prove the contrapositive. Suppose (Θ m, Σm) /∈ ˆSm. Then there exists 
+
+Fm ∈ A m violating the condition. 44 1) Qm(Fm) < 0 but √ρ|Am 
+
+> cl
+
+| ≥ 1: then P 
+
+> t
+
+ρtQm(Fm)E[p2 
+
+> t
+
+] diverges to −∞ , so the infimum is 
+
+−∞ .2) Qm(Fm) = 0 but ρ|Am 
+
+> cl
+
+| ≥ 1: choose an admissible fm with Rm(Fm, f m)̸ = 0 (possible because 
+
+Rm is affine in fm); then the linear term diverges to −∞ for a suitable initial price p, making the infimum −∞ .In either case (Θ m, Σm) /∈ S m. Hence Sm ⊆ ˆSm.Both inclusions yield Sm = ˆSm.
+
+B.4.2 Proof of Lemma 12 
+
+Proof. Proof We first prove part 1). For each player, under any admissible strategy profile of others, condition (55) holds, so that Lemma 11 applies, and the unconstrained optimum exists. We then track how bounds propagate along the chain (58) →(56) →(57), showing at each step that the output remains strictly inside the admissible set. Part 2) then follows from Brouwer’s fixed-point theorem, using the continuity of the best-response map established in part 1). We take player m as a representative player. For any admissible strategy profile ( F−m, f −m)of the other players, let Θ (F−m,f −m) 
+
+> m
+
+= [ A(f−m)0 , A (F−m), −(1 − s)b]⊤ as in (18). By replacing (F (k−1)  
+
+> −m
+
+, f (k−1)  
+
+> −m
+
+) in (32) with an arbitrary ( F−m, f −m) ∈ A −m ×B −m (and Θ (k),∗ 
+
+> m
+
+with the correspond-ing Θ (F−m,f −m) 
+
+> m
+
+), the minimizer of the complete-information problem Jm(( Fm, f m); ( F−m, f −m), p )coincides with that of the control problem (53) with the perceived parameter pair (Θ (F−m,f −m) 
+
+> m
+
+, Σω). Thus, it suffices to analyze the latter, which is the focus of the rest of this subsection. By definition, 
+
+CA,m ≤ A(F−m) ≤ CA,m , so Part 1) of Condition 2 gives 
+
+√ρ|A(F−m)| < 1, (1 − s)b > 0, (70) which means condition (55) holds. Lemma 11 therefore applies and ( F Θ(F−m,f −m) 
+
+> m
+> m
+
+, f Θ(F−m,f −m) 
+
+> m
+> m
+
+)attains the minimum over R × R.
+
+Step 1: Bound on Pm. Since |A(F−m)| ≤ CA,m , one verifies by rationalizing the numerator of (58) that the expression is monotone increasing in |A(F−m)|. Hence P Θ(F−m,f −m) 
+
+> m
+> m
+
+is negative and bounded below by CP in (63). With CG as defined in (62), we obtain 
+
+−CP ≤ P Θ(F−m,f −m) 
+
+> m
+> m
+
+< 0, 12 + (1 − s)b + ρP Θ(F−m,f −m) 
+
+> m
+> m
+
+((1 − s)b)2 ≥ CG > 0. (71) 
+
+Step 2: Bound on Fm. Since 0 > 2ρP Θ(F−m,f −m) 
+
+> m
+> m
+
+(1 − s)b ≥ − 2ρ(1 − s)bC P > −1, from (56) we obtain the estimate F Θ(F−m,f −m) 
+
+> m
+> m
+
+< CA,m 
+
+> 2CG
+
+. Part 2) of Condition 2 then yields 
+
+−κm < F Θ(F−m,f −m) 
+
+> m
+> m
+
+< κ m. (72) 
+
+Step 3: Bound on fm. Using (56), we have 
+
+A(F−m) + (1 − s)bF Θ(F−m,f −m) 
+
+> m
+> m
+
+= A(F−m)(1 + (1 − s)b)2 ( 12 + (1 − s)b) + ρP Θ(F−m,f −m) 
+
+> m
+> m
+
+((1 − s)b)2 .
+
+Together with |A(F−m)| ≤ CA,m and (71), the denominator of (57) satisfies 
+
+2 ( 12 +(1 −s)b)+ ρP Θ(F−m,f −m) 
+
+> m
+> m
+
+((1 −s)b)2(1 −ρ(A(F−m) +(1 −s)bF Θ(F−m,f −m) 
+
+> m
+> m
+
+)) ≥ 2CG −ρC A,m (1+(1 −s)b),
+
+(73) 
+
+45 where the positivity of the lower bound follows directly from the definitions of CP and CG. Com-bining this with the bounds on A(f−m)0 , |A(f−m)0 | ≤ (1 − s)( a + b P 
+
+> j̸=m
+
+κ′ 
+
+> j
+
+), and (71), we obtain from (57) the estimate |f Θ(F−m,f −m) 
+
+> m
+> m
+
+| ≤ Cf,m , where Cf,m is given by (64). Part 3) of Condition 2 then guarantees 
+
+−κ′ 
+
+> m
+
+< f Θ(F−m,f −m) 
+
+> m
+
+< κ ′
+
+> m
+
+. (74) By part (2) of Lemma 11, the pair ( F Θ(F−m,f −m) 
+
+> m
+> m
+
+, f Θ(F−m,f −m) 
+
+> m
+> m
+
+) is the unique minimizer, indepen-dent of the initial price p, and continuous in ( F−m, f −m), so Assumption 1 holds with 
+
+ψm(F−m, f −m) = F Θ(F−m,f −m) 
+
+> m
+> m
+
+, φm(F−m, f −m) = f Θ(F−m,f −m) 
+
+> m
+> m
+
+. (75) The continuity of Ψ follows from (75) and the continuity of the closed-form expressions in the parameters ( F−m, f −m). Since A × B is compact, Brouwer’s fixed-point theorem guarantees a fixed point ( F ∗, f ∗) of Ψ, which by definition satisfies the coupled system (65). Lemma 1 then implies that ( F ∗, f ∗) is a feedback Nash equilibrium. This proves part 2). The proof is complete. 
+
+B.4.3 Proof of Lemma 13 
+
+Proof. Proof Fix any ( F−m, f −m) ∈ A −m × B −m and let Θ (F−m,f −m) 
+
+> m
+
+be as defined in (18). 
+
+Part 1. Lemma 12 shows that Θ (F−m,f −m) 
+
+> m
+
+satisfies the conditions of Lemma 11 with strict inequal-ities (see (70), (72), (74)). Since these inequalities involve only the components of Θ (F−m,f −m) 
+
+> m
+
+and are strict, and since the bounds used in the estimates are uniform over the compact set A−m × B −m,there exists δm > 0 independent of ( F−m, f −m) such that for any ˜Θm with ∥ ˜Θm −Θ(F−m,f −m) 
+
+> m
+
+∥ ≤ δm,the same strict inequalities hold. Consequently, Lemma 11(2) applies and yields ( ˜Θm, ˜Σm) ∈ S m
+
+for any ˜Σm with ∥ ˜Σm − Σω∥ ≤ δm. This establishes part 1) of Assumption 4. 
+
+Part 2. The explicit formulas (56)-(57) are smooth functions of the components of Θ (F−m,f −m)
+
+> m
+
+over the compact parameter range induced by A−m × B −m. The uniform lower bounds (71) and (73) ensure that the denominators in these formulas stay bounded away from zero uniformly over ( F−m, f −m). By continuity and compactness, there exists a constant Lm < ∞ such that for all (F−m, f −m) ∈ A −m × B −m and all ( ˜Θm, ˜Σm, α m) with max {∥ ˜Θm − Θ(F−m,f −m) 
+
+> m
+
+∥, ∥ ˜Σm − Σω∥, α m} ≤ 
+
+δm, the Lipschitz bounds required by part 2) of Assumption 4 hold. The independence of the minimizer from the initial state x follows from Lemma 11(2). 
+
+B.4.4 Proof of Lemma 14 
+
+Proof. Proof By Lemma 12, ( F ∗, f ∗) is a fixed point of Ψ. We consider any ( ˆF , ˆf ) ∈ A × B and let (F, f ) = Ψ(( ˆF , ˆf )). Under Condition 2, Lemma 12 provides the explicit formulas (75) for ( Fm, f m). 
+
+Step 1: Lipschitz estimate for Pm. Applying a differencing argument to formula (58) and using the uniform bound |Pm| ≤ CP from (71), we obtain |Pm − P ∗
+
+> m
+
+| ≤ LP,m |A( ˆF−m) − A(F ∗−m)|, where 
+
+LP,m is defined in (66) and its denominator is positive by Part 1) of Condition 3. 
+
+Step 2: Lipschitz estimate for Fm. Applying a differencing argument to formula (56) and substituting the bound from Step 1 and the uniform lower bound on the denominator from (71), we obtain |Fm − F ∗
+
+> m
+
+| ≤ LF,m |A( ˆF−m) − A(F ∗−m)|, where LF,m is given by (67). Since |A( ˆF−m) − A(F ∗−m)| =(1 − s)b P 
+
+> j̸=m
+
+| ˆFj − F ∗ 
+
+> j
+
+|, summing over m and rearranging yields 
+
+> M
+
+X
+
+> m=1
+
+|Fm − F ∗
+
+> m
+
+| ≤ max 
+
+> 1≤j≤M
+
+n
+
+(1 − s)b X
+
+> m̸=j
+
+LF,m 
+
+o MX
+
+> j=1
+
+| ˆFj − F ∗ 
+
+> j
+
+|.
+
+46 Step 3: Lipschitz estimate for fm. Applying a differencing argument to formula (57) and substituting the bounds from Steps 1-2 together with (73), we obtain |fm − f ∗
+
+> m
+
+| ≤ Lf,m |A( ˆf−m)0 −
+
+A(f ∗−m)0 | + Lf F,m |A( ˆF−m) − A(F ∗−m)|, where Lf,m is given by (68) and Lf F,m < ∞ depends only on the model parameters and the bounds already established. Summing over m and rearranging analogously to Step 2 then gives 
+
+> M
+
+X
+
+> m=1
+
+|fm − f ∗
+
+> m
+
+| ≤ max 
+
+> 1≤j≤M
+
+n
+
+(1 − s)b X
+
+> m̸=j
+
+Lf F,m 
+
+o MX
+
+> j=1
+
+| ˆFj − F ∗ 
+
+> j
+
+| + max 
+
+> 1≤j≤M
+
+n
+
+(1 − s)b X
+
+> m̸=j
+
+Lf,m 
+
+o MX
+
+> j=1
+
+| ˆfj − f ∗ 
+
+> j
+
+|.
+
+Step 4. Let ζ be defined as in (69), and choose μ = 
+
+> 2max
+> 1≤j≤M
+
+(1 −s)b P 
+
+> m̸=j
+> Lf F,m
+> 1−max
+> 1≤j≤M
+
+(1 −s)b P
+
+> m̸=j
+> LF,m
+
+. Substituting the estimates from Steps 2-3 into the definition of ∥ · ∥ μ, 1,2 in Assumption 2, a direct calculation yields 
+
+Ψ(( ˆF , ˆf ) − Ψ(( F ∗, f ∗)) μ, 1,2 ≤ ζ ( ˆF , ˆf ) − (F ∗, f ∗) μ, 1,2.
+
+Parts 2) and 3) of Condition 3 ensure that ζ < 1, so Assumption 2 is satisfied. 
+
+# C A Numerical Example with Multiple Equilibria 
+
+In this section, we consider a linear-quadratic games with no cross term ( Hm = 0) and Qm ≻ 0, which allow for multi-dimensional state and action spaces. This setting is standard in the LQ game literature (Hambly et al., 2023; Mazumdar et al., 2020). We first describe the implementation of Algorithm 1 in this setting, and then present a numerical example with two distinct Nash equilibria, for which the learning dynamics may converge to different equilibria or oscillate across runs. 
+
+C.1 Algorithm Implementation 
+
+We first analyze the unconstrained control problem and characterize its solution. Using this result, we then provide a verifiable characterization of the feasible set Sm and describe a practical method for computing the greedy strategy. Throughout this subsection, player m serves as the representative agent, and we denote its parameter estimate by (Θ m, Σm). For convenience, we partition Θ m as Θm = [ A′
+
+> 0
+
+, A ′, B ′
+
+> m
+
+]⊤, where A′ 
+
+> 0
+
+∈ Rn×1 is the coefficient vector for the constant term, A′ ∈ Rn×n
+
+for the state xt, and B′ 
+
+> m
+
+∈ Rn×dm for player m’s control umt in the perceived dynamics (6). 
+
+C.1.1 The Unconstrained Optimal Strategy 
+
+We begin by studying the LQ control problem without the compact constraints Am × B m. The following lemma can be derived using standard results from linear quadratic control theory (see, e.g., Hager and Horowitz (1976)). 
+
+Lemma 15. Assume that the pair (√ρA ′, √ρB ′
+
+> m
+
+) is stabilizable and that (√ρA ′, Q m) is detectable (e.g., Qm ≻ 0 guarantees detectability). Then the following hold. 1) For every initial state x ∈ Rn and exploration scale αm ≥ 0, the infimum 
+
+inf 
+
+> (Fm,f m)∈Rdm ×n×Rdm
+
+JΘm,Σm
+
+> m
+
+ (Fm, f m); x, α m
+
+
+
+is finite and uniquely attained at the pair (F Θm 
+
+> m
+
+, f Θm 
+
+> m
+
+) given by 
+
+F Θm 
+
+> m
+
+= ρ Rm + ρB ′⊤  
+
+> m
+
+P Θm 
+
+> m
+
+B′
+
+> m
+
+−1B′⊤  
+
+> m
+
+P Θm 
+
+> m
+
+A′, (76) 
+
+f Θm 
+
+> m
+
+=  Rm + ρB ′⊤  
+
+> m
+
+P Θm 
+
+> m
+
+B′
+
+> m
+
+−1
+
+ρB ′⊤ 
+
+> m
+
+ I − ρ(A′ − B′
+
+> m
+
+F Θm 
+
+> m
+
+)⊤−1  12 (( F Θm 
+
+> m
+
+)⊤rm − qm) − P Θm 
+
+> m
+
+A′
+
+> 0
+
+ − rm
+
+> 2
+
+
+
+,
+
+(77) 
+
+47 where P Θm 
+
+> m
+
+is the unique positive semidefinite solution of the following equation 
+
+P Θm 
+
+> m
+
+= Qm + ρA ′⊤ P Θm 
+
+> m
+
+A′ − ρ2A′⊤ P Θm 
+
+> m
+
+B′
+
+> m
+
+ Rm + ρB ′⊤  
+
+> m
+
+P Θm 
+
+> m
+
+B′
+
+> m
+
+−1B′⊤  
+
+> m
+
+P Θm 
+
+> m
+
+A′.
+
+2) If in addition (F Θm 
+
+> m
+
+, f Θm 
+
+> m
+
+) ∈ A m×B m, then this pair is the unique minimizer of the constrained problem (7) for every x and αm.
+
+C.1.2 Characterization of the Feasible Set Sm
+
+For LQ games with Hm = 0 and Qm ≻ 0, the feasible set Sm defined in (8) admits a spectral char-acterization stated in Lemma 16. We omit its proof, which follows by applying (Horn and Johnson, 2012, Theorem 5.6.12) to the dynamics under linear feedback, together with the observation that the positive definiteness of Qm rules out unbounded negative cost. 
+
+Lemma 16. For LQ games with Hm = 0 and Qm ≻ 0, the feasible set Sm defined in (8) coincides with ˜Sm = (Θ m, Σm) : ∃Fm ∈ A m such that r(√ρ(A′ − B′
+
+> m
+
+Fm)) < 1 . (78) Note that ˜Sm imposes no restriction on Σ m because the well-posedness of problem (7) is de-termined solely by the drift parameters. When implementing Algorithm 1, we decide whether to accept a given (Θ m, Σm) or fall back by checking whether it lies in ˜Sm; specifically, this requires determining if there exists an Fm ∈ A m such that r(√ρ(A′ − B′
+
+> m
+
+Fm)) < 1. For low-dimensional problems, a simple grid search over Am can be used. In general, we treat the problem as a feasibility optimization: minimize r(√ρ(A′ − B′
+
+> m
+
+Fm)) subject to Fm ∈ A m; if the minimal value is less than 1, then (Θ m, Σm) is feasible. This is a non-convex constrained problem. A Sequential Quadratic Pro-gramming (SQP) solver (or its variants adapted to non-smooth objectives) with multiple random initializations (Boggs and Tolle, 1995; Nocedal and Wright, 2006) can be employed. This numer-ical verification is practical for moderate dimensions. In the next subsection, we assume that the accepted parameter set already lies in ˜Sm and focus on computing the greedy strategy. 
+
+C.1.3 Greedy Strategy Calculation 
+
+We now provide a practical method for computing the greedy strategy in Algorithm 1. For any accepted parameter set ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+) ∈ ˜Sm, the unconstrained optimum is well defined (Lemma 15). If this unconstrained optimum lies inside the admissible set Am × B m, it is optimal for the constrained problem (7). Otherwise, we must solve a constrained optimization problem. Because the problem is generally non-convex in ( Fm, f m) (Fazel et al., 2018), we adopt the SQP approach described above, combined with a multi-start heuristic to mitigate the risk of converging to a poor local minimum. The cost function for the SQP solver is given by the standard LQ representation. The following algorithm summarizes the procedure. 
+
+C.2 Numerical Example with Multiple Equilibria 
+
+This section presents a numerical experiment illustrating the behavior of Algorithm 1 in a two-player LQ game with at least two distinct complete-information Nash equilibria. Gaussian noise is used for both the state and exploration noises throughout. The system parameters are A = 1 .0700, 
+
+B1 = 0 .10254, B2 = 0 .085934, A0 = 0, Σ ω = 0 .12, Q1 = 0 .11112, R1 = 0 .30872, Q2 = 0 .25806, 
+
+R2 = 0 .4949, and Hm = qm = rm = 0 for m = 1 , 2. The discount factor is ρ = 0 .9999, and the admissible bounds are κm = 2 .0 and κ′ 
+
+> m
+
+= 1 .0 for m = 1 , 2. The algorithm parameters are 
+
+τ = 300, λ = 1 .1, τ = 2000, ¯ τ = 200, ν = 0 .25, and βm = 0 .01 for each player. At each update, the asynchronous shift for each player is sampled independently from a uniform distribution on [0 , ¯τ ]. The total number of time steps is T ≈ 2.8 × 10 8, ensuring that every player completes 120 updates per run. We find two feedback Nash equilibria: 48 Algorithm 3 LQ Game without Cross Terms: Greedy Strategy Calculation for Player m 
+
+> 1:
+
+Require: Accepted parameter set ( ˜Θ(k) 
+
+> m
+
+, ˜Σ(k) 
+
+> m
+
+), exploration noise scale α(k) 
+
+> m
+
+, initial state x¯τ (k) 
+
+> m
+> 2:
+
+Compute the unconstrained optimal strategy ( F ˜Θ(k) 
+
+> m
+> m
+
+, f ˜Θ(k) 
+
+> m
+> m
+
+) via (76)-(77).  
+
+> 3:
+
+if (F ˜Θ(k) 
+
+> m
+> m
+
+, f ˜Θ(k) 
+
+> m
+> m
+
+) ∈ A m × B m then  
+
+> 4:
+
+return (F ˜Θ(k) 
+
+> m
+> m
+
+, f ˜Θ(k) 
+
+> m
+> m
+
+).  
+
+> 5:
+
+else  
+
+> 6:
+
+Generate Nstart random initial points uniformly in Am × B m. 
+
+> 7:
+
+for i = 1 to Nstart do  
+
+> 8:
+
+Run an SQP solver from the i-th initial point for a local minimizer ( F (i) 
+
+> m
+
+, f (i) 
+
+> m
+
+) and its cost 
+
+J(i). 
+
+> 9:
+
+end for  
+
+> 10:
+
+Return the pair with the smallest cost: ( F ∗
+
+> m
+
+, f ∗
+
+> m
+
+) = arg min i J(i). 
+
+> 11:
+
+end if 
+
+• Equilibrium 1: F1 = 0 .8908 , f 1 = 0 .0000 , F 2 = 0 .4980 , f 2 = 0 .0000. The spectral radius of 
+
+DΨ at this equilibrium is 0 .9709. 
+
+• Equilibrium 2: F1 = 0 .3718 , f 1 = 0 .0000 , F 2 = 1 .1423 , f 2 = 0 .0000. The spectral radius of 
+
+DΨ at this equilibrium is 0 .9203. Both equilibria are locally stable, but the existence of multiple fixed points violates Assump-tion 2. Additionally, Assumption 3 is violated since |A| > 1. We run 100 independent simulations of Algorithm 1, where each simulation independently selects an initial guess uniformly at random from the admissible strategy sets Am × B m. Outcomes are classified into four categories following the same criteria as in Section 5.4: explode (the state grows without bound, or the algorithm diverges), oscillatory (persistent fluctuations without settling), converge to Equilibrium 1, and converge to Equilibrium 2. Table 4 summarizes the results. Table 4: Distribution of experimental outcomes for the multiple-equilibria example Explode (%) Oscillatory (%) Converge to Equilibrium 1 (%) Converge to Equilibrium 2 (%) 35.00 36.00 5.00 24.00 Because Assumption 3 is violated, some simulations explode, causing the algorithm to fail. In the remaining runs, we observe three types of behavior: convergence to Equilibrium 1, convergence to Equilibrium 2, or persistent best-response cycles. This phenomenon is consistent with the syn-chronous Riccati iteration results reported in Nortmann et al. (2024) (see Figure 3(c) there). Unlike the deterministic best-response iteration studied there, Algorithm 1 is subject to estimation errors and exploration noises; hence there is no sharp deterministic partition of the region of initial guesses that determines convergence to a specific equilibrium. However, because both equilibria are locally stable, each possesses a neighborhood such that once the algorithm stays within that neighborhood, it tends to converge to the corresponding equilibrium. This explains why the behavior in this ex-ample differs from that of Section 5.4 (Group 2), where all simulations exhibited oscillations and none converged, whereas here some simulations do converge to equilibria. 49

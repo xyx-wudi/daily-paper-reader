@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-16",
+  "date": "2026-08-16",
+  "generated_at": "2026-08-16T19:14:27",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/16/2608.08268v1-learning-under-opponent-unawareness-in-linear-quadratic-stochastic-games",
+      "section": "deep",
+      "title_en": "Learning under Opponent Unawareness in Linear-Quadratic Stochastic Games",
+      "authors": "Dantong Chu, Xuefeng Gao, Yufei Zhang",
+      "date": "2026-08-08",
+      "pdf": "https://arxiv.org/pdf/2608.08268v1",
+      "score": "8.0",
+      "evidence": "非零和随机博弈中的去中心化学习",
+      "tldr": "在对手未知或策略性忽视的不完全信息环境中，研究无限时域非零和线性二次随机博弈的学习问题。玩家仅观测公共状态与自身动作历史，异步运行ε-greedy迭代最小二乘算法。证明学习动力学几乎必然收敛到完全信息的Nash均衡，并刻画收敛速率。应用于动态古诺竞争，发现有限信息降低企业利润并带来福利损失，而公开市场总量信息可加速收敛、缓解损失。",
+      "tags": "query:marl",
+      "abstract_en": "As firms increasingly deploy machine learning for strategic decision-making, understanding algorithmic interactions has become central to operations research and economics. This paper studies learning in infinite-horizon, nonzero-sum linear-quadratic stochastic games under a radically uncoupled information structure, where players are either unaware of opponents or strategically oblivious, observing only a common state and their own action history. Under this minimal information, we analyze an asynchronous decentralized learning process in which each player independently runs a single-agent $ε$-greedy iterated least-squares algorithm. We prove that, despite being unable to identify the system parameters, players' learning dynamics converge almost surely to the complete-information Nash equilibrium and characterize the convergence rate. We then apply the framework to a dynamic Cournot competition with sticky prices. Numerical experiments validate the theoretical results and show that learning under limited information reduces firm profits under both low and high price stickiness, while total surplus declines and market concentration increases when price stickiness is high. Publicly revealing aggregate market output substantially accelerates convergence and mitigates these welfare losses.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/16/2608.12921v1-discovering-efficient-and-explainable-communication-topologies-for-llm-based-multi-agent-systems-via-causal-inference",
+      "section": "quick",
+      "title_en": "Discovering Efficient and Explainable Communication Topologies for LLM-based Multi-Agent Systems via Causal Inference",
+      "authors": "Junzhi Li, Peng He, Qirui Ji, Wei Wang, Lixiang Liu, Chuxiong Sun",
+      "date": "2026-08-13",
+      "pdf": "https://arxiv.org/pdf/2608.12921v1",
+      "score": "7.0",
+      "evidence": "基于奖励驱动优化学习LLM多智能体系统通信拓扑；与去中心化多智能体强化学习相关",
+      "tldr": "针对LLM多智能体系统通信拓扑依赖黑盒优化、难以解释关键通信边的问题，提出模型无关框架E2-Explainer。该方法将拓扑解释建模为因果归因，通过Granger式掩码衡量各通信通道对任务结果与响应稳定性的影响，识别紧凑关键子图，并蒸馏为摊销解释器实现高效后验解释。实验表明其能保留成功协作，直接剪枝冗余边可显著降低通信成本且性能竞争。",
+      "tags": "query:marl",
+      "abstract_en": "The performance of large language model (LLM)-based multi-agent systems (MAS) largely depends on effective communication topologies. Existing topology generation methods, however, typically learn communication topologies through black-box optimization driven solely by task-level rewards. While effective, such optimization provides little insight into why particular communication edges are selected, making it difficult to identify the critical communication subgraphs responsible for successful collaboration. To address this limitation, we propose E2-Explainer, a model-agnostic framework for providing interpretable explanations of communication topologies produced by arbitrary topology generators. Specifically, we formulate topology explanation as a causal attribution problem that identifies compact communication subgraphs supported by edge-level evidence of task preservation. We obtain this evidence with a Granger-style objective that measures how masking each communication channel changes the task outcome and the stability of the final response. The resulting budgeted subgraphs are then distilled into an amortized explainer, enabling efficient post-hoc explanation without repeated edge-level evaluations at deployment. Extensive experiments on multiple reasoning and coding benchmarks demonstrate that E2-Explainer identifies critical communication subgraphs that preserve successful collaboration. These subgraphs can also be executed directly to prune redundant communication edges, substantially reducing communication costs while maintaining competitive task performance.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/16/2608.11873v1-dcm-bandits-multiplayer-information-asymmetric-cascading-bandits-for-multiple-clicks",
+      "section": "quick",
+      "title_en": "DCM Bandits: Multiplayer Information Asymmetric Cascading Bandits for Multiple Clicks",
+      "authors": "Andy Wang, Charlton Shih, William Chang",
+      "date": "2026-08-12",
+      "pdf": "https://arxiv.org/pdf/2608.11873v1",
+      "score": "6.0",
+      "evidence": "多人信息不对称多点击级联老虎机；与去中心化多智能体学习方法相关",
+      "tldr": "多人共享排名列表且每次会话可多次点击的场景，现有DCM Bandits未考虑信息不对称。本工作将DCM Bandits扩展至多人信息不对称设置，分别针对行动不对称和奖励不对称提出算法，在三种至少含一种不对称的设置下获得次线性遗憾界。发现小终止概率下无需知道终止排名，改进单智能体结果。实验表明完整反馈与首次点击反馈的区分显著影响探索协调和遗憾性能，为实际推荐系统提供了理论指导。",
+      "tags": "query:marl",
+      "abstract_en": "In this work, we extend the Dependent Click Model (DCM) Bandits to a multiplayer information-asymmetric setting, where multiple agents interact with a shared ranked list and may observe multiple clicks per session, introducing new challenges for selection strategies. We study asymmetry in (1) actions and (2) rewards, providing sublinear regret guarantees for three settings where at least one asymmetry is present. Establishing matching information-theoretic lower bounds for these settings is left as an open problem. We further show that for small termination probabilities, the termination ranking need not be known, improving on prior single-agent results. Experiments confirm that our algorithms perform well across asymmetric environments and highlight the critical role of feedback structure, specifically the distinction between full versus first-click feedback, in coordinating exploration and minimizing regret.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
