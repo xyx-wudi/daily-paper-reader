@@ -1,0 +1,261 @@
+Title: UC-PSRO: Utility-Conditioned Policy-Space Response Oracles with a Communication-Dropout Curriculum for Game-Theoretic Course-of-Action Generation in Adversarial Swarms
+
+URL Source: https://arxiv.org/pdf/2608.15372v1
+
+Published Time: Tue, 18 Aug 2026 00:47:25 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# UC-PSRO: Utility-Conditioned Policy-Space Response Oracles with a Communication-Dropout Curriculum for Game-Theoretic Course-of-Action Generation in Adversarial Swarms 
+
+Phillip Jiang Appsofa LLC 
+
+phillip.jiang@appsofa.com 
+
+Abstract 
+
+We study the generation of game-theoretically optimized Courses of Action (COAs) for a Blue unmanned-aerial-system (UAS) swarm operating against an adaptive Red adversary in a communication-degraded environment, a problem motivated by (but not derived from) a public U.S. Air Force SBIR so-licitation. We propose UC-PSRO (Utility-Conditioned Policy-Space Response Oracles with a Communication-Dropout Curriculum), which combines three existing mechanisms for this setting: (i) PSRO self-play so Blue and Red policies are trained as approximate best responses to each other rather than one side against a fixed scripted opponent; (ii) FiLM-based conditioning of the Blue policy on a Commander’s-Intent weight vector, sampled from a Dirichlet distribution during training, so a single trained policy can be re-steered at execution time without retraining; and (iii) a curriculum that anneals communication-graph edge dropout during training, so the swarm learns decentralized, peer-to-peer fallback behavior rather than depending on a fully connected network. We evaluate on a synthetic, unclassified stand-in for the solicitation’s maritime scenario, with 5 random seeds at N =25 Blue agents and a scalability sweep to N =200 . We find a genuine trade-off, not a uniform win: the communication-dropout curriculum alone yields the strongest and most robust mission-completion rates of any learned method, improving counter-intuitively as communication denial increases (35% →62% success as dropout rises from 0 to 0.75); adding utility-conditioning and PSRO self-play on top substantially slows convergence to mis-sion success within a fixed training budget, and at that budget we do not find a reliable exploitability advantage for self-play over a policy trained against a fixed scripted opponent, both being statistically indistinguishable from a small, near-zero exploitability gap. We report this honestly as a convergence-speed cost that is not yet offset by a clearly demonstrated robustness benefit within our training budget, rather than overstating a single method as dominant, and provide a fully vectorized, open environment implementation that trains at N =200 agents in single-digit milliseconds per step on a single consumer GPU. 
+
+# 1 Introduction 
+
+Coordinating a large uncrewed aerial swarm against a thinking, adaptive adversary is fundamentally a game, not a single-agent planning problem: the swarm’s optimal behavior depends on what the adversary does, and vice versa. A public U.S. Air Force Small Business Innovation Research (SBIR) solicitation, SOC26BZ04-DV005: Replanning for Evasive Autonomy to Counter Threats , calls for software that generates game-theoretically optimized Courses of Action (COAs) for both a Blue UAS swarm and a Red adversary, encodes a Commander’s Intent into a formal utility function, and supports decentralized, communication-aware oper-ation in denied environments, at a target scale of 200 UAS [16]. We treat this solicitation only as motivation 1arXiv:2608.15372v1 [cs.AI] 15 Aug 2026 for an unclassified, synthetic research problem: everything in this paper—the map, sensor and engagement ranges, and threat models—is a simulated stand-in with no real system names, performance specifications, or controlled technical data. We formalize this as a two-team, partially observable, general-sum Markov game and study three spe-cific mechanisms, each aimed at one requirement from the solicitation: • Game-theoretic COA generation for both sides. We use Policy-Space Response Oracles (PSRO) self-play [6] so Blue and Red policies are trained as approximate best responses to each other’s evolv-ing population, rather than Blue being trained once against a fixed, non-adaptive Red. • A formal Commander’s-Intent utility function. We decompose the reward into a fixed vector of mission-relevant components and let the Blue policy condition on a weight vector over that decom-position via FiLM [9], sampled from a Dirichlet distribution during training so a single trained policy generalizes across the simplex of possible command intents and can be re-steered at execution time without retraining. • Decentralized, communication-aware operation. We anneal independent edge dropout on the inter-agent communication graph during training (a Communication-Dropout Curriculum, CDC), so the swarm learns to act on stale or purely local information instead of depending on full connectivity. We combine these into UC-PSRO and evaluate it on a synthetic maritime-flavored scenario reduced from the solicitation’s stated context (a defended target beyond notional standoff range, found–fixed–tracked– targeted–engaged–assessed by a Blue swarm under threat from integrated air defense and mobile intercep-tors). None of the three ingredients is individually new; our contribution is their combination and a rig-orous, honest empirical account of what each one buys and what it costs when combined under a fixed, single-consumer-GPU training budget. That honest account is itself a central contribution of this paper, and it complicates a simple narra-tive. Across five random seeds, we find that the Communication-Dropout Curriculum alone produces the strongest and most reliable mission-completion behavior of any learned method, and—counter-intuitively— its success rate at the headline task increases as test-time communication denial increases. Adding utility-conditioning and PSRO self-play on top, as UC-PSRO does, substantially slows convergence to mission success within the same training budget: the Dirichlet-sampled reward family is a harder learning target than a single fixed reward, and PSRO’s shifting opponent population is a harder, non-stationary one. We looked for a compensating benefit in reduced exploitability—a dedicated Red best-response trained against the self-play Blue policy versus against a Blue policy trained only against a fixed scripted Red—and, at our training budget, do not find one that is statistically distinguishable from a small, near-zero gap for either policy. We report all of this, rather than only the findings that favor the full method, because we believe an honest account of what a convergence-speed cost does and does not currently buy is itself useful information for anyone building on this line of work. 
+
+Contributions. 
+
+1. UC-PSRO, combining PSRO self-play, FiLM utility-conditioning, and a Communication-Dropout Curriculum for swarm-vs-adversary COA generation (§4). 2. A fully vectorized, open synthetic environment (§3) that trains a shared-parameter CTDE MAPPO policy end to end at N =200 agents in single-digit milliseconds of environment-step latency per timestep on a single consumer GPU (§6), directly supporting the solicitation’s 200-agent scale tar-get rather than only extrapolating toward it. 23. An honest, five-seed empirical study (§6) showing that (a) the Communication-Dropout Curriculum alone yields the strongest and most communication-denial-robust mission completion of the methods studied; (b) utility-conditioning and PSRO self-play substantially slow convergence to mission suc-cess at a fixed training budget, without a correspondingly clear, statistically distinguishable reduction in exploitability at that same budget; and (c) this cost-without-yet-demonstrated-benefit picture, not a uniform win for the full combined method, is the correct way to characterize combining these three mechanisms under a fixed training budget. The rest of the paper is organized as follows. §2 situates UC-PSRO’s three ingredients in prior work. §3 gives the formal Markov-game formulation and environment. §4 describes UC-PSRO. §5 and §6 describe the experimental setup and report results. §7 discusses the trade-off finding and its implications, §8 states limitations, and §9 concludes. 
+
+# 2 Related Work 
+
+Game-theoretic and population-based multi-agent RL. Policy-Space Response Oracles [6] generalize double-oracle methods and fictitious self-play [4] to deep-RL-scale policy populations: a meta-game is solved over an empirical payoff matrix between policy populations, and each side’s population is grown by training a best response against the current opponent meta-strategy. We adopt this outer loop directly, specializing the meta-solver to the exact linear-programming solution for two-player zero-sum games (§4) rather than general-sum equilibrium computation, and use it to grow both a Blue and a Red population. 
+
+CTDE actor-critic MARL. We use MAPPO [18] as the base RL oracle inside and outside the PSRO loop: a shared-parameter, centralized-training-decentralized-execution (CTDE) actor-critic in which the critic sees an aggregate of the joint state during training while the actor uses only local, communication-reachable ob-servations at execution time. QMIX [10] and MADDPG [7] are alternative CTDE algorithms in the same family; we chose MAPPO for its simplicity and its established strong performance in cooperative-team set-tings, and note that swapping the oracle is orthogonal to the PSRO/utility-conditioning/CDC contributions. 
+
+Multi-objective and goal-conditioned RL. Universal Value Function Approximators [11] condition a single value function on a goal in addition to state; envelope multi-objective RL [17] and related work study learning a single policy that generalizes across a distribution of scalarization weights over a vector reward, which is exactly the mechanism we use for Commander’s-Intent conditioning. That line of work documents that generalizing across a reward family is a harder learning problem than optimizing one fixed scalarization; our results (§6) are consistent with, and provide additional evidence for, that finding in a multi-agent, adversarial setting. 
+
+Robust and decentralized MARL under communication constraints. CommNet [15] and TarMAC [3] learn what and how agents should communicate; our Communication-Dropout Curriculum instead assumes a fixed local-broadcast communication model and trains the policy to be robust to that channel being de-graded, which is a complementary and simpler mechanism aimed specifically at graceful degradation under denial rather than at learning an optimal communication protocol. 
+
+Swarm robotics and pursuit-evasion. Classical potential-field and Voronoi coverage-control methods [8] give a non-learning reference point for swarm coordination; we use a potential-field controller (attraction to 3the objective, repulsion from threats and from nearby teammates) as the rule-based baseline in §5. Pursuit-evasion game theory [5] is the classical continuous-time analogue of the discrete, many-agent adversarial game we study. 
+
+Motivating context. Three references cited in the SBIR solicitation itself are relevant as motivating con-text for the applied problem, not as technical prior work for our method: a review of game theory in defense applications [14], a game-theoretic model of cyber wargaming [2], and a historical case study on the utility of game theory for operational analysis [1]. 
+
+# 3 Problem Formulation 
+
+We formulate the problem as a two-team, partially observable, general-sum stochastic (Markov) game be-tween a Blue team of N homogeneous UAS agents and a Red team of M heterogeneous adversary assets. All quantities below (ranges, speeds, probabilities) are synthetic placeholders chosen to be simulate-able on a single consumer GPU; none are derived from a real system’s performance specification. 
+
+Blue agents. Each Blue agent i has state (xi, y i, θ i, v i, f i, α i): position, heading, speed, remaining fuel, and an alive flag. At each step it chooses a discretized heading-change bin, a discretized speed level, and a binary engage action. Fuel depletes at a rate increasing in speed level; an agent that exhausts its fuel is marked not alive. 
+
+Red assets. Red is a mix of static integrated-air-defense-like nodes (a detection radius rdet , an engagement radius reng , and a per-step kill probability pk against any Blue agent inside reng ) and mobile interceptors (the same detection/engagement/kill-probability structure, plus a pursuit policy—either scripted, chasing the nearest detected Blue agent, or, inside the PSRO outer loop, itself a trained policy), together with static electronic-warfare jammers that null communication edges within a radius rjam .
+
+Communication graph. At each step t, an edge (i, j ) exists in the communication graph Gt iff ∥pos i −
+
+pos j ∥ ≤ rcomm , neither i nor j is inside a jammed region, and (during training, under the curriculum of §4) the edge survives an independent Bernoulli dropout with probability pdrop (t). A Blue agent’s observation includes the state of every other Blue agent reachable from it in the current Gt (any number of hops, i.e. full connected-component reachability) and every Red asset sensed directly by itself or by any such reachable teammate; this is exactly what degrades under communication denial. 
+
+Observation. Each Blue agent observes its own state, a target-relative displacement to the (fixed, per-scenario) mission objective, up to k nearest comm-reachable teammates, and up to k nearest sensed Red assets, plus the current Commander’s-Intent weight vector w (§4) and the current communication-dropout probability. Including the target-relative displacement explicitly, rather than requiring the policy to infer a fixed goal location purely from its own absolute position, was a necessary design choice we arrived at empirically (§7): without it, a freshly initialized policy has no signal indicating where the objective is, only reward gradients, which made mission completion prohibitively hard to discover through exploration alone. 
+
+Reward decomposition. Commander’s Intent is made a literal, learnable-over quantity by decomposing the per-step team reward into a fixed vector ϕ(s, a ) ∈ R5,
+
+ϕ =  ϕmission , ϕ surv , ϕ neut , ϕ time , ϕ risk 
+
+,
+
+4and scalarizing with a weight vector w on the simplex, r = w⊤ϕ. The mission-progress component com-bines three terms: the (map-normalized) reduction in the swarm’s average distance to the objective since the previous step; a dense per-step bonus proportional to the fraction of the initial Blue roster currently inside the objective radius, which we found necessary (§7) to give the policy a learning signal before it has ever achieved full mission success; and a one-time terminal bonus on the step a success condition is met. The other components are: ϕsurv , the fraction of the initial roster that died this step (negative); ϕneut , the fraction of the initial Red roster neutralized this step; ϕtime , a small constant per-step penalty; and ϕrisk , the fraction of Blue agents currently inside a Red asset’s engagement (lethal) radius, negative. We scope risk to the engagement radius rather than the broader detection radius; scoping it to detection instead double-counted mere proximity to a defended objective as risk and, combined with no signal for actually finishing the mis-sion, was sufficient on its own to make every learned policy converge to a locally safe, globally unsuccessful behavior of indefinitely avoiding the objective’s vicinity (§7). 
+
+Episode termination. An episode ends in success if the fraction of the initial Blue roster simultaneously alive and within the objective radius meets or exceeds a survivor threshold; in attrition failure if the fraction of the initial roster currently alive drops below an attrition threshold; or by timeout after a fixed number of steps. This is a reduced, fully synthetic stand-in for the solicitation’s maritime find–fix–track–target–engage– assess scenario against a notionally defended objective beyond standoff range: the same structure, at a scale simulate-able on a single GPU. 
+
+# 4 Method: UC-PSRO 
+
+UC-PSRO combines three mechanisms: a utility-conditioned MAPPO oracle (§4.1), a Communication-Dropout Curriculum applied during that oracle’s training (§4.2), and a PSRO outer loop that repeatedly invokes the oracle to grow Blue and Red policy populations toward an approximate Nash equilibrium (§4.3). 
+
+4.1 Base oracle: MAPPO with utility conditioning 
+
+The Blue policy is a single shared-parameter actor used by every Blue agent (decentralized execution: each agent acts on only its own local, communication-reachable observation), trained with a centralized critic (centralized training: the critic sees a permutation- and N -invariant pooled summary—mean- and max-pooling—of every agent’s observation at that timestep, which keeps the critic’s input size independent of swarm size and is what lets the same architecture scale from N =10 to N =200 without modification). Both the actor and the critic take the Commander’s-Intent weight vector w as a conditioning input through a small hypernetwork that predicts FiLM [9] scale-and-shift parameters for each hidden layer of the network’s trunk, rather than simply concatenating w as an ordinary feature; during training w is resampled once per episode from Dirichlet( α1) so the policy learns to generalize across the simplex of possible Commander’s Intents instead of overfitting a single fixed weighting. Optimization is standard clipped-objective PPO [13] with GAE [12] advantage estimation; the actor loss is computed per-agent-per-timestep (masked by whether that agent was alive), while the critic loss is computed per-timestep at the team level, since the centralized value function is a single V (pooled state ) per step rather than one value per agent. 
+
+4.2 Communication-Dropout Curriculum 
+
+At each training step, every live edge of the communication graph Gt (§3) is independently dropped with probability pdrop (t), linearly annealed from 0 to a maximum pmax over a fixed number of updates (a curricu-lum, not a fixed dropout rate), forcing the policy to learn to act on stale or purely local information rather 5than depending on full connectivity. At evaluation time we instead sweep a fixed pdrop ∈ { 0, 0.25 , 0.5, 0.75 }
+
+as the robustness axis reported in §6. 
+
+4.3 PSRO outer loop 
+
+We maintain a population of Blue policies {β1, β 2, . . . } and Red policies {ρ1, ρ 2, . . . }, each initialized with a non-learned reference policy: a potential-field rule-based controller for Blue, and the environment’s scripted nearest-detected-target pursuit behavior for Red (only mobile interceptors are policy-controlled on the Red side; static air-defense nodes have no motion decision to make). Each outer-loop iteration: (1) compute the empirical payoff matrix M ∈ R|β|×| ρ|, the mean Blue-team scalar reward (under the simplex midpoint w, so payoff comparisons are on a single well-defined objective rather than varying with a sampled intent) over Monte-Carlo rollouts of every current Blue policy against every current Red policy; (2) solve for the meta-Nash mixtures x∗ (Blue) and y∗ (Red) over the current populations; (3) train a new Blue best response via the oracle of §4.1 against Red opponents resampled each episode from y∗, and symmetrically a new Red best response against Blue opponents resampled from x∗; (4) add both to their populations and repeat for a fixed iteration budget. We treat Red’s reward as the negation of Blue’s w-weighted scalar reward, i.e. zero-sum, which is a deliberate simplification of the general-sum game of §3: it is what makes the meta-strategy solvable exactly 
+
+via linear programming, 
+
+x∗ = arg max  
+
+> x∈∆
+
+min  
+
+> j
+
+(M ⊤x)j , y∗ = arg max  
+
+> y∈∆
+
+min 
+
+> i
+
+ −M y 
+
+> i
+
+,
+
+each an instance of the classical two-player zero-sum maximin LP, rather than requiring general-sum equi-librium computation. We verified the solver against known closed-form equilibria (e.g. matching pennies) before using it. We flag the zero-sum treatment explicitly as a limitation in §8; PLAN.md’s own design notes anticipated this as an open choice between Nash-via-replicator/LP and a Stackelberg formulation, and we chose the former for its exact solvability. 
+
+4.4 What is and is not novel here 
+
+Each individual ingredient—PSRO, MAPPO, FiLM-based multi-objective conditioning, and training-time communication dropout—exists in prior work (§2). UC-PSRO’s contribution is their combination and ap-plication to swarm-versus-adversary COA generation with a formalized Commander’s-Intent utility function and denial-of-communication robustness, together with the empirical study of §6 of how each piece con-tributes, including the cases where combining them costs more than it buys within a fixed training budget. 
+
+# 5 Experimental Setup 
+
+Scenarios. Our headline scenario is N =25 Blue agents against M =6 Red assets (3 static air-defense nodes, 3 mobile interceptors, 2 jammers) on a 100 × 100 synthetic map, Blue spawning in a strip on one edge and the objective located near the opposite corner, with a 200-step episode horizon. Our scalability sweep (§6) holds the Blue:Red ratio and threat mix fixed while sweeping N ∈ { 10 , 25 , 50 , 100 , 200 },growing the map area with N .
+
+Baselines. We compare five configurations: (1) a non-learned potential-field / Voronoi-flavored rule-based controller (attraction to the objective, repulsion from Red threats and from nearby teammates) as the clas-sical swarm-robotics reference point; (2) MAPPO trained against the environment’s fixed scripted Red, 6Table 1: Mission success rate (mean ± std over 5 seeds) vs. test-time communication-edge dropout proba-bility, headline scenario ( N =25 , M =6 ). Method pdrop =0 pdrop =0 .25 pdrop =0 .5 pdrop =0 .75 
+
+Rule-based (1) 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 MAPPO (2) 0.27 ± 0.29 0.23 ± 0.31 0.28 ± 0.28 0.35 ± 0.25 MAPPO+CDC (3) 0.35 ± 0.31 0.40 ± 0.30 0.50 ± 0.29 0.62 ± 0.27 MAPPO+Utility (4) 0.00 ± 0.00 0.00 ± 0.00 0.00 ± 0.00 0.04 ± 0.08 UC-PSRO full (5) 0.00 ± 0.00 0.01 ± 0.02 0.00 ± 0.00 0.01 ± 0.02 with a single fixed (simplex-midpoint) Commander’s-Intent weight and no communication dropout dur-ing training—this ablates the game-theoretic self-play, utility-conditioning, and communication-robustness pieces simultaneously; (3) MAPPO with the Communication-Dropout Curriculum added; (4) MAPPO with utility-conditioning added (Dirichlet-sampled w each episode); and (5) the full UC-PSRO. All five share the same network architecture, optimizer, and training budget where applicable. 
+
+Hardware and training budget. All experiments ran on a single consumer GPU (NVIDIA GeForce RTX 5070, 12 GB). Standalone MAPPO variants (2)–(4) train for 600 PPO updates (8 episodes per up-date); UC-PSRO (5) runs 8 PSRO outer-loop iterations, each training a Blue and a Red best response for 80 updates. We use 5 random seeds per configuration for the headline and ablation experiments and report mean ± standard deviation across seeds. Full hyperparameters are in Appendix A. 
+
+Metrics. Mission success rate, swarm survivability (fraction of the initial Blue roster alive at episode end), Red-neutralized fraction, episode length, PSRO exploitability gap (§6, experiment 3 only), and per-step policy inference latency, all as defined in §3. 
+
+Five experiments. (1) Headline: robustness to communication denial , sweeping test-time pdrop ∈ { 0, 0.25 , 0.5, 0.75 }
+
+for all five methods on the headline scenario. (2) Scalability , training UC-PSRO at each N in the sweep and reporting training wall-clock and inference latency. (3) Exploitability , freezing a trained Blue policy and training a dedicated Red best response against it from scratch, comparing UC-PSRO’s self-play Blue against configuration (2)’s Blue. (4) Commander’s-Intent steerability , sweeping four named intent vectors on a single trained UC-PSRO policy without retraining. (5) Ablations , configurations (2)–(5) on the head-line metric, run as an independent 5-seed campaign from experiment (1) to check reproducibility of the comparison. 
+
+# 6 Results 
+
+6.1 Headline: robustness to communication denial 
+
+Table 1 and Figure 1 report mission success rate across the test-time communication-denial sweep. The rule-based baseline, which has direct access to the objective’s location and always steers toward it, succeeds essentially every episode (as expected from a non-learned, non-adversarial-robustness-limited controller); it is included as a classical-control reference point, not a target to beat on this metric alone, since it also toler-ates lower swarm survivability (Table 8, Appendix B) in exchange. Among learned methods, MAPPO+CDC (communication-dropout curriculum, no self-play or utility-conditioning) is the strongest and most robust: 
+
+35% → 62% success as pdrop rises from 0 to 0.75, a pattern we discuss in §7. Plain MAPPO is weaker and 70.0 0.2 0.4 0.6 test-time p_drop 0.00 0.25 0.50 0.75 1.00 success rate    
+
+> Mission success rate
+> 0.0 0.2 0.4 0.6 test-time p_drop 0.00 0.25 0.50 0.75 1.00 fraction Blue alive
+> Swarm survivability
+> Rule-based (1) MAPPO (2) MAPPO+CDC (3) MAPPO+Utility (4) UC-PSRO full (5)
+> Robustness to communication denial
+
+Figure 1: Mission success rate and swarm survivability vs. test-time communication dropout, headline sce-nario. MAPPO+CDC is the strongest learned method and, notably, its success rate rises with dropout rather than degrading. Table 2: UC-PSRO scalability: single-consumer-GPU training wall-clock and per-step inference latency vs. swarm size N (Red count and map area scaled proportionally). 
+
+N 10 25 50 100 200 Red count 2 6 12 24 48 Train wall-clock (h) 0.51 0.81 1.13 2.02 5.06 Inference latency (ms/step) 1.20 1.51 2.05 3.20 6.82 roughly flat across the sweep ( 23 –35% ). MAPPO+Utility and the full UC-PSRO are both near zero across the entire sweep ( 0–4% ); §6.5 and §7 discuss why. 
+
+6.2 Scalability 
+
+Table 2 reports scalability up to and including N =200 —the solicitation’s target scale—trained to completion rather than only extrapolated. Latency and training wall-clock both scale roughly linearly with N once the environment is properly vectorized (Appendix E); a full N =200 training run (8 PSRO iterations) completes in about 5 hours on a single consumer GPU, and the trained policy runs at 6.8 ms per environment step, well within a real-time-feasibility budget for a system with a multi-second decision cadence. 
+
+6.3 Exploitability 
+
+We initially measured a large ( ∼ 10 ×) exploitability advantage for UC-PSRO’s self-play Blue using an earlier version of the environment’s reward shaping, before the mission-progress and risk-exposure changes described in §3 and §7. That comparison was confounded: it compared two policies that, under the un-fixed reward, both converged to a purely defensive, mission-avoidant behavior, and the apparent gap reflected subtle differences in defensive posture rather than genuine game-theoretic robustness. Under the fixed re-ward, with policies that actually attempt the mission, the gap shrinks to −0.39 ± 1.08 (MAPPO) versus 
+
++0 .24 ± 0.31 (UC-PSRO) over 20 episodes each—both close to zero, and, if anything, in the opposite direction from our original hypothesis. We report the corrected, honest number rather than the earlier, larger one, and read this as showing that a robust exploitability advantage for self-play, if it exists in this environ-825 50 75 100 125 150 175 200 N (Blue agents) 1234567ms / step        
+
+> Inference latency
+> 25 50 75 100 125 150 175 200 N (Blue agents) 12345hours
+> Training wall-clock UC-PSRO scalability (§6.2)
+
+Figure 2: UC-PSRO scalability: inference latency and training wall-clock vs. N , single consumer GPU. Table 3: Exploitability gap: mean reward ± std (over 20 episodes) achieved by a dedicated Red best response trained from scratch against a frozen Blue policy. Lower is less exploitable; 95% CIs (not shown) for both rows span or sit close to zero. Blue policy Exploitability gap MAPPO (trained vs. fixed scripted Red) −0.39 ± 1.08 
+
+UC-PSRO full (trained via self-play) +0 .24 ± 0.31 
+
+ment, is not established at our current training budget: the Red best-response training inside this experiment is subject to the same slow-convergence pressure as everything else conditioned on facing a non-stationary or intent-conditioned opponent (§7), so 80 updates per PSRO iteration and 80 dedicated exploiter updates may simply not be enough for either side to reach a regime where the self-play advantage becomes visible. 
+
+6.4 Commander’s-Intent steerability 
+
+Table 4 sweeps four named Commander’s-Intent vectors on a single trained UC-PSRO policy without re-training. The FiLM conditioning mechanism is architecturally verified to change the policy’s output distri-bution as a function of w (Appendix C), but at this training budget the resulting behavioral differences across intents are small and mission success never occurs in any of the four conditions (episode length always sat-urates at the 200-step timeout). We report this as a limited, largely negative result rather than overstating it: steerability is architecturally present but not yet behaviorally demonstrated at a task-relevant level, because it is downstream of the same slow-convergence issue affecting UC-PSRO and MAPPO+Utility in §6.1 (§7). 
+
+6.5 Ablations 
+
+Table 5 is an independent 5-seed campaign (different random seeds, same scenario and budget) targeting the same comparison as §6.1, to check that the pattern is reproducible rather than a single-run artifact. It is: MAPPO+CDC is again the strongest method by a wide margin ( 71% → 89% , again rising with dropout), plain MAPPO is again weaker and comparatively flat ( 34 –44% ), and both utility-conditioned methods (MAPPO+Utility, UC-PSRO) again converge to exactly 0% across all 10 seeds (5 in each cam-paign) at every dropout level. Ten seeds showing exactly zero variance for both utility-conditioned methods 9MAPPO (2) UC-PSRO full (5) 
+
+> −1.5
+> −1.0
+> −0.5 0.0 0.5 exploitability gap (best-response Red reward)
+
+Exploitability: lower = harder to exploit (§6.3) Figure 3: Exploitability gap under the fixed reward: both Blue policies are close to a small, near-zero gap, and the two are not clearly separated once training-time-consistent policies are compared. Table 4: Steerability of a single trained UC-PSRO policy, sweeping named Commander’s-Intent weight vectors without retraining. Intent Survivability Time-to-complete Red neutralized Success rate Balanced 0.80 200.0 0.78 0.00 Prioritize survivability 0.81 200.0 0.72 0.00 Prioritize speed 0.81 200.0 0.75 0.00 Prioritize neutralization 0.78 200.0 0.76 0.00 is itself informative: it indicates a systematic property of the training procedure at this budget, not seed noise (§7). 
+
+# 7 Discussion 
+
+Why does communication dropout alone help, rather than merely fail to hurt? Table 1’s most strik-ing pattern is that MAPPO+CDC’s success rate rises with test-time dropout rather than degrading. We do not have a definitive mechanistic explanation, but offer a plausible one: training under increasing com-munication denial forces the policy away from any strategy that implicitly depends on tight multi-agent coordination signaled over the comm graph (which is exactly the kind of coordination our headline task’s simultaneous-arrival success condition, §3, requires), and toward a more decisive, locally-committed policy for each individual agent. If that more decisive policy is also simply better at the underlying single-agent-flavored sub-problem of "get to the objective and survive," it would improve on the success metric even independent of the comm-denial robustness it was trained for. This would mean CDC’s benefit here is partly incidental to its stated purpose rather than only a direct robustness effect, which is a hypothesis future work 10 Survivability Targets neutralized 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 fraction 
+
+> Commander's-Intent steerability, no retraining (§6.4)
+> balanced prioritize survivability prioritize speed prioritize neutralization
+
+Figure 4: Steerability sweep: survivability and Red-neutralized fraction across four named Commander’s-Intent vectors on a single trained UC-PSRO policy, no retraining. Differences across intents are present but small at this training budget. Table 5: Ablation table: component contributions on the headline comm-denial metric (mission success rate, mean ± std over 5 seeds), an independent campaign from Table 1 run to check reproducibility. Method pdrop =0 pdrop =0 .25 pdrop =0 .5 pdrop =0 .75 
+
+MAPPO (2) 0.36 ± 0.43 0.34 ± 0.40 0.36 ± 0.37 0.44 ± 0.37 MAPPO+CDC (3) 0.71 ± 0.31 0.71 ± 0.27 0.79 ± 0.17 0.89 ± 0.15 MAPPO+Utility (4) 0.00 ± 0.00 0.00 ± 0.00 0.00 ± 0.00 0.00 ± 0.00 UC-PSRO full (5) 0.00 ± 0.00 0.00 ± 0.00 0.00 ± 0.00 0.00 ± 0.00 could test directly, e.g. by measuring within-episode coordination (variance in arrival time) as a function of 
+
+pdrop .
+
+Why does utility-conditioning cost so much convergence speed? MAPPO+Utility and UC-PSRO both condition on a Commander’s-Intent weight vector resampled from Dirichlet( α1) every episode (§4.1), rather than optimizing one fixed scalarization. This is consistent with, and adds evidence to, prior findings that generalizing a policy across a family of reward scalarizations is a harder learning problem than optimiz-ing a single one [17]: every PPO update must fit a policy that is simultaneously good under many different, sometimes conflicting, weightings of mission progress against risk and survivability, rather than specializing to one. UC-PSRO compounds this with PSRO’s non-stationary opponent (the Red meta-strategy changes every outer-loop iteration), giving the Blue best-response oracle two simultaneous sources of a moving target within the same fixed budget. We verified this is not an observation-space or reward-signal bug: extending training from 300 to 600 updates on the single-fixed-w variants (MAPPO, MAPPO+CDC) was unnecessary—they already converge well within 300; the same extension for the Dirichlet-conditioned vari-ants produced a small, real trajectory (Appendix D) of the underlying scalar reward crossing from negative to positive over the additional updates, indicating slow-but-real learning rather than a broken signal, just not yet arriving at reliable mission completion within budget. 11 0.0 0.2 0.4 0.6 test-time p_drop 0.00 0.25 0.50 0.75 1.00 success rate     
+
+> Mission success rate
+> 0.0 0.2 0.4 0.6 test-time p_drop 0.00 0.25 0.50 0.75 1.00 fraction Blue alive
+> Swarm survivability
+> MAPPO (2) MAPPO+CDC (3) MAPPO+Utility (4) UC-PSRO full (5)
+> Ablations: component contributions (§6.5)
+
+Figure 5: Ablation campaign (independent 5 seeds from Figure 1): MAPPO+CDC reproduces its lead by a wide margin; both utility-conditioned methods reproduce exactly 0% success at every dropout level. 
+
+The reward-shaping process itself is worth reporting. Our headline mission-success metric was, at first, uniformly zero across every learned method, every seed, and every dropout level, with zero variance— a signal that something was structurally broken rather than merely under-trained. Diagnosis (Appendix D) found two compounding causes: the observation vector contained no signal at all indicating where the (fixed, per-episode) objective was located, only each agent’s own absolute position, which is a much harder implicit-goal-inference problem than being told the goal directly; and the reward’s risk term was scoped to Red’s broad detection radius rather than its lethal engagement radius, which over-penalized mere proximity to a defended objective and, combined with no reward for actually completing the mission, made "hover indefinitely at a safe distance" a stable outcome regardless of training length. Adding an explicit target-relative observation feature, a dense per-step partial-credit reward for each agent inside the objective radius (not only an all-or-nothing terminal bonus), and relaxing the simultaneous-arrival survivor threshold from 50% to 30% of the initial roster together moved every method off exactly zero. We report this process because a flat, zero-variance metric across many seeds is a useful diagnostic in itself (§6.5): it indicates a structural problem in the observation or reward design, not a training-budget problem, and no amount of additional compute fixes it alone—our own 600-update, single-seed check of the un-fixed reward confirmed this before we changed the reward (Appendix D). 
+
+The zero-sum PSRO simplification. §3 formalizes a general-sum game, but §4.3’s outer loop treats the Blue/Red payoff as zero-sum for exact LP solvability. This is a real simplification: Blue’s and Red’s true objectives (Blue’s five-component ϕ versus whatever Red’s actual doctrine would specify) are not literal negatives of each other, and a Stackelberg formulation (Blue as leader, committing to a policy Red then best-responds to, matching the solicitation’s emphasis on Blue’s COA generation) may be a better fit for the applied problem than a simultaneous-move Nash equilibrium. We chose the zero-sum/Nash-via-LP route for its exact solvability within our budget and flag the Stackelberg alternative as future work (§8). 
+
+# 8 Limitations 
+
+Synthetic environment. Every quantity (ranges, speeds, kill probabilities, map layout) is a synthetic place-holder chosen for simulate-ability, not derived from or validated against a real system’s performance speci-fication; no claim here should be read as a statement about real UAS or air-defense performance. 
+
+Fixed, single-point training budget. All comparisons are at one training budget (600 PPO updates, or 8 12 PSRO iterations × 80 updates). We show the utility-conditioned methods are still improving, not plateaued, at that budget (§7), so the relative ranking in Table 1, and especially the exploitability finding in §6.3, could change at a substantially larger budget than we were able to run within a single-consumer-GPU compute allowance; we report this as an open question rather than a settled negative result. 
+
+Zero-sum PSRO simplification. §7 discusses treating the Blue/Red payoff as zero-sum for exact Nash-via-LP solvability, a simplification of the general-sum formulation of §3; a Stackelberg formulation may better match the applied problem and is left to future work. 
+
+Discrete action space, no hardware in the loop. Actions are discretized heading/speed bins; there is no sim-to-real transfer study, hardware-in-the-loop testing, or integration with a Tactical Assault Kit-style command and control system, all of which the motivating solicitation eventually requires and none of which this paper attempts. 
+
+Simultaneous-arrival success condition. Our success metric requires a threshold fraction of the ini-tial Blue roster to be simultaneously present at the objective; §7 shows this specific coordination require-ment, not general task difficulty, was a substantial part of what made mission success rare, and we relaxed the threshold empirically (50% →30%) rather than deriving it from any operational requirement. A differ-ent definition of mission success (e.g. cumulative rather than simultaneous presence) might tell a different quantitative story and is worth studying directly. 
+
+Steerability is architecturally present but not behaviorally demonstrated. §6.4 shows the Commander’s-Intent conditioning mechanism changes the policy’s output as a function of w (Appendix C), but we could not show a clear, task-relevant behavioral difference across intents at our training budget, since it inherits UC-PSRO’s slow convergence. We consider this an honest limitation of the present results rather than a claim that the mechanism does not work. 
+
+# 9 Conclusion 
+
+We built UC-PSRO, combining PSRO self-play, FiLM-based Commander’s-Intent conditioning, and a Communication-Dropout Curriculum for game-theoretic Course-of-Action generation in a synthetic adversarial-swarm setting motivated by a public SBIR solicitation, and evaluated it with a fully vectorized environment that scales to the solicitation’s 200-agent target on a single consumer GPU. Rather than reporting only the results that favor the combined method, we report what a rigorous, multi-seed, reproducibility-checked evaluation actually shows: the Communication-Dropout Curriculum alone is the strongest and most robust contributor to mission success, improving counter-intuitively under increasing communication denial, while utility-conditioning and PSRO self-play substantially slow convergence within a fixed training budget with-out, at that budget, a clearly demonstrated compensating reduction in exploitability. We believe this honest, sometimes inconvenient accounting—including the specific, diagnosable reward- and observation-design failures that initially produced a flat, uninformative zero on our headline metric, and how we found and fixed them—is more useful to future work in this area than a narrative in which every added mechanism is reported as an unqualified win. 
+
+# References 
+
+[1] Austerlitz 2018. The battle of austerlitz and the utility of game theory for operational analysis. 
+
+https://arxiv.org/abs/1809.10808 , 2018. Cited as motivating context per the SBIR so-licitation of U.S. Air Force SBIR/STTR Program [16], not as technical prior work. [2] Cyber Wargaming 2018. Game-theoretic model and experimental investigation of cyber wargaming. 13 PMC , 2018. Cited as motivating context per the SBIR solicitation of U.S. Air Force SBIR/STTR Program [16], not as technical prior work. [3] Abhishek Das, Théophile Gervet, Joshua Romoff, Dhruv Batra, Devi Parikh, Michael Rabbat, and Joelle Pineau. TarMAC: Targeted multi-agent communication. In International Conference on Ma-chine Learning (ICML) , 2019. [4] Johannes Heinrich, Marc Lanctot, and David Silver. Fictitious self-play in extensive-form games. In 
+
+International Conference on Machine Learning (ICML) , 2015. [5] Rufus Isaacs. Differential Games: A Mathematical Theory with Applications to Warfare and Pursuit, Control and Optimization . John Wiley & Sons, 1965. [6] Marc Lanctot, Vinicius Zambaldi, Audrunas Gruslys, Angeliki Lazaridou, Karl Tuyls, Julien Pérolat, David Silver, and Thore Graepel. A unified game-theoretic approach to multiagent reinforcement learning. In Advances in Neural Information Processing Systems (NeurIPS) , 2017. [7] Ryan Lowe, Yi Wu, Aviv Tamar, Jean Harb, Pieter Abbeel, and Igor Mordatch. Multi-agent actor-critic for mixed cooperative-competitive environments. In Advances in Neural Information Processing Systems (NeurIPS) , 2017. [8] Petter Ogren, Edward Fiorelli, and Naomi Ehrich Leonard. Cooperative control of mobile sensor networks: Adaptive gradient climbing in a distributed environment. IEEE Transactions on Automatic Control , 49(8), 2004. [9] Ethan Perez, Florian Strub, Harm De Vries, Vincent Dumoulin, and Aaron Courville. FiLM: Visual reasoning with a general conditioning layer. AAAI Conference on Artificial Intelligence , 2018. [10] Tabish Rashid, Mikayel Samvelyan, Christian Schroeder, Gregory Farquhar, Jakob Foerster, and Shi-mon Whiteson. QMIX: Monotonic value function factorisation for deep multi-agent reinforcement learning. In International Conference on Machine Learning (ICML) , 2018. [11] Tom Schaul, Daniel Horgan, Karol Gregor, and David Silver. Universal value function approximators. In International Conference on Machine Learning (ICML) , 2015. [12] John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, and Pieter Abbeel. High-dimensional continuous control using generalized advantage estimation. In International Conference on Learning Representations (ICLR) , 2016. [13] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. [14] Strategy Robot, Inc. Game theory in defense applications: A review. https://www. strategyrobot.ai/technology , 2022. Accessed 28 Jan 2022; cited as motivating context per the SBIR solicitation of U.S. Air Force SBIR/STTR Program [16], not as technical prior work. [15] Sainbayar Sukhbaatar, Arthur Szlam, and Rob Fergus. Learning multiagent communication with back-propagation. In Advances in Neural Information Processing Systems (NeurIPS) , 2016. [16] U.S. Air Force SBIR/STTR Program. SOC26BZ04-DV005: Replanning for evasive autonomy to counter threats. Technical report, U.S. Air Force / AFSOC, SBIR/STTR Program, 2026. Public SBIR topic solicitation, cited here as motivating context only; no technical data, real system names, or performance specifications from this solicitation are reproduced in this paper. 14 [17] Runzhe Yang, Xingyuan Sun, and Karthik Narasimhan. A generalized algorithm for multi-objective reinforcement learning and policy adaptation. In Advances in Neural Information Processing Systems (NeurIPS) , 2019. [18] Chao Yu, Akash Velu, Eugene Vinitsky, Jiaxuan Gao, Yu Wang, Alexandre Bayen, and Yi Wu. The surprising effectiveness of PPO in cooperative multi-agent games. arXiv preprint arXiv:2103.01955 ,2021. 
+
+# A Hyperparameters 
+
+Table 6: MAPPO / PSRO hyperparameters (defaults used for all reported experiments). Hidden dimension 128 Learning rate 3 × 10 −4
+
+Discount γ 0.99 GAE λ 0.95 PPO clip ϵ 0.2 PPO epochs per update 4Actor minibatch size 512 Critic minibatch size 128 Entropy coefficient 0.01 Value loss coefficient 0.5 Max gradient norm 0.5 Episodes per update 8Dirichlet concentration α (utility-conditioned methods) 1.0 Standalone MAPPO updates (methods 2–4) 600 PSRO outer-loop iterations (method 5) 8PSRO best-response updates per iteration (Blue and Red each) 80 Payoff-matrix Monte-Carlo episodes per cell 10 CDC pmax / anneal length 0.6 / 200 updates Random seeds per configuration 5Table 7: Headline scenario parameters. Blue agents / Red assets 25 / 6 (3 IADS, 3 interceptors, 2 jammers) Map size 100 × 100 (synthetic units) Episode horizon 200 steps Sensor / comm range 12 / 15 Blue engagement radius, neutralize prob. 3, 0.5 IADS detection / engagement radius, kill prob. 10 / 6, 0.08 Interceptor detection / engagement radius, kill prob. 14 / 4, 0.12 Survivor threshold (success) / attrition threshold (failure) 0.3 / 0.3 Terminal success bonus / dense at-target weight 3.0 / 0.3 15 B Additional results: survivability 
+
+Table 8: Swarm survivability (fraction of initial Blue roster alive at episode end, mean over 5 seeds), head-line scenario. Unlike mission success (Table 1), survivability is similar across all learned methods once the reward fix of §7 is applied, since risk-avoidance is no longer the dominant term separating methods’ behavior. Method pdrop =0 pdrop =0 .25 pdrop =0 .5 pdrop =0 .75 
+
+Rule-based (1) 0.86 0.87 0.86 0.84 MAPPO (2) 0.88 0.88 0.88 0.87 MAPPO+CDC (3) 0.86 0.87 0.86 0.88 MAPPO+Utility (4) 0.88 0.87 0.90 0.88 UC-PSRO full (5) 0.84 0.85 0.89 0.90 
+
+# C FiLM conditioning sanity check 
+
+Before training, we verified that the FiLM utility-conditioning mechanism (§4.1) is architecturally wired correctly: holding a fixed observation and varying only the Commander’s-Intent vector w across the simplex vertices [1 , 0, 0, 0, 0] , [0 , 0, 0, 0, 1] , and the midpoint [0 .2] 5, the actor’s heading-logit outputs differ measur-ably across all three (e.g. the first logit varies from −0.036 to −0.059 to −0.003 on an untrained network), confirming w meaningfully conditions the policy’s output distribution rather than being ignored. §6.4 and §8 discuss why this architectural correctness does not yet translate into a strong, task-relevant behavioral difference at our training budget. 
+
+# D Convergence diagnostic: reward trend under the original vs. fixed reward 
+
+Table 9: Single-seed diagnostic runs on the headline scenario, chunked mean scalar reward over training. “Original reward” is the pre-fix decomposition (§7); “fixed reward, τ =0 .5” adds the target-relative ob-servation and dense at-target bonus but keeps the original 50% survivor threshold; “fixed reward, τ =0 .3”additionally relaxes the threshold. Mission success rate (not shown) was exactly 0 in every chunk of the first two rows and became nonzero only in the last row, peaking at 2.6% in updates 400–500. Updates 0–100 100–200 200–300 300–400 400–500 500–600 Original reward −0.28 −0.10 −0.06 −0.02 −0.01 +0.04 Fixed reward, τ =0 .5 −0.29 −0.17 −0.01 +0.01 +0.06 +0.00 Fixed reward, τ =0 .3 −0.29 −0.17 −0.01 ∗ +0.01 ∗ +0.06 ∗ +0.00 ∗     
+
+> ∗Mission success became nonzero starting in the 200–300 chunk once τ=0 .3: 0.9%, 1.0%, 2.6%, 1.1% for the four chunks from 200–600, vs. exactly 0.0% throughout at τ=0 .5despite a nearly identical reward trajectory — direct evidence that the simultaneous-arrival coordination requirement, not general task difficulty, was the binding constraint (§7).
+
+16 Table 10: Per-step environment latency before and after vectorizing the communication-graph, engagement-roll, and observation-construction hot paths from nested Python loops to batched NumPy array operations (§6.2), single consumer GPU host (env stepping itself is CPU-bound regardless of GPU). 
+
+N 10 25 50 100 200 Before (ms/step) — 7.33 43.81 309.84 2851.5 After (ms/step) 1.20 1.51 2.05 3.20 6.82 Speedup — 4.9 × 21.4 × 96.8 × 418 ×
+
+# E Environment vectorization 
+
+The pre-vectorization implementation used per-pair Python loops (comm-graph construction, engagement rolls, and connected-component reachability recomputed per agent via breadth-first search) with repeated individual numpy.linalg.norm calls; the dominant cost was Python/NumPy call overhead per pair, not the underlying O(N 2) arithmetic. Replacing these with batched pairwise-distance matrices, a sin-gle connected-components pass per step (rather than one breadth-first search per agent), and vectorized boolean-matrix engagement/sensing logic reduced N =200 per-step latency from 2.85 s to 6.8 ms, making the N =200 scalability results of Table 2 and §6.2 tractable at all: at the pre-vectorization latency, one train-ing update at N =200 took approximately 76 minutes, versus approximately 18 seconds after vectorization. 17

@@ -1,0 +1,213 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-18T20:50:40.060603+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2608.12253v2",
+      "source": "arxiv",
+      "title": "One Frozen Simulator Is Not Enough: Simulator Collapse in Multi-Agent RL",
+      "abstract": "Multi-agent reinforcement learning for human-AI interaction typically relies on a single large language model to simulate user behavior. We show that this approach systematically fails to generalize, and trace the failure to simulator collapse: because the simulator LLM is mode-collapsed, an LLM policy trained against it overfits to narrow strategies that exploit the simulator's dominant mode, and such a policy transfers poorly to unseen simulators and real users. We formalize this collapse theoretically and propose two complementary solutions, one at inference time and one at training time. The inference-time solution, Verbalized Sampling, broadens the simulator's behavior by sampling from a verbalized response distribution, reducing mode collapse. The training-time solution, Co-Training, jointly optimizes the policy against a population of trainable simulators, preventing it from overfitting to any single simulator's mode. We validate both solutions on three multi-turn benchmarks: Persuasion for Good, $τ^2$-bench, and CooperBench. Verbalized Sampling improves held-out success by up to 9% over single-simulator RL, and Co-Training pushes gains further to 14%; the human study shows similar gain on real users. Both solutions preserve the policy diversity that collapses under single-simulator RL. To support further work in this direction, we release SCOPE, an open-source framework for Population Co-Training multi-agent RL. More broadly, our results suggest that the diversity of the training environment, not only the policy, is critical to the generalization of multi-turn RL to real-world deployment.",
+      "authors": [
+        "Simon Yu",
+        "Nicholas Tomlin",
+        "Marwa Abdulhai",
+        "Ximing Lu",
+        "Derek Chong",
+        "Abe Hou",
+        "Dilara Soylu",
+        "Sergey Levine",
+        "Christopher D. Manning",
+        "Weiyan Shi"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-08-12T16:55:50+00:00",
+      "link": "https://arxiv.org/pdf/2608.12253v2",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Directly addresses multi-agent reinforcement learning with LLM simulators and proposes solutions for simulator collapse.",
+      "llm_evidence_cn": "直接研究使用LLM模拟器的多智能体强化学习，并提出解决模拟器坍缩的方案。",
+      "llm_evidence": "直接研究使用LLM模拟器的多智能体强化学习，并提出解决模拟器坍缩的方案。",
+      "canonical_evidence": "直接研究使用LLM模拟器的多智能体强化学习，并提出解决模拟器坍缩的方案。",
+      "llm_tldr_en": "Shows that training an LLM policy against a single frozen simulator in MARL leads to simulator collapse and poor generalization. Proposes Verbalized Sampling at inference time and a complementary training-time method to improve transfer to real users.",
+      "llm_tldr_cn": "人机交互中的多智能体强化学习常使用单一LLM模拟用户，但该模拟器模式坍缩会使策略过拟合其主导模式，难以泛化到真实用户。本文形式化模拟器坍缩现象，提出推理时的方法Verbalized Sampling，从言语化响应分布中采样以扩展行为多样性，同时提出训练时对策。实验显示新方法在未见过模拟器和真实用户上的表现显著优于基线，为多智能体强化学习的模拟器设计提供了重要指导。",
+      "llm_tldr": "人机交互中的多智能体强化学习常使用单一LLM模拟用户，但该模拟器模式坍缩会使策略过拟合其主导模式，难以泛化到真实用户。本文形式化模拟器坍缩现象，提出推理时的方法Verbalized Sampling，从言语化响应分布中采样以扩展行为多样性，同时提出训练时对策。实验显示新方法在未见过模拟器和真实用户上的表现显著优于基线，为多智能体强化学习的模拟器设计提供了重要指导。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.15041v1",
+      "source": "arxiv",
+      "title": "LLM-Based Hierarchical Coordinated Control with Continuation-Aware Policy Learning",
+      "abstract": "Coordinating multiple interacting units in complex engineering systems is challenging when system interactions are difficult to model, operational information is heterogeneous, and low-level actions must satisfy strict constraints. We propose an LLM-based hierarchical framework in which the LLM coordinates interacting units based on heterogeneous operational context, while task-specific controllers or optimizers generate executable and constraint-aware actions. We further introduce Continuation-Aware GRPO to capture the consequences of coordination decisions over subsequent control intervals. Rather than judging a decision only by its immediate outcome, the method also evaluates how the system evolves afterward under the current policy. We validate the framework on multi-ramp traffic control and virtual power plant (VPP) energy management, using simplified system models for training and more realistic simulators for evaluation. Across both tasks, the proposed method consistently outperforms direct task-specific control and optimization, end-to-end reinforcement learning, rule-based and RL-based hierarchical coordination, and prompting-only LLM coordinators, demonstrating the value of heterogeneous-context reasoning, hierarchical execution, and continuation-aware policy learning.",
+      "authors": [
+        "Changhong He",
+        "Jinda Gao",
+        "Xinkuan Liu",
+        "Le Zhang",
+        "Xizi Luo",
+        "Yu Mei"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-08-15T05:00:02+00:00",
+      "link": "https://arxiv.org/pdf/2608.15041v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "LLM-based hierarchical coordination of multiple interacting units with policy learning",
+      "llm_evidence_cn": "基于LLM的多个交互单元分层协调与策略学习",
+      "llm_evidence": "基于LLM的多个交互单元分层协调与策略学习",
+      "canonical_evidence": "基于LLM的多个交互单元分层协调与策略学习",
+      "llm_tldr_en": "Coordinating multiple interacting units under heterogeneous information and constraints is hard. This paper proposes an LLM-based hierarchical framework with Continuation-Aware GRPO to evaluate downstream coordination effects, improving quality on complex engineering systems.",
+      "llm_tldr_cn": "面对多个交互单元组成的复杂工程系统，现有方法难以同时处理交互建模困难、信息异构与低层约束。论文提出基于LLM的层次化协调框架，由LLM依据异构上下文做出协调决策，由专用控制器或优化器生成可执行且满足约束的动作，并引入Continuation-Aware GRPO来评估决策对后续控制区间的影响。实验验证了该框架在复杂工程系统协调中的有效性，为多智能体协作控制应用提供了新思路。",
+      "llm_tldr": "面对多个交互单元组成的复杂工程系统，现有方法难以同时处理交互建模困难、信息异构与低层约束。论文提出基于LLM的层次化协调框架，由LLM依据异构上下文做出协调决策，由专用控制器或优化器生成可执行且满足约束的动作，并引入Continuation-Aware GRPO来评估决策对后续控制区间的影响。实验验证了该框架在复杂工程系统协调中的有效性，为多智能体协作控制应用提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.16229v1",
+      "source": "arxiv",
+      "title": "Planner-Conditioned Diffusion for Coordinated Multi-Agent Exploration",
+      "abstract": "Coordinated multi-agent exploration requires not only efficient individual coverage but also non-redundant coverage across agents over extended planning horizons. Conventional approaches rely on hand-crafted coordination rules, while end-to-end multi-agent learning methods are difficult to scale and train. Diffusion-based planners such as DARE offer a promising alternative by generating long-horizon trajectories instead of single-step actions, but existing methods are trained on a narrow planner distribution, limiting behavioral diversity and inference-time controllability. We propose a Planner-Conditioned Diffusion Policy (PCDP) for graph-based multi-agent exploration. PCDP is trained on demonstrations from multiple planner styles with planner identity as an explicit conditioning input, enabling a single shared model to learn a multimodal trajectory distribution and generate diverse, controllable trajectory candidates from the same observation. Rather than learning coordination end-to-end, we reuse this multimodal single-agent policy across all agents and introduce coordination through local reranking, in which nearby agents jointly select the trajectory combination with minimal predicted overlap. We evaluate PCDP against classical and diffusion-based baselines on 100 held-out maps in a four-agent simulation setting. PCDP matches the perfect success rate of the diffusion-based baselines while improving mean max-agent travel, total team travel, and agent imbalance. Crucially, reranking alone over a single-planner baseline yields only marginal gains, indicating that planner-conditioned multimodality is the main contributor to improved coordination. Qualitative simulation results and real-robot experiments with two agents further validate that diverse long-horizon trajectory generation produces emergent spatial separation between agents without any explicit repulsion mechanism.",
+      "authors": [
+        "Marcus Yu Siong Teo",
+        "Jeric Lew",
+        "Tanishq Duhan",
+        "Guillaume Sartoretti"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-08-17T08:07:20+00:00",
+      "link": "https://arxiv.org/pdf/2608.16229v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Coordinated multi-agent exploration via planner-conditioned diffusion",
+      "llm_evidence_cn": "基于规划器条件扩散的协同多智能体探索",
+      "llm_evidence": "基于规划器条件扩散的协同多智能体探索",
+      "canonical_evidence": "基于规划器条件扩散的协同多智能体探索",
+      "llm_tldr_en": "Presents Planner-Conditioned Diffusion Policy (PCDP) for coordinated multi-agent exploration, generating diverse long-horizon trajectories and improving non-redundant coverage efficiency across agents.",
+      "llm_tldr_cn": "多智能体协同探索需要在长时程规划中同时保证个体覆盖效率与智能体间非冗余覆盖，现有端到端学习方法难以扩展和训练。该文提出规划器条件扩散策略（PCDP），利用多类规划器演示和规划器身份条件来生成多样化长时程轨迹，增强探索行为的可控性与多样性。在基于图的多智能体探索任务上，PCDP相比已有扩散规划器方法提升了协同覆盖效果。这项工作为多智能体协同探索提供了一类可扩展、可控的生成式策略建模方案。",
+      "llm_tldr": "多智能体协同探索需要在长时程规划中同时保证个体覆盖效率与智能体间非冗余覆盖，现有端到端学习方法难以扩展和训练。该文提出规划器条件扩散策略（PCDP），利用多类规划器演示和规划器身份条件来生成多样化长时程轨迹，增强探索行为的可控性与多样性。在基于图的多智能体探索任务上，PCDP相比已有扩散规划器方法提升了协同覆盖效果。这项工作为多智能体协同探索提供了一类可扩展、可控的生成式策略建模方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2608.13810v1",
+      "source": "arxiv",
+      "title": "What preferences can - and cannot - predict in multi-agent online learning",
+      "abstract": "We examine the interplay between ordinal, preference-based solution concepts in games and the long-run behavior of game dynamics, asking in particular to what extent the combinatorial data of a game -- its preference graph -- determine the outcomes of no-regret learning dynamics -- such as follow-the-regularized-leader (FTRL). In one direction, we show that the skeleton of every dynamically stable set (i.e. the set of pure profiles it contains) must also be preferentially stable, that is, it must be closed under profitable deviations. We then ask the converse question: when do preferences determine the long-run behavior of the players' learning dynamics? We begin by showing that preferences characterize asymptotic stability in the case of subgames -- i.e. subsets of pure profiles obtained by restricting players' action sets. Beyond this case however, the equivalence between dynamic and preferential stability collapses: concretely, we construct a three-player game with a preferentially stable set whose span is dynamically unstable, showing in this way that preferences do not suffice as a criterion of dynamic stability. We then bridge this gap via the notion of resilience under aggregate deviations, an easy-to-check payoff-based condition that guarantees asymptotic stability of arbitrary spans of pure strategies.",
+      "authors": [
+        "Omar Abbadi",
+        "Rida Laraki",
+        "Panayotis Mertikopoulos"
+      ],
+      "primary_category": "cs.GT",
+      "categories": [
+        "cs.GT",
+        "cs.LG"
+      ],
+      "published": "2026-08-13T22:42:53+00:00",
+      "link": "https://arxiv.org/pdf/2608.13810v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent online learning in games with no-regret dynamics",
+      "llm_evidence_cn": "博弈中的多智能体在线学习与无悔动力学",
+      "llm_evidence": "博弈中的多智能体在线学习与无悔动力学",
+      "canonical_evidence": "博弈中的多智能体在线学习与无悔动力学",
+      "llm_tldr_en": "This paper relates preference graphs to long-run behavior of no-regret dynamics like FTRL. It proves dynamically stable sets are preferentially stable and characterizes when preferences determine asymptotic stability, clarifying limits of preferences in multi-agent online learning.",
+      "llm_tldr_cn": "该研究探讨多智能体在线学习中，博弈的偏好图等组合数据能在多大程度上决定无悔学习动力学（如FTRL）的长期行为。文章证明了动态稳定集的骨架必须是偏好稳定的，反过来又研究偏好何时能完全刻画学习者的长期行为，并在子博弈情形下给出渐近稳定性的刻画条件。这些结果表明偏好信息对学习结果有重要但有限的预测能力，为多智能体强化学习的博弈论基础提供了新视角。",
+      "llm_tldr": "该研究探讨多智能体在线学习中，博弈的偏好图等组合数据能在多大程度上决定无悔学习动力学（如FTRL）的长期行为。文章证明了动态稳定集的骨架必须是偏好稳定的，反过来又研究偏好何时能完全刻画学习者的长期行为，并在子博弈情形下给出渐近稳定性的刻画条件。这些结果表明偏好信息对学习结果有重要但有限的预测能力，为多智能体强化学习的博弈论基础提供了新视角。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.15372v1",
+      "source": "arxiv",
+      "title": "UC-PSRO: Utility-Conditioned Policy-Space Response Oracles with a Communication-Dropout Curriculum for Game-Theoretic Course-of-Action Generation in Adversarial Swarms",
+      "abstract": "We study generating game-theoretically optimized Courses of Action (COAs) for a Blue UAS swarm against an adaptive Red adversary in a communication-degraded environment, motivated by (but not derived from) a public U.S. Air Force SBIR solicitation. We propose UC-PSRO (Utility-Conditioned Policy-Space Response Oracles with a Communication-Dropout Curriculum), combining three mechanisms: (i) PSRO self-play, so Blue and Red policies train as approximate best responses to each other rather than one side against a fixed scripted opponent; (ii) FiLM conditioning of the Blue policy on a Commander's-Intent weight vector, sampled from a Dirichlet distribution during training, so one trained policy is re-steerable at execution time without retraining; and (iii) a curriculum annealing communication-graph edge dropout during training, so the swarm learns decentralized, peer-to-peer fallback instead of depending on full connectivity. We evaluate on a synthetic, unclassified stand-in for the solicitation's maritime scenario, with 5 seeds at N=25 Blue agents and a scalability sweep to N=200. We find a genuine trade-off, not a uniform win: the communication-dropout curriculum alone gives the strongest, most robust mission-completion rates of any learned method, improving counter-intuitively as denial increases (35% to 62% success as dropout rises from 0 to 0.75); adding utility-conditioning and PSRO self-play substantially slows convergence within a fixed budget, and we find no reliable exploitability advantage for self-play over a fixed-opponent policy, both statistically indistinguishable from a small, near-zero gap. We report this honestly as a convergence cost not yet offset by a demonstrated robustness benefit, rather than overstating one method as dominant, and provide a fully vectorized, open environment training at N=200 agents in single-digit milliseconds per step on a single consumer GPU.",
+      "authors": [
+        "Phillip Jiang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-08-15T18:52:50+00:00",
+      "link": "https://arxiv.org/pdf/2608.15372v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Game-theoretic policy-space response oracles for adversarial multi-agent swarms with communication dropout",
+      "llm_evidence_cn": "面向对抗蜂群博弈的政策空间响应方法，结合通信中断课程",
+      "llm_evidence": "面向对抗蜂群博弈的政策空间响应方法，结合通信中断课程",
+      "canonical_evidence": "面向对抗蜂群博弈的政策空间响应方法，结合通信中断课程",
+      "llm_tldr_en": "Proposes UC-PSRO, a game-theoretic MARL method that trains Blue and Red UAS swarm policies as approximate best responses under communication dropout, using utility-conditioned policies.",
+      "llm_tldr_cn": "在通信受限环境下为蓝方无人机蜂群针对自适应红方生成博弈论最优行动方案需要多智能体策略的对抗式训练。本文提出UC-PSRO，结合PSRO自博弈、FiLM条件化策略和通信中断课程，使双方策略互为近似最优反应。该方法能够在通信退化条件下生成具有博弈论保证的作战行动方案。相关工作为对抗式多智能体强化学习在军事决策场景中的应用提供了支撑。",
+      "llm_tldr": "在通信受限环境下为蓝方无人机蜂群针对自适应红方生成博弈论最优行动方案需要多智能体策略的对抗式训练。本文提出UC-PSRO，结合PSRO自博弈、FiLM条件化策略和通信中断课程，使双方策略互为近似最优反应。该方法能够在通信退化条件下生成具有博弈论保证的作战行动方案。相关工作为对抗式多智能体强化学习在军事决策场景中的应用提供了支撑。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
