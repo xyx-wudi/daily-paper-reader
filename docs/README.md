@@ -6,34 +6,30 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-19
-- 运行时间：2026-08-19 20:58:35 UTC
+- 最新运行日期：2026-08-20
+- 运行时间：2026-08-20 19:49:35 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：3
 - 精读区：3
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-1) 今日精读3篇、速读1篇，聚焦多智能体强化学习与网络优化前沿。  
-2) 最值得关注：物理信息世界模型用于混合交通协同控制（10分），及策略计数遏制DecPOMDP爆炸问题（9分）。  
-3) 建议优先精读满分交通控制论文，理解其世界模型设计；速读随机梯度跟踪分析即可。
-- 详情：[/202608/19/README](/202608/19/README)
+今日精读2篇多智能体强化学习论文，聚焦推理涌现与复杂决策难题。Co-RL发现多智能体多样性协作可自发产生推理能力；DecPOMDP爆炸问题则借策略计数方法有效遏制。建议关注MARL中无监督推理现象，及其对复杂规划问题的实用解法。
+- 详情：[/202608/20/README](/202608/20/README)
 
 ### 精读区论文标签
-1. [Offline Multi-Agent Reinforcement Learning with a Physics-Informed World Model for Cooperative Mixed Traffic Control](/202608/19/2608.17739v1-offline-multi-agent-reinforcement-learning-with-a-physics-informed-world-model-for-cooperative-mixed-traffic-control)  
-   标签：评分：10.0/10、query:marl
-   evidence：协作多智能体强化学习在混合交通控制中的应用，基于离线世界模型
-2. [The Curious Case of Exploding DecPOMDPs: Containing the Fire through Policy Counting](/202608/19/2608.17749v1-the-curious-case-of-exploding-decpomdps-containing-the-fire-through-policy-counting)  
-   标签：评分：9.0/10、query:marl
-   evidence：分散式部分可观测马尔可夫决策过程，通过策略计数解决多智能体可扩展性
-3. [Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL](/202608/19/2608.17253v1-co-rl-unsupervised-reasoning-emerges-from-diverse-cohort-in-multi-agent-rl)  
+1. [Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL](/202608/20/2608.17253v2-co-rl-unsupervised-reasoning-emerges-from-diverse-cohort-in-multi-agent-rl)  
    标签：评分：8.0/10、query:marl
-   evidence：提出了基于多样群体协作的多智能体强化学习以促成无监督推理涌现
+   evidence：多样群体的多智能体强化学习实现无监督推理
+2. [The Curious Case of Exploding DecPOMDPs: Containing the Fire through Policy Counting](/202608/20/2608.17749v2-the-curious-case-of-exploding-decpomdps-containing-the-fire-through-policy-counting)  
+   标签：评分：8.0/10、query:marl
+   evidence：面向分散式多智能体决策的 DecPOMDP 框架与策略计数可扩展方法
+3. [Multi-Agent Off-Policy Deep Reinforcement Learning for Smart Campus Coverage](/202608/20/2608.19049v1-multi-agent-off-policy-deep-reinforcement-learning-for-smart-campus-coverage)  
+   标签：评分：8.0/10、query:marl
+   evidence：多智能体离策略深度强化学习用于校园基站部署
 
 ### 速读区论文标签
-1. [Stochastic Gradient Tracking over Time-Varying Networks: One-Step Lyapunov Analysis](/202608/19/2608.16271v1-stochastic-gradient-tracking-over-time-varying-networks-one-step-lyapunov-analysis)  
-   标签：评分：7.0/10、query:marl
-   evidence：面向去中心化多智能体网络优化的随机梯度跟踪收敛分析，可为去中心化MARL提供优化基础
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">

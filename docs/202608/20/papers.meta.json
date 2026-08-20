@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-20",
+  "date": "2026-08-20",
+  "generated_at": "2026-08-20T19:49:40",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/20/2608.17253v2-co-rl-unsupervised-reasoning-emerges-from-diverse-cohort-in-multi-agent-rl",
+      "section": "deep",
+      "title_en": "Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL",
+      "authors": "Yunhao Yang, Yuexin Bian, Yunjie Tian, Di Fu, Tianjin Huang, Yuanyuan Shi, Ziang Xiao, Nuno Vasconcelos, Yijiang Li",
+      "date": "2026-08-18",
+      "pdf": "https://arxiv.org/pdf/2608.17253v2",
+      "score": "8.0",
+      "evidence": "多样群体的多智能体强化学习实现无监督推理",
+      "tldr": "强化学习提升推理能力常依赖真实标签，自奖励方法易强化偏差并导致训练崩溃。Co-RL提出多智能体协作框架，让多个无参数共享的模型通过彼此奖励进行优化，并利用模型家族、规模与样本复述提升群体多样性。在文本与多模态基准上，该方法无需任何标签即可超越基线，匹配甚至超过监督方法，实现无监督推理涌现。",
+      "tags": "query:marl",
+      "abstract_en": "Reinforcement learning (RL) has emerged as a powerful approach for improving reasoning in language and vision-language models, yet its strongest successes still depend heavily on ground-truth supervision (e.g., verifiable reward). Such annotations are costly to obtain and become increasingly scarce as reasoning capabilities advance beyond what humans can reliably evaluate. Self-rewarding RL reduces this dependence by enabling models to derive reward signals from their own completions. However, training solely on self-generated feedback can reinforce existing biases and suboptimal behaviors, reduce response diversity, and ultimately lead to homogenized responses and training collapse. In this work, we show that unsupervised reasoning can emerge through cooperative multi-agent training. We introduce Co-RL, a framework in which multiple decoupled models, sharing no parameters, are simultaneously optimized through RL using rewards derived from their peers. We further show that increasing cohort diversity, through heterogeneous model families, sizes, and rephrased training samples, reduces the correlated errors that drive self-reinforcing feedback loops. This diversity consistently improves reasoning performance, maintains behavioral diversity, and mitigates training collapse. Across text-only and multimodal domains, Co-RL consistently outperforms the base models and prior label-free approaches, while matching or surpassing supervised methods, without access to any ground-truth labels. Concretely, Co-RL yields average gains of 3.0-8.6% across seven text-only benchmarks for LLMs and 2.3-7.2% across four multimodal benchmarks for VLMs. Code is available at https://github.com/DrStranded/Co-RL.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/20/2608.17749v2-the-curious-case-of-exploding-decpomdps-containing-the-fire-through-policy-counting",
+      "section": "deep",
+      "title_en": "The Curious Case of Exploding DecPOMDPs: Containing the Fire through Policy Counting",
+      "authors": "Nazlı Nur Karabulut, Tanya Braun",
+      "date": "2026-08-18",
+      "pdf": "https://arxiv.org/pdf/2608.17749v2",
+      "score": "8.0",
+      "evidence": "面向分散式多智能体决策的 DecPOMDP 框架与策略计数可扩展方法",
+      "tldr": "DecPOMDPs是建模多智能体不确定环境下序贯决策的通用框架，但其计算复杂度随代理数量指数爆炸，严重制约实际应用。已有对称性方法通过对代理分组计数来压缩模型与评估，却导致策略空间发生爆炸。本文改变视角，从计数代理转为计数策略，形式化策略计数DecPOMDPs，使得模型规模与评估代价均多项式化。进一步提出策略计数动态规划，利用紧凑表示在指数策略空间中高效搜索，实现在代理数量上的可扩展求解。",
+      "tags": "query:marl",
+      "abstract_en": "Decentralised partially observable Markov decision processes (DecPOMDPs) provide a general framework for modelling multi-agent decision making under uncertainty. However, DecPOMDPs are known to suffer from exponential complexity in the number of agents. One way to combat this intractability in agent numbers is to look at partitions of agents that exhibit a form of symmetry among agents, allowing for a compact encoding by counting. However, a challenge arises as the policy space explodes, even though the model complexity and evaluation cost reduce to a polynomial dependence. In this paper, we redirect our focus from counting agents to counting policies, which actually enables tractability in agent numbers for so called policy-counted DecPOMDPs. Further, we present policy-counted dynamic programming using the compact representation to solve policy-counted DecPOMDPs efficiently.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/20/2608.19049v1-multi-agent-off-policy-deep-reinforcement-learning-for-smart-campus-coverage",
+      "section": "deep",
+      "title_en": "Multi-Agent Off-Policy Deep Reinforcement Learning for Smart Campus Coverage",
+      "authors": "Omar Rady, Mohamed Ayman, Ali Arafa, Mohamed Shalma",
+      "date": "2026-08-19",
+      "pdf": "https://arxiv.org/pdf/2608.19049v1",
+      "score": "8.0",
+      "evidence": "多智能体离策略深度强化学习用于校园基站部署",
+      "tldr": "针对非凸校园拓扑中毫米波基站部署的非凸非光滑优化难题，本文将其建模为马尔可夫决策过程，并系统比较了离散单智能体DQN、空间分割多智能体DQN、连续单智能体DDPG和地理分割多智能体DDPG四种方案。实验表明，多智能体DDPG在400用户密集场景下表现最优，实现完全覆盖且Jain公平指数达0.94，计算收敛效率显著高于单智能体。这为复杂环境下的智能基站布局提供了高效可扩展的强化学习范式。",
+      "tags": "query:marl",
+      "abstract_en": "Deep reinforcement learning (DRL) has recently gained a great attention due to its real-time adaptation and effectiveness in complex optimization problems. This paper investigates the optimal deployment of millimeter-wave (mmWave) base stations (BSs) in a realistic, non-convex campus topology. The optimization problem is NP-hard, due to the non-convex, non-smooth nature of the max-min fairness objective. To overcome these constraints, we formulate the BS placement as a Markov Decision Process (MDP) and systematically benchmark four DRL schemes: a discrete single-agent Deep Q-Network (DQN), a spatially partitioned Multi-Agent DQN, a continuous single-agent Deep Deterministic Policy Gradient (DDPG), and a geographically partitioned multi-agent DDPG framework. Numerical evaluations reveal that the multi-agent DDPG approach substantially outperforms single-agent in dense scenarios. Additionally full coverage is achieved, and a fairness Jain's index of 0.94 is obtained. Finally, the multi-agent demonstrates highly efficient computational convergence of dense scenarios with $400$ users.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
