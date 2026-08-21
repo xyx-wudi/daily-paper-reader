@@ -6,30 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-20
-- 运行时间：2026-08-20 19:49:35 UTC
+- 最新运行日期：2026-08-21
+- 运行时间：2026-08-21 20:49:41 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：3
-- 速读区：0
+- 本次总论文数：5
+- 精读区：2
+- 速读区：3
 
 ### 今日简报（AI）
-今日精读2篇多智能体强化学习论文，聚焦推理涌现与复杂决策难题。Co-RL发现多智能体多样性协作可自发产生推理能力；DecPOMDP爆炸问题则借策略计数方法有效遏制。建议关注MARL中无监督推理现象，及其对复杂规划问题的实用解法。
-- 详情：[/202608/20/README](/202608/20/README)
+今日5篇推荐聚焦多智能体协作与博弈，精读2篇高分论文领衔。最值得看声誉机制强化学习揭示合作涌现，以及LLM常识推理驱动的自动驾驶多智能体编排。建议后续关注声誉建模与LLM推理在多智能体任务中的融合方向。
+- 详情：[/202608/21/README](/202608/21/README)
 
 ### 精读区论文标签
-1. [Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL](/202608/20/2608.17253v2-co-rl-unsupervised-reasoning-emerges-from-diverse-cohort-in-multi-agent-rl)  
+1. [Emergence of cooperation: A reputation-modulated reinforcement learning](/202608/21/2608.20016v1-emergence-of-cooperation-a-reputation-modulated-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：空间囚徒困境中的合作多智能体Q学习
+2. [Multi-Agent Orchestration with the Common-Sense Reasoning Capabilities of LLMs for Autonomous Driving](/202608/21/2608.20129v1-multi-agent-orchestration-with-the-common-sense-reasoning-capabilities-of-llms-for-autonomous-driving)  
    标签：评分：8.0/10、query:marl
-   evidence：多样群体的多智能体强化学习实现无监督推理
-2. [The Curious Case of Exploding DecPOMDPs: Containing the Fire through Policy Counting](/202608/20/2608.17749v2-the-curious-case-of-exploding-decpomdps-containing-the-fire-through-policy-counting)  
-   标签：评分：8.0/10、query:marl
-   evidence：面向分散式多智能体决策的 DecPOMDP 框架与策略计数可扩展方法
-3. [Multi-Agent Off-Policy Deep Reinforcement Learning for Smart Campus Coverage](/202608/20/2608.19049v1-multi-agent-off-policy-deep-reinforcement-learning-for-smart-campus-coverage)  
-   标签：评分：8.0/10、query:marl
-   evidence：多智能体离策略深度强化学习用于校园基站部署
+   evidence：自动驾驶中的多智能体编排与PPO强化学习
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets](/202608/21/2608.16230v1-deep-reinforcement-learning-orchestration-of-game-theoretic-user-association-and-resource-allocation-in-hetnets)  
+   标签：评分：7.0/10、query:marl
+   evidence：集中式深度强化学习控制器编排分布式博弈论用户关联与资源分配
+2. [$\texttt{Flip-Team}$: Cooperative Takeover Games with Stochastic Human Override](/202608/21/2608.16311v1-textttflip-team-cooperative-takeover-games-with-stochastic-human-override)  
+   标签：评分：7.0/10、query:marl
+   evidence：将人机权威切换建模为同利益动态博弈，接近马尔可夫博弈设定
+3. [Reward-Guided Autoregressive Graph Generation for Efficient Multi-Agent Communication Topology Design](/202608/21/2608.20099v1-reward-guided-autoregressive-graph-generation-for-efficient-multi-agent-communication-topology-design)  
+   标签：评分：6.0/10、query:marl
+   evidence：基于奖励引导生成的多智能体通信拓扑设计
 
 
 <div class="dpr-home-promo-card">
