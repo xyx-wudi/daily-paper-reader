@@ -1,0 +1,613 @@
+Title: Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets
+
+URL Source: https://arxiv.org/pdf/2608.16230v2
+
+Published Time: Thu, 20 Aug 2026 00:34:50 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+> 1
+
+# Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets 
+
+Sotiris Kopsinos, Alexandros I. Papadopoulos, Antonios Lalas, Konstantinos Votis, and Christos Liaskos 
+
+Abstract —Managing dynamic User Association and Resource Allocation (UARA) in modern Heterogeneous Cellular Networks (HetNets) remains a critical open challenge. Existing mathemat-ical optimization and Reinforcement Learning approaches face limitations in handling low-latency decision-making under dy-namic traffic conditions. This paper introduces a novel orchestra-tion scheme for game-theoretic UARA in HetNets. The proposed bilevel framework distributes UARA decisions to User Equipment through a multi-objective non-cooperative game. Overlaying the distributed game, a centralized Deep Reinforcement Learning controller orchestrates network performance by dynamically configuring the game’s utility parameters, enabling transitions between power awareness, coverage enhancement, and balanced operation. Evaluated on urban HetNet topologies with 3GPP TR 38.901-compliant channel modeling, the proposed framework closely approximates the optimal policy for the considered op-erational objectives, while delivering higher network throughput than conventional association methods. Furthermore, it incurs low computational overhead and maintains stable performance across the evaluated traffic densities without retraining. 
+
+Index Terms —Heterogeneous cellular networks, user associ-ation, resource allocation, network orchestration, game theory, deep reinforcement learning 
+
+I. I NTRODUCTION 
+
+The rapid growth in the number of mobile devices and traffic demand in modern cellular networks [1], [2] has driven net-work deployments beyond traditional macro-only Base Station (BS) architectures [1], [3]. This evolution has led to multi-tier BS deployments, commonly referred to as Heterogeneous Cellular Networks (HetNets) [3], [4]. By deploying small-cell BSs, such as Pico BSs (PBSs) and Femto BSs (FBSs), within existing macro-cell coverage, HetNets enable dense spectrum reuse, thereby increasing network capacity in a cost-effective and energy-aware manner [3], [4]. As key enablers of Beyond 5G (B5G) systems, HetNets integrate heterogeneous technologies to improve coverage, capacity, and reliability [5]. Massive Multiple-Input Multiple-Output antennas are widely deployed, providing spatial multi-
+
+S. Kopsinos and A. Papadopoulos are with the Computer Science Engineering Department, University of Ioannina, Ioannina, Greece and with the Information Technologies Institute, CERTH, Greece (e-mails: s.kopsinos@uoi.gr/skopsinos@iti.gr, a.papadopoulos@uoi.gr/alexpap@iti.gr). A. Lalas and K. Votis are with the Information Technologies Institute, CERTH, Greece (e-mails: {lalas, kvotis}@iti.gr). C. Liaskos is with the Computer Science Engineering Department, Uni-versity of Ioannina, Ioannina, and with the Foundation for Research and Technology Hellas (FORTH), Greece (e-mail: cliaskos@uoi.gr). This work was funded by the SNS JU under the EU Horizon Europe research and innovation program through the NATWORK project (Grant No. 101139285). 
+
+plexing gains and increased capacity [5]. Moreover, higher frequencies, such as millimeter wave bands, provide wide bandwidths for data-intensive applications [5]. In this context, HetNets could also incorporate emerging programmable wire-less technologies, such as Reconfigurable Intelligent Surfaces (RISs), which enable energy-efficient control of the propaga-tion environment. Their integration into HetNets can provide benefits such as coverage extension, blockage mitigation, and interference management. [6]. Despite their importance for B5G, HetNets introduce chal-lenging operational trade-offs due to the coexistence of high-power and low-power BSs [4]. Conventional user association based on maximum received signal power tends to concentrate User Equipment (UEs) at macro cells, often leading to small-cell under-utilization, reduced system capacity, and increased power consumption [3], [7]. On the other hand, offloading UEs to small cells can increase inter-cell interference from the macro-tier and degrade Quality-of-Service (QoS) [3], [7]. Therefore, efficient HetNet operation requires jointly address-ing user association and resource allocation to balance load, manage interference, reduce power consumption, and satisfy diverse UE service requirements. Nevertheless, several existing frameworks for joint User Association and Resource Allocation (UARA) in HetNets face practical limitations under dynamic network conditions. In particular, optimization-based methods often require iterative computations [8]–[12], which may become costly for real-time operation. Reinforcement Learning (RL)-based algorithms, on the other hand, can reduce part of the computational burden through offline training, but they often rely on combinato-rial action spaces [13], [14] and user-dependent state space dimensions [13]–[16], and may still incur high computa-tional complexity as network density scales. Moreover, many optimization and RL formulations depend on detailed UE-specific information, such as CSI data or complete SINR vectors [11]–[13], [17], [18]. Since such measurements can support accurate UE localization [19]–[21], their transmission can raise privacy concerns [19], [20]. In addition, MARL schemes that model UEs as agents may require local neural network (NN) inference [16], which can be unsuitable for resource-constrained devices. Another limitation is that many RL models employed in UARA schemes are designed for fixed numbers of UEs [13], [14], [16], complicating their adaptation to varying traffic densities. Furthermore, several works assume uniform UE distributions [15], [16], [22], [23], although practical HetNets often feature zones of concentrated traffic. arXiv:2608.16230v2 [eess.SP] 19 Aug 2026 2
+
+Additionally, evaluations based on conventional statistical fad-ing models [13], [24], [25] may not fully capture spatially consistent large- and small-scale propagation effects. Finally, many UARA frameworks optimize fixed objectives [23]–[27], while practical networks may need to adapt their operational goals depending on congestion levels. Motivated by the aforementioned limitations, we propose a novel orchestration scheme for game-theoretic UARA in HetNets. By overlaying a centralized Deep Reinforcement Learning (DRL) controller on a decentralized game-theoretic execution layer, the proposed framework provides scalable multi-objective resource management. The main contributions of our work are summarized as follows:  
+
+> •
+
+We introduce a multi-objective non-cooperative game formulation for HetNets, where UARA decisions are distributed to UEs. The proposed utility function jointly accounts for user data rate, SINR, and BS power con-sumption. The resulting UE-side computations require simple algebraic operations, making the framework suit-able for a broad range of devices.  
+
+> •
+
+We propose an orchestration scheme to control the per-formance of the distributed game. In particular, we em-ploy a low-complexity centralized DQN controller, which configures the utility parameters determining the relative importance of rate, signal quality, and power cost across UEs. In this way, the controller can dynamically steer the network toward different macroscopic operational objectives. The proposed DQN relies on high-level BS load distribution data as inputs, thereby reducing the need for UE-specific information at the controller side.  
+
+> •
+
+We evaluate the proposed DQN-orchestrated framework in a practical HetNet scenario under 3GPP-standardized urban channel conditions. Simulation results show that it supports multi-objective resource management, provides high network throughputs, and operates with low compu-tational overhead, while maintaining good performance across traffic loads not encountered during training. The remainder of this paper is organized as follows. Sec-tion II provides an overview of the literature. Section III describes the network and communication model. Section IV formulates the distributed, multi-objective UARA game. Sec-tion V presents the proposed DQN-based scheme, which orchestrates the UARA game. Section VI evaluates the per-formance of the proposed framework in a practical HetNet environment. Finally, Section VII concludes the paper. II. L ITERATURE OVERVIEW 
+
+Mathematical optimization has been widely used to address the joint UARA problem. One main direction focuses on maximizing system throughput [8], [11], [12], while several works study energy-efficient HetNet operation under user QoS constraints [10], [17], [28]. Since the joint UARA problem is typically non-convex and combinatorial, existing optimization-based methods commonly rely on reformulation techniques. These include relaxing binary association variables into continuous ones [9], [10], [17] and decomposing the original problem into more tractable subproblems [8]–[10], [17], [28]. To reduce the computational overhead of joint online optimization, the authors in [18] separated the two processes, using mathematical optimization solely for offline resource allocation, while relying on low-complexity heuristics for online user association and scheduling. In parallel, RL-based methods have been proposed to shift part of the UARA computational burden to offline training. The first RL-based framework for joint UARA in HetNets was introduced in [16]. In this work, UEs are modeled as independent agents in a multi-agent RL (MARL) framework, which maximizes long-term aggregate network utility while satisfying QoS constraints. MARL was also considered in [13], where a multi-agent dueling deep Q-network with distributed coordinated learning was used for joint device association, spectrum allocation, and power allocation. Unlike UE-centric approaches, this framework models BSs as learning agents and aims to maximize the network data rate under QoS constraints. In [24], the authors proposed a MARL framework for UAV-assisted HetNets. After an initial matching game and a Lagrangian-dual-based user association step, UAVs and terrestrial BSs act as autonomous agents that dynamically allocate slicing resources to balance throughput, latency, and coverage. Centralized RL schemes have also been employ for joint UARA. The authors in [15] proposed a centralized deep Q-network (DQN) controller that jointly assigns users to BSs and allocates Physical Resource Blocks. Following this centralized paradigm, the framework in [14] addresses end-to-end network slicing in HetNets. While Dijkstra’s algorithm handles core network link assignment, centralized DQN agents iteratively optimize user association, wireless bandwidth allo-cation, and Virtual Network Function placement under user QoS constraints. Game Theory is another strong candidate for UARA, as it decomposes the global problem into local player interactions. In [23], the authors proposed a non-cooperative exact potential game, with individual BSs as players. This centrally coor-dinated framework uses iterative best-response dynamics to optimize Cell Individual Offsets for user association alongside power transmission patterns. Other works consider both UEs and BSs as players. For instance, [25] proposes a hierarchi-cal framework that combines an evolutionary game for user association with a Stackelberg differential game for resource allocation in wireless-backhauled HetNets. At the user level, UEs dynamically select BSs via the evolutionary game. At the resource level, the MBS determines backhaul prices as the leader, while small cells adapt their bandwidth and access-throughput strategies as followers. Several works adopt UE-centric non-cooperative games. For example, [26] models spectrum allocation and user association as coordinated non-cooperative exact potential games. Regarding user association, UEs optimize their association time through greedy best re-sponse dynamics, balancing spectral efficiency and load. Sim-ilarly, [27] models joint user association and channel selection as a non-cooperative stochastic game among UEs. To address the non-convexity of the problem under imperfect Channel State Information (CSI), the authors proposed a multi-agent double deep Q-network algorithm, enabling UEs to maximize aggregate network rate subject to QoS constraints. 3
+
+III. N ETWORK AND COMMUNICATION MODEL 
+
+We consider a three-tier HetNet consisting of one MBS, P
+
+PBSs, and F FBSs, as shown in Fig. 1. Each BS operates on K shared orthogonal channels of bandwidth W . A total of N users are randomly distributed across the network area. The sets of UEs and available channels are denoted by 
+
+U = {1, 2, . . . , N } and K = {1, 2, . . . , K }, respectively. The BS set is denoted by B = {0, 1, . . . , P + F }, where index 0
+
+corresponds to the MBS, indices 1 through P to the PBSs, and indices P + 1 through P + F to the FBSs. It is assumed that each user u ∈ U associates with exactly one BS-channel pair (b, k ) ∈ B × K at any given time. To formulate this connection, we define a binary association variable xku,b ∈ { 0, 1}, where xku,b = 1 if user u connects to BS b on channel k, and xku,b = 0 otherwise. Thus: 
+
+X
+
+> b∈B
+
+X
+
+> k∈K
+
+xku,b = 1 , ∀u ∈ U . (1) When user u is served by BS b on channel k, i.e., xku,b = 1 ,the received Signal-to-Interference-plus-Noise Ratio (SINR) is given by: 
+
+γku,b = pkb gku,b 
+
+P 
+
+> b′∈B\{ b}
+
+pkb′ gku,b ′ + W N 0
+
+, (2) where pkb is the transmission power of BS b on channel k, and 
+
+gku,b denotes the channel gain between BS b and user u over channel k. The channel gain accounts for path loss, shadowing, and fast fading effects. The term P 
+
+> b′∈B\{ b}
+
+pkb′ gku,b ′ denotes the co-channel interference from all other base stations trans-mitting on the same channel k, and N0 is the noise power spectral density. Users in cellular networks typically belong to different priority tiers based on their technical QoS requirements and the importance of their service [22], [29]. Therefore, to implement unequal user priority, each user u ∈ U is assigned a priority weight ωu > 0. We define Ukb = {u′ ∈ U | xku′,b = 1 } as the set of all users simultaneously associated with BS b on channel 
+
+k and Ωkb = P
+
+> u′∈U kb
+
+ωu′ as their aggregate priority weight. The fraction of channel resources allocated to user u is strictly proportional to its priority weight relative to the aggregate weight of users sharing that specific BS-channel pair. Thus, the achievable downlink data rate for user u from base station 
+
+b over channel k is expressed as: 
+
+Rku,b = ωu
+
+Ωkb
+
+rku,b , (3) where 
+
+rku,b = W log 2(1 + γku,b ) (4) denotes the uncongested data rate, i.e., the theoretical rate achieved under exclusive channel access. IV. G AME FORMULATION FOR DISTRIBUTED USER 
+
+ASSOCIATION AND RESOURCE ALLOCATION 
+
+To overcome the complexity of global UARA optimiza-tion, we employ distributed decision-making. Specifically, we model UARA as a multi-objective non-cooperative game, defined by the tuple G = ⟨U , S, {Ju}u∈U ⟩, where: Pico BS 
+
+> Macro BS
+> Pico BS
+> Femto BS
+> Femto BS
+> Femto BS
+> Femto BS
+
+Fig. 1: A three-tier heterogeneous cellular network.  
+
+> •
+
+U is the finite set of players, i.e., the UEs in the network.  
+
+> •
+
+S = Q 
+
+> u∈U
+
+Su is the global strategy space, where Su
+
+denotes the set of available strategies for user u. A strategy su ∈ S u is a singleton selection corresponding to exactly one BS-channel pair, such that su = ( b, k ). 
+
+> •
+
+Ju : S → R is the utility function for user u, which maps a chosen strategy profile to a real-valued payoff. Let s = ( su, s −u) ∈ S denote the strategy profile of all users, where su is the strategy chosen by user u and s−u is the strategy profile of all other users in the network. The utility function evaluates the payoff of a potential connection based on a parameterized sum of normalized communication metrics. Specifically, for a user u selecting strategy su = ( b, k ), the resulting utility is given by: 
+
+Ju(s) = wr ¯Rku,b (s) + wγ ¯Γku,b (su) − wp ¯Pb(su). (5) In Eq. (5), ¯Rku,b ∈ [0 , 1] is the achievable data rate of user u,normalized by the maximum uncongested data rate available in the network, and depends on the channel load induced by the complete strategy profile s. The term ¯Γku,b ∈ [0 , 1] , with 
+
+Γku,b = 10 log 10 (γku,b ), captures the received SINR in dB, min-max normalized over the network-wide SINR range. This metric reflects the radio-link quality of the selected BS-channel pair and, in contrast to ¯Rku,b , is independent of channel con-gestion. The term ¯Pb ∈ [0 , 1] represents a fixed, tier-dependent power cost associated with BS b, obtained by normalizing its logarithmic transmit power against the maximum BS power in the network. The weighting parameters (wr , w γ , w p) ∈ [0 , 1] 3
+
+control the relative importance of data rate, signal quality, and power consumption. Including both ¯Rku,b and ¯Γku,b allows the utility to distinguish between connections that offer high data rates due to low congestion and connections that provide genuinely strong radio conditions. This prevents users from selecting lightly loaded but signal-poor channels, while still enabling load-aware association. Hence, the proposed utility function formulation can support diverse QoS requirements in HetNets, ranging from throughput-oriented to reliability-sensitive services. The objective of each user u is to maximize its individual utility given the strategies of other users: 
+
+max 
+
+> su∈S u
+
+Ju(s), ∀u ∈ U . (6) 4
+
+The non-cooperative game reaches a stable state when no user can unilaterally improve its utility by changing its cur-rent association. Mathematically, this state corresponds to a Pure Strategy Nash Equilibrium (PSNE). A strategy profile 
+
+s∗ = ( s∗
+
+> 1
+
+, . . . , s ∗ 
+
+> N
+
+) constitutes a PSNE if and only if it satisfies the following condition: 
+
+Ju(s∗
+
+> u
+
+, s ∗−u) ≥ Ju(s′
+
+> u
+
+, s ∗−u), ∀s′ 
+
+> u
+
+∈ S u, ∀u ∈ U . (7) Assuming that the transmit powers of the base stations are fixed during the UARA game, ¯Γku,b and ¯Pb are static metrics and independent of the strategies of other users. Thus, the coupling between players occurs strictly through the load-aware rate calculation ¯Rku,b , where the resource fraction allocated to each user depends on the user’s priority weight relative to the total weight of all users sharing the same BS-channel pair. This particular dependence maps G to the class of weighted congestion games with player-specific constants. For the considered weighted congestion structure, the existence of a PSNE is not guaranteed in full generality. To establish strict mathematical convergence within a finite number of steps, we shift our objective to an ϵ-Approximate PSNE ( ϵ-PSNE), defined as a state in which no user can improve its utility by more than a dynamic hysteresis threshold τ .
+
+Theorem 1: Consider the UARA game G. Defining the strategy update rule so that a user only switches its associ-ation if its individual utility gain satisfies ∆Ju > τ , where 
+
+τ = wr ωu/(Ω n + ωu), maps the formulation to a Generalized Ordinal Potential Game. This guarantees monotonic conver-gence to an ϵ-PSNE in a finite number of steps. 
+
+Proof: Let the global potential function Φ( s) be the sum of all individual user utilities: 
+
+Φ( s) = X
+
+> v∈U
+
+Jv (s). (8) Assume user u unilaterally switches from an old association 
+
+o to a new one n, which corresponds to a specific BS-channel pair (b, k ). We denote Ωn = Ω kb as the aggregate priority weight at the target channel immediately prior to the association of user u. The network potential changes by 
+
+∆Φ = ∆ Ju + Go − Dn, where ∆Ju is the total utility gained by user u, Go is the utility gained by the users left behind at 
+
+o (which is strictly positive as the aggregate priority weight decreases), and Dn is the congestion penalty introduced to the already connected users at the target channel, denoted as 
+
+Un.Because the aggregate priority weight of the target connec-tion increases from Ωn to Ωn + ωu, and the individual user SINR and power cost metrics are independent of congestion, the utility reduction experienced by the existing users is caused solely by the load-aware rate component: 
+
+Dn = wr
+
+ ωu
+
+Ωn(Ω n + ωu)
+
+ X
+
+> v∈U n
+
+ωv ¯rv,n . (9) Given that the normalized uncongested rate satisfies ¯rv,n ≤ 1,the sum of the weighted uncongested rates of the existing users is strictly upper-bounded by their aggregate priority weight, P 
+
+> v∈U n
+
+ωv ¯rv,n ≤ Ωn. Substituting this bound in Eq. 
+
+Algorithm 1: Distributed Game-Theoretic UARA via ABRD 
+
+Input: U, B, K, {ωu}u∈U , { ¯Pb}b∈B , W, (wr , w γ , w p)
+
+Output: Final association profile {xku,b }∀u∈U 
+
+Initialization: 
+
+Measure local SINR γku,b , ∀(b, k ) ∈ B × K at each UE Transmit bounds γmin , γ max , R max from controller Initialize each UE strategy via max-SINR: 
+
+su = ( b, k ) ← arg max  
+
+> (b′,k ′)∈B×K
+
+γk′
+
+> u,b ′
+
+Initialize association indicators xku,b ∀u ∈ U 
+
+Initialize network loads Ukb ∀(b, k ) ∈ B × K 
+
+repeat for each user u ∈ U asynchronously do 
+
+Given su = ( b, k )
+
+Evaluate utility Ju(s′
+
+> u
+
+, s −u), ∀s′ 
+
+> u
+
+∈ S u
+
+Compute best response: 
+
+sBR u = ( bBR , k BR ) ← arg max 
+
+> s′
+> u∈S u
+
+Ju(s′
+
+> u
+
+, s −u)
+
+if Ju(sBR u , s −u) > J u(su, s −u) then 
+
+su ← sBR u
+
+xku,b ← 0, xkBR  
+
+> u,b BR
+
+← 1
+
+Update loads: 
+
+Ukb ← U kb \ { u}, UkBR  
+
+> bBR
+
+← U kBR  
+
+> bBR
+
+∪ { u}
+
+until ∀u ∈ U , J u(su, s −u) ≥ Ju(s′
+
+> u
+
+, s −u), ∀s′ 
+
+> u
+
+∈ S u;(9) provides the maximum possible utility reduction of the users currently connected to the target channel: 
+
+Dn ≤ wr
+
+ ωu
+
+Ωn + ωu
+
+
+
+. (10) By defining this upper bound as our dynamic threshold τ and applying the condition ∆Ju > τ to our game, it is guaranteed that ∆Ju > D n, which ensures ∆Φ > 0. Since the strategy space is finite and every update strictly increases the global potential, the game must terminate at an ϵ-PSNE in a finite number of steps. Although condition ∆Ju > τ guarantees theoretical con-vergence, it leads to overly conservative player strategies. In practice, unconstrained best-response dynamics for games of this type have been shown to consistently converge to an equilibrium [30]. Therefore, to bridge the theoretical worst-case bound with practical execution, we adopt unconstrained Asynchronous Best-Response Dynamics (ABRD), where users update their strategies whenever ∆Ju > 0.The practical execution of the distributed UARA game using ABRD is presented in Alg. 1. Initially, UEs measure their local SINR for all available BS-channel pairs. Each UE then determines its minimum and maximum SINR and transmits only these two values to the network controller—without asso-ciating them with specific links. The controller then evaluates the global extreme values across the network to define the bounds γmin , γmax , and Rmax , which it broadcasts back to the UEs so that they normalize their individual data rate and SINR metrics. Here, Rmax denotes the maximum possible uncon-gested data rate, calculated using γmax in Eq. (4). Following, 5DQN 
+
+Controller       
+
+> UE 1 UE 2 UE N
+> Femto BS Macro BS
+> Game
+> Player
+> Game
+> Player
+> Game
+> Player
+> BS Load Feedback
+> CONTROL PLANE
+> (Network Orchestration)
+> UARA EXECUTION PLANE
+> (Non-Cooperative Game)
+> Local SINR
+> measurements
+> Distributed
+> UARA
+> Distributed
+> UARA
+> Distributed
+> UARA Local SINR
+> measurements
+> Local SINR
+> measurements
+> BS Load Feedback
+> Pico BS
+> BS Load Feedback
+> Utility Parameters
+> Configuration
+
+Fig. 2: Illustration of the Proposed DQN-based Orchestration Scheme for Game-Theoretic UARA. the UEs establish their initial connections based on the Max-SINR association rule. They then begin the distributed UARA game. During the game, each UE asynchronously evaluates its utility across its strategy space. If a strictly positive utility gain is identified, the UE unilaterally updates its association to the corresponding BS-channel pair, and the global channel loads are updated accordingly. This asynchronous process continues until no UE can further improve its utility by changing its current connection, at which point the network converges to a PSNE. Because each UE evaluates all |B| × |K| links, the per-iteration computational complexity of Alg. 1 is O(N |B||K| ),scaling linearly with each network dimension. V. D YNAMIC PARAMETER TUNING FOR GAME -T HEORETIC 
+
+UARA WITH REINFORCEMENT LEARNING 
+
+As shown in Eq. (5), the resulting strategy profile of the UEs and, consequently, also the overall network performance are determined by the weighting parameters (wr , w γ , w p) ∈ [0 , 1] 3
+
+of the game’s utility function. Each combination of these values balances the trade-offs between throughput, signal quality, and power consumption in a distinct way, both at the microscopic and macroscopic level. However, analytically computing the optimal weights for a desired macroscopic network objective (e.g., prioritizing net-work throughput or coverage, or reducing power consumption) is far from straightforward. To the best of our knowledge, no closed-form expression can directly map desired aggregate network performance metrics to exact utility parameter values, since user associations result from a non-cooperative game, which also does not admit a guaranteed unique equilibrium. Furthermore, relying on computational methodologies such as exhaustive search would require simulating the game to con-vergence for every candidate parameter configuration, hinder-ing low-latency network orchestration. Consequently, a model-free approach is required to dynamically map macroscopic net-work objectives to optimal utility parameters without excessive computational overhead. To this end, we propose a network orchestration scheme based on Reinforcement Learning, which tunes the weighting parameters of the multi-objective utility function. 
+
+A. MDP Formulation for Network Orchestration 
+
+To address the dynamic weighting parameter configuration problem, without the constraints of tabular Q-learning in complex action and state spaces, we employ Deep Rein-forcement Learning, where a centralized network controller acts as the agent. The orchestration process is modeled as a Markov Decision Process (MDP) defined by the tuple 
+
+⟨X , A, P, R, δ ⟩: 
+
+> •
+
+State Space (X ): The DRL agent receives real-time feedback on the load distribution across the network. We define the state x(t) ∈ X at time step t as a vector consisting of the standardized load fraction of every BS and the weighting parameters previously applied: 
+
+x(t) = { ¯Lb(t)}b∈B , w γ(t−1) , w p(t−1) 
+
+ . (11) The raw load fraction Lb(t) of each BS b ∈ B is calculated as the ratio of its associated users to the total number of users N :
+
+Lb(t) =
+
+P 
+
+> k∈K
+
+|U kb(t)|
+
+N . (12) To ensure gradient stability, the raw load fraction is standardized using a tier-specific mean μb and standard deviation σ:
+
+¯Lb(t) = Lb(t) − μb
+
+σ . (13) This step ensures consistent scaling across base station tiers, as directly feeding heterogeneous fractions into the 6
+
+state space would bias the learning process and lead to unstable training.  
+
+> •
+
+Action Space ( A): In our framework, we fix wr and tune 
+
+(wγ , w p) ∈ [0 , 1] 2. This design choice allows the con-troller to guide the network toward different objectives, such as power-aware and coverage-enhancing operation. Moreover, it reduces the dimensionality of the optimiza-tion space, resulting in a less complex problem and facilitating low-latency policy implementation, which is a priority for the design of our proposed scheme. Therefore, at each time step t, the DRL agent selects an action a(t),which represents a configuration of (wγ , w p) ∈ [0 , 1] 2.To avoid the computational overhead of continuous op-timization, the utility parameters are discretized into the following finite set: 
+
+Wγ = Wp = {0, ∆, 2∆ , . . . , 1}. (14) Thus, the two-dimensional discrete Action Space is de-fined as A = Wγ × W p, and the action vector as: 
+
+a(t) = wγ(t), w p(t)
+
+ ∈ A . (15)  
+
+> •
+
+Reward Function ( R): The DRL agent is rewarded based on the improvement in aggregate network performance metrics relative to a fixed-parameter game formulation 
+
+(wγ0, w p0). The reward r(t) at time step t is given by: 
+
+r(t) = ∆ ¯Γ(t) − β · ∆ ¯P(t), (16) where ∆¯Γ(t) denotes the gain in aggregate normalized network SINR, and ∆ ¯P(t) denotes the change in ag-gregate normalized network power consumption at time step t. Coefficient β is a positive weighting factor that determines the importance of reducing power consump-tion. Both ∆¯Γ(t) and ∆ ¯P(t) are calculated based on the resulting associations after each distributed game reaches equilibrium. Specifically: 
+
+∆¯Γ(t) = X
+
+> u∈U
+
+¯Γku,b (s∗
+
+> u
+
+(t)) − X
+
+> u∈U
+
+¯Γku,b (s∗
+
+> u, 0
+
+(t)) , (17) 
+
+∆ ¯P(t) = X
+
+> u∈U
+
+¯Pb(s∗
+
+> u
+
+(t)) − X
+
+> u∈U
+
+¯Pb(s∗
+
+> u, 0
+
+(t)) . (18) Here, s∗
+
+> u
+
+(t) represents the converged strategy of user u
+
+under the agent’s policy at time step t, and s∗
+
+> u, 0
+
+(t) the one under the fixed-parameter configuration (wγ0, w p0).Crucially, the proposed MDP formulation keeps the dimen-sionality of both the state and action spaces constant regardless of the number of users in the network, thereby enabling scala-bility. This contrasts with centralized RL and BS-agent MARL algorithms employed in UARA frameworks, which may define combinatorial action spaces, directly mapping UEs to BSs and radio resources, and consequently experience exponential action-space growth and high state-space dimensionality as network density increases. Moreover, the state space does not include user-specific information, such as converged associa-tions, CSI data, complete SINR vectors, user coordinates, or user priority class IDs. Instead, the agent operates on BS load distribution data, thus limiting the exposure of UE-specific information to the controller. 
+
+Algorithm 2: DQN-Based Network Orchestration Scheme for Game-Theoretic UARA 
+
+Input: Dataset of HetNet topologies, Action Space grid A, Number of episodes E, Number of time steps 
+
+T , Hyperparameters (α, δ, ϵ, ϵ min , ϵ decay ), Mini-batch size B
+
+Output: Learned DQN model Q(x, a ; θ)
+
+Initialize: Replay Buffer D ← ∅ , network weights θ
+
+randomly, exploration rate ϵ ← 1.0
+
+for each episode = 1 . . . E do 
+
+Load a network realization from dataset; Select initial random action a(0) = ( wγ(0) , w p(0) );Execute Algorithm 1 to observe initial state x(1) ;
+
+for each step t = 1 . . . T do 
+
+With probability ϵ select random a(t) ∈ A , else 
+
+a(t) = arg max a Q(x(t), a ; θ);Broadcast a(t) to all UEs; Execute Algorithm 1 until PSNE is reached; Receive reward r(t) using Eq. (16) and observe next state x(t+1) ;Store transition (x(t), a (t), r (t), x (t+1) ) into D;overwrite oldest if buffer is full; 
+
+if size of D > 2B then 
+
+Sample a random mini-batch of B
+
+transitions (x(j), a (j), r (j), x (j+1) ) from D;Calculate target values yj using Eq. (20); Perform a gradient descent step on 
+
+(yj − Q(x(j), a (j); θ)) 2:
+
+θ ← θ − α∇θ
+
+1
+
+B
+
+X
+
+> j
+
+(yj − Q(x(j), a (j); θ)) 2
+
+x(t) ← x(t+1) ;Decay exploration rate: ϵ ← max( ϵmin , ϵ · ϵdecay );
+
+B. DQN-Based Network Orchestration Scheme 
+
+Exploiting the discrete action space, we solve the formulated MDP using a DQN as a simple and efficient action-value approximator, thereby avoiding the architectural and compu-tational complexity of policy-gradient methods. Specifically, the neural network with weights θ is trained to approximate 
+
+Q(x, a ; θ) ≈ Q∗(x, a ) by minimizing the Mean Squared Error (MSE) loss derived from the Bellman equation: 
+
+L(θ) = E
+
+h yt − Q(x(t), a (t); θ)2i
+
+, (19) where yt is the target value defined as: 
+
+yt = r(t) + δ max  
+
+> a′
+
+Q(x(t+1) , a ′; θ), (20) and δ ∈ [0 , 1] is the discount factor of the MDP representing the importance of future rewards. To improve DQN learning stability, we implement Experience Replay (ER). Specifically, transitions of the form (x(t), a (t), r (t), x (t+1) ) are stored in a replay buffer D. During training, random mini-batches are sampled from D to approximate the expected MSE loss and update the weights of the NN via gradient descent. 7X pos (m) 0 100 200 300 400 500 600 700 800 900 1000 Y pos (m) 0100 200 300 400 500 600 700 800 900 1000 Hotspots FBSs PBSs MBS UEs 
+
+Fig. 3: Example topology of the simulated HetNet. The proposed DQN-based network orchestration scheme, illustrated in Fig. 2, is detailed in Alg. 2. First, the NN weights are randomly initialized, the replay buffer is set to empty, and the exploration rate is set to 1.0. At the beginning of each episode, a new network realization is loaded from the dataset. The agent selects a random initial action a(0) =(wγ(0) , w p(0) ), and the UARA game is executed to obtain the initial state x(1) . Each episode consists of T steps. At each step t, the agent observes the state x(t) and selects, with probability ϵ, a random action a(t) ∈ A , or else picks the ac-tion maximizing the approximated action-value function, i.e., 
+
+a(t) = arg max a Q(x(t), a ; θ). The selected action, i.e., the parameter configuration, is broadcast to all UEs and the game is played until convergence. Upon convergence, the agent receives its reward r(t) and observes the new state x(t+1) .The transition (x(t), a (t), r (t), x (t+1) ) is stored in the replay buffer D, overwriting the oldest entry if the buffer is full. Once the buffer exceeds 2B transitions (ensuring sufficient diversity), a random mini-batch of size B is sampled and target values yj are computed using Eq. (20). A gradient descent step then minimizes Eq. (19) over the sampled mini-batch to update θ. At the end of each episode, the exploration rate is decayed as ϵ ← max( ϵmin , ϵ · ϵdecay ). After E episodes, the agent converges to a learned action-value function Q(x, a ; θ)
+
+that approximates the optimal policy for the selection of the game-theoretic utility parameters. Because each of the T steps across the E episodes involves a mini-batch gradient update, the DQN training complexity is O ET B (Nin Nh + NhNout ), where Nin , N h, and Nout 
+
+denote the dimensions of the input, hidden, and output lay-ers, respectively. Conversely, during online deployment, the trained agent executes a single forward pass with complexity 
+
+O(Nin Nh + NhNout ). Since the NN dimensions are indepen-dent of the number of users, the inference complexity remains 
+
+O(1) with respect to N .TABLE I HetNet Simulation Parameters                             
+
+> Parameter Value
+> General System Parameters
+> Downlink center frequency f2 GHz Channel bandwidth W180 kHz Number of channels K2Noise power spectral density N0-174 dBm/Hz Network area radius 500 m Hotspot zone radius 40 m Load fraction standard deviation σ0.025
+> Base Stations
+> Number of PBSs, FBSs 4, 8 Transmit power (MBS, PBSs, FBSs) {40, 30, 20} dBm Antenna heights (MBS, PBSs, FBSs) {25, 10, 5} m BS antenna model 3GPP-3D Propagation scenario (MBS) 3GPP 38.901 UMa Propagation scenario (PBSs/FBSs) 3GPP 38.901 UMi
+> User Equipment
+> Number of UEs N40 Minimum hotspot UE ratio 20% Priority UE ratio 20% Priority weights ωu(standard, priority) {1, 4} UE antenna height 1.5 m UE antenna model Patch
+
+TABLE II DQN Hyperparameters                     
+
+> Parameter Value
+> Episodes E500 Steps T30 Replay Memory DSize 3000 Mini-batch size B32 Learning rate α0.001 Discount factor δ0.8 Initial exploration rate ϵ1.0 Minimum exploration rate ϵmin 0.05 Exploration decay ϵdecay 0.992
+
+VI. P ERFORMANCE EVALUATION 
+
+A dataset of 500 HetNet instances is produced for training, each containing the full SINR matrix γku,b , ∀(u, b, k ) ∈U × B × K . These channel realizations are generated using the QuaDRiGa simulator [31], following standardized 3GPP TR 38.901 propagation models [32] and capturing path loss, shadowing, and fast fading effects. An example network topology of the dataset is illustrated in Fig. 3. All dataset instances use the same BS layout and environment seed, ensuring spatially consistent large-scale propagation effects across the simulations. Meanwhile, N UEs are placed ran-domly in each instance to model the spatial variability of traffic distribution in HetNets. UEs are also distributed with a higher concentration within Hotspot Zones. These simulate high traffic areas of practical HetNets (e.g., public event areas) and are primarily served by the FBSs. Furthermore, UEs are divided into two priority classes—standard and priority. The network simulation parameters are explicitly defined in Table I. The tier-dependent power cost ¯Pb in Eq. (5) is obtained by normalizing the transmit power of each BS tier in decibels against the power of the Macro-tier. This results in fixed power costs of 0.5, 0.75, and 1.0 for the Femto, Pico, and Macro tiers, respectively. 8Rate Weighting Parameter (w r)           
+
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> Average Total Network Throughput (Mbps)
+> 6.5 77.5 88.5 99.5 10 10.5 11
+> Avg Throughput over all (w ., w p)Proposed Setting (w r= 1.0)
+
+Fig. 4: Impact of the rate weighting parameter wr on the average total network throughput. Discretization Step Size ∆0.005 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 Avg. UE Association Mismatch (%) 00.5 11.5 0.17 UEs 0.17 UEs 0.17 UEs 0.17 UEs 0.17 UEs 0.23 UEs 0.37 UEs 0.40 UEs 0.60 UEs Mismatch w.r.t. ∆ = 0.005 baseline  
+
+> ∆= 0.05 (selected)
+
+Fig. 5: Impact of the action space discretization step ∆ on user association accuracy. The proposed DQN consists of an input layer of Nin = 15 
+
+neurons (13 BS load values and 2 utility parameters), a single hidden layer of Nh = 256 neurons with ReLU activation, and an output layer of Nout = |A| neurons. Training is performed using mini-batch stochastic gradient descent. The complete set of DQN hyperparameters is provided in Table II. 
+
+A. Simulation Results 
+
+This subsection evaluates the proposed framework under different operational objectives. First, the rate weighting pa-rameter wr of the UARA game is calibrated. Then, the action-space discretization and training convergence of the DQN agent are examined. Finally, the proposed DQN-orchestrated game-theoretic framework (DQN-GT) is evaluated against conventional association methods, a static game formulation, and an exhaustive-search benchmark under balanced, power-aware, and coverage-enhancing policies. 
+
+1) Rate Weighting Parameter Calibration: As discussed in Section V-A, the centralized agent configures (wγ , w p) ∈
+
+[0 , 1] 2, while the value of wr is fixed. Fig. 4 illustrates how the rate weighting parameter wr of the game’s utility function affects total network throughput. For each value of Episodes 0 50 100 150 200 250 300 350 400 450 500 Relative Reward -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 00.1 α = 0.001    
+
+> α= 0.0005
+> α= 0.0001
+> α= 5e-05
+
+Fig. 6: Training convergence of the proposed DQN algorithm under varying learning rates α (50-episode moving average of the relative reward). 
+
+wr ∈ [0 , 1] , the distributed UARA game is executed across all configurations of (wγ , w p) in the discrete grid and the average total network throughput is calculated. As shown in the figure, this metric is maximized for wr ≥ 0.8. Therefore, fixing wr
+
+to 1.0 forces UEs to prioritize connections that provide the highest possible data rates under each (wγ , w p) configuration. In this way, the controller can implement different operational policies while maintaining robust user throughputs, which is a primary objective in cellular networks. Accordingly, wr is fixed to 1.0 for the remaining simulations in this work. 
+
+2) Action Space Discretization and Convergence Behavior: 
+
+The DQN agent is initially trained for the balanced policy, which enforces an effective trade-off between network cover-age and power consumption. The fixed-parameter baseline and the reward coefficient are set to (wγ0, w p0) = (0 .5, 0.3) and 
+
+β = 0 .2, respectively. The action space discretization step ∆ in Eq. (14) must first be selected to balance solution accuracy and computational complexity. Fig. 5 illustrates the average number of UEs that change their converged association relative to the high-resolution baseline ( ∆ = 0 .005 ), with respect to the grid step size. The evaluation is conducted using exhaustive search. Step sizes up to ∆ = 0 .06 introduce a negligible deviation of 0.17 UEs on average (0.43%), while larger steps lead to a rapid increase in association mismatch. Therefore, ∆ = 0 .05 is selected as it provides near-baseline accuracy and uniformly partitions [0 , 1] , while yielding an action space of |A| = 441 
+
+configurations. Hence, the output layer of the proposed DQN consists of 441 neurons. Fig. 6 evaluates the training convergence of the proposed DQN-based network orchestration algorithm under different learning rates α, using a 50-episode moving average. Training under α = 0 .001 provides the highest final reward ( ≈ 0.035 )and converges to a stable policy by episode 300, while training under lower rates ( α ∈ { 5 × 10 −4, 1 × 10 −4, 5 × 10 −5})converges more slowly or fails to reach competitive perfor-mance. Therefore, α = 0 .001 is selected for the proposed scheme. 9
+
+TABLE III Average System Performance Metrics Relative to the Balanced Policy                                                                   
+
+> Method N= 20 N= 40 N= 80
+> SINR (dB) Power (W) Throughput (Mbps) Response (ms) SINR (dB) Power (W) Throughput (Mbps) Response (ms) SINR (dB) Power (W) Throughput (Mbps) Response (ms) Max-SINR 7.35 61.02 6.07 < 0.01 7.40 117.15 8.98 < 0.01 7.30 239.16 11.04 < 0.01 CRE 6.97 47.76 6.29 < 0.01 7.01 88.11 9.09 < 0.01 6.90 178.61 10.85 < 0.01 ES-GT 6.95 48.40 7.31 49.73 6.89 87.22 10.24 89.79 6.74 173.59 11.19 186.05 DQN-GT 6.98 50.76 7.26 0.17 6.87 90.42 10.20 0.27 6.52 178.14 11.22 0.48 Static Game 6.55 44.34 7.46 0.14 5.78 68.66 10.37 0.24 4.87 120.94 10.94 0.45
+
+TABLE IV Average System Performance Metrics of the Power-Aware Policy                     
+
+> Method N= 20 N= 40
+> SINR (dB) Power (W) Throughput (Mbps) Response (ms) SINR (dB) Power (W) Throughput (Mbps) Response (ms) ES-GT 2.10 23.19 7.27 47.64 1.32 34.44 10.83 89.41 DQN-GT 3.27 27.86 7.57 0.18 1.51 36.83 10.94 0.30
+
+TABLE V Average System Performance Metrics of the Coverage-Enhancing Policy                     
+
+> Method N= 40 N= 80
+> SINR (dB) Power (W) Throughput (Mbps) Response (ms) SINR (dB) Power (W) Throughput (Mbps) Response (ms) ES-GT 7.29 104.46 10.14 88.90 7.22 217.85 11.52 187.92 DQN-GT 7.19 102.55 10.20 0.30 7.14 213.98 11.45 0.49
+
+3) Comparative Performance Evaluation: Finally, the per-formance of the proposed DQN-GT is evaluated against four baseline methods:  
+
+> •
+
+Max-SINR association: UEs select the connection pro-viding the highest SINR.  
+
+> •
+
+Cell Range Expansion (CRE): fixed artificial biases are applied to the SINR received from small cells ( +6 dB to PBSs and +11 dB to FBSs).  
+
+> •
+
+Exhaustive search-orchestrated game (ES-GT): the UARA game is simulated for all candidate utility param-eter configurations to identify the optimal one.  
+
+> •
+
+Static Game Formulation: utility parameters are fixed to baseline values, (wγ0, w p0) = (0 .5, 0.3) .Performance is evaluated with respect to average UE SINR, total network power consumption, aggregate network through-put, and response time of each method. The simulations are conducted on a Windows 10 Pro system with an Intel Core i5 CPU and 16 GB of memory. Table III presents the comparative results under the balanced operational policy of the controller. The tier-specific means are set to μb = {0.125 , 0.075 , 0.075 } for the MBS, PBSs, and FBSs, respectively. Max-SINR inherently achieves the highest average UE SINR across all network sizes. How-ever, this comes at the cost of overloading higher-power BSs, resulting in the highest network power consumption and consistently low network throughput across all evaluated traffic densities. The controller-orchestrated game-theoretic frameworks achieve performance close to CRE in terms of average UE SINR and network power consumption, while delivering higher network throughput. Specifically, relative to CRE in the 20-UE case, ES-GT records a 0.02 dB decrease in average UE SINR and a 1.34% increase in power consump-tion, while achieving 16.22% higher throughput than CRE and 20.43% higher than Max-SINR. This demonstrates the advantage of the proposed multi-objective game formulation over conventional signal-based association methods in terms of resource management. Similar results are observed across the 40- and 80-UE cases, with throughput gains gradually decreasing, however, as the network becomes more congested and optimization margins narrow. The proposed DQN-GT closely approximates the perfor-mance of ES-GT in the communication metrics evaluated for 
+
+N = 40 , demonstrating high accuracy in the implementation of the optimal policy. A high level of accuracy is also maintained for traffic loads of 20 and 80 users, which were not encountered during training. This stems from the agent operating on BS load distributions, which capture macroscopic network performance patterns and therefore enable operation across different traffic loads. Such a property contrasts with many RL models employed in HetNet UARA schemes, which are designed for specific user counts and typically require retraining to adapt to different loads. Crucially, the proposed DQN-GT provides a significant advantage over ES-GT in terms of execution speed. The total DQN-GT response time accounts for both the DQN inference time and the convergence time of the underlying UARA game. In the 20-UE case, DQN-GT achieves a response time approximately 293 times shorter than ES-GT. This gap widens with network density, since the convergence time of the UARA 10 
+
+game grows with the number of players, and ES-GT must simulate it separately for every candidate parameter config-uration. Specifically, in the 80-UE case, DQN-GT operates approximately 388 times faster than ES-GT. Nonetheless, even in the case of the highly congested network, where 80 UEs contend for 26 available BS-channel pairs, the proposed DQN-GT records a response time of 0.48 ms. For reference, the channel coherence time of a vehicular receiver with a speed of 45 km/h, operating at a 2 GHz down-link frequency, is approximately 5.08 ms, confirming that the proposed framework operates well within real-time constraints in terms of algorithmic execution. This is a direct effect of its bilevel architecture and the lightweight structure of the DQN. Specifically, the proposed DQN maintains an O(1) inference complexity with respect to network load, yielding a rapid inference time of 0.03 ms regardless of traffic density. This is obtained from Table III as the difference between DQN-GT and Static Game response times. While these execution times are highly promising, it should be noted that they reflect the total algorithmic complexity of the proposed framework and do not account for practical deployment overhead. In real-world systems, some additional latency would arise from signaling overhead required to aggregate BS load observations and broadcast the updated utility parameters, as well as from UEs transmitting local SINR values to receive back global ex-tremes for the normalization of the utility components. In contrast to centralized RL and BS-agent MARL al-gorithms, which can suffer from exponential growth of the action space as the number of users increases, the proposed framework decouples the dynamic policy update from the distributed UARA execution. By offloading the combinatorial associations problem to a fast-converging Nash game with linear per-iteration complexity, DQN-GT incurs low compu-tational overhead even in dense traffic conditions, enabling scalability. Moreover, the underlying UARA game requires only simple algebraic calculations from UEs to evaluate each link. This eliminates the need for executing locally deep NNs, as in MARL frameworks that may model UEs as independent agents, thereby enabling UARA execution even on computa-tionally and energy-constrained devices (e.g., IoT). In the 20-UE network, the Static Game achieves results close to both CRE and the controller-orchestrated game-theoretic frameworks in terms of average UE SINR and network power consumption. However, as network density increases, a progressively larger deviation in these metrics is observed. Specifically, while the Static Game incurs a small gap of 0.42 dB in average UE SINR relative to CRE for 
+
+N = 20 , this gap exceeds 2 dB for N = 80 . Notably, signal-based association methods remain inherently robust to congestion: users associate with the BS-channel pair providing the highest SINR (or highest biased SINR) regardless of network load. Consequently, this progressive deviation relative to CRE highlights the limitation of a static game formulation in providing consistent performance across different conges-tion levels. In contrast, the controller-orchestrated frameworks consistently approximate CRE in terms of coverage and power consumption across the evaluated traffic densities, demonstrat-ing comparable robustness to network congestion. The power-aware policy is trained by setting (wγ0, w p0) = (0 .5, 0.5) , β = 0 .8, and μb = {0.075 , 0.075 , 0.125 }. Table IV presents the performance of DQN-GT and ES-GT under this operational objective. For N = 40 , ES-GT effectively implements power-aware operation. Specifically, total network power consumption is reduced by 60 .51% relative to the Balanced Policy results of Table III, and by 70 .60% relative to Max-SINR. By offloading users toward small cells in order to save power, the congestion in the macro-tier BSs is also reduced. Consequently, total network throughput is increased relative to the balanced operation, as well, by 5.76% . In the 20-UE case, power consumption is again effectively reduced; however, no gain in network throughput is observed. In this low-congestion scenario, the abundance of available resources (20 users contending for 26 BS-channel pairs) means that UEs can establish lightly loaded connections largely independent of their converged strategy. As expected, improvements in network power consumption and throughput come at the cost of a lower, although still viable, average UE SINR compared to the Balanced Policy. In the 40-UE network the proposed DQN-GT closely ap-proximates the exhaustive-search baseline in the evaluated metrics of average UE SINR, total network power consump-tion, and aggregate throughput. In the case of the previously unseen load of N = 20 UEs, it also effectively implements the power-aware policy, exhibiting, however, a deviation of 1.17 dB in average UE SINR and 4.67 Watts in total power con-sumption relative to ES-GT. This slight trade-off in accuracy is the cost of deploying DQN-GT to unseen traffic loads and of its significant response time advantage over ES-GT, which is consistent with the results reported under the Balanced Policy. Specifically, similarly to the Balanced Policy, under the Power-Aware Policy DQN-GT records 0.18 ms for N = 20 and 0.30 
+
+ms for N = 40 , while ES-GT requires 47 .64 ms and 89 .41 
+
+ms, respectively, corresponding to a speedup of approximately 
+
+265 × and 298 × in favor of the proposed framework. The proposed Power-Aware Policy is particularly well-suited for low-congestion scenarios. For instance, during pe-riods of reduced traffic, such as late-night hours, the network controller can shift the objective to power-aware operation. By increasing the penalty on high-power connections, the proposed framework reduces power consumption while con-sistently providing viable connections and high data rates for UEs in scenarios where channel resources are abundant, such as the N = 20 case examined above. To train the DQN agent for the Coverage-Enhancing Policy, we set (wγ0, w p0) = (0 .5, 0.2) , β = 0.06 , and μb =
+
+{0.20 , 0.10 , 0.05 }. The corresponding performance metrics of ES-GT and DQN-GT are presented in Table V. Under this operational objective, ES-GT effectively enhances coverage relative to the Balanced Policy. Specifically, for both N = 40 
+
+and N = 80 , it provides higher average UE SINR than CRE, by 0.28 dB and 0.32 dB, respectively, approaching the performance of Max-SINR. It also achieves higher aggre-gate throughput than both signal-based methods across the evaluated densities, and than the Balanced Policy for the highly congested N = 80 case. Meanwhile, it reduces power consumption by 10 .83% for N = 40 and by 8.91% for 11 
+
+N = 80 relative to Max-SINR. The proposed DQN-GT achieves high accuracy in the implementation of the optimal policy, approximating the ex-haustive search baseline in terms of average UE SINR, total network power consumption, and aggregate network through-put, consistent with the behavior observed under the other op-erational policies. This holds for both the trained user density of N = 40 and the previously unseen density of N = 80 ,further indicating the adaptability of the proposed framework. Meanwhile, DQN-GT achieves a significantly faster response than ES-GT, providing a relative speedup of approximately 
+
+296 × and 384 × for N = 40 and N = 80 , respectively. The proposed Coverage-Enhancing Policy is particularly well-suited for high-congestion scenarios. For instance, during periods of sudden traffic surges, such as the conclusion of public events, the controller can shift the operational objective to coverage enhancement. By prioritizing signal quality over power savings, DQN-GT provides reliable connections and higher data rates for UEs in scenarios where radio resources are limited, such as the N = 80 case examined above. VII. C ONCLUSION 
+
+In this paper, we presented a novel DQN-based scheme for the orchestration of game-theoretic User Association and Resource Allocation in HetNets. The proposed low-complexity DQN controller dynamically configures the utility param-eters of the distributed game, effectively transitioning the network between power awareness, coverage enhancement, and balanced operation in direct response to macroscopic traffic patterns. Simulations in a practical HetNet environment demonstrated that, under the considered operational objectives, the proposed bilevel framework efficiently manages network resources across different traffic densities, while incurring low computational overhead. As a future direction, the proposed framework could be extended to RIS-assisted HetNets, exam-ining the integration of programmable surfaces for communi-cation enhancement. REFERENCES [1] M. Agiwal et al. , “Next generation 5G wireless networks: A compre-hensive survey,” IEEE Communications Surveys & Tutorials , vol. 18, no. 3, pp. 1617–1655, 2016. [2] M. Vaezi et al. , “Cellular, wide-area, and non-terrestrial IoT: A survey on 5G advances and the road toward 6G,” IEEE Communications Surveys & Tutorials , vol. 24, no. 2, pp. 1117–1174, 2022. [3] D. Liu et al. , “User association in 5G networks: A survey and an outlook,” IEEE Communications Surveys & Tutorials , vol. 18, no. 2, pp. 1018–1044, 2016. [4] Y. Xu et al. , “A survey on resource allocation for 5G heterogeneous networks: Current research, future trends, and challenges,” IEEE Com-munications Surveys & Tutorials , vol. 23, no. 2, pp. 668–695, 2021. [5] C.-X. Wang et al. , “On the road to 6G: Visions, requirements, key technologies, and testbeds,” IEEE Communications Surveys & Tutorials ,vol. 25, no. 2, pp. 905–974, 2023. [6] A. Papadopoulos et al. , “On modeling the RIS as a resource: Multi-user allocation and efficiency-proportional pricing,” IEEE Transactions on Network and Service Management , vol. 22, no. 5, pp. 4694–4705, 2025. [7] Q. Ye et al. , “User association for load balancing in heterogeneous cellular networks,” IEEE Transactions on Wireless Communications ,vol. 12, no. 6, pp. 2706–2716, 2013. [8] A. Khalili et al. , “Joint user association and resource allocation in the uplink of heterogeneous networks,” IEEE Wireless Communications Letters , vol. 9, no. 6, pp. 804–808, 2020. [9] R. Liu et al. , “Joint user association and resource allocation for multi-band millimeter-wave heterogeneous networks,” IEEE Transactions on Communications , vol. 67, no. 12, pp. 8502–8516, 2019. [10] T. Kim and J. M. Chang, “QoS-aware energy-efficient association and resource scheduling for HetNets,” IEEE Transactions on Vehicular Technology , vol. 67, no. 1, pp. 650–664, 2017. [11] B. Soleimani and M. Sabbaghian, “Cluster-based resource allocation and user association in mmWave femtocell networks,” IEEE Transactions on Communications , vol. 68, no. 3, pp. 1746–1759, 2020. [12] S. Rezvani et al. , “Resource allocation in virtualized CoMP-NOMA HetNets: Multi-connectivity for joint transmission,” IEEE Transactions on Communications , vol. 69, no. 6, pp. 4172–4185, 2021. [13] H. Yang et al. , “Distributed deep reinforcement learning-based spectrum and power allocation for heterogeneous networks,” IEEE Transactions on Wireless Communications , vol. 21, no. 9, pp. 6935–6948, 2022. [14] W. Liu et al. , “Reinforcement learning-based network slicing scheme for optimized UE-QoS in future networks,” IEEE Transactions on Network and Service Management , vol. 21, no. 3, pp. 3454–3464, 2024. [15] F. Allagiotis et al. , “Reinforcement learning approach for resource allo-cation in 5G HetNets,” in 2023 International Conference on Information Networking (ICOIN) , pp. 387–392, IEEE, 2023. [16] N. Zhao et al. , “Deep reinforcement learning for user association and resource allocation in heterogeneous cellular networks,” IEEE Trans-actions on Wireless Communications , vol. 18, no. 11, pp. 5141–5152, 2019. [17] S. Dong et al. , “Energy-efficient hierarchical resource allocation in uplink–downlink decoupled NOMA hetnets,” IEEE Transactions on Network and Service Management , vol. 20, no. 3, pp. 3380–3395, 2023. [18] Y. Özcan et al. , “Robust planning and operation of multi-cell homoge-neous and heterogeneous networks,” IEEE Transactions on Network and Service Management , vol. 17, no. 3, pp. 1805–1821, 2020. [19] V.-L. Nguyen et al. , “Understanding privacy risks of high-accuracy radio positioning and sensing in wireless networks,” IEEE Communications Magazine , vol. 62, no. 5, pp. 104–111, 2024. [20] R. L. Cigno et al. , “Integrating CSI sensing in wireless networks: Challenges to privacy and countermeasures,” IEEE Network , vol. 36, no. 4, pp. 174–180, 2022. [21] L. De Nardis et al. , “Positioning by fingerprinting with multiple cells in NB-IoT networks,” in 2022 International Conference on Localization and GNSS (ICL-GNSS) , pp. 01–07, IEEE, 2022. [22] M. Chinipardaz and A. Sarlak, “User-priority-based resource allocation in downlink heterogeneous cellular networks,” Wireless Personal Com-munications , vol. 140, no. 3, pp. 1219–1239, 2025. [23] N. Trabelsi et al. , “User association and resource allocation optimization in LTE cellular networks,” IEEE Transactions on Network and Service Management , vol. 14, no. 2, pp. 429–440, 2017. [24] G. Chen et al. , “MADDPG-M&L: UAV-assisted joint user association and slicing resource allocation in HetNets,” IEEE Transactions on Network Science and Engineering , 2025. [25] B. Huang and A. Guo, “A dynamic hierarchical game approach for user association and resource allocation in HetNets with wireless backhaul,” 
+
+IEEE Wireless Communications Letters , vol. 13, no. 1, pp. 59–63, 2024. [26] K. Khawam et al. , “Coordinated framework for spectrum allocation and user association in 5G HetNets with mmWave,” IEEE Transactions on Mobile Computing , vol. 21, no. 4, pp. 1226–1243, 2022. [27] Y. Chen et al. , “Game-based user association and resource allocation in B5G heterogeneous networks: A prioritized experience replay-aided dis-tributed DRL solution,” IEEE Transactions on Green Communications and Networking , vol. 10, pp. 610–622, 2026. [28] W. Ni et al. , “User association and small base station configuration for energy-efficiency maximization in hybrid-energy heterogeneous cellular networks,” IEEE Internet of Things Journal , vol. 12, no. 8, pp. 9858– 9871, 2024. [29] Z. Kaleem and K. Chang, “Public safety priority-based user association for load balancing and interference reduction in PS-LTE systems,” IEEE Access , vol. 4, pp. 9775–9785, 2016. [30] P. Caballero et al. , “Multi-tenant radio access network slicing: Statistical multiplexing of spatial loads,” IEEE/ACM Transactions on Networking ,vol. 25, no. 5, pp. 3044–3058, 2017. [31] S. Jaeckel et al. , “QuaDRiGa: A 3-D multi-cell channel model with time evolution for enabling virtual field trials,” IEEE Transactions on Antennas and Propagation , vol. 62, no. 6, pp. 3242–3256, 2014. [32] 3rd Generation Partnership Project (3GPP), “Study on channel model for frequencies from 0.5 to 100 GHz,” Technical Report (TR) 38.901, 3GPP, 2026. Version 19.3.0, Release 19. [Online]. Available: https: //www.3gpp.org/dynareport/38901.html.

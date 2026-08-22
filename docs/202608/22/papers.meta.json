@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-22",
+  "date": "2026-08-22",
+  "generated_at": "2026-08-22T20:34:01",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/22/2608.16195v1-robostriker-latent-space-strategic-games-for-autonomous-humanoid-boxing",
+      "section": "deep",
+      "title_en": "RoboStriker: Latent-Space Strategic Games for Autonomous Humanoid Boxing",
+      "authors": "Kangning Yin, Kaige Liu, Zhe Cao, Wentao Dong, Weishuai Zeng, Tianyi Zhang, Qiang Zhang, Jingbo Wang, Jiangmiao Pang, Yang Li, Ming Zhou, Weinan Zhang",
+      "date": "2026-08-17",
+      "pdf": "https://arxiv.org/pdf/2608.16195v1",
+      "score": "9.0",
+      "evidence": "将人形机器人拳击建模为两玩家潜在空间零和马尔可夫博弈，直接对应多智能体强化学习中的马尔可夫博弈",
+      "tldr": "仿人机器人拳击任务高度动态且充满接触，实现人类级对抗智能是严峻挑战。直接将多智能体强化学习用于原始动作空间会造成关节级物理崩溃，无法产生任何有效战术。RoboStriker将战斗建模为两玩家潜在空间零和博弈，通过预训练运动解码器将策略探索限制在拓扑有界的动作流形上，并采用潜在空间神经虚构自我博弈进行训练。实验表明该方法显著降低平衡失败率，在胜率和打击效率上优于原始空间方法，并成功部署到真实人形机器人。",
+      "tags": "query:marl",
+      "abstract_en": "Achieving human-level competitive intelligence and physical agility in humanoid robots remains a profound challenge, particularly in contact-rich and highly dynamic tasks such as boxing. While Multi-Agent Reinforcement Learning offers a principled framework for strategic interaction, its direct application to unstructured raw motor spaces inevitably leads to joint-level physical collapse, preventing the emergence of any viable combat tactics. To resolve this fundamental conflict between strategic exploration and physical feasibility, we formulate the humanoid combat task as a novel two-player latent-space zero-sum Markov game. Under standard regularity and approximate best-response assumptions, we show that the latent formulation induces an equivalent game over the decoder-reachable action manifold, providing an approximate-Nash interpretation of the resulting self-play dynamics. To instantiate this theoretical formulation, we propose RoboStriker, a hierarchical framework that decouples high-level reasoning from low-level execution. It first distills the tracking expertise of predefined boxing motions into a topologically bounded latent manifold. This structured latent foundation subsequently drives multi-agent co-evolution via Latent-Space Neural Fictitious Self-Play. Extensive experimental results demonstrate that gaming within this structured latent space substantially outperforms direct exploration. By constraining strategic exploration through a pretrained motion decoder, RoboStriker substantially reduces the catastrophic balance failures observed in raw action-space methods and achieves superior tactical performance in both competitive win rates and striking efficiency. Finally, we successfully deploy and validate our learned combat policies on real-world humanoid robots. Our code and video and supplementary materials are available at RoboStriker.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/22/2608.16230v2-deep-reinforcement-learning-orchestration-of-game-theoretic-user-association-and-resource-allocation-in-hetnets",
+      "section": "quick",
+      "title_en": "Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets",
+      "authors": "Sotiris Kopsinos, Alexandros I. Papadopoulos, Antonios Lalas, Konstantinos Votis, Christos Liaskos",
+      "date": "2026-08-17",
+      "pdf": "https://arxiv.org/pdf/2608.16230v2",
+      "score": "7.0",
+      "evidence": "集中式深度强化学习控制器编排异构网络中分布式多智能体博弈决策",
+      "tldr": "异构蜂窝网络中动态用户关联与资源分配面临低时延决策挑战。本文提出双层编排框架：底层多目标非合作博弈将决策分布至用户设备，顶层深度强化学习控制器动态调整博弈效用参数，实现功率、覆盖与均衡的灵活切换。在城市HetNet场景中，该方法接近最优策略，吞吐量优于传统关联，且计算开销低、无需重训即可适应流量变化。",
+      "tags": "query:marl",
+      "abstract_en": "Managing dynamic User Association and Resource Allocation (UARA) in modern Heterogeneous Cellular Networks (HetNets) remains a critical open challenge. Existing mathematical optimization and Reinforcement Learning approaches face limitations in handling low-latency decision-making under dynamic traffic conditions. This paper introduces a novel orchestration scheme for game-theoretic UARA in HetNets. The proposed bilevel framework distributes UARA decisions to User Equipment through a multi-objective non-cooperative game. Overlaying the distributed game, a centralized Deep Reinforcement Learning controller orchestrates network performance by dynamically configuring the game's utility parameters, enabling transitions between power awareness, coverage enhancement, and balanced operation. Evaluated on urban HetNet topologies with 3GPP TR 38.901-compliant channel modeling, the proposed framework closely approximates the optimal policy for the considered operational objectives, while delivering higher network throughput than conventional association methods. Furthermore, it incurs low computational overhead and maintains stable performance across the evaluated traffic densities without retraining.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

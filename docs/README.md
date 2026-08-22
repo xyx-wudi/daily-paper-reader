@@ -6,35 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-21
-- 运行时间：2026-08-21 20:49:41 UTC
+- 最新运行日期：2026-08-22
+- 运行时间：2026-08-22 20:33:55 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：2
-- 速读区：3
+- 本次总论文数：2
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-今日5篇推荐聚焦多智能体协作与博弈，精读2篇高分论文领衔。最值得看声誉机制强化学习揭示合作涌现，以及LLM常识推理驱动的自动驾驶多智能体编排。建议后续关注声誉建模与LLM推理在多智能体任务中的融合方向。
-- 详情：[/202608/21/README](/202608/21/README)
+今日精读聚焦《RoboStriker》9.0分，探索人形机器人拳击的潜在空间策略博弈；速读涉异构网络中的深度强化学习资源分配。最值得关注的是机器人对抗中策略生成与决策效率的突破，以及游戏论与强化学习在无线资源管理中的结合。建议普通读者从拳击机器人场景切入，直观理解强化学习在动态对抗中如何“以智取胜”。
+- 详情：[/202608/22/README](/202608/22/README)
 
 ### 精读区论文标签
-1. [Emergence of cooperation: A reputation-modulated reinforcement learning](/202608/21/2608.20016v1-emergence-of-cooperation-a-reputation-modulated-reinforcement-learning)  
+1. [RoboStriker: Latent-Space Strategic Games for Autonomous Humanoid Boxing](/202608/22/2608.16195v1-robostriker-latent-space-strategic-games-for-autonomous-humanoid-boxing)  
    标签：评分：9.0/10、query:marl
-   evidence：空间囚徒困境中的合作多智能体Q学习
-2. [Multi-Agent Orchestration with the Common-Sense Reasoning Capabilities of LLMs for Autonomous Driving](/202608/21/2608.20129v1-multi-agent-orchestration-with-the-common-sense-reasoning-capabilities-of-llms-for-autonomous-driving)  
-   标签：评分：8.0/10、query:marl
-   evidence：自动驾驶中的多智能体编排与PPO强化学习
+   evidence：将人形机器人拳击建模为两玩家潜在空间零和马尔可夫博弈，直接对应多智能体强化学习中的马尔可夫博弈
 
 ### 速读区论文标签
-1. [Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets](/202608/21/2608.16230v1-deep-reinforcement-learning-orchestration-of-game-theoretic-user-association-and-resource-allocation-in-hetnets)  
+1. [Deep Reinforcement Learning Orchestration of Game-Theoretic User Association and Resource Allocation in HetNets](/202608/22/2608.16230v2-deep-reinforcement-learning-orchestration-of-game-theoretic-user-association-and-resource-allocation-in-hetnets)  
    标签：评分：7.0/10、query:marl
-   evidence：集中式深度强化学习控制器编排分布式博弈论用户关联与资源分配
-2. [$\texttt{Flip-Team}$: Cooperative Takeover Games with Stochastic Human Override](/202608/21/2608.16311v1-textttflip-team-cooperative-takeover-games-with-stochastic-human-override)  
-   标签：评分：7.0/10、query:marl
-   evidence：将人机权威切换建模为同利益动态博弈，接近马尔可夫博弈设定
-3. [Reward-Guided Autoregressive Graph Generation for Efficient Multi-Agent Communication Topology Design](/202608/21/2608.20099v1-reward-guided-autoregressive-graph-generation-for-efficient-multi-agent-communication-topology-design)  
-   标签：评分：6.0/10、query:marl
-   evidence：基于奖励引导生成的多智能体通信拓扑设计
+   evidence：集中式深度强化学习控制器编排异构网络中分布式多智能体博弈决策
 
 
 <div class="dpr-home-promo-card">
