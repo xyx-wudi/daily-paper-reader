@@ -1,0 +1,2356 @@
+Title: Policy Iteration for Linear-Quadratic Stochastic Differential Games with State- and Control-Dependent Noise
+
+URL Source: https://arxiv.org/pdf/2608.17940v1
+
+Published Time: Wed, 19 Aug 2026 01:10:02 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible. 
+
+> 1
+
+# Policy Iteration for Linear-Quadratic Stochastic Differential Games with State- and Control-Dependent Noise 
+
+Karl Handwerker, Felix Th ¨ ommes, Member, IEEE, Lucas G ¨ unther, Balint Varga, Member, IEEE, and S ¨ oren Hohmann, Senior Member, IEEE 
+
+Abstract — This paper presents a novel sequential policy iteration (PI) method for stochastic differential games with state- and control-dependent noise. The updates preserve mean-square stability, so that the iteration is well posed. We further derive a closed-form expression for the Fr ´ echet derivative of the sequential PI map at a Nash equilib-rium. The resulting characterization reveals how control-dependent noise, policy-evaluation sensitivity, and update ordering govern local error propagation, and yields explicit sufficient conditions for local linear convergence. Since finding an initial stabilizing solution is a major challenge in policy iteration, we also propose a homotopy-based initial-ization that ensures a valid starting point. The effectiveness of the proposed PI algorithm and the analytical results are verified through a numerical example. 
+
+Index Terms — Differential games, Mean-square stability, Multiplicative noise, Nash equilibrium, Policy iteration, Ric-cati equations 
+
+I. I NTRODUCTION 
+
+Noncooperative stochastic differential games are mathe-matical models of the dynamic interaction between multiple decision makers acting on an uncertain system, each pursuing an individual objective [1]–[3]. Originating in deterministic differential game theory [2], the stochastic formulation cap-tures uncertainties inherent in a wide range of applications such as financial markets [4], networked control [5], [6], and human–machine interaction [7], [8], where the uncertainty typically scales with the state and with the applied controls [9]. A central solution concept in such settings is the feedback Nash equilibrium, namely a profile of state-feedback strategies for which no player can improve its own objective by a unilateral deviation [1], [10]. The computation of a feedback Nash equilibrium requires solving a system of coupled equi-librium conditions, which in general take the form of coupled stochastic Hamilton–Jacobi–Bellman equations [1], [11]. In infinite-horizon linear–quadratic (LQ) settings, these condi-tions reduce to a system of coupled stochastic algebraic Riccati equations that characterize the equilibrium value functions and the associated linear feedback gains [12]. 
+
+All authors are with the Institute of Control Systems (IRS), Karlsruhe Institute of Technology (KIT), 76131 Karlsruhe, Germany. Correspond-ing author: K. Handwerker (karl.handwerker@kit.edu). 
+
+Closed-form solutions to these equations are available only in special cases, so that feedback Nash equilibria must in general be computed numerically [1]. While the single-player counterpart can be solved by classical iterative methods [13]– [15], the coupled equilibrium conditions of a game constitute a fixed-point problem rather than an optimization problem, so that the underlying monotonicity arguments no longer apply. Assessing convergence remains an open question for the computation of Nash equilibria in general [3], since nonzero-sum games may possess several stabilizing feedback Nash equilibria already in the deterministic special case [1], [16]. Global convergence to a distinguished equilibrium can there-fore not be expected without strong additional assumptions, and convergence becomes an inherently local and equilibrium-dependent question. Even at a given equilibrium, iterations of the same method class converge at different rates, since the multiplayer structure allows the players to be updated either simultaneously or sequentially one at a time in a chosen order [17], the latter being empirically reported to converge faster [18], [19]. A structural explanation of this phenomenon in policy iteration is missing. The solution methods themselves, by contrast, have ad-vanced considerably, though largely for the deterministic spe-cial case, in which iterative schemes built around repeated Lyapunov or Riccati equation solutions are well established [20], [21]. Policy iteration (PI), which alternates between policy evaluation and policy improvement, is the most widely used approach for computing feedback Nash equilibria in de-terministic games [17], [18], [22]–[26]. For stochastic games, iterative methods are available for two-player formulations [27], [28], for state-dependent noise [29], [30], and for multi-player games over finite time horizons [31]–[34]. None of these settings, however, combines an arbitrary number of players with noise that depends on the controls over an infinite horizon. Control-dependent noise in particular couples the players’ stationarity conditions and turns the equilibrium conditions into rational matrix equations, whereas they are polynomial in the deterministic case and under purely state-dependent noise [12], [15]. Whenever the diffusion does not vanish, drift and diffusion jointly govern the evolution of the state variance, so that mean-square stability (MSS) replaces asymptotic stability as the relevant closed-loop prop-erty [35]. As a consequence, neither the algorithms developed arXiv:2608.17940v1 [eess.SY] 18 Aug 2026 2
+
+for the deterministic and state-dependent case nor the results establishing their convergence carry over, since they address different equations and, in the deterministic case, certify a different notion of stability. In fact, a recent survey identifies the general solvability of Riccati-type equations for the explicit implementation of feedback-type optimal solutions in games with state- and control-dependent noise as an open research direction [36]. We therefore develop a policy-iteration method for infinite-horizon N -player nonzero-sum stochastic LQ differential games with state- and control-dependent noise. The policy evaluation step presupposes a mean-square-stabilizing gain profile, since otherwise the infinite-horizon value equations and costs are not defined [37]. How such a profile is to be obtained has been raised as a question in its own right [17]. Homotopy continuation has been used for this purpose in deterministic single-player [38] and game [18] settings. Both rely on a different notion of stability and require each player to stabilize the system on its own, so that neither extends to the present class. Once started, the iteration must then retain mean-square stability at every update, which renders every iterate implementable as a stabilizing feedback. To the best of our knowledge, the sequential policy-iteration method proposed here is the first for this class of games. Our main contributions are: 1) A policy-iteration method whose player-wise updates preserve mean-square stability, with fixed points that are precisely the stabilizing feedback Nash equilibria. 2) A local convergence analysis that delimits the equilibria at which sequential updating is guaranteed to contract at least as strongly as simultaneous updating, and shows that with three or more players the update order can decide whether an equilibrium is locally attracting at all. 3) A homotopy-based initialization that produces a mean-square-stabilizing initial gain profile in finitely many continuation steps whenever the game is mean-square stabilizable. 
+
+Notation: For positive integers n and m, let Rn and Rn×m
+
+denote the space of real vectors of dimension n and the space of real n × m matrices, respectively. Let Sn denote the set of real symmetric n × n matrices, and define Sn 
+
+> +
+
+:= {X ∈
+
+Sn : X ⪰ 0}, and Sn 
+
+> ++
+
+:= {X ∈ Sn : X ≻ 0}. For 
+
+X ∈ Sn, λmin (X) and λmax (X) denote its smallest and largest eigenvalues, respectively. For a square matrix X, ρ(X)
+
+denotes its spectral radius. We use ∥ · ∥ for the Euclidean norm on vectors and the associated induced operator norm on matrices. The identity matrix of dimension n is denoted by In, or simply by I when the dimension is clear from the context. Let (Ω , F, P) be a probability space, and let {F t}t≥0
+
+be a right-continuous filtration such that F0 contains all P-null sets of F. Assume that W = ( Wt)t≥0 is a one-dimensional standard Brownian motion adapted to {F t}t≥0. Throughout the paper, the initial state is deterministic, x(0) = x0 ∈ Rn.Whenever an equilibrium notion is stated, it is understood for every initial state x0 ∈ Rn.
+
+II. P ROBLEM FORMULATION 
+
+We consider an N -player stochastic differential game. For each player i ∈ I := {1, . . . , N }, we define the control 
+
+ui(t) ∈ Rmi , where u(t) := ( u1(t), . . . , u N (t)) denotes the joint control. The state x(t) ∈ Rn evolves according to the stochastic differential equation (SDE) 
+
+dx (t) = 
+
+
+
+Ax (t) + X
+
+> i∈I
+
+Biui(t)
+
+
+
+dt 
+
++
+
+
+
+Cx (t) + X
+
+> i∈I
+
+Diui(t)
+
+
+
+dW (t), (1) where A, C ∈ Rn×n and Bi, D i ∈ Rn×mi , i ∈ I are constant matrices. Each player i ∈ I seeks to minimize the infinite-horizon quadratic cost 
+
+Ji(u; x0) = E
+
+Z ∞
+
+> 0
+
+x(t)⊤Qix(t) + X
+
+> j∈I
+
+uj (t)⊤Rij uj (t) dt. 
+
+(2) where Qi ∈ Sn
+
+> ++
+
+, Rii ∈ Smi
+
+> ++
+
+, and Rij ∈ Smj 
+
+> +
+
+for all j ∈I \ { i}.We consider constant linear state-feedback strategies of the form ui(t) = −Kix(t), with Ki ∈ K i := Rmi×n, i ∈ I , and define the gain profile space K := Q 
+
+> i∈I
+
+Ki, whose elements are the N -tuples K = ( Ki)i∈I . For i ∈ I , we also write 
+
+K−i := ( Kj )j∈I\{ i} for the gains of all players except player 
+
+i. For K ∈ K, define the closed-loop drift and diffusion matrices 
+
+Acl (K) := A − X
+
+> i∈I
+
+BiKi, Ccl (K) := C − X
+
+> i∈I
+
+DiKi, (3) such that the closed-loop dynamics becomes 
+
+dx (t) = Acl (K)x(t) dt +Ccl (K)x(t) dW (t), x (0) = x0. (4) For every gain profile K ∈ K , the closed-loop system (4) admits a unique strong solution on [0 , ∞). The induced closed-loop control is uK (t) := ( −Kix(t)) i∈I , and we define 
+
+Ji(K; x0) := Ji(uK ; x0) (5) for the induced cost of player i ∈ I with the convention that 
+
+Ji(K; x0) = + ∞ whenever the integral in (2) diverges under 
+
+uK . The associated value function under K is defined by 
+
+V Ki (x0) := Ji(K; x0). (6) 
+
+Definition 1 (Mean-square stability [15, Def. 1.5.1]): The closed-loop system (4) is called mean-square stable (MSS) if its state trajectory satisfies 
+
+lim  
+
+> t→∞
+
+E∥x(t)∥2 = 0 ∀x0 ∈ Rn. (7) The system (1) is called mean-square stabilizable if there exists an N -tuple K ∈ K such that the closed-loop system (4) is MSS. We denote the set of stabilizing gain profiles by 
+
+KMSS := {K ∈ K : (4) is MSS } . (8) 
+
+Assumption 1 (Mean-square stabilizability): The stochastic game (1) is mean-square stabilizable by constant linear state feedback, that is, KMSS ̸ = ∅.HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 3
+
+Following [15], a gain profile K ∈ K belongs to KMSS if and only if there exists a matrix X = X⊤ ≻ 0 such that 
+
+Acl (K)⊤X + XA cl (K) + Ccl (K)⊤XC cl (K) ≺ 0. (9) In this setting, the second moment E∥x(t)∥2 decays moreover exponentially; see, e.g., [15, Thm. 1.5.3]. 
+
+Definition 2 (Stabilizing linear feedback Nash equilibrium): 
+
+A gain profile K⋆ = ( K⋆i )i∈I ∈ K MSS is called a stabilizing linear feedback Nash equilibrium [1], [12] if, for every player 
+
+i ∈ I and every other gain eKi ∈ K i,
+
+Ji(K⋆; x0) ≤ Ji
+
+ ( eKi, K ⋆
+
+> −i
+
+); x0
+
+ ∀x0 ∈ Rn, (10) whenever ( eKi, K ⋆
+
+> −i
+
+) ∈ K MSS .If K⋆ ∈ KMSS is a stabilizing linear feedback Nash equilibrium, then for each player i ∈ I there exists a matrix 
+
+P ⋆i ∈ Sn 
+
+> ++
+
+such that V K⋆ 
+
+> i
+
+(x0) = x⊤ 
+
+> 0
+
+P ⋆i x0, ∀x0 ∈ Rn, and the matrices P ⋆i satisfy, for each player i ∈ I , the coupled relations 
+
+0 = Acl (K⋆)⊤P ⋆i + P ⋆i Acl (K⋆) + Ccl (K⋆)⊤P ⋆i Ccl (K⋆)+ Qi + X
+
+> j∈I
+
+(K⋆j )⊤Rij K⋆j , (11) and 
+
+ Rii +D⊤ 
+
+> i
+
+P ⋆i Di
+
+K⋆i = B⊤ 
+
+> i
+
+P ⋆i +D⊤ 
+
+> i
+
+P ⋆i
+
+
+
+C − X
+
+> j∈I\{ i}
+
+Dj K⋆j
+
+
+
+.
+
+(12) These coupled equilibrium equations (11)–(12) follow from the quadratic structure of the closed-loop value functions (6) and the first-order optimality conditions of the induced best-response problems; see, e.g., [12]. They admit closed-form solutions only in special cases, so that K⋆ must in general be computed numerically [1]. 
+
+Problem 1: Develop a policy iteration algorithm for com-puting a stabilizing linear feedback Nash equilibrium K⋆ ∈KMSS for the stochastic N -player differential game (1)–(2), that is, solve the coupled equilibrium system (11)–(12) via a well-posed PI scheme on the set of stabilizing gain profiles 
+
+KMSS .
+
+Problem 2: Characterize the local convergence behavior of the proposed algorithm near a stabilizing linear feedback Nash equilibrium K⋆ ∈ KMSS , and provide verifiable sufficient conditions for local convergence. 
+
+Problem 3: Construct a gain profile K ∈ K MSS directly from the data of the game (1)–(2), so that the proposed algorithm can be initialized without a stabilizing profile being known in advance. 
+
+III. S EQUENTIAL POLICY ITERATION 
+
+This section addresses Problem 1 by presenting a policy-iteration method based on sequential player-wise updates for computing stabilizing linear feedback Nash equilibria of the stochastic N -player differential game (1)–(2). Starting from a stabilizing gain profile, the method alternates between (A) policy evaluation via a generalized Lyapunov equation and (B) policy improvement based on fixed-value stationarity conditions. Within each iteration, the players are updated one at a time in a fixed order. Each player’s improvement step is evaluated at a partially updated gain profile that already incorporates the most recent updates of the preceding players, so that the following players within the same iteration already benefit from the updated gains of preceding players. Both the policy-evaluation step and the associated quadratic value representation are defined only for gain profiles in KMSS . The sequential construction is therefore designed to preserve mean-square stability at each intermediate player-wise update, so that the policy-iteration mapping remains well defined on this set. 
+
+A. Policy Evaluation 
+
+The policy evaluation step assesses a given stabilizing and in general suboptimal gain profile K ∈ K MSS by computing, for each player i ∈ I , the infinite-horizon cost (2) induced by the closed-loop system (4). Under ui(t) = −Kix(t), define the induced running-cost matrix 
+
+Si(K) := Qi + X
+
+> j∈I
+
+K⊤ 
+
+> j
+
+Rij Kj , (13) so that 
+
+Ji(K; x0) = E
+
+Z ∞
+
+> 0
+
+x(t)⊤Si(K)x(t) dt. (14) 
+
+Lemma 1 (Policy evaluation under fixed linear feedback): 
+
+Let K ∈ K MSS and fix i ∈ I . Then the generalized Lyapunov equation 
+
+Acl (K)⊤Pi + PiAcl (K) + Ccl (K)⊤PiCcl (K) + Si(K) = 0 
+
+(15) admits a unique symmetric solution Pi(K) ∈ Sn. More-over, Pi(K) ∈ Sn
+
+> ++
+
+, and the induced cost of player 
+
+i admits the quadratic value representation Ji(K; x0) =
+
+x⊤ 
+
+> 0
+
+Pi(K)x0, ∀x0 ∈ Rn.
+
+Proof: Fix K ∈ KMSS and i ∈ I. Existence and uniqueness of a symmetric solution Pi(K) ∈ Sn of (15) follow from the unique solvability of the generalized Lyapunov equation for mean-square stable closed-loop systems; see, e.g., [15]. Since Qi ≻ 0 and Rij ⪰ 0, we have Si(K) ≻ 0, and therefore Pi(K) ≻ 0.Applying Itˆ o’s formula to x(t)⊤Pi(K)x(t) and using (15) gives d x(t)⊤Pi(K)x(t) = −x(t)⊤Si(K)x(t) dt + dM i(t),where Mi(·) is a local martingale; see, e.g., [35]. Fix T > 0
+
+and let τℓ := min  inf {t ≥ 0 : ∥x(t)∥ ≥ ℓ}, T  for ℓ > 0.Integrating over [0 , τ ℓ] and taking expectations, using that 
+
+x(0) = x0 is deterministic and that the stopped process 
+
+Mi(min( ·, τ ℓ)) is a true martingale, we obtain 
+
+Ex(τℓ)⊤Pi(K)x(τℓ) − x⊤ 
+
+> 0
+
+Pi(K)x0
+
+= − E
+
+Z τℓ
+
+> 0
+
+x(t)⊤Si(K)x(t) dt. 
+
+Since τℓ ≤ T and τℓ → T almost surely as ℓ → ∞ , monotone convergence applies to the right-hand side, and since x(·) is continuous with Esup t∈[0 ,T ] ∥x(t)∥2 < ∞ for the linear SDE (4), see, e.g., [39], dominated convergence applies to the left-hand side. Hence the identity holds with τℓ replaced by T . Since K ∈ K MSS , one has E∥x(T )∥2 → 0, and letting 
+
+T → ∞ yields Ji(K; x0) = x⊤ 
+
+> 0
+
+Pi(K)x0.4
+
+Algorithm 1 Sequential Policy Iteration for Stochastic N -Player LQ Differential Games 
+
+Require: Stabilizing initial gain profile K0 =(K01 , . . . , K 0 
+
+> N
+
+) ∈ KMSS , system matrices A, B i, C, D i,weights Qi, R ii , R ij , tolerance ε > 0
+
+k ← 0
+
+repeat for i ∈ I do 
+
+Form the partially updated profile 
+
+eKk,i :=  Kk+1 1 , . . . , K k+1  
+
+> i−1
+
+, K ki , . . . , K kN
+
+.
+
+Policy evaluation: Solve for P ki ∈ Sn
+
+> ++
+
+0 = Si( eKk,i ) + P ki Acl ( eKk,i ) + Acl ( eKk,i )⊤P ki
+
++ Ccl ( eKk,i )⊤P ki Ccl ( eKk,i ).
+
+Policy improvement: Update 
+
+Kk+1  
+
+> i
+
+:=  Rii + D⊤ 
+
+> i
+
+P ki Di
+
+−1
+
+B⊤ 
+
+> i
+
+P ki
+
++ D⊤ 
+
+> i
+
+P ki
+
+ C − X
+
+> j∈I\{ i}
+
+Dj eKk,i j
+
+
+
+end for 
+
+k ← k + 1 
+
+until X
+
+> i∈I
+
+∥Kki − Kk−1 
+
+> i
+
+∥ < ε 
+
+return Kk
+
+B. Player-Wise Policy Improvement 
+
+We first develop the player-wise policy-improvement step. Given a value matrix, it returns the gain that enforces the cor-responding fixed-value stationarity condition, independently of how the value matrix was obtained. Fix a player i ∈ I , a value matrix P ∈ Sn
+
+> ++
+
+, and the gains 
+
+Kj , j ∈ I \ { i}, of the remaining players. The improved gain for player i is obtained by enforcing the first-order stationarity condition of player i’s induced cost, which is quadratic in Ki,while holding the value matrix fixed at P . This fixed-value stationarity condition is 
+
+0 =  Rii + D⊤ 
+
+> i
+
+P D i
+
+ bKi
+
++ X
+
+> j∈I\{ i}
+
+D⊤ 
+
+> i
+
+P D j Kj − B⊤ 
+
+> i
+
+P − D⊤ 
+
+> i
+
+P C, (16) where bKi ∈ Rmi×n denotes the updated gain of player i.Since Rii ≻ 0 and P ≻ 0, the matrix Rii +D⊤ 
+
+> i
+
+P D i is positive definite. Hence (16) uniquely determines bKi as a function of the value matrix P and the gains Kj , j ∈ I \ { i}.
+
+C. Sequential Iteration Mapping 
+
+We now combine policy evaluation and policy improvement into a single player-wise update and compose these updates sequentially. For a gain profile K ∈ K MSS and a player i ∈ I ,the value matrix Pi(K) ∈ Sn 
+
+> ++
+
+is well defined by Lemma 1. Evaluating Pi(K) and applying the improvement step (16) with P = Pi(K) yields the player-wise gain update Ui(K),defined as the unique solution bKi of (16) at P = Pi(K),
+
+Ui(K) := bKi P =Pi(K). (17) 
+
+Definition 3 (Player-wise update mapping): For each i ∈I, define the player-wise update mapping Ti : KMSS → K 
+
+by 
+
+Ti(K) :=  K1, . . . , K i−1, Ui(K), K i+1 , . . . , K N
+
+. (18) Within each iteration, these player-wise updates are applied to one player at a time, in an arbitrary but fixed order, here 
+
+1, . . . , N .Let Kk ∈ K MSS denote the current iterate. The partially updated gain profiles generated within iteration k are defined recursively by 
+
+eKk,i := Ti−1 ◦ · · · ◦ T 1(Kk), i ∈ I , (19) where, by convention, Ti−1 ◦ · · · ◦ T 1 denotes the identity mapping for i = 1 . Equivalently, 
+
+eKk,i =  Kk+1 1 , . . . , K k+1  
+
+> i−1
+
+, K ki , . . . , K kN
+
+, i ∈ I \ { 1}. (20) 
+
+Definition 4 (Sequential policy iteration mapping): Define the sequential policy-iteration mapping by 
+
+Tseq := TN ◦ T N −1 ◦ · · · ◦ T 1. (21) Algorithm 1 summarizes the resulting sequential policy-iteration scheme. 
+
+D. Preservation of Mean-Square Stability 
+
+Each Ti is defined through the value matrix Pi(K) and therefore requires K ∈ K MSS . The composition (21) is thus well posed only if every partially updated gain profile again lies in KMSS . The following theorem establishes that each player-wise update preserves mean-square stability, thereby confirming that Algorithm 1 is well posed. 
+
+Theorem 1 (Mean-square stability preservation): Fix k ∈
+
+N and let Kk ∈ K MSS . Let the stage profiles eKk,i , i ∈ I ,be defined by (19), with eKk, 1 = Kk. Then eKk,i ∈ K MSS ,
+
+i ∈ I . Moreover, Kk+1 = Tseq (Kk) ∈ K MSS .
+
+Proof: For K ∈ K MSS , define the Lyapunov operator 
+
+LK (X) := Acl (K)⊤X + XA cl (K) + Ccl (K)⊤XC cl (K),
+
+(22) with X ∈ Sn. For notational convenience, set Ak,i := 
+
+Acl ( eKk,i ), Ck,i := Ccl ( eKk,i ) and Sk,i i := Si( eKk,i ). In addition, define eKk,N +1 := Kk+1 = Tseq (Kk).
+
+Fix i ∈ I and assume that eKk,i ∈ K MSS . By Lemma 1, the generalized Lyapunov equation 
+
+L eKk,i (P ki ) + Sk,i i = 0 (23) admits a unique solution P ki ∈ Sn
+
+> ++
+
+.Let ∆Ki := Kk+1  
+
+> i
+
+−Kki . Since only the i-th gain is updated, one has 
+
+Ak,i +1 = Ak,i − Bi∆Ki (24) and 
+
+Ck,i +1 = Ck,i − Di∆Ki. (25) HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 5
+
+A direct expansion of the Lyapunov operator at eKk,i +1 yields 
+
+L eKk,i +1 (P ki ) = L eKk,i (P ki )
+
+− ∆K⊤
+
+> i
+
+ B⊤ 
+
+> i
+
+P ki + D⊤ 
+
+> i
+
+P ki Ck,i 
+
+−  P ki Bi + ( Ck,i )⊤P ki Di
+
+∆Ki
+
++ ∆ K⊤ 
+
+> i
+
+D⊤ 
+
+> i
+
+P ki Di ∆Ki. (26) Moreover, since only Ki changes, 
+
+Sk,i +1  
+
+> i
+
+= Sk,i i − (Kki )⊤Rii Kki + ( Kk+1  
+
+> i
+
+)⊤Rii Kk+1  
+
+> i
+
+. (27) Using the stationarity condition (16) for player i at eKk,i ,one obtains 
+
+B⊤ 
+
+> i
+
+P ki + D⊤ 
+
+> i
+
+P ki Ck,i = Rii Kk+1  
+
+> i
+
++ D⊤ 
+
+> i
+
+P ki Di ∆Ki. (28) Substituting (28) into (26) and combining the result with (27) and the evaluation identity (23) yields 
+
+L eKk,i +1 (P ki ) + Sk,i +1  
+
+> i
+
+= −∆K⊤
+
+> i
+
+ Rii + D⊤ 
+
+> i
+
+P ki Di
+
+∆Ki ⪯ 0.
+
+(29) Since Qi ≻ 0 and Rij ⪰ 0 for all j ∈ I , one has Sk,i +1  
+
+> i
+
+≻ 0.
+
+Therefore, 
+
+L eKk,i +1 (P ki ) = − Sk,i +1  
+
+> i
+
+− ∆K⊤
+
+> i
+
+ Rii + D⊤ 
+
+> i
+
+P ki Di
+
+∆Ki ≺ 0.
+
+(30) Since P ki ≻ 0, the MSS Lyapunov criterion (9) implies that 
+
+eKk,i +1 ∈ K MSS . The claim follows by induction over i ∈ I .
+
+E. Fixed-Point Characterization 
+
+Theorem 1 guarantees that the iteration remains on KMSS .It remains to characterize its fixed points and thereby confirm that, upon convergence, Algorithm 1 returns a solution of the coupled equilibrium system (11)-(12). 
+
+Proposition 1 (Fixed-point characterization): A gain pro-file K⋆ ∈ KMSS satisfies Tseq (K⋆) = K⋆ if and only if it satisfies the coupled equilibrium equations (11)–(12), and hence if and only if it is a stabilizing linear feedback Nash equilibrium in the sense of Definition 2. In that case, 
+
+Ti(K⋆) = K⋆ for every i ∈ I .
+
+Proof: (Sufficiency) If K⋆ satisfies (11)–(12), then for each i ∈ I the value matrix Pi(K⋆) solves (11) and K⋆i
+
+satisfies the stationarity condition (12); hence Ui(K⋆) = K⋆i
+
+and Ti(K⋆) = K⋆ for all i ∈ I and therefore Tseq (K⋆) = K⋆.(Necessity) Suppose Tseq (K⋆) = K⋆. By Definition 3, each map Tj updates only block j and leaves the remaining blocks unchanged. Hence T1 replaces K⋆ 
+
+> 1
+
+by U1(K⋆); since block 
+
+1 is not modified at the later stages, Tseq (K⋆) = K⋆ forces 
+
+U1(K⋆) = K⋆ 
+
+> 1
+
+, so that the profile entering stage 2 is again K⋆.Proceeding inductively, the profile entering each stage i equals 
+
+K⋆ and Ui(K⋆) = K⋆i for every i ∈ I , which is precisely the stationarity condition (12) with P ⋆i = P ⋆i (K⋆) solving (11). Hence K⋆ satisfies (11)–(12), which are necessary and sufficient conditions for K⋆ to be a stabilizing linear feedback Nash equilibrium [40]. Together with the mean-square-stability preservation of Theorem 1, this establishes that Algorithm 1 is a well-posed iteration on KMSS whose fixed points solve the coupled equi-librium system (11)–(12), thereby completing Contribution 1 and resolving Problem 1. 
+
+IV. L OCAL CONVERGENCE OF SEQUENTIAL POLICY 
+
+ITERATION 
+
+With Tseq well defined on KMSS by Theorem 1, we turn to its behavior near a stabilizing linear feedback Nash equilibrium. Such equilibria need not be unique, since the coupled equations may admit several solutions already in the deterministic special case contained in the present model [1], [16]. Convergence is therefore a local, equilibrium-dependent property. We analyze the Fr´ echet derivative of the iteration map (21), which governs the first-order propagation of per-turbations near an equilibrium and thus yields a criterion for local convergence [41]. The derivative identifies the sequential scheme and its decoupled counterpart, in which all players up-date simultaneously, as block Gauss–Seidel and block Jacobi iterations of a single operator, respectively. This explains the faster convergence reported for sequential updates [17], [18] and yields a verifiable condition under which the advantage holds. 
+
+A. Linearization and Local Convergence Criterion 
+
+To derive the Fr´ echet derivative of the full sequential iteration map Tseq from Definition 4, we first characterize the local linearization of the player-wise update maps Ti from Definition 3. For fixed i ∈ I , define the policy-evaluation residual map Ei : Sn × K → Sn by 
+
+Ei(P, K ) := Acl (K)⊤P + P A cl (K) (31) 
+
++ Ccl (K)⊤P C cl (K) + Si(K).
+
+By Lemma 1, for every K ∈ K MSS , the value matrix Pi(K)
+
+is characterized by 
+
+Ei
+
+ Pi(K), K  = 0 . (32) 
+
+Lemma 2 (Local smoothness of the evaluation map): Fix 
+
+i ∈ I and let K⋆ ∈ KMSS . Then there exists an open neighborhood N ⊂ K MSS of K⋆ such that the solution map 
+
+N ∋ K 7 → Pi(K) ∈ Sn (33) defined through (32), is continuously Fr´ echet differentiable on 
+
+N . Moreover, the partial Fr´ echet derivative DP Ei(K) of Ei
+
+with respect to P , evaluated at  Pi(K), K ,
+
+DP Ei(K) : Sn → Sn, (34) is invertible for every K ∈ N , and its inverse is uniformly bounded on N .
+
+Proof: Since K⋆ ∈ K MSS , the strict Lyapunov inequality (9) remains valid under sufficiently small perturbations of K.Hence KMSS is open, and there exists an open neighborhood 
+
+N ⊂ K MSS of K⋆. The map Ei(P, K ) is continuously Fr´ echet differentiable in (P, K ), and by Lemma 1 the derivative 
+
+DP Ei(K⋆) is precisely the Lyapunov operator LK⋆ from (22), which is invertible for K⋆ ∈ K MSS ; see, e.g., [15]. The claim therefore follows from the implicit function theorem, see e.g. [41]. Since DP Ei depends continuously on K, invertibility and a bound on the inverse persist under sufficiently small perturbations of K. Hence, after possibly shrinking N , the stated properties hold for all K ∈ N .6
+
+For fixed i ∈ I , define the fixed-value stationarity residual map associated with (16) by 
+
+Gi : Sn × Rmi×n × K → Rmi×n (35) by 
+
+Gi(P, bKi, K ) :=  Rii + D⊤ 
+
+> i
+
+P D i
+
+ bKi (36) 
+
++ X
+
+> j∈I\{ i}
+
+D⊤ 
+
+> i
+
+P D j Kj − B⊤ 
+
+> i
+
+P − D⊤ 
+
+> i
+
+P C. 
+
+Let K ∈ N , and define Pi := Pi(K) and bKi := Ui(K), where 
+
+Ui is given by (17). By (32), one has Ei(Pi, K ) = 0 . Then, by the definition of Ui,
+
+Gi(Pi, bKi, K ) = 0 . (37) Here Pi is obtained by policy evaluation at K, and bKi is then obtained by enforcing the fixed-value stationarity condition with Pi and K held fixed. Next, in addition to DP Ei(K) from Lemma 2, we write 
+
+DK Ei(K) for the partial Fr´ echet derivative of Ei with respect to K, evaluated at  Pi(K), K , and DP Gi(K), D bKi Gi(K),and DK Gi(K) for the corresponding partial Fr´ echet derivatives of Gi, evaluated at  Pi(K), Ui(K), K  (explicit expressions are given in Appendix I). Whenever no ambiguity arises, we omit the dependence on K.Throughout, for a Fr´ echet differentiable map F we write 
+
+DF (K) for its Fr´ echet derivative at the point K, which is a bounded linear operator, and DF (K)[∆ K] for its action on a perturbation ∆K. The subscript  ·  
+
+> j
+
+extracts the j-th block component. 
+
+Lemma 3 (Local linearization of a player-wise update): 
+
+Fix i ∈ I and let K ∈ N . Then the player-wise update map 
+
+Ti from Definition 3 is continuously Fr´ echet differentiable at K, and the i-th block row of DT i(K) equals the linear operator DU i(K) : K → Rmi×n given by 
+
+DU i(K) = − D bKi Gi
+
+−1
+
+DK Gi − D P Gi(DP Ei)−1DK Ei
+
+
+
+.
+
+(38) All remaining block rows act as the identity. In particular, 
+
+DT i(K) has exactly one nontrivial block row, namely the i-th one. 
+
+Proof: By Lemma 2, the map K 7 → Pi(K) is continu-ously Fr´ echet differentiable on N . Since (32) holds for every 
+
+K ∈ N , differentiation of (32) at K in the direction ∆K ∈ K 
+
+yields 
+
+DPi(K)[∆ K] = −(DP Ei)−1DK Ei[∆ K]. (39) Here (DP Ei)−1 is well defined by Lemma 2. Next, differen-tiating (37) at K in the direction ∆K gives 
+
+0 = DP Gi
+
+DPi(K)[∆ K] + D bKi Gi
+
+DU i(K)[∆ K]
+
++ DK Gi[∆ K]. (40) Moreover, D bKi Gi is invertible, since 
+
+D bKi Gi[H] =  Rii + D⊤ 
+
+> i
+
+Pi(K)Di
+
+H, H ∈ Rmi×n, (41) and Rii + D⊤ 
+
+> i
+
+Pi(K)Di ≻ 0 by Rii ≻ 0 and Lemma 1. Substituting (39) into (40) and solving for DU i(K) yields (38). Finally, by Definition 3, the map Ti leaves all player components j ∈ I \ { i} unchanged and updates only the i-th component through Ui; hence the i-th block row of DT i(K)
+
+equals DU i(K), while all other block rows act as the identity, so that DT i(K) has exactly one nontrivial block row, namely the i-th one. Since K 7 → Pi(K) is continuously Fr´ echet differentiable on N and the residual maps Ei and Gi are continuously Fr´ echet differentiable in their arguments, Ti is continuously Fr´ echet differentiable at K.Since the full sequential iteration map from Definition 4 is obtained by composing the player-wise update maps from Definition 3, its Fr´ echet derivative is given by the chain rule; see, e.g., [41]. Let K⋆ ∈ K MSS be a stabilizing linear feedback Nash equilibrium. By Proposition 1, Ti(K⋆) = K⋆ for all 
+
+i ∈ I , so that every partial composition Ti−1 ◦ · · · ◦ T 1 fixes 
+
+K⋆ as well. Hence all intermediate evaluation points of the chain rule coincide with K⋆, and 
+
+DT seq (K⋆) = DT N (K⋆) DT N −1(K⋆) · · · DT 1(K⋆). (42) 
+
+Lemma 4 (Sufficient criterion for local convergence): 
+
+Let K⋆ ∈ KMSS be a stabilizing linear feedback Nash equilibrium, and hence a solution of (11)–(12). Suppose that the sequential policy-iteration map Tseq from Definition 4 is continuously Fr´ echet differentiable in a neighborhood of K⋆.If 
+
+ρ(DT seq (K⋆)) < 1, (43) then there exists an equivalent norm ∥ · ∥ ∗ on K and a neighborhood V ⊂ K of K⋆ such that, for every initial point 
+
+K0 ∈ V , the iterates generated by repeated application of Tseq 
+
+converge linearly to K⋆ in the norm ∥ · ∥ ∗.
+
+Proof: Since K is finite dimensional and (43) holds, there exists an equivalent norm ∥ · ∥ ∗ on K whose induced operator norm satisfies 
+
+∥DT seq (K⋆)∥∗ < 1; (44) see, e.g., [42]. Because Tseq is continuously Fr´ echet differen-tiable in a neighborhood of K⋆, the local contraction principle for nonlinear fixed-point iterations yields a constant q ∈ (0 , 1) 
+
+and a radius r > 0 such that the contraction estimate 
+
+∥T seq (K) − K⋆∥∗ ≤ q ∥K − K⋆∥∗ (45) holds on the closed ∥ · ∥ ∗-ball V := {K ∈ K : ∥K − K⋆∥∗ ≤
+
+r}; see, e.g., [41], [43]. Since q < 1, the ball V is forward invariant, since for K ∈ V one has ∥T seq (K)−K⋆∥∗ ≤ q ∥K−
+
+K⋆∥∗ ≤ q r < r , so Tseq (K) ∈ V . Hence every iterate of Tseq 
+
+with initial point K0 ∈ V remains in V and converges linearly to K⋆.
+
+Remark 1 (Vanishing local derivative): If, in addition, 
+
+DT seq (K⋆) = 0, then the iteration converges locally superlinearly to K⋆; see, e.g., [41], [43]. 
+
+B. Structural Decomposition of the Local Derivative 
+
+Lemma 4 shows that local convergence is governed by the Fr´ echet derivative DT seq (K⋆) through the spectral condition (43). So far, the sequential policy-iteration scheme has been stated for a fixed update order of the players. However, the sequential construction admits an additional degree of HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 7
+
+freedom, namely the order in which the player-wise updates are carried out. We therefore analyze how the player-update order is reflected in the local derivative and thereby governs the local convergence behavior of sequential policy iteration. For a permutation π of I, define the permuted sequential policy-iteration map by 
+
+T π 
+
+> seq
+
+:= Tπ(N ) ◦ T π(N −1) ◦ · · · ◦ T π(1) . (46) 
+
+Proposition 2 (Order Decomposition): Let K⋆ ∈ KMSS 
+
+satisfy the coupled equilibrium equations (11)–(12), let π be a permutation of I, and define 
+
+Uπ(ℓ) := DT π(ℓ)(K⋆) − I, ℓ ∈ I . (47) Then the Fr´ echet derivative of the permuted sequential policy-iteration map admits the decomposition 
+
+DT π
+
+> seq
+
+(K⋆) = DT inv + Γ π , (48) where 
+
+DT inv := I + X
+
+> i∈I
+
+Uπ(i) (49) is the order-invariant part, and 
+
+Γπ := 
+
+> N
+
+X
+
+> m=2
+
+X
+
+> 1≤ℓ1<··· <ℓ m≤N
+
+Uπ(ℓm) · · · Uπ(ℓ1) (50) is the order-dependent part, where, for each m, the inner sum ranges over all strictly increasing index tuples 1 ≤ ℓ1 < · · · <ℓm ≤ N , equivalently over the m-element subsets of I.
+
+Proof: Since K⋆ satisfies (11)–(12), one has Ti(K⋆) = 
+
+K⋆ for all i ∈ I . Hence, by the chain rule, 
+
+DT π
+
+> seq
+
+(K⋆) = DT π(N )(K⋆) · · · DT π(1) (K⋆). (51) Using (47), this becomes 
+
+DT π
+
+> seq
+
+(K⋆) = ( I + Uπ(N )) · · · (I + Uπ(1) ). (52) Expanding the product yields the identity term I, the first-order sum P 
+
+> i∈I
+
+Uπ(i), and all ordered products of length at least two. The first two contributions form DT inv , while the remaining terms are collected in Γπ . This proves (48). 
+
+C. Effects of the Update Order 
+
+Proposition 2 identifies Γπ as the sole source of order de-pendence in DT π
+
+> seq
+
+(K⋆). We now determine which properties of the sequential iteration are governed by this term and which remain invariant under permutations. 
+
+Lemma 5 (Order invariance of fixed points): Let π be apermutation of I, and let T π 
+
+> seq
+
+be defined by (46). If K⋆ ∈KMSS satisfies the coupled equilibrium equations (11)–(12), then 
+
+T π
+
+> seq
+
+(K⋆) = K⋆ (53) for every permutation π.
+
+Proof: If K⋆ ∈ K MSS satisfies (11)–(12), then Ti(K⋆) = 
+
+K⋆ for all i ∈ I by Definition 3. Since T π 
+
+> seq
+
+in (46) is a composition of the player-wise update maps Ti, each of which fixes K⋆, it follows that T π
+
+> seq
+
+(K⋆) = K⋆, which is exactly (53). While the fixed-point set is thus permutation-invariant, the spectral radius of DT π
+
+> seq
+
+(K⋆), which governs the local conver-gence rate by Lemma 4, is in general not. The following result establishes the precise extent of this spectral order dependence. 
+
+Lemma 6 (Spectral order dependence): Let K⋆ ∈ KMSS 
+
+satisfy (11)–(12) and let π be a permutation of I.(i) If ˜π is a cyclic shift of π, then DT π
+
+> seq
+
+(K⋆) and 
+
+DT ˜π
+
+> seq
+
+(K⋆) have the same spectrum, and in particular 
+
+ρ DT π
+
+> seq
+
+(K⋆) = ρ DT ˜π
+
+> seq
+
+(K⋆) . (54) (ii) For N ≥ 3, there exist a game (1)–(2), a stabiliz-ing linear feedback Nash equilibrium K⋆, and per-mutations π, ˜π not related by a cyclic shift such that 
+
+ρ(DT π
+
+> seq
+
+(K⋆)) < 1 < ρ (DT ˜π
+
+> seq
+
+(K⋆)) .
+
+Proof: Claim (i) follows from (42), since a cyclic shift of π corresponds to a cyclic permutation of the factors 
+
+DT π(ℓ)(K⋆) in the ordered product. For square matrices A
+
+and B of the same size, 
+
+det( λI − AB ) = det( λI − BA ), (55) and repeated application of (55) shows that any cyclic per-mutation of the factors leaves the characteristic polynomial unchanged, yielding (54). For claim (ii), let N = 3 , n = 1 , mi = 1 , A = 0 , Bi = 1 ,
+
+C = 0 , Di = 0 , Qi = 12 , and let the control weights be 
+
+R11 = R22 = R33 = 1 , R13 = R21 = R32 = 92 and R12 =
+
+R23 = R31 = 0 . Then K⋆ = (1 , 1, 1) with P ⋆i = 1 solves (11)–(12) and Acl (K⋆) = −3, and (38) gives 
+
+DT dec (K⋆) = 
+
+
+
+0 − 137676 0 − 13
+
+− 1376 0
+
+ .
+
+The six update orders split into the two cyclic classes of (i), with ρ = 827 < 1 and ρ = (65 + 23 √43) /108 > 1. See also Section VI for a stochastic three-player instance. By Lemma 4, the update order therefore governs the local convergence rate at a given stabilizing fixed point, and can decide whether that fixed point is locally attracting at all. In the example the game and the equilibrium are held fixed and only the composition order changes. The example is deterministic, so the effect is not specific to the stochastic setting. 
+
+Remark 2 (Two-player spectral invariance): For N = 2,the two possible update orders π = (1 , 2) and π = (2 , 1) 
+
+are related by a cyclic shift. Lemma 6 therefore implies 
+
+ρ
+
+
+
+DT (1 ,2) seq (K⋆)
+
+
+
+= ρ
+
+
+
+DT (2 ,1) seq (K⋆)
+
+
+
+, (56) so that the sufficient spectral convergence condition (43) of Lemma 4 is insensitive to the update order for N = 2 .
+
+D. Relation between Sequential and Decoupled Policy Iteration 
+
+The preceding subsection characterized the order-dependent part Γπ . We now show that the order-invariant part DT inv is the derivative of the decoupled scheme, in which every player is updated from the common gain profile Kk rather than from the 8
+
+partially updated profile eKk,i , and identify conditions under which the sequential structure is preferable. On the neighborhood N from Lemma 2, define the decou-pled policy-iteration map by 
+
+Tdec (K) :=  U1(K), . . . , UN (K), K ∈ N , (57) where Ui is given by (17) for each i ∈ I .
+
+Proposition 3 (Decoupled PI derivative): Let K⋆ ∈ K MSS 
+
+satisfy (11)–(12), let Tdec be defined by (57), and let DT inv 
+
+be given by (49). Then 
+
+DT dec (K⋆) = DT inv . (58) 
+
+Proof: By Lemma 3, each gain-update map Ui given by (17) is continuously Fr´ echet differentiable on N ; in particular, the map Tdec in (57) is Fr´ echet differentiable at K⋆. Moreover, by (57), the i-th block of Tdec (K) is Ui(K). Hence, for every 
+
+∆K ∈ K ,
+
+DT dec (K⋆)[∆ K] 
+
+> i
+
+= DU i(K⋆)[∆ K], i ∈ I . (59) Now let Ui = DT i(K⋆) − I. By Lemma 3, the i-th block row of DT i(K⋆) equals DU i(K⋆) and all other block rows are the identity; hence, writing ∆ bKi := DU i(K⋆)[∆ K], one has Ui[∆ K] 
+
+> j
+
+= 0 , j ∈ I \ { i}, and Ui[∆ K] 
+
+> i
+
+= ∆ bKi − ∆Ki.
+
+Therefore, for every ∆K ∈ K ,
+
+h 
+
+I +X
+
+> i∈I
+
+Ui
+
+
+
+[∆ K]
+
+i
+
+> i
+
+= ∆ Ki + ∆ bKi −∆Ki
+
+ = ∆ bKi. (60) Comparison of (59) and (60) thus yields DT dec (K⋆) = I +P 
+
+> i∈I
+
+Ui. By (49), this is exactly DT inv .Since K⋆ satisfies (11)–(12), one has Tdec (K⋆) = K⋆ by (57). Moreover, the proof of Proposition 3 shows that Tdec 
+
+is continuously Fr´ echet differentiable at K⋆. Hence the same argument as in Lemma 4 applies to Tdec . If ρ(DT dec (K⋆)) <
+
+1, or equivalently, by (58), ρ(DT inv ) < 1, then decoupled policy iteration converges locally linearly to K⋆.To relate the two schemes, we express the sequential lo-cal derivative as a block Gauss–Seidel–type iteration of the decoupled derivative DT inv (Proposition 4). For a permutation π of I, define the π-ordered block space by Kπ := Q 
+
+> i∈I
+
+Rmπ(i)×n.
+
+Definition 5 (Block-permutation operator): Let π be a per-mutation of I. The block-permutation operator 
+
+Pπ : K → K π (61) is defined by 
+
+Pπ (∆ K1, . . . , ∆KN ) := (∆ Kπ(1) , . . . , ∆Kπ(N )). (62) Its inverse is the block-permutation operator 
+
+P−1 
+
+> π
+
+: Kπ → K , (63) which reorders the blocks according to the inverse permutation 
+
+π−1.For every linear operator A : K → K , define its π-ordered representation by Pπ AP−1 
+
+> π
+
+: Kπ → K π .
+
+Define 
+
+DT π 
+
+> dec
+
+:= Pπ DT dec (K⋆)P−1 
+
+> π
+
+. (64) By (63), Pπ is invertible, so that DT π 
+
+> dec
+
+is similar to 
+
+DT dec (K⋆). Since similar operators share the same spec-trum, ρ(DT π
+
+> dec
+
+) = ρ(DT dec (K⋆)) , and by (58), DT π 
+
+> dec
+
+=
+
+Pπ DT inv P−1 
+
+> π
+
+.
+
+Write the block splitting of DT π 
+
+> dec
+
+as 
+
+DT π 
+
+> dec
+
+= Lπ + Dπ + Rπ , (65) where Lπ is strictly block lower triangular, Dπ is block diagonal, and Rπ is strictly block upper triangular. 
+
+Proposition 4 (Triangular block representation): Let T π
+
+> seq
+
+be defined by (46), let Pπ be the block-permutation operator from Definition 5, let DT π 
+
+> dec
+
+be given by (64), and let (65) be the block splitting of DT π
+
+> dec
+
+. Then 
+
+Pπ DT π
+
+> seq
+
+(K⋆)P−1 
+
+> π
+
+= ( I − Lπ )−1(Dπ + Rπ ). (66) 
+
+Proof: For i ∈ I , set Vi := Pπ Uπ(i)P−1 
+
+> π
+
+. By Lemma 3, each Uπ(i) has exactly one nontrivial block row, namely the 
+
+π(i)-th one. Hence each Vi has exactly one nontrivial block row, namely the i-th one, and the i-th block row of I + Vi
+
+coincides with the i-th block row of DT π
+
+> dec
+
+.Now fix ∆Kπ ∈ K π , and define ∆Kπ, (0) := ∆ Kπ , and 
+
+∆Kπ, (i) := ( I + Vi)∆ Kπ, (i−1) , for i ∈ I . Then, by (46) and the chain rule at K⋆, ∆Kπ, (N ) = Pπ DT π
+
+> seq
+
+(K⋆)P−1 
+
+> π
+
+∆Kπ .
+
+Since I + Vi differs from the identity only in block row i, one has 
+
+(∆ Kπ, (i))j = (∆ Kπ, (i−1) )j , j ∈ I \ { i}, (67) and 
+
+(∆ Kπ, (i))i = X
+
+> j∈I
+
+(DT π
+
+> dec
+
+)ij (∆ Kπ, (i−1) )j . (68) For j < i , the j-th block is unchanged after step j, hence 
+
+(∆ Kπ, (i−1) )j = (∆ Kπ, (N ))j . For j ≥ i, the j-th block has not yet been updated at step i − 1, hence (∆ Kπ, (i−1) )j =∆Kπj . Therefore, 
+
+(∆ Kπ, (N ))i = X
+
+> j<i
+
+(DT π
+
+> dec
+
+)ij (∆ Kπ, (N ))j +X
+
+> j≥i
+
+(DT π
+
+> dec
+
+)ij ∆Kπj ,
+
+(69) for i ∈ I . Equivalently, using (65), we get 
+
+∆Kπ, (N ) = Lπ ∆Kπ, (N ) + ( Dπ + Rπ )∆ Kπ . (70) Since Lπ is strictly block lower triangular, I − Lπ is invertible, and thus 
+
+∆Kπ, (N ) = ( I − Lπ )−1(Dπ + Rπ )∆ Kπ . (71) Because this holds for every ∆Kπ ∈ K π , (66) follows. 
+
+Remark 3 (Jacobi and Gauss–Seidel structure): 
+
+Representation (66) places the update order within the classical theory of matrix splittings [44], [45]. The local dynamics of the decoupled scheme is the block-Jacobi iteration of the splitting (65) of DT inv , updating all player blocks simultaneously, whereas the sequential scheme is the corresponding block Gauss–Seidel iteration, updating the blocks in turn, each using the already-updated ones. The local effect of the update order is therefore exactly the difference between Jacobi- and Gauss–Seidel-type iterations of the same operator, which both interprets the ordering phenomenon and HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 9
+
+provides the structural basis for the comparison below. The representation uses only that each player-wise update modifies a single gain block, and therefore applies to player-wise policy iteration beyond the present class. Whereas (43) only guarantees the existence of a contracting norm, we compare the two schemes in an explicit, checkable weighted block-ℓ∞ norm. The weights provide the freedom to tighten the resulting contraction bound toward the spectral radius [42]. For ∆Kπ = (∆ Kπ 
+
+> 1
+
+, . . . , ∆KπN ) ∈ Kπ and weights w1, . . . , w N > 0, define 
+
+∥∆Kπ ∥w, ∞ := max 
+
+> 1≤i≤N
+
+∥∆Kπi ∥
+
+wi
+
+. (72) This induces the transported norm on K,
+
+∥∆K∥π,w, ∞ := ∥P π ∆K∥w, ∞, ∆K ∈ K . (73) Then 
+
+∥DT π
+
+> dec
+
+∥w, ∞ = max  
+
+> i∈I
+
+sup  
+
+> ∥∆Kπ∥w, ∞≤1
+
+P 
+
+> j∈I
+
+(DT π
+
+> dec
+
+)ij ∆Kπj
+
+wi
+
+.
+
+(74) Choosing w as a dominant eigenvector of the nonnegative matrix with entries ∥(DT π
+
+> dec
+
+)ij ∥ renders the resulting block bound minimal. 
+
+Theorem 2 (Weighted block-norm comparison): Let K⋆ ∈KMSS satisfy (11)–(12), let T π 
+
+> seq
+
+be defined by (46), let Tdec be defined by (57), let Pπ be the block-permutation operator from Definition 5, and let the norms ∥ · ∥ w, ∞ on Kπ and ∥ · ∥ π,w, ∞
+
+on K be given by (72) and (73), respectively. Assume that 
+
+DT dec (K⋆) π,w, ∞ ≤ 1. (75) Then 
+
+DT π
+
+> seq
+
+(K⋆) π,w, ∞ ≤ DT dec (K⋆) π,w, ∞. (76) Thus, in the norm ∥ · ∥ π,w, ∞, the local linear convergence rate for sequential policy iteration is at least as good as that for decoupled policy iteration. 
+
+Proof: By (73) and (64), one has 
+
+DT dec (K⋆) π,w, ∞ = ∥DT π
+
+> dec
+
+∥w, ∞. (77) Equations (75) and (77) imply ∥DT π
+
+> dec
+
+∥w, ∞ ≤ 1. Now fix 
+
+∆Kπ ∈ K π with ∥∆Kπ ∥w, ∞ ≤ 1, and set 
+
+∆Kπ, + := ( I − Lπ )−1(Dπ + Rπ )∆ Kπ . (78) By Proposition 4, 
+
+∆Kπ, + = Pπ DT π
+
+> seq
+
+(K⋆)P−1 
+
+> π
+
+∆Kπ . (79) We show by induction on i ∈ I that 
+
+∥∆Kπ, + 
+
+> i
+
+∥
+
+wi
+
+≤ ∥DT π
+
+> dec
+
+∥w, ∞. (80) For i = 1 , equations (66) and (65) give 
+
+∆Kπ, +1 = X
+
+> j∈I
+
+(DT π
+
+> dec
+
+)1j ∆Kπj . (81) Hence, by (74), 
+
+∥∆Kπ, +1 ∥
+
+w1
+
+≤ ∥DT π
+
+> dec
+
+∥w, ∞. (82) Now let i ≥ 2, and assume that ∥∆Kπ, + 
+
+> j
+
+∥/w j ≤∥DT π
+
+> dec
+
+∥w, ∞ for all j < i. Define ∆ eKπ, (i) := (∆ Kπ, +1 , . . . , ∆Kπ, + 
+
+> i−1
+
+, ∆Kπi , . . . , ∆KπN ).Since ∥DT π
+
+> dec
+
+∥w, ∞ ≤ 1, the induction hypothesis gives 
+
+∥∆Kπ, + 
+
+> j
+
+∥/w j ≤ 1 for j < i ; together with ∥∆Kπ ∥w, ∞ ≤ 1,this implies 
+
+∥∆ eKπ, (i)∥w, ∞ ≤ 1. (83) Moreover, equations (66) and (65) yield 
+
+∆Kπ, + 
+
+> i
+
+= X
+
+> j<i
+
+(DT π
+
+> dec
+
+)ij ∆Kπ, + 
+
+> j
+
++ X
+
+> j≥i
+
+(DT π
+
+> dec
+
+)ij ∆Kπj
+
+= X
+
+> j∈I
+
+(DT π
+
+> dec
+
+)ij ∆ eKπ, (i) 
+
+> j
+
+. (84) Therefore, by (74) and (83), 
+
+∥∆Kπ, + 
+
+> i
+
+∥
+
+wi
+
+≤ ∥DT π
+
+> dec
+
+∥w, ∞. (85) This proves (80) for all i ∈ I . Taking the maximum over i
+
+gives 
+
+∥∆Kπ, +∥w, ∞ ≤ ∥DT π
+
+> dec
+
+∥w, ∞. (86) By (79), (86), and the arbitrariness of ∆Kπ with 
+
+∥∆Kπ ∥w, ∞ ≤ 1, we obtain 
+
+Pπ DT π
+
+> seq
+
+(K⋆)P−1  
+
+> πw, ∞
+
+≤ ∥DT π
+
+> dec
+
+∥w, ∞. (87) Using (73) once more together with (77), we obtain (76). Wherever the decoupled scheme is non-expansive in ∥ · ∥π,w, ∞, sequential updating therefore contracts at least as strongly. 
+
+Corollary 1 (Two-player spectral relation): Let N = 2 and let K⋆ ∈ K MSS satisfy (11)–(12). Then, for either update order, 
+
+ρ DT π
+
+> seq
+
+(K⋆) = ρ DT dec (K⋆)2. (88) 
+
+Proof: By (133), DK Gi contains no term in ∆Ki, and by (130) its i-th block is DKi Ei[∆ Ki] = −∆K⊤ 
+
+> i
+
+Mi − M ⊤ 
+
+> i
+
+∆Ki
+
+with Mi := B⊤ 
+
+> i
+
+P ⋆i + D⊤ 
+
+> i
+
+P ⋆i Ccl (K⋆) − Rii K⋆i . Since C −P  
+
+> j̸=i
+
+Dj K⋆j = Ccl (K⋆) + DiK⋆i , condition (12) yields Mi =0, so that DU i(K⋆) 
+
+> i
+
+= 0 by (38) and Dπ = 0 in (65). Write Xij := (DT π
+
+> dec
+
+)ij . Then (66) reduces to (I −
+
+Lπ )−1Rπ , which is block upper triangular with diagonal blocks 0 and X21 X12 , whence ρ(DT π
+
+> seq
+
+(K⋆)) = ρ(X21 X12 ).Moreover (DT π
+
+> dec
+
+)2 = blkdiag( X12 X21 , X 21 X12 ), and 
+
+X12 X21 and X21 X12 share their nonzero spectrum. For every two-player game, the two schemes therefore converge and diverge together at each stabilizing equilibrium, and where they converge, one sequential iteration contracts as much as two decoupled iterations. 
+
+E. Effects of the Game Structure 
+
+In addition to the main structural results established in Theorem 2 and Corollary 1, we now analyze how the stochas-ticity of the game affects local convergence. Specifically, we reveal how the control-dependent noise terms Di enter the contraction bounds through the coefficients γij .Let K⋆ ∈ K MSS be a stabilizing linear feedback Nash equi-librium in the sense of Definition 2, equivalently, a solution of (11)–(12). For each i ∈ I , define P ⋆i := Pi(K⋆). Moreover, let 10 
+
+(DP Ei)⋆ := DP Ei(K⋆), and (DP Gi)⋆ := DP Gi(K⋆), where 
+
+DP Ei and DP Gi are the partial Fr´ echet derivatives introduced before Lemma 3. For j ∈ I \{ i}, let (DKj Ei)⋆ : Rmj ×n → Sn
+
+denote the restriction of DK Ei(K⋆) to perturbations in the j-th player block, where DK Ei is introduced before Lemma 3. For each i ∈ I , define 
+
+μ⋆i :=  (DP Ei)⋆−1 −1, γ ii := [DT inv ]ii , i ∈ I , (89) where DT inv is given by (49), equivalently, by Proposition 3, 
+
+DT inv = DT dec (K⋆). For i ∈ I and j ∈ I \ { i}, define 
+
+γij :=  Rii + D⊤ 
+
+> i
+
+P ⋆i Di
+
+−1D⊤ 
+
+> i
+
+P ⋆i Dj
+
++
+
+ Rii + D⊤ 
+
+> i
+
+P ⋆i Di
+
+−1 ∥(DP Gi)⋆∥ ∥ (DKj Ei)⋆∥
+
+μ⋆i
+
+.
+
+(90) The coefficients γij in (90) reflect three structural drivers of local convergence. The first term captures cross-player control-dependent diffusion through D⊤ 
+
+> i
+
+P ⋆i Dj , the second captures policy-evaluation sensitivity through (μ⋆i )−1, and both are premultiplied by  Rii + D⊤ 
+
+> i
+
+P ⋆i Di
+
+−1, which encodes how player i’s own control-dependent diffusion scales these effects. The following corollary uses γij as a computable sufficient condition for local contraction. The criterion (91) is a weighted block-diagonal-dominance condition in the sense of [46]. 
+
+Corollary 2 (Explicit sufficient convergence criterion): 
+
+Let π be a permutation of I, and consider the transported norm ∥ · ∥ π,w, ∞ from (73). Assume that there exist weights 
+
+w1, . . . , w N > 0 and a constant q ∈ [0 , 1) such that 
+
+X
+
+> j∈I
+
+wj
+
+wi
+
+γπ(i)π(j) ≤ q, i ∈ I . (91) Then 
+
+∥DT π
+
+> seq
+
+(K⋆)∥π,w, ∞ ≤ q < 1. (92) In particular, 
+
+ρ DT π
+
+> seq
+
+(K⋆) < 1. (93) Hence the sequential policy-iteration map T π 
+
+> seq
+
+is locally contractive at K⋆ in the weighted block-ℓ∞ norm associated with the update order π.
+
+Proof: See Appendix II. Notably, the influence of player i’s own diffusion matrix 
+
+Di on the criterion (91) is not monotone: Di enters γij both through the premultiplier  Rii + D⊤ 
+
+> i
+
+P ⋆i Di
+
+−1 and through 
+
+μ⋆i , so that larger Di may either tighten or relax the sufficient condition depending on the balance of these two effects. The results established in this section are evaluated nu-merically in Section VI. The analytic characterization of the Fr´ echet derivative of the sequential policy-iteration map developed in this section separates the effects of the update order from those of the game structure and provides ex-plicit computable sufficient conditions for local contraction. It thereby completes Contribution 2 and resolves Problem 2. 
+
+V. H OMOTOPY INITIALIZATION 
+
+This section develops a homotopy continuation method that produces a mean-square-stabilizing gain profile and thereby removes the requirement of a stabilizing gain profile for Algorithm 1, closing the initialization gap that arises from the restriction of the presented policy iteration method and its convergence analysis to KMSS . Mean-square stability is preserved throughout, so that every intermediate gain profile is itself admissible. The procedure terminates after finitely many continuation steps, with an explicit bound on their number. 
+
+A. Stability-Preserving Homotopy Path 
+
+This subsection establishes the analytical foundation of the homotopy-based initialization by formulating an auxiliary single-controller problem and deriving the properties needed to obtain an MSS starting gain profile. The initialization procedure operates on this auxiliary problem and constructs a stabilizing gain profile by following a homotopy path from an artificially drift-shifted MSS system, initialized at K = 0 ,toward the target dynamics while successively removing the shift and preserving mean-square stability throughout. The resulting gain profile is admissible for Algorithm 1. To construct a stabilizing initial gain profile for the N -player stochastic differential game (1)–(2), we temporarily disregard the game structure and treat the inputs of all players as the control of a single auxiliary controller. Collecting the input matrices as 
+
+B := B1 · · · BN
+
+ , D := D1 · · · DN
+
+ , (94) with B, D ∈ Rn×m and m := P 
+
+> i∈I
+
+mi, and identifying the joint control u = ( u1, . . . , u N ) with the stacked vector 
+
+(u⊤ 
+
+> 1
+
+, . . . , u ⊤ 
+
+> N
+
+)⊤ ∈ Rm, the state equation (1) takes the single-input form 
+
+dx (t) =  Ax (t)+ Bu (t) dt + Cx (t)+ Du (t) dW (t). (95) Under the corresponding identification of a gain profile K =(Ki)i∈I ∈ K with the stacked matrix K⊤ 
+
+> 1
+
+· · · K⊤
+
+> N
+
+⊤ ∈
+
+Rm×n, the auxiliary control law u(t) = −Kx (t) coincides with the game feedback ui(t) = −Kix(t), i ∈ I , and 
+
+A − BK = Acl (K), C − DK = Ccl (K). (96) The auxiliary closed-loop system therefore coincides with the closed-loop game dynamics induced by K.The auxiliary controller minimizes the single cost functional 
+
+Jaux (u; x0) := E
+
+Z ∞
+
+> 0
+
+
+
+x(t)⊤Qx (t) + u(t)⊤R u (t)
+
+
+
+dt, (97) with weights Q ∈ Sn 
+
+> ++
+
+and R ∈ Sm
+
+> ++
+
+, which may for instance be inherited from the game as Q = P 
+
+> i∈I
+
+Qi and 
+
+R = blkdiag( R11 , . . . , R N N ). Thus the initialization problem is to compute a stabilizing gain K for the auxiliary stochastic control problem (95)–(97). By (96), such a gain is precisely an element of KMSS . The weights provide a degree of freedom in selecting where in KMSS the initial profile is placed. The auxiliary problem (95)–(97) is an instance of the game class (1)–(2) with a single player. The results of Section III HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 11 
+
+therefore apply to it verbatim. In particular, its optimality con-ditions are obtained by specializing the coupled equilibrium relations (11)–(12) to the auxiliary dynamics (95) with the single cost (97). Assumption 1 is existential and does not yield an explicit stabilizing gain. To initialize the homotopy at the trivial gain 
+
+K = 0 , we therefore introduce a uniform negative shift in the drift of the auxiliary system. The shift parameter β is chosen so that the shifted auxiliary system is asymptotically mean-square stable already at K = 0 .
+
+Lemma 7 (Sufficient drift shift for mean-square stability): 
+
+Fix εβ > 0 and define 
+
+β := max 
+
+n 12 λmax (A⊤ + A + C⊤C), 0
+
+o
+
++ εβ . (98) Then the shifted auxiliary system 
+
+dx (t) = ( A − βI )x(t) dt + Cx (t) dW (t), t ≥ 0, (99) which corresponds to the auxiliary dynamics (95) at the trivial gain K = 0 , is asymptotically mean-square stable. 
+
+Proof: By (9), it suffices to verify 
+
+(A − βI )⊤X + X(A − βI ) + C⊤XC ≺ 0 (100) for some X = X⊤ ≻ 0. Choosing X = I yields 
+
+A⊤ + A + C⊤C − 2βI ≺ 0 (101) by (98). Hence (9) holds, and (99) is asymptotically mean-square stable. Introduce the homotopy level σ ≥ 0 via the shifted drift 
+
+A − βI + σI , with σ = 0 corresponding to the explicitly stabilized starting point and σ = β to the unshifted auxiliary dynamics. 
+
+Lemma 8 (MSS preservation under the auxiliary PI step): 
+
+Fix σ ∈ [0 , β ] and replace the drift matrix A in the auxiliary system (95) by A − βI + σI . Let K ∈ K be such that the corresponding closed-loop pair 
+
+ A − βI + σI − BK, C − DK  (102) is asymptotically mean-square stable. Let P denote the unique solution of the associated policy-evaluation equation 
+
+0 =  A − βI + σI − BK ⊤P + P  A − βI + σI − BK 
+
++  C − DK ⊤P  C − DK  + Q + K⊤R K, (103) and define 
+
+bK =  R + D⊤P D −1 B⊤P + D⊤P C . (104) Then the updated closed-loop pair 
+
+ A − βI + σI − B bK, C − D bK (105) is asymptotically mean-square stable. 
+
+Proof: Since (102) is asymptotically mean-square stable, Lemma 1 yields existence and uniqueness of the solution P
+
+to (103). The claim is then the specialization of Theorem 1 to a single controller with input matrices (94), weights Q ≻ 0
+
+and R ≻ 0, and drift A − βI + σI .We next derive a sufficient condition on the homotopy increment for preservation of mean-square stability. 
+
+Lemma 9 (Admissible homotopy step size): Fix 
+
+σk ∈ [0 , β ], and let Kk+1 ∈ K be such that 
+
+bAk+1 := A − βI + σkI − BK k+1 , bCk+1 := C − DK k+1 
+
+(106) defines an asymptotically mean-square stable closed-loop pair. Let bP k ≻ 0 denote the unique solution of (103) with σ = σk
+
+and K = Kk+1 , and define 
+
+νk := λmin 
+
+
+
+( bP k)−1/2 Q + ( Kk+1 )⊤R K k+1 ( bP k)−1/2
+
+.
+
+(107) Then νk > 0, and every αk+1 ∈
+
+
+
+0, νk
+
+> 2
+
+
+
+has the property that 
+
+  bAk+1 + αk+1 I, bCk+1 
+
+ (108) is asymptotically mean-square stable. 
+
+Proof: Since Q ≻ 0 and R ≻ 0, the matrix 
+
+Q + ( Kk+1 )⊤R K k+1 (109) is positive definite, and hence νk > 0. Moreover, by (103), 
+
+bA⊤ 
+
+> k+1
+
+bP k + bP k bAk+1 + bC⊤ 
+
+> k+1
+
+bP k bCk+1 
+
+= − Q + ( Kk+1 )⊤R K k+1 . (110) Therefore, for any α > 0,
+
+( bAk+1 + αI )⊤ bP k + bP k( bAk+1 + αI ) + bC⊤ 
+
+> k+1
+
+bP k bCk+1 
+
+= − Q + ( Kk+1 )⊤R K k+1  + 2 α bP k.
+
+(111) If α ∈ (0 , ν k/2) , then by (107), 
+
+( bP k)−1/2 Q + ( Kk+1 )⊤R K k+1 ( bP k)−1/2 − 2αI ≻ 0,
+
+(112) and hence − Q + ( Kk+1 )⊤R K k+1  + 2 α bP k ≺ 0. Thus the mean-square Lyapunov inequality (9) holds for (108) with 
+
+bP k, which proves asymptotic mean-square stability. Whereas Lemma 9 bounds each homotopy step so as to preserve mean-square stability along the path, the last step need not meet β exactly and may yield σk > β . The following lemma shows that the resulting gain profile satisfies K ∈KMSS nonetheless, so that the continuation can be stopped as soon as σk ≥ β.
+
+Lemma 10 (Safe overshoot): Let β be given by (98), let 
+
+σ ≥ β, and let K ∈ K be such that the shifted closed-loop pair (102) is asymptotically mean-square stable. Then K ∈ K MSS .
+
+Proof: Set δ := σ − β ≥ 0. Then, by (96), the shifted closed-loop pair (102) is 
+
+ Acl (K) + δI, C cl (K). (113) By (9), there exists P = P ⊤ ≻ 0 such that 
+
+ Acl (K) + δI ⊤P + P  Acl (K) + δI 
+
++  Ccl (K)⊤P C cl (K) ≺ 0. (114) Subtracting 2δP ⪰ 0 yields 
+
+ Acl (K)⊤P + P A cl (K) +  Ccl (K)⊤P C cl (K) ≺ 0. (115) Hence (9) holds for the closed-loop pair induced by K in the game (1), that is, K ∈ K MSS .12 
+
+Algorithm 2 Homotopy Initialization for Stochastic N -Player LQ Differential Games 
+
+Require: system matrices A, C and B, D from (94), weights 
+
+Q ≻ 0, R ≻ 0, shift margin εβ > 0, step-size factor η ∈
+
+(0 , 1) 
+
+Set k ← 0, α0 ← 0, K0 ← 0
+
+Compute β from (98) 
+
+repeat 
+
+Set σk := Pkj=0 αj
+
+Policy iteration: Starting from Kk, iterate at level σk
+
+the policy-evaluation step 
+
+0 =  A − βI + σkI − BK ⊤P
+
++ P  A − βI + σkI − BK 
+
++  C − DK ⊤P  C − DK 
+
++ Q + K⊤R K 
+
+and the policy-improvement update 
+
+K ←  R + D⊤P D −1 B⊤P + D⊤P C 
+
+until convergence, yielding the stabilizing solution bP k ≻
+
+0 and the optimal gain Kk+1 
+
+Margin: Compute νk from (107) Choose αk+1 := η νk
+
+> 2
+
+Set k ← k + 1 
+
+until σk ≥ β
+
+Set Kinit := Kk and partition it row-wise into the player blocks Kinit  
+
+> i
+
+∈ Rmi×n, i ∈ I 
+
+return Kinit 
+
+B. Homotopy Initialization Algorithm 
+
+Starting from the explicitly stabilized auxiliary system from Lemma 7, the homotopy initialization proceeds by repeated policy-evaluation and policy-improvement steps, combined with a stability-preserving update of the homotopy level. The procedure is summarized in Algorithm 2. 
+
+Theorem 3 (Well-posedness of Algorithm 2): Let εβ > 0,
+
+η ∈ (0 , 1) , let Q ≻ 0 and R ≻ 0, and let β be given by (98). For each k ≥ 0, define 
+
+σk := 
+
+> k
+
+X
+
+> j=0
+
+αj (116) and the shifted closed-loop pair 
+
+Ak := A − βI + σkI − BK k, Ck := C − DK k. (117) If, for some k ≥ 0, the pair (Ak, C k) is asymptotically mean-square stable, then the next iteration of Algorithm 2 is well defined and produces a step size αk+1 > 0 such that 
+
+Ak+1 := A − βI + σk+1 I − BK k+1 , Ck+1 := C − DK k+1 
+
+(118) is again asymptotically mean-square stable. In particular, 
+
+(Ak, C k) is asymptotically mean-square stable for all k ≥ 0.Moreover, under Assumption 1, σk ≥ β is reached af-ter finitely many iterations, and the corresponding unshifted closed-loop pair  A − BK k, C − DK k (119) is then asymptotically mean-square stable. 
+
+Proof: We argue by induction on k. For k = 0,Algorithm 2 sets K0 = 0 and α0 = 0 , so that σ0 = 0 and 
+
+(A0, C 0) = ( A − βI, C ). The claim therefore follows from Lemma 7. Now assume that (Ak, C k) is asymptotically mean-square stable, so that Kk stabilizes the auxiliary system at level σk.Policy iteration at level σk, started from Kk, is then well defined, since by Lemma 1 each policy-evaluation equation (103) (with σ = σk) admits a unique solution P ≻ 0, each improvement is well defined since 
+
+R + D⊤P D ≻ 0, (120) and by Lemma 8 mean-square stability is preserved at every step. The iteration converges to the optimal stabilizing gain 
+
+Kk+1 , with value bP k ≻ 0 [15], so that the pair 
+
+bAk+1 := A − βI + σkI − BK k+1 , bCk+1 := C − DK k+1 
+
+(121) is asymptotically mean-square stable. Applying Lemma 9yields νk > 0. Since Algorithm 2 chooses 
+
+αk+1 = η νk
+
+2 , (122) one has αk+1 ∈ (0 , ν k/2) . Therefore, 
+
+( bAk+1 + αk+1 I, bCk+1 ) = ( Ak+1 , C k+1 ) (123) is asymptotically mean-square stable. This proves that the next iteration is well defined and preserves mean-square stability. It remains to establish finite termination. Let ¯K ∈ K MSS ,which is nonempty by Assumption 1. By (96), ¯K stabilizes the unshifted auxiliary system. Since a larger drift shift only improves stability, ¯K is admissible at every level σ ∈ [0 , β ].Let Pβ ≻ 0 denote the solution of (103) for ¯K at σ = β.Let Pσk ≻ 0 denote the solution of (103) for ¯K at σ = σk.Subtracting the two evaluation equations shows that ∆ := 
+
+Pβ − Pσk satisfies 
+
+Acl ( ¯K)⊤∆+∆ Acl ( ¯K)+ Ccl ( ¯K)⊤∆ Ccl ( ¯K) = −2( β−σk)Pσk ,
+
+(124) whose right-hand side is negative semidefinite because σk ≤
+
+β. Since ¯K ∈ K MSS , the generalized Lyapunov equation (124) is uniquely solvable, and a negative semidefinite right-hand side yields ∆ ⪰ 0 by the argument used in the proof of Lemma 1 with the strict inequalities replaced by their nonstrict counterparts. Hence Pσk ⪯ Pβ . By optimality of bP k at level 
+
+σk, it follows that bP k ⪯ Pσk ⪯ Pβ , and in particular 
+
+λmax ( bP k) ≤ λmax (Pβ ) (125) is bounded by a constant independent of k. By (107), drop-ping the nonnegative term (Kk+1 )⊤R K k+1 and applying the standard bound λmin (X−1/2Y X −1/2) ≥ λmin (Y )/λ max (X)
+
+for X, Y ≻ 0 (see, e.g., [42, Thm. 4.2.2]), 
+
+νk ≥ λmin 
+
+ ( bP k)−1/2Q( bP k)−1/2
+
+≥ λmin (Q)
+
+λmax ( bP k) ≥ λmin (Q)
+
+λmax (Pβ ) > 0. (126) HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 13 
+
+Hence the homotopy level increases at every iteration by at least 
+
+αk+1 = η νk
+
+2 ≥ α := η λ min (Q)2λmax (Pβ ) > 0, (127) so that σk ≥ k α and therefore σk ≥ β after at most 
+
+l βα
+
+m
+
+=
+
+l 2β λ max (Pβ )
+
+η λ min (Q)
+
+m
+
+< ∞ (128) iterations. Once σk ≥ β, Lemma 10 applied to (Ak, C k) yields asymptotic mean-square stability of the unshifted pair (119). Assumption 1 ensures that the target problem at the homo-topy level σ = β, i.e., the unshifted auxiliary system, admits a stabilizing gain. Theorem 3 shows that Algorithm 2 preserves asymptotic mean-square stability along the homotopy path and that every iterate with σk ≥ β already yields a stabilizing gain for the unshifted auxiliary system. Let k denote the terminal iteration index of Algorithm 2, so that its output satisfies Kinit = Kk with σk ≥ β. By Theorem 3, the unshifted pair  A − BK init , C − DK init  is asymptotically mean-square stable. By (96), this pair coincides with  Acl (Kinit ), C cl (Kinit ), so that the closed-loop game dynamics induced by the gain profile Kinit = ( Kinit  
+
+> i
+
+)i∈I is asymptotically mean-square stable, that is, Kinit ∈ K MSS .Algorithm 2 thus constructs a stabilizing initial gain profile 
+
+Kinit ∈ K MSS for every mean-square stabilizable stochastic 
+
+N -player LQ differential game, addressing the initialization re-quirement of Algorithm 1, thereby completing Contribution 3 and resolving Problem 3. 
+
+VI. N UMERICAL EXAMPLES 
+
+We examine the local convergence behavior of sequential policy iteration on a stochastic LQ differential game (1)– (2) with N = 3 , the smallest number of players at which the update order can matter, and n = 2 , mi = 2 for all 
+
+i ∈ I , varying only the diffusion matrices. With increasing diffusion intensity, the update order can determine whether local contraction is lost, so that its effect is not merely quantitative. This dependence itself does not require diffusion, as the deterministic example in Lemma 6 shows, and here the diffusion level determines its severity. The game is constructed so that all these effects become visible in a single instance. We consider a nominal game specified by the matrices 
+
+A =
+
+−0.781 −1.161 
+
+−1.376 −0.926 
+
+
+
+, C =
+
+0.211 0.563 0.524 −0.408 
+
+
+
+,B1 =
+
+−1.325 −0.429 
+
+−2.411 −1.187 
+
+
+
+, B2 =
+
+−2.106 3.394 
+
+−0.183 2.958 
+
+
+
+,B3 =
+
+ 0.256 0.953 
+
+−0.060 0.068 
+
+
+
+, D1 =
+
+−0.030 −0.005 
+
+−0.040 0.063 
+
+
+
+,D2 =
+
+0.237 0.290 0.467 0.069 
+
+
+
+, D3 =
+
+−0.077 −0.025 0.090 0.075 
+
+
+
+.
+
+The weighting matrices are Qi = qiI2 and Rij = rij I2 with 
+
+q = 0.214 36 .940 0.184  ,
+
+[rij ] = 
+
+
+
+2.026 0.003 2.575 0.002 2.948 0.007 0.168 2.308 41 .851 
+
+ .
+
+For s ≥ 0, we vary only the diffusion terms according to 
+
+C(s) = s C, Di(s) = s D i, i ∈ I ,
+
+while keeping A, Bi, Qi, and Rij fixed. Thus s parametrizes the diffusion intensity. The case s = 1 is the nominal stochastic game. First, as a preliminary analysis Algorithm 2 was applied to the nominal game, for which K = 0 is not mean-square stabilizing. With Q = I, R = blkdiag( Rii ),
+
+η = 0 .5, and εβ = 10 −3, it returned a stabilizing profile after two continuation levels and 16 policy-iteration steps, within the bound ⌈2βλ max (Pβ )/(ηλ min (Q)) ⌉ = 5 of Theorem 3. Algorithm 1 then converged from this profile in nine iterations. Second, as the main numerical example we compare the two update orders π(1) := (2 , 1, 3) , and π(2) := (1 , 2, 3) .
+
+By Lemma 6, cyclic shifts of a given order induce the same spectrum of the local Fr´ echet derivative DT π
+
+> seq
+
+(K⋆). Hence, for N = 3 , the six permutations split into two cyclic equiv-alence classes, represented by π(1) and π(2) . For each value of s, we compute a stabilizing equilibrium K⋆(s) ∈ K MSS 
+
+by Algorithm 1 with update order π(1) . Along the parameter sweep, the converged equilibrium at the previous value of s
+
+is used as the initial gain profile for the next value, so that a single equilibrium branch is followed, with Algorithm 2 supplying the profile at the first value. At each computed equilibrium K⋆(s), we evaluate the local Fr´ echet deriva-tives DT π(1)  
+
+> seq
+
+(K⋆(s)) , DT π(2)  
+
+> seq
+
+(K⋆(s)) , and DT dec (K⋆(s)) ,
+
+together with their spectral radii and the weighted block-
+
+ℓ∞ quantities from Theorem 2. For the weighted block-ℓ∞
+
+quantities in (74), the weights w are obtained by normalizing a dominant eigenvector of the nonnegative matrix with entries 
+
+∥(DT π
+
+> dec
+
+)ij ∥. All runs are terminated once ∥Kk+1 − Kk∥ ≤ 
+
+10 −8, or once 500 iterations are reached. 
+
+A. Convergence Rates and Order Dependence 
+
+The quantity evaluated first is the local spectral radius at K⋆(s). By Lemma 4, ρ < 1 yields local contraction, whereas ρ > 1 renders the equilibrium locally repelling [41]. Figure 1 summarizes the local spectral radii ρπ
+
+> seq
+
+(s) := 
+
+ρ DT π
+
+> seq
+
+(K⋆(s))  and ρdec (s) := ρ(DT dec (K⋆(s))) . All three quantities increase with the diffusion level s, showing that stronger diffusion systematically weakens local contraction. At s = 0, all three update maps are strongly contractive (ρπ(1)  
+
+> seq
+
+(0) ≈ 1.60 × 10 −2, ρπ(2)  
+
+> seq
+
+(0) ≈ 3.97 × 10 −3, ρdec (0) ≈
+
+7.43 × 10 −2), and the same hierarchy is still visible at the nominal game s = 1. As s increases further, the three spectral radii grow at markedly different rates, so that the local behavior of the three updates separates increasingly. A central observation is that the locally preferred sequential update order is not constant along the diffusion sweep. For small s, the order π(2) yields the smaller local spectral radius, but the two orders cross near s ≈ 2.2, beyond which π(1) 
+
+becomes preferable. Most importantly, the loss of local contraction is itself order-dependent. The decoupled update crosses the threshold 14          
+
+> 012345600.511.5
+> Diffusion scaling s
+> Spectral radius
+> ρdec (s)
+> ρπ(2)
+> seq (s)
+> ρπ(1)
+> seq (s)
+
+Fig. 1 : Local spectral radii ρπ
+
+> seq
+
+(s) := ρ(DT π
+
+> seq
+
+(K⋆(s))) and 
+
+ρdec (s) := ρ(DT dec (K⋆(s))) along the diffusion sweep. 
+
+ρ = 1 first, near s ≈ 4.6, and the sequential order π(2) only later, near s ≈ 5.7, whereas the order π(1) remains locally contractive throughout the entire tested range. Running all three schemes at s = 6 from a common admissible gain profile near K⋆ confirms that this spectral prediction governs the actual iteration. In Fig. 2, the order π(1) converges at the rate predicted by Lemma 4 and reaches machine precision after roughly 30 iterations, whereas π(2) is repelled from K⋆ at its own predicted rate. The decoupled scheme leaves KMSS 
+
+after 33 iterations, so that its value equations cease to be solvable and the iteration is no longer defined, while both sequential orders remain admissible throughout, as guaranteed by Theorem 1. The update order therefore governs not only the local rate, but whether local convergence is retained at all under increasing diffusion. Sequential schemes have been used repeatedly [17]–[19], where the effect of the update order has remained unexplained. To the best of our knowledge, it has not been identified as a factor that can decide whether an equilibrium is locally attracting at all in policy iteration for differential games. Its absence from the literature is consistent with Remark 2 and Lemma 6, which confine the effect to at least three players and to orders from distinct cyclic classes. 
+
+B. Comparison of Sequential and Decoupled Dynamics 
+
+Spectral radii yield sharp local rates but no guaranteed comparison between the two schemes. Theorem 2 supplies such a guarantee in a transported weighted norm, which we evaluate along the same sweep. In Fig. 3, the comparison quantity for the decoupled core increases monotonically with 
+
+s and crosses the threshold 1 near s ≈ 2.76 , whereas both sequential orders remain strictly below it throughout the tested range. The plotted values are the exact block norms, not the explicit bounds of Corollary 2. The mechanism identified there nonetheless accounts for the behavior, since increasing diffusion enlarges the coupling coefficients γij and reduces the contraction margin. Whenever the decoupled norm does not exceed one, the sequential local contraction is at least as strong as the decoupled one in this norm, and the ordering seen in the spectral radii is consistent with the guarantee. The condition of Theorem 2 thus delimits the equilibria at which the advantage of the sequential update structure is not incidental but guaranteed.              
+
+> 020 40 60 80 100 10 −12
+> 10 −9
+> 10 −6
+> 10 −3
+> 10 0
+> iteration k
+> ∥Kk − K⋆∥2
+> π(1) ,ρ= 0 .585
+> π(2) ,ρ= 1 .096
+> decoupled, ρ= 1 .610
+> predicted rate ρk
+
+Fig. 2 : Distance to the equilibrium K⋆ along the iteration at 
+
+s = 6 , for the two update orders of Fig. 1 and the decoupled scheme. Dotted lines show the rates ρk predicted by Lemma 4. The decoupled curve ends where its iterates leave KMSS .          
+
+> 00.511.522.50.51
+> Diffusion scaling s
+> Weighted block-norm  ∥DT dec (K⋆(s)) ∥π,w, ∞
+> ∥DT π(2)
+> seq (K⋆(s)) ∥π(2) ,w, ∞
+> ∥DT π(1)
+> seq (K⋆(s)) ∥π(1) ,w, ∞
+
+Fig. 3 : Weighted block-ℓ∞ comparison quantities associated with Theorem 2 along the diffusion sweep. 
+
+VII. C ONCLUSION 
+
+This paper has proposed a sequential policy-iteration method for infinite-horizon stochastic linear–quadratic differ-ential games with state- and control-dependent noise. The player-wise sequential construction preserves mean-square sta-bility at every intermediate update, yielding a well-posed iteration on the set of mean-square-stabilizing gain profiles. Its fixed points are precisely the stabilizing feedback Nash equilibria, so that every run converging within this set certifies the solvability of the coupled equilibrium equations for the instance at hand. From the Fr´ echet derivative of the iteration map, we established a sufficient criterion for local conver-gence. A weighted block-norm comparison further delimits the equilibria at which sequential updating is guaranteed to contract at least as strongly as updating all players simul-taneously from a common gain profile. The same derivative shows that the order in which the players are updated can decide whether an equilibrium is locally attracting at all. To address the initialization requirement of infinite-horizon policy iteration, we further developed a homotopy initialization that preserves mean-square stability along the continuation path and provides a stabilizing initial gain profile for the full N -player iteration. The numerical example confirms the analysis for a three-player game. Increasing diffusion weakens local HANDWERKER et al. : POLICY ITERATION FOR LINEAR-QUADRATIC STOCHASTIC DIFFERENTIAL GAMES 15 
+
+contraction, changes which update order is locally preferred, and causes contraction to be lost at different diffusion levels for different orders. 
+
+APPENDIX IEXPLICIT FRÉCHET BLOCKS 
+
+This appendix records explicit expressions for the Fr´ echet blocks appearing in Lemma 3. For X ∈ Sn, Hi ∈ Rmi×n, and 
+
+∆K = (∆ Kj )j∈I ∈ K , the partial Fr´ echet derivatives of Ei
+
+and Gi, evaluated at (Pi(K), Ui(K), K ), are given as follows. (i) Evaluation residual. 
+
+DP Ei(K)[ X] = Acl (K)⊤X + XA cl (K) + Ccl (K)⊤X C cl (K),
+
+(129) 
+
+DK Ei(K)[∆ K] = − X
+
+> j∈I
+
+ ∆K⊤ 
+
+> j
+
+B⊤ 
+
+> j
+
+Pi + PiBj ∆Kj
+
+
+
+− X
+
+> j∈I
+
+ ∆K⊤ 
+
+> j
+
+D⊤ 
+
+> j
+
+PiCcl (K) + Ccl (K)⊤PiDj ∆Kj
+
+
+
++ X
+
+> j∈I
+
+ K⊤ 
+
+> j
+
+Rij ∆Kj + ∆ K⊤ 
+
+> j
+
+Rij Kj
+
+ . (130) (ii) Fixed-value stationarity residual. 
+
+DP Gi(K)[ X] = D⊤ 
+
+> i
+
+XD i bKi + X
+
+> j∈I\{ i}
+
+D⊤ 
+
+> i
+
+XD j Kj
+
+− B⊤ 
+
+> i
+
+X − D⊤ 
+
+> i
+
+XC, (131) 
+
+D bKi Gi(K)[ Hi] =  Rii + D⊤ 
+
+> i
+
+PiDi
+
+Hi, (132) 
+
+DK Gi(K)[∆ K] = X
+
+> j∈I\{ i}
+
+D⊤ 
+
+> i
+
+PiDj ∆Kj . (133) 
+
+APPENDIX II PROOF OF COROLLARY 2
+
+Proof: By (64) and (73), ∥DT inv ∥π,w, ∞ = ∥DT π
+
+> dec
+
+∥w, ∞.
+
+Moreover, the (i, j )-block of DT π 
+
+> dec
+
+is (DT π
+
+> dec
+
+)ij =[DT inv ]π(i)π(j), for i, j ∈ I. Hence, by (89), (90), 
+
+∥(DT π
+
+> dec
+
+)ij ∥ ≤ γπ(i)π(j), for i, j ∈ I . Let ∆Kπ ∈ K π . For each i ∈ I ,
+
+∥(DT π
+
+> dec
+
+∆Kπ )i∥
+
+wi
+
+= ∥ P 
+
+> j∈I
+
+(DT π
+
+> dec
+
+)ij ∆Kπj ∥
+
+wi
+
+≤ X
+
+> j∈I
+
+∥(DT π
+
+> dec
+
+)ij ∥ ∥ ∆Kπj ∥
+
+wi
+
+≤ X
+
+> j∈I
+
+wj
+
+wi
+
+γπ(i)π(j)
+
+∥∆Kπj ∥
+
+wj
+
+≤
+
+X
+
+> j∈I
+
+wj
+
+wi
+
+γπ(i)π(j)
+
+ ∥∆Kπ ∥w, ∞.
+
+(134) By (91), ∥(DT π  
+
+> dec ∆Kπ)i∥
+> wi
+
+≤ q ∥∆Kπ ∥w, ∞, for i ∈ I.
+
+Taking the maximum over i yields ∥DT π
+
+> dec
+
+∆Kπ ∥w, ∞ ≤
+
+q ∥∆Kπ ∥w, ∞, with ∆Kπ ∈ K π . Therefore, 
+
+∥DT inv ∥π,w, ∞ = ∥DT π
+
+> dec
+
+∥w, ∞ ≤ q < 1. (135) Since DT inv = DT dec (K⋆) by Proposition 3, Theorem 2 implies 
+
+∥DT π
+
+> seq
+
+(K⋆)∥π,w, ∞ ≤ ∥DT inv ∥π,w, ∞ ≤ q < 1. (136) The spectral radius bound ρ(DT π
+
+> seq
+
+(K⋆)) < 1 follows since 
+
+ρ ≤ ∥ · ∥ π,w, ∞.
+
+REFERENCES 
+
+[1] T. Bas ¸ar and G. J. Olsder, Dynamic Noncooperative Game Theory ,2nd ed., ser. Classics in Applied Mathematics. Philadelphia, PA, USA: SIAM, 1998, vol. 23. [2] A. Friedman, Differential Games . Mineola, NY, USA: Dover Publica-tions, 2013. [3] R. Hu and M. Lauri` ere, “Recent developments in machine learning methods for stochastic control and games,” Numerical Algebra, Control and Optimization , vol. 14, no. 3, pp. 435–525, 2024. [4] T. Saito and A. Takahashi, “Stochastic differential game in high fre-quency market,” Automatica , vol. 104, pp. 111–125, 2019. [5] Z. Liu and J. Huang, “Distributed nash equilibrium seeking in aggrega-tive games over jointly connected and weight-balanced networks,” IEEE Transactions on Automatic Control , vol. 70, no. 5, pp. 3486–3493, 2025. [6] S. Y¨ uksel and T. Bas ¸ar, Stochastic Networked Control Systems: Sta-bilization and Optimization under Information Constraints . Springer, 2013. [7] B. Varga, J. Inga, M. Lemmer, and S. Hohmann, “Ordinal potential differential games to model human-machine interaction in vehicle-manipulators,” in Proc. IEEE Conf. on Control Technology and Appli-cations (CCTA) , 2021, pp. 728–734. [8] S. Kille, M. Leibold, P. Karg, B. Varga, and S. Hohmann, “Human-variability-respecting optimal control for physical human-machine inter-action,” in Proc. 33rd IEEE Int. Conf. on Robot and Human Interactive Communication (RO-MAN) , 2024, pp. 1595–1602. [9] E. Todorov, “Stochastic optimal control and estimation methods adapted to the noise characteristics of the sensorimotor system,” Neural Compu-tation , vol. 17, no. 5, pp. 1084–1108, 2005. [10] A. W. Starr and Y.-C. Ho, “Nonzero-sum differential games,” Journal of Optimization Theory and Applications , vol. 3, no. 3, pp. 184–206, 1969. [11] J. Yong and X. Y. Zhou, Stochastic Controls: Hamiltonian Systems and HJB Equations . New York, NY, USA: Springer-Verlag, 1999. [12] H. Zhu and C. Zhang, “Infinite time horizon nonzero-sum linear quadratic stochastic differential games with state and control-dependent noise,” Journal of Control Theory and Applications , vol. 11, no. 4, pp. 629–633, 2013. [13] D. L. Kleinman, “Optimal stationary control of linear systems with control-dependent noise,” IEEE Transactions on Automatic Control ,vol. 14, no. 6, pp. 673–677, 1969. [14] P. McLane, “Optimal stochastic control of linear systems with state-and control-dependent disturbances,” IEEE Transactions on Automatic Control , vol. 16, no. 6, pp. 793–798, 1971. [15] T. Damm, Rational Matrix Equations in Stochastic Control , ser. Lecture Notes in Control and Information Sciences. Berlin, Germany: Springer-Verlag, 2004, vol. 297. [16] J. Engwerda, LQ Dynamic Optimization and Differential Games . Chich-ester, England: John Wiley & Sons, Ltd, 2005. [17] B. Nortmann, A. Monti, M. Sassano, and T. Mylvaganam, “Nash equilibria for linear quadratic discrete-time dynamic games via iterative and data-driven algorithms,” IEEE Transactions on Automatic Control ,vol. 69, no. 10, pp. 6561–6575, 2024. [18] Y. Chen, C. Chen, F. L. Lewis, and S. Xie, “Multiplayer cascaded policy iteration for Nash differential games,” IEEE Transactions on Automatic Control , vol. 71, no. 2, pp. 1038–1053, 2026. [19] Y. Chen, C. Chen, and F. L. Lewis, “Non-zero-sum games in continuous-time nonlinear systems: Multiplayer cascaded solutions,” Automatica ,vol. 186, p. 112828, 2026. [20] G. Freiling, G. Jank, and H. Abou-Kandil, “On global existence of solutions to coupled matrix Riccati equations in closed-loop Nash games,” IEEE Transactions on Automatic Control , vol. 41, no. 2, pp. 264–269, 1996. [21] T.-Y. Li and Z. Gaji´ c, “Lyapunov iterations for solving coupled algebraic Riccati equations of Nash differential games and algebraic Riccati equations of zero-sum games,” in New Trends in Dynamic Games and Applications , G. J. Olsder, Ed. Birkh¨ auser, 1995, pp. 333–351. 16 
+
+[22] M. L. Puterman and S. L. Brumelle, “On the convergence of policy iter-ation in stationary dynamic programming,” Mathematics of Operations Research , vol. 4, no. 1, pp. 60–69, 1979. [23] F. L. Lewis and D. Vrabie, “Reinforcement learning and adaptive dynamic programming for feedback control,” IEEE Circuits and Systems Magazine , vol. 9, no. 3, pp. 32–50, 2009. [24] Y. Guan, G. Salizzoni, M. Kamgarpour, and T. H. Summers, “A policy iteration algorithm for N-player general-sum linear quadratic dynamic games,” in Proc. 63rd IEEE Conf. on Decision and Control (CDC) ,2024, pp. 1725–1730. [25] K. G. Vamvoudakis and F. L. Lewis, “Multi-player non-zero-sum games: Online adaptive learning solution of coupled Hamilton–Jacobi equations,” Automatica , vol. 47, no. 8, pp. 1556–1569, 2011. [26] F. Th¨ ommes, L. G¨ unther, K. Handwerker, P. Kr¨ uger, B. Varga, and S. Hohmann, “Policy gradient methods for continuous-time linear quadratic games,” 2026, IFAC-PapersOnLine, in press. [27] I. G. Ivanov and V. K. Tanov, “An iterative method for an equilibrium point of linear quadratic stochastic differential games with state and control-dependent noise,” Annals of the Academy of Romanian Scien-tists, Series on Mathematics and its Applications , vol. 10, no. 2, pp. 202–210, 2018. [28] H. Sun, L. Jiang, and W. Zhang, “Infinite horizon linear quadratic differential games for discrete-time stochastic systems,” Journal of Control Theory and Applications , vol. 10, no. 3, pp. 391–396, 2012. [29] M. Sagara, H. Mukaidani, and T. Yamamoto, “Stochastic Nash games with state-dependent noise,” in Proc. SICE Annual Conference , Kagawa University, Japan, 2007, pp. 1635–1638. [30] H. Mukaidani, “Soft-constrained stochastic Nash games for weakly coupled large-scale systems,” Automatica , vol. 45, no. 5, pp. 1272–1279, 2009. [31] J. Han and R. Hu, “Deep fictitious play for finding Markovian Nash equilibrium in multi-agent games,” Proceedings of Machine Learning Research , vol. 107, pp. 221–245, 2020. [32] J. Han, R. Hu, and J. Long, “Convergence of deep fictitious play for stochastic differential games,” Frontiers of Mathematical Finance , vol. 1, no. 2, pp. 287–319, 2022. [33] B. Hambly, R. Xu, and H. Yang, “Policy gradient methods find the Nash equilibrium in N-player general-sum linear-quadratic games,” Journal of Machine Learning Research , vol. 24, no. 139, pp. 1–56, 2023. [34] A. Andersson, K. Andersson, and P. Ljung, “Convergence of fictitious play for fully coupled FBSDEs in finite-player stochastic differential games,” 2026, arXiv preprint arXiv:2607.08861. [35] B. Øksendal, Stochastic Differential Equations: An Introduction with Applications , 6th ed. Berlin, Germany: Springer, 2003. [36] J. Moon, B.-C. Wang, and T. Bas ¸ar, “A selective survey of recent results on linear-quadratic stochastic differential games,” International Journal of Control, Automation, and Systems , vol. 24, no. 1, pp. 1–29, 2026. [37] J. L. Willems and J. C. Willems, “Feedback stabilizability for stochastic systems with state and control dependent noise,” Automatica , vol. 12, no. 3, pp. 277–283, 1976. [38] C. Chen, F. L. Lewis, and B. Li, “Homotopic policy iteration-based learning design for unknown linear continuous-time systems,” Automat-ica , vol. 138, p. 110153, 2022. [39] M. Nisio, Stochastic Control Theory: Dynamic Programming Principle ,2nd ed., ser. Probability Theory and Stochastic Modelling. Tokyo, Japan: Springer, 2015, vol. 72. [40] L. G¨ unther, K. Handwerker, F. Th¨ ommes, B. Varga, and S. Hohmann, “Infinite-horizon inverse linear-quadratic differential games with state-and control-dependent noise,” 2026, arXiv preprint. [41] J. M. Ortega and W. C. Rheinboldt, Iterative Solution of Nonlinear Equations in Several Variables . New York, USA: Academic Press, 1970. [42] R. A. Horn and C. R. Johnson, Matrix Analysis , 2nd ed. Cambridge, UK: Cambridge University Press, 2012. [43] P. Deuflhard, Newton Methods for Nonlinear Problems: Affine Invari-ance and Adaptive Algorithms , ser. Springer Series in Computational Mathematics. Berlin, Germany: Springer-Verlag, 2011. [44] R. S. Varga, Matrix Iterative Analysis , 2nd ed. Berlin, Germany: Springer, 2000. [45] A. S. Householder, “On the convergence of matrix iterations,” Journal of the ACM , vol. 3, no. 4, pp. 314–324, 1956. [46] D. G. Feingold and R. S. Varga, “Block diagonally dominant matrices and generalizations of the Gerschgorin circle theorem,” Pacific Journal of Mathematics , vol. 12, no. 4, pp. 1241–1250, 1962.

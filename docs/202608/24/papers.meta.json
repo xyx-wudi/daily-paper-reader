@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-24",
+  "date": "2026-08-24",
+  "generated_at": "2026-08-24T20:11:17",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/24/2608.17940v1-policy-iteration-for-linear-quadratic-stochastic-differential-games-with-state--and-control-dependent-noise",
+      "section": "quick",
+      "title_en": "Policy Iteration for Linear-Quadratic Stochastic Differential Games with State- and Control-Dependent Noise",
+      "authors": "Karl Handwerker, Felix Thömmes, Lucas Günther, Balint Varga, Sören Hohmann",
+      "date": "2026-08-18",
+      "pdf": "https://arxiv.org/pdf/2608.17940v1",
+      "score": "6.0",
+      "evidence": "随机微分博弈的策略迭代",
+      "tldr": "针对状态和控制依赖噪声的随机微分博弈，提出一种序贯策略迭代方法，其更新保证均方稳定性，从而确保迭代良定义。推导了序贯PI映射在纳什均衡处的Fréchet导数闭式表达式，揭示了控制依赖噪声、策略评估灵敏度和更新顺序对局部误差传播的影响，并给出显式的局部线性收敛充分条件。针对初值稳定解难求的问题，提出同伦初始化方法，数值例子验证了算法与理论分析的有效性。",
+      "tags": "query:marl",
+      "abstract_en": "This paper presents a novel sequential policy iteration (PI) method for stochastic differential games with state- and control-dependent noise. The updates preserve mean-square stability, so that the iteration is well posed. We further derive a closed-form expression for the Fréchet derivative of the sequential PI map at a Nash equilibrium. The resulting characterization reveals how control-dependent noise, policy-evaluation sensitivity, and update ordering govern local error propagation, and yields explicit sufficient conditions for local linear convergence. Since finding an initial stabilizing solution is a major challenge in policy iteration, we also propose a homotopy-based initialization that ensures a valid starting point. The effectiveness of the proposed PI algorithm and the analytical results are verified through a numerical example.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/24/2608.18282v1-self-supervised-in-context-operator-learning-for-stochastic-mean-field-control",
+      "section": "quick",
+      "title_en": "Self-supervised In-context Operator Learning for Stochastic Mean-Field Control",
+      "authors": "Suyi Gao, Mo Zhou, Rongjie Lai",
+      "date": "2026-08-18",
+      "pdf": "https://arxiv.org/pdf/2608.18282v1",
+      "score": "6.0",
+      "evidence": "面向不确定环境下大规模交互智能体协调的平均场控制",
+      "tldr": "随机平均场控制（MFC）是协调大规模交互智能体的重要框架，但现有方法需针对每个任务重新优化。本文提出首个无网格、自监督神经算子NFIST，结合概率流ODE与可逆归一化流Transformer，将随机动力学化为确定性连续性方程，并实现闭式score计算。通过上下文学习，预训练算子一次前向即可求解未见任务。在多个随机MFC任务上实现零样本泛化并大幅降低计算成本，且证明了该算子学习与逐任务优化的一致性。",
+      "tags": "query:marl",
+      "abstract_en": "Stochastic mean-field control (MFC) provides a fundamental framework for coordinating large populations of interacting agents under uncertainty, with a wide range of applications. Existing numerical and deep-learning methods solve one MFC problem instance at a time and must be re-optimized whenever the task changes. In this work, we formulate stochastic MFC as an operator-learning problem and develop, to the best of our knowledge, the first mesh-free, self-supervised neural operator for stochastic MFC. The main challenge is that the diffusion term in the controlled Fokker--Planck equation precludes deterministic transport-map representations. We address this challenge by combining the probability-flow ODE with an invertible normalizing-flow-based transformer, which recasts the dynamics as a deterministic continuity equation and enables closed-form score evaluation through the exact inverse and analytical log-determinant of the normalizing flow, with $\\mathcal{O}(d)$ cost per particle for networks of fixed size. Through transformer-based in-context learning, task prompts, represented by compact distribution parameters or raw particle clouds, condition the transport map, enabling a single pretrained operator to solve unseen tasks in one forward pass. The resulting \\emph{Normalizing Flow Invertible Solution Transformer} (NFIST) is trained end-to-end by minimizing the stochastic control objective directly, requiring no precomputed numerical solutions for training. We further prove the consistency of the proposed operator-learning formulation with task-by-task optimization. Numerical experiments on stochastic optimal control, Schrödinger bridge, systemic-risk control, and obstacle-avoiding path planning demonstrate effective zero-shot generalization while substantially reducing the computational cost of solving large families of stochastic MFC problems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

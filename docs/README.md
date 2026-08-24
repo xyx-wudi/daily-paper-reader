@@ -6,22 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-23
-- 运行时间：2026-08-23 19:21:48 UTC
+- 最新运行日期：2026-08-24
+- 运行时间：2026-08-24 20:11:11 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：2
 - 精读区：0
-- 速读区：0
+- 速读区：2
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202608/23/README](/202608/23/README)
+今日速读2篇随机控制/博弈方向论文，均获6分。  
+最值得关注：带状态与控制依赖噪声的线性二次随机微分博弈策略迭代，以及自监督上下文算子学习求解随机均场控制。  
+建议在此基础上精读算法收敛性与实验效果，再扩展相关应用。
+- 详情：[/202608/24/README](/202608/24/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Policy Iteration for Linear-Quadratic Stochastic Differential Games with State- and Control-Dependent Noise](/202608/24/2608.17940v1-policy-iteration-for-linear-quadratic-stochastic-differential-games-with-state--and-control-dependent-noise)  
+   标签：评分：6.0/10、query:marl
+   evidence：随机微分博弈的策略迭代
+2. [Self-supervised In-context Operator Learning for Stochastic Mean-Field Control](/202608/24/2608.18282v1-self-supervised-in-context-operator-learning-for-stochastic-mean-field-control)  
+   标签：评分：6.0/10、query:marl
+   evidence：面向不确定环境下大规模交互智能体协调的平均场控制
 
 
 <div class="dpr-home-promo-card">
