@@ -6,38 +6,32 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-25
-- 运行时间：2026-08-25 20:21:07 UTC
+- 最新运行日期：2026-08-26
+- 运行时间：2026-08-26 22:21:23 UTC
 - 运行状态：成功
-- 本次总论文数：6
-- 精读区：1
-- 速读区：5
+- 本次总论文数：4
+- 精读区：2
+- 速读区：2
 
 ### 今日简报（AI）
-今日聚焦多智能体强化学习，精读满分论文《Equilibrium in Multi-Agent Reinforcement Learning》，并速读5篇相关研究。最值得关注的是多智能体均衡理论与异构多机器人任务分配中的模型基RL方法。下一步可深入探究均衡求解在复杂分布变化场景下的实际应用。
-- 详情：[/202608/25/README](/202608/25/README)
+今日4篇论文聚焦多智能体协作，其中《协作税》以9.0高分揭示协调成本是系统瓶颈。 精读推荐：多智能体协调代价与测试时协作分类，前者量化“协作税”以优化效率。 普通读者可重点了解多智能体协作的隐性成本，后续再关注其在实际系统中的权衡。
+- 详情：[/202608/26/README](/202608/26/README)
 
 ### 精读区论文标签
-1. [Equilibrium in Multi-Agent Reinforcement Learning](/202608/25/2608.22840v1-equilibrium-in-multi-agent-reinforcement-learning)  
-   标签：评分：10.0/10、query:marl
-   evidence：提出针对随机博弈的MBCCE均衡概念并分析去中心化多智能体强化学习算法
+1. [The Collaboration Tax: How Much LLM Multi-Agent Systems Pay to Coordinate](/202608/26/2608.22152v1-the-collaboration-tax-how-much-llm-multi-agent-systems-pay-to-coordinate)  
+   标签：评分：9.0/10、query:marl
+   evidence：以合作博弈视角研究LLM多智能体系统的协作代价
+2. [Test-Time Collaborative Classification over Multi-Agent Networks](/202608/26/2608.24787v1-test-time-collaborative-classification-over-multi-agent-networks)  
+   标签：评分：8.0/10、query:marl
+   evidence：独立训练智能体在测试时通过分布式协议协调决策
 
 ### 速读区论文标签
-1. [Model-Based Reinforcement Learning for Heterogeneous Multi-Robot Task Assignment Under Distribution Shifts](/202608/25/2608.21554v1-model-based-reinforcement-learning-for-heterogeneous-multi-robot-task-assignment-under-distribution-shifts)  
-   标签：评分：7.0/10、query:marl
-   evidence：多机器人任务分配，应用强化学习，属于协同多智能体系统应用
-2. [Artificial Empathy: Towards a Framework for Unsupervised Agency Detection and Policy Reconstruction](/202608/25/2608.23030v1-artificial-empathy-towards-a-framework-for-unsupervised-agency-detection-and-policy-reconstruction)  
-   标签：评分：7.0/10、query:marl
-   evidence：利用强化学习智能体检测并建模其他智能体，是多智能体强化学习的前提
-3. [A Theoretical Framework for Parallel Lifelong MAPF Using Group Decentralized Planning](/202608/25/2608.17928v1-a-theoretical-framework-for-parallel-lifelong-mapf-using-group-decentralized-planning)  
+1. [A Theoretical Framework for Parallel Lifelong MAPF Using Group Decentralized Planning](/202608/26/2608.17928v1-a-theoretical-framework-for-parallel-lifelong-mapf-using-group-decentralized-planning)  
    标签：评分：6.0/10、query:marl
-   evidence：多智能体MDP理论与分散规划，契合多智能体强化学习主题
-4. [Opinion-Guided Layered Strategies for Decentralized Coordination](/202608/25/2608.22104v1-opinion-guided-layered-strategies-for-decentralized-coordination)  
+   evidence：利用多智能体MDP理论为并行终身多智能体路径规划提供分组分散规划的理论框架
+2. [Counterfactual Quotient Models: Learning What Actions Change, Not What the World Does](/202608/26/2608.22092v1-counterfactual-quotient-models-learning-what-actions-change-not-what-the-world-does)  
    标签：评分：6.0/10、query:marl
-   evidence：提出意见引导的分层策略，用于独立智能体的去中心化协调
-5. [CED-EF: Compressed Exact Diffusion with Error Feedback for Multi-Agent Learning](/202608/25/2608.23013v1-ced-ef-compressed-exact-diffusion-with-error-feedback-for-multi-agent-learning)  
-   标签：评分：6.0/10、query:marl
-   evidence：去中心化多智能体学习与压缩通信，可迁移至去中心化MARL训练
+   evidence：反事实未来建模，直接关联多智能体信用分配问题
 
 
 <div class="dpr-home-promo-card">
