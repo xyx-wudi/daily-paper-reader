@@ -6,27 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-28
-- 运行时间：2026-08-28 03:59:42 UTC
+- 最新运行日期：2026-08-29
+- 运行时间：2026-08-29 03:13:32 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：2
-- 速读区：0
+- 本次总论文数：1
+- 精读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读2篇高分解法，聚焦多智能体与联邦学习的聚合优化。最值得关注：非独立同分布数据下的自适应聚合，及结构化噪声感知的组聚合。下一步可深入对比两者在真实异构场景的鲁棒性。
-- 详情：[/202608/28/README](/202608/28/README)
+今日仅速读1篇，聚焦多集群聚合博弈的分布式优化算法。  
+最值得关注的是“梯度外推+镜像下降”组合方案，评分6.0，适合入门了解该方向。  
+下一步可补充精读同类博弈算法，对比其收敛性差异。
+- 详情：[/202608/29/README](/202608/29/README)
 
 ### 精读区论文标签
-1. [Cooperative Multi-Agent Reinforcement Learning for Adaptive Aggregation in Semi-Supervised Federated Learning with non-IID Data](/202608/28/2608.25794v1-cooperative-multi-agent-reinforcement-learning-for-adaptive-aggregation-in-semi-supervised-federated-learning-with-non-iid-data)  
-   标签：评分：9.0/10、query:marl
-   evidence：提出pFedMARL，利用基于TD3的协作式多智能体强化学习自适应聚合非独立同分布联邦学习
-2. [SIGMA: Structured Noise-Effect-Aware Grouped Multi-Agent Aggregation](/202608/28/2608.26683v1-sigma-structured-noise-effect-aware-grouped-multi-agent-aggregation)  
-   标签：评分：9.0/10、query:marl
-   evidence：面向噪声观测的协作多智能体强化学习，提出结构化噪声效应感知的分组聚合
+- 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Gradient-extrapolation-based distributed mirror descent algorithm for multi-cluster aggregative games](/202608/29/2608.24183v1-gradient-extrapolation-based-distributed-mirror-descent-algorithm-for-multi-cluster-aggregative-games)  
+   标签：评分：6.0/10、query:marl
+   evidence：面向多簇聚合博弈的分布式纳什均衡求解，算法可迁移至多智能体分散决策问题
 
 
 <div class="dpr-home-promo-card">

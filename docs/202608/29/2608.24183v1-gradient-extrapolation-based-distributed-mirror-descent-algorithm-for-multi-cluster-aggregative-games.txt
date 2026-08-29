@@ -1,0 +1,2582 @@
+Title: Gradient-extrapolation-based distributed mirror descent algorithm for multi-cluster aggregative games
+
+URL Source: https://arxiv.org/pdf/2608.24183v1
+
+Published Time: Wed, 26 Aug 2026 00:44:32 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# Gradient-extrapolation-based distributed mirror descent algorithm for multi-cluster aggregative games 
+
+# Rui Zhu a, Fuyong Wang a, Zhongxin Liu a, Zengqiang Chen a
+
+> a
+
+College of Artificial Intelligence, Nankai University, Tianjin 300350, China 
+
+Abstract 
+
+This paper studies a class of multi-cluster aggregative games characterized by the coexistence of cooperation and competition, where each agent’s cost function depends on its own strategy and the aggregate of all agents’ strategies. To address the Nash equilibrium seeking problem for such games in the non-Euclidean setting, a distributed mirror descent algorithm with gradient extrapolation is proposed over time-varying intra-cluster and inter-cluster networks. The mirror descent framework employs a general Bregman divergence as the distance measure, providing greater flexibility than Euclidean-based methods, while gradient extrapolation exploits historical gradient information to improve convergence performance. Under the restricted strong monotonicity characterized by the Bregman divergence, the convergence of the proposed algorithm is established, and it achieves the O(1 /k ) convergence rate with the appropriately selected step-size and parameters. Finally, the effectiveness of the proposed algorithm is verified by an example on the demand response of energy systems. 
+
+Key words: Multi-cluster aggregative games; Distributed mirror descent; Gradient extrapolation; Convergence. 
+
+1 Introduction 
+
+Aggregative games, as an important subclass of non-cooperative games, have been extensively utilized to ad-dress optimal decision-making problems in multi-agent systems, such as the demand response management (Ye and Hu, 2017), charging coordination in electric vehi-cles (Zhou et al. , 2025), and flow control in traffic net-works (Barrera and Garcia, 2015), among others. Dis-tinct from general non-cooperative games, the cost of each agent in such games is not directly affected by other agents’ strategies but rather depends on the aggregate of all agents’ strategies and its own strategy. Nevertheless, Nash equilibrium (NE) is still a widely-used concept in aggregative games, representing a stable and desirable solution where no agent can improve its payoff through unilateral deviation. Recently, the NE seeking algorithm design in aggregative games has attracted considerable attention (Deng, 2022; Huang et al. , 2023; Li et al. , 2025; Parise et al. , 2020). However, since aggregative games primarily consider agents in competition, they are inad-
+
+⋆ This work was supported by the National Natural Science Foundation of China under Grant 62103203. (Corresponding author: Fuyong Wang.) 
+
+Email addresses: rui zcg@mail.nankai.edu.cn (Rui Zhu), wangfy@nankai.edu.cn (Fuyong Wang), 
+
+lzhx@nankai.edu.cn (Zhongxin Liu), 
+
+chenzq@nankai.edu.cn (Zengqiang Chen). 
+
+equate for addressing real-life scenarios where competi-tion and cooperation coexist, which drives the develop-ment of multi-cluster aggregative games (MAGs). In MAGs, agents in the same cluster collaborate to optimize the sum of costs, while each cluster is viewed as a virtual self-interested player to optimize its own cost. Additionally, the cost of each agent is influenced by its own strategy and the aggregate of all agents’ strategies in the game, regardless of their cluster affiliation. When each cluster contains only one agent, the MAG reduces to a standard aggregative game (Koshal et al. , 2016). On the other hand, when there is just one cluster, it re-duces to an aggregative optimization problem (Chen et al. , 2023; Li et al. , 2022). It is worth noting that exist-ing studies on the coexistence of cooperation and com-petition mainly focus on multi-cluster games (Huang et al. , 2025; Li et al. , 2024; Liu et al. , 2025; Meng and Li, 2023; Nguyen et al. , 2024), a class of games obtained by incorporating cooperative mechanisms into general non-cooperative games. Although these methods can be ap-plied to MAGs, they generally require each agent to es-timate the strategies of other agents and then compute the aggregate, which inevitably increases computational and communication burdens. In fact, for MAGs, it is suf-ficient to obtain only the aggregate, without access to the specific strategies of each agent. Specifically, an al-gorithm based on best response is proposed for MAGs in Kebriaei et al. (2021), where a cluster coordinator is arXiv:2608.24183v1 [cs.GT] 25 Aug 2026 used to gather information within its own cluster and exchange local aggregate information with the neighbor-ing coordinators. A similar communication architecture is adopted in Chen and Yi (2024) to develop a gradient-based algorithm. Further, fully distributed continuous-time and discrete-time NE seeking algorithms are de-veloped in Huang et al. (2024) and Zhao et al. (2026), respectively, where each agent estimates the aggregate and gradient information required for NE seeking us-ing only information exchanged with its neighbors over intra-cluster and inter-cluster networks. In contrast to existing gradient-based algorithms for MAGs in the Euclidean setting, this paper adopts the mirror descent method, a generalization of gradient de-scent, to develop a distributed algorithm for MAGs un-der a flexible non-Euclidean framework induced by the Bregman divergence. This framework provides greater flexibility in selecting a distance-generating function suited to the geometry of the constraint set, potentially leading to more efficient strategy updates. It has al-ready been widely applied to optimization problems. For example, Doan et al. (2019) analyzes centralized and distributed mirror descent algorithms. A distributed zeroth-order mirror descent method is proposed in Yu 
+
+et al. (2022). To reduce communication costs, an event-triggered strategy is employed to design the distributed mirror descent algorithm in Xiong et al. (2023). More re-cently, Wang et al. (2024) extends mirror descent to NE seeking in stochastic aggregative games. To the best of our knowledge, there is limited literature exploring how to apply the mirror descent method to handle MAGs where cooperation and competition coexist. Moreover, this problem is not simply a combination of the mirror descent algorithms from distributed optimization or game problems. Instead, several challenges arise from coordinating information exchange in the primal space with gradient updates in the dual space and handling the asymmetry of the Bregman divergence in the conver-gence analysis. Therefore, developing a mirror descent algorithm for MAGs is of great significance from both theoretical and practical perspectives. In time-varying networks, sparse communication links may slow information transmission, thereby af-fecting the convergence performance of algorithms. To alleviate this effect, acceleration techniques are consid-ered an effective solution. In this regard, the Nesterov acceleration method has been widely applied to address distributed optimization (Krichene et al. , 2015; Liu et al. , 2024) and game problems (Tatarenko et al. , 2021), and has also been extended to more complex scenarios where cooperation and competition coexist (Wang et al. , 2025). However, the assumptions on the pseudo-gradient generally need to hold over Rmd , since the accelerated search points may lie outside the feasible region. To avoid this limitation, the gradient extrapola-tion provides an alternative acceleration mechanism by performing extrapolation in the dual space rather than in the primal space, as illustrated in Fig. 1. Accordingly, gradient-extrapolation-based methods are developed for variational inequality problems (Kotsalis et al. , 2022), optimization problems (Lan and Zhou, 2018), and game problems (Wang et al. , 2024), demonstrating improved convergence performance. Nevertheless, extending this acceleration mechanism to MAGs remains challenging due to the coexistence of cooperation and competition. Primal space        
+
+> Dual space
+> Nesterov acceleration Gradient extrapolation
+> Fig. 1. Comparison of acceleration mechanisms between Nesterov acceleration method and gradient extrapolation method.
+
+Inspired by the above discussions, this paper aims to develop a gradient-extrapolation-based distributed mir-ror descent algorithm for MAGs, capable of addressing complex scenarios where cooperation and competition coexist and achieving efficient NE seeking The main con-tributions are presented as follows: 
+
+• A distributed mirror descent algorithm incorporat-ing gradient extrapolation is proposed for efficient NE seeking in MAGs. In contrast to existing algorithms for MAGs (Chen and Yi, 2024; Huang et al. , 2024; Zhao et al. , 2026) that rely on the classical Euclidean distance, the proposed algorithm employs the more general Bregman divergence within the mirror descent framework, thereby offering greater flexibility. More-over, the gradient extrapolation method leverages his-torical gradient information in the decision-making process to improve the convergence performance. 
+
+• Compared with existing methods, as summarized in Table 1, the proposed mirror descent algorithm achieves convergence over time-varying intra-cluster and inter-cluster networks under the restricted strong monotonicity characterized by the Bregman diver-gence. Furthermore, the convergence rate of O(1 /k )is established through an appropriate design of the step sizes and algorithm parameters. 
+
+Notations : Denote ⌈h⌉ := {1, 2, . . . , h } for an integer 
+
+h ≥ 1. All vectors are regarded as column vectors un-less otherwise specified. The symbol col (( xj )j∈M ) is the stacked vector in the form of [( x1)⊤, · · · , (xm)⊤]⊤. For a vector b, [ b]i denotes its ith element, and b⊤ represents 2Table 1 Recent studies on multi-cluster aggregative games. Literature Network Aggregate acquisition scheme Algorithm Strong monotonicity condition Rate Kebriaei et al. (2021) Time-varying Semi-decentralized Best-response − −
+
+Chen and Yi (2024) Fixed Semi-decentralized Gradient Euclidean-based Linear Huang et al. (2024) Fixed Distributed Gradient Euclidean-based −
+
+Zhao et al. (2026) Fixed Distributed Gradient Euclidean-based Linear This paper Time-varying Distributed Mirror descent Bregman-based restricted O(1 /k )A dash ( −) indicates that the corresponding property is not considered in the literature. 
+
+its transpose. ⟨a, b ⟩ = a⊤b represents the inner product of vectors a and b. The Euclidean norm of vector a is de-noted as ∥a∥ = √a⊤a. Also, the dual norm with respect to ∥·∥ is given by ∥z∥∗ = max ∥a∥=1 ⟨z, a ⟩. Define 1m as the m-dimensional vector with all entries equal to 1, and 
+
+I as the identity matrix. 
+
+2 Problem Formulation 
+
+2.1 Multi-cluster Aggregative Games 
+
+A MAG with an agent set M ≜ {1, 2, · · · , m } con-sists of h clusters. Every cluster l ∈ ⌈ h⌉, viewed as a vir-tual player, has an agent set Ml containing ml agents, where m = Phl=1 ml and agents across different clusters are distinct from one another, i.e. Ml ∩ M l′
+
+= ∅ for any 
+
+l̸ = l′ ∈ ⌈ h⌉. For notational clarity, agent indices are rep-resented by subscripts, whereas cluster indices are indi-cated through superscripts. Every agent j ∈ M l in any cluster l ∈ ⌈ h⌉ has its own cost function which is privately accessible only to itself. This function f lj (xlj , ψ (x)) depends on the agent’s own strategy xlj chosen from a strategy set Ωlj ⊂ Rd, and the aggregate ψ of all agents’ strategies 
+
+x ≜ col ((( xlj )j∈M l )l∈⌈ h⌉) ∈ Rmd . Specifically, the ag-gregate ψ(x) is defined as ψ(x) ≜ Phl=1 
+
+Pml 
+
+> j=1
+
+xlj ∈ Rd.In MAGs, all agents within any given cluster l ∈ ⌈ h⌉
+
+collaborate to minimize the cluster’s cost function 
+
+f l(xl, ψ (x)) formed by the sum of these agents’ cost functions, as expressed by min 
+
+> xl∈Ωl
+
+f l(xl, ψ (x)) = 
+
+> ml
+
+X
+
+> j=1
+
+f lj (xlj , ψ (x)) , (1) where xl = col (( xlj )j∈M l ) ∈ Ωl, and Ω l ≜ Qml 
+
+> i=1
+
+Ωli ⊂
+
+Rdm l
+
+. It is worth noting that problem (1) includes two special cases. Specifically, when h = 1, it reduces to an aggregative optimization problem. When ml = 1 for all 
+
+l ∈ ⌈ h⌉ and h > 1, it reduces to an aggregative game. The Nash equilibrium (NE) x∗ is a stable strategy profile for the MAG satisfying, for any cluster l ∈ ⌈ h⌉,
+
+f l(xl, ∗, ψ (x∗)) ≤ f l(xl, ψ (xl) + ψ(x−l, ∗)) , ∀xl ∈ Ωl,
+
+where ψ(xl) ≜ P 
+
+> j∈M l
+
+xlj , and ψ(x−l, ∗) ≜ P
+
+> i∈⌈ h⌉\{ l}
+
+P 
+
+> j∈M i
+
+xi, ∗ 
+
+> j
+
+is the aggregate of the strategies of all agents outside cluster l. In other words, no cluster can reduce its cost by unilaterally deviating from this profile x∗.The following assumptions on the cost functions are introduced for the subsequent analysis. 
+
+Assumption 1 For each agent j in any cluster l ∈ ⌈ h⌉,the strategy set Ωlj is convex, compact and closed. More-over, the cost function f lj (xlj , ψ (x)) is continuously dif-ferentiable with respect to (xlj , ψ (x)) ∈ Ωlj × Rd and is convex over Ωl for any given x−l ∈ Ω−l ≜ Q  
+
+> r̸=l
+
+Ωr .
+
+Based on Assumption 1, it follows that f l(xl, ψ (x)) is convex over Ω l and continuously differentiable in (xl, ψ (x)) ∈ Ωl × Rd. For each agent j in cluster l,let ∇1f lj (xlj , z ) and ∇2f lj (xlj , z ) denote the gradients of 
+
+f lj (xlj , z ) with respect to its first argument xlj and second argument z, respectively. Since, among the local cost functions in cluster l, xlj appears explicitly only in the first argument of f lj , the direct derivative with respect to xlj involves only ∇1f lj , whereas its indirect effect on the cluster cost through the aggregate is captured by 
+
+∇2f l = Pml 
+
+> i=1
+
+∇2f li . Accordingly, for any cluster l ∈ ⌈ h⌉,the gradient of f l(xl, ψ (x)) with respect to xlj is defined as 
+
+F lj (x) ≜ ∇1f lj (xlj , ψ (x)) + ∇2f l(xl, ψ (x)) .
+
+Denote the pseudo gradient as F (x) ≜ col ((( F lj (x)) j∈M l )l∈⌈ h⌉). Let ¯ zlj denote the estimate of the aggregate by agent j
+
+in cluster l and ¯ zl ≜ col ((¯ zlj )j∈M l ). Under the estimated aggregates, define 
+
+Glj (xl, ¯zl) ≜ ∇1f lj (xlj , ¯zlj ) + 
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli, ¯zli).
+
+It is easily obtained that F lj (x) = Glj (xl, 1ml ⊗ Idψ(x)). The following Lipschitz continuity conditions are im-posed on these mappings. 
+
+Assumption 2 (i) F (x) is L-Lipschitz continuous for any x1, x2 ∈ Ω ≜ Q 
+
+> l∈⌈ h⌉
+
+Ωl, i.e., ∥F (x1) − F (x2)∥∗ ≤
+
+L∥x1 − x2∥.
+
+(ii) For each agent j in cluster l ∈ ⌈ h⌉, Glj (xl, ¯zl) is ¯L-Lipschitz continuous in ¯zl for any fixed xl ∈ Ωl, i.e., for 
+
+3any ¯zl
+
+> 1
+
+, ¯zl 
+
+> 2
+
+∈ Rmld, ∥Glj (xl, ¯zl
+
+> 1
+
+)−Glj (xl, ¯zl
+
+> 2
+
+)∥∗ ≤ ¯L∥¯zl
+
+> 1
+
+−¯zl
+
+> 2
+
+∥.
+
+(iii) For each agent j in cluster l ∈ ⌈ h⌉, ∇2f lj (xlj , ¯zlj ) is ˆL-Lipschitz continuous over Ωlj ×Rd, i.e., ∥∇ 2f lj (xlj1, ¯zlj1)−∇2f lj (xlj2, ¯zlj2)∥∗ ≤ ˆL(∥xlj1 − xlj2∥ + ∥¯zlj1 − ¯zlj2∥) for any 
+
+xlj1, x lj2 ∈ Ωlj and ¯zlj1, ¯zlj2 ∈ Rd.
+
+Remark 1 It is worth noting that Assumption 1 ensures the existence of NE for MAGs (Scutari et al. , 2010), and under Assumption 1, the NE x∗ can be equivalently characterized as the solution to the variational inequality problem VI(Ω , F ) i.e., (x′−x∗)⊤F (x∗) ≥ 0 for any x′ ∈ Ω.
+
+In the designed non-Euclidean algorithms, the Breg-man divergence is specified as follows. 
+
+Definition 2 Let ϕ(·) be a 1-strongly convex differen-tiable function with respect to the norm ∥·∥ , i.e., ϕ(x2) ≥
+
+ϕ(x1) + ⟨∇ ϕ(x1), x 2 − x1⟩ + 12 ∥x1 − x2∥2 for any x1, x 2 ∈
+
+¯Ω, where ¯Ω is the constraint set. The Bregman divergence 
+
+Dϕ(x1, x 2) associated with ϕ is given by 
+
+Dϕ(x1, x 2) = ϕ(x2) − ϕ(x1) − ⟨∇ ϕ(x1), x 2 − x1⟩. (2) From Definition 2, the following relationship between the Bregman divergence and the Euclidean distance is established: 
+
+Dϕ(x1, x 2) ≥ 12 ∥x1 − x2∥2, ∀x1, x 2 ∈ ¯Ω. (3) 
+
+Remark 3 The function ϕ(·) is assumed to be 1-strongly convex for the sake of presenting the main results more clearly. If the ϑ-strongly convex assumption is adopted, the convergence analysis remains essentially unchanged. 
+
+In existing studies (Chen and Yi, 2024; Nguyen et al. , 2023; Pu et al. , 2021; Zhao et al. , 2026), strong monotonicity is commonly formulated in terms of the Euclidean distance. In contrast, this paper for-mulates the condition using the Bregman divergence, making it better aligned with the non-Euclidean ge-ometry underlying mirror descent. Moreover, the condition is imposed in a restricted form relative to the NE x∗. Specifically, for any x1, x2 ∈ Ω, define ¯Dϕ(x1, x2) = P
+
+> l∈⌈ h⌉
+
+P 
+
+> j∈M l
+
+Dϕ(xlj, 1, x lj, 2). This as-sumption is then stated as follows. 
+
+Assumption 3 The mapping F (x) is restricted strongly monotone with respect to the NE x∗ with a constant μ > 
+
+0, that is, for any x ∈ Ω, ⟨F (x) − F (x∗), x − x∗⟩ ≥ 
+
+2μ ¯Dϕ(x, x∗).2.2 Communication Networks 
+
+For MAGs, two distinct types of networks are in-volved in the design of the fully distributed algorithm: local intra-cluster networks for tracking the cluster gra-dient and the global inter-cluster networks for tracking the aggregate. Specifically, for the intra-cluster network 
+
+Glk = {M l, Elk}, where Elk ⊆ M l × M l is the edge set, (i, j ) ∈ E lk indicates that agent j receives information from agent i within cluster l at time k. Correspondingly, the adjacency matrix Clk ∈ Rml×ml
+
+satisfies [ Clk]ji > 0if ( i, j ) ∈ E lk and [ Clk]ji = 0 otherwise. Similarly, for the inter-cluster network G0 
+
+> k
+
+= {M 0, E0 
+
+> k
+
+} with M0 = M
+
+and E0 
+
+> k
+
+⊆ M × M , the adjacency matrix C0 
+
+> k
+
+∈ Rm×m
+
+satisfies [ C0 
+
+> k
+
+]lu ji > 0 if ( i, j ) ∈ E 0 
+
+> k
+
+and [ C0 
+
+> k
+
+]lu ji = 0 other-wise, where l and u denote the clusters to which agents 
+
+j and i belong, respectively. 
+
+Assumption 4 There exists a positive integer Q such that, for each i ∈ { 0} ∪ ⌈ h⌉ and any p ≥ 0, the union graph {M i, ∪(p+1) Q−1 
+
+> k=pQ
+
+Eik} is strongly connected. Each ad-jacency matrix Cik is doubly stochastic for any k ≥ 0,i.e., C0 
+
+> k
+
+1m = 1m, 1⊤
+
+> m
+
+C0 
+
+> k
+
+= 1⊤
+
+> m
+
+, C lk1ml = 1ml , 1⊤ 
+
+> ml
+
+Clk =
+
+1⊤ 
+
+> ml
+
+, l ∈ ⌈ h⌉. Moreover, for any k ≥ 0, each Cik has positive diagonal elements, and there exists a constant 
+
+0 < γ < 1 such that [Clk]js ≥ γ for all s ∈ N lk,j 
+
+and l ∈ ⌈ h⌉, and [C0 
+
+> k
+
+]lu js ≥ γ for all s ∈ N 0 
+
+> k,j
+
+, where 
+
+N ik,j ≜ {s ∈ M i | (s, j ) ∈ E ik}.
+
+Unlike the assumptions in Chen and Yi (2024); Huang et al. (2024); Zhao et al. (2026), Assumption 4 allows the communication digraphs to be disconnected at some time, thereby covering a broader class of communication scenarios. For any k ≥ t ≥ 0, let Ξi 
+
+> (k,t )
+
+= CikCik−1 · · · Cit . The following property is then stated to facilitate the subsequent analysis. 
+
+Lemma 4 (Nedi ´c and Ozdaglar, 2009) Under Assump-tion 4, there exist β0 ≜ (1 − γ/ (4 m2)) −2 > 0, 0 < η 0 ≜
+
+(1 − γ/ (4 m2)) 1/Q < 1, and for each l ∈ ⌈ h⌉, βl ≜ (1 −
+
+γ/ (4( ml)2)) −2 > 0, 0 < η l ≜ (1 − γ/ (4( ml)2)) 1/Q < 1,such that for any k ≥ t ≥ 0,
+
+| [Ξ 0(k,t )]js − 1/m |≤ βη k−t, ∀j, s ∈ M ,
+
+| [Ξ l
+
+> (k,t )
+
+]j′s′ − 1/m l |≤ βη k−t, ∀j′, s ′ ∈ M l,
+
+where β = max i∈{ 0,1,··· ,h } βi and η = max i∈{ 0,1,··· ,h } ηi.
+
+3 Algorithm Design 
+
+In this section, a distributed mirror descent algo-rithm with gradient extrapolation is proposed to seek the NE of MAGs. Compared with the settings in Lan and Zhou (2018) and Kotsalis et al. (2022), an important challenge in the considered setting is that each agent can only access local information exchanged through intra-cluster and inter-cluster networks. Therefore, each agent 
+
+j in cluster l ∈ ⌈ h⌉ maintains a local variable xlj,k ∈ Ωlj as an estimate of its equilibrium strategy and an estimate 
+
+vlj,k to track the aggregate ψ(xk). Moreover, an auxiliary variable ylj,k is introduced to estimate the derivative with respect to the second argument, since this term involves information from all agents within cluster l, whereas the derivative of f lj with respect to the first argument can be computed locally. Based on these variables, the update procedure of the proposed algorithm is given in Algo-rithm 1. At each iteration, each agent j in cluster l updates its strategy xlj,k +1 by employing the mirror descent scheme with gradient extrapolation. Different from the Nesterov acceleration method, where extrapolation is performed 4Algorithm 1 Gradient-extrapolation-based distributed mirror descent algorithm Define the step size αk > 0 and parameter λk > 0 at time k.
+
+Initialization: For any agent j of any cluster l ∈ ⌈ h⌉,initialize with xlj, 0 = xlj, −1 ∈ Ωlj , and let vlj, 0 = vlj, −1 =
+
+xlj, 0, ylj, −1 = ylj, 0 = ∇2f lj (xlj, 0, mv lj, 0). 
+
+Iteration: For k ≥ 0, each agent j in cluster l ∈ ⌈ h⌉
+
+executes the following update: 
+
+xlj,k +1 = argmin  
+
+> ¯xlj∈Ωlj
+
+n
+
+αk⟨Hlj,k , ¯xlj ⟩ + Dϕ(xlj,k , ¯xlj )
+
+o
+
+, (4a) 
+
+vlj,k +1 = X 
+
+> i∈N 0
+> k,j
+
+[C0 
+
+> k
+
+]lu ji vui,k + xlj,k +1 − xlj,k , (4b) 
+
+ylj,k +1 =
+
+> ml
+
+X
+
+> i=1
+
+[Clk]ji yli,k + ∇2f lj (xlj,k +1 , mv lj,k +1 )
+
+− ∇ 2f lj (xlj,k , mv lj,k ), (4c) where Hlj,k = (1 + λk)( ∇1f lj (xlj,k , mv lj,k ) + mlylj,k ) − λk
+
+(∇1f lj (xlj,k −1, mv lj,k −1) + mlylj,k −1). in the primal space, the gradient extrapolation used here is carried out in the dual space. Specifically, the gradi-ent extrapolation term λk([ ∇1f lj (xlj,k , mv lj,k )+ mlylj,k ]−
+
+[∇1f lj (xlj,k −1, mv lj,k −1) + mlylj,k −1]) is incorporated into the strategy update to improve the convergence per-formance. Since the aggregate ψ(xk) depends on the strategies of all agents in MAGs, the aggregate esti-mates are exchanged among neighboring agents through the inter-cluster network G0 
+
+> k
+
+, regardless of their clus-ter affiliations. Based on the received information and the strategy increment xlj,k +1 − xlj,k , each agent j in cluster l updates its estimate vlj,k +1 to track the aggre-gate ψ(xk+1 ). In addition, the estimate ylj,k of agent 
+
+j ∈ M l is to track 1
+
+> ml
+
+Pml 
+
+> i=1
+
+∇2f li (xli,k , mv li,k ) which is only related to the agents within the cluster l. Thus, 
+
+ylj,k +1 is updated using information received through the intra-cluster network and the local derivative increment 
+
+∇2f lj (xlj,k +1 , mv lj,k +1 ) − ∇ 2f lj (xlj,k , mv lj,k ). 
+
+Remark 5 In the mirror descent scheme, an appropri-ate distance function can be selected to match the char-acteristics of the constraint set, which may yield a di-rect and computationally efficient update while reducing the cost associated with Euclidean projection. For ex-ample, for the simplex constraint set, i.e., Ωlj ≜ {xlj ≥
+
+0 : 1⊤ 
+
+> d
+
+xlj = 1 }, the distance function can be selected as 
+
+ϕ(xlj ) = Pdi=1 [xlj ]i ln[ xlj ]i. The corresponding Bregman divergence is Dϕ(xlj1, x lj2) = Pdi=1 [xlj2]i ln [xlj2]i 
+
+> [xlj1]i
+
+, which is known as the Kullback-Leibler divergence. In this case, the update (4a) takes the following form: 
+
+[xlj,k +1 ]i = [xlj,k ]i exp   − αk[Hlj,k ]i
+
+
+
+> d
+
+P
+
+> r=1
+
+[xlj,k ]r exp 
+
+
+
+− αk[Hlj,k ]r
+
+ , ∀i ∈ ⌈ d⌉.
+
+Under the simplex constraint, this update has a computa-tional complexity of O(d) per iteration, whereas the dis-tributed projected gradient method in Zhao et al. (2026) requires O(d log d), thereby reducing the per-iteration computational burden. Moreover, the mirror descent scheme includes the Euclidean projected gradient method with extrapolation as a special case. Specifically, when 
+
+ϕ(xlj ) = 12 ∥xlj ∥2, the corresponding Bregman divergence becomes Dϕ(xlj1, x lj2) = 12 ∥xlj1 − xlj2∥2. In this case, the update (4a) is equivalent to the projected update with extrapolation xlj,k +1 = PΩlj [xlj,k − αkHlj,k ], where PΩlj
+
+denotes the Euclidean projection onto the set Ωlj .
+
+4 Convergence Analysis 
+
+In this section, the convergence analysis of the de-signed algorithm is provided in detail. 
+
+4.1 Preliminary Results 
+
+This subsection shows several auxiliary results that are crucial for establishing the subsequent con-vergence results. Firstly, for each agent j within clus-ter l ∈ ⌈h⌉, bounds are established for the aggre-gate tracking error Ev lj,k +1 = ∥vlj,k +1 − ψ(xk+1 ) 
+
+> m
+
+∥,as well as the gradient tracking error Ey lj,k +1 =
+
+∥ylj,k +1 − 1
+
+> ml
+
+Pml 
+
+> i=1
+
+∇2f li (xli,k +1 , mv li,k +1 )∥∗.
+
+Lemma 6 Under Assumptions 1, 2 and 4, suppose that, for any agent j in cluster l ∈ ⌈ h⌉, the initial conditions 
+
+vlj, 0 = xlj, 0 and ylj, 0 = ∇2f lj (xlj, 0, mv lj, 0) hold. Then, the aggregate and gradient tracking errors satisfy, respec-tively, 
+
+Ev lj,k +1 ≤ βη km ˆN + m ˜W β 
+
+> k
+
+X
+
+> s=1
+
+ηk−sαs−1(1 + 2 λs−1)+ 2αk(1 + 2 λk) ˜W , (5) 
+
+Ey lj,k +1 ≤ βη kmlNf +βη k−1 ˆLm ln
+
+(m+1) α0(1+2 λ0) ˜W
+
++2 m ˆN
+
+o
+
++β
+
+> k
+
+X
+
+> s=2
+
+ηk−s ˆLm ln
+
+(m+1) αs−1(1+2 λs−1) ˜W +4 mαs−2(1+2 λs−2) ˜W +2 m2 βη s−2 ˆN + ˜W β 
+
+> s−2
+
+X
+
+> r=1
+
+ηs−2−r αr−1
+
+(1+2 λr−1)o
+
++2 ˆL
+
+n
+
+(m+1) αk(1+2 λk) ˜W +4 mα k−1(1+2 λk−1)˜W +2 m2 βη k−1 ˆN + ˜W β 
+
+> k−1
+
+X
+
+> s=1
+
+ηk−1−sαs−1(1+2 λs−1)o
+
+,
+
+(6) 5where ˜W ≜ ¯m ˜Wy + ¯Lm ¯m ˜Wv + max 
+
+> l∈⌈ h⌉,j ∈M l
+
+max  
+
+> x∈Ω
+
+∥F lj (x)∥∗
+
+with ¯m ≜ max l∈⌈ h⌉ ml, while ˜Wv and ˜Wy represent the auxiliary uniform bounds on the aggregate and the gradi-ent tracking errors, respectively, as detailed in equations 
+
+(9) and (12) .
+
+Proof. First, one establishes the auxiliary uniform bounds ˜Wv and ˜Wy for the aggregate and gradient tracking errors. Under Assumption 4 and the given initial condition, it follows by induction that 
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+vlj,k =
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+xlj,k = ψ(xk), ∀k ≥ 0. (7) Based on the update form (4b) of vlj,k +1 , recursively ex-panding Ev lj,k +1 yields 
+
+Ev lj,k +1 ≤
+
+> h
+
+X
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+1
+
+m − [Ξ 0(k, 0) ]lu ji ∥vui, 0∥ +
+
+> k
+
+X
+
+> s=1
+> h
+
+X
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+1
+
+m − [Ξ 0(k,s )]lu ji ∥xui,s − xui,s −1∥ + 1
+
+m
+
+> h
+
+X
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+∥xui,k +1 
+
+− xui,k ∥ + ∥xlj,k +1 − xlj,k ∥≤ βη khX
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+∥xui, 0∥ + β
+
+> k
+
+X
+
+> s=1
+
+ηk−shX
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+∥xui,s −xui,s −1∥
+
++ 1
+
+m
+
+> h
+
+X
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+∥xui,k +1 −xui,k ∥+∥xlj,k +1 −xlj,k ∥,
+
+(8) where the second inequality follows from Lemma 4. Un-der Assumption 1, define ˆN ≜ max 
+
+> l∈⌈ h⌉,j ∈M l
+
+max  
+
+> xlj∈Ωlj
+
+xlj ,then one has 
+
+Ev lj,k +1 ≤ m ˆN βη k +2 m ˆN β 
+
+> k
+
+X
+
+> s=1
+
+ηk−s +4 ˆN
+
+≤ m ˆN β +2 m ˆN β/ (1 − η)+4 ˆN
+
+| {z } 
+
+> ≜˜Wv
+
+. (9) Thus, ˜Wv provides an auxiliary uniform bound on the aggregate tracking error. Similarly, based on Assump-tion 4 and the initial condition ylj, 0 = ∇2f lj (xlj, 0, mv lj, 0), there exists for any cluster l ∈ ⌈ h⌉,
+
+> ml
+
+X
+
+> j=1
+
+ylj,k =
+
+> ml
+
+X
+
+> j=1
+
+∇2f lj (xlj,k , mv lj,k ), ∀k ≥ 0. (10) Then by considering the update form (4c) of ylj,k +1 , one can obtain 
+
+Ey lj,k +1 ≤
+
+> ml
+
+X
+
+> i=1
+
+1
+
+ml −[Ξ l
+
+> (k, 0)
+
+]ji ∥yli, 0∥∗ +
+
+> k
+
+X
+
+> s=1
+> ml
+
+X
+
+> i=1
+
+1
+
+ml
+
+−[Ξ l
+
+> (k,s )
+
+]ji ∥∇ 2f li (xli,s , mv li,s )−∇ 2f li (xli,s −1, mv li,s −1)∥∗
+
++ 1
+
+mlml
+
+X
+
+> i=1
+
+∥∇ 2f li (xli,k +1 , mv li,k +1 ) − ∇ 2f li (xli,k , mv li,k )∥∗
+
++∥∇ 2f lj (xlj,k +1 , mv lj,k +1 )−∇ 2f lj (xlj,k , mv lj,k )∥∗,
+
+≤ βη kml
+
+X
+
+> i=1
+
+∥∇ 2f li (xli, 0, mv li, 0)∥∗ +β
+
+> k
+
+X
+
+> s=1
+
+ηk−s ˆL
+
+> ml
+
+X
+
+> i=1
+
+ ∥xli,s −
+
+xli,s −1∥+m∥vli,s −vli,s −1∥+ ˆL ∥xlj,k +1 −xlj,k ∥+m∥vlj,k +1 
+
+−vlj,k ∥+ ˆLmlml
+
+X
+
+> i=1
+
+ ∥xli,k +1 −xli,k ∥+m∥vli,k +1 −vli,k ∥.
+
+(11) Notably, ∥ψ(xk)∥ = ∥ Pmj=1 xj,k ∥ ≤ m ˆN . Together with (9), this implies that ∥mv lj,k ∥ ≤ m ˜Wv + m ˆN for all 
+
+k ≥ 0. Moreover, the initialization vlj, 0 = xlj, 0 implies that f lj (xlj, 0, mv lj, 0) = f lj (xlj, 0, mx lj, 0) with xlj, 0 ∈ Ωlj . It then follows from Assumption 1 that ∇2f lj (xlj, 0, mv lj, 0)is bounded for any j in cluster l ∈ ⌈ h⌉. Accordingly, define Nf ≜ max  
+
+> l∈⌈ h⌉
+
+max 
+
+> j∈M l
+
+max 
+
+> xlj, 0∈Ωlj
+
+∥∇ 2f lj (xlj, 0, mv lj, 0)∥∗. Fur-ther, one derives that 
+
+Ey lj,k +1 ≤ βη kmlNf +2 β ˆLm lkX
+
+> s=1
+
+ηk−s  ˆN + m ˜Wv + m ˆN 
+
++ 4 ˆL  ˆN + m ˜Wv + m ˆN 
+
+≤ β ¯mN f + 2β ˆL ¯m  ˆN +m ˜Wv +m ˆN
+
+(1 − η) +4 ˆL  ˆN +m ˜Wv +m ˆN| {z } 
+
+> ≜˜Wy
+
+.
+
+(12) where ¯ m ≜ max l∈⌈ h⌉ ml. Hence, ˜Wy provides an auxil-iary uniform bound on the gradient tracking error. Next, based on the auxiliary uniform bounds ˜Wv and ˜Wy , one derives an upper bound on the strategy incre-ment ∥xlj,k +1 − xlj,k ∥, which is subsequently used to es-tablish the iteration-dependent bound for the aggregate tracking error. Specifically, the optimality condition of (4a), together with the definition of the Bregman diver-gence in (2), gives (¯ xlj − xlj,k +1 )⊤[αk
+
+ (1 + λk)( ∇1f lj (xlj,k , mv lj,k ) + mlylj,k )−
+
+λk(∇1f lj (xlj,k −1, mv lj,k −1) + mlylj,k −1) + ∇ϕ(xlj,k +1 )
+
+− ∇ ϕ(xlj,k )] ≥ 0, ∀¯xlj ∈ Ωlj .
+
+Setting ¯ xlj = xlj,k and using the 1-strong convexity of ϕ
+
+6yield 
+
+∥xlj,k − xlj,k +1 ∥ ≤ αk
+
+ (1 + λk)∥∇ 1f lj (xlj,k , mv lj,k )+ 
+
+mlylj,k ∥∗ + λk∥∇ 1f lj (xlj,k −1, mv lj,k −1) + mlylj,k −1∥∗
+
+.
+
+(13) For the term ∥∇ 1f lj (xlj,k , mv lj,k ) + mlylj,k ∥∗, by adding and subtracting F lj (xk) and Glj (xlk, mv lk) with vlk =
+
+col (( vlj,k )j∈M l ), it can be reformulated as 
+
+∥∇ 1f lj (xlj,k , mv lj,k )+ mlylj,k ∥∗ = ∥∇ 1f lj (xlj,k , mv lj,k )+ mlylj,k 
+
+− Glj (xlk, mv lk) + Glj (xlk, mv lk) − F lj (xk) + F lj (xk)∥∗
+
+= ∥mlylj,k −
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k , mv li,k ) + Glj (xlk, mv lk)−
+
+Glj (xlk, 1ml ⊗ Idψ(xk)) + F lj (xk)∥∗
+
+≤ mlEy lj,k + ¯L
+
+> ml
+
+X
+
+> i=1
+
+mEv li,k +1 + ∥F lj (xk)∥∗
+
+≤ ¯m ˜Wy + ¯Lm ¯m ˜Wv + max 
+
+> l∈⌈ h⌉,j ∈M l
+
+max  
+
+> x∈Ω
+
+∥F lj (x)∥∗
+
+| {z } 
+
+> ≜˜W
+
+.
+
+The first inequality follows from the triangle inequality and Assumption 2. Substituting this result back into (13) results in 
+
+∥xlj,k − xlj,k +1 ∥ ≤ αk(1 + 2 λk) ˜W . (14) Substituting this bound into the recursive estimate (8) for the aggregate tracking error yields (5), as desired. Finally, based on the preceding results, the explicit iteration-dependent bound for the gradient tracking er-ror is derived. Since the recursion (11) involves the vari-ation ∥vlj,k +1 − vlj,k ∥, an upper bound on this term needs to be established. By introducing ¯ vk ≜ 1
+
+> mh
+
+P
+
+> l=1
+> ml
+
+P
+
+> j=1
+
+vlj,k = 
+
+> 1
+> m
+
+ψ(xk) into this term, the following relation is derived for k ≥ 1: 
+
+m∥vlj,k +1 −vlj,k ∥ = m∥vlj,k +1 − ¯vk + ¯ vk − vlj,k ∥
+
+= m∥
+
+> h
+
+X
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+[C0 
+
+> k
+
+]lu ji vui,k + xlj,k +1 − xlj,k − ¯vk + ¯ vk −vlj,k ∥≤ m  hX
+
+> u=1
+> mu
+
+X
+
+> i=1
+
+[C0 
+
+> k
+
+]lu ji ∥vui,k −¯vk∥+∥vlj,k −¯vk∥+∥xlj,k +1 −xlj,k ∥
+
+≤ m[2  βη k−1m ˆN + m ˜W β 
+
+> k−1
+
+X
+
+> s=1
+
+ηk−1−sαs−1(1 + 2 λs−1)
+
++4 αk−1(1 + 2 λk−1) ˜W + αk(1 + 2 λk) ˜W ],
+
+(15) where the first inequality follows from Assumption 4, and the last one is obtained by invoking (5) and (14). For 
+
+k = 0, one has m∥vlj, 1−vlj, 0∥ ≤ 2m ˆN + mα 0(1 + 2 λ0) ˜W .Therefore, the s = 1 term in (11) is treated separately, while (15) is used to bound the subsequent aggregate es-timate variations. Together with (14), substituting these bounds into (11) yields the desired iteration-dependent gradient-tracking error bound (6). ■
+
+Next, a well-known technical result concerning the optimality condition for (4a) is derived through the ap-plication of the three-point identity from the Bregman divergence. 
+
+Lemma 7 (Lan and Zhou, 2018) Let Dϕ be defined in 
+
+(2) , the following inequality holds, 
+
+αk⟨Hlj,k , x lj,k +1 − ¯xlj ⟩ + Dϕ(xlj,k , x lj,k +1 )
+
+≤ Dϕ(xlj,k , ¯xlj ) − Dϕ(xlj,k +1 , ¯xlj ) ∀¯xlj ∈ Ωlj . (16) Furthermore, let ∆Y lj,k ≜ (∇1f lj (xlj,k , mv lj,k ) + mlylj,k )−
+
+(∇1f lj (xlj,k −1, mv lj,k −1) + mlylj,k −1), (17) ∆Dlj,k (¯ xlj ) ≜ Dϕ(xlj,k , ¯xlj ) − Dϕ(xlj,k +1 , ¯xlj ), (18) ∆Dk(¯ x) = X
+
+> l∈⌈ h⌉
+
+X
+
+> j∈M l
+
+∆Dlj,k (¯ xlj ) = ¯Dϕ(xk, ¯x)− ¯Dϕ(xk+1 , ¯x),
+
+(19) where ¯ x ≜ col (((¯ xlj )j∈M l )l∈⌈ h⌉). Then, a lemma is pre-sented to facilitate the subsequent analysis of the con-vergence properties of Algorithm 1. 
+
+Lemma 8 Under Assumptions 1 and 2, let xk be gen-erated by Algorithm 1, and suppose that there exists a positive sequence {ϵk}k≥0 satisfying 
+
+ϵk+1 αk+1 λk+1 = ϵkαk (20) 
+
+ϵk−1 ≥ 16 α2
+
+> k
+
+λ2
+
+> k
+
+L2ϵk. (21) 
+
+Then, for any ¯x ∈ Ω, one has 
+
+> t
+
+X
+
+> k=0
+
+ϵk
+
+ αkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 )+ mlylj,k +1 , x lj,k +1 −
+
+¯xlj ⟩+ ¯Dϕ(xk+1 , ¯x)+ 12 ¯Dϕ(xk, xk+1 )−2ϵtα2 
+
+> t
+
+L2∥xt+1 − ¯x∥2
+
+≤
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, ¯x) + 
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk + ϵtαtδt+1 ,
+
+(22) 
+
+where 
+
+δk ≜ 2 ˆN
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+ml(Ey lj,k +Ey lj,k −1)+ ¯Lm 
+
+> ml
+
+X
+
+> i=1
+
+(Ev li,k +Ev li,k −1).
+
+(23) 
+
+Proof. Based on (17) and (18), the addition and sub-traction of αk⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 )+ mlylj,k +1 , x lj,k +1 −
+
+7¯xlj ⟩ in (16), followed by rearrangement, yield ∆Dlj,k (¯ xlj ) ≥ αk⟨∇ 1f lj (xlj,k , mv lj,k ) + mlylj,k , x lj,k +1 − ¯xlj ⟩
+
++ αkλk⟨∆Y lj,k , x lj,k +1 − ¯xlj ⟩ + Dϕ(xlj,k , x lj,k +1 ) + αk
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 − ¯xlj ⟩ − αk
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 − ¯xlj ⟩
+
+= αk⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 − ¯xlj ⟩− 
+
+αk⟨∆Y lj,k +1 , x lj,k +1 − ¯xlj ⟩ + αkλk⟨∆Y lj,k , x lj,k − ¯xlj ⟩ + αkλk
+
+⟨∆Y lj,k , x lj,k +1 − xlj,k ⟩ + Dϕ(xlj,k , x lj,k +1 ).
+
+By multiplying both sides of the above inequality by ϵk,and summing over the indices j from 1 to ml, l from 1 to h and k from 0 to t, the following is derived: 
+
+> t
+
+X
+
+> k=0
+
+ϵk∆Dk(¯ x) ≥
+
+> t
+
+X
+
+> k=0
+
+ϵkαkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 )+ 
+
+mlylj,k +1 , x lj,k +1 − ¯xlj ⟩+
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,k , x lj,k − ¯xlj ⟩−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,k +1 , x lj,k +1 − ¯xlj ⟩ +
+
+> t
+
+X
+
+> k=0
+
+ϵkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+Dϕ(xlj,k , x lj,k +1 ) + 
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,k , x lj,k +1 − xlj,k ⟩≥ − ϵtαthX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,t +1 , x lj,t +1 − ¯xlj ⟩ +
+
+> t
+
+X
+
+> k=0
+
+ϵkαkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 − ¯xlj ⟩+
+
+> t
+
+X
+
+> k=0
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+ ϵkDϕ(xlj,k , x lj,k +1 )+ ϵkαkλk⟨∆Y lj,k , x lj,k +1 −xlj,k ⟩| {z }
+
+> ≜Rt
+
+,
+
+(24) where the second inequality follows from (20) and the fact that ∆ Y lj, 0 = 0 obtained by the initial condition. Further, based on the definitions of Glj , F lj and ˆN , as well as Assumption 2, one can derive 
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,k , x lj,k +1 −xlj,k ⟩ =
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+n
+
+⟨∇ 1f lj (xlj,k , mv lj,k )+ 
+
+mlylj,k −Glj (xlk, mv lk), x lj,k +1 −xlj,k ⟩+⟨Glj (xlk−1, mv lk−1)−∇1f lj (xlj,k −1, mv lj,k −1)−mlylj,k −1, x lj,k +1 −xlj,k ⟩+⟨Glj (xlk,mv lk)−F lj (xk), x lj,k +1 −xlj,k ⟩ + ⟨F lj (xk−1) − Glj (xlk−1,mv lk−1), x lj,k +1 −xlj,k ⟩ + ⟨F lj (xk) − F lj (xk−1), x lj,k +1 −xlj,k ⟩
+
+o
+
+≥ − 
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+ ∥mlylj,k −
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k , mv li,k )∥∗ + ∥mlylj,k −1
+
+−
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k −1, mv li,k −1)∥∗
+
+∥xlj,k +1 −xlj,k ∥ − 
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+ ∥Glj (xlk, mv lk)−F lj (xk)∥∗ +∥F lj (xk−1)−Glj (xlk−1, mv lk−1)∥∗
+
+
+
+∥xlj,k +1 −xlj,k ∥ + ⟨F (xk) − F (xk−1), xk+1 −xk⟩≥ − 2 ˆN
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+ ∥mlylj,k −
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k , mv li,k )∥∗ +∥mlylj,k −1
+
+−
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k −1, mv li,k −1)∥∗ + ¯L
+
+> ml
+
+X
+
+> i=1
+
+ ∥mv li,k − ψ(xk)∥
+
++ ∥mv li,k −1 − ψ(xk−1)∥ − L∥xk − xk−1∥∥ xk+1 −xk∥
+
+= −δk − L∥xk − xk−1∥∥ xk+1 −xk∥,
+
+(25) where the last equality is a result of invoking (23). Then, by substituting the above result into Rt and applying the relationship (3) between the Bregman divergence and the Euclidean distance, one obtains under the initial condition x0 = x−1,
+
+Rt ≥
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk −
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkL
+
+∥xk − xk−1∥∥ xk+1 −xk∥≥ 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk +
+
+> t
+
+X
+
+> k=0
+
+  ϵk
+
+8 ∥xk+1 −xk∥2
+
++ ϵk−1
+
+8 ∥xk −xk−1∥2 − ϵkαkλkL∥xk − xk−1∥∥ xk+1 −xk∥
+
++ ϵt
+
+8 ∥xt+1 −xt∥2.
+
+Notably, the term ϵk 
+
+> 8
+
+∥xk+1 −xk∥2 + ϵk−1 
+
+> 8
+
+∥xk −xk−1∥2 −
+
+αkλkϵkL∥xk − xk−1∥∥ xk+1 −xk∥ ≥ 0 holds by (21) and the Young’s inequality. Thus, one has 
+
+Rt ≥ 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk + ϵt
+
+8 ∥xt+1 −xt∥2,
+
+which is brought back to (24), yielding 
+
+> t
+
+X
+
+> k=0
+
+ϵk∆Dk(¯ x) ≥ 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk+
+
+> t
+
+X
+
+> k=0
+
+ϵkαkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 
+
+− ¯xlj ⟩ + ϵt
+
+8 ∥xt+1 −xt∥2 − ϵtαthX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,t +1 , x lj,t +1 − ¯xlj ⟩.
+
+(26) 8Proceeding as in the derivation of (25) and using Glj , F lj ,ˆN and Assumption 2, one obtains: 
+
+−
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,t +1 , x lj,t +1 − ¯xlj ⟩ =
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,t +1 , ¯xlj −xlj,t +1 ⟩≥ − δt+1 − L∥xt+1 − xt∥∥ xt+1 − ¯x∥.
+
+Then, the following inequality can be derived 
+
+ϵt
+
+8 ∥xt+1 −xt∥2 − ϵtαthX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∆Y lj,t +1 , x lj,t +1 − ¯xlj ⟩≥ ϵt
+
+8 ∥xt+1 −xt∥2 −ϵtαtδt+1 −ϵtαtL∥xt+1 −xt∥∥ xt+1 − ¯x∥≥ − ϵtαtδt+1 − 2ϵtα2 
+
+> t
+
+L2∥xt+1 − ¯x∥2,
+
+where the last inequality is established by 18 ∥xt+1 −
+
+xt∥2 − αtL∥xt+1 − xt∥∥ xt+1 − ¯x∥ = ( 12√2 ∥xt+1 −
+
+xt∥ − √2αtL∥xt+1 − ¯x∥)2 − 2α2 
+
+> t
+
+L2∥xt+1 − ¯x∥2 ≥−2α2 
+
+> t
+
+L2∥xt+1 − ¯x∥2. By substituting the above results into the corresponding terms in (26), it follows that 
+
+> t
+
+X
+
+> k=0
+
+ϵk∆Dk(¯ x) ≥ 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )−
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk+
+
+> t
+
+X
+
+> k=0
+
+ϵkαkhX
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 ) + mlylj,k +1 , x lj,k +1 
+
+− ¯xlj ⟩− ϵtαtδt+1 − 2ϵtα2 
+
+> t
+
+L2∥xt+1 − ¯x∥2.
+
+Incorporating (19) into the above inequality and rear-ranging gives the desired result. ■
+
+4.2 Main Results 
+
+In this subsection, the convergence property of Algo-rithm 1 is explored with appropriate step sizes in The-orem 9, building on Lemma 8. Subsequently, its con-vergence rate is identified in Theorem 10 by combining Lemma 6 and Theorem 9. 
+
+Theorem 9 Under Assumptions 1-4, consider Algo-rithm 1. Let the parameters αk, λk and ϵk satisfy (20) 
+
+and (21) . Further, suppose that the parameters αk and 
+
+ϵk satisfy 
+
+ϵk ≤ ϵk−1(2 μα k−1 + 1) and 8L2α2 
+
+> k
+
+≤ 1. (27) 
+
+Then 
+
+ϵt(2 μα t + 12 ) ¯Dϕ(xt+1 , x∗) + 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )
+
+≤ ϵ0 ¯Dϕ(x0, x∗)+2 
+
+> t
+
+X
+
+> k=0
+
+ϵkαkδk+1 + ϵ0α0λ0δ0
+
+(28) 
+
+holds for all t > 0.
+
+Proof. By introducing Glj (xlk+1 , mv lk+1 ) and F lj (xk+1 )and applying Assumption 2, one has 
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 )+ mlylj,k +1 , x lj,k +1 − ¯xlj ⟩ = ⟨ ∇1f lj (xlj,k +1 ,mv lj,k +1 )+ mlylj,k +1 
+
+−Glj (xlk+1 , mv lk+1 ), x lj,k +1 − ¯xlj ⟩+⟨Glj (xlk+1 ,mv lk+1 ) − F lj (xk+1 ), x lj,k +1 − ¯xlj ⟩ + ⟨F lj (xk+1 ), x lj,k +1 − ¯xlj ⟩≥ ⟨ F lj (xk+1 ), x lj,k +1 − ¯xlj ⟩ − 2 ˆN ∥mlylj,k +1 −
+
+> ml
+
+X
+
+> i=1
+
+∇2f li (xli,k +1 ,mv li,k +1 )∥∗ − 2 ˆN ¯L
+
+> ml
+
+X
+
+> i=1
+
+∥mv li,k +1 − ψ(xk+1 )∥.
+
+Further, setting ¯ xlj = xl, ∗ 
+
+> j
+
+, and employing Assumption 3 and the definition (23) of δk lead to 
+
+> h
+
+X
+
+> l=1
+> ml
+
+X
+
+> j=1
+
+⟨∇ 1f lj (xlj,k +1 , mv lj,k +1 )+ mlylj,k +1 , x lj,k +1 −xl, ∗ 
+
+> j
+
+⟩≥ ⟨ F (xk+1 ), xk+1 −x∗⟩− δk+1 ≥ 2μ ¯Dϕ(xk+1 , x∗)−δk+1 ,
+
+which is substituted back into (22) with ¯ xlj = xl, ∗ 
+
+> j
+
+, and invoking (20), resulting in 
+
+> t
+
+X
+
+> k=0
+
+ϵk(2 μα k + 1) ¯Dϕ(xk+1 , x∗) + 12
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, xk+1 )
+
+−2ϵtα2 
+
+> t
+
+L2∥xt+1 −x∗∥2
+
+≤
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, x∗)+ 
+
+> t
+
+X
+
+> k=0
+
+ϵkαkλkδk +ϵtαtδt+1 +
+
+> t
+
+X
+
+> k=0
+
+ϵkαkδk+1 
+
+=
+
+> t
+
+X
+
+> k=0
+
+ϵk ¯Dϕ(xk, x∗)+2 
+
+> t
+
+X
+
+> k=0
+
+ϵkαkδk+1 + ϵ0α0λ0δ0.
+
+(29) Given that ϵk ≤ ϵk−1(2 μα k−1 + 1) indicated in (27), it follows that 
+
+> t
+
+X
+
+> k=0
+
+ϵk(2 μα k + 1) ¯Dϕ(xk+1 , x∗)−2ϵtα2 
+
+> t
+
+L2∥xt+1 −x∗∥2
+
+≥ ϵt(2 μα t + 12 ) ¯Dϕ(xt+1 , x∗) + 
+
+> t−1
+
+X
+
+> k=0
+
+ϵk+1 ¯Dϕ(xk+1 , x∗)+ 
+
+ϵt
+
+2
+
+  ¯Dϕ(xt+1 , x∗) − 4α2 
+
+> t
+
+L2∥xt+1 −x∗∥2
+
+≥ ϵt(2 μα t + 12 ) ¯Dϕ(xt+1 , x∗) + 
+
+> t−1
+
+X
+
+> k=0
+
+ϵk+1 ¯Dϕ(xk+1 , x∗),
+
+where the last inequality is derived from (3) and 8L2α2 
+
+> k
+
+≤ 1 indicated in (27). The desired result can be obtained by combining the above result with (29). ■
+
+Next, the convergence rate of Algorithm 1 is shown under specific parameter selections. 9Theorem 10 Under Assumptions 1-4, consider Algo-rithm 1. Let 
+
+p = 5Lμ , α k = 1
+
+μ(k+p−1) , ϵ k = ( k+p+1)( k+p), λ k = ϵk−1αk−1
+
+ϵkαk
+
+.
+
+(30) 
+
+Then 
+
+¯Dϕ(xt+1 , x∗) ≤ 2( p + 1) p
+
+(t+p+1)( t+p) ¯Dϕ(x0, x∗)+ 8( q1 + q2(t + 1)) 
+
+μ2(t+p+1)( t+p) + 2p(p − 1) pδ
+
+μ(p−2)( t+p+1)( t+p)(31) 
+
+holds for all t ≥ 0, where pδ ≜ 4 ˆN m ( ¯ m ˜Wy + ¯Lm ˜Wv ), q1
+
+and q2 are defined in (38) .
+
+Proof. It follows from (9) and (12) that, for all k ≥ 0, 
+
+δk+1 is bounded as 
+
+δk ≤ 4 ˆN m ( ¯ m ˜Wy + ¯Lm ˜Wv ) = pδ . (32) Similarly to Kotsalis et al. (2022), it can be verified that (20), (21), and (27) hold under the parameter selection (30). Additionally, for p ≥ 5, straightforward calcula-tions yield 
+
+ϵt(2 μα t + 12 ) > ϵt
+
+2 = (t+p+1)( t+p)2 ,ϵkαk = (k+p+1)( k+p)
+
+μ(k+p − 1) ≤ 2
+
+μ2αk
+
+.
+
+Combining the above relations with (28) and (32), and using ¯Dϕ(xk, xk+1 ) ≥ 0, yields (t+p+1)( t+p)2 ¯Dϕ(xt+1 , x∗) ≤ ϵ0 ¯Dϕ(x0, x∗)+ 4
+
+μ2
+
+> t
+
+X
+
+> k=0
+
+δk+1 
+
+αk
+
++ ϵ0α0λ0pδ .
+
+(33) Next, one proceeds to analyze an upper bound on 
+
+Ptk=0  
+
+> δk+1
+> αk
+
+. For any t ≥ 0, the following estimates hold: 
+
+> t
+
+X
+
+> k=0
+
+kη k = η  tX
+
+> k=0
+
+kη k−1 = η  tX
+
+> k=0
+
+ηk′ = η  1 − ηt+1 
+
+1 − η
+
+′
+
+= η(1 − (t + 1) ηt(1 − η) − ηt+1 )(1 − η)2 ≤ η
+
+(1 − η)2
+
+> t
+
+X
+
+> k=0
+
+k(k−1) ηk−2 =   1−ηt+1 
+
+1−η
+
+′′ = ( (1 −(t+1) ηt(1 −η)−ηt+1 )(1 −η)2 )′
+
+= 2−2( t+1) ηt(1 −η) − 2ηt+1 −(t+1) tη t−1(1 −η)2
+
+(1 −η)3
+
+≤ 3(1 − η)3
+
+> t
+
+X
+
+> k=0
+
+ηk
+
+αk
+
+=
+
+> t
+
+X
+
+> k=0
+
+μ(k + p − 1) ηk ≤ μη 
+
+(1 − η)2 + (p − 1) μ
+
+1 − η
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkkX
+
+> s=1
+
+ηk−sαs−1 =
+
+> t
+
+X
+
+> k=0
+> k
+
+X
+
+> s=1
+
+ηk−s αs−1
+
+αk
+
+=
+
+> t
+
+X
+
+> k=0
+> k
+
+X
+
+> s=1
+
+ηk−s k + p − 1
+
+s − 2 + p =
+
+> t
+
+X
+
+> k=0
+> k
+
+X
+
+> s=1
+
+ηk−s(1 + k − s + 1 
+
+s − 2 + p )
+
+> (e≜k−s)
+
+≤
+
+> t
+
+X
+
+> k=0
+> k−1
+
+X
+
+> e=0
+
+ηe(e + 2) ≤ (2 − η)( t + 1) (1 − η)2
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkk−1X
+
+> s=1
+
+ηk−1−sαs−1 =
+
+> t
+
+X
+
+> k=0
+> k−1
+
+X
+
+> s=1
+
+ηk−1−s(1 + k − s + 1 
+
+s + p − 2 )
+
+≤ (3 − 2η)( t + 1) (1 − η)2
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkk−2X
+
+> s=1
+
+ηk−2−sαs−1 ≤ (4 − 3η)( t + 1) (1 − η)2
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkkX
+
+> s=1
+
+ηk−sαs−2 ≤ (3 − 2η)( t + 1) (1 − η)2
+
+> t
+
+X
+
+> k=0
+
+kη k−2
+
+αk
+
+=
+
+> t
+
+X
+
+> k=0
+
+μ(k+p−1) kη k−2 =
+
+> t
+
+X
+
+> k=0
+
+μ(( k−1) k+pk )ηk−2
+
+≤ 3μ
+
+(1 − η)3 + μp 
+
+(1 − η)2η
+
+> t
+
+X
+
+> k=0
+
+kη k−3
+
+αk
+
+≤ 3μ
+
+(1 − η)3η + μp 
+
+(1 − η)2η2
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkkX
+
+> s=1
+
+ηk−ss−2X
+
+> r=1
+
+ηs−2−r αr−1
+
+=
+
+> t
+
+X
+
+> k=0
+
+Pks=1 ηk−sαs−2
+
+αk
+
+Ps−2 
+
+> r=1
+
+ηs−2−r αr−1
+
+αs−2
+
+=
+
+> t
+
+X
+
+> k=0
+
+  kX
+
+> s=1
+
+ηk−s(1+ k−s+2 
+
+s−3+ p )  s−2X
+
+> r=1
+
+ηs−2−r (1+ s−r−1
+
+r−2+ p )
+
+≤
+
+> t
+
+X
+
+> k=0
+
+( 3 − 2η
+
+(1 − η)2 )( 2 − η
+
+(1 − η)2 ) = (3 − 2η)(2 − η)( t + 1) (1 − η)4
+
+> t
+
+X
+
+> k=0
+
+1
+
+αkk−1X
+
+> s=1
+
+ηk−1−ss−2X
+
+> r=1
+
+ηs−2−r αr−1 ≤ (4 − 3η)(2 − η)( t + 1) (1 − η)4 .
+
+(34) Also, note that 
+
+λk = ϵk−1αk−1
+
+ϵkαk
+
+= (k + p − 1) 2
+
+(k + p − 2)( k + p + 1) ≤ 32 (35) holds with p ≥ 4 for any k ≥ 0. Further, by employing (34) and (35), one has 
+
+> t
+
+X
+
+> k=0
+
+mEv lj,k +1 
+
+αk
+
+≤ m2β ˆN ( μη 
+
+(1 − η)2 + (p − 1) μ
+
+1 − η )+ 4 m2 ˜W β (2 − η)( t + 1) (1 − η)2 + 8 m ˜W (t + 1) ,
+
+10 tX
+
+> k=0
+
+mEv lj,k 
+
+αk
+
+≤ m2β ˆN ( μ
+
+(1 − η)2 + (p − 1) μ
+
+(1 − η)η )+ 4 m2 ˜W β (3 − 2η)( t + 1) (1 − η)2 + 16 m ˜W (t + 1) ,
+
+(36) where the last inequality is based on αk−1 
+
+> αk
+
+= k+p−1 
+
+> k+p−2
+
+≤ 2. Similarly, for the gradient tracking error, by leveraging (34) and (35), the following can be derived, 
+
+> t
+
+X
+
+> k=0
+
+mlEy lj,k +1 
+
+αk
+
+≤ (ml)2Nf β( μη 
+
+(1 −η)2 + (p − 1) μ
+
+1−η )+ 4( m+1)( ml)2 ˆL ˜W β (2 −η)( t+1) (1 −η)2 + 16 m(ml)2 ˆL ˜W β 
+
+(3 − 2η)( t + 1) (1 − η)2 + 2( mm lβ)2 ˆN ˆL  3μ
+
+(1 − η)3 + μp 
+
+(1 − η)2η
+
+
+
++ 4( ml)2 ˆL ˜W β 2 (3 − 2η)(2 − η)( t + 1) (1 − η)4 + 8 ml(m + 1) ˆL ˜W (t + 1) + 64 mlm ˆL ˜W (t + 1) + 4 m2ml ˆL ˆN β 
+
+  μ
+
+(1 − η)2 + (p − 1) μ
+
+(1 − η)η
+
+ + 16 m2ml ˆL ˜W β (3 − 2η)( t + 1) (1 − η)2 ,
+
+> t
+
+X
+
+> k=0
+
+mlEy lj,k 
+
+αk
+
+≤ (ml)2Nf β( μ
+
+(1 −η)2 + (p − 1) μ
+
+(1 −η)η )+4( m+1) (ml)2 ˆL ˜W β (3 −2η)( t+1) (1 −η)2 + 16 m(ml)2 ˆL ˜W β 
+
+(4 − 3η)( t + 1) (1 − η)2 + 2( mm lβ)2 ˆN ˆL  3μ
+
+(1 − η)3η +
+
+μp 
+
+(1 − η)2η2
+
+ + 4( ml)2 ˆL ˜W β 2 (4 − 3η)(2 − η)( t + 1) (1 − η)4 +16 ml(m+1) ˆL ˜W (t+1)+96 mlm ˆL ˜W (t+1)+4 m2ml ˆL ˆN β 
+
+  μ
+
+(1 −η)2η + (p−1) μ
+
+(1 −η)η2
+
++16 m2ml ˆL ˜W β (4 −3η)( t+1) (1 −η)2 .
+
+(37) Combining (36) and (37), one proceeds to derive 
+
+> t
+
+X
+
+> k=0
+
+δk+1 
+
+αk
+
+≤ 2 ˆN ¯Lm 
+
+nh 
+
+m2β ˆN (1+ η)( μ
+
+(1 −η)2 + (p − 1) μ
+
+(1 −η)η )
+
+i
+
++
+
+h
+
+4m2 ˜W β (5 −3η)(1 −η)2 +24 m ˜W
+
+i
+
+(t+1) 
+
+o
+
++2 ˆN m 
+
+nh 
+
+( ¯ m)2Nf β
+
+(1+ η)( μ
+
+(1 −η)2 + (p−1) μ
+
+(1 −η)η )+2( m ¯mβ )2 ˆN ˆL(1+ η)  3μ
+
+(1 −η)3η
+
++ μp 
+
+(1 −η)2η2
+
++4 m2 ¯m ˆL ˆN β (1+ η)  μ
+
+(1 −η)2η + (p−1) μ
+
+(1 −η)η2
+
+i
+
++
+
+h
+
+4( m+1) ¯ m2 ˆL ˜W β (5 −3η)(1 −η)2 +16 m ¯m(m+ ¯ m) ˆL ˜W β (7 −5η)(1 −η)2
+
++4 ¯ m2 ˆL ˜W β 2 (7 −5η)(2 −η)(1 −η)4 +8 ¯ m ˆL ˜W (23 m+3) 
+
+i
+
+(t+1) 
+
+o
+
+=
+
+n
+
+2 ˆN ¯Lm 3β ˆN (1+ η)( μ
+
+(1 −η)2 + (p − 1) μ
+
+(1 −η)η )+2 ˆN m ¯m2
+
+Nf β(1+ η)( μ
+
+(1 −η)2 + (p−1) μ
+
+(1 −η)η ) + 4 m3( ¯ mβ ˆN )2 ˆL(1+ η)
+
+  3μ
+
+(1 −η)3η + μp 
+
+(1 −η)2η2
+
++8 m3 ¯m ˆL ˆN 2β(1+ η)  μ
+
+(1 −η)2η+(p − 1) μ
+
+(1 −η)η2
+
+o
+
++
+
+n
+
+2 ˆN ¯Lm (4 m2 ˜W β (5 −3η)(1 −η)2 +24 m ˜W )+ 8m(m+1) ¯ m2 ˆL ˆN ˜W β (5 −3η)(1 −η)2 +32 m2 ¯m(m+ ¯ m) ˆL ˆN ˜W β 
+
+(7 −5η)(1 −η)2 +8 m ¯m2 ˆL ˆN ˜W β 2 (7 −5η)(2 −η)(1 −η)4 +16 ˆN ¯m ˆL
+
+˜W m (23 m+3) 
+
+o
+
+(t + 1) ≜ q1 + q2(t + 1) ,
+
+(38) where for the last equality, the coefficient of the term 
+
+t + 1 is defined as q2, with the rest defined as q1. Invok-ing the above result into (33) and considering ϵ0α0λ0 =
+
+ϵ−1α−1 = p(p−1)  
+
+> μ(p−2)
+
+yields (t+p+1)( t+p)2 ¯Dϕ(xt+1 , x∗)
+
+≤ ϵ0 ¯Dϕ(x0, x∗)+ 4( q1 + q2(t + 1)) 
+
+μ2 + p(p − 1) pδ
+
+μ(p − 2) .
+
+Then, the desired result follows directly. ■
+
+Remark 11 Theorem 10 reveals that Algorithm 1achieves a convergence rate of O(1 /k ) under the selected step size and parameters. The design of the step size and parameters required to achieve faster convergence remains to be further investigated. Moreover, the upper bound on the number of iterations required to obtain an ε-approximate Nash equilibrium ˜x, i.e., ¯Dϕ(˜ x, x∗) ≤ ε can be computed as O(max { L√ ¯Dϕ(x0,x∗) 
+
+> μ√ε
+
+, √q1 
+
+> μ√ε
+
+, q2 
+
+> μ2ε
+
+,
+
+√Lp δ 
+
+> μ√ε
+
+}).It can be observed from this bound that, with the other problem- and network-dependent quantities fixed, asmaller valid Lipschitz constant L and a larger valid re-stricted strong monotonicity constant μ generally lead to a more favorable iteration-complexity bound and hence fewer iterations to attain a prescribed accuracy. This effect can be understood from the parameter design, since the constants μ and L determine the step size αk
+
+and the parameter λk, thereby affecting the convergence performance of the algorithm. 
+
+5 Numerical Simulations 
+
+In this section, the demand response management of energy systems is considered to illustrate the effective-ness of the proposed algorithm. It includes h communi-ties, and each community l ∈ ⌈ h⌉ consists of ml electric-ity users. For each user j ∈ M l, the electricity consump-tion over six operating periods is characterized by the strategy vector xlj ∈ Ωlj ⊂ R6. The local constraint set is modeled as Ω lj = {xlj ∈ R6 : ( xlj − νlj )⊤Q(xlj − νlj ) ≤
+
+R2}, where νlj ∈ R6 denotes the nominal electricity-consumption profile and R > 0 characterizes the overall load-adjustment capability, and Q is a positive definite 11 weighting matrix characterizing the adjustment flexibil-ity over different operating periods. The cost function of each user j is given by f lj (xlj , ψ (x)) = ∥xlj − νlj ∥2 +
+
+U (ψ(x)) , x lj , where ψ(x) = Phl=1 
+
+Pml 
+
+> j=1
+
+xlj is the ag-gregate formed by all users, and the unit price is defined as U (ψ(x)) = aψ (x) + ˜ u with a > 0 and ˜ u ∈ R6 be-ing a positive baseline price vector. In the simulation, consider 3 communities containing 3, 4, and 5 users, re-spectively. The interactions within and across commu-nities are described by undirected time-varying commu-nication graphs. For each communication network, the graph at each iteration is periodically selected from a set of three graphs, whose union is connected. Let a = 0 .002 and ˜ u = [4 , 5, 7, 9, 6, 8] ⊤. For each user j ∈ M l, the com-ponents of the nominal electricity-consumption profile νlj
+
+are randomly selected from [40 , 80]. The constraint set is specified by R = 15 and a diagonal matrix Q with diago-nal entries 1 , 2, 4, 6, 8, and 10. Additionally, the function 
+
+ϕ is set as ϕ(x) = 12 x⊤Qx , which yields the Bregman divergence Dϕ(x1, x 2) = 12 (x1 − x2)⊤Q(x1 − x2). Algorithm 1 is implemented with αk and λk chosen according to Theorem 10. It is further compared with the Euclidean fully distributed algorithm in Zhao et al. 
+
+(2026) and the hierarchical Euclidean distributed algo-rithm with semi-decentralized aggregate acquisition in Chen and Yi (2024). The parameters of the compari-son algorithms are chosen following the settings in the corresponding references. Regarding the communication networks, the algorithm in Zhao et al. (2026) employs the same networks as Algorithm 1. For the algorithm in Chen and Yi (2024), the same time-varying intra-cluster networks are adopted, while the cluster coordina-tors communicate over a time-varying network switch-ing among three graphs whose union is connected. The simulation results presented in Fig. 2 show that the se-quence xk generated by Algorithm 1 converges to the NE 
+
+x∗. Moreover, Algorithm 1 achieves the same accuracy in less computation time than the other two algorithms. Therefore, compared with the Euclidean algorithms, the proposed framework can achieve improved convergence performance and computational efficiency by adapting the distance function to the geometry of the constraint set and incorporating gradient extrapolation based on historical gradient information. 
+
+6 Conclusion 
+
+This paper has designed a distributed algorithm in the non-Euclidean sense for MAGs, where competition and cooperation coexist. This algorithm has combined gradient extrapolation with mirror descent to ensure ef-ficient convergence. It has been verified that this algo-rithm can converge at a rate of O(1 /k ) under the re-stricted strong monotonicity assumption. Moreover, the effectiveness of the proposed method has been demon-strated by the simulation results. Future work will focus on extending this algorithm to limited communication settings and relaxing the doubly stochastic assumption on adjacency matrices. 0 0.01 0.02 0.03 0.04 0.05 0.06       
+
+> Computation time (s)
+> 10 -5
+> 10 -4
+> 10 -3
+> 10 -2
+> 10 -1
+> 10 0
+> Algorithm 1 Algorithm in Zhao et al . (2026) Algorithm in Chen and Yi (2024)
+> Fig. 2. Comparison of the relative error ∥xk−x∗∥∥x0−x∗∥among Al-gorithm 1 and the algorithms in Zhao et al. (2026) and Chen and Yi (2024).
+
+References 
+
+Barrera, J., and Garcia, A. (2015). Dynamic Incentives for Congestion Control. IEEE Transactions on Auto-matic Control , 60(2), 299–310. Chen, M., Wang, D., Wang, X., Wu, Z. -G., and Wang, W. (2023). Distributed Aggregative Optimiza-tion via Finite-Time Dynamic Average Consensus. 
+
+IEEE Transactions on Network Science and Engineer-ing , 10(6), 3223–3231. Chen, Y., and Yi, P. (2024). Multi-Cluster Aggrega-tive Games: A Linearly Convergent Nash Equilibrium Seeking Algorithm and Its Applications in Energy Management. IEEE Transactions on Network Science and Engineering , 11(3), 2797–2809. Deng, Z. (2022). Distributed Algorithm Design for Ag-gregative Games of Euler-Lagrange Systems and Its Application to Smart Grids. IEEE Transactions on Cybernetics , 52(8), 8315–8325. Doan, T. T., Bose, S., Nguyen, D. H., and Beck, C. L. (2019). Convergence of the Iterates in Mirror Descent Methods. IEEE Control Systems Letters , 3(1), 114– 119. Huang, B., Liu, Y., Lu, J., Jiang, Y., and Gui, W. (2025). Two-Timescale Distributed Approach to Nash Equi-librium Seeking of Euler–Lagrange Systems in Multi-cluster Nonconvex Games. IEEE Transactions on Au-tomatic Control , 70(9), 6323-6330. Huang, S., Lei, J., and Hong, Y. (2023). A Linearly Con-vergent Distributed Nash Equilibrium Seeking Algo-rithm for Aggregative Games. IEEE Transactions on Automatic Control , 68(3), 1753–1759. Huang, Y., Meng, Z., and Sun, J. (2024). Distributed Nash Equilibrium Seeking for Multicluster Aggrega-tive Game of Euler-Lagrange Systems With Cou-pled Constraints. IEEE Transactions on Cybernetics ,54(10), 5672–5683. Kebriaei, H., Sadati-Savadkoohi, S. J., Shokri, M., and Grammatico, S. (2021). Multipopulation Aggregative 12 Games: Equilibrium Seeking via Mean-Field Con-trol and Consensus. IEEE Transactions on Automatic Control , 66(12), 6011–6016. Koshal, J., Nedi´ c, A., Shanbhag, U. V. (2016). Dis-tributed Algorithms for Aggregative Aames on Graphs. Operations Research , 64(3), 680–704. Kotsalis, G., Lan, G., and Li, T. (2022). Simple and Op-timal Methods for Stochastic Variational Inequalities, I: Operator Extrapolation. SIAM Journal on Opti-mization , 32(3), 2041–2073. Krichene, W., Bayen, A., and Bartlett, P. L. (2015). Ac-celerated Mirror Descent in Ccontinuous and Discrete time. In Advances in Neural Information Processing Systems , 2845–2853. Lan, G., and Zhou, Y. (2018). Random Gradient Extrap-olation for Distributed and Stochastic Optimization. 
+
+SIAM Journal on Optimization , 28(4), 2753–2782. Li, X., Xie, L., and Hong, Y. (2022). Distributed Ag-gregative Optimization Over Multi-Agent Networks. 
+
+IEEE Transactions on Automatic Control , 67(6), 3165–3171. Li, F., Liu, D., and Nian, X. (2024). A Novel Single-Time Scale Distributed Attack-Resilient Algorithm for Multi-Cluster Games. IEEE Transactions on Net-work Science and Engineering , 11(5), 4252–4263. Li, H., Li, J., Ran, L., Zheng, L., and Huang, T. (2025). A Survey of Distributed Algorithms for Aggregative Games. IEEE/CAA Journal of Automatica Sinica ,12(5), 859–871. Liu, B., Du, W., and Li, Z. (2024). Accelerated Dis-tributed Nesterov Optimization Subject to Complex Constraints and Its Applications. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 54(4), 2055–2066. Liu, B., Wen, G., Fang, X., Huang, T., and Chen, G. (2025). Distributed Online Generalized Nash Equi-librium Learning in Multi-Cluster Games: A Delay-Tolerant Algorithm. IEEE Transactions on Circuits and Systems I: Regular Papers , 72(10), 6083-6096. Meng, M., and Li, X. (2023). On the Linear Conver-gence of Distributed Nash Equilibrium Seeking for Multi-cluster Games under Partial-decision Informa-tion. Automatica , 151, 110919. Nedi´ c, A., and Ozdaglar, A. (2009). Distributed Subgra-dient Methods for Multi-Agent Optimization. IEEE Transactions on Automatic Control , 54(1), 48–61. Nguyen, D. T. A., Bianchi, M., D¨ orfler, F., Nguyen, D. T., and Nedi´ c, A. (2023). Nash Equilibrium Seek-ing Over Digraphs With Row-Stochastic Matrices and Network-Independent Step-Sizes. IEEE Control Sys-tems Letters , 7, 3543–3548. Nguyen, D. T. A., Bianchi, M., D¨ orfler, F., Nguyen, D. T., Nedi´ c, A. (2024). Constrained Multi-cluster Game: Distributed Nash Equilibrium Seeking over Directed Graphs. arXiv preprint arXiv: 2404.14554. Parise, F., Grammatico, S., Gentile, B., et al. (2020). Distributed Convergence to Nash Equilibria in Net-work and Average Aggregative Games. Automatica ,117, 108959. Pu, S., Shi, W., Xu, J., and Nedi´ c, A. (2021). Push-pull Gradient Methods for Distributed Optimization in Networks. IEEE Transactions on Automatic Con-trol , 66(1), 1–16. Scutari, G., Palomar, D. P., Facchinei, F., and Pang, J. -s. (2010). Convex optimization, game theory, and variational inequality theory. IEEE Signal Processing Magazine , 27(3), 35–49. Tatarenko, T., Shi, W., and Nedi´ c, A. (2021). Geomet-ric Convergence of Gradient Play Algorithms for Dis-tributed Nash Equilibrium Seeking. IEEE Transac-tions on Automatic Control , 66(11), 5342–5353. Wang, T., Yi, P., and Chen, J. (2024). Distributed Mirror Descent Method with Operator Extrapolation for Stochastic Aggregative Games. Automatica , 159, 111356. Wang, D., Liu, J., Lian, J., Wang, W. (2025). Gradient-tracking-based Distributed Nesterov Accel-erated Algorithms for Multiple Cluster Games over Time-varying Unbalanced Digraphs. Automatica , 171, 111925. Xiong, M., Zhang, B., Ho, D. W. C., Yuan, D., and Xu, S. (2023). Event-Triggered Distributed Stochas-tic Mirror Descent for Convex Optimization. IEEE Transactions on Neural Networks and Learning Sys-tems , 34(9), 6480–6491. Ye, M., and Hu, G. (2017). Game Design and Analysis for Price-Based Demand Response: An Aggregate Game Approach. IEEE Transactions on Cybernetics , 47(3), 720–730. Yu, Z., Ho, D. W. C., and Yuan, D. (2022). Distributed Randomized Gradient-Free Mirror Descent Algorithm for Constrained Optimization. IEEE Transactions on Automatic Control , 67(2), 957–964. Zhao, J., Lu, T., Liu, H., Wu, Z., and Yu, W. (2026). Distributed Nash Equilibrium Seek-ing with Linear Convergence Rate for Constrained Multi-Cluster Aggregative Games over Digraphs. 
+
+IEEE Transactions on Control of Network Systems ,https://doi.org/10.1109/TCNS.2026.3702287. Zhou, Z., Li, X., Ge, H., Zhang, J., and Xue, Y. (2025). Congestion-Aware Rebalancing and Vehicle-to-Grid Coordination of Shared Electric Vehicles: An Aggrega-tive Game Approach. IEEE Transactions on Trans-portation Electrification , 11(1), 275–285. 13
