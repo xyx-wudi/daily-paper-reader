@@ -1,0 +1,638 @@
+Title: Evolution of cooperation with Q-learning: how much information do we need?
+
+URL Source: https://arxiv.org/pdf/2608.22705v1
+
+Published Time: Tue, 25 Aug 2026 01:29:16 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+## Evolution of cooperation with Q-learning: how much information do we need? 
+
+Yile Ku, 1 Xin Ou, 1 Jiqiang Zhang, 2 Shengfeng Deng, 1 Huiji Yue, 1, ∗ and Li Chen 1, †
+
+> 1
+
+School of Physics and Information Technology, Shaanxi Normal University, Xi’an 710061, P. R. China 
+
+> 2
+
+School of Physics, Ningxia University, Yinchuan 750021, P. R. China 
+
+(Dated: August 25, 2026) Cooperation is ubiquitous in both natural and human societies, yet its evolutionary basis re-mains a major challenge. A long-standing puzzle is whether having more information leads to better decision-making and thus a higher level of cooperation. To address this question, we adopt a recently developed reinforcement learning framework in which individuals learn through trial and error to maximize cumulative rewards – a paradigm that has successfully explained diverse emergent patterns in human behaviors. Specifically, we equip a structured population with the Q-learning algorithm and systematically vary the size of the interactive neighborhood, which serves as a proxy for perceived information. Interestingly, we observe a non-monotonic relationship between coopera-tion prevalence and neighborhood size in both two-dimensional square lattices and Barab´ asi–Albert scale-free networks. This inverted U-shaped dependence reveals that an optimal amount of infor-mation exists, yielding the highest level of cooperation. Mechanistic analyses show that a moderate neighborhood size enables individuals to strike an optimal balance between information sufficiency and decision-making tractability. This balance allows them to detect reciprocal opportunities while avoiding the deterioration of decision quality due to information overload. Our findings challenge everyday intuition, suggesting that a proper amount of information – not more – is optimal for the emergence of cooperation. 
+
+I. INTRODUCTION 
+
+Cooperative behaviors are pervasive phenomena in na-ture and human societies [1–3]. In nature, the division of labor within bee colonies ensures colony survival, and food sharing in vampire bats helps individuals endure hunger crises [4, 5]. In human societies, cooperation profoundly shapes individual behavior and social inter-actions [6]. However, its prevalence challenges the core logic of Darwinian evolution [3]. Darwinism emphasizes that individuals adapt to their environment by maximiz-ing their own survival and reproductive success, whereas cooperation is inherently altruistic – individuals provide benefits to others at a personal cost [7]. This places coop-erators at a competitive disadvantage against selfish in-dividuals, making cooperation difficult to evolve. Conse-quently, understanding the emergence and maintenance of cooperation remains a pressing challenge [8]. Evolutionary game theory provides a fundamental framework for addressing this puzzle by integrating the analytical tools of classical game theory into evolution-ary dynamics [9, 10]. Within this framework, early stud-ies on prototypical game models, such as the prisoner’s dilemma [11–16], have revealed several key mechanisms for the evolution of cooperation [17], including direct reciprocity [18, 19], indirect reciprocity [20–23], network reciprocity [24], group selection [25, 26], and kin selec-tion [27–30]. Subsequent research has further uncov-ered additional mechanisms, such as reward [31], pun-ishment [32–34], reputation [35, 36], and dynamical reci-procity [37], etc. .  
+
+> ∗Email address: yhj2004@snnu.edu.cn
+> †Email address: chenl@snnu.edu.cn
+
+Despite this progress, one long-standing question re-mains open in the community: Does more information necessarily lead to higher levels of cooperation? In-tuitively, having more information provides individu-als with a more complete picture of their surroundings, which would be expected to enable wiser decision-making and potentially promote cooperative behaviors. How-ever, an early study [38] suggests that this may not hold true: when the neighborhood size – interpreted as a proxy for information – exceeds a critical value, the population always converges to the mean-field limit of no cooper-ation on lattice structures. Subsequent studies [39–42] quantitatively corroborated this finding and further re-vealed that an intermediate neighborhood size is optimal for fostering cooperation. The key mechanism underly-ing the breakdown of cooperation under large neighbor-hoods lies in the failure of network reciprocity [24]: co-operation thrives when cooperators form compact clus-ters, but large neighborhoods disrupt this compactness, thereby undermining cooperation. To achieve an ap-propriate neighborhood size, adaptive adjustment strate-gies have often proven effective [43–45]. It is important to note, however, that all these studies were conducted within the imitation learning (IL) paradigm, in which players copy successful neighbors according to fixed up-date rules. A notable limitation of this paradigm is that many behavioral experiments exhibit strategic changes that cannot be explained by imitation alone [46], and net-work reciprocity often fails to account for the observed patterns [47, 48]. Consequently, the role of information quantity in the evolution of cooperation remains an un-resolved issue. Recently, reinforcement learning (RL) [49, 50] has emerged as a distinct paradigm for understanding evo-lutionary game dynamics. In the RL framework, play-arXiv:2608.22705v1 [physics.soc-ph] 24 Aug 2026 2ers make decisions by learning through trial and error to maximize accumulated rewards over the long term. Unlike the “follow-the-peer” social heuristic characteris-tic of IL, RL players develop their own decision-making strategies through interaction with the environment – an introspective learning process that is intrinsic to humans and many other species. This fundamental difference sets the RL paradigm apart from the IL paradigm and makes it particularly well-suited for modeling human behavior, as its foundational principles are supported by neurosci-entific evidence [51, 52]. Indeed, a growing body of work has revisited classic emergence problems within evolu-tionary games using RL, including the emergence of co-operation [53–62], fairness [63], trust [64], resource allo-cation [65–68], punishment [69], and even biodiversity in ecology [70]. These studies suggest that RL may offer a unified framework for addressing a wide range of societal puzzles. Returning to our central question: within the RL paradigm, does more information necessarily lead to higher levels of cooperation ? Or put the way around, how much information do we need to make proper decisions that sustain a satisfactory level of cooperation? In this work, we employ Q-learning [71, 72] – a clas-sic RL algorithm – to investigate the role of informa-tion quantity in the evolution of cooperation using pris-oner’s dilemma game. Specifically, we consider a two-dimensional square lattice in which the information ac-quisition range is controlled by varying the neighborhood size, with the number of neighbors ranging from 1 to 12. Interestingly, we uncover the existence of an optimal in-formation quantity that maximizes the cooperation level, occurring at around 3 ∼ 4 neighbors. This finding re-mains robust when the underlying topology is replaced by Barab´ asi–Albert scale-free networks. We further elu-cidate the mechanisms behind this phenomenon by ana-lyzing the dynamics of the evolution and a semi-analytic theory.  
+
+> II. MODEL
+
+In our work, the population is placed on a two-dimensional square lattice of size N = L × L with pe-riodic boundary conditions. For each pair of players, they engage in the prisoner’s dilemma game (PDG), in which each player can either cooperate (C) or defect (D). Mutual cooperation yields a reward R, mutual defection brings punishment P , and if one cooperates while the other defects, the defector receives the temptation pay-off T , whereas the cooperator receives the sucker’s payoff 
+
+S. In the strong version of PDG, the four payoffs satisfy the ordering T > R > P > S and S + T < 2R, which creates a fundamental dilemma: although cooperation benefits the collective, defection remains the individually superior choice. In practice, the payoff matrix is often parameterized as follows: Π = 
+
+(ΠCC ΠCD 
+
+ΠDC ΠDD 
+
+)
+
+=
+
+(R ST P
+
+)
+
+=
+
+( 1 −b
+
+1 + b 0
+
+)
+
+, (1) FIG. 1: Scheme of the neighborhood structure on a two-dimensional lattice. For k = 1 ∼ 4, neighbors are randomly drawn from the four nearest neighbors (pink). For k = 5 ∼ 8, the four nearest neighbors are included, and the remaining neighbors are randomly selected from the four diagonal nearest neighbors (green). For 
+
+k = 9 ∼ 12, all eight nearest and diagonal nearest neighbors are included, and the remaining neighbors are randomly chosen from the next-nearest neighbors (blue). where b ∈ (0 , 1) controls the intensity of the dilemma; a larger value of b corresponds to a weaker inclination toward cooperation. In our study, players employ the Q-learning algorithm with an ǫ−greedy policy to guide their decision-making. Specifically, each individual maintains a Q-table (Table I), which is a 2d matrix of Q-values spanned by the state and action sets. Here, the action set is A = {C, D}, while the state set S = {0, 1, 2, . . . , k } is defined by the number of cooperators among the focal individual’s neighbors, with k denoting the neighorhood size. The value Qs,a is the state-action value function, which evaluates the value of taking action a in state s; a higher value for a given action a in a particular state s indicates that it is more likely to be selected over the alternative. The evolutionary process follows a synchronous update scheme. Initially, each player is assigned a random strat-egy from the set A, and all values Qs,a in the Q-table are randomly initialized between 0 and 1, reflecting es-sentially no initial preference for any particular action. To investigate the impact of information quantity, the neighborhood size k is varied from 1 to a maximum of 12 neighbors. For a given k, each player randomly selects its neighbors but sequentially from near to far, as illustrated in Figure 1. In each round t, the update proceeds as follows: (i) each individual chooses a random action at ∈ A with probability ε; otherwise, it follows the guidance of its Q-table by selecting the action a with the higher Q-value within the current state st, i.e. Qs,a > Q s, ˆa. (ii) After all individuals have made their decisions, they transition 3to their new state st+1 , and their average payoffs ¯ π are computed as ¯πi = 1
+
+ki
+
+∑
+
+> j∈Ωi
+
+Π( ai, a j ), (2) where ki is the number of neighbors of player i, Ω i de-notes its neighbor set, and Π is the payoff matrix defined in Eq. (1). (iii) They draw lessons by revising the corre-sponding Q-values using the Bellman equation: 
+
+Q(st, a t) ← (1 − α)Q(st, a t)+ α
+
+[
+
+¯πt + γ max  
+
+> a′
+
+Q(st+1 , a ′)
+
+]
+
+,
+
+(3) where st and at are the current state and action, respec-tively, and st+1 is the resulting new state. The parameter 
+
+α ∈ (0 , 1] is the learning rate, capturing the contribution of the current experience; a smaller α indicates the past experience is replaced more slowly. The discount factor 
+
+γ ∈ [0 , 1) determines the weight assigned to future re-wards, with max a′ Q(st+1 , a ′) representing the expected maximal reward in the next round. The evolution, consisting of steps (i)-(iii), is repeated until the system reaches a steady state or the predefined maximum number of rounds is attained. Unless other-wise stated, the learning parameters are fixed at typical values α = 0 .1, γ = 0 .9, ε = 0 .01, with b = 0 .1 and 
+
+L = 50. In our simulations, the evolution runs for 2 × 10 6
+
+rounds, and we sample data over the final 1 × 10 4 rounds. In parallel, we also examine Barab´ asi-Albert (BA) scale-free networks [73] to assess the generality of our findings. Compared to the two-dimensional lattice, BA networks are characterized by a heterogeneous degree distribution and are widely regarded as a representative model for many real-world systems. Due to this inherent degree heterogeneity, individuals in BA networks nat-urally possess varying numbers of neighbors, implying that different nodes may acquire substantially different amounts of information. In particular, hub nodes have much larger neighborhoods than peripheral nodes, thus obtaining more information and maintaining larger Q-tables. This naturally raises a question: are hub nodes necessarily more cooperative since they possess more in-formation?  
+
+> III. RESULTS
+
+We first report the dependence of cooperation level fC
+
+on the amount of information in the 2d lattice popu-lation, where the information quantity is modulated by the neighborhood size k, and fC is measured across the entire population. As shown in Fig. 2(a), the cooper-ation level increases with k when information is highly limited. However, an optimal neighborhood size emerges around k = 3, at which fC reaches its maximum; further enlarging the neighborhood instead reduces cooperation. This trend is corroborated by the typical time series in Fig. 2(b), where fC for k = 3 remains the highest after                      
+
+> State Action
+> a1=Ca2=Ds0(nc= 0) Q(s0, C )Q(s0, D )
+> s1(nc= 1) Q(s1, C )Q(s1, D ).........
+> sk(nc=k)Q(sK, C )Q(sK, D )
+
+TABLE I: Q-table for each player. The states 
+
+sj (j = 0 , . . . , k ) correspond to the number of cooperators nc in its neighborhood, and k is the neighborhood size. There are two actions available: cooperation (C) and defection (D). stabilization. These results suggest that cooperation is hindered by both insufficient and excessive information, and that an intermediate amount of information maxi-mizes the cooperative level in the population. To examine the robustness of this finding, we extend our analysis to BA scale-free networks, where the degree 
+
+k serves as the control parameter for information avail-ability. Note that in this case, the cooperation level is defined at the subpopulation level: fC (k) = NC (k)/N k,with NC (k) denoting the number of cooperators among nodes of degree k, and Nk the total number of such nodes. Fig. 2(c) demonstrates that the optimal information ef-fect persists in BA networks, although the peak shifts to 
+
+k = 4. The corresponding time series in Fig. 2(d) further corroborates this observation, and the average coopera-tion level across the entire population is also displayed. A particularly intriguing finding in the BA network is illustrated in Figs. 2(c) and 2(d): low-degree (peripheral) nodes sustain relatively high cooperation levels, whereas high-degree (hub) nodes exhibit cooperation levels near zero, as shown in the inset of Fig. 2(c). This pattern stands in sharp contrast to the established result with the imitation learning [74], where hubs typically main-tain high levels of cooperation and serve as the back-bone of cooperative behaviors within the whole popula-tion. Such reversed cooperation prevalence between hubs and periphery nodes highlights a fundamental distinction in the underlying mechanisms governing the evolution of cooperation between IL and RL paradigms [50].  
+
+> IV. MECHANISM ANALYSIS
+
+To understand the dynamical mechanisms underlying the above phenomena, we focus on the evolution of the Q-table and compute the Q-value difference within each state as follows ∆Qsj = 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+(
+
+Qisj ,C − Qisj ,D 
+
+)
+
+. (4) According to the working logic of Q-learning, ∆ Qsj > 0implies that individuals in state sj are more inclined to 4        
+
+> 123456789 10 11 12
+
+k   
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (a) Theory Simulation
+> 10 110 310 5
+
+t        
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (b) k=1
+> k=2
+> k=3
+> k=4
+> k=5
+> k=6
+> k=7
+> k=8
+> k=9
+> k=10
+> k=11
+> k=12
+> 23456789 10 11 12
+
+k  
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (c)
+> 264 128180
+
+k  
+
+> 0.0 0.2
+> fc
+> 10 110 310 5
+
+t 
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (d) k=2
+> k=3
+> k=4
+> k=5
+> k=6
+> k=7
+> k=8
+> k=9
+> k=10
+> k=11
+> k=12 Overall
+
+FIG. 2: Impact of information on cooperation. (a,c) shows the dependence of the cooperation level on information quantity for 2d lattice and BA networks, respectively. In (a), the control parameter k is the neighbourhood size varied in our study, fC = NC /N ,where NC is the number of cooperators and N = L × L
+
+is the total population size. For BA networks, k
+
+represents the node degree, and fC (k) = NC (k)/N k,where Nk is the total number of individuals with degree 
+
+k and NC (k) is the number of cooperators among them. The red dashed line in (a) is our semi-analytical treatment (Sec. V). Each data point is averaged over the last 1 × 10 4 time steps and over 50 independent realizations; error bars indicate the standard deviations. The inset in (c) shows the dependence over a broader range of degrees in BA networks. (b,d) present the typical time series of the cooperation level fC for different information quantities, with each data point averaged over 50 ensembles. Other parameters: b = 0 .1, 
+
+α = 0 .1, γ = 0 .9, ε = 0 .01, tmax = 2 × 10 6.choose cooperation on average; conversely, ∆ Qsj < 0indicates defection is preferred. Thus, this Q-value dif-ference can be interpreted as a measure of cooperation preference .We present the state density for all states and the frac-tion of individuals with a positive cooperation preference of ∆ Qsj > 0 across all neighborhood sizes on the 2d square lattice in Fig. 3(a). A separate version for each k
+
+is provided in Fig. 7 in Appendix A. We observe that, in most cases, the state densities are dominated by s0,1,2,3,while the densities for highly cooperative states s4,5,... 
+
+are nearly zero. The positive cooperation preference is coded by the shaded region within each bar, though this visualization makes it inconvenient to directly compare preferences for different states and neighborhood sizes. For a more systematic comparison, we normalize the state index by the neighborhood size, defining ˆ j = j/k ,and examine the cooperation preference for states sˆj .This normalization allows us to compare cooperation preferences (i.e., the fraction of individuals with ∆ Qsj >
+
+0) across different information scenarios with varying k.In this way, Fig. 3(b) reveals two prominent properties. (i) The cooperation preference monotonically strength-ens with increasing normalized state index ˆ j, meaning that players tend to defect in predominantly defective surroundings (small ˆ j) but cooperate in cooperative en-vironments (large ˆ j). This observation aligns with pre-vious theoretical results [75–77] and is consistent with conditional cooperation behavior documented in behav-ioral economics [78]. (ii) More importantly, individuals with neighborhood size k = 3 exhibit the highest coop-erative preference compared to other sizes across almost all states. Although this advantage appears only slight in each state, the cumulative effect across all states ulti-mately leads to a substantially higher overall level of co-operation. It is also worth noting that, for ˆ j = 1, the co-operation preference is strong (the fraction of ∆ Qsj > 0is generally the highest); however, the densities of these states are very small, especially for large k, rendering their practical impact negligible, see e.g. Figs. 3(a,c). Two ensemble-averaged time evolution of ∆ Qsj for each state, corresponding to k = 3 and 4, are provided in Fig. 9 (Appendix B). They show that the average coop-eration preference across all states is low, as ∆ Qsj < 0for all states, which explains why cooperation levels are modest even under these two moderate information con-ditions. Comparatively, the more defective the neighbor-hood (e.g., s0,1), the more negative the value of ∆ Qsj .It should be emphasized that ∆ Qsj represents the mean over all players; even when ∆ Qsj < 0, some individu-als still exhibit cooperative preferences (∆ Qsj > 0), as shown in Fig. 3. We apply the same analysis to the BA networked pop-ulation, and the results are presented in Figs. 3(c,d). Specifically, the two key properties i) and ii) largely hold, except for a noticeable decay at large ˆ j, particularly for large k in Fig. 3(d). This decline stems from the fact that high-degree nodes are rare in BA networks due to the power-law degree distribution, and even rarer are those whose neighborhoods are highly cooperative (i.e., ˆj → 1). This scarcity is more clearly observed in Fig. 8 (Appendix A), where the densities for states s5,6,... be-come vanishingly small. Another observation is that, although the cooperation preference for k = 3 remains slightly higher than that for k = 4 in some states, the state density distribution for k = 4 is more concentrated in states with higher cooperation preference, ultimately yielding a slightly higher overall cooperation level. To further understand why a moderate amount of in-formation yields optimal cooperation, we compute the average cooperation duration TC and defection duration 
+
+TD – defined as the number of consecutive steps an indi-vidual remains in cooperation or defection, respectively, and the strategy switching frequency, i.e., the number of strategy switches divided by the total number of evolu-5                                   
+
+> 12345678910 11 12
+> k
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> State Density (a)
+> S0 S1 S2 S3 S4 S5 S6 S7
+> QCQD> 0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> j
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fraction of  Q>0 (b)
+> k=1 k=2 K=3 k=4 k=5 k=6 k=7 k=8 k=9 k=10 k=11 k=12
+> 2345678910 11 12
+> k
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> State Density (c)
+> S0 S1 S2 S3 S4 S5 S6 S7
+> QCQD> 0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> j
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fraction of  Q>0 (d)
+> k=2 k=3 K=4 k=5 k=6 k=7 k=8 k=9 k=10 k=11 k=12
+
+FIG. 3: Cooperation preference analysis. (a) The state densities for different neighborhood sizes k on the 2d square lattice; the shaded portion of each bar represents the cooperation preference, defined as the fraction of cases with ∆Qsj > 0. (b) The cooperation preference on 2d lattice, i.e., the fraction of ∆ Qsj > 0 within each state, where the state labeling is normalized by ˆ j = j/k . (c, d) show the corresponding results for BA networks. All data are averaged over the last 1 × 10 4 steps after reaching steady state, and over 50 independent realizations. Other parameters: b = 0 .1, α = 0 .1, γ = 0 .9, ε = 0 .01. tion steps. Their dependence on the neighborhood size k
+
+is shown in Fig. 4 for both the lattice and BA networks. When information is highly limited, e.g., the case of 
+
+k = 1 on the two-dimensional lattice, Figs. 4(a–c) show that defection dominates, with TD ≫ TC , and the corre-sponding switching frequency is around 0.02, indicating that cooperation arises solely from exploration at rate 
+
+ε = 0 .01. This observation is consistent with Fig. 7(a) (Appendix A), confirming that individuals persistently defect in this information-limited scenario. When the information increases to k = 2, TC rises to about 8 steps, TD drops significantly to approximately 20 steps, and the strategy switching frequency becomes about 0.089. This indicates that cooperation begins to emerge and stabilize, and individuals exhibit relatively persistent strategy choices – whether cooperating or de-fecting – as switching remains infrequent. Further increasing k reduces both TC and TD, accom-panied by an increase in switching frequency, implying that strategy persistence weakens and individuals switch more frequently between cooperation and defection. This trend, however, reverses for k > 6, where TD increases again and switching frequency declines. In the extreme case of k = 12, for instance, individuals remain coopera-tive for only one step before reverting to defection. Yet the switching frequency is much higher than the explo-ration rate (0 .14 ≫ 0.01), indicating that individuals do not settle into stable defection but instead switch strate-gies repeatedly. Thus, in this information-overloaded sce-nario, a stable policy fails to form, and players behave chaotically with frequent strategy changes. For the moderate case (here k = 3), the cooperation duration is TC ≈ 6, and the defection duration is TD ≈ 15 steps. On the one hand, this means individuals have de-veloped clearer preferences compared to the information-overloaded scenario, as they maintain either cooperation or defection for several consecutive steps. On the other hand, they are not as rigid in their strategies as those in the information-limited scenarios ( k = 1 , 2); instead, they adjust their strategies to better adapt to the chang-ing environment. Figs. 4(d–f) show that the above evolutionary prop-erties are qualitatively similar in BA networks. Specifi-cally, Fig. 4(d) shows a peak in cooperation duration TC
+
+at k = 3, after which it decays with increasing degree and approaches zero for high-degree nodes, whereas Fig. 4(e) exhibits the opposite trend for TD, with a minimum at 
+
+k = 4. The insets in Figs. 4(d) and (e) clearly reveal that hubs are persistent defectors, with TC → 0 and TD
+
+becoming very large for nodes with large degree k.These two profiles of TC and TD naturally explain why an intermediate degree yields the highest level of cooperation, for the same reasons discussed above. In information-limited scenarios (e.g., k = 2), indi-viduals strongly prefer defection with high persistence. In information-overloaded cases, policies are not well-formed: although defection is still preferred ( TD ≫ TC ), persistence is lower due to more frequent switching. From 6    
+
+>   
+> k
+> 
+> ⟨   ⟩
+
+     
+
+>   
+> k
+>  
+> ⟨  ⟩
+
+     
+
+>   
+> k
+>    
+>  
+
+      
+
+>   
+> k
+> 
+> ⟨   ⟩
+
+      
+
+>   
+> k
+>       
+> ⟨  ⟩
+
+      
+
+>   
+> k
+>    
+>  
+
+                
+
+>        
+>      
+
+FIG. 4: Strategy persistence and switching. (a, d) Average cooperation duration 〈TC 〉; (b, e) Average defection duration 〈TD〉; (c, f) Strategy switching frequency. The upper row (a-c) corresponds to the 2d square lattice, and the bottom row (d-f) to the BA network. The insets in (d-f) show the full range of degrees, with the shaded regions indicating the enlarged portions displayed in the main panels. All data are averaged over the last 1 × 10 4 time steps after reaching the steady state at tmax = 2 × 10 6, and over 50 independent realizations. Error bars denote the standard deviation of the mean across 50 realizations. Other parameters: b = 0 .1, α = 0 .1, γ = 0 .9, ε = 0 .01. a learning perspective, the state space becomes too large in such scenarios, and within a reasonably long evolution, learning remains incomplete, resulting in near-random behavior. In brief, optimal cooperation under moderate infor-mation arises from a balance between information suffi-ciency and decision-making tractability. Insufficient in-formation is cognitively manageable but biased toward defection, whereas excessive information exceeds individ-uals’ learning capacity, preventing the formation of effec-tive policies and thereby also leading to poor cooperative outcomes. 
+
+V. A SEMI-ANALYTIC THEORY 
+
+To further explore the underlying mechanism quanti-tatively, we implement a semi-analytical treatment for the case of the two-dimensional square lattice. Within the framework of a Markov process, we construct the state transition matrix to study the evolution of different state densities. By incorporating the cooperation prefer-ence information extracted from simulations, we can then solve for the stationary densities of different states, as well as the overall cooperation level fC . Detailed deriva-tions are provided in Appendix C. From a physics per-spective, this treatment neglects the underlying spatial structure of the population and can thus be viewed as a mean-field approximation. The results of our theory are illustrated in Fig. 2(a), which correctly captures the overall trend of fC as a func-tion of neighborhood size k observed in simulations. In particular, it accurately reproduces the optimal cooper-ation level at the moderate k values. Since the main logic of our theory is based on the computation of state densities, the theoretical stationary-state distributions is also presented in Fig. 5 and compared with the simula-tions. Although modest discrepancies exist between the theoretical and numerical outcomes, their overall evolu-tionary tendencies remain consistent. Specifically, the theoretical results are in perfect agreement with the nu-merical results for the extreme case of k = 1 [Fig. 5(a)], as no spatial correlation is present. However, this agree-ment does not hold well for intermediate cases, such as 
+
+k = 2 , 3, 4, where strategic correlations among neigh-boring agents become prominent and violate the inde-pendence assumption underlying the Markovian process, leading to larger deviations [Figs. 5(b–d)]. As k is fur-ther increased [Figs. 5(e–l)], the population approaches the well-mixed assumption, and the deviations between 7                                                                            
+
+> 010.0 0.2 0.4 0.6 0.8
+> state density  s      (k=1)
+> 0120.0 0.2 0.4 0.6
+> k=2
+> 01230.0 0.2 0.4
+> k=3
+> 012340.0 0.2 0.4
+> state density  k=4
+> 0123450.0 0.2 0.4 k=5
+> 01234560.0 0.2
+> k=6
+> 012345670.0 0.2
+> state density  k=7
+> 0123456780.0 0.2
+> k=8
+> 01234567890.0 0.2
+> k=9
+> 012345678910
+> k
+> 0.0 0.2
+> state density  k=10
+> 0123456789 10 11
+> k
+> 0.0 0.2 0.4 k=11
+> 0123456789 101112
+> k
+> 0.0 0.2 0.4 k=12
+
+FIG. 5: State densities for different numbers of neighbors on 2d lattice. Subplots (a-l) are for neighborhood sizes k = 1 ∼ 12; both simulation and theoretical results are shown. All the setups are the same as Fig. 2(a) theoretical and simulation results shrink accordingly. 
+
+VI. EXTENSION 
+
+To examine the impact of the learning parameters in Q-learning, we conduct additional simulations on the two-dimensional lattice using various combinations of param-eter values. Fig. 6(a) shows that increasing the learn-ing rate α reduces the maximal cooperation level fC for small neighborhoods (small k), but enhances cooperation for larger neighborhoods (large k). These contrasting ef-fects arise from the nuanced role of α in the learning pro-cess: a small α helps preserve past experience but slows down learning, thereby requiring longer training dura-tions; in contrast, a larger α discards experience more rapidly but accelerates learning, which often proves ad-vantageous when learning samples are limited. In small-neighborhood scenarios, learning samples are abundant, so increasing α impairs cooperation. However, for large 
+
+k, where many states suffer from insufficient samples, a higher α facilitates faster learning and thus promotes co-operation. In contrast, the discount factor γ exerts a more pro-nounced influence on the cooperation level, as shown in Fig. 6(b). Reducing γ suppresses overall cooperation, and when γ ≤ 0.7, cooperation becomes negligible for all values of k. This occurs because the emergence of coop-eration in RL relies on players maintaining a long-term perspective; when γ decreases, individuals become overly focused on immediate rewards, undermining the viability of cooperative strategies. Overall, while both learning parameters modulate the            
+
+> 12345678910 11 12
+
+k            
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (a) =0.1 =0.2 =0.5 =0.7
+> 12345678910 11 12
+
+k 
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> fc
+> (b) =0.7 =0.75 =0.8 =0.85
+
+FIG. 6: The impact of learning parameters for the lattice case. (a) The dependence of fC on the neighorhood size k for different α by fixing γ = 0 .9. (b) The dependence of fC on k for different γ by fixing 
+
+α = 0 .1. All data are averaged over the last 1 × 10 4
+
+time steps after reaching state state at tmax = 2 × 10 6,and over 10 independent realizations. Other parameters: ε = 0 .01, b = 0 .1. absolute level of cooperation, they do not alter the quali-tative dependence of fC on the neighborhood size k. The presence of optimal neighborhood size that maximizes cooperation remains robust across the parameter space examined. 
+
+VII. CONCLUSION 
+
+This study introduces the reinforcement learning (RL) paradigm into the prisoner’s dilemma game to systemati-cally examine how information quantity – operationalized as neighborhood size – affects the evolution of coopera-tion. Unlike imitation learning, where individuals copy successful peers, Q-learning agents make decisions based on accumulated payoffs through trial and error. Through simulations on both 2d regular lattices and Barab´ asi– Albert scale-free networks, we uncover a non-monotonic, inverted U-shaped relationship between cooperation level and information availability, with cooperation maximized at an intermediate neighborhood size around 3 ∼ 4. Our mechanistic analysis reveals that optimal cooper-ation emerges when individuals strike a balance between information sufficiency and decision-making tractability. Strategy persistence analysis further shows that, under moderate neighborhood sizes ( k = 3 , 4), a subset of in-dividuals can sustain cooperation with relatively stable 8strategies while retaining necessary strategic flexibility. In contrast, under either insufficient or excessive informa-tion, strategies become either rigidly fixated on defection or excessively volatile – both of which prevent the emer-gence of stable cooperation. We develop a semi-analytic theory that successfully reproduces this non-monotonic dependence. Importantly, although previous studies [38–42] reached similar conclusions, the underlying mechanisms differ fundamentally, especially in the information-overloaded scenario. In those works, the breakdown of cooperation is attributed to the failure of network reciprocity stemming from the disrupted compactness of cooperative clusters. In contrast, the emergence and maintenance of coopera-tion in our RL-based framework arise from information sufficiency and cognitive tractability – no obvious spatial patterns are required or observed. To further validate the findings of this study, controlled behavioral experiments are called for. By manipulat-ing the information acquisition range, such as the size of the interactive neighborhood, in experimental settings, the dependence of cooperation prevalence on information quantity can be directly examined. In brief, our study suggests that making proper decisions does not necessar-ily require more information – a reassuring message in today’s era of information overload. 
+
+[1] J. Maynard Smith and E. Szathmary. The Major Tran-sitions in Evolution . Oxford University Press, Oxford, 1997. [2] D. L. Cheney. Extent and limits of cooperation in ani-mals. Proceedings of the National Academy of Sciences ,108:10902–10909, 2011. [3] R. Dawkins. The Selfish Gene . Oxford University Press, New York, 2006. [4] Lee Alan Dugatkin. Cooperation among animals: an evo-lutionary perspective . Oxford University Press, 1997. [5] Gerald S Wilkinson. Reciprocal food sharing in the vam-pire bat. Nature , 308(5955):181–184, 1984. [6] J. M. Zelenski, R. L. Dopko, and C. A. Capaldi. Cooper-ation is in our nature: Nature exposure may promote cooperative and environmentally sustainable behavior. 
+
+Journal of Environmental Psychology , 42:24–31, 2015. [7] E. Fehr and U. Fischbacher. The nature of human altru-ism: Proximate patterns and evolutionary origins. Na-ture , 425(6960):785–791, 2003. [8] E. Pennisi. How did cooperative behavior evolve? Sci-ence , 313(5781):93–93, 2006. [9] J. Maynard Smith. Evolution and the theory of games .Springer, Berlin, 1982. [10] P. D. Taylor and L. B. Jonker. Evolutionary stable strate-gies and game dynamics. Mathematical Biosciences ,40:145–156, 1978. [11] J. W. Poundstone. Prisoner’s Dilemma: John Von Neu-mann, Game Theory, and the Puzzle of the Bomb . An-chor, 1993. [12] M. Doebeli and C. Hauert. Models of cooperation based on the prisoner’s dilemma and the snowdrift game. Ecol-ogy Letters , 8:748–765, 2005. [13] Robert Axelrod. Effective choice in the prisoner’s dilemma. Journal of Conflict Resolution , 24(1):3–25, 1980. [14] M. Perc and A. Szolnoki. Social diversity and promotion of cooperation in the spatial prisoner’s dilemma game. 
+
+Physical Review E , 77:011904, 2008. [15] Robert Axelrod. More effective choice in the prisoner’s dilemma. Journal of Conflict Resolution , 24(3):379–403, 1980. [16] Manfred Milinski and Claus Wedekind. Working mem-ory constrains human cooperation in the prisoner’s dilemma. Proceedings of the National Academy of Sci-ences , 95(23):13755–13758, 1998. [17] Martin A. Nowak. Five rules for the evolution of coop-eration. Science , 314(5805):1560–1563, 2006. [18] R. L. Trivers. The evolution of reciprocal altruism. Quar-terly Review of Biology , 46:35–57, 1971. [19] J. M. Pacheco, A. Traulsen, and H. Ohtsuki. Repeated games and direct reciprocity under active linking. Jour-nal of Theoretical Biology , 253(4):723–731, 2008. [20] M. A. Nowak and K. Sigmund. Evolution of indirect reciprocity by image scoring. Nature , 393(6685):573–577, 1998. [21] H. Ohtsuki and Y. Iwasa. Evolution of indirect reci-procity. Nature , 437:1291–1298, 2005. [22] H. Brandt and K. Sigmund. The good, the bad and the discriminator—errors in direct and indirect reciprocity. 
+
+Journal of Theoretical Biology , 239(4):435–444, 2006. [23] W. Ghang and M. A. Nowak. Indirect reciprocity with optional interactions. Journal of Theoretical Biology ,365:111–118, 2015. [24] M. A. Nowak and R. M. May. Evolutionary games and spatial chaos. Nature , 359(6398):826–829, 1992. [25] L. Keller. Levels of Selection in Evolution . Princeton University Press, Princeton, 1999. [26] D. C. Queller. Group selection and kin selection. Nature ,358(6384):313–315, 1992. [27] W. D. Hamilton. The evolution of altruistic behaviour. 
+
+Nature , 197:354–356, 1963. [28] W. D. Hamilton. The genetical evolution of social be-haviour i. Journal of Theoretical Biology , 7(1):1–16, 1964. [29] W. D. Hamilton. The genetical evolution of social be-haviour ii. Journal of Theoretical Biology , 7(1):17–52, 1964. [30] A. S. Griffin and S. A. West. Kin selection: Fact and fic-tion. Trends in Ecology & Evolution , 17(1):15–21, 2002. [31] K. Sigmund, C. Hauert, and M. A. Nowak. Reward and punishment as mechanisms for the evolution of cooper-ation. Proceedings of the National Academy of Sciences ,98(20):10757–10762, 2001. [32] X. Yang and J. Chen. Promoting cooperation by pun-ishing minority. Applied Mathematics and Computation ,316:460–466, 2018. [33] H. Takesue. Cooperation in the prisoner’s dilemma game with pool punishment and reward. Europhysics Letters ,121(4):48005, 2018. [34] A. Szolnoki and M. Perc. Punishment and the evolution of cooperation in spatial public goods games. Journal of 9
+
+Theoretical Biology , 325:34–40, 2013. [35] F. Fu, C. Hauert, and M. A. Nowak. Reputation-based partner choice promotes cooperation in social networks. 
+
+Physical Review E , 78(2):026117, 2008. [36] C. Xia, J. Wang, and M. Perc. Reputation and reci-procity. Physics of Life Reviews , 46:8–45, 2023. [37] Rizhou Liang, Qinqin Wang, Jiqiang Zhang, Guozhong Zheng, Lin Ma, and Li Chen. Dynamical reciprocity in in-teracting games: Numerical results and mechanism anal-ysis. Physical Review E , 105(5):054302, 2022. [38] Margarita Ifti, Timothy Killingback, and Michael Doe-beli. Effects of neighbourhood size and connectivity on the spatial continuous prisoner’s dilemma. Journal of theoretical biology , 231(1):97–106, 2004. [39] G. Szab´ o and A. Szolnoki. Cooperation in spatial pris-oner’s dilemma with two types of players for increasing number of neighbors. Physical Review E , 79(1):016106, 2009. [40] C. J. Zhu, S. W. Sun, J. Wang, and C. Y. Xia. Role of population density and increasing neighborhood in the evolution of cooperation on diluted lattices. Physica A ,392(24):6353–6360, 2013. [41] X. Qian, F. Xu, and J. Yang. The expansion of neigh-borhood and pattern formation on spatial prisoner’s dilemma. Chaos , 25(4):043110, 2015. [42] Q. Wang and C. Du. Impact of expansion of priority range on cooperation in the prisoner’s dilemma game. 
+
+Chaos, Solitons & Fractals , 129:77–80, 2019. [43] X. Han, X. Zhao, and H. Xia. Evolution of cooperation through aspiration-based adjustment of interaction range in spatial prisoner’s dilemma game. Applied Mathematics and Computation , 393:125746, 2021. [44] S. Lu, G. Zhu, and J. Dai. Promoting effect of adaptive interaction based on random neighbors to cooperation in the spatial prisoner’s dilemma game. Applied Mathemat-ics and Computation , 450:127960, 2023. [45] J. Ma and H. Zhao. Cooperation dynamics of reputation-based manhattan distance social circle in spatial pris-oner’s dilemma game in evolutionary game theory. 
+
+Chaos, Solitons & Fractals , 189:115688, 2024. [46] Arne Traulsen, Dirk Semmann, Ralf D Sommerfeld, Hans-J¨ urgen Krambeck, and Manfred Milinski. Human strategy updating in evolutionary games. Proceedings of the National Academy of Sciences , 107(7):2962–2966, 2010. [47] Carlos Gracia-L´ azaro, Alfredo Ferrer, Gonzalo Ruiz, Alfonso Taranc´ on, Jos´ e A Cuesta, Angel S´ anchez, and Yamir Moreno. Heterogeneous networks do not promote cooperation when humans play a prisoner’s dilemma. Proceedings of the National Academy of Sci-ences , 109(32):12922–12926, 2012. [48] Angel S´ anchez. Physics of human cooperation: ex-perimental evidence and theoretical models. Jour-nal of Statistical Mechanics: Theory and Experiment ,2018(2):024001, 2018. [49] R. S. Sutton and A. G. Barto. Reinforcement Learning: An Introduction . MIT Press, Cambridge, MA, 2018. [50] Guozhong Zheng, Xin Ou, Shengfeng Deng, Jiqiang Zhang, and Li Chen. A brief review of evolutionary game dynamics in the reinforcement learning paradigm. Com-munications in Theoretical Physics , 78(6):067601, 2026. [51] D. Lee, H. Seo, and M. W. Jung. Neural basis of rein-forcement learning and decision making. Annual Review of Neuroscience , 35:287–308, 2012. [52] A. Rangel, C. Camerer, and P. R. Montague. A frame-work for studying the neurobiology of value-based de-cision making. Nature Reviews Neuroscience , 9(7):545– 556, 2008. [53] S. Zhang, J. Zhang, L. Chen, and X. Liu. Oscillatory evolution of collective behavior in evolutionary games played with reinforcement learning. Nonlinear Dynamics ,99(4):3301–3312, 2020. [54] D. Jia, H. Guo, Z. Song, L. Shi, X. Deng, M. Perc, and Z. Wang. Local and global stimuli in reinforcement learn-ing. New Journal of Physics , 23(8):083020, 2021. [55] L. Wang, L. Fan, L. Zhang, R. Zou, and Z. Wang. Synergistic effects of adaptive reward and reinforcement learning rules on cooperation. New Journal of Physics ,25(7):073008, 2023. [56] Z. Song, H. Guo, D. Jia, M. Perc, X. Li, and Z. Wang. Reinforcement learning facilitates an optimal interaction intensity for cooperation. Neurocomputing , 513:104–113, 2022. [57] Z. He, Y. Geng, C. Du, L. Shi, and Z. Wang. Q-learning-based migration leading to spontaneous emergence of seg-regation. New Journal of Physics , 24(12):123038, 2022. [58] Z. Ding, G. Zheng, C. Cai, W. Cai, L. Chen, J. Zhang, and X. Wang. Emergence of cooperation in two-agent re-peated games with reinforcement learning. Chaos, Soli-tons & Fractals , 175:114032, 2023. [59] Y. Geng, Y. Liu, Y. Lu, C. Shen, and L. Shi. Re-inforcement learning explains various conditional co-operation. Applied Mathematics and Computation ,427:127182, 2022. [60] Guozhong Zheng, Jiqiang Zhang, Shengfeng Deng, Weiran Cai, and Li Chen. Evolution of cooperation in the public goods game with q-learning. Chaos, Solitons & Fractals , 188:115568, 2024. [61] Z. Yang, L. Zheng, M. Perc, and Y. Li. Interaction state q-learning promotes cooperation in the spatial prisoner’s dilemma game. Applied Mathematics and Computation ,463:128364, 2024. [62] J. Zhang, Z. Rong, G. Zheng, J. Zhang, and L. Chen. The emergence of cooperation via q-learning in spatial dona-tion game. Journal of Physics: Complexity , 5(2):025006, 2024. [63] G. Zheng, J. Zhang, X. Ou, S. Deng, and L. Chen. Decod-ing fairness: A reinforcement learning perspective. Phys-ical Review E , 111(6):064307, 2025. [64] G. Zheng, J. Zhang, J. Zhang, W. Cai, and L. Chen. Decoding trust: A reinforcement learning perspective. 
+
+New Journal of Physics , 26(5):053041, 2024. [65] M. Andrecut and M. Ali. Q learning in the minority game. Physical Review E , 64(6):067103, 2001. [66] J. Zhang, J. Dong, L. Liu, Z. Huang, L. Huang, and Y. C. Lai. Reinforcement learning meets minority game: Toward optimal resource allocation. Physical Review E ,99(3):032302, 2019. [67] Guozhong Zheng, Weiran Cai, Guanxiao Qi, Jiqiang Zhang, and Li Chen. Optimal coordination of resource: A solution from reinforcement learning. Phys. Rev. E ,112:064305, Dec 2025. [68] S. Zhang, J. Dong, H. Zhang, Y. L¨ u, J. Wang, and Z. Huang. Self organizing optimization and phase tran-sition in reinforcement learning minority game system. 
+
+Frontiers of Physics , 19(1):1–13, 2024. [69] Chenyang Zhao, Guozhong Zheng, Chun Zhang, Jiqiang Zhang, and Li Chen. Emergence of cooperation un-10 
+
+der punishment: A reinforcement learning perspective. 
+
+Chaos , 34(7):073123, jul 2024. [70] Kaiwen Jiang, Chenyang Zhao, Shengfeng Deng, Weiran Cai, Jiqiang Zhang, and Li Chen. Decoding species coex-istence: A reinforcement learning perspective. Physical Review E , 113(5):054411, 2026. [71] C. J. C. H. Watkins and P. Dayan. Q-learning. Machine Learning , 8(3-4):279–292, 1992. [72] C. J. C. H. Watkins. Learning from Delayed Rewards .PhD thesis, University of Cambridge, Cambridge, UK, 1989. [73] Albert.-L´ aszl´ o Barab´ asi and R´ eka Albert. Emergence of scaling in random networks. Science , 286(5439):509–512, 1999. [74] F. C. Santos and J. M. Pacheco. Scale-free networks provide a unifying framework for the emergence of coop-eration. Physical Review Letters , 95(9):098104, 2005. [75] Anhui Sheng, Jing Zhang, Guozhong Zheng, Jiqiang Zhang, Weiran Cai, and Li Chen. Catalytic evolution of cooperation in a population with behavioral bimodal-ity. Chaos: An Interdisciplinary Journal of Nonlinear Science , 34(10):103117, 10 2024. [76] Chenyang Zhao, Guozhong Zheng, Chun Zhang, Jiqiang Zhang, and Li Chen. Emergence of cooperation un-der punishment: A reinforcement learning perspective. 
+
+Chaos: An Interdisciplinary Journal of Nonlinear Sci-ence , 34:073123, 2024. [77] Chenyang Zhao, Xinshi Feng, Guozhong Zheng, Weiran Cai, Jiqiang Zhang, and Li Chen. Evolution of coopera-tion in a dual-mode mixture of conditional cooperators. 
+
+Physical Review E , 112(5):054309, 2025. [78] Urs Fischbacher, Simon G¨ achter, and Ernst Fehr. Are people conditionally cooperative? evidence from a pub-lic goods experiment. Economics Letters , 71(3):397–404, 2001. 
+
+DATA AND CODE AVAILABILITY 
+
+All data in our study are generated by our code written in Python, which is available at https://github.com/chenli-lab/RL-information. 
+
+ACKNOWLEDGEMENTS 
+
+This work is supported by the National Natural Sci-ence Foundation of China (Grants Nos. 12075144, 12165014), the Fundamental Research Funds for the Central Universities (Grant Nos. GK202401002, GK202406016), and the Natural Science Basic Research Program of Shaanxi (Grants Nos. 2026JC-YBMS-0012, 2026JC-YBQN-0021). 
+
+Appendix A: State densities and cooperation preference 
+
+To more clearly show the state density and cooper-ation preference shown in Fig. 3(a) and 3(c), here we separately illustrate them in Figs. 7 and 8, which present the distributions for 2d square lattice and BA networks, respectively. The state distributions in both figures show that the state densities for large k are vanishing, 
+
+0 00 0 0 0 0 0 
+
+>   !
+
+##     !Q   Q  
+
+  
+
+##  
+
+   
+
+##  
+
+         
+
+>   !
+
+##  
+
+   
+
+##  
+
+   
+
+##  
+
+         
+
+>   !
+
+##  
+
+   
+
+##  
+
+    
+
+##  
+
+      
+
+  
+
+      
+
+>   !
+
+##  
+
+       
+
+  
+
+##  
+
+        
+
+  
+
+##  
+
+FIG. 7: State density and cooperation preference under that density for each state for different neighborhood sizes on the 2d lattice. (a)-(l) corresponds to the state density (in blue) and the fraction of individuals with ∆Qsj > 0 (in orange-red) for each state with neighborhood size k = 1 to 12, respectively. The data represent means over the final 1 × 10 4 steps after reaching the steady state, averaged over 20 independent realizations. Error bars represent the standard deviations. Parameters are the same as Fig. 3. 
+
+Appendix B: Time evoution of ∆Qsj for k = 3 and 4 
+
+As shown in Fig. 9, we present the temporal evolution of ∆ Qsj by ensemble average with the information size that yields a relatively high fC on the two-dimensional lattice. It can be observed that ∆ Qsj < 0 for all states, indicating that individuals consistently have a stronger propensity to defect than to cooperate in every state. This explains why, even under the optimal neighbor-hood size, the overall cooperation level fC remains rel-atively modest. Furthermore, after the system reaches the steady state, notable differences in ∆ Qsj < 0 emerge across states. Specifically, the more cooperators there are among the neighbors, the weaker the individual’s ten-dency to defect – a pattern that aligns with intuitive expectations. 11   
+
+> 000 0 0 0 0 0
+> !"#
+
+#  ""!"# Q   Q  0 "     
+
+> 000 0 0 0 0 0
+
+#      
+
+> 000 0 0 0 0 0
+
+#     
+
+> 000 0 0 0 0 0
+> !"#
+
+#      
+
+> 000 0 0 0 0 0
+
+#      
+
+> 000 0 0 0 0 0
+
+#     
+
+> 000 0 0 0 0 0
+> !"#
+
+#       
+
+> 000 0 0 0 0 0
+
+#        
+
+> 00 00 0 0 0 0 0
+
+#      
+
+> 0 0 
+
+  
+
+> 00 0 0 0 0 0
+> !"#
+
+#      
+
+> 00  
+
+   
+
+> 00 0 0 0 0 0
+
+#  
+
+FIG. 8: State density and cooperation tendency under that density for each state for different neighborhood sizes on the BA networks. (a)-(k) corresponds to node degree k = 2 to 12, respectively. Other setups are the same as Fig. 7. 
+
+1  1 1 1  1  1 1 1 
+
+t
+
+1   
+
+>  
+
+# Δ 
+
+>  1  
+
+1  1 1 1  1  1 1 1 
+
+t
+
+1 1     
+
+>  
+
+#  
+
+>  1   
+
+FIG. 9: Time evolution of ∆ Qsj for each state in the case of k = 3 (a) and k = 4 (b) with the ensemble average. Each data point is averaged over 50 independent realizations. Other parameters: 
+
+tmax = 2 × 10 6.
+
+Appendix C: Deviation of the semi-analytic theory 
+
+The conditional probability that an individual chooses cooperation within state s is given by 
+
+p(C | s) = πc(s) · (1 − ε) + 0 .5 · ε, (C1) where we denote πc(s) as the fraction of ∆ Qs > 0 for the whole population, computed from numerical simulations. The second term at the RHS is due to the equal chance of being cooperative in exploration. The average cooperation level over the entire popula-tion is computed as 
+
+fC =
+
+> K
+
+∑
+
+> s=0
+
+ρ(s) · p(C | s), (C2) where ρ(s) denotes the density of state s, and K is the neighborhood size we defined in the main text. Within the mean-field approximation, the cooperation propensity p(C | st) is assumed to be uniquely deter-mined by the global state st, which remains identical for the central agent and all its neighbors. Accordingly, the state transition probability is expressed as: 
+
+P (st → st+1 ) = 
+
+> K−st
+
+∑
+
+> a=0
+> st
+
+∑
+
+> b=0
+
+(K − st
+
+a
+
+)( st
+
+b
+
+)[p(C | st)]a+st −b
+
+· [1 − p(C | st)]K−st−a+b
+
+· δ(st+1 , (st − b) + a), (C3) where δ(·, ·) is the Kronecker delta function, a is the num-ber of defectors switching to cooperators at a given step, while b denotes the corresponding number of cooperators switching to defectors. All P (st → st+1 ) then constitute the state transition matrix. With the state transition matrix, we can compute the state density at time t + 1: 
+
+ρt+1 (s) = 
+
+> K
+
+∑ 
+
+> st=0
+
+P (st → s) · ρt(st). (C4) At steady state, the state density is independent of time: 
+
+ρt+1 (s) = ρt(s), ∀ s. (C5) Combining Eqs. (C3)–(C5) yields 
+
+ρ(s) = 
+
+> K
+
+∑ 
+
+> st=0
+
+P (st → s) · ρ(st). (C6) Meanwhile, the stationary density satisfies the normal-ization constraint: 
+
+> K
+
+∑
+
+> s=0
+
+ρ(s) = 1 . (C7) Equations (C6) and (C7) can be recast into a linear algebraic system 
+
+A ρ = 0 , (C8) 
+
+A[s, s t] = 
+
+{1 − P (st → s), s = st,
+
+−P (st → s), s 6 = st.
+
+Solving the associated eigenvector together with the normalization constraint Eqs. (C7) yields the stationary distribution ρ.

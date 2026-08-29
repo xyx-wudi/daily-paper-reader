@@ -7,25 +7,27 @@
 
 ## 每次日报
 - 最新运行日期：2026-08-29
-- 运行时间：2026-08-29 03:13:32 UTC
+- 运行时间：2026-08-29 22:12:13 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
+- 本次总论文数：2
+- 精读区：1
 - 速读区：1
 
 ### 今日简报（AI）
-今日仅速读1篇，聚焦多集群聚合博弈的分布式优化算法。  
-最值得关注的是“梯度外推+镜像下降”组合方案，评分6.0，适合入门了解该方向。  
-下一步可补充精读同类博弈算法，对比其收敛性差异。
+今日精读Q-learning演化合作、速读自动驾驶课程学习，共2篇。  
+最值得关注的是强化学习中的信息需求与博弈合作机制，8.0分。  
+建议优先研读该精读文章，可拓展多智能体决策方向。
 - 详情：[/202608/29/README](/202608/29/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Evolution of cooperation with Q-learning: how much information do we need?](/202608/29/2608.22705v1-evolution-of-cooperation-with-q-learning-how-much-information-do-we-need)  
+   标签：评分：8.0/10、query:marl
+   evidence：在结构化种群中应用Q学习研究合作演化
 
 ### 速读区论文标签
-1. [Gradient-extrapolation-based distributed mirror descent algorithm for multi-cluster aggregative games](/202608/29/2608.24183v1-gradient-extrapolation-based-distributed-mirror-descent-algorithm-for-multi-cluster-aggregative-games)  
+1. [Scaling Curriculum Learning For Autonomous Driving](/202608/29/2608.22549v1-scaling-curriculum-learning-for-autonomous-driving)  
    标签：评分：6.0/10、query:marl
-   evidence：面向多簇聚合博弈的分布式纳什均衡求解，算法可迁移至多智能体分散决策问题
+   evidence：自动驾驶批量模拟中的多智能体交通场景强化学习
 
 
 <div class="dpr-home-promo-card">
