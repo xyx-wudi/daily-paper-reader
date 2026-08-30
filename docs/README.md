@@ -6,28 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-29
-- 运行时间：2026-08-29 22:12:13 UTC
+- 最新运行日期：2026-08-30
+- 运行时间：2026-08-30 22:46:12 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：0
+- 精读区：0
+- 速读区：0
 
 ### 今日简报（AI）
-今日精读Q-learning演化合作、速读自动驾驶课程学习，共2篇。  
-最值得关注的是强化学习中的信息需求与博弈合作机制，8.0分。  
-建议优先研读该精读文章，可拓展多智能体决策方向。
-- 详情：[/202608/29/README](/202608/29/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202608/30/README](/202608/30/README)
 
 ### 精读区论文标签
-1. [Evolution of cooperation with Q-learning: how much information do we need?](/202608/29/2608.22705v1-evolution-of-cooperation-with-q-learning-how-much-information-do-we-need)  
-   标签：评分：8.0/10、query:marl
-   evidence：在结构化种群中应用Q学习研究合作演化
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Scaling Curriculum Learning For Autonomous Driving](/202608/29/2608.22549v1-scaling-curriculum-learning-for-autonomous-driving)  
-   标签：评分：6.0/10、query:marl
-   evidence：自动驾驶批量模拟中的多智能体交通场景强化学习
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
