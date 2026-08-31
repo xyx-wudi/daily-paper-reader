@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-31",
+  "date": "2026-08-31",
+  "generated_at": "2026-08-31T23:12:25",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/31/2608.25477v1-aeris-offline-policy-improvement-for-multi-uav-integrated-sensing-and-communication",
+      "section": "deep",
+      "title_en": "AERIS: Offline Policy Improvement for Multi-UAV Integrated Sensing and Communication",
+      "authors": "Ziyuan Wang, Yifan Sui, Wei Wei, Wenjie Xin, Zekai Zhang, Xiangwang Hou, Xiao-Ping, Zhang",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.25477v1",
+      "score": "9.0",
+      "evidence": "多无人机离线强化学习中的集中训练与分散执行",
+      "tldr": "多无人机集成感知与通信（ISAC）控制需兼顾通信质量、感知可靠性和飞行安全，优化方法求解成本高，在线强化学习存在试飞碰撞风险。为此提出AERIS离线策略改进框架，基于固定飞行日志采用集中训练与分布式执行；其中STAR-CRDT算法引入支持感知的动作修正和可信策略蒸馏，并具备离线支持策略改进保证。实验显示STAR-CRDT使主目标回报提高29.3%，通信和感知指标同步提升，碰撞风险事件减少54.2%，且在未见过的真实道路地图上仍最优，为安全高效的无人机集群ISAC提供新方案。",
+      "tags": "query:marl",
+      "abstract_en": "Unmanned aerial vehicle (UAV)-enabled integrated sensing and communication (ISAC) is a promising 6G paradigm, but dynamic multi-UAV ISAC control must jointly balance communication quality, sensing reliability, and flight safety under stochastic mobility. Existing optimization methods often require repeated global non-convex solving, while online reinforcement learning (RL) depends on risky trial-and-error flights that may cause sensing loss or collision-risk events.   This paper proposes AERIS, an offline policy improvement framework for multi-UAV ISAC. AERIS learns from fixed flight logs under centralized training and decentralized execution, so each UAV acts from local histories while training uses logged global information to assess team-level effects. We further design STAR-CRDT, an offline multi-agent RL algorithm that performs support-aware local action rectification and distills only trusted improvements into the decentralized actor. We prove an offline-support policy improvement guarantee. Experiments show that STAR-CRDT improves the main ISAC objective return by 29.3% over the strongest baseline. It further improves communication sum rate, sensing pass rate, and sensing margin by 3.4%, 4.8%, and 69.1%, while reducing collision-risk events by 54.2%. On unseen real-road maps built from OpenStreetMap data, STAR-CRDT still obtains the best return.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/31/2608.25193v1-simulating-cognitive-smart-freight-corridors-with-agent-based-models-and-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Simulating Cognitive Smart Freight Corridors with Agent-Based Models and Reinforcement Learning",
+      "authors": "Madelaine Martinez-Ferguson, Chun Wang, Mustafa Can Camur, Xueping Li",
+      "date": "2026-08-25",
+      "pdf": "https://arxiv.org/pdf/2608.25193v1",
+      "score": "8.0",
+      "evidence": "针对智能货运走廊的智能体建模框架，集成MARL用于队列形成与充电协调",
+      "tldr": "针对智慧货运走廊依赖预设控制策略、难以捕捉自适应行为的问题，提出融合物理层、V2X连接层与强化学习/多智能体强化学习决策层的个体建模框架，用于车队编队与充电协调。初步结果表明认知场景提升吞吐量并降低拥堵，辅助场景通过编队节省能源，高需求下优势扩大。该框架为CAV部署提供了可扩展的仿真评估途径。",
+      "tags": "query:marl",
+      "abstract_en": "Smart freight corridors offer a practical pathway for connected and automated vehicle (CAV) deployment in freight transportation, but physical experimentation is expensive and existing approaches rely on predefined control policies that cannot capture adaptive behaviors. This paper presents an agent-based modeling (ABM) framework coupling a physical infrastructure layer, a connectivity layer (V2X), and a decision layer integrating reinforcement learning (RL) and multi-agent reinforcement learning (MARL) for platoon formation and charging coordination. We evaluate three scenarios (Baseline, Assisted, and Cognitive) using throughput, congestion, energy, emissions, and robustness metrics. Preliminary results indicate that the Cognitive scenario achieves higher throughput and lower congestion than the baseline, while the Assisted scenario delivers meaningful energy savings per kilometer through platooning. Sensitivity analysis shows that the throughput advantage of the smart corridor widens under conditions with high demand and that MARL coordination extracts greater utilization from fixed charging capacity than rule-based assignment.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/31/2608.25419v1-bvr-sim-an-open-and-high-throughput-environment-for-heterogeneous-air-combat-reinforcement-learning",
+      "section": "quick",
+      "title_en": "BVR Sim: An Open and High-Throughput Environment for Heterogeneous Air-Combat Reinforcement Learning",
+      "authors": "Haocheng Sun, Mulai Tan",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.25419v1",
+      "score": "7.0",
+      "evidence": "面向异构空战强化学习的开源环境，包含对手与异构平台，天然是多智能体场景。",
+      "tldr": "BVR空战是部分可观测、长时程且资源有限的强化学习难题。BVR Sim提出一种开源Gymnasium风格环境，支持F-15、F-16等多种JSBSim飞机模型，通过统一战术动作接口实现跨平台策略控制。其加速C++后端在1v1场景可达104倍实时速度，并在10v10下保持实用。基于F-16训练的策略可迁移至四种未见机型，平均胜率45.5%，且兼容MAPPO等标准多智能体框架，为异构空战研究提供高效开放平台。",
+      "tags": "query:marl",
+      "abstract_en": "Beyond-visual-range (BVR) air combat is a challenging reinforcement-learning domain characterized by partial observability, long-horizon decision making, energy management, and limited weapons. We present BVR Sim, an open-source Gymnasium-style environment designed for heterogeneous air-combat reinforcement learning. BVR Sim supports multiple JSBSim aircraft models, including the F-15, F-16, F/A-18, and F-22, with configurable weapons, sensors, controllers, and opponents. A unified tactical action interface specifies desired heading, altitude, speed, and weapon release above aircraft-specific inner-loop controllers, enabling policies to operate across heterogeneous platforms. The environment provides interchangeable Python and accelerated C++ backends, entity-oriented observations, compositional rewards, scripted opponents, replay and visualization, and adapters for multi-agent learning frameworks. At a 0.4-s decision interval, the C++ backend achieves 104 simulated seconds per wall-clock second in 1-vs-1 and remains practical through 10-vs-10 scenarios. A policy trained only on the F-16 transfers without retraining to four unseen aircraft, reaching a 45.5% mean win rate with aircraft-specific controller adaptation. MAPPO and HAPPO experiments further verify end-to-end compatibility with standard multi-agent reinforcement-learning pipelines.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/31/2608.28409v1-cooperative-risk-aware-exploration-in-heterogeneous-multi-robot-systems-using-algorithmic-altruism",
+      "section": "quick",
+      "title_en": "Cooperative Risk-Aware Exploration in Heterogeneous Multi-Robot Systems Using Algorithmic Altruism",
+      "authors": "Brooks A. Butler, Jair Certório, João P. Hespanha, Magnus Egerstedt",
+      "date": "2026-08-28",
+      "pdf": "https://arxiv.org/pdf/2608.28409v1",
+      "score": "6.0",
+      "evidence": "基于博弈论利他性的多机器人协同探索，与协同多智能体强化学习应用相关。",
+      "tldr": "多机器人危险环境探索需同时考虑信息收集与风险分配。针对异构团队，提出基于算法利他主义的博弈论规划框架，利用Hamilton相关度权重将队友价值内化到效用中，并定义社会纳什均衡，促使低价值机器人主动承担风险以保护高价值成员。采用投影梯度法优化滚动时域航点，仿真与硬件实验表明，该方法减少冗余探索、改善队形间距，在保持相当地图覆盖的同时实现风险按价值重分配，为异构多机器人协作探索提供了新思路。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-robot systems are well-positioned for exploration in hazardous environments, but effective deployment requires deciding not only where robots should gather information, but also how risk should be distributed across heterogeneous team members. This paper develops a game-theoretic framework for cooperative risk-aware exploration based on ecologically inspired altruistic behavior. Each robot selects a finite-horizon trajectory to maximize information gain while penalizing redundant exploration and expected hazard exposure. Heterogeneity is introduced through agent-specific value parameters for encoding altruistic coupling, which is modeled through relatedness weights inspired by Hamilton's rule. We introduce a game-theoretic structure for trajectory planning that defines a Social Nash Equilibrium, which modifies the utility of agent actions according to agent relatedness. This utility shaping causes agents to internalize the effect of their trajectory choices on teammates, encouraging lower-valued robots to accept risk when doing so benefits higher-valued agents and improves team performance. We define an exploration utility for agents that rewards area coverage and uncertainty reduction, while also penalizing redundancy and risk, enabling projected gradient-based waypoint optimization in a receding-horizon planner. Simulations show that altruistic planning reduces redundant exploration, improves inter-robot separation, and reallocates risk according to agent value while maintaining comparable map coverage. We further demonstrate the approach in hardware experiments, where planned waypoints are tracked by wheeled robots using single-integrator controllers and barrier certificates.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
