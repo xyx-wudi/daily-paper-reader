@@ -1,0 +1,3204 @@
+Title: Decentralized Strategies for Finite Population LQG Social Control: A Reinforcement Learning Approach
+
+URL Source: https://arxiv.org/pdf/2608.30244v1
+
+Published Time: Tue, 01 Sep 2026 01:59:54 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Decentralized Strategies for Finite Population LQG Social Control: A Reinforcement Learning Approach ⋆⋆ 
+
+# Liangyuan Guo, Bing-Chang Wang, Guangchen Wang 
+
+School of Control Science and Engineering, Shandong University, Jinan 250061, China 
+
+Abstract 
+
+This paper presents a novel model-free algorithm for the finite-population linear quadratic Gaussian (LQG) decentralized social control problem with multiplicative noise. The state and control weights in the cost functional are not limited to be positive semidefinite. For both finite-horizon and infinite-horizon cases, the goal is to obtain a social optimum by solving two algebraic Riccati equations (AREs), without requiring prior knowledge of the system matrices. Then, we complete the design of a model-free algorithm for solving the decentralized social control problem. Especially, in the infinite-horizon case, the algorithm’s convergence is based on analyzing the spectral property of the Lyapunov-type operator. The differences of reinforcement learning (RL) solutions between the finite-horizon and infinite-horizon cases are compared. Finally, the effectiveness of the proposed algorithm is demonstrated by a numerical example. 
+
+Key words: Decentralized social control; reinforcement learning; finite population; indefinite weighting matrix. 
+
+1 Introduction 
+
+The decentralized social control provides a useful method for solving large population cooperative differ-ential games, which are characterized by agents seeking to optimize a common cost. Decentralized social control has attracted considerable attention in various fields, including system control, financial mathematics, crowd dynamics and engineering ([2], [7], [9], [43]). 
+
+1.1 Mean field game and control 
+
+Mean field games originated from the pioneering achieve-ments of [20] and [25]. The mean field game and control is full of potential in theoretical and practical application. A mean field game can be categorized into two types, namely the linear quadratic Gaussian (LQG) type and the more general type, which is determined by its state-cost setup. The LQG type is prevalently used in mean field problems, due to its wide practical backgrouds. See [35] for LQG type mean field games with risk-sensitive and worst-case risk-neutral cost, [3] with ergodic cost, 
+
+⋆ Corresponding author: Bing-Chang Wang. 
+
+⋆⋆ This research was supported by the National Key R&D Program of China under Grant No.2022YFA1006100, the National Natural Science Foundation of China under Grant Nos.62573266 and 61925306. 
+
+Email addresses: lyguo@mail.sdu.edu.cn (Liangyuan Guo), bcwang@sdu.edu.cn (Bing-Chang Wang), 
+
+wguangchen@sdu.edu.cn (Guangchen Wang). 
+
+[30] with time-averaged stochastic cost, [44] with Markov jump parameters, [27] with partial observation. Some re-cent works for nonlinear mean field games include [12] and [24]. In addition, the robust mean field games are studied in [18], Stackelberg mean field games in [4] and [28], zero-sum differential mean field games in [34]. Mean field models have been extensively studied for so-cial optima. Social optima are linked to a type of team decision problem [16] but with highly complex interac-tions. Accordingly, a team decision problem can be for-mulated where all cooperative agents share a common cost functional. The goal of collaborating agents is to minimize the total cost in a large population system. However, achieving social optima often requires central-ized information from all agents, which poses huge com-putational and implementation challenges. To cope with these challenges, decentralized cooperative optimization frameworks have been developed, utilizing the mean field model to asymptotically achieve social optima. [20] de-veloped a state aggregation technique to obtain a set of decentralized control laws for the individuals which pos-sesses an ϵ-Nash equilibrium property. [21] developed the social certainty equivalence approach for asymptotically achieving the social optima. [45] gave the necessary and sufficient conditions for uniform stabilization of the sys-tems and designed a set of decentralized control laws by using solutions of two Riccati equations. [19] employed a rescaling approach to reduce the Riccati ordinary differ-ential equation (ODE) to some lower-order ODE system, 
+
+Preprint submitted to Automatica 1 September 2026 arXiv:2608.30244v1 [math.OC] 31 Aug 2026 which characterizes a necessary and sufficient condition for asymptotic solvability. Most existing works on mean-field games and control have studied the large or infinite population systems. However, small or moderate-population systems are also considered in many practical situations [33], [23]. In mean-field games and control theory, the classical results have limitations for finite-population systems. Specifically, the asymptotically optimal strategies de-rived from these results may lead to performance loss in finite-population systems. Therefore, it is significant to study the optimal decentralized control for the finite-population systems. [46] first gave necessary and suffi-cient conditions for the solvability of finite-population decentralized games and teams in terms of the forward-backward stochastic difference equations (FBSDEs). [32] considered the optimal decentralized strategies for finite-population systems in discrete-time settings. No-tably, the cost function’s weighting matrices are not re-quired to be definite and the solvability of decentralized social optimal control is characterized by the existence of regular solutions to two Riccati equations. 
+
+1.2 Reinforcement learning 
+
+In recent decades, the numerical methods for the mean field games and control have attracted tremendous at-tention. Several numerical methods for mean-field mod-els have been designed, such as the fixed-point approach ([6], [31]), Semi-Lagrangian scheme ([8]), finite difference discretization ([5]), etc. However, these methods require the system dynamics to be known, which limits their practical applicability. The problem of learning solutions to mean field game and control without requiring the system matrices has garnered significant interest. Recently, Reinforcement learning (RL) has been successfully applied to solve com-plex decision making problems [47]. In RL, a agent learns the control policies by interacting with the environment [41]. For more details, see [42]. Various algorithms have been developed for mean field games and control, in-cluding Q-learning ([14], [1], [13]), entropy regulariza-tion ([15]), fictitious play ([38]). The connection between RL for mean field control and finite-agent problems is analyzed in [48], [10]. Nonhomogeneous populations are considered in [17]. [29] employed a policy iteration RL method using a Lyapunov Recursion for the continuous-time LQG mean-field control problems in infinite hori-zon. [49] and [50] presented a model-free method to solve LQG mean field games and mean field social control, re-spectively. However, most studies focus either on mean field games or on infinite population systems. Research on the learning algorithms for mean field social control on finite population is relatively scarce. 
+
+1.3 Contribution 
+
+Most of related work focuses on the infinite-population or large-population systems with traditional numerical methods. However, the existing research has the follow-ing gaps. (1) Results on classical mean field games and control mainly focused on large-population or infinite-population systems. However, for the practical finite-population systems, using strategies based on the above results can cause a considerable optimality loss. The cor-responding data-driven methods do not work well for finite-population systems. (2) Existing model-free algo-rithms predominantly focus on the infinite-horizon case and the work on finite-horizon problems is scarce. The relationship of RL solutions under the above two cases remains unclear, necessitating further investigation to bridge this gap. (3) Existing results on the convergence of policy iteration algorithms are guaranteed when the weight matrices Q and R satisfy (semi-) definiteness con-ditions. Conversely, for non-standard/indefinite weight matrices, convergence analyses are sparse. In this paper, we study the finite-population LQG mean field social control problems in the discrete time. If the system dynamics are known, the optimal control gains can be obtained by solving two Riccati equations [32]. However, the technical challenge arises when the dy-namics of agents are completely unknown. Inspired by the abovementioned related work, especially [32] and [50], this paper develops a model-free algorithm for solv-ing the finite-population LQG mean field social control problem. Different from existing work, this paper considers the model-free learning for finite-population systems. The main contributions of the paper are summarized as fol-lows. (1) We develop a model-free algorithm to find decentral-ized strategies under indefinite weight matrices. Unlike traditional methods that rely on positive (semi-) definite state and control weights for convergence, we relax this condition to allow for indefinite weight matrices. Fur-thermore, we demonstrate three differences in RL solu-tions between finite-horizon and infinite-horizon cases. (2) We present the monotonic decrease property for iter-ative equations, which is different from the matrix inver-sion method. When the quadratic term related to control (BT ¯P B ) exists in the ARE, the direct matrix inversion formula method is infeasible. We combine two coupled AREs into a new equation and prove the monotonic de-crease and boundedness of the iterative algorithms, en-suring the convergence of the iterative sequences. (3) For addressing the indefinite AREs, we show the con-vergence of iterative algorithms with indefinite weights for both finite-horizon and infinite-horizon cases. No-tably, in the infinite-horizon case, it builds upon analyz-ing the spectral property of the Lyapunov-type operator. 
+
+1.4 Notations 
+
+Let Rm×n be the set of all m × n matrices. A ma-trix A ∈ Rn×n is positive definite (resp. positive semi-definite), expressed as A ∈ Sn 
+
+> +
+
+(resp. A ∈ Sn). vecs( A) ≜
+
+2[a11 , 2a12 , . . . , 2a1n, a 22 , . . . , a nn ]T ∈ R 12 n(n+1) . ⊗ is the Kronecker product. For a vector x ∈ Rn and a ma-trix A ∈ Rn×m, define the following operators: ˜x ≜
+
+[x1x1, . . . , x 1xn, x 2x2, . . . , x 2xn, . . . , x nxn] ∈ R 12 n(n+1) .
+
+vec( A) ≜ [aT1 , a T2 , . . . , a T
+
+> m
+
+]T ∈ Rnm , where ai is the i-th column of A. diag (· · · ) is the diagonal matrix. 
+
+2 Problem Formulation 
+
+Consider a finite-population system with N homoge-neous players, where the dynamics of player Aj are given by the discrete-time linear stochastic difference equation 
+
+xj (k +1) = Ax j (k)+ Bu j (k)+( Cx j (k)+ Du j (k)) wj (k),
+
+(1) where {xjk ∈ Rn, k ∈ T} and {ujk ∈ Rm, k ∈ T} are the state and control processes of the player Aj , respec-tively. wj (k) is the scalar Gaussian white noise with zero mean and variance σ2. A, C ∈ Rn×n and B, D ∈ Rn×m,the coefficient matrices are given deterministic. The in-dividual cost function of player Aj is given by 
+
+Ji(u) = 
+
+> T
+
+X
+
+> k=0
+
+E
+
+
+
+xjk − Γx(N ) 
+
+> k
+> 2
+> Q
+
++ ujk
+
+> 2
+> R
+
+
+
++ E xjT +1 − Γx(N ) 
+
+> T+1
+> 2
+> Q
+
+,
+
+where u ≜ (( u1)T , . . . , (uN )T )T , and Q, R, Γ are constant matrices with appropriate dimensions. Q
+
+and R are not limited to be positive semi-definite. 
+
+x(N ) 
+
+> k
+
+= 1
+
+> N
+
+PNj=1 xjk is the mean field term. The social cost function is given by 
+
+Jsoc (u) = 
+
+> N
+
+X
+
+> j=1
+
+Jj (u). (2) The admissible decentralized control set for the player 
+
+Aj is given by 
+
+Ujad = {uj |ujk is adapted to Fjk ,
+
+> T
+
+X
+
+> k=0
+
+E|ujk|2 < ∞} , (3) where Fjk is the σ-field generated by {wj
+
+> 0
+
+, w j
+
+> 1
+
+, . . . , w jk−1}.A set of strategies {ˆuj , 1 ≤ j ≤ N } is said to be a de-centralized social optimal control if the following holds: 
+
+Jsoc (ˆ u) = inf  
+
+> uj∈U jad ,j ∈N
+
+Jsoc (u), (4) where ˆu ≜ ((ˆ u1)T , . . . , (ˆ uN )T )T . Besides, define the in-dividual cost function in infinite horizon 
+
+J∞ 
+
+> j
+
+(uj , u −j ) = 
+
+> ∞
+
+X
+
+> k=0
+
+E
+
+
+
+xjk − Γx(N ) 
+
+> k
+> 2
+> Q
+
++ ujk
+
+> 2
+> R
+
+
+
+. (5) In this paper, we mainly study the following problems. 
+
+Problem 1 (Finite-horizon problem) For each player 
+
+Ai with the state equation (1) associated the cost function 
+
+(2) , find a decentralized social optimal control {ˆuj , 1 ≤
+
+j ≤ N } such that (4) holds for any xj0 ∈ Rn, without knowing players’ dynamics (Parameters A, B, C, D are unknown). 
+
+Problem 2 (Infinite-horizon problem) For each player 
+
+Ai with the state equation (1) associated the cost func-tion J∞
+
+> soc
+
+(u) = PNj=1 J∞ 
+
+> j
+
+(uj , u −j ), the goal is to find a decentralized social optimal control {ˆuj , 1 ≤ j ≤ N } to optimize the cost function, without knowing players’ dy-namics. 
+
+The related concepts of stabilizability (as defined in [36]) are introduced as follows. We first consider the following system: 
+
+y(k + 1) = ( A + BK )y(k) + ( B ¯K − BK )E(y(k)) + [( C + DK )y(k) + ( D ¯K − DK )E(y(k))] w(k).
+
+(6) 
+
+Definition 1 System (6) is called closed-loop L2− sta-bilizable if there exists a pair (K, ¯K) such that for any initial state x0, the closed loop of system (6) is L2−stable. 
+
+3 Main results for Problem 1 
+
+In this section, we develop a model-free method to ap-proximate the solution of AREs (8) and (9). First, we design two model-based policy iteration algorithms to solve AREs (8) and (9). Then, by employing the model-free method, the reliance of system dynamics can be avoided. 
+
+3.1 Model-based policy iteration 
+
+We now introduce the following definition and lemma, which can be referred to [32]. 
+
+Definition 2 Problem 1 is linearly solvable if Problem 1 admits a decentralized social optimal control with the linear structure ujk = Kkxjk + ¯KkE[xjk] + ηk.
+
+Lemma 1 [32, Theorem 4.5] Problem 1 is linearly solv-able if and only if AREs (8) -(9) admit solutions Pk, ¯Pk
+
+such that the regular conditions (10) hold. In this case, the decentralized social optimal control can be represented as 
+
+ujk = −Υ−1 
+
+> k
+
+Mk(xjk − ¯xjk) − ¯Υ−1 
+
+> k
+
+¯Mk ¯xjk, (7) 
+
+where 
+
+Υk ≜ R + BT Pk+1 B + σ2DT Pk+1 D, Mk ≜ BT Pk+1 A + σ2DT Pk+1 C, 
+
+¯Υk ≜ Υk + BT ¯Pk+1 B, 
+
+¯Mk ≜ Mk + BT ¯Pk+1 A. 
+
+3
+
+Pk = Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + AT Pk+1 A
+
++ σ2CT Pk+1 C − (BT Pk+1 A + σ2DT Pk+1 C)T
+
+× (R + BT Pk+1 B + σ2DT Pk+1 D)−1
+
+× (BT Pk+1 A + σ2DT Pk+1 C),PT +1 = Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q).
+
+(8) 
+
+
+
+¯Pk = N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + AT ¯Pk+1 A
+
++ ( BT Pk+1 A + σ2DT Pk+1 C)T (R + BT Pk+1 B
+
++ σ2DT Pk+1 D)−1(BT Pk+1 A + σ2DT Pk+1 C)
+
+− (BT Pk+1 A + σ2DT Pk+1 C + BT ¯Pk+1 A)T
+
+× (R + BT Pk+1 B + σ2DT Pk+1 D + BT ¯Pk+1 B)−1
+
+× (BT Pk+1 A + σ2DT Pk+1 C + BT ¯Pk+1 A),
+
+¯PT +1 = N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q).
+
+(9) 
+
+
+
+Υk ≥ 0,
+
+¯Υk ≥ 0,
+
+[I − Υk ΥTk ]Mk = 0 ,
+
+[I − ¯Υk ¯ΥTk ] ¯Mk = 0 .
+
+(10) We now make the following assumption. 
+
+Assumption 1 The AREs (8) -(9) admit a regular so-lution. 
+
+For notational simplicity, let Kk ≜ −Υ−1 
+
+> k
+
+Mk, ¯Kk ≜
+
+− ¯Υ−1 
+
+> k
+
+¯Mk.
+
+Theorem 1 Assume that the ARE (8) exists a regular solution. P ik and Ki+1  
+
+> k
+
+are recursively updated by (11) -
+
+(12) ,
+
+P ik =Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + ( Aik)T P ik+1 Aik
+
++ σ2(Cik)T P ik+1 Cik + ( Kik)T RK ik,
+
+(11) 
+
+Ki+1  
+
+> k
+
+= − (R + BT P ik+1 B + σ2DT P ik+1 D)−1
+
+× (BT P ik+1 A + σ2DT P ik+1 C), (12) 
+
+where Aik ≜ A + BK ik, Cik ≜ C + DK ik, and P iT +1 ≡
+
+Q + 1 
+
+> N
+
+(Γ T QΓ − QΓ − ΓT Q). Then for any k ∈ [0 , T ],
+
+Pk ≤ P i+1  
+
+> k
+
+≤ P ik, lim  
+
+> i→+∞
+
+P ik = Pk.Proof. Since Aik = Ai+1  
+
+> k
+
++ B(Kik − Ki+1  
+
+> k
+
+), Cik = Ci+1  
+
+> k
+
++
+
+D(Kik − Ki+1  
+
+> k
+
+), Kik = ( Kik − Ki+1  
+
+> k
+
+) + Ki+1  
+
+> k
+
+, we have 
+
+P ik − P i+1  
+
+> k
+
+=( Kik − Ki+1  
+
+> k
+
+)T (R + BT P ik+1 B
+
++ σ2DT P ik+1 D)( Kik − Ki+1  
+
+> k
+
+)+ Ai+1  
+
+> kT
+
+(P ik+1 − P i+1 
+
+> k+1
+
+)Ai+1 
+
+> k
+
++ σ2Ci+1  
+
+> kT
+
+(P ik+1 − P i+1 
+
+> k+1
+
+)Ci+1  
+
+> k
+
+.
+
+(13) Noting that P iT +1 = P i+1   
+
+> T+1
+
+= Q+ 1 
+
+> N
+
+(Γ T QΓ−QΓ−ΓT Q)
+
+R + BT P ik+1 B + σ2DT P ik+1 D ≥ 0, one has for all i, k ∈
+
+N+, P ik+1 − P i+1  
+
+> k+1
+
+≥ 0. Combining (11) with (8), we have 
+
+P i+1  
+
+> k
+
+− Pk =( Kk − Ki+1  
+
+> k
+
+)T (R + BT Pk+1 B
+
++ σ2DT Pk+1 D)( Kk − Ki+1  
+
+> k
+
+)+ Ai+1  
+
+> kT
+
+(P i+1  
+
+> k+1
+
+− Pk+1 )Ai+1 
+
+> k
+
++ σ2Ci+1  
+
+> kT
+
+(P i+1  
+
+> k+1
+
+− Pk+1 )Ci+1  
+
+> k
+
+.
+
+(14) Therefore, the inequality P i+1  
+
+> k
+
+− Pk ≥ 0 holds. This implies that the sequence {P ik}∞ 
+
+> i=0
+
+is monotonically de-creasing and has a lower bound. The limit of the sequence 
+
+{P ik}∞ 
+
+> i=0
+
+exists. Letting i → ∞ in (11) and (12), we have 
+
+P ∞ 
+
+> k
+
+=Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ A∞ 
+
+> kT
+
+P ∞
+
+> k+1
+
+A∞ 
+
+> k
+
++ K∞ 
+
+> kT
+
+RK ∞
+
+> k
+
++ σ2C∞ 
+
+> kT
+
+P ∞
+
+> k+1
+
+C∞ 
+
+> k
+
+,
+
+(15) 
+
+K∞ 
+
+> k
+
+= −(R + BT P ∞
+
+> k+1
+
+B + σ2DT P ∞
+
+> k+1
+
+D)−1
+
+×(BT P ∞
+
+> k+1
+
+A + σ2DT P ∞
+
+> k+1
+
+C). (16) Eliminating K∞ 
+
+> k
+
+from the above equations, one has 
+
+P ∞ 
+
+> k
+
+=Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ AT P ∞
+
+> k+1
+
+A + σ2CT P ∞
+
+> k+1
+
+C
+
+− (BT P ∞
+
+> k+1
+
+A + σ2DT P ∞
+
+> k+1
+
+C)T
+
+× (R + BT P ∞
+
+> k+1
+
+B + σ2DT P ∞
+
+> k+1
+
+D)−1
+
+× (BT P ∞
+
+> k+1
+
+A + σ2DT P ∞
+
+> k+1
+
+C).
+
+(17) Since P ∞  
+
+> T+1
+
+= PT +1 = Q + 1 
+
+> N
+
+(Γ T QΓ − QΓ − ΓT Q) and the ARE (8) has a unique positive semi-definite solution, we have P ∞ 
+
+> k
+
+= Pk. 2
+
+Remark 1 To obtain the optimal control gain and the solution of the ARE (8) , the iteration (11) -(12) need complete knowledge of the system dynamics. When the system is a single-agent and deterministic system, the above iteration degenerates into the method in [26]. 
+
+Remark 2 Most existing numerical methods are de-veloped for continuous-time, infinite-horizon or large-population systems. For other situations, it remains un-certain how to transform the model-based approach into model-free one. Based on Theorem 1, a corresponding model-free off-policy algorithm can be deduced. 
+
+Combining (8) with (9), one has 
+
+Sk =Q + Γ T QΓ − QΓ − ΓT Q + ¯ATk Sk+1 ¯Ak
+
++ σ2 ¯CTk Pk+1 ¯Ck + ¯KTk R ¯Kk, (18) where Sk ≜ Pk + ¯Pk, ¯Ak ≜ A+B ¯Kk and ¯Ck ≜ C +D ¯Kk.4Theorem 2 Assume that AREs (8) -(9) exist a regular solution. Sik and ¯Ki+1  
+
+> k
+
+are recursively updated by (19) -
+
+(20) ,
+
+Sik =Q + Γ T QΓ − QΓ − ΓT Q + ( ¯Aik)T Sik+1 ¯Aik
+
++ σ2( ¯Cik)T Pk+1 ¯Cik + ( ¯Kik)T R ¯Kik,
+
+(19) 
+
+¯Ki+1  
+
+> k
+
+= −R−1(BT Sik+1 ¯Ai+1  
+
+> k
+
++ σ2DT Pk+1 ¯Ci+1  
+
+> k
+
+), (20) 
+
+where SiT +1 ≡ Q + Γ T QΓ − QΓ − ΓT Q, and Pk is the converged solution obtained from Theorem 1 . Then for any k ∈ [0 , T ], Sk ≤ Si+1  
+
+> k
+
+≤ Sik, lim  
+
+> i→+∞
+
+Sik = Sk and 
+
+lim 
+
+> i→+∞
+
+¯P ik = ¯Pk.Proof. Since ¯Aik = ¯Ai+1  
+
+> k
+
++ B( ¯Kik − ¯Ki+1  
+
+> k
+
+), ¯Cik = ¯Ci+1  
+
+> k
+
++
+
+D( ¯Kik − ¯Ki+1  
+
+> k
+
+), ¯Kik = ( ¯Kik − ¯Ki+1  
+
+> k
+
+) + ¯Ki+1  
+
+> k
+
+, we have 
+
+Sik − Si+1  
+
+> k
+
+= ( ¯Aik)T Sik+1 ¯Aik − ( ¯Ai+1  
+
+> k
+
+)T Si+1  
+
+> k+1
+
+¯Ai+1 
+
+> k
+
++ σ2( ¯Cik)T Pk+1 ¯Cik − σ2( ¯Ci+1  
+
+> k
+
+)T Pk+1 ¯Ci+1 
+
+> k
+
++ ( Kik)T RK ik − (Ki+1  
+
+> k
+
+)T RK i+1  
+
+> k
+
+.
+
+(21) Combining the above equation with (20), one has 
+
+Sik − Si+1  
+
+> k
+
+=( ¯Ai+1  
+
+> k
+
+)T (Sik+1 − Si+1 
+
+> k+1
+
+) ¯Ai+1 
+
+> k
+
++ ( ¯Kik − ¯Ki+1  
+
+> k
+
+)T (R + BT Sik+1 B
+
++ σ2DT Pk+1 D)( ¯Kik − ¯Ki+1  
+
+> k
+
+).
+
+(22) Noting that SiT +1 = Si+1   
+
+> T+1
+
+= PT +1 + ¯PT +1 = Q +(Γ T QΓ−QΓ−ΓT Q), R+BT Sik+1 B +σ2DT Pk+1 D ≥ 0,one has for all i, k ∈ N+, Sik − Si+1  
+
+> k
+
+≥ 0. Combining (8), (9) with (19), we have 
+
+Si+1  
+
+> k
+
+− Sk =( ¯Ai+1  
+
+> k
+
+)T (Si+1  
+
+> k+1
+
+− Sk+1 ) ¯Ai+1 
+
+> k
+
++ ( ¯Kk − ¯Ki+1  
+
+> k
+
+)T (R + BT Sk+1 B
+
++ σ2DT Pk+1 D)( ¯Kk − ¯Ki+1  
+
+> k
+
+).
+
+(23) Therefore, the inequality Si+1  
+
+> k
+
+− Sk ≥ 0 holds. It implies that the sequence {Sik}∞ 
+
+> i=0
+
+is monotonically decreasing and has a lower bound. The limit of the sequence {Sik}∞
+
+> i=0
+
+exists. Letting i → ∞ in (19) and (20), one has 
+
+S∞ 
+
+> k
+
+=Q + Γ T QΓ − QΓ − ΓT Q + ¯A∞ 
+
+> kT
+
+Sk+1 ¯A∞
+
+> k
+
++ σ2 ¯C∞ 
+
+> kT
+
+Pk+1 ¯C∞ 
+
+> k
+
++ ¯K∞ 
+
+> kT
+
+R ¯K∞ 
+
+> k
+
+. (24) Using the definition of Sk yields 
+
+Pk + ¯P ∞ 
+
+> k
+
+=Q + Γ T QΓ − QΓ − ΓT Q
+
++ AT (Pk+1 + ¯P ∞
+
+> k+1
+
+)A + σ2CT Pk+1 C
+
+− ( ¯K∞ 
+
+> k
+
+)T R + BT (Pk+1 + ¯P ∞
+
+> k+1
+
+)B
+
++ σ2DT Pk+1 D ¯K∞ 
+
+> k
+
+,
+
+(25) which can be written as 
+
+¯P ∞ 
+
+> k
+
+= N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + AT ¯P ∞
+
+> k+1
+
+A
+
++ ( BT Pk+1 A + σ2DT Pk+1 C)T (R + BT Pk+1 B
+
++ σ2DT Pk+1 D)−1(BT Pk+1 A + σ2DT Pk+1 C)
+
+− (BT Pk+1 A + σ2DT Pk+1 C + BT ¯P ∞
+
+> k+1
+
+A)T
+
+× (R + BT Pk+1 B + σ2DT Pk+1 D + BT ¯P ∞
+
+> k+1
+
+B)−1
+
+× (BT Pk+1 A + σ2DT Pk+1 C + BT ¯P ∞
+
+> k+1
+
+A).
+
+(26) Since ¯PT +1 = ¯P ∞  
+
+> T+1
+
+= N −1 
+
+> N
+
+(Γ T QΓ−QΓ−ΓT Q) and the ARE (9) has a unique positive semi-definite solution, we have ¯Pk = ¯P ∞ 
+
+> k
+
+. 2
+
+3.2 Gain matrix approximation with unknown dynam-ics 
+
+First, based on the model-based iterations (11)-(12), we design an equivalent model-free iteration to approximate the control gains {Kk}Tk=0 .For a fixed 1 ≤ j ≤ N , we have 
+
+E
+
+n
+
+xTj (k + 1) Pkxj (k + 1) − xTj (k)Pk−1xj (k)
+
+o
+
+=E
+
+n
+
+(Ax j (k) + Bu j (k)) T Pk(Ax j (k) + Bu j (k)) + σ2(Cx j (k) + Du j (k)) T Pk(Cx j (k) + Du j (k)) 
+
+− xTj (k)Pk−1xj (k)
+
+o
+
+=E
+
+n
+
+− xTj (k)Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ KTk−1RK k−1
+
+xj (k)+ 2( uj (k) − Kk−1xj (k)) T Λk 
+
+> 2
+
+xj (k)+ uTi (k)Λ k 
+
+> 1
+
+uj (k) − xTj (k)KTk−1Λk 
+
+> 1
+
+Kk−1xj (k)
+
+o
+
+,
+
+(27) where Λk 
+
+> 1
+
+= BT PkB+σ2DT PkD, Λk 
+
+> 2
+
+= −(R+Λ k+1 1 )Kk.By vectorization, one has 
+
+E
+
+n
+
+xTj (k + 1) Pkxj (k + 1) 
+
+o
+
+− E
+
+n
+
+(˜ xj (k)) T vecs (P ik−1)
+
+o
+
+=E
+
+n
+
+− xTj (k)Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ ( Kik−1)T RK ik−1
+
+xj (k)
+
+o
+
++ 2 E
+
+n
+
+xTj (k) ⊗ (uj (k) − Kik−1xj (k)) T o
+
+vec (Λ k,i  
+
+> 2
+
+)+ E
+
+n
+
+˜uj (k) − ^Kik−1xj (k)
+
+oT
+
+vec (Λ k,i  
+
+> 1
+
+),
+
+(28) To approximate the unknown parameters, at least n 
+
+> 2
+
+(n+1) + mn + m 
+
+> 2
+
+(m + 1) data sets are collected to solve (28) using least squares. The data matrices are defined as 5
+
+Ikxj ≜
+
+h
+
+Ik, 1  
+
+> xjxj
+
+, I k, 2  
+
+> xjxj
+
+, · · · , I k,l xj xj
+
+iT
+
+, I kxj xj ≜ E(˜ xj (k)) ,
+
+Ikuj ≜
+
+h
+
+Ik, 1  
+
+> ujuj
+
+, I k, 2  
+
+> ujuj
+
+, · · · , I k,l uj uj
+
+iT
+
+, I kuj uj ≜ E(˜ uj (k)) ,
+
+Ikxj uj K ≜
+
+h
+
+Ik, 1   
+
+> xjujK
+
+, I k, 2   
+
+> xjujK
+
+, · · · , I k,l xj uj K
+
+iT
+
+,Ikxj uj K ≜ E
+
+n
+
+xTj (k) ⊗ (uj (k) − Kik−1xj (k)) T oT
+
+,
+
+Ikuj xj ≜
+
+h
+
+Ik, 1  
+
+> ujxj
+
+, I k, 2  
+
+> ujxj
+
+, · · · , I k,l uj xj
+
+iT
+
+,Ikuj xj ≜ E
+
+n
+
+˜uj (k) − ^Kik−1xj (k)
+
+o
+
+,
+
+Ikxj uj ≜
+
+h
+
+Ik, 1  
+
+> xjuj
+
+, I k, 2  
+
+> xjuj
+
+, · · · , I k,l xj uj
+
+iT
+
+,Ikxj uj ≜ E
+
+n
+
+xTj (k) ⊗ uTj (k)
+
+oT
+
+,
+
+Ξk ≜
+
+h
+
+ξk, 1, ξ k, 2, · · · , ξ k,l iT
+
+,ξk ≜ E
+
+n
+
+xTj (k + 1) Pk xj (k + 1) + xTj (k)
+
+h
+
+Q
+
++ 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + ( Kik−1)T RK ik−1
+
+i
+
+xj (k)
+
+o
+
+(29) Then, by the Kronecker product, (28) implies the fol-lowing matrix form of linear equations 
+
+Ψk
+
+
+
+vecs (P ik−1)
+
+vec (Λ k,i  
+
+> 2
+
+)
+
+vecs (Λ k,i  
+
+> 1
+
+)
+
+ = Ξ k, (30) where Ψk ≜ [Ikxj , 2Ikxj uj K , Ikuj xj ].
+
+Assumption 2 There exists an l1 > 0, such that, for all l ≥ l1,
+
+rank 
+
+h 
+
+Ikxj , Ikxj uj , Ikuj
+
+i 
+
+= n(n + 1) 2 + mn + m(m + 1) 2 .
+
+(31) 
+
+Theorem 3 Suppose Assumption 2 holds. Pk is the pos-itive semi-definite solution to the ARE (8) . The sequence 
+
+{P ik, Λk+1 ,i  
+
+> 1
+
+, Λk+1 ,i  
+
+> 2
+
+}∞ 
+
+> i=1
+
+generated by recursively solving the following equation 
+
+
+
+vecs (P ik−1)
+
+vec (Λ k,i  
+
+> 2
+
+)
+
+vecs (Λ k,i  
+
+> 1
+
+)
+
+ = (Ψ Tk Ψk)−1ΨTk Ξk, (32) 
+
+satisfies lim  
+
+> i→∞
+
+P ik = Pk, where Ψk ≜ [Ikxj , 2Ikxj uj K , Ikuj xj ].Proof. Equation (32) is equivalent to (11) and (12). Then combining with Theorem 1, the model-free method is convergent. Next, we show that Ψk+1 has full column rank by contradiction. We first assume that Ψk+1 H = 0 for a nonzero vector 
+
+H = [ XTv , Y Tv , Z Tv ]T , where Xv = vecs (X) ∈ R n 
+
+> 2(n+1)
+
+,Yv = vec (Y ) ∈ Rmn , Z v = vecs (Z) ∈ R m 
+
+> 2(m+1)
+
+. Then, one has Ikxj vecs (X) + 2 Ikxj uj K vec (Y ) + Ikuj xj vecs (Z) = 0. By (28), we have 
+
+Ikxj vecs (M1) + Ikxj uj vec (M2) + Ikuj vecs (M3) = 0 . (33) where 
+
+
+
+M1 = X − 2Y T Kik − (Kik)T ZK ik,M2 = 2 Y, M3 = Z. 
+
+(34) Since Assumption 2 holds, (33) has a unique solution. Therefore, we have M1 = 0, M 2 = 0, M 3 = 0, i.e., 
+
+X = 0 , Y = 0 , Z = 0 , leading to a contradiction with the assumption that H̸ = 0 . This completes the proof. 
+
+2
+
+Next, we utilize the system trajectories to iterate (19)-(20) without the system parameters. The dynamics of the i-th agent is rewritten as follows 
+
+¯xj (k + 1) = A¯xj (k) + B ¯uj (k)= ¯Ak ¯xj (k) − B ¯Kk ¯xj (k) + B ¯uj (k), (35) and we can deduce that 
+
+¯xTj (k + 1) ¯Pk+1 ¯xj (k + 1) − ¯xTj (k) ¯Pk ¯xj (k)=[ ¯Ak ¯xj (k) − B ¯Kk ¯xj (k) + B ¯uj (k)] T ¯Pk+1 [ ¯Ak ¯xj (k)
+
+− B ¯Kk ¯xj (k) + B ¯uj (k)] − ¯xTj (k) ¯Pk ¯xj (k)=¯ xTj (k) ¯ATk ¯Pk+1 ¯Ak ¯xj (k) − ¯xTj (k) ¯Pk ¯xj (k)+ 2¯ xTj (k) ¯ATk ¯Pk+1 B(− ¯Kk ¯xj (k) + ¯ uj (k)) +( − ¯Kk ¯xj (k)+ ¯ uj (k)) TBT ¯Pk+1 B(− ¯Kk ¯xj (k) + ¯ uj (k)) = − ¯xTj (k)[ N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ (Λ k+1 2 )T (R + Λ k+1 1 )−1Λk+1 2 ]¯ xj (k)+ 2¯ uTj (k)¯Λk+1 2 ¯xj (k) + ¯ uTi (k)¯Λk+1 1 ¯uj (k)+ ¯ xTj (k) ¯KTk (R + Λ k+1 1 + ¯Λk+1 1 ) ¯Kk ¯xj (k),
+
+(36) where ¯Λk 
+
+> 1
+
+≜ BT ¯PkB, ¯Λk 
+
+> 2
+
+≜ BT ¯PkA, ¯Kk = −(R+Λ k+1 1 +¯Λk+1 1 )−1(Λ k+1 2 + ¯Λk+1 2 ). Based on above equation, we can obtain the following recurrence relation 
+
+¯xTj (k + 1) ¯Pk+1 ¯xj (k + 1) − ¯xTj (k) ¯P ik ¯xj (k)= − ¯xTj (k)[ N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ (Λ k+1 2 )T (R + Λ k+1 1 )−1Λk+1 2
+
+− ( ¯Kik)T (R + Λ k+1 1 ) ¯Kik]¯ xj (k)+ 2¯ uTj (k)¯Λk+1 ,i  
+
+> 2
+
+¯xj (k) + ¯ uTj (k)¯Λk+1 ,i  
+
+> 1
+
+¯uj (k)+ ¯ xTj (k)( ¯Kik)T ¯Λk+1 ,i  
+
+> 1
+
+¯Kik ¯xj (k).
+
+6By vectorization, the above equation becomes 
+
+¯xTj (k + 1) ¯Pk+1 ¯xj (k + 1) − ˜¯xTj (k)vecs ( ¯P ik)= − ¯xTj (k) N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ (Λ k+1 2 )T (R + Λ k+1 1 )−1Λk+1 2
+
+− ( ¯Kik)T (R + Λ k+1 1 ) ¯Kik
+
+¯xj (k)+ (˜ ¯uj (k) + ^¯Kik ¯xj (k)) T vecs (¯Λk+1 ,i  
+
+> 1
+
+)+ 2(¯ xTj (k) ⊗ ¯uTj (k)) vec (¯Λk+1 ,i  
+
+> 2
+
+).
+
+(37) Using least squares, the above equation can be solved as follows, without any knowledge of the system dynamics 
+
+¯Ψk
+
+
+
+vecs ( ¯P ik)
+
+vecs (¯Λk+1 ,i  
+
+> 1
+
+)
+
+vec (¯Λk+1 ,i  
+
+> 2
+
+)
+
+ = ¯Ξk, (38) where ¯Ψk ≜ [¯Ik 
+
+> ¯x
+
+, ¯Ik 
+
+> ¯K¯x¯u
+
+, 2¯Ik
+
+> ¯x¯u
+
+]. At least n 
+
+> 2
+
+(n + 1) + mn + 
+
+> m
+> 2
+
+(m+1) data sets are collected to solve above equation. The data matrices are defined as follows                                                                                        
+
+> 
+> ¯Ik
+> ¯x≜
+> h¯Ik, 1¯x,¯Ik, 2¯x,· · · ,¯Ik,l
+> ¯x
+> iT
+> ,¯Ik
+> ¯x≜˜¯xj(k),
+> ¯Ik
+> ¯u≜
+> h¯Ik, 1¯u,¯Ik, 2¯u,· · · ,¯Ik,l
+> ¯u
+> iT
+> ,¯Ik
+> ¯u≜˜¯uj(k),
+> ¯Ik
+> ¯K¯x¯u≜
+> h¯Ik, 1¯K¯x¯u,¯Ik, 2¯K¯x¯u,· · · ,¯Ik,l
+> ¯K¯x¯u
+> iT
+> ,Ik
+> ¯K¯x¯u≜^¯Kik¯xj(k) + ˜ ¯uj(k),
+> ¯Ik
+> ¯x¯u≜
+> h¯Ik, 1¯x¯u,¯Ik, 2¯x¯u,· · · ,¯Ik,l
+> ¯x¯u
+> iT
+> ,
+> ¯Ik
+> ¯x¯u≜
+> n
+> ¯xTj(k)⊗¯uTj(k)
+> oT
+> ,
+> ¯Ξk≜
+> h¯ξk, 1,¯ξk, 2,· · · ,¯ξk,l iT
+> ,
+> ¯ξk≜¯xTj(k+ 1) ¯Pk+1 ¯xj(k+ 1) + ¯ xTj(k)
+> hN−1
+> N(Γ TQΓ−QΓ−ΓTQ)+ (Λ k+1 2)T(R+ Λ k+1 1)−1Λk+1 2
+> −( ¯Kik)T(R+ Λ k+1 1) ¯Kik
+> i
+> ¯xj(k).
+
+Assumption 3 There exists an l2 > 0, such that, for all l ≥ l2,rank 
+
+h ¯Ik 
+
+> ¯x
+
+, ¯Ik
+
+> ¯x¯u
+
+, ¯Ik
+
+> ¯u
+
+i 
+
+= n
+
+2 (n + 1) + mn + m
+
+2 (m + 1) .
+
+Theorem 4 Suppose Assumption 3 holds. ¯Pk is the pos-itive semi-definite solution to the ARE (9) . The sequence 
+
+{ ¯P ik, ¯Λk+1 ,i  
+
+> 1
+
+, ¯Λk+1 ,i  
+
+> 2
+
+}∞ 
+
+> i=0
+
+generated by recursively solving the following equation 
+
+
+
+vecs ( ¯P ik)
+
+vecs (¯Λk+1 ,i  
+
+> 1
+
+)
+
+vec (¯Λk+1 ,i  
+
+> 2
+
+)
+
+ = ( ¯ΨTk ¯Ψk)−1 ¯ΨTk ¯Ξk,
+
+satisfies lim 
+
+> i→∞
+
+¯P ik = ¯Pk.Proof. We first assume that ¯Ψk ¯H = 0 for a nonzero vector ¯H = [ ¯HTv, 1, ¯HTv, 2, ¯HTv, 3]T , where ¯Hv, 1 = vecs (H1),
+
+¯Hv, 2 = vecs (H2), ¯Hv, 3 = vec (H3). Then, one has 
+
+¯Ik 
+
+> ¯x
+
+¯Hv, 1 + ¯Ik  
+
+> ¯K¯x¯u
+
+¯Hv, 2 + 2 ¯Ik 
+
+> ¯x¯u
+
+¯Hv, 3 = 0 . By (37), we have 
+
+¯Ik 
+
+> ¯x
+
+vecs ( ¯M1) + ¯Ik
+
+> ¯x¯u
+
+vec ( ¯M2) + ¯Ik 
+
+> ¯u
+
+vecs ( ¯M3) = 0 , (39) where 
+
+
+
+¯M1 = H1 + ( ¯Kik)T H2 ¯Kik,
+
+¯M2 = 2 H3 + 2 H2 ¯Kik,
+
+¯M3 = H2.
+
+Since Assumption 3 holds, (39) has a unique solution. Therefore, we have ¯M1 = 0 , ¯M2 = 0 , ¯M3 = 0 , i.e., H1 =0, H 2 = 0 , H 3 = 0 , leading to a contradiction with the assumption that ¯H̸ = 0 . This completes the proof. 2
+
+Remark 3 To satisfy the persistence of excitation con-dition, probing noise is added to the system. If the col-lected data do not satisfy the rank condition, probing noise is injected into the control input and additional data are collected until the condition is satisfied. In other words, emoploy uj = K0xj + ej , where ej is the probing noise. The selection of probing noise is no simple matter in general RL [22]. There are several types of exploration noise [50], such as random noise, exponentially decreas-ing probing noise, sum of sinusoidal signals with different frequencies. 
+
+Remark 4 The proposed two off-policy RL algorithms iteratively solve (30) and (38) , respectively. The algo-rithms do not require the knowledge of the system dynam-ics and their behavior policy is unrelated to the extimated policy, which enable us to make use of the previously pro-duced data for learning. 
+
+4 Main results for Problem 2 
+
+In this section, we investigate properties of the proposed model-free algorithm as T → ∞ (infinite-horizon case). 
+
+Assumption 4 System (1) [A, B ; C, D ] is L2 −
+
+stabilizable and ¯M̸ = ∅, where ¯M ≜ {(P, S ) =(P T , S T )| ¯H(P, S ) > 0, H(P ) > 0},
+
+H(P, S ) ≜
+
+" ¯L(P, S ) ¯HT (P, S )¯H(P, S ) ¯W (P, S )
+
+#
+
+,
+
+H(P ) ≜
+
+" L(P ) HT (P )
+
+H(P ) W (P )
+
+#
+
+,
+
+with 
+
+7
+
+¯L(P, S ) ≜ N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ σ2CT P C + AT SA − S, 
+
+¯H(P, S ) ≜ BT SA + σ2DT P C, 
+
+¯W (P, S ) ≜ R + BT SB + σ2DT P D, L(P ) ≜ Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ AT P A + σ2CT P C − P, H(P ) ≜ BT P A + σ2DT P C, W (P ) ≜ R + BT P B + σ2DT P D. 
+
+4.1 Model-based policy iteration 
+
+Lemma 2 [36, Proposition 3.2] Under Assumption 4, there exists a stabilizing solution to the following coupled AREs (40) -(41) :
+
+P = Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + AT P A 
+
++ σ2CT P C − (BT P A + σ2DT P C )T
+
+× (R + BT P B + σ2DT P D )−1
+
+× (BT P A + σ2DT P C ),
+
+(40) 
+
+¯P = N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + AT ¯P A 
+
++ ( BT P A + σ2DT P C )T (R + BT P B 
+
++ σ2DT P D )−1(BT P A + σ2DT P C )
+
+− (BT P A + σ2DT P C + BT ¯P A )T
+
+× (R + BT P B + σ2DT P D + BT ¯P B )−1
+
+× (BT P A + σ2DT P C + BT ¯P A ).
+
+(41) 
+
+Theorem 5 Let K0 be any stabilizing gain matrix, and let P i be the solution of the Lyapunov equation (42) .
+
+P i =Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + ( Ai)T P iAi
+
++ σ2(Ci)T P iCi + ( Ki)T RK i,
+
+(42) 
+
+where Ki, with i = 1 , 2, ..., are defined recursively by: 
+
+Ki+1 = − (R + BT P iB + σ2DT P iD)−1
+
+× (BT P iA + σ2DT P iC), (43) 
+
+where Ai ≜ A + BK i and Ci ≜ C + DK i. Then, under Assumption 4, the following properties hold: (1). Ki is a stabilizer of the system [A, B ; C, D |Q].(2). P ≤ P i+1 ≤ P i.(3). lim  
+
+> i→+∞
+
+P i = P , lim  
+
+> i→+∞
+
+Ki = K.Proof. We define the Lyapunov-type operator as follows              
+
+> Li(X)≜(A+BK i)TX(A+BK i) + σ2(C+DK i)TX(C+DK i),
+
+with spectrum 
+
+σ(Li(X)) ≜ {λ ∈ R|L i(X) = λX, X ∈ Sn, X ̸ = 0 }.
+
+If i = 0 , the initial conditon K0 ensures result (1) holds. Suppose the result (1) holds for i − 1 > 0, we prove that the result (1) holds for i. Assume there exists λ ∈
+
+σ(Li(X)) such that λ ≥ 1. Subtracting (40) from (42) yields 
+
+P i − P = ( Ai)T (P i − P )Ai + σ2(Ci)T (P i − P )Ci
+
++ ( Ki − K)T (R + BT P B + σ2DT P D )( Ki − K).
+
+This can be written as                             
+
+> (Ai−1)T(Pi−1−P)Ai−1+σ2(Ci−1)T(Pi−1−P)Ci−1
+> + ( Ki−1−K)T(R+BTP B +σ2DTP D )( Ki−1−K)
+> −(Pi−1−P) = 0 .
+
+(44) Since Ki−1 is a stabilizer and R + BT P B + σ2DT P D > 
+
+0, one has P i−1 − P ≥ 0. The above equation can be transformed into                                             
+
+> (Ai)T(Pi−1−P)Ai+σ2(Ci)T(Pi−1−P)Ci−(Pi−1−P)=−(Ki−K)T(R+BTP B +σ2DTP D )( Ki−K)
+> −(Ki−1−Ki)T(R+BTPi−1B+σ2DTPi−1D)( Ki−1−Ki).
+
+Then, we have 
+
+(Ai − 1) vec (P i−1 − P )= − [( Ki − K)T ⊗ (Ki − K)T ]
+
+× vec (R + BT P B + σ2DT P D )
+
+− [( Ki−1 − Ki)T ⊗ (Ki−1 − Ki)T ]
+
+× vec (R + BT P i−1B + σ2DT P i−1D),
+
+where Ai = ( Ai)T ⊗ (Ai)T + σ2(Ci)T ⊗ (Ci)T . Premul-tiplying the above equation by vec T (X), we have 
+
+vec T (X)( λ − 1) vec (P i−1 − P )= − vec T (X)[( Ki − K)T ⊗ (Ki − K)T ]
+
+× vec (R + BT P B + σ2DT P D )
+
+− vec T (X)[( Ki−1 − Ki)T ⊗ (Ki−1 − Ki)T ]
+
+× vec (R + BT P i−1B + σ2DT P i−1D),
+
+or equivalently, 
+
+(λ − 1) T r [( P i−1 − P )X]= − T r [X1/2(Ki − K)T (R + BT P B + σ2DT P D )
+
+× (Ki − K)X1/2 + X1/2(Ki−1 − Ki)T × (R
+
++ BT P i−1B + σ2DT P i−1D)( Ki−1 − Ki)X1/2].
+
+(45) 8As P i−1 − P ≥ 0 and −(Ki − K)T (R + BT P B +
+
+σ2DT P D )( Ki − K) − (Ki−1 − Ki)T (R + BT P i−1B +
+
+σ2DT P i−1D)( Ki−1 − Ki) ≤ 0, the equation (45) im-plies (Ki−1 − Ki)X = 0. Consequently, there exists 
+
+λ ∈ σ(Li−1(X)) such that λ ≥ 1. It contradicts with the induction assumption. Therefore, the result (1) holds for i ∈ N+.Replacing i in (42) by i − 1, one has 
+
+P i−1 = Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ ( Ai−1)T P i−1Ai−1 + σ2(Ci−1)T P i−1Ci−1
+
++ ( Ki−1)T RK i−1.
+
+(46) Subtracting (42) from (46), one has 
+
+P i−1 − P i =( Ai)T (P i−1 − P i)Ai
+
++ σ2(Ci)T (P i−1 − P i)Ci
+
++ ( Ki−1 − Ki)T (R + BT P i−1B
+
++ σ2DT P i−1D)( Ki−1 − Ki).
+
+(47) Since Ki is a stabilizer and R+BT P i−1B+σ2DT P i−1D > 
+
+0, one has P i−1 − P i ≥ 0. From (44) and (47), the result (2) holds for i ∈ N+.Therefore, the sequence {P i}∞ 
+
+> i=0
+
+is monotonically de-creasing and has a lower bound. This sequence has a limit. The sequence {Ki}∞ 
+
+> i=0
+
+has a limit since Ki is the unique solution of (43) and the convergence of {P i}∞
+
+> i=0
+
+is guaranteed. Besides, P satisfies (42) with Ki = K. We have lim  
+
+> i→+∞
+
+P i = P and lim  
+
+> i→+∞
+
+Ki = K. This completes the proof. 2
+
+Remark 5 Compared to the finite-horizon case (The-orem 1), Theorem 5 requires an additional assumption that K0 is a stabilizer, and we needs to show that Ki is a stabilizer for all i ∈ N+.
+
+Combining (40) with (41), one has 
+
+S =Q + Γ T QΓ − QΓ − ΓT Q + ¯AT S ¯A
+
++ σ2 ¯CT P ¯C + ¯KT R ¯K, (48) where S ≜ P + ¯P , ¯A ≜ A + B ¯K and ¯C ≜ C + D ¯K.Similar to Theorem 5, we obtain the following result. 
+
+Theorem 6 Let ¯K0 be any stabilizing gain matrix, and let Si be the solution of the Lyapunov equation (49) .
+
+Si =Q + Γ T QΓ − QΓ − ΓT Q + ( ¯Ai)T Si ¯Ai
+
++ σ2( ¯Ci)T P ¯Ci + ( ¯Ki)T R ¯Ki,
+
+(49) 
+
+where ¯Ki, with i = 1 , 2, ..., are defined recursively by: 
+
+¯Ki+1 + R−1(BT Si ¯Ai+1 + σ2DT P ¯Ci+1 ) = 0 . (50) 
+
+Then, under Assumption 4, the following properties hold: (1). ¯Ki is a stabilizer of the system [A, B ; C, D |Q].(2). S ≤ Si+1 ≤ Si,(3). lim  
+
+> i→+∞
+
+Si = S, lim 
+
+> i→+∞
+
+¯P i = ¯P , lim 
+
+> i→+∞
+
+¯Ki = ¯K.Proof. The proof of Theorem 6 is similar to that of Theo-rem 5, using the assumed initial stabilizer ¯K0 and math-ematical induction. The Lyapunov-type operator is de-fined as ¯Li(X) ≜ (A + B ¯Ki)T X(A + B ¯Ki). Similarly, com-bining (48) with (49), one has                      
+
+> ( ¯Ai−1)T(Si−1−S) ¯Ai−1−(Si−1−S)=−( ¯K−¯Ki−1)T(R+BTSB +σ2DTP D )( ¯K−¯Ki−1),
+
+(51) or equivalently, 
+
+(( ¯Ai)T ⊗ ( ¯Ai)T − 1) vec (Si−1 − S)= − [( ¯K − ¯Ki)T ⊗ ( ¯K − ¯Ki)T ]
+
+× vec (R + BT SB + σ2DT P D )
+
+− [( ¯Ki−1 − ¯Ki)T ⊗ ( ¯Ki−1 − ¯Ki)T ]
+
+× vec (R + BT Si−1B + σ2DT P D ).
+
+(52) If i = 0 , the initial conditon ¯K0 ensures result (1) holds. Suppose the result (1) holds for i − 1 > 0, i.e., ¯Ki−1 is a stabilizer. Then it follows from (51) that Si−1 − S ≥ 0.Assume there exists ¯λ ∈ σ( ¯Li(X)) such that ¯λ ≥ 1,where σ( ¯Li(X)) denotes the spectrum of the Lyapunov-type operator ¯Li(X). From (52), one has 
+
+(¯λ − 1) T r [( Si−1 − S)X]= − T r [X1/2( ¯K − ¯Ki)T (R + BT SB + σ2DT P D )
+
+× ( ¯K − ¯Ki)X1/2 + X1/2( ¯Ki−1 − ¯Ki)T × (R
+
++ BT Si−1B + σ2DT P D )( ¯Ki−1 − ¯Ki)X1/2].
+
+Above equation implies ( ¯Ki−1 − ¯Ki)X = 0. Conse-quently, there exists λ ∈ σ(Li−1(X)) such that λ ≥ 1. It contradicts with the induction assumption. Therefore, the result (1) holds for i ∈ N+. From (49), one has 
+
+Si−1 − Si =( ¯Ai)T (Si−1 − Si) ¯Ai
+
++ ( ¯Ki−1 − ¯Ki)T (R + BT Si−1B
+
++ σ2DT P D )( ¯Ki−1 − ¯Ki).
+
+(53) Since ¯Ki is a stabilizer and R + BT Si−1B + σ2DT P D > 
+
+0, one has Si−1 −Si ≥ 0. The result (2) holds for i ∈ N+.Therefore, the sequence {Si}∞ 
+
+> i=0
+
+is monotonically de-creasing and has a lower bound. This sequence has a limit. Since ¯Ki is the unique solution of (50), the conver-gence of { ¯Ki}∞ 
+
+> i=0
+
+can be deduced from the convergence of the sequence {Si}∞
+
+> i=0
+
+. Besides, S satisfies (49) with 
+
+¯Ki = ¯K. This implies that lim  
+
+> i→+∞
+
+Si = S and lim 
+
+> i→+∞
+
+¯Ki =
+
+9¯K. By Theorem 5 and ARE (41) has a unique solu-tion, one has lim 
+
+> i→+∞
+
+¯P i = ¯P . This completes the proof. 
+
+2
+
+Remark 6 To address the selection issue of initial gains of (42) -(43) and (49) -(50) , which are necessary to start the policy iteartion in the infinite-horizon case, we use the data-driven approach based on system identification. According to [11, Theorem 6] or [39, Theorem 1], when the number of samples is large, we can compute the initial stabilizing gains ˆK0 = −YX −1 and ˆ¯K0 = − ¯Y ¯X −1 by solving the following linear matrix inequalities (LMIs) 
+
+
+
+−X ˆAX + ˆBY CX + DYX ˆAT + YT ˆBT X 0
+
+X CT + YT DT 0 X
+
+ < 0,
+
+
+
+− ¯X ˆA ¯X + ˆB ¯Y C ¯X + D ¯Y
+
+¯X ˆAT + ¯YT ˆBT ¯X 0¯X CT + ¯YT DT 0 ¯X
+
+ < 0.
+
+Remark 7 The initial stabilizing gains of algorithms are not unique. The above inequalities may have fea-sible solutions in different directions, which may give rise to different initial stabilizing gains [39]. LMIs are powerful tools for analyzing and solving control prob-lems, particularly those related to Riccati equations, sta-bility, well-posedness, and robustness. The feasibility of an LMI condition is shown to be equivalent to the solv-ability of the generalized difference Riccati equation, the well-posedness, and the attainability of the LQG problem [40]. 4.2 Gain matrix approximation with unknown dynam-ics 
+
+Similar to Section 3.2, we obtain the following design of model-free algorithm and convergence analysis. By Kronecker product representation, we have 
+
+E
+
+n
+
+˜xTj (k + 1) − ˜xTj (k)
+
+o
+
+vecs (P i)=E
+
+n
+
+− xTj (k)Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + ( Ki)T RK ixj (k)
+
+o
+
++ 2 E
+
+n
+
+xTj (k) ⊗ (uj (k) − Kixj (k)) T o
+
+vec (Λ j
+
+> 2
+
+)+ E
+
+n
+
+˜uj (k) − ^Kixj (k)
+
+oT
+
+vec (Λ j
+
+> 1
+
+),
+
+and 
+
+[˜ ¯xTj (k + 1) − ˜¯xTj (k)] vecs ( ¯P i)= − ¯xTj (k) N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q) + Λ 2T (R + Λ 1)−1Λ2
+
+− ( ¯Ki)T (R + Λ 1) ¯Ki¯xj (k) + (˜ ¯uj (k) + ^¯Kj ¯xj (k)) T vecs ( ¯Λi
+
+> 1
+
+)+ 2(¯ xTj (k) ⊗ ¯uTj (k)) vec ( ¯Λi
+
+> 2
+
+).
+
+Based on above equations, we can design the model-free algorithm and analyze its convergence (Theorems 7 and 8). For the infinite-horizon model-free algorithm, the new data matrices need to be defined as follows 
+
+
+
+Nxj ≜
+
+h
+
+I1, I 2, · · · , I liT
+
+, I ≜ E(˜ xj (k) − ˜xj (k + 1)) ,
+
+Ξ ≜
+
+h
+
+ξ1, ξ 2, · · · , ξ liT
+
+,ξ ≜ E
+
+n
+
+xTj (k)
+
+h
+
+Q + 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ ( Ki)T RK ii
+
+xj (k)
+
+o
+
+,
+
+Ixj ≜
+
+h
+
+I1  
+
+> xjxj
+
+, I 2  
+
+> xjxj
+
+, · · · , I lxj xj
+
+iT
+
+, I xj xj ≜ E(˜ xj (k)) ,
+
+Iuj ≜
+
+h
+
+I1  
+
+> ujuj
+
+, I 2  
+
+> ujuj
+
+, · · · , I luj uj
+
+iT
+
+, I uj uj ≜ E(˜ uj (k)) ,
+
+Ixj uj K ≜
+
+h
+
+I1   
+
+> xjujK
+
+, I 2   
+
+> xjujK
+
+, · · · , I lxj uj K
+
+iT
+
+,Ixj uj K ≜ E
+
+n
+
+xTj (k) ⊗ (uj (k) − Kixj (k)) T oT
+
+,
+
+Iuj xj ≜
+
+h
+
+I1  
+
+> ujxj
+
+, I 2  
+
+> ujxj
+
+, · · · , I luj xj
+
+iT
+
+,Iuj xj ≜ E
+
+n
+
+˜uj (k) − ^Kixj (k)
+
+o
+
+,
+
+Ixj uj ≜
+
+h
+
+I1  
+
+> xjuj
+
+, I 2  
+
+> xjuj
+
+, · · · , I lxj uj
+
+iT
+
+,Ixj uj ≜
+
+n
+
+xTj (k) ⊗ uTj (k)
+
+oT
+
+,
+
+and 
+
+
+
+N¯x ≜
+
+h ¯I1, ¯I2, · · · , ¯IliT
+
+, ¯I ≜ ˜¯xj (k) − ˜¯xj (k + 1) ,
+
+¯Ξ ≜
+
+h ¯ξ1, ¯ξ2, · · · , ¯ξliT
+
+,
+
+¯ξ ≜ ¯xTj (k)
+
+h N − 1
+
+N (Γ T QΓ − QΓ − ΓT Q)+ Λ 2T (R + Λ 1)−1Λ2 − ( ¯Ki)T (R + Λ 1) ¯Kii
+
+¯xj (k),
+
+¯I¯x ≜
+
+h ¯I1¯x, ¯I2¯x, · · · , ¯Il
+
+> ¯x
+
+iT
+
+, ¯I¯x ≜ ˜¯xj (k),
+
+¯I¯u ≜
+
+h ¯I1¯u, ¯I2¯u, · · · , ¯Il
+
+> ¯u
+
+iT
+
+, ¯I¯u ≜ ˜¯uj (k),
+
+¯I ¯K ¯x¯u ≜
+
+h ¯I1¯K ¯x¯u, ¯I2¯K ¯x¯u, · · · , ¯Il¯K ¯x¯u
+
+iT
+
+,I ¯K ¯x¯u ≜ ^¯Kik ¯xj (k) + ˜ ¯uj (k),
+
+¯I¯x¯u ≜
+
+h ¯I1¯x¯u, ¯I2¯x¯u, · · · , ¯Il
+
+> ¯x¯u
+
+iT
+
+,
+
+¯I¯x¯u ≜
+
+n
+
+¯xTj (k) ⊗ ¯uTj (k)
+
+oT
+
+.
+
+Assumption 5 There exists an l1 > 0, such that, for all l ≥ l1,rank 
+
+h 
+
+Ixj , Ixj uj , Iuj
+
+i 
+
+= n
+
+2 (n + 1) + mn + m
+
+2 (m + 1) .
+
+Theorem 7 Suppose Assumption 5 holds. P is the posi-tive semi-definite solution to the ARE (40) . The sequence 
+
+{P i, Λi
+
+> 1
+
+, Λi
+
+> 2
+
+}∞ 
+
+> i=1
+
+generated by recursively solving the fol-lowing equation 
+
+
+
+vecs (P i)
+
+vec (Λ i
+
+> 2
+
+)
+
+vecs (Λ i
+
+> 1
+
+)
+
+ = (Ψ T Ψ) −1ΨT Ξ, (54) 10 satisfies lim  
+
+> i→∞
+
+P i = P , where Ψ ≜ [Nxj , 2Ixj uj K , Iuj xj ].All the control gains Ki+1 = −(R + Λ i
+
+> 1
+
+)−1Λi 
+
+> 2
+
+are stabi-lizers. Proof. The iteration is initialized with a stabilizer K0.Assuming Ki is a stabilizer, we prove that Ki+1 is also a stabilizer. Define a nonzero vector H = [ XTv , Y Tv , Z Tv ]T ,where Xv = vecs (X) ∈ R n 
+
+> 2(n+1)
+
+, Y v = vec (Y ) ∈ Rmn ,Zv = vecs (Z) ∈ R m 
+
+> 2(m+1)
+
+. From (1), we obtain 
+
+E[˜ xTj (k + 1) Xv ] = E˜xTj (k)vecs (AT XA + σ2CT XC )+ 2( xTj (k) ⊗ uTj (k)) vec (BT XA + σ2DT XC )+ ˜ uTj (k)vecs (BT XB + σ2DT XD ).
+
+Considering the equation ΨH − Ξ = 0 , one has 
+
+h
+
+Ixj , Ixj uj , Iuj
+
+i
+
+vecs (M1)
+
+vec (M2)
+
+vecs (M3)
+
+ = 0 , (55) where                                          
+
+> 
+> M1=X−(Ki)TY−YTKi−(Ki)TZK i
+> −ATXA −σ2CTXC −
+> h
+> Q+ 1
+> N(Γ TQΓ−QΓ
+> −ΓTQ) + ( Ki)TRK ii
+> ,M2= 2( Y−BTXA −σ2DTXC ),M3=Z−BTXB −σ2DTXD.
+
+Since Assumption 5 holds, the equation (55) has a unique solution. Therefore, we have M1 = 0 , M 2 = 0 , M 3 = 0 .Substituting Y = BT XA + σ2DT XC , Z = BT XB +
+
+σ2DT XD into M1 = 0 , one has                       
+
+> X= ( A+BK i)TX(A+BK i)+σ2(C+DK i)TX(C+DK i)+Q+ 1
+> N(Γ TQΓ−QΓ−ΓTQ) + ( Ki)TRK i.
+
+Let X = P i, Y = Λ i 
+
+> 1
+
+and Z = Λ i
+
+> 2
+
+. Then the equation 
+
+ΨH −Ξ = 0 or the above equation becomes (54), which is the same as (42). The control gain is updated as Ki+1 =
+
+−(R + Λ i
+
+> 1
+
+)−1Λi
+
+> 2
+
+, which coincides with (43). Using the Lyapunov-type operator and (40), we have Li(P i − P ) −
+
+(P i − P ) = −(Ki − K)T (R + BT P B + σ2DT P D )( Ki −
+
+K), which implies that P i − P ≥ 0. From (47), one has 
+
+Li+1 (P i − P i+1 ) − (P i − P i+1 ) = −(Ki − Ki+1 )T
+
+× (R + BT P iB + σ2DT P iD)( Ki − Ki+1 ).
+
+Assume there exists λ ∈ σ(Li+1 (X )) such that λ ≥ 1.Then, we have 
+
+(λ − 1) T r [( P i − P i+1 )X ] = −T r [X 1/2(Ki − Ki+1 )T
+
+× (R + BT P iB + σ2DT P iD)( Ki − Ki+1 )X 1/2].
+
+The above equation implies that (Ki − Ki+1 )X = 0 .Consequently, this indicates that λ ≥ 1 is also in the spectrum of the previous operator σ(Li(X )) . It contra-dicts with the induction assumption. Therefore, the gain 
+
+Ki+1 updated by (54) is a stabilizer for all i ∈ N. By Theorem 5, the convergence is proved. 2
+
+Assumption 6 There exists an l2 > 0, such that, for all l ≥ l2,rank 
+
+h ¯I¯x, ¯I¯x¯u, ¯I¯u
+
+i 
+
+= n
+
+2 (n + 1) + mn + m
+
+2 (m + 1) .
+
+Theorem 8 Suppose Assumption 6 holds. ¯P is the posi-tive semi-definite solution to the ARE (41) . The sequence 
+
+{Si, ¯Λi
+
+> 1
+
+, ¯Λi
+
+> 2
+
+}∞ 
+
+> i=1
+
+generated by recursively solving the fol-lowing equation 
+
+
+
+vecs ( ¯P i)
+
+vec (¯Λi
+
+> 2
+
+)
+
+vecs (¯Λi
+
+> 1
+
+)
+
+ = ( ¯ΨT ¯Ψ) −1 ¯ΨT ¯Ξ, (56) satisfies lim 
+
+> i→∞
+
+¯P i = ¯P , where ¯Ψ ≜ [N¯x, 2¯I¯x¯u, ¯I ¯K ¯x¯u]. All the control gains ¯Ki+1 = −(R + Λ 1 + ¯Λi
+
+> 1
+
+)−1(Λ 2 + ¯Λi
+
+> 2
+
+)
+
+are stabilizers. 
+
+Proof. Define a nonzero vector ¯H = [ ¯HTv, 1, ¯HTv, 2, ¯HTv, 3]T ,where ¯Hv, 1 = vecs ( ¯H1) ∈ R n 
+
+> 2(n+1)
+
+, ¯Hv, 2 = vec ( ¯H2) ∈
+
+R m 
+
+> 2(m+1)
+
+, ¯Hv, 3 = vecs ( ¯H3) ∈ Rmn . From (35), we ob-tain 
+
+˜¯xTj (k + 1) ¯Hv, 1 = ˜ xTj (k)vecs (AT ¯H1A)+ 2( xTj (k) ⊗ uTj (k)) vec (BT ¯H1A)+ ˜ uTj (k)vecs (BT ¯H1B).
+
+Consider the equation ¯Ψ ¯H − ¯Ξ = 0 , one has 
+
+h¯I¯x, ¯I¯x¯u, ¯I¯u
+
+i
+
+vecs ( ¯M1)
+
+vec ( ¯M2)
+
+vecs ( ¯M3)
+
+ = 0 , (57) where                                
+
+> 
+> ¯M1= ¯H1−AT¯H1A+ ( ¯Ki)T¯H3¯Ki
+> −
+> hN−1
+> N(Γ TQΓ−QΓ−ΓTQ)+ Λ 2T(R+ Λ 1)−1Λ2−( ¯Ki)T(R+ Λ 1) ¯Kii
+> ,
+> ¯M2= 2( ¯H2−BT¯H1A),
+> ¯M3= ¯H3−BT¯H1B.
+
+Since Assumption 6 holds, the equation (57) has a unique solution. Therefore, we have ¯M1 = 0 , ¯M2 = 0 , ¯M3 = 0 .11 Substituting ¯H3 = BT ¯H1B into ¯M1 = 0 , one has                       
+
+> ¯H1=
+> hN−1
+> N(Γ TQΓ−QΓ−ΓTQ) + Λ 2T(R+ Λ 1)−1Λ2
+> i
+> +AT¯H1A−( ¯Ki)T(R+ Λ 1+BT¯H1B) ¯Ki,
+
+(58) Let ¯H1 = ¯P i, the above equation becomes (56) and can also be obtained by subtracting (40) from (49). Similar to the proof of Theorem 7, the gain ¯Ki+1 updated by (56) is a stabilizer for all i ∈ N. By Theorem 6, the convergence is proved and the sequence in (56) or (58) is asymptotically equivalent to { ¯P i}∞
+
+> i=0
+
+. 2
+
+Theorem 9 Assume the initial control gains are set as 
+
+K0 
+
+> k
+
+= K0 and ¯K0 
+
+> k
+
+= ¯K0 for all k ∈ [k0, T ) in Theo-rems 1 and 2, where K0 and ¯K0 are identical to those in Theorems 5 and 6. Then, as T → ∞ , it follows that 
+
+lim k→−∞ P ik = P i, lim k→−∞ Kik = Ki, lim k→−∞ Sik =
+
+Si, and lim k→−∞ ¯Kik = ¯Ki. Thus, for T → ∞ , the finite-horizon policy iteration algorithms in Theorems 1 and 2 become asymptotically equivalent to the infinite-horizon algorithms in Theorems 5 and 6. Proof. For the i-th iteration of policy iteration and 
+
+( ˜P i, ˜Si) ∈ ¯M, we consider the auxiliary cost function 
+
+J i(l, ζ ) = 
+
+> T
+
+X
+
+> k=l
+
+E
+
+n "¯yk
+
+¯vk
+
+#T
+
+H( ˜P i, ˜Si)
+
+"¯yk
+
+¯vk
+
+#
+
++
+
+"yk − ¯yk
+
+vk − ¯vk
+
+#T
+
+H( ˜P i)
+
+"yk − ¯yk
+
+vk − ¯vk
+
+# o
+
+,
+
+(59) with initial state ζ. Furthermore, the corresponding value function is 
+
+Vi(l) = inf 
+
+> u∈U ad
+
+J i(l, ζ )= E (yl − ¯yl)T U il (yl − ¯yl) + (¯ yl)T V il ¯yl.
+
+(60) We first prove the monotonicity of the sequences 
+
+{U il }Tl=−∞ and {V il }Tl=−∞ with respect to time hori-zon l . Since ( ˜P i, ˜Si) ∈ ¯M, we have H( ˜P i, ˜Si) ≥ 0
+
+and H( ˜P i) ≥ 0. Consequently, every term in (59) is nonnegative. Extending the time horizon backwards by one step (from [l, T ] to [l − 1, T ]) cannot decrease the cost function for the same initial state ζ. There-fore, J i(l − 1, ζ ) ≥ J i(l, ζ ) and Vi(l − 1) ≥ Vi(l).To prove the monotonicity of the sequences {U il }Tl=−∞ 
+
+and {V il }Tl=−∞ separately, as in [36], we construct the following two specific choices of the initial state ζ:(i) Let ζ = μ ∈ Rn, from (60), we have μT V il−1μ ≥
+
+μT V il μ, which implies V il−1 ≥ V il .(ii) Let ζ = ξϵ, ξ ∈ Rn, ϵ is a random variable with P(ϵ =1) = P(ϵ = −1) = 12 . From (60), we have ξT U il−1ξ ≥
+
+ξT U il ξ, which implies U il−1 ≥ U il .Next, we show that the statement of the theorem holds for all i ∈ N by mathematical induction. If i = 0 , by Assumption 4, the system (1) is L2−stabilizable and for any stabilizing control vk = K(yk − ¯yk) + ¯K ¯yk, the state 
+
+yk is mean-square bounded. Since (E(y)) 2 ≤ E(y2) and 
+
+E[y − E(y)] 2 = E(y2) − (E(y)) 2 ≤ E(y2), (60) becomes 
+
+E (yl − ¯yl)T U 0 
+
+> l
+
+(yl − ¯yl) + (¯ yl)T V 0 
+
+> l
+
+¯yl
+
+≤
+
+> T
+
+X
+
+> k=l
+
+E
+
+n
+
+¯yTk
+
+"In
+
+¯K
+
+#T
+
+H( ˜P 0, ˜S0)
+
+"In
+
+¯K
+
+#
+
+¯yk
+
++ ( yk − ¯yk)T
+
+"In
+
+K
+
+#T
+
+H( ˜P 0)
+
+"In
+
+K
+
+#
+
+(yk − ¯yk)
+
+o
+
+≤ c
+
+> ∞
+
+X
+
+> k=l
+
+E|yk|2 < ∞,
+
+(61) where c > 0 is a constant. Next, we need to discuss the boundedness of the sequences {U 0 
+
+> l
+
+}Tl=−∞ and {V 0 
+
+> l
+
+}Tl=−∞ 
+
+separately. For deterministic yl = μ, we have μT V 0 
+
+> l
+
+μ < 
+
+∞ from the above equation. For random yl = ξϵ, we have ξT U 0 
+
+> l
+
+ξ < ∞ from the above equation. Thus as l → −∞ , {U 0 
+
+> l
+
+, U 0
+
+> l−1
+
+, U 0
+
+> l−2
+
+, · · · , U 0
+
+> −∞
+
+} and 
+
+{V 0 
+
+> l
+
+, V 0
+
+> l−1
+
+, V 0
+
+> l−2
+
+, · · · , V 0
+
+> −∞
+
+} are bounded nondecreas-ing sequences. Let P ik = U ik + ˜P i and Sik = V ik + ˜Si.
+
+lim k→−∞ P 0 
+
+> k
+
+and lim k→−∞ S0 
+
+> k
+
+exist. Taking the limit k → −∞ on the both sides of (11) and (19), 
+
+(P 0 
+
+> k
+
+, K 0 
+
+> k
+
+, S 0 
+
+> k
+
+, ¯K0 
+
+> k
+
+) converges to (P 0, K 0, S 0, ¯K0), where 
+
+(P 0, S 0) is the solution given in (42) and (49) when 
+
+i = 0 .Suppose the result holds for i > 0, that is, (P ik, K ik, S ik, ¯Kik)
+
+converges to (P i, K i, S i, ¯Ki) as k → −∞ . We prove that the result also holds for i + 1 . By the induction hypothesis, (Ki+1  
+
+> k
+
+, ¯Ki+1  
+
+> k
+
+) converges to (Ki+1 , ¯Ki+1 )
+
+as k → −∞ , where Ki+1  
+
+> k
+
+and ¯Ki+1  
+
+> k
+
+are given in (12) and (20), respectively, and Ki+1 , ¯Ki+1 are given in (43) and (50), respectively. Based on Theorems 1 and 2, P i+1  
+
+> k
+
+≤ P ik and Si+1  
+
+> k
+
+≤ Sik. By the in-duction hypothesis, that is, P ik < ∞ and Sik < ∞,as k → −∞ , {P i+1  
+
+> k
+
+, P i+1 
+
+> k−1
+
+, P i+1 
+
+> k−2
+
+, · · · , P i+1 
+
+> −∞
+
+} and 
+
+{Si+1  
+
+> k
+
+, S i+1 
+
+> k−1
+
+, S i+1 
+
+> k−2
+
+, · · · , S i+1 
+
+> −∞
+
+} are bounded nondecreas-ing sequences. The convergence of {P i+1  
+
+> k
+
+}−∞  
+
+> k=T
+
+and 
+
+{Si+1  
+
+> k
+
+}−∞  
+
+> k=T
+
+are proved. Furthermore, P i+1 and Si+1 sat-isfy (11) and (19) with Ki+1  
+
+> k
+
+= Ki+1 and ¯Ki+1  
+
+> k
+
+= ¯Ki+1 ,respectively. Thereby, lim k→−∞ P i+1  
+
+> k
+
+= P i+1 and 
+
+lim k→−∞ Si+1  
+
+> k
+
+= Si+1 . Hence, the proof is complete. 2
+
+Next, we compare the finite-horizon and infinite-horizon cases. The main differences are listed below. 
+
+Remark 8 The main distinctions between infinite-horizon and finite-horizon cases are as follows: (1) Stability requirement. In the infinite-horizon case, an initial stabilizing gain and system stability are required. In contrast, the finite-horizon case does not require sta-
+
+12 bility. (2) Time-variety of control policies. In the infinite-horizon case, the control strategies are time-invariant, whereas in the finite-horizon case, it is time-varying since the solution is computed backward from the termi-nal time T + 1 to the initial time. (3) Data utilization efficiency. In the infinite-horizon case, data is efficiently utilized to learn a single fixed policy, whereas the finite-horizon case requires collecting time-specific data for each step due to the policy’s time-dependency, increasing complexity. In finite-horizon case, optimizing T + 1 strategies (one per time step) leads to a significant increase in parameter space and complexity. 
+
+To facilitate the robustness analysis, we first intro-duce the following notation: β1(i) ≜ (1 − 1 
+
+> a1
+
+)i−1√n,
+
+β2 ≜ a1a0(ε) · a2(ε), a0(ε) ≜ sup ˆKi∈G ∥P∞
+
+> t=0
+
+( ˆL∗ 
+
+> i
+
+)t(I)∥2,
+
+a1 ≜ ∥P∞ 
+
+> t=0
+
+(L∗)t(I)∥2, a2(ε) ≜ sup ˆKi∈G ∥(R +
+
+BT ˆP i−1B + σ2DT ˆP i−1D)∥2, ¯β1(i) ≜ (1 − 1¯a1 )i−1√n,
+
+¯β2 ≜ ¯a1¯a0(ε) · ¯a2(ε), ¯a0(ε) ≜ sup ˆ¯Ki∈ ¯G ∥P∞
+
+> t=0
+
+( ˆ¯L∗ 
+
+> i
+
+)t(I)∥2,
+
+¯a1 ≜ ∥P∞ 
+
+> t=0
+
+( ¯L∗)t(I)∥2, and ¯a2(ε) ≜ sup ˆ¯Ki∈ ¯G ∥(R +
+
+BT ˆSi−1B + σ2DT P D )∥2. The l∞-norm is defined as 
+
+∥∆K∥∞ ≜ sup i∈Z+ ∥∆Ki∥F . The operator L∗ is the adjoint operator of L.
+
+Theorem 10 Given ε > 0 and ˆK1 ∈ G , where G ≜
+
+{ ˆKi| ˆKi is a stabilizer , T r ( ˆP i)−T r (P ) ≤ ε}, there exists 
+
+δ > 0 such that if ∥∆K∥2 
+
+> ∞
+
+< δ , then we have (i) the following small-disturbance input-to-state sta-bility (ISS) holds: 
+
+∥ ˆP i − P ∥F ≤ β1(i)∥ ˆP 1 − P ∥F + β2∥∆K∥2
+
+> ∞
+
+.
+
+(62) 
+
+(ii) lim i→∞ ∥∆Ki∥F = 0 implies lim i→∞ ∥ ˆPi − P ∥F =0.
+
+Proof. We show that if the current control gain is a stabi-lizer, the next gain remains a stabilizer even under suit-able perturbations. Given that ˆKi−1 is a stabilizer, there exists a threshold δ(r) > 0 such that for any ˆP i−1 within the closed ball ¯B(P, r ), the condition ∥∆Ki∥2 
+
+> F
+
+< δ (r)
+
+ensures that the updated controller ˆKi remains a sta-bilizer and the matrix (R + BT ˆP i−1B + σ2DT ˆP i−1D)
+
+is invertible [37, Lemma 4]. Substituting the perturbed controller ˆKi = Ki + ∆ Ki into the analysis, the original equation (42) is rewritten as                      
+
+> ˆPi=Q+ 1
+> N(Γ TQΓ−QΓ−ΓTQ)+ ( ˆAi)TˆPiˆAi+σ2( ˆCi)TˆPiˆCi+ ( ˆKi)TRˆKi.
+
+(63) The corresponding Lyapunov-type operator is ˆLi(X).Subtracting the above equation from ( ˆAi)T ˆP i−1 ˆAi +
+
+σ2( ˆCi)T ˆP i−1 ˆCi and substituting ˆKi = Ki + ∆ Ki yields                          
+
+> ( ˆAi)T( ˆPi−1−ˆPi) ˆAi+σ2( ˆCi)T( ˆPi−1−ˆPi) ˆCi−( ˆPi−1−ˆPi)=−(Ki−ˆKi−1)TˆΥi−1(Ki−ˆKi−1) + ∆ KTiˆΥi−1∆Ki,
+
+(64) where ˆΥi−1 = Υ( ˆP i−1) ≜ R+BT ˆP i−1B +σ2DT ˆP i−1D.Since ˆKi is stabilizer, the difference equation above ad-mits a unique series solution              
+
+> ˆPi−1−ˆPi=
+> ∞X
+> t=0
+> ˆLti[( Ki−ˆKi−1)TˆΥi−1(Ki−ˆKi−1)
+> −∆KTiˆΥi−1∆Ki].
+
+(65) Take the trace of both sides of (65). Regarding the first term, the matrix Υ( P i−1) is positive definite. By the sign-preserving property of continuous functions, the perturbed matrix ˆΥi−1 is positive semi-definite for suf-ficiently small perturbations. We derive the following inequality 
+
+T r ( ˆP i−1 − ˆP i) ≥ T r 
+
+n
+
+(Ki − ˆKi−1)T ˆΥi−1(Ki − ˆKi−1)
+
+− a0(ε) · T r [∆ KTi ˆΥi−1∆Ki]
+
+o
+
+,
+
+(66) where ˆL∗ 
+
+> i
+
+is the adjoint operator of ˆLi, and a0(ε) ≜
+
+sup ˆKi∈G ∥P∞
+
+> t=0
+
+( ˆL∗ 
+
+> i
+
+)t(I)∥2. Subtracting (40) from (63) at the (i − 1) -th iteration yields                
+
+> ˆPi−1−P=
+> ∞X
+> t=0
+> Lt[( Ki−ˆKi−1)TˆΥi−1(Ki−ˆKi−1)
+> −(Ki−K)TˆΥi−1(Ki−K)] .
+
+(67) Taking the trace of (67) and applying the trace inequal-ity Tr (XY ) ≤ Tr (X)∥Y ∥2, we obtain              
+
+> T r ( ˆPi−1−P)≤a1·T r [( Ki−ˆKi−1)TˆΥi−1(Ki−ˆKi−1)] ,
+
+(68) where a1 ≜ ∥P∞ 
+
+> t=0
+
+(L∗)t(I)∥2. Since the solution of ARE (40) is stabilizing, the spectrum of L∗(·) lies strictly in-side the open unit disc, yielding a1 < 1. Substituting the above inequality into (66) yields                
+
+> −T r ( ˆPi−1−ˆPi)≤ − 1
+> a1
+> T r ( ˆPi−1−P) + a0(ε)·a2(ε)· ∥ ∆Ki∥2
+> F,
+
+(69) where a2(ε) ≜ sup         
+
+> ˆKi∈G
+> ∥(R+BTˆPi−1B+σ2DTˆPi−1D)∥2
+
+. Con-sequently, we obtain the following inequality                  
+
+> T r ( ˆPi−P)≤(1 −1
+> a1
+> )T r ( ˆPi−1−P) + a0(ε)·a2(ε)· ∥ ∆Ki∥2
+> F.
+
+(70) Let δ = a1 
+
+> a0(ε)·a2(ε)
+
+· ε. When ∥∆Ki∥2 
+
+> F
+
+< δ , the inequal-ity T r ( ˆP i − P ) < ε holds. This implies that the up-dated perturbed controller ˆKi ∈ G . Letting ∥∆K∥2 
+
+> F
+
+=
+
+13 max i∈N{∥ ∆Ki∥2
+
+F }, we have ∥∆K∥2
+
+F < δ . Repeatedly applying the inequality (70), one has 
+
+T r ( ˆP i − P ) ≤ (1 − 1
+
+a1
+
+)i−1T r ( ˆP 1 − P )+
+
+> i−2
+
+X
+
+> j=0
+
+(1 − 1
+
+a1
+
+)j a0(ε) · a2(ε) · ∥ ∆Ki−j ∥2 
+
+> F
+
+.
+
+(71) Since ∥P ∥F ≤ T r (P ) ≤ √n∥P ∥F , one has 
+
+∥ ˆP i − P ∥F ≤ (1 − 1
+
+a1
+
+)i−1√n∥ ˆP 1 − P ∥F
+
++ a1 · a0(ε) · a2(ε) · ∥ ∆K∥2
+
+> ∞
+
+.
+
+(72) This completes the proof of part (i) of Theorem 10. As for (ii) in Theorem 10, since lim i→∞ ∥∆Ki∥F = 0 ,for any ε > 0, there exists a constant i1 ∈ N such that 
+
+sup i≥i1 {∥ ∆Ki∥2
+
+F } < β −12 · ε/ 2. From (62), one has 
+
+∥ ˆP i − P ∥F ≤ β1(i − i1 + 1) ∥ ˆP i1 − P ∥F + β2 · sup 
+
+> i≥i1
+
+{∥ ∆K∥2 
+
+> F
+
+}.
+
+Furthermore, since β1(i) tends to 0 as i → ∞ and ∥ ˆP i1 −
+
+P ∥F is a constant independent of the step i, there exists a constant i2 > i 1 such that β1(i−i1 +1) ∥ ˆP i1 −P ∥F < ε/ 2
+
+holds for all i ≥ i2. Then, we have ∥ ˆP i − P ∥F < ε. 2
+
+Theorem 11 Given ε > 0 and ˆ¯K1 ∈ ¯G, where ¯G ≜
+
+{ ˆ¯Ki| ˆ¯Ki is a stabilizer , T r ( ˆSi) − T r (S) ≤ ε}, there exists 
+
+δ > 0 such that if ∥∆ ¯K∥2
+
+∞ < δ , then we have (i) the following small-disturbance ISS holds: 
+
+∥ ˆSi − S∥F ≤ ¯β1(i)∥ ˆS1 − S∥F + ¯β2∥∆ ¯K∥2
+
+∞. (73) 
+
+(ii) lim i→∞ ∥∆ ¯Ki∥F = 0 implies lim i→∞ ∥ ˆSi − S∥F =0.
+
+Sketch of the proof: The proof of Theorem 11 is simi-lar to that of Theorem 10. Using the assumption that ˆ¯K0
+
+is a stabilizer, by analyzing the Lyapunov equations sat-isfied by the difference matrices ˆSi−1 − S and ˆSi−1 − ˆSi,the perturbed gain ˆ¯Ki is stablizer when ∥∆ ¯Ki∥F is suf-ficiently small. By taking traces and applying trace in-equalities, one has 
+
+T r ( ˆSi − S) ≤ (1 − 1¯a1
+
+)T r ( ˆSi−1 − S) + ¯ a0(ε) · ¯a2(ε) · ∥ ∆ ¯Ki∥2 
+
+> F
+
+.
+
+Iterating the inequality further yields the ISS type bound (73) for ∥ ˆSi − S∥F . If ∥∆ ¯Ki∥F → 0, the first term converges to zero and the second term in the re-cursive inequality vanishes asymptotically. Therefore, 
+
+lim i→∞ ∥ ˆSi − S∥F = 0 . 2
+
+5 Simulation Example 
+
+In this section, a numerical example is given to validate the effectiveness of the proposed algorithm. 5 10 15 20 25 30 
+
+> Time
+> -0.2 00.2 0.4 0.6 0.8 11.2 1.4
+> x1
+> Trajectories of states x 1(100 agents)
+
+(a) 5 10 15 20 25 30  
+
+> Time
+> -0.4 -0.2 00.2 0.4 0.6 0.8 11.2 1.4
+> x2
+> Trajectories of states x 2(100 agents)
+
+(b) 5 10 15 20 25 30 
+
+> Time
+> -1 -0.5 00.5 11.5 2
+> x3
+> Trajectories of states x 3(100 agents)
+
+(c) 5 10 15 20 25 30  
+
+> Time
+> -1 -0.8 -0.6 -0.4 -0.2 00.2
+> uTrajectories of control u (100 agents)
+
+(d) Fig. 1. Simulation results for finite-horizon in 3-D case (100 agents). (a) The trajectories of system states x1. (b) The trajectories of system states x2. (c) The trajectories of system states x3. (d) Sample paths of control u.
+
+5.1 The finite-horizon case 
+
+Consider a system with 100 agents. Each agent’s dy-namics are as follows: Q = diag (1 , 1, 1) , R = 1 , Γ = 
+
+diag (0 .9, 0.9, 0.9) , T = 6 , σ = 1 , B = [ −0.2, 0, 0.1] T ,D = [−0.02 , −0.03 , 0.01] T , K0 = [0 .1, −0.1, −0.7] T ,
+
+ej = sin 2(0 .5k) + sin (k) + ξ · cos (k), with ξ∼N (0 , 1) ,A =
+
+
+
+0.6 0 .2 −0.20.2 0 .6 −0.20.4 0 .5 0.6
+
+ , C =
+
+
+
+0.06 0 .02 −0.02 0.02 0 .06 −0.02 0.04 0 .05 0.06 
+
+ .
+
+The simulation results for finite-horizon in 3-D case are plotted in Figures 1. After a period of time, they converge to a constant. Therefore, the simulation results demon-strate the effectiveness of the proposed finite-horizon mean field model-free algorithm. 
+
+5.2 The infinite-horizon case 
+
+Consider a system with 10 agents. Each agent’s dynam-ics are as follows: R = 0 .99 , Γ = diag (0 .94 , 0.94) , σ = 1 ,
+
+B = [−0.84 , −0.67] T , D = [0 .03 , 0.07] T , K0 =[−1.33 , 3.42] T , ej = sin 2(0 .5k) + sin (k) + ξ · cos (k),with ξ∼N (0 , 1) ,
+
+A =
+
+ 0.65 −0.72 
+
+−0.11 0.57 
+
+ , C =
+
+ 0.01 0.02 
+
+−0.04 0 .09 
+
+ Q =
+
+ 0.04 −0.86 
+
+−0.86 0.91 
+
+ .
+
+The eigenvalues of Q are −0.49 and 1.43 respectively, in 14 2 4 6 8 10 12 14 16 18 20 22 24 
+
+> Time
+> -12 -10 -8 -6 -4 -2 02468
+> x1
+> Trajectories of states x 1(10 agents)
+
+(a) 2 4 6 8 10 12 14 16 18 20 22 24  
+
+> Time
+> -8 -6 -4 -2 0246
+> x2
+> Trajectories of states x 2(10 agents)
+
+(b) 2 4 6 8 10 12 14 16 18 20 22 24  
+
+> Time
+> -10 -5 0510 15
+> uTrajectories of control u (10 agents)
+
+(c) Fig. 2. Simulation results for infinite-horizon in 2-D case (10 agents). (a) The trajectories of system states x1. (b) The trajectories of system states x2. (c) Sample paths of control 
+
+u.0 1 2 3 4 5 6 7 8 9
+
+> Iteration
+> 012345678
+> Norm
+
+Fig. 3. Iterations of P and ¯P parameters in infinite-horizon case. 
+
+other words, Q is indefinite. By using the model-free al-gorithm, we obtain the solution of the AREs (40)-(41): 
+
+P =
+
+"−0.3905 −0.4531 
+
+−0.4531 0.8474 
+
+#
+
+, ¯P =
+
+"0.3784 0.4801 0.4801 −0.8466 
+
+#
+
+.
+
+The optimal control gains are 
+
+K =
+
+h
+
+−0.7602 0 .9381 
+
+i
+
+, ¯K =
+
+h
+
+−0.0381 −0.0025 
+
+i
+
+.
+
+The simulation results for infinite-horizon in 2-D case are plotted in Figures 2. After a period of time, they converge to a constant. The resulting errors are ∥P i − P ∗∥F =0.1123 and ∥ ¯P i − ¯P ∗∥F = 0 .0641 . The iterations of P
+
+and ¯P are presented in Figures 3. This indicates that the iteartion defined by (54) and (56) converges. The results of the sensitivity analysis are presented in Fig-ure 4, which shows the robustness when perturbing pa-rameters (A, B, C, D ) and population sizes. Therefore, the simulation results demonstrate the effectiveness of model-free algorithm for infinite-horizon case. 
+
+6 Conclusion 
+
+In this paper, a novel computational model-free algo-rithm has been presented to learn decentralized strate-gies for discrete-time finite-population systems. The weights Q and R in the cost functional are not limited to be positive semidefinite. The model-free algorithm is 2 4 6 8 10 12 14 16 18 20 
+
+> Iteration
+> 00.5 11.5 22.5 33.5
+> Norm
+
+(a) (∆ A, ∆B) = ( −0.2A, −0.2B)2 4 6 8 10 12 14 16 18 20  
+
+> Iteration
+> 00.5 11.5 22.5 33.5 4
+> Norm
+
+(b) (∆ A, ∆B) = ( −0.5A, −0.5B)2 4 6 8 10 12 14 16 18 20 
+
+> Iteration
+> 00.5 11.5 22.5 3
+> Norm
+
+(c) (∆ C, ∆D) = (+0 .3C, +0 .3D)2 4 6 8 10 12 14 16 18 20  
+
+> Iteration
+> 00.5 11.5 22.5 3
+> Norm
+
+(d) (∆ C, ∆D) = ( −0.2C, −0.2D)1 2 3 4 5 6 7 8 9 10 
+
+> Iteration
+> 00.5 11.5 22.5
+> Norm
+
+(e) N = 5 1 2 3 4 5 6 7 8 9 10  
+
+> Iteration
+> 00.5 11.5 22.5
+> Norm
+
+(f) N = 10000 
+
+Fig. 4. Gain matrices errors under different perturbations of 
+
+(A, B, C, D ) and N .
+
+proposed to learn the optimal policies directly from tra-jectory data, without learning the system parameters. For the finite-horizon and infinite-horizon cases, the convergence of algorithms is separately established, and the obtained RL solutions are compared. Simulation results demonstrate the effectiveness of the proposed algorithm. 
+
+Acknowledgements 
+
+The authors would like to thank the editor and three anonymous referees for their constructive and insightful comments for improving the quality of this work. 
+
+References 
+
+[1] Angiuli, A., Fouque, J.-P. and Laurière, M. (2022). Unified reinforcement Q-learning for mean field game and control problems. Mathematics of Con-trol, Signals, and Systems , 34(2), 217–271. [2] Aurell, A. and Djehiche, B. (2018). Mean-field type modeling of nonlocal crowd aversion in pedestrian crowd dynamics. SIAM Journal on Control and Op-timization , 56(1), 434–455. [3] Bardi, M. and Priuli, F. S. (2014). Linear-15 quadratic N-person and mean-field games with er-godic cost. SIAM Journal on Control and Optimiza-tion , 52(5), 3022–3052. [4] Bensoussan, A., Chau, M. H. M. and Yam, S. C. P. (2015). Mean field stackelberg games: Aggregation of delayed instructions. SIAM Journal on Control and Optimization , 53(4), 2237–2266. [5] Briceno-Arias, L. M., Kalise, D. and Silva, F. J. (2018). Proximal methods for stationary mean field games with local couplings. SIAM Journal on Con-trol and Optimization , 56(2), 801–836. [6] Caines, P. E. and Huang, M. (2021). Graphon mean field games and their equations. SIAM Journal on Control and Optimization , 59(6), 4373–4399. [7] Cardaliaguet, P., Delarue, F., Lasry, J.-M. and Li-ons, P.-L. (2019). The master equation and the con-vergence problem in mean field games . Princeton University Press. [8] Carlini, E. and Silva, F. J. (2012). A fully discrete semi-lagrangian scheme for a first order mean field game problem. SIAM Journal on Numerical Anal-ysis , 52, 45–67. [9] Carmona, R., Delarue, F. and Lachapelle, A. (2013). Control of McKean–Vlasov dynamics ver-sus mean field games. Mathematics and Financial Economics , 7, 131–166. [10] Chen, M., Li, Y., Wang, E., Yang, Z., Wang, Z. and Zhao, T. (2021). Pessimism meets invariance: Prov-ably efficient offline mean-field multi-agent RL. Ad-vances in Neural Information Processing Systems ,34, 17913–17926. [11] Cui, L., Başar, T. and Jiang, Z.-P. (2024). Ro-bust reinforcement learning for risk-sensitive linear quadratic Gaussian control. IEEE Transactions on Automatic Control , 69(11), 7678–7693. [12] Fischer, M. (2017). On the connection between symmetric N-player games and mean field games. 
+
+Annals of Applied Probability , 27(2), 757–810. [13] Gu, H., Guo, X., Wei, X. and Xu, R. (2021). Mean-field controls with Q-learning for coopera-tive MARL: convergence and complexity analysis. 
+
+SIAM Journal on Mathematics of Data Science ,3(4), 1168–1196. [14] Guo, X., Hu, A., Xu, R. and Zhang, J. (2019). Learning mean-field games. Advances in neural in-formation processing systems .[15] Guo, X., Xu, R. and Zariphopoulou, T. (2022). Entropy regularization for mean field games with learning. Mathematics of Operations Research .[16] Ho, Y.-C. (1980). Team decision theory and in-formation structures. Proceedings of the IEEE ,68(6), 644–654. [17] Hu, Y., Wei, X., Yan, J. and Zhang, H. (2023). Graphon mean-field control for cooperative multi-agent reinforcement learning. Journal of the Franklin Institute , 360(18), 14783–14805. [18] Huang, J. and Huang, M. (2017). Robust mean field linear-quadratic-Gaussian games with un-known L2-disturbance. SIAM Journal on Control and Optimization , 55(5), 2811–2840. [19] Huang, M. and Yang, X. (2021). Linear quadratic mean field social optimization: Asymptotic solv-ability and decentralized control. Appl. Math. Op-tim. , 84, 1969–2010. [20] Huang, M., Caines, P. E. and Malhame, R. P. (2007). Large-population cost-coupled LQG prob-lems with nonuniform agents: Individual-mass be-havior and decentralized ε-Nash equilibria. IEEE Transactions on Automatic Control , 52(9), 1560– 1571. [21] Huang, M., Caines, P. E. and Malhame, R. P. (2012). Social optima in mean field LQG con-trol: Centralized and decentralized strategies. IEEE Transactions on Automatic Control , 57(7), 1736– 1751. [22] Jiang, Y. and Jiang, Z.-P. (2012). Computational adaptive optimal control for continuous-time linear systems with completely unknown dynamics. Au-tomatica , 48(10), 2699–2704. [23] Kizilkale, A. and Malhamé, R. (2016). Chapter twenty - collective target tracking mean field con-trol for markovian jump-driven models of electric water heating loads. In K. G. Vamvoudakis and S. Jagannathan (Eds.). Control of Complex Sys-tems. Butterworth-Heinemann. pp. 559–584. [24] Lacker, D. (2020). On the convergence of closed-loop Nash equilibria to the mean field game limit. 
+
+Annals of Applied Probability , 30(4), 1693–1761. [25] Lasry, J. M. and Lions, P.-L. (2007). Mean field games. Japanese Journal of Mathematics , 2, 229– 260. [26] Lewis, F. L. and Vamvoudakis, K. G. (2011). Rein-forcement learning for partially observable dynamic processes: Adaptive dynamic programming using measured output data. IEEE Transactions on Sys-tems, Man, and Cybernetics, Part B (Cybernetics) ,41(1), 14–25. [27] Li, M., Li, N. and Wu, Z. (2025 a). Linear-quadratic mean-field game for stochastic systems with partial observation. Automatica , 171, 111821. [28] Li, N. and Wang, S. (2024). Linear-quadratic stochastic Stackelberg games of N players for time-delay systems and related FBSDEs. Applied Math-ematics & Optimization .[29] Li, N., Li, X. and Xu, Z. Q. (2025 b). Policy itera-tion reinforcement learning method for continuous-time linear–quadratic mean-field control prob-lems. IEEE Transactions on Automatic Control ,70(4), 2690–2697. [30] Li, T. and Zhang, J.-F. (2008 a). Asymptotically optimal decentralized control for large population stochastic multiagent systems. IEEE Transactions on Automatic Control , 53(7), 1643–1660. [31] Li, T. and Zhang, J.-F. (2008 b). Decentralized tracking-type games for multi-agent systems with coupled ARX models: Asymptotic nash equilibria. 
+
+Automatica , 44(3), 713–725. [32] Liang, Y., Wang, B.-C. and Zhang, H. (2024). 16 Discrete-time indefinite linear-quadratic mean field games and control: The finite-population case. Au-tomatica , 162, 111518. [33] Ma, Z., Callaway, D. S. and Hiskens, I. A. (2013). Decentralized charging control of large populations of plug-in electric vehicles. IEEE Transactions on Control Systems Technology , 21(1), 67–78. [34] Moon, J. (2020). Linear-quadratic mean field stochastic zero-sum differential games. Automatica ,120, 109067. [35] Moon, J. and Başar, T. (2017). Linear quadratic risk-sensitive and robust mean field games. IEEE Transactions on Automatic Control , 62(3), 1062– 1077. [36] Ni, Y.-H., Li, X. and Zhang, J.-F. (2015). Indefinite mean-field stochastic linear-quadratic optimal con-trol: from finite horizon to infinite horizon. IEEE Transactions on Automatic Control , 61(11), 3269– 3284. [37] Pang, B., Bian, T. and Jiang, Z.-P. (2021). Ro-bust policy iteration for continuous-time linear quadratic regulation. IEEE Transactions on Auto-matic Control , 67(1), 504–511. [38] Perrin, S., Pérolat, J., Laurière, M., Geist, M., Elie, R. and Pietquin, O. (2020). Fictitious play for mean field games: Continuous time analysis and appli-cations. Advances in neural information processing systems , 33, 13199–13213. [39] Rami, M. A. and Zhou, X. Y. (2000). Linear ma-trix inequalities, Riccati equations, and indefinite stochastic linear quadratic controls. IEEE Trans-actions on Automatic Control , 45(6), 1131–1143. [40] Rami, M. A., Chen, X. and Zhou, X. Y. (2002). Discrete-time indefinite LQ control with state and control dependent noises. Journal of Global Opti-mization , 23, 245–265. [41] Rizvi, S. A. A. and Lin, Z. (2018). Output feedback Q-learning for discrete-time linear zero-sum games with application to the H-infinity control. Automat-ica , 95, 213–221. [42] Sutton, R. S., Barto, A. G. et al. (1998). Reinforce-ment learning: An introduction . MIT press Cam-bridge. [43] Tembine, H., Zhu, Q. and Başar, T. (2013). Risk-sensitive mean-field games. IEEE Transactions on Automatic Control , 59(4), 835–850. [44] Wang, B.-C. and Zhang, J.-F. (2012). Mean field games for large-population multiagent systems with markov jump parameters. SIAM Journal on Control and Optimization , 50(4), 2308–2334. [45] Wang, B.-C., Zhang, H. and Zhang, J.-F. (2020 a). Mean field linear-quadratic control: Uniform stabilization and social optimality. Automatica ,121, 109088. [46] Wang, B.-C., Zhang, H., Fu, M. and Liang, Y. (2023). Decentralized strategies for finite popula-tion linear quadratic Gaussian games and teams. 
+
+Automatica , 148, 110789. [47] Wang, H., Zariphopoulou, T. and Zhou, X. Y. (2020 b). Reinforcement learning in continuous time and space: A stochastic control approach. Journal of Machine Learning Research , 21(198), 1–34. [48] Wang, L., Yang, Z. and Wang, Z. (2020 c). Breaking the curse of many agents: Provable mean embed-ding Q-iteration for mean-field reinforcement learn-ing. In International conference on machine learn-ing. PMLR. pp. 10092–10103. [49] Xu, Z., Shen, T. and Huang, M. (2023). Model-free policy iteration approach to NCE-based strategy design for linear quadratic Gaussian games. Auto-matica , 155, 111162. [50] Xu, Z., Wang, B.-C. and Shen, T. (2025). Mean field LQG social optimization: A reinforcement learning approach. Automatica , 172, 111924. 17
