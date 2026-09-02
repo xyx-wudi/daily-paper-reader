@@ -1,0 +1,5378 @@
+Title: Independent Reinforcement Learning in Discounted Markov Games
+
+URL Source: https://arxiv.org/pdf/2609.00504v1
+
+Published Time: Wed, 02 Sep 2026 00:27:58 GMT
+
+Number of Pages: 54
+
+Markdown Content:
+# Independent Reinforcement Learning in Discounted Markov Games 
+
+Asrın Efe Yorulmaz ∗ U˘ gur Aydın † Tamer Ba¸ sar ‡
+
+Abstract 
+
+In this work, we study radically uncoupled learning in discounted general-sum Markov games. Assuming “ ETH for PPAD ”, we show that, for every fixed discount factor, there is no polynomial-time algorithm for computing inverse-polynomially accurate coarse correlated equilibria in dis-counted general-sum Markov games when players learn independently in decentralized settings. Complementing this hardness result, we provide what appears to be the first radically uncoupled 
+
+algorithm with sub-exponential convergence guarantees to coarse correlated equilibria in dis-counted general-sum Markov games without imposing any structural restrictions on the game. Our algorithm is a layered variant of optimistic mirror descent with an increasing step-size schedule tailored to the multi-agent setting. Finally, we develop both full-feedback and partial feedback versions of the aforementioned algorithm and establish sub-exponential convergence guarantees for each case. 
+
+# 1 Introduction 
+
+Multi-agent reinforcement learning (MARL) studies how multiple decision-making agents learn and act in a shared environment, where each agent seeks to optimize its own objective while adapting to the behavior of others [Bu¸ soniu et al., 2008, Zhang et al., 2021]. This framework has become a central modeling paradigm for large-scale decision-making systems involving both cooperation and competition. Its recent applications range from strategic game playing—including Go, poker, Stratego, and Diplomacy [Silver et al., 2016, Brown and Sandholm, 2018, Perolat et al., 2022, Kram´ ar et al., 2022, Bakhtin et al., 2022]—to large language models [Park et al., 2025, Wan et al., 2025], robotics [Levine et al., 2017], quantitative finance [Zhang et al., 2024], intelligent transporta-tion [Shalev-Shwartz et al., 2016], cybersecurity [Malialis and Kudenko, 2015], and economic policy design [Zheng et al., 2022]. These applications motivate algorithms that are not only computation-ally and statistically efficient, but also robust to decentralization, limited information, and strategic non-stationarity. The standard mathematical model for the theoretical study of MARL is stochastic games, also known as Markov games [Shapley, 1953, Littman, 1994]. In a Markov game, interaction unfolds over a sequence of states. At each state, all players choose actions simultaneously; each player receives a reward depending on the current state and the joint actions; and the next state is drawn from a transition kernel that also depends on the joint actions. Thus, Markov games extend Markov decision processes (MDPs) to multi-agent environments, while also extending normal-form 
+
+> ∗Department of Electrical and Computer Engineering, University of Illinois Urbana-Champaign, Urbana, IL, 61801, USA, ay20@illinois.edu
+> †Department of Electrical and Computer Engineering, University of Illinois Urbana-Champaign, Urbana, IL, 61801, USA, uaydin2@illinois.edu
+> ‡Department of Electrical and Computer Engineering, University of Illinois Urbana-Champaign, Urbana, IL, 61801, USA, basar1@illinois.edu
+
+1arXiv:2609.00504v1 [cs.GT] 1 Sep 2026 games to dynamic environments with state-dependent rewards and transitions. This combination creates difficulties that are absent from each of these two special cases. In contrast to single-agent MDPs, the value of a player’s policy depends on the policies chosen by the other players, and thus optimality must be replaced by an equilibrium notion. In contrast to normal-form games, a player’s current action affects not only her immediate reward, but also the future state distribution on which later strategic interactions take place. Consequently, equilibrium computation in Markov games combines the fixed-point nature of equilibrium computation in normal-form games with the intertemporal structure of dynamic decision-making. In this work, we focus on a fully decentralized information model for MARL, namely independent or 
+
+radically uncoupled learning [Foster et al., 2023, Foster and Peyton, 2006]. We study this model in the discounted setting, which is widely used in the control and reinforcement learning literatures for a variety of purposes [Daskalakis et al., 2023, Tessler et al., 2019, Huang et al., 2026, P´ erolat et al., 2017, Sayin et al., 2021]. Here, radically uncoupled refers to the restriction that players are not allowed to observe one another’s policies, losses, value functions, or random bits. In particular, there is no available shared randomness, communication, policy revelation, or correlation device during learning. Consequently, each player updates her policy using only her own feedback and treats the effect of the other players as part of the environment. Independent learning dynamics are attractive because they scale without the communication and synchronization overhead required by centralized coordination. For instance, in large-scale systems, repeatedly aggregating global information or coordinating agents through a central learner can be costly and or infeasible under bandwidth, latency, or privacy constraints Lian et al. [2017]. Moreover, these informational restrictions also rule out many of the mechanisms used in existing results for equilibrium computation in Markov games [Bai et al., 2020, Wei et al., 2021, Jin et al., 2023], thereby motivating the study of equilibrium computation under decentralized information structures. Beyond asymptotic convergence, one typically seeks algorithms that reach an approximate equi-librium with controlled computational cost and sample complexity, for example with polynomial or quasi-polynomial dependence on the natural problem parameters. To achieve these finite-time computational guarantees, centralized or communication-based methods often rely on shared value estimates, policy information, or coordinated equilibrium-computation subroutines. In contrast, under radically uncoupled information, each player must both compute and statistically estimate her update using only her own local feedback. Therefore, the main challenge in the independent learning setting is not merely to design a convergent learning dynamic, but to obtain convergence with meaningful computational and statistical efficiency under radically uncoupled information. For these reasons, in this work we investigate the following question: 
+
+Are there (quasi-)efficient, radically uncoupled learning algorithms for approximate equilibrium computation in discounted general-sum Markov games? 
+
+In normal-form games, the connection between independent learning mechanisms and equilibrium computation is well understood, as independent learning reduces naturally to no-regret learning in this setting: if all players have vanishing external regret, then their average play converges to a coarse correlated equilibrium (CCE), and if all players have vanishing swap regret, their average play converges to a correlated equilibrium (CE) [Hannan, 1957, Hart and Mas-Colell, 2000, Cesa-Bianchi and Lugosi, 2006, Blum and Mansour, 2007]. Moreover, it has been shown that optimistic and regularized learning dynamics yield faster self-play rates in normal-form games [Daskalakis et al., 2011, Syrgkanis et al., 2015, Daskalakis et al., 2021, Anagnostides et al., 2022, Soleymani et al., 2025]. 2In contrast, the relationship between independent learning dynamics and equilibrium computation in Markov games remains much less understood. For two-player zero-sum Markov games there is a substantial body of work on decentralized learning, including settings with limited shared information and radically uncoupled algorithms with provable guarantees [Bai et al., 2020, Wei et al., 2021, Cai et al., 2023, Chen et al., 2024]. Naturally, general-sum Markov games are expected to be more challenging, as there is no common value function or saddle-point structure. The challenge lies not only in the general-sum strategic interactions among multiple players, but also in the dynamic nature of the environment. The unilateral alternative policies may induce a different distribution over future states, and this state distribution depends jointly on the deviating player’s policy, the transition dynamics, and the policies used by the other players. Since the opponents may also change their policies over time, these comparison distributions are themselves time-varying and unknown to players. This is a central obstruction to transferring the standard normal-form no-regret argument directly to Markov games. The existing positive results for general-sum Markov games typically rely on coordination or post-processing mechanisms that are not present in the independent learning problem considered in this paper [Arslan and Y¨ uksel, 2017, Jin et al., 2023, Song et al., 2022, Mao and Ba¸ sar, 2023, Daskalakis et al., 2023]. A frequently studied class of algorithms include V-learning and related sample-based algorithms [Jin et al., 2023, Song et al., 2022, Mao and Ba¸ sar, 2023], which compute CCE or CE policies in decentralized MARL. The equilibrium policies produced by these methods are represented as carefully specified distributions over the learning history and require the play-ers to sample a common index from that history during execution. Notably, the learning phase of these algorithms does not provide any online regret guarantees. Thus, while these methods are decentralized, they do not address the radically uncoupled online-regret objective considered in this paper. Being another closely related algorithm, the so-called SPoCMAR [Daskalakis et al., 2023] is a decentralized algorithm with polynomial sample and computational complexity for learning a nonstationary Markov-CCE, but the provided regret guarantees rely on the existence of common random bits during learning and for sampling the output policy, where Markov-CCE is an equi-librium with respect to the Markov policy deviations. Consequently, these works do not provide online regret guarantees for the independently played product policies during the learning process. Another closely related precursor to our work is Erez et al. [2025]. Similar to our work, they study radically uncoupled learning in finite-horizon general-sum Markov games in the self-play setting. Their work, compared to ours, contains further restrictions. First, their regret bounds are obtained with respect to Markov policies, whereas our results allow non-Markov history-dependent policies. Second, their sublinear regret guarantee is obtained when agents may affect one another’s losses but not one another’s transition dynamics. In contrast, we study finite- and infinite-horizon discounted Markov games with action-dependent transition kernels and aim to develop radically uncoupled learning algorithms with online regret guarantees against non-Markov history-dependent deviations. On the other hand, there exist hardness results that demonstrate limitations in finding efficient algo-rithms for the MDPs and Markov games. In the single-agent case, no-regret learning in adversarially changing MDPs can be computationally intractable [Abbasi-Yadkori et al., 2013]. Naturally, this intractability also arises in Markov games with adversarial opponents, where both computational and statistical barriers are known [Liu et al., 2022, Tian et al., 2021]. More recently, motivated by the fact that computing Nash equilibria is PPAD -complete in normal-form games [Daskalakis et al., 2009], it has been shown that similar hardness constraints can persist in Markov games [Daskalakis et al., 2023, Foster et al., 2023]. In particular, computing stationary Markov-CCEs in discounted 3general-sum stochastic games is PPAD -hard [Daskalakis et al., 2023]. Moreover, in finite-horizon general-sum Markov games, any independent learning algorithm that achieves no regret property is also PPAD -hard [Foster et al., 2023]. In contrast, we seek nonstationary policies that approximate CCE in discounted Markov games while avoiding the intractability barriers described above in the self-play setting, which complements the existing literature. Our contributions in this paper can be summarized as follows. 1. In Section 3, we first study finite-horizon general-sum Markov games under full-feedback. We in-troduce a layered smoothed-entropy optimistic-online-mirror-descent (OOMD) algorithm, with an increasing step-size schedule (Algorithm 1). Then, we show that this algorithm achieves an 
+
+O T −3/(3 H+1)  -approximate CCE with respect to history-dependent deviations after T episodes (Theorem 1). Then, when the underlying model is unknown to agents, in Subsection 3.2, under a reachability notion (Definition 7), we prove a high-probability finite-horizon CCE guarantee with the same exponential-in-horizon dependence up to the polynomial terms (Theorem 2). 2. In Section 4, we transfer the finite-horizon guarantees established in Section 3 to discounted Markov games (Theorem 3). Unlike the undiscounted case, in the discounted case our al-gorithms yield quasi-polynomial-time and quasi-polynomial-sample guarantees for computing inverse-polynomially accurate sparse discounted CCEs for the full-feedback and partial feed-back cases for both finite-horizon and infinite-horizon Markov games (Corollaries 1 and 2). These quasi-polynomial results rely on a horizon length truncation and approximation error bounding arguments to reduce the error bound O T −3/(3 H+1)  to a quasi-polynomial one. 3. In Section 5, we complement the quasi-polynomial upper bounds established in Section 4 for learning discounted-CCE with a complexity-theoretic lower bound. In particular, assuming the “ ETH for PPAD ” [Babichenko et al., 2016], we show that for every fixed discount factor 
+
+γ ∈ (0 , 1) ∩ Q and every polynomial support bound, there exists an inverse-polynomial accuracy level for which no polynomial-time algorithm can compute a sparse approximate CCE in finite horizon or infinite horizon discounted general-sum Markov games (Theorem 5, Corollary 3) i.e., when players learn independently in a decentralized setting, one cannot calculate approximate CCE in polynomial time. 
+
+# 2 Preliminaries and Notations 
+
+2.1 Notations 
+
+For an integer q ≥ 1, we write [ q] := {1, . . . , q }. For a finite set X, we let ∆( X) denote the probability simplex over X. For a vector x ∈ ∆( X), x(a) denotes the probability of occurrence of action a. All logarithms are natural base unless otherwise stated. In the computational statements, every input object is represented by a finite binary string. 
+
+2.2 Undiscounted Finite-horizon Markov games 
+
+Let m be a positive integer. An m-player finite-horizon Markov game is specified by the tuple 
+
+G =
+
+
+
+H, {Sh}H+1  
+
+> h=1
+
+, {Ai}mi=1 , {Ph}Hh=1 , {ℓih}i∈[m],h ∈[H], s 1
+
+
+
+. We will denote by M = [ m] the set of players. The components of the the Markov game are defined as follows: 
+
+• Horizon length is denoted by H ∈ N+.4• We denote the finite set of states at layer h by Sh. The initial state is deterministic and we denote the initial state by s1. The layer H + 1 is terminal and has no actions or costs. We write S := FH+1  
+
+> h=1
+
+Sh , and S := |S| .
+
+• The action set of player i ∈ M is denoted by Ai, which we will assume to be finite. The joint action space of all players will be denoted by A := Qmi=1 Ai. We write joint actions of the players as a = ( a1, . . . , a m) ∈ A, and write a−i := ( aj )j̸ =i ∈ A−i := Q  
+
+> j̸=i
+
+Aj for the action profile that excludes the action of player i. By Amax := max i∈[m] |Ai|, we will denote the maximum available cardinality among all players. 
+
+• For any given h ∈ [H], by Ph : Sh × A → ∆( Sh+1 ) we denote the (state) transition probability kernel of all players. The quantity Ph(s′ | s, a) represents the probability of transitioning to 
+
+s′ ∈ Sh+1 from s ∈ Sh when the joint action is a ∈ A.
+
+• For each player i ∈ [m] and layer h ∈ [H], the cost function is ℓih : Sh × A → [0 , 1] .
+
+General (non-Markov) policies. For h ∈ [H], let Hh denote the set of histories before the layer-h action, Hh := S1 × A × S2 × A × · · · × Sh−1 × A × Sh. An element of Hh is written as τh = ( s1, a1, s 2, a2, . . . , s h−1, ah−1, s h). Furthermore, when needed, we let s(τh) ∈ Sh be the concluding state of the history τh ∈ H h at layer h. A non-Markov policy of player i is a sequence of maps πi = {πih}Hh=1 , π ih(· | τh) ∈ ∆( Ai) for every τh ∈ H h. Let Π gen  
+
+> i
+
+denote the set of all such finite-horizon policies of player i, and define Π gen := Qmi=1 Πgen  
+
+> i
+
+. A non-Markov product policy profile is denoted by π = ( π1, . . . , π m) ∈ Πgen . In particular, for player i ∈ M a general (non-Markov) policy πi ∈ Πgen  
+
+> i
+
+is specified by a collection πi = ( πi
+
+> 1
+
+, · · · , π iH ), where πih : τh → ∆( Ai). Under such a profile, conditional on the history, τh, the players’ actions are sampled independently as 
+
+aih ∼ πih(· | τh), i ∈ [m], h ∈ [H].
+
+Markov policies. A Markov policy of player i is a sequence πi = {πih}Hh=1 , π ih(· | s) ∈ ∆( Ai)for every s ∈ Sh. Let Π markov  
+
+> i
+
+denote the set of all such finite-horizon policies of player i, and define Π markov := Qmi=1 Πmarkov  
+
+> i
+
+to denote the space of product Markov policies, where each agent i
+
+independently follows a policy in Π markov  
+
+> i
+
+for a given state. In particular, a Markov product policy 
+
+π ∈ Πmarkov is specified by a collection π = ( π1, · · · , πH ), where πh : Sh → ∆( A1)×· · ·× ∆( Am). At state s ∈ Sh, it induces the product distribution πh(a | s) := Qmj=1 πjh(aj | s), a = ( a1, . . . , a m) ∈ A. 
+
+For player i, write π−i := ( π1, . . . , π i−1, π i+1 , . . . , π m) for the policy profile of all players except i.If ρi is another policy of player i, either Markov or non-Markov, we write ρi ⊙ π−i for the profile obtained by replacing player i’s policy with ρi and leaving the opponents’ policies equal to π−i. In particular, if ρi is Markov, then for s ∈ Sh, ( ρi ⊙ π−i)h(a | s) := ρih(ai | s) Q  
+
+> j̸=i
+
+πjh(aj | s).
+
+Repeated interaction. The agents interact with environment over T episodes. At the beginning of episode t ∈ [T ], each player i chooses a Markov policy πit. Let πt = ( π1 
+
+> t
+
+, . . . , π mt ) denote the resulting product Markov profile. Each episode starts from st, 1 = s1. For each h ∈ [H], player i samples ait,h ∼ πit,h (· | st,h ), the joint action is at,h := ( a1
+
+> t,h
+
+, . . . , a mt,h ), player i incurs cost 
+
+ℓih(st,h , at,h ), and the next state is sampled as st,h +1 ∼ Ph(· | st,h , at,h ). The feedback observed by each player after the episode depends on the feedback model defined below. 
+
+Definition 1 (Full-feedback) . At the end of episode t, player i observes the exact Qit(s, a i) = 
+
+Qi, πt 
+
+> h
+
+(s, a i), ∀h ∈ [H], s ∈ Sh, a i ∈ Ai.
+
+5Definition 2 (Partial feedback) . At the end of episode t, player i observes only its own trajectory information 
+
+
+
+st, 1, a it, 1, c it, 1, s t, 2, a it, 2, c it, 2, . . . , s t,H , a it,H , c it,H , s t,H +1 
+
+
+
+, where cit,h := ℓih(st,h , at,h ).
+
+For a policy profile π ∈ Πmarkov , let Pπ denote the distribution over trajectories induced by the policy profile π and the transition kernels {Ph}Hh=1 , and define V i, π 
+
+> H+1
+
+≡ 0. All expectations Eπ below are taken with respect to this trajectory distribution. For h ∈ [H], s ∈ Sh, and i ∈ [m], we define the value function V i, π 
+
+> h
+
+(s) := Eπ
+
+hPHr=h ℓir(sr, ar) sh = s
+
+i
+
+. Similarly, the state-action value is given as 
+
+Qi, π 
+
+> h
+
+(s, a i) := Ea−i∼π−ih (·| s)
+
+h
+
+ℓih(s, a) + P 
+
+> s′∈Sh+1
+
+Ph(s′ | s, a) V i, π
+
+> h+1
+
+(s′)
+
+i
+
+, where the opponents follow the π−i. Therefore, V i, π 
+
+> h
+
+(s) = Eai∼πih(·| s)
+
+h
+
+Qi, π 
+
+> h
+
+(s, a i)
+
+i
+
+. For s1, we have V i, π(s1) := V i, π 
+
+> 1
+
+(s1).
+
+The induced MDP of a player. Fix an episode t, a player i, and the opponents’ policies π−it .Then, player i faces an induced finite-horizon MDP M it := 
+
+
+
+H, {Sh}H+1  
+
+> h=1
+
+, A i, {P it,h }Hh=1 , {ℓit,h }Hh=1 , s 1
+
+
+
+,
+
+where, for s ∈ Sh, ai ∈ Ai, and s′ ∈ Sh+1 , ℓit,h (s, a i) := Ea−i∼π−it,h (·| s)
+
+ℓih
+
+ s, (ai, a−i) , and 
+
+P it,h (s′ | s, a i) := Ea−i∼π−it,h (·| s)
+
+Ph
+
+ s′ | s, (ai, a−i) . For a Markov policy μi in this induced MDP, define V i,μ i 
+
+> t,H +1
+
+≡ 0 and, then, we have 
+
+Qi,μ i 
+
+> t,h
+
+(s, a i) := ℓit,h (s, a i) + X
+
+> s′∈Sh+1
+
+P it,h (s′ | s, a i) V i,μ i
+
+> t,h +1
+
+(s′), V i,μ i 
+
+> t,h
+
+(s) := Eai∼μih(·| s)
+
+h
+
+Qi,μ i 
+
+> t,h
+
+(s, a i)
+
+i
+
+.
+
+These induced-MDP quantities agree with the corresponding Markov-game quantities, V i,μ i 
+
+> t,h
+
+(s) = 
+
+V i,μ i⊙π−it 
+
+> h
+
+(s), Q i,μ i 
+
+> t,h
+
+(s, a i) = Qi,μ i⊙π−it 
+
+> h
+
+(s, a i). For the actually played policy πit, we use the shorthand 
+
+V i,π t,h (s) := V i,π it⊙π−it 
+
+> h
+
+(s), Q i,π t,h (s, a i) := Qi,π it⊙π−it 
+
+> h
+
+(s, a i), s ∈ Sh. Moreover, we drop policy-dependent indices from the value-functions’ notation whenever they are clear from the context. 
+
+Distributional policies. We will also consider distributions over non-Markov general policies; we refer to such elements of ∆(Π gen ) as distributional policies . Playing a distributional policy 
+
+P ∈ ∆(Π gen ) consists of first sampling a randomized policy π ∼ P, and then executing the sampled policy π.For any policy π ∈ Πgen , let δπ ∈ ∆(Π gen ) denote the distribution placing unit mass on π. Accord-ingly, the empirical distribution over the iterates π1, . . . , πT is bΠT := 1
+
+> T
+
+PTt=1 δπt ∈ ∆(Π gen ).
+
+More generally, if P ∈ ∆(Π gen ) is a distribution over policy profiles, we define V i, P(s1) := 
+
+Eσ∼P
+
+V i, σ(s1) . Then, for a deviation μi ∈ Πgen  
+
+> i
+
+, we let V i,μ i⊙P−i
+
+(s1) := Eσ∼P
+
+h
+
+V i,μ i⊙σ−i
+
+(s1)
+
+i
+
+.
+
+Definition 3 (General-policy external regret) . Given product Markov policy profiles π1, . . . , πT , the general-policy external regret of player i is Reg gen ,i T := sup μi∈Πgen 
+
+> i
+
+PTt=1 
+
+h
+
+V i, πt (s1) − V i,μ i⊙π−it (s1)
+
+i
+
+.
+
+Definition 4 (Coarse Correlated Equilibrium) . The empirical distribution bΠT = 1
+
+> T
+
+PTt=1 δπt is an 
+
+ε-approximate CCE if, for every player i ∈ [m], sup μi∈Πgen 
+
+> i
+
+h
+
+V i, bΠT (s1) − V i,μ i⊙ bΠ−iT (s1)
+
+i
+
+≤ ε. 
+
+2.3 Discounted Markov games 
+
+We use the same notation for finite and infinite-horizon discounted games. Let ¯H ∈ N+ ∪ {∞} 
+
+denote the horizon. When ¯H < ∞, an m-player finite-horizon discounted Markov game is specified 6by Gγ, ¯H =
+
+ ¯H, {Sh} ¯H+1  
+
+> h=1
+
+, {Ai}mi=1 , {Ph} ¯Hh=1 , {ℓih}i∈[m],h ∈[ ¯H], γ, s 1
+
+
+
+. When ¯H = ∞, we recover the discounted infinite-horizon Markov game Gγ =
+
+
+
+S, {Ai}mi=1 , P, {ℓi}mi=1 , γ, s 1
+
+
+
+. In both cases, we will denote by M = [ m] the set of players. Corresponding games are defined as follows. 
+
+• For horizon ¯H, we use the convention [ ¯H] = 
+
+(
+
+{1, . . . , ¯H}, ¯H < ∞,
+
+N+, ¯H = ∞.
+
+• In the finite-horizon case, the state spaces S1, . . . , S ¯H+1 are layer-labeled, and S ¯H+1 is termi-nal. In the infinite-horizon case, we have Sh = S for all h ≥ 1. The initial state is deterministic and we denote it by s1.
+
+• The set Ai is the finite action set of player i ∈ M . The joint action space is A := Qmi=1 Ai. We write a joint action as a = ( a1, . . . , a m) ∈ A, and we write a−i := ( aj )j̸ =i ∈ A−i := Q  
+
+> j̸=i
+
+Aj .
+
+• For each layer h ∈ [ ¯H], the transition kernel is Ph : Sh × A → ∆( Sh+1 ). In the infinite-horizon case, this reduces to the stationary kernel P : S × A → ∆( S).
+
+• For each player i ∈ [m] and layer h ∈ [ ¯H], the cost function is ℓih : Sh × A → [0 , 1] . In the infinite-horizon case, the cost function is ℓi : S × A → [0 , 1] .
+
+• The discount factor is γ ∈ (0 , 1) .
+
+General (non-Markov) and Markov policies. For each h ≤ ¯H, let H ¯Hh := S1 × A × S2 ×
+
+A × · · · × Sh−1 × A × Sh be the set of histories before the time-h action. When ¯H = ∞, this definition is understood with the convention Sh = S for every h. An element of H ¯Hh is written as 
+
+τh = ( s1, a1, s 2, a2, . . . , s h−1, ah−1, s h).
+
+A non-Markov policy of player i over horizon ¯H is a sequence of maps μi = {μih}h≤ ¯H , μih(· | 
+
+τh) ∈ ∆( Ai) for every τh ∈ H ¯Hh . Let Π gen , ¯Hi denote the set of such policies of player i, and define Πgen , ¯H := Qmi=1 Πgen , ¯Hi . For ¯H = ∞, we also write Π gen ,∞ 
+
+> i
+
+and Π gen ,∞.A Markov policy of player i over horizon ¯H is a sequence πi = {πih}h≤ ¯H , π ih(· | s) ∈ ∆( Ai), s ∈ Sh.
+
+In the infinite-horizon case, as a special case our notion of Markov policies corresponds to non-stationary Markov policies. Let Π markov , ¯Hi denote the set of such policies of player i, and define Πmarkov , ¯H := Qmi=1 Πmarkov , ¯Hi . For ¯H = ∞, we also write Π markov ,∞ 
+
+> i
+
+and Π markov ,∞.
+
+Discounted values. For a policy profile σ ∈ Πgen , ¯H and a finite L ≤ ¯H, define the L-truncated discounted cost of player i by Jγi,L (σ) := Eσ
+
+hPLh=1 γh−1ℓih(sh, ah) s1 = sinit 
+
+i
+
+. The full discounted objective is Jγi, ¯H (σ) := Eσ
+
+hP ¯Hh=1 γh−1ℓih(sh, ah) s1
+
+i
+
+, In the infinite-horizon case, we also write 
+
+Jγi (σ) := Jγi, ∞(σ). Since 0 ≤ ℓih ≤ 1, for every profile σ, 0 ≤ Jγi, ¯H (σ) ≤ P ¯Hh=1 γh−1 ≤ 11−γ .
+
+For a distribution P ∈ ∆(Π gen , ¯H ) over policy profiles, define Jγi, ¯H (P) := Eσ∼P
+
+h
+
+Jγi, ¯H (σ)
+
+i
+
+. For a unilateral deviation μi ∈ Πgen , ¯Hi , define Jγi, ¯H (μi ⊙ P−i) := Eσ∼P
+
+h
+
+Jγi, ¯H (μi ⊙ σ−i)
+
+i
+
+. Then, we define the corresponding discounted CCE and regret notions as follows. 
+
+Definition 5. For a sequence of ¯H-horizon product policy profiles ¯π1, . . . , ¯πT , the discounted general-policy regret of player i is defined as Reg gen ,i γ, ¯H,T := sup μi∈Πgen , ¯Hi
+
+PTt=1 
+
+h
+
+Jγi, ¯H ( ¯ πt) − Jγi, ¯H (μi ⊙ ¯π−it )
+
+i
+
+.
+
+7Definition 6. The empirical distribution bΠT is an ε-approximate CCE if, for every player i ∈ [m],
+
+sup μi∈Πgen , ¯Hi
+
+h
+
+Jγi, ¯H (bΠT ) − Jγi, ¯H (μi ⊙ bΠ−iT )
+
+i
+
+≤ ε. If ¯H = ∞, it is the discounted infinite-horizon CCE. 
+
+2.4 Truncated Markov Games 
+
+Let L ≤ ¯H. For a given discounted Markov game Gγ, ¯H , we define a corresponding L-step discounted truncation G[L]  
+
+> γ, ¯H
+
+whose one-step cost function is defined as cih(s, a) := γh−1ℓih(s, a), h ∈ [L]. The state spaces, action sets, transition kernels, and initial state of G[L]  
+
+> γ, ¯H
+
+are inherited from the original game for layers 1 , . . . , L .For an ¯H-horizon policy μi = ( μi
+
+> 1
+
+, μ i
+
+> 2
+
+, . . . , μ i¯H ), define μi, [L] := ( μih)Lh=1 . That is, μi, [L] is the L-step policy obtained by truncating μi after stage L. We define policy πL, ref for the layers after L, in which every player plays uniformly at every state. For an L-step product profile π[L], let Ext L(π[L]) denote the ¯H-horizon profile that plays π[L] during layers 1 , . . . , L and then plays πL, ref afterward. Finally, define the discounted tail after layer L or truncation error by τL, ¯H (γ) := P ¯Hh=L+1 γh−1 ≤ γL 
+
+> 1−γ
+
+.
+
+# 3 Main Algorithm and Results for Episodic Markov Games 
+
+Let G =
+
+
+
+H, {Sh}H+1  
+
+> h=1
+
+, {Ai}mi=1 , {Ph}Hh=1 , {ℓih}i∈[m],h ∈[H], s 1
+
+
+
+be a finite-horizon Markov game. In this section, we establish the undiscounted finite-horizon regret guarantees for G that underlie our later discounted-game results. We consider undiscounted general-sum Markov games within episodic framework in the self-play setting, where the players repeatedly generate product Markov profiles and update their own policies independently. The performance criterion is regret with respect to history-dependent deviations, which, through the standard no-regret-to-CCE connection [Cesa-Bianchi and Lugosi, 2006], yields approximate CCE for the empirical distribution of play. The main obstruction, compared with normal-form games, is that the regret comparison in a Markov game is weighted by the history distribution induced by the policy deviations. A unilateral deviation of policies may change the distribution of future states, and therefore the future decision points at which the deviation is evaluated. Hence, the comparison places more weight on histories that the deviating policy visits frequently and less weight on histories that it reaches rarely. From the learner’s perspective, these history-occupancy weights are unknown and time-varying: they depend on the transition kernel, the deviation being compared against, and the opponents’ evolving policies. Thus, the analysis must control the drift of these unknown weights in addition to the online learning dynamics. We first handle this issue in the full-feedback model, and then extend the argument to the trajectory-level partial-feedback model by introducing value estimation and an exploration floor under a reachability condition. 
+
+3.1 Episodic Markov games under full-feedback 
+
+In this subsection, we present the Layered Optimistic Online Mirror Descent (OOMD) algorithm for the self-play setting in game G (see Algorithm 1) and prove its regret guarantee under full-feedback. The algorithm follows an independent self-play structure: at each player–state–layer tuple ( i, s, h ), player i performs a local policy update using the state–action value vector generated by the product Markov profile played in the previous episode. 8Algorithm 1 Layered Optimistic Online Mirror Descent  
+
+> 1:
+
+Input: Finite-horizon game G, horizon H, episode count T , base step-size η0 ∈ R. 
+
+> 2:
+
+Define αh := 3( H−h)+1 3H+1 , η h := η0T −αh , ¯xi(ai) := 1 
+
+> |Ai|
+
+, λ i = 1 /|Ai|, a i ∈ Ai, h ∈ [H]. 
+
+> 3:
+
+For every i ∈ [m], h ∈ [H], and s ∈ Sh, set exi,s  
+
+> 0,h
+
+:= ¯ xi ∈ argmin x∈∆( Ai) Ψi(x), Q i
+
+> 0
+
+(s, ·) ≡ 0 ∈ RAi . 
+
+> 4:
+
+for t = 1 , . . . , T do  
+
+> 5:
+
+for each player i ∈ [m], layer h ∈ [H], and state s ∈ Sh do ▷ Optimistic mirror step  
+
+> 6:
+
+xi,s t,h = argmin x∈∆( Ai)
+
+n
+
+ηh Qit−1,h (s, ·), x + Di
+
+
+
+x, exi,s t−1,h 
+
+o 
+
+. 
+
+> 7:
+
+Set the played policy at ( h, s ) by πit,h (· | s) = xi,s t,h (·). 
+
+> 8:
+
+Execute episode t using the πt = ( π1 
+
+> t
+
+, . . . , π mt ). 
+
+> 9:
+
+Each player i observes Qit,h (s, a i), ∀h ∈ [H], s ∈ Sh, a i ∈ Ai. 
+
+> 10:
+
+for each player i ∈ [m], layer h ∈ [H], and state s ∈ Sh do ▷ Mirror-descent update  
+
+> 11:
+
+exi,s t,h = argmin x∈∆( Ai)
+
+n
+
+ηh Qit,h (s, ·), x + Di
+
+
+
+x, exi,s t−1,h 
+
+o 
+
+.
+
+The full-feedback setting removes the statistical difficulty of estimating value functions from tra-jectories, since each player observes the exact vectors Qit,h (s, ·) after every episode. The remaining challenge is therefore purely dynamical: each player’s OOMD updates must be stable enough to control the induced drift of the hidden history-occupancy weights. Algorithm 1 addresses this diffi-culty by combining a smoothed-entropy regularizer with an increasing layer-wise step-size schedule. Our first design choice is the smoothed entropy function as the regularizer choice. Given a smooth-ing parameter λi > 0, the smoothed negative-entropy regularizer over ∆( Ai) is defined as Ψi(x) := X
+
+> a∈Ai
+
+ x(a) + λi
+
+ log  x(a) + λi
+
+, x ∈ ∆( Ai).
+
+The associated Bregman divergence is Di(x, y ) = P
+
+> a∈Ai
+
+ x(a) + λi
+
+ log x(a)+ λi 
+
+> y(a)+ λi
+
+, x, y ∈ ∆( Ai).
+
+Here, the idea of shift λi is reminiscent of the fixed-share smoothing idea used in tracking and adaptive-regret algorithms Herbster and Warmuth [1998], Cesa-Bianchi et al. [2012]. To the best of our knowledge, this type of fixed-share idea, implemented through regularizers, was first proposed in Salem et al. [2024], although we use it for a different purpose. In our setting, the shift provides a bounded Bregman divergence on the full simplex and a clean Lipschitz bound, while still allowing the comparator μih(· | τh) to be an arbitrary distribution in ∆( Ai). Furthermore, under the choice 
+
+λi = 1 /|Ai|, the upper bound over Di(x, y ) grows only logarithmically with the action-set size. The second design choice is the increasing step-size schedule. For a given horizon H, defining 
+
+αh := 3( H−h)+1 3H+1 , we set our learning-rate as ηh := η0T −αh , h ∈ [H], given η0 ∈ (0 , 1]. Simply, our step-size schedule is designed to make the drift of unknown weights manageable. In particular, the earlier layers use smaller learning rates, and thus their policies move slowly and do not create abrupt changes over later histories. Later layers use larger learning rates, allowing the downstream parts of the game to adapt more quickly by providing them a more stable regime. In a sense, this creates a nested time-scale separation across the horizon as deep layers react faster, while earlier layers remain comparatively stable. Combined with optimism, this schedule turns the problem into a controlled collection of slowly varying weighted online learning problems. This layer-wise schedule is mathematically reminiscent of increasing learning-rate schemes used in adaptive online learning and adversarial bandit/MDP analyses Bubeck et al. [2021], Agarwal et al. [2017], Wei and Luo [2018], Lee et al. [2020], but the motivation and exact schedule here 9is fundamentally different. In those settings, learning rates increase across episodes to improve exploration by discounting early high-variance loss estimates and avoiding commitment to subopti-mal actions. In contrast, our schedule is designed to make the drift of unknown history-occupancy weights manageable. Formally, the performance of Algorithm 1 is provided in the statement below. 
+
+Theorem 1. Suppose all players run Algorithm 1. Define 
+
+CSE  
+
+> ∗
+
+:= max 
+
+> i∈[m]
+
+ 2H log( |Ai| + 1) 
+
+η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 144 η30 m2H7
+
+
+
+.
+
+Given ϵ ∈ (0 , 1] , choose Tε := 
+
+ CSE 
+
+> ∗
+> ε
+
+(3 H+1) /3
+
+. Then, after running Algorithm 1 for Tε episodes, for every player i ∈ [m], Reg gen ,i Tε ≤ εT ε. Equivalently, the empirical distribution bΠTε is an ε-approximate CCE with respect to all history-dependent deviations. Proof Outline. We provide here an overview of the proof of Theorem 1. The full argument is deferred to Appendix B. The proof follows three main steps. First, the Markov-game regret is rewritten as a sum of local weighted regret terms. Second, the movement of the hidden weights and the movement of the Q-functions are controlled through the stability of the policy sequences. Third, the layer-wise learning-rate schedule is chosen so that all resulting terms have the same order. For a player i and a history-dependent policy μi ∈ Πgen  
+
+> i
+
+, let di,μ t,h ∈ ∆( Hh) denote the distribution over histories at layer h, τh, generated by μi and the opponents’ episode-t Markov profile π−it . For each layer h, define the local weighted regret 
+
+Ri,h (μi) := X
+
+> τh∈H h
+> T
+
+X
+
+> t=1
+
+di,μ t,h (τh) Qit,h (s(τh), ·), π it,h (· | s(τh)) − μih(· | τh) .
+
+The weighted value-difference decomposition, Lemma 12, shows that the regret against μi is exactly 
+
+PTt=1 
+
+h
+
+V i,π t,h (s1)−V i,μ i 
+
+> t,h
+
+(s1)
+
+i
+
+=PHh=1 Ri,h (μi). Thus, the problem reduces to bounding Ri,h (μi) for all 
+
+h.The first step is the weighted optimistic-online-mirror-descent bound in Lemma 7. Applied to the learner at layer h, and then summed over histories, it leads to a bound of the form 
+
+Ri,h (μi) ≤ Bi(1 + TV μi,h )
+
+ηh
+
++ ηhρi
+
+2
+
+X 
+
+> τ∈H h
+> T
+
+X
+
+> t=1
+
+di,μ t,h (τ ) Qit,h (s(τ ), ·) − Qit−1,h (s(τ ), ·) 2 
+
+> ∞
+
+,
+
+where TV μi,h := PT −1 
+
+> t=1
+
+di,μ t+1 ,h − di,μ t,h 1 . The first term is controlled by the bounded Bregman di-ameter of the smoothed-entropy regularizer. The second term is where optimism enters: the cost of learning depends on the variation of consecutive Q-functions rather than on their magnitudes. The second step controls the variation of the hidden weights. Regarding the smooth-entropy reg-ularizer, define ρi := 1 + |Ai|λi, ¯ρ := max i∈[m] ρi, and Bi := ρi log 1+ λi 
+
+> λi
+
+. By the proximal Lipschitz property of the smoothed-entropy OOMD update given in Lemma 5, Lemma 8 shows that the one-step movement of player i’s layer-h policy satisfies max 
+
+> s∈Sh
+
+πit+1 ,h (· | s) − πit,h (· | s) 1 ≤ 3ρiHη h.
+
+10 Then, Lemma 9 uses the layered structure of the game to show that the layer-h history weights depend only on policy movement in earlier layers: TV μi,h ≤ 3m¯ρHT P 
+
+> ℓ<h
+
+ηℓ. Since earlier layers use smaller step sizes, their movement is slow enough to keep the later-layer visitation weights stable. The third step of the proof controls the Q-variation term. Lemma 10 shows that a small change in the product Markov profile leads to a small change in Q-functions. Combining this perturbation estimate with the policy-movement bound leads to Lemma 11, namely 
+
+Qit,h (s, ·) − Qit−1,h (s, ·) 2 
+
+> ∞
+
+≤ 36 m2 ¯ρ2H6η2 
+
+> H
+
+(t ≥ 2) ,
+
+with the t = 1 round bounded separately by H2.Substituting these estimates into the weighted OOMD bound yields, up to absolute constants, 
+
+Ri,h (μi) ≤ Bi
+
+ηh
+
++ 3m¯ρHB i
+
+ηh
+
+T X
+
+> ℓ<h
+
+ηℓ
+
+!
+
++ 12 ηhρiH2 + 18 ηhρim2 ¯ρ2H6η2 
+
+> H
+
+T. 
+
+The learning-rate schedule ηh = η0T −αh , α h = 3( H−h)+1 3H+1 , is chosen precisely to balance these terms after summing over layers. Therefore the total regret against any μi ∈ Πgen  
+
+> i
+
+is bounded by 
+
+ HB i
+
+η0
+
++ 3 mB i ¯ρH 3 + 12 η0ρiH3 + 18 η30 ρim2 ¯ρ2H7
+
+
+
+T β ,
+
+where β = 3H−23H+1 . Finally, taking the supremum over μi and choosing λi = 1 /|Ai| gives Reg gen ,i T ≤
+
+CSE  
+
+> i
+
+T β . Since β − 1 = −3/(3 H + 1), choosing Tε := 
+
+ CSE 
+
+> ∗
+> ε
+
+(3 H+1) /3
+
+, CSE  
+
+> ∗
+
+:= max i∈[m] CSE  
+
+> i
+
+,
+
+ensures that, for every player i ∈ [m], Reg gen ,i Tε ≤ εT ε. The CCE guarantee then follows from the standard no-regret-to-CCE equivalence applied to the empirical distribution over the generated policy profiles. 
+
+3.2 Episodic Markov games under partial feedback 
+
+In this subsection, we extend the results of Subsection 3.1 to the partial-feedback setting. The primary distinction between the full-feedback and partial-feedback settings is the restrictions on the accessibility to Q-functions. We tackle this difficulty by estimating the Q-functions as follows. First, players will maintain a small action-exploration floor throughout the play. This action-exploration floor is maintained by taking mirror descent steps over the simplex ∆ζi := 
+
+
+
+x ∈ ∆( Ai) : x(ai) ≥ ζ
+
+|Ai| for every ai ∈ Ai
+
+
+
+instead of the full simplex ∆( Ai), where ζ ∈ (0 , 1]. Second, unlike the full-information case, the players update policies in blocks , which is inspired by Erez et al. [2023]. This update proceeds as follows. During a block, the same product Markov profile is repeated for B independent episodes, and the realized trajectories are used to estimate the Q-functions for that block by visiting each state-action ( s, a ) pair sufficiently many times. The policy is then updated using the estimated 
+
+Q-functions. To ensure that every player state is reached often enough throughout the play, we impose the following reachability condition in a similar way to Erez et al. [2023], Wei et al. [2021]. 11 Definition 7 (( κ, ζ )-reachability) . A finite-horizon Markov game is said to be (κ, ζ )-reachable if, for every Markov policy profile π satisfying πih(ai | s) ≥ ζ 
+
+> |Ai|
+
+for all i ∈ [m], h ∈ [H], s ∈ Sh,and ai ∈ Ai, the induced state-occupancy probabilities satisfy Pr π(sh = s) ≥ κ for all h ∈ [H] and 
+
+s ∈ Sh.
+
+At block k, all players use the same product Markov profile πk for B independent episodes. For episode r ∈ [B] in block k, we write the realized trajectory as ( sk,r  
+
+> 1
+
+, ak,r  
+
+> 1
+
+, s k,r  
+
+> 2
+
+, ak,r  
+
+> 2
+
+, . . . , s k,r H , ak,r H , s k,r H+1 ).
+
+The realized tail cost of player i at layer h is denoted by Y i,k,r h := PHτ =h ℓiτ (sk,r τ , ak,r τ ). By Nk,i we denote the number of times that player i visits ( s, a ) ∈ Sh ∈ Ai during the play, which can be formally written as 
+
+Nk,i (s, a i) := 
+
+> B
+
+X
+
+> r=1
+
+1{sk,r h = s, a i,k,r h = ai}. (1) Then, we define the empirical estimate of the Q-function of player i at block k as 
+
+bQik,h (s, a i) := 
+
+
+
+1
+
+Nk,i (s, a i)
+
+> B
+
+X
+
+> r=1
+
+1{sk,r h = s, a i,k,r h = ai}Y i,k,r h , Nk,i (s, a i) > 0,
+
+0, Nk,i (s, a i) = 0 .
+
+Our Algorithm in the partial-feedback setting, compared to Algorithm 1, differs in only two as-pects: the use of a blocked estimation procedure and the replacement of exact values with their corresponding estimates; see Algorithm 2. 
+
+Algorithm 2 Blocked Layered OOMD  
+
+> 1:
+
+Input: finite-horizon game G, horizon H, number of blocks K, block length B, exploration floor ζ ∈ (0 , 1], base step-size η0 ∈ (0 , 1].  
+
+> 2:
+
+Define αh := 3( H−h)+1 3H+1 , η h := η0K−αh , ¯xi(ai) := 1 
+
+> |Ai|
+
+, λ i = 1 /|Ai|, a i ∈ Ai, h ∈ [H]. 
+
+> 3:
+
+For every i ∈ [m], h ∈ [H], and s ∈ Sh, set exi,s  
+
+> 0,h
+
+= ¯ xi ∈ argmin x∈∆ζi
+
+Ψi(x), bQi
+
+> 0
+
+(s, ·) ≡ 0 ∈ RAi . 
+
+> 4:
+
+for k = 1 , . . . , K do  
+
+> 5:
+
+for each player i ∈ [m], layer h ∈ [H], and state s ∈ Sh do  
+
+> 6:
+
+xi,s k,h = argmin x∈∆ζi
+
+n
+
+ηh bQik−1,h (s, ·), x + Di
+
+ x, exi,s k−1,h 
+
+o
+
+. 
+
+> 7:
+
+Set πik,h (· | s) = xi,s k,h (·).  
+
+> 8:
+
+Execute B independent episodes using the fixed product profile πk = ( π1
+
+> k
+
+, . . . , π mk ).  
+
+> 9:
+
+Each player i forms the trajectory estimate bQik,h (s, a i) for all h ∈ [H], s ∈ Sh, and ai ∈ Ai. 
+
+> 10:
+
+for each player i ∈ [m], layer h ∈ [H], and state s ∈ Sh do  
+
+> 11:
+
+exi,s k,h = argmin x∈∆ζi
+
+n
+
+ηh bQik,h (s, ·), x + Di
+
+ x, exi,s k−1,h 
+
+o
+
+.
+
+For the regret guarantee of Algorithm 2, we first introduce the following: 
+
+eCSE  
+
+> ∗
+
+≤ max 
+
+> i∈[m]
+
+ 2H log( |Ai| + 1) 
+
+η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 288 η30 m2H7
+
+
+
+, eCSE  
+
+> ∗
+
+:= max 
+
+> i∈[m]
+
+eCSE  
+
+> i
+
+.
+
+The constant above differs from the constant CSE  
+
+> ∗
+
+in the full-feedback case only in the last term, which is due to the Q-function estimations that we use. The following result is the corresponding regret guarantee of Algorithm 2. 12 Theorem 2. Suppose the underlying Markov game is (κ, ζ ϵ)-reachable, where ζε := ε 
+
+> 8H2
+
+. Fix ε, δ ∈
+
+(0 , 1] . Choose Kε := 
+
+ 4 eCSE 
+
+> ∗
+> ε
+
+(3 H+1) /3
+
+, B ε := 
+
+l 8Amax 
+
+> κζ ε
+
+ nε + uε
+
+m
+
+, where Mε := KεmA max S, ξ ε := min 
+
+n ε 
+
+> 8H
+
+,
+
+q ε
+
+> 32 η0H
+
+o
+
+, u ε := log 4Mε 
+
+> δ
+
+, n ε := 
+
+l H2
+
+> 2ξ2
+> ε
+
+uε
+
+m
+
+. Then, running Algorithm 2 for every player 
+
+i ∈ [m], for Nε = eO
+
+
+
+> Amax H2
+> κε
+
+ H2
+
+> ξ2
+> ε
+
++ 1 
+
+  eCSE 
+
+> ∗
+> ε
+
+(3 H+1) /3
+
+episodes results in Reg gen ,i Nε ≤ εN ε, with probability at least 1 − δ. Consequently, the empirical distribution bΠNε is an ε-approximate CCE. 
+
+Thus, our regret guarantees for the partial-feedback implementation of Algorithm 2 inherits the same exponential dependence on the horizon length as the one we had in the full-feedback finite-horizon case, together with an additional polynomial overhead arising from exploration, and value-function estimation parts. 
+
+Proof Outline. The proof follows the same stability argument as in the full-feedback case, with two additional steps. First, because the algorithm uses only partial feedback, it relies on an es-timation of the exact Q-function values. The exploration floor and the ( κ, ζ )-reachability ensure that, during each block, every state-action pair ( s, a i) is sampled often enough. Later, Lemma 14 shows that, if the block length is chosen as in Theorem 2, i.e. Bε := 
+
+l 8Amax 
+
+> κζ ε
+
+ nε + uε
+
+m
+
+, then with probability at least 1 − δ, the Q-functions can be estimated uniformly with the desired precision, i.e., max k,i,s,a i bQik,h (s, a i) − Qik,h (s, a i) ≤ ξε.
+
+Second, the imposed action floor for exploration restricts the policies played by the algorithm to ∆ ζε 
+
+> i
+
+. To compare policies within ∆ ζε 
+
+> i
+
+against an arbitrary history-dependent policy μi, we smooth the comparator by mixing it with the uniform distribution. Lemma 13 then shows that this comparison changes the value by at most 2 ζH 2. Thus, the error bound obtained due to the exploration is controlled by choosing ζε = ε/ (8 H2). On the good event that all Q-estimates are uniformly accurate, the proof then runs the full-feedback OOMD analysis with bQik,h in place of Qik,h . Then, Proposition 2 gives the following regret bound: Reg gen ,i N = sup 
+
+> μi∈Πgen
+> i
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+h
+
+V i,π k (s1)−V i,μ i⊙π−ik (s1)
+
+i
+
+≤ eCSE  
+
+> i
+
+K−3/(3 H+1) +2 Hξ +2 ζH 2 +8 η0Hξ 2K−αH .
+
+The four terms have clear roles: the first is the finite-horizon OOMD error, the second is the error from replacing exact Q-functions by (uniform) estimates, the third is the cost of smoothing the comparator, and the last one is an additional variation term caused by using estimated Q-functions in the optimistic update. The choices of Kε, ξε, and ζε make these four terms at most ε/ 4 each. Combining this deterministic regret bound with high probability estimation guarantee given in Lemma 14 proves Theorem 2. 
+
+# 4 Approximating Equilibrium Discounted Markov Games 
+
+In this section, we extend the finite-horizon non-discounted Markov game regret guarantees from Section 3 to discounted Markov games in both finite horizon and infinite horizon cases. The argument for this extension is independent of the feedback model, and it only requires a finite-horizon regret guarantee on the truncated discounted game. With this extension, we show that the corresponding regret can be reduced to a sub-exponential bound in the discounted case. We first 13 state this general transfer principle in Theorem 3, and then instantiate it for the full-feedback and partial-feedback algorithms in Corollaries 1 and 2 . 
+
+4.1 A transfer principle 
+
+In the infinite-horizon discounted game case, a non-Markov nonstationary policy consists of in-finitely many decision rules, and hence cannot be represented by a finite-sized object. Thus, a finite-output algorithm must either restrict attention to a compactly represented policy class, such as stationary policies, or approximate the discounted game by a finite-horizon truncation. It is known that, for general-sum discounted Markov games, computing stationary equilibria is already 
+
+PPAD -hard [Daskalakis et al., 2023]. We therefore follow the second route and work with sparse dis-tributions over finite-horizon product-policy prefixes. In the infinite-horizon case, each such prefix is extended beyond the truncation point by a fixed reference continuation. The same formulation also covers finite-horizon discounted games: when ¯H < ∞, we choose a truncation length L ≤ ¯H,extend the learned L-step policies only if L < ¯H, and the continuation is vacuous when L = ¯H.Ultimately, discounting is what makes this finite approximation idea possible. Since the contri-bution of future layers decays geometrically, controlling the first L discounted layers is sufficient to control the original discounted objective up to a tail error. This observation allows the finite-horizon regret guarantees from Section 3 to be transferred directly to discounted Markov games. Specifically, we run the finite-horizon algorithm on the L-step discounted truncated game, obtain a regret guarantee on the first L layers, and then account separately for the remaining discounted tail to approximate the equilibrium of the discounted game with horizon ¯H. We now formalize this transfer argument as follows. 
+
+Theorem 3. Let ¯H ∈ N+ ∪ {∞} , γ ∈ (0 , 1) , and fix L ≤ ¯H. Suppose that a learning procedure is run on the game G[L]  
+
+> γ, ¯H
+
+for N episodes, and outputs an L-step product Markov profile at each episode, {π[L]1 , . . . , π[L] 
+
+> N
+
+}, where π[L] 
+
+> t
+
+∈ Πmarkov ,L for every t ∈ [N ]. Assume that, for every player 
+
+i ∈ [m], the learning procedure satisfies 
+
+sup 
+
+> νi∈Πgen ,L i
+
+1
+
+N
+
+> N
+
+X
+
+> n=1
+
+h
+
+Jγi,L (π[L] 
+
+> n
+
+) − Jγi,L (νi ⊙ π[L],−in )
+
+i
+
+≤ εalg .
+
+For each n ∈ [N ], let ¯πn := Ext L(π[L] 
+
+> n
+
+). Then, for every player i ∈ [m],
+
+sup  
+
+> μi∈Πgen ,¯Hi
+
+1
+
+N
+
+> N
+
+X
+
+> n=1
+
+h
+
+Jγi, ¯H ( ¯ πn) − Jγi, ¯H (μi ⊙ ¯π−in )
+
+i
+
+≤ εalg + τL, ¯H (γ).
+
+Equivalently, 1
+
+> N
+
+PNn=1 δ¯πn is an (εalg + τL, ¯H (γ)) -approximate discounted CCE over horizon ¯H.Proof Outline. The complete proof is deferred to Appendix D. To compare an extended learned policy ¯ πn = Ext L(π[L] 
+
+> n
+
+) against an arbitrary ¯H-horizon deviation μi, the finite-horizon algorithm only needs to compete with the first L decision rules of that deviation, μi, [L]. The formal tail bound in Lemma 15 leads to 0 ≤ Jγi, ¯H (σ) − Jγi,L (σ[L]) ≤ τL, ¯H (γ) ≤ γL
+
+1 − γ
+
+for every policy profile σ. Combining this estimate for the learned policy with the non-negativity of costs leads to the one-step comparison 
+
+Jγi, ¯H ( ¯ πn) − Jγi, ¯H (μi ⊙ ¯π−in ) ≤ Jγi,L (π[L] 
+
+> n
+
+) − Jγi,L (μi, [L] ⊙ π[L],−in ) + τL, ¯H (γ),
+
+14 which is Lemma 16. Averaging this inequality over the policies produced by the finite-horizon algorithm and then using the finite-horizon regret guarantee proves the theorem. The corollaries below instantiate Theorem 3 with a similar choice of truncation length. For a target accuracy ε, we choose Hγε := 
+
+& log  
+
+> 2(1 −γ)ε
+> 
+> log(1 /γ )
+
+'
+
+, so that γHγε 
+
+> 1−γ
+
+≤ ε 
+
+> 2
+
+. Thus, for a discounted game with horizon ¯H ∈ N+ ∪ ∞ , we set Lε := min { ¯H, H γε } to guarantee, τLε, ¯H (γ) ≤ ε 
+
+> 2
+
+. We, then run the corresponding finite-horizon algorithms, Algorithms 1 and 2, on the Lε-step truncated discounted game G[Lε]  
+
+> γ, ¯H
+
+long enough to make its average regret at most ε/ 2. The finite-horizon regret bounds in Theorems 1 and 2 have exponents that depend on the horizon length, and thus replacing the original horizon by the effective discounted horizon Lε is crucial. For every fixed γ < 1, Hγε = O(log(1 /ε )), and hence the resulting discounted-game bounds become quasi-polynomial in 1 /ε , rather than exponential in the original horizon. 
+
+4.2 Full-feedback and Partial-feedback consequences 
+
+Let CSE  
+
+> ∗
+
+(L) denote the full-feedback constant in Theorem 1 with the horizon parameter replaced by L, and set Alog := max i∈[m] log( |Ai| + 1) . Then, formally, we have the following guarantees. 
+
+Corollary 1. Let ¯H ∈ N+ ∪ {∞} , ε ∈ (0 , 1] , and define Hγε := 
+
+& log  
+
+> 2(1 −γ)ε
+> 
+> log(1 /γ )
+
+'
+
+. Choose Tε := 
+
+ 2CSE  
+
+> ∗(Lε)
+> ε
+
+(3 Lε+1) /3
+
+, L ε := min { ¯H, H γε }. Run Algorithm 1 on the Lε-step discounted truncation 
+
+G[Lε]  
+
+> γ, ¯H
+
+for Tε episodes. For each t ∈ [Tε], let ¯πt = Ext Lε (π[Lε] 
+
+> t
+
+). Then, for every player i ∈ [m],
+
+sup  
+
+> μi∈Πgen ,¯Hi
+> Tε
+
+X
+
+> t=1
+
+h
+
+Jγi, ¯H ( ¯ πt) − Jγi, ¯H (μi ⊙ ¯π−it )
+
+i
+
+≤ εT ε.
+
+Consequently, 1
+
+> Tε
+
+PTε 
+
+> t=1
+
+δ¯πt is an ε-approximate discounted CCE over horizon ¯H. Moreover, for every fixed γ < 1, Tε ≤
+
+"  Alog   
+
+> η0+mA log +m2+1
+> 
+> min {¯H, log(1 /ε )}7
+> ε
+
+#O(min { ¯H, log(1 /ε )})
+
+.
+
+Proof. See Appendix D.1 We now apply Theorem 3 to the partial-feedback case. By eCSE  
+
+> ∗
+
+(L) denote the finite-horizon con-stant from Theorem 2 with horizon L. For a target finite-horizon accuracy ¯ ε ∈ (0 , 1], horizon 
+
+L, and confidence level δ ∈ (0 , 1), choose K¯ε,L := 
+
+ 4 eCSE  
+
+> ∗(L)¯ε
+
+(3 L+1) /3
+
+, ζ¯ε,L := ¯ε 
+
+> 8L2
+
+, B¯ε,L,δ := 
+
+l8Amax  
+
+> κζ ¯ε,L
+
+(n¯ε,L,δ + u¯ε,L,δ )
+
+m
+
+, where, M¯ε,L := K¯ε,L mA max S, u ¯ε,L,δ := log 4M¯ε,L  
+
+> δ
+
+, n ¯ε,L,δ := 
+
+
+
+> L2
+> 2ξ2¯ε,L
+
+u¯ε,L,δ 
+
+
+
+, ξ ¯ε,L := min 
+
+n ¯ε 
+
+> 8L
+
+,
+
+q ¯ε 
+
+> 32 η0¯L
+
+o
+
+. Then, formally, we have the following guarantee. 
+
+Corollary 2. Let ¯H ∈ N+ ∪ {∞} , ε, δ ∈ (0 , 1] , and define Hγε := 
+
+& log  
+
+> 2(1 −γ)ε
+> 
+> log(1 /γ )
+
+'
+
+. Set Lε := min { ¯H, H γε }, ¯ε := ε 
+
+> 2
+
+. Assume that the truncated discounted game G[Lε]  
+
+> γ, ¯H
+
+is (κ, ζ ¯ε,L ε )-reachable. 
+
+15 Run Algorithm 2 on G[Lε]  
+
+> γ, ¯H
+
+with parameters K¯ε,L ε , B¯ε,L ε,δ , and ζ¯ε,L ε for Nε, ¯H,δ episodes. For each 
+
+k ∈ [K¯ε,L ε ], let ¯πk := Ext Lε
+
+ π[Lε]
+
+> k
+
+. Then, with probability at least 1 − δ, for every player i ∈ [m],
+
+sup  
+
+> μi∈Πgen ,¯Hi
+
+1
+
+Nε, ¯H,δ K¯ε,Lε X
+
+> k=1
+> Bε,Lε,δ
+
+X
+
+> t=1
+
+h
+
+Jγi, ¯H (¯ πk) − Jγi, ¯H (μi ⊙ ¯π−ik )
+
+i
+
+≤ ε. 
+
+Consequently, 1 
+
+> Nε, ¯H,δ
+
+PNε, ¯H,δ  
+
+> t=1
+
+δ¯πt is an ε-approximate discounted CCE. Moreover, for constants 
+
+Cband := 2Alog  
+
+> η0
+
++ 12 mA log + η0 + 288 m2η30 , L ¯H,ε := min { ¯H, log(1 /ε )}, and γ < 1, we have 
+
+Nε, ¯H,δ ≤
+
+" Amax L2¯H,ε 
+
+κε 1 + L4¯H,ε 
+
+ε2 + η0L3¯H,ε 
+
+ε
+
+!
+
+× L ¯H,ε log Cband L7¯H,ε 
+
+ε +log mA max Sδ
+
+!#" Cband L7¯H,ε 
+
+ε
+
+#O(L ¯H,ε )
+
+Proof. See Appendix D.2 
+
+# 5 Computational Lower Bound for Discounted Markov Games 
+
+In this section, we provide computational lower bounds for the task of finding a CCE in dis-counted Markov games to complement the quasi-polynomial upper bounds we have found in the earlier sections. In particular, we show that under the “ ETH for PPAD ”, one should not expect a polynomial-time polynomial-support algorithm for the same discounted CCE objective in general-sum discounted Markov games when players learn independently in decentralized settings. To show this, we make simple modifications on the main results of Foster et al. [2023], which achieves this result for finite-horizon undiscounted Markov games for a problem called sparse Markov CCE .Accordingly, we define a search problem that subsumes their problem as a special case. 
+
+Definition 8. Fix a discount factor γ ∈ (0 , 1] for the finite horizon case and fix a discount factor γ ∈
+
+(0 , 1) for the infinite horizon case . For an m-player discounted Markov game Gγ, ¯H and parameters 
+
+T ∈ N and ε > 0, which may depend on the size of Gγ, ¯H , the (T, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+problem is the problem of finding a sequence σ(1) , . . . , σ(T ), σ(t) ∈ Πmarkov , ¯H for every t ∈ [T ], such that the distributional policy bσT := 1
+
+> T
+
+PTt=1 δσ(t) ∈ ∆
+
+
+
+Πgen , ¯H
+
+
+
+is an ε-approximate discounted CCE of 
+
+Gγ, ¯H . Equivalently, the sequence must satisfy sup μi∈Πgen , ¯Hi
+
+PTt=1 
+
+Jγi
+
+ σ(t) − Jγi
+
+ μi ⊙ σ(t),−i ≤ εT 
+
+for every player i ∈ [m]. We call such a sequence a T -sparse discounted CCE. 
+
+Definition 8 formulates the equilibrium-computation objective studied in this section as a search problem over finite sequences of product Markov policy profiles. The following proposition says that the outputs constructed from Algorithms 1 and 2 are valid solutions to this search problem. 
+
+Proposition 1. Let Gγ, ¯H be an m-player discounted Markov game, and fix ε ∈ (0 , 1] .1. Let Lε and Tε be chosen as in Corollary 1. Run Algorithm 1 on the truncated Markov game G[Lε]  
+
+> γ, ¯H
+
+, and define ¯πt := Ext Lε
+
+ π[Lε]
+
+> t
+
+, t ∈ [Tε]. Then   ¯π1, . . . , ¯πTε
+
+ is a solution to 
+
+(Tε, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+.
+
+2. Suppose that the reachability condition of Corollary 2 holds, and choose the parameters Lε, Kε,and Bε as in Corollary 2. Run Algorithm 2 on G[Lε]  
+
+> γ, ¯H
+
+, and define ¯πk := Ext Lε
+
+ π[Lε]
+
+> k
+
+, k ∈ [Kε].
+
+Let Nε := KεBε, and define the policy sequence by σ(k−1) Bε+r := ¯ πk, k ∈ [Kε], r ∈ [Bε].
+
+Then, with probability 1 − δ,  σ1, . . . , σNε  is a solution to (Nε, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+.
+
+16 Proof. See Appendix E.1. Before proceeding, we emphasize that ( T, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+is a relaxation of the radically uncoupled learning task addressed by Algorithms 1 and 2 through discounted policy extensions. The search problem only asks for a finite sequence of product Markov policy profiles whose uniform empirical distribution is an ε-approximate discounted CCE. It does not require that this sequence be generated online by independent players; in particular, a centralized algorithm with full access to the game description is also permitted as stated in Foster et al. [2023]. Therefore, any lower bound provided for this search problem, is also valid for our radically uncoupled learning problem. Next, we state the arguments that lay the foundation for our computational lower bound result. 
+
+Lemma 1. Let M be an n × n bimatrix game. Then, there exists a corresponding 2-player Markov game FH (M ) with a predesignated horizon-length H such that computation of the CCE of FH (M )
+
+implies computation of NE of M . Furthermore, this construction can be done in polynomial time. Proof. See Appendix E.3. For any given finite-horizon Markov game, by forcing the game to enter an absorbing state after the step h = H, we obtain an infinite-horizon discounted extension of it. 
+
+Lemma 2. Let GH be a Markov game with horizon length H. Then there exists an infinite-horizon 
+
+γ-discounted Markov game eGH,γ such that if ˜L is an ε-approximate discounted CCE of eGH,γ , then there exists a list eL[H] that is an (ε/γ H−1)-approximate CCE of GH . Furthermore, this construction can be done in polynomial time. We denote this correspondence in the case of FH (M ) by eFH,γ (M ).Proof. See Appendix E.4. We refer to Appendix E for the detailed encoding conventions. Before introducing our main result of this section, we first recall the complexity-theoretic assumption underlying our lower bound. Introduced by Papadimitriou [1994], PPAD is a widely studied complexity class for equilibrium computation in game theory. For the sake of completeness, we provide a complete statement of the so-called Exponential Time Hypothesis for PPAD . We refer to Papadimitriou [1994] and Rubinstein [2016] for further details. 
+
+Definition 9 (EndOfALine ; [Daskalakis et al., 2009]) . Given two binary circuits S, P, each with 
+
+m-input bits and m output bits such that P (0 m) = 0 m̸ = S(sm), find an input x ∈ { 0, 1}m such that P (S(x)) ̸ = x or S(P (x)) ̸ = x̸ = 0 m.
+
+Assumption 1 (ETH for PPAD ; Babichenko et al. [2016]) . Solving the PPAD -complete problem 
+
+EndOfALine , on instances of size ˜n, requires time 2Ω(˜ n).
+
+Our hardness results rely on the following consequence of the “ ETH for PPAD ”. 
+
+Theorem 4 (Rubinstein [2016]) . Assume ETH for PPAD . Then, there exists a universal constant 
+
+ε⋆ > 0 such that every algorithm that computes an ε⋆-approximate Nash equilibrium of every two-player n × n bimatrix game requires time nlog 1−o(1) n.
+
+Lemma 3. There exists a countable infinite subset S ⊂ N such that for all n ∈ S there exists a bimatrix game cM with the following properties: 1. Both players have n pure actions, and assuming ETH for PPAD , computing an ε⋆-approximate Nash equilibrium of cM requires time nlog 1−o(1) n.
+
+17 2. Let | cM | be the size of the game cM (see Appendix E.2). There exist absolute constants 
+
+qsrc , n src ≥ 1, such that n ≤ | cM | ≤ (n + 2) qsrc for all n ≥ nsrc .3. Let γ be a discount factor. There are absolute constants AH , B H , n size (γ), d 0 such that when-ever n ≥ nsize (γ) and AH log( n + 2) ≤ H ≤ BH log( n + 2) , n ≤ | ˜FH,γ ( cM )| ≤ (n + 2) d0 holds. Proof. See Appendices E.2 and E.4. The next result is the main result of this section, which provides a computational lower bound for (N C , N −K )-DiscSparseMarkovCCE gen  
+
+> γ
+
+for arbitrarily large N , where N is the size of the discounted Markov game instance the search problem is concerned with (see Appendix E.2). Here, C is the 
+
+support exponent and K is the accuracy exponent , which are absolute constants. 
+
+Theorem 5. Fix a constant discount factor γ ∈ (0 , 1) ∩ Q and a support exponent C > 0. We define AH := 2( Cd 0+1)  
+
+> cFε2
+> ⋆
+
+, B H := AH + 2 , a γ = BH log( 1 
+
+> γ
+
+). By cM denote the bimatrix game in Lemma 3. Under Assumption 1, there exists an accuracy exponent K = K(γ, C ) ≥ aγ +1 such that, for any constructed discounted Markov game eFH,γ ( cM ), n ∈ S , satisfying n ≥ nsrc , n size (γ), n −K (n + 2) aγ ≤ 
+
+> ε⋆
+> 4
+
+, and such that there exists an even integer H with BH log( n + 2) ≥ H ≥ AH log( n + 2) , there exists a discounted two-player general-sum Markov game such that no polynomial-time algorithm solves  | eFH,γ ( cM )|C , | eFH,γ ( cM )|−K -DiscSparseMarkovCCE gen  
+
+> γ
+
+.
+
+Before proceeding with the proof of Theorem 5, some remarks are in order. Theorem 5 demonstrates that with our current understanding of computational complexity, it is unlikely that there exists a polynomial time algorithm for discounted Markov games. In particular, a quasi-polynomial time algorithm (which we have constructed) is about the best one can hope for. 
+
+Proof of Theorem 5. Suppose not. Take K := aγ + 1 that violates the running hypothesis. Let cM
+
+denote the bimatrix game whose infinite-horizon discounted extension under γ admits a polynomial-time algorithm A that solves  | eFH,γ ( cM )|C , | eFH,γ ( cM )|−K -DiscSparseMarkovCCE gen  
+
+> γ
+
+with the afore-mentioned properties. Running A on eFH,γ ( cM ), we obtain a list eL = ( σσσ1, · · · , σ σσT ) such that 
+
+T ≤ ⌈| eFH,γ ( cM )|C ⌉, max  
+
+> i∈{ 1,2}
+
+Gap γi (eL; eFH,γ ( cM )) ≤ | eFH,γ ( cM )|−K ,
+
+whose restrictions to the first H-layers is denoted by LH := eL[H] = ( σ[H]1 , . . . , σ[H] 
+
+> T
+
+) that satisfies the properties in Lemma 2. In particular, it holds that max  
+
+> i∈{ 1,2}
+
+Gap Hi (LH ; FH ( cM )) = γ−H+1 max  
+
+> i∈{ 1,2}
+
+Gap γi (eL; eFH,γ ( cM )) ≤ | eFH,γ ( cM )|−K γ−H+1 .
+
+Since | eFH,γ ( cM )| ≥ n and H ≤ BH log( n + 2) by Lemma 3, 
+
+| eFH,γ ( cM )|−K γ−(H−1) ≤ n−K γ−H
+
+= n−K exp( H log(1 /γ )) 
+
+≤ n−K exp( BH log( n + 2) log(1 /γ )) = n−K (n + 2) aγ ≤ ε⋆
+
+4 .
+
+Therefore LH is an ε⋆/4-approximate T -sparse CCE of FH ( cM ), against non-Markov deviations. Since T ≤ ⌈| eFH,γ ( cM )|C ⌉, | eFH,γ ( cM )| ≤ (n + 2) d0 , and that H ≥ Ah log( n + 2), a straightforward 18 inequality implies that T < exp( cF ε2
+
+> ⋆
+
+H), meaning that Lemma 17 is applicable. In particular, through A, one obtains an ε⋆-approximate Nash equilibrium of cM in polynomial time. Note that T H ≤ (n + 2) Cd 0+1 O(log n), which can be written in polynomial time in n. Furthermore, for any given mixed strategy in cM , its Nash gap can be checked in polynomial time. Since A runs in polynomial time and | eFH,γ ( cM )| ≤ (n + 2) d0 , all output probabilities have polynomial bit length in n. Thus enumerating the candidate pairs and outputting one with gap at most ε⋆ is feasible in polynomial time. Construction of FH ( cM ) and eFH,γ ( cM ) takes polynomial time by Lemmas 2 and 1. In particular, we have obtained a contradiction to Theorem 4. The following corollary extends our hardness result for the finite-horizon discounted setting. 
+
+Corollary 3. Fix a constant discount factor γ ∈ (0 , 1) and a support exponent Cfh > 0. Under Assumption 1, there exists a finite-horizon discounted Markov game and an accuracy exponent 
+
+Kfh = Kfh (γ, C fh ) > 0 such that no polynomial-time algorithm can solve the following problem: given a game Gγ, ¯H of input length at most N , output a list of at most N Cfh product Markov profiles whose ¯H-horizon discounted CCE gap, against all history-dependent deviations, is at most N −Kfh .Proof. Due to equilibrium correspondence between FH ( cM ) and eFH,γ ( cM ), given in Lemma 2, Theorem 5 implies that no polynomial time algorithm is feasible for a class of Markov games 
+
+FH ( cM ) under some restrictions on H and n. In such a game FH ( cM ), suppose that player 
+
+i has an objective function of the form Ji,H = E
+
+hPHh=1 γH−1ℓih(xh, a h)
+
+i
+
+. Note that Ji,H =
+
+E
+
+hPHh=1 γh−1γH−1 ℓih(xh,a h)
+
+> γh−1
+
+i
+
+, and thus rewriting the cost of player i instead as {ℓihγH−1/γ h−1}Hh=1 ,we obtain that there is no polynomial time algorithm for a discounted Markov game. 
+
+# 6 Numerical Results 
+
+In this section, we evaluate the independent learning dynamics under both information structures considered in the paper. First, we run Algorithm 1 with full-feedback, as in Theorem 1. Second, we run Algorithm 2 using only independently sampled partial feedbacks, as in Theorem 2. These two experiments use exactly the same four finite-horizon Markov games. Finally, we use a two-state discounted linear-quadratic zero-sum Markov game with a closed-form stationary solution as a benchmark for the discounted truncation approximation result stated in Corollary 1. 
+
+6.1 Finite-horizon episodic Markov games 
+
+We consider a Markov battle-of-the-sexes chain, a routing/congestion game, a three-player public-goods game, and a transition-trap game. The transition and cost tables are given in Appendix F. Every state appearing in these games has occupancy probability at least 0 .05 under every product Markov profile. Hence, all four games are (0 .05 , ζ )-reachable for every ζ ∈ (0 , 1]. Letting N
+
+denote the number of executed episodes, given the episode-indexed sequence of product Markov profiles ( ρn)Nn=1 , we report Gap N := max i∈[m] sup μi∈Πgen 
+
+> i
+> 1
+> N
+
+PNn=1 
+
+h
+
+V i,ρ n (s1) − V i,μ i⊙ρ−in (s1)
+
+i
+
+. For Algorithm 1, one policy update is performed per episode, so N = t and ρn = πn. For Algorithm 2, the profile πk is held fixed for B episodes in block k; hence N = kB and ρ(k−1) ,B +r = πk for r ∈ [B]. The full-feedback experiment uses T = 1000, η0 = 0 .5, and evaluates the gap every 50 episodes. The partial-feedback experiment uses K = 1000 , B = 500 , ζ = 0 .05 , η0 = 0 .1, and evaluates the gap every 50 blocks, or equivalently in every 25 ,000 episodes. We perform 20 independent 19 (a) Algorithm 1: full-feedback. (b) Algorithm 2: partial feedback. Figure 1: Finite-horizon behavior of the independent product-policy learning dynamics on the same four Markov games. Panel (a) reports the deterministic feedback generated full-feedback. Panel (b) reports the mean over 20 independent partial feedback runs; shaded regions show one empirical standard deviation. runs of the trajectory-feedback experiment. Figure 1 reports their mean gap, with the shaded region representing plus or minus one empirical standard deviation. In all four games, the CCE gap decreases under both feedback models. Thus, the two panels respectively support the finite-horizon conclusions of Theorems 1 and 2. 
+
+6.2 Discounted linear-quadratic benchmark 
+
+The final experiment studies a two-player, two-state, zero-sum discounted linear-quadratic Markov game with continuous scalar actions. The benchmark is chosen so that its infinite-horizon dis-counted saddle-point solution can be computed in closed form. In the simulation, we discretize the action interval while ensuring that the grid contains the closed-form saddle-point actions. Let J⋆ 
+
+> 0
+
+(s0) denote the normalized infinite-horizon discounted saddle-point value obtained from the closed-form solution. We report Err T ′ := 1 
+
+> T′
+
+PT ′ 
+
+> t=1
+
+J0(πt) − J⋆ 
+
+> 0
+
+(s0) , where J0(πt) is the value of the finite approximation used in the simulation. Figure 2 shows that this error decreases rapidly. Thus, while the first two experiment evaluates CCE violations directly for the episodic case, the LQ benchmark tests our approximation on a problem where the infinite-horizon value is known. This experiment uses T = 1000 , H = 20 , γ = 0 .90 , base grid size = 9 , η 0 = 1 .0. 
+
+# 7 Conclusion 
+
+In this work, we have shown that, under the so-called “ ETH for PPAD ”, there does not exist any polynomial time algorithm for computing CCE in discounted general-sum Markov games. We have complemented this hardness result with a quasi-polynomial-time algorithm for online self-play under a radically uncoupled information structure, without imposing any structural assumptions on the game. Our layered OOMD algorithm appears to be the first provably convergent algorithm in this setting with a sub-exponential convergence guarantee. Furthermore, we have shown that the layered OOMD algorithm extends to the partial-feedback setting while retaining similar convergence guarantees. 20 Figure 2: Discounted linear-quadratic benchmark. The plot reports the value error relative to the closed-form infinite-horizon saddle-point value. Our work suggests several directions for future research. First, a gap remains between our quasi-polynomial upper bounds and the computational lower bounds established in this paper; deter-mining the precise complexity of computing sparse CCEs in discounted Markov games remains an important open problem. Second, it would be interesting to determine whether polynomial-time radically uncoupled online-learning algorithms exist for general-sum Markov games when the con-sidered policy classes for the players are restricted to Markov policies rather than general history-dependent policies. Finally, another direction is to characterize the boundary between radically uncoupled learning and more permissive information models. In particular, it would be interesting to investigate whether information models weaker than shared randomness also make tractable algorithms possible. 
+
+# 8 Acknowledgment 
+
+Research was supported in part by the Army Research Office (ARO), under Grant Number W911NF-24-1-0085. 21 References 
+
+Jacob Abernethy, Elad Hazan, and Alexander Rakhlin. Competing in the dark: An efficient algo-rithm for bandit linear optimization. In Proceedings of the 21st Annual Conference on Learning Theory (COLT) , pages 263–274, 2008. Ioannis Anagnostides, Gabriele Farina, Christian Kroer, Chung-Wei Lee, Haipeng Luo, and Tuomas Sandholm. Uncoupled learning dynamics with swap regret in multiplayer games. In Proceedings of the 36th Conference on Neural Information Processing Systems (NeurIPS) , 2022. Yu Bai, Chi Jin, and Tiancheng Yu. Near-optimal reinforcement learning with self-play. In Pro-ceedings of the 34th Conference on Neural Information Processing Systems (NeurIPS) , 2020. Avrim Blum and Yishay Mansour. From external to internal regret. Journal of Machine Learning Research , 8:1307–1324, 2007. Yang Cai, Haipeng Luo, Chen-Yu Wei, and Weiqiang Zheng. Near-optimal policy optimization for correlated equilibrium in general-sum Markov games. In Proceedings of the 27th International Conference on Artificial Intelligence and Statistics (AISTATS) , 2024. Nicolo Cesa-Bianchi and Gabor Lugosi. Prediction, Learning, and Games . Cambridge University Press, 2006. Nicol` o Cesa-Bianchi, Pierre Gaillard, G´ abor Lugosi, and Gilles Stoltz. Mirror descent meets fixed share (and feels no regret). In Proceedings of the 26th Conference on Neural Information Pro-cessing Systems (NeurIPS) , 2012. Constantinos Daskalakis, Alan Deckelbaum, and Anthony Kim. Near-optimal no-regret algorithms for zero-sum games. In Proceedings of the Twenty-Second Annual ACM-SIAM Symposium on Discrete Algorithms (SODA) , pages 235–254, 2011. Constantinos Daskalakis, Maxwell Fishelson, and Noah Golowich. Near-optimal no-regret learn-ing in general games. In Proceedings of the 35th Conference on Neural Information Processing Systems (NeurIPS) , 2021. Liad Erez, Tal Lancewicki, Uri Sherman, Tomer Koren, and Yishay Mansour. Regret minimiza-tion and convergence to equilibria in general-sum Markov games. In Proceedings of the 40th International Conference on Machine Learning (ICML) , 2023. Liad Erez, Tal Lancewicki, Uri Sherman, Tomer Koren, and Yishay Mansour. Regret minimization and convergence to equilibria in general-sum Markov games. arXiv preprint arXiv:2207.14211 ,2025. Sergiu Hart and Andreu Mas-Colell. A simple adaptive procedure leading to correlated equilibrium. 
+
+Econometrica , 68(5):1127–1150, 2000. Michael L. Littman. Markov games as a framework for multi-agent reinforcement learning. In 
+
+Machine Learning Proceedings 1994 , pages 157–163, 1994. Chinmay Maheshwari, Manxi Wu, and Shankar Sastry. Decentralized learning in general-sum Markov games. arXiv preprint arXiv:2409.04613 , 2024. 22 Weichao Mao and Tamer Ba¸ sar. Provably efficient reinforcement learning in decentralized general-sum Markov games. Dynamic Games and Applications , 13(1):165–186, 2023. Weichao Mao, Haoran Qiu, Chen Wang, Hubertus Franke, Zbigniew Kalbarczyk, and Tamer Ba¸ sar. 
+
+eO(T −1) convergence to (coarse) correlated equilibria in full-information general-sum Markov games. In Proceedings of the 6th Annual Learning for Dynamics and Control Conference (L4DC) ,2024. A. S. Nemirovski and D. B. Yudin. Problem Complexity and Method Efficiency in Optimization .Wiley, 1983. Alexander Rakhlin and Karthik Sridharan. Optimization, learning, and games with predictable sequences. In Proceedings of the 27th Conference on Neural Information Processing Systems (NeurIPS) , 2013. L. S. Shapley. Stochastic games. Proceedings of the National Academy of Sciences , 39(10):1095– 1100, 1953. Ziang Song, Song Mei, and Yu Bai. When can we learn general-sum Markov games with a large number of players sample-efficiently? In International Conference on Learning Representations (ICLR) , 2022. Ashkan Soleymani, Georgios Piliouras, and Gabriele Farina. Faster rates for no-regret learning in general games via cautious optimism. In Proceedings of the 57th Annual ACM Symposium on Theory of Computing (STOC) , pages 518–529, 2025. Vasilis Syrgkanis, Alekh Agarwal, Haipeng Luo, and Robert E. Schapire. Fast convergence of regularized learning in games. In Proceedings of the 29th Conference on Neural Information Processing Systems (NeurIPS) , 2015. Asrın Efe Yorulmaz and Tamer Ba¸ sar. Near optimal convergence to coarse correlated equilibrium in general-sum Markov games. arXiv preprint arXiv:2511.02157 , 2025. Kaiqing Zhang, Zhuoran Yang, and Tamer Ba¸ sar. Multi-agent reinforcement learning: A selective overview of theories and algorithms. In K. G. Vamvoudakis, Y. Wan, F. L. Lewis, and D. Can-sever, editors, Handbook of Reinforcement Learning and Control , pages 321–384. Springer, 2021. Lucian Bu¸ soniu, Robert Babuska, and Bart De Schutter. A comprehensive survey of multi-agent reinforcement learning. IEEE Transactions on Systems, Man, and Cybernetics, Part C (Appli-cations and Reviews) , pages 156–172, 2008. Shai Shalev-Shwartz, Shaked Shammah, and Amnon Shashua. Safe, multi-agent, reinforcement learning for autonomous driving. In Learning, Inference and Control of Multi-Agent Systems Workshop, (NeurIPS) , 2016. Chanwoo Park, Seungju Han, Xingzhi Guo, Asuman Ozdaglar, Kaiqing Zhang, and Joo-Kyung Kim. MAPoRL: multi-agent post-co-training for collaborative large language models with rein-forcement learning. In Proceedings of the 63rd Annual Meeting of the Association for Computa-tional Linguistics (ACL) , 2025. Ziyu Wan, Yunxiang Li, Xiaoyu Wen, Yan Song, Hanjing Wang, Linyi Yang, Mark Schmidt, Jun Wang, Weinan Zhang, Shuyue Hu, and Ying Wen. ReMA: learning to meta-think for LLMs with 23 multi-agent reinforcement learning. In Proceedings of the 39th Conference on Neural Information Processing Systems (NeurIPS) , 2025. Hengxi Zhang, Zhendong Shi, Yuanquan Hu, Wenbo Ding, Ercan E. Kuruoglu, and Xiao-Ping Zhang. Optimizing trading strategies in quantitative markets using multi-agent reinforce-ment learning. In IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2024. Sergey Levine, Peter Pastor, Alex Krizhevsky, and Deirdre Quillen. Learning hand-eye coordination for robotic grasping with deep learning and large-scale data collection. The International Journal of Robotics Research , 37(4-5):421–436, 2017. James Hannan. Approximation to Bayes risk in repeated play. Contributions to the Theory of Games , 3:97–139, 1957. Yasin Abbasi-Yadkori, Peter L. Bartlett, Varun Kanade, Yevgeny Seldin and Csaba Szepesvari. Online learning in Markov decision processes with adversarially chosen transition probability distributions. In Proceedings of the 27th Conference on Neural Information Processing Systems (NeurIPS) , 2013. Qinghua Liu, Yuanhao Wang and Chi Jin. Learning Markov games with adversarial opponents: efficient algorithms and fundamental limits. In Proceedings of the 39th International Conference on Machine Learning (ICML) , 2022. Dylan J. Foster, Noah Golowich and Sham M. Kakade. Hardness of independent learning and sparse equilibrium computation in Markov games. In Proceedings of the 40th International Conference on Machine Learning (ICML) , 2023. Mark Herbster, and Manfred K. Warmuth. Tracking the best expert. Machine Learning , 32:151–178, 1998 Tareq Si Salem, G¨ ozde ¨Ozcan, Iasonas Nikolaou, Evimaria Terzi and Stratis Ioannidis. Online submodular maximization via online convex optimization. In Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence and Thirty-Sixth Conference , 2024. Yi Tian, Yuanhao Wang, Tiancheng Yu and Suvrit Sra. Online learning in unknown Markov games. In Proceedings of the 38th International Conference on Machine Learning (ICML) , 2021. Robert E. Schapire and Yoav Freund. A decision-theoretic generalization of on-line learning and an application to boosting. In Computational Learning Theory - 2nd European Conference, Euro-COLT 1995, Proceedings, Lecture Notes in Computer Science (including subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics) , pages 23–37. Springer Verlag, 1995. Chen-Yu Wei, Chung-Wei Lee, Mengxiao Zhang and Haipeng Luo. Last-iterate convergence of decentralized optimistic gradient descent/ascent in infinite-horizon competitive Markov games. In Proceedings of Thirty Fourth Conference on Learning Theory (COLT) , 2021. Constantinos Daskalakis, Noah Golowich, and Kaiqing Zhang. The Complexity of Markov equilib-rium in stochastic games. Proceedings of Thirty Sixth Conference on Learning Theory (COLT) ,2023. 24 Chi Jin, Qinghua Liu, Yuanhao Wang, and Tiancheng Yu. V-Learning—A simple, efficient, decen-tralized algorithm for multiagent reinforcement learning. Mathematics of Operations Research 49(4):2295-2322, 2023 .David Silver, Aja Huang, Chris J. Maddison, Arthur Guez, Laurent Sifre, George van den Driess-che, Julian Schrittwieser, Ioannis Antonoglou, Veda Panneershelvam, Marc Lanctot, Sander Dieleman, Dominik Grewe, John Nham, Nal Kalchbrenner, Ilya Sutskever, Timothy Lillicrap, Madeleine Leach, Koray Kavukcuoglu, Thore Graepel, and Demis Hassabis. Mastering the game of Go with deep neural networks and tree search. Nature , 529:484–489, 2016. Noam Brown and Tuomas Sandholm. Superhuman AI for heads-up no-limit poker: Libratus beats top professionals. Science , 359(6374):418–424, 2018. Julien Perolat, Bart De Vylder, Daniel Hennes, Eugene Tarassov, Florian Strub, Vincent de Boer, Paul Muller, Jerome T. Connor, Neil Burch, Thomas Anthony, Stephen McAleer, Romuald Elie, Sarah H. Cen, Zhe Wang, Audrunas Gruslys, Aleksandra Malysheva, Mina Khan, Sherjil Ozair, Finbarr Timbers, Toby Pohlen, Tom Eccles, Mark Rowland, Marc Lanctot, Jean-Baptiste Lespiau, Bilal Piot, Shayegan Omidshafiei, Edward Lockhart, Laurent Sifre, Nathalie Beauguer-lange, Remi Munos, David Silver, Satinder Singh, Demis Hassabis, and Karl Tuyls. Mastering the game of Stratego with model-free multiagent reinforcement learning. Science , 378(6623):990–996, 2022. J´ anos Kram´ ar, Tom Eccles, Ian Gemp, Andrea Tacchetti, Kevin R. McKee, Mateusz Malinowski, Thore Graepel, and Yoram Bachrach. Negotiation and honesty in artificial intelligence methods for the board game of Diplomacy. Nature Communications , 13:7214, 2022. Anton Bakhtin, Noam Brown, Emily Dinan, Gabriele Farina, Colin Flaherty, Daniel Fried, Andrew Goff, Jonathan Gray, Hengyuan Hu, Athul Paul Jacob, Mojtaba Komeili, Karthik Konath, Minae Kwon, Adam Lerer, Mike Lewis, Alexander H. Miller, Sasha Mitts, Adithya Renduchintala, Stephen Roller, Dirk Rowe, Weiyan Shi, Joe Spisak, Alexander Wei, David Wu, Hugh Zhang, and Markus Zijlstra. Human-level play in the game of Diplomacy by combining language models with strategic reasoning. Science , 378(6624):1067–1074, 2022. Kleanthis Malialis and Daniel Kudenko. Distributed response to network intrusions using mul-tiagent reinforcement learning. Engineering Applications of Artificial Intelligence , 41:270–284, 2015. Stephan Zheng, Alexander Trott, Sunil Srinivasa, David C. Parkes, and Richard Socher. The AI Economist: Taxation policy design via two-level deep multiagent reinforcement learning. Science Advances , 8(18), 2022. Constantinos Daskalakis, Paul W. Goldberg, and Christos H. Papadimitriou. The complexity of computing a Nash equilibrium. SIAM Journal on Computing , 39(1):195–259, 2009. Aviad Rubinstein. Settling the complexity of computing approximate two-player Nash equilibria. In 
+
+Proceedings of the 57th Annual IEEE Symposium on Foundations of Computer Science (FOCS) ,pages 258–265, 2016. Dean P. Foster , and H. Peyton Young. Regret testing: learning to play Nash equilibrium without knowing you have an opponent. In Theoretical Economics , 1 (2006), 341–367. 25 Yang Cai, Haipeng Luo, Chen-Yu Wei, and Weiqiang Zheng. Uncoupled and convergent learning in two-player zero-sum markov games with bandit feedback. In Proceedings of the 37th Conference on Neural Information Processing Systems (NeurIPS) , 2023. Zaiwei Chen, Kaiqing Zhang, Eric Mazumdar, Asuman Ozdaglar, and Adam Wierman. Last-Iterate convergence of payoff-based independent learning in zero-sum stochastic games. arXiv preprint arXiv:2409.01447 , 2024. G¨ urdal Arslan and Serdar Y¨ uksel. Decentralized Q-learning for stochastic teams and games. IEEE Transactions on Automatic Control , 62(4):1545–1558, 2017. Xi Chen, Xiaotie Deng, and Shang-Hua Teng. Settling the complexity of computing two-player Nash equilibria. Journal of the ACM , 56(3):1–57, 2009. Constantinos Daskalakis, Dylan J. Foster, and Noah Golowich. Independent policy gradient meth-ods for competitive reinforcement learning. In Proceedings of the 34th Conference on Neural Information Processing Systems (NeurIPS) , 2020. Amy Greenwald, and Keith Hall. Correlated-Q learning. In Proceedings of the 20th International Conference on Machine Learning (ICML) , 2003. Junling Hu and Michael P. Wellman. Nash Q-learning for general-sum stochastic games. Journal of Machine Learning Research , 4:1039–1069, 2003. Michael L. Littman. Friend-or-Foe Q-learning in general-sum games. In Proceedings of the 18th International Conference on Machine Learning (ICML) , 2001. Muhammed O. Sayin, Kaiqing Zhang, David S. Leslie, Tamer Ba¸ sar, and Asuman Ozdaglar. De-centralized Q-learning in zero-sum Markov games. In Proceedings of the 35th Conference on Neural Information Processing Systems (NeurIPS) , 2021. Kaiqing Zhang, Sham M. Kakade, Tamer Ba¸ sar, and Lin F. Yang. Model-based multi-agent rein-forcement learning in zero-sum Markov games with near-optimal sample complexity. Journal of Machine Learning Research , 24(1):8286–8338, 2023. S´ ebastien Bubeck, Ronen Eldan, and Yin Tat Lee. Kernel-based methods for bandit convex opti-mization. Journal of the ACM , 68(4):1–35, 2021. Alekh Agarwal, Haipeng Luo, Behnam Neyshabur, and Robert E. Schapire. Corralling a band of bandit algorithms. In Proceedings of the 30th Conference on Learning Theory (COLT) , 2017. Chen-Yu Wei and Haipeng Luo. More adaptive algorithms for adversarial bandits. In Proceedings of the 31st Conference on Learning Theory (COLT) , 2018. Chung-Wei Lee, Haipeng Luo, Chen-Yu Wei, and Mengxiao Zhang. Bias no more: high-probability data-dependent regret bounds for adversarial bandits and MDPs. In Proceedings of the 34th Conference on Neural Information Processing Systems (NeurIPS) , 2020. Panayotis Mertikopoulos, Bruno Lecouat, Houssam Zenati, Chuan-Sheng Foo, Vijay Chan-drasekhar, and Georgios Piliouras. Optimistic mirror descent in saddle-point problems: going the extra (gradient) mile . In International Conference on Learning Representations (ICLR) ,2019. 26 Gong Chen and Marc Teboulle. Convergence analysis of a proximal-like minimization algorithm using Bregman functions . SIAM Journal on Optimization , 3(3):538–543, 1993. Tamer Ba¸ sar and Geert Jan Olsder. Dynamic Noncooperative Game Theory . SIAM, 1998. Chen Tessler, Yonathan Efroni, and Shie Mannor. Action robust reinforcement learning and appli-cations in continuous control . In Proceedings of the 36th International Conference on Machine Learning (ICML) , 2019. Shansong Huang, Virginia R. Young, and Bin Zou, Optimal investment, consumption, and insurance strategies under claim habit . Working paper, 2026. Julien P´ erolat, Florian Strub, Bilal Piot, and Olivier Pietquin. Learning Nash equilibrium for general-sum Markov games from batch data . In Proceedings of the 20th International Conference on Artificial Intelligence and Statistics (AISTATS) , 2017. Martin Zinkevich, Amy Greenwald, and Michael L. Littman. Cyclic equilibria in Markov games. In 
+
+Proceedings of the 19th Conference on Neural Information Processing Systems (NeurIPS) , 2005. Yakov Babichenko, Christos Papadimitriou, and Aviad Rubinstein. Can almost everybody be almost happy? . In Proceedings of the ACM Conference on Innovations in Theoretical Computer Science (ITCS) , 2016. Christos Papadimitriou. On the complexity of the parity argument and other inefficient proofs of existence . Journal of Computer and System Sciences , 48(3):498–532, 1994. Qinghua Liu, Tiancheng Yu, Yu Bai, and Chi Jin. A sharp analysis of model-based reinforcement learning with self-play . In Proceedings of the 38th International Conference on Machine Learning (ICML) , 2021. Xiangru Lian, Ce Zhang, Huan Zhang, Cho-Jui Hsieh, Wei Zhang, and Ji Liu. Can decentralized algorithms outperform centralized algorithms? a case study for decentralized parallel stochastic gradient descent . In Proceedings of the 31th Conference on Neural Information Processing Systems (NeurIPS) , 2017. Gabriele Farina, Ioannis Anagnostides, Haipeng Luo, Chung-Wei Lee, Christian Kroer, and Tuomas Sandholm. Near-optimal no-regret learning dynamics for general convex games . In Proceedings of the 36th Conference on Neural Information Processing Systems (NeurIPS) , 2022. 27 A Related Work 
+
+The connection between no-regret learning and equilibrium computation is a cornerstone of learning in games. In repeated normal-form games, if every player uses an external no-regret algorithm with regret O(T α), then the empirical distribution of play converges to an O(T α−1)-approximate CCE; in two-player zero-sum games this further implies convergence to the saddle-point/Nash value, while swap or internal regret yields CE in general-sum games [Hannan, 1957, Hart and Mas-Colell, 2000, Cesa-Bianchi and Lugosi, 2006, Blum and Mansour, 2007]. Classical online learning algorithms such as multiplicative weights, online mirror descent, and follow-the-regularized-leader provide the underlying no-regret guarantees in the fully adversarial setting, yielding the standard 
+
+eO(T −1/2) convergence rate to equilibrium [Schapire and Freund, 1995, Nemirovski and Yudin, 1983, Abernethy et al., 2008]. It is known that agents in the adversarial setting can be pessimistic when their learning algorithms interact with one another in self-play Farina et al. [2022]. Starting with the optimistic dynamics of Daskalakis et al. [2011] for two-player zero-sum games and continuing through the RVU framework of Syrgkanis et al. [2015], optimism and stability have emerged as central tools for leveraging this predictability. In normal-form games, optimistic variants of FTRL and OMD, together with their regularized extensions, attain convergence rates to coarse correlated and correlated equilibria that improve upon the baseline eO(T −1/2) rate, with recent results approaching O(1 /T ) rates in general-sum normal-form games [Rakhlin and Sridharan, 2013, Daskalakis et al., 2021, Anagnostides et al., 2022, Soleymani et al., 2025]. Our work is motivated by this optimistic self-play perspective. However, extending these ideas to Markov games introduces a challenge absent from normal-form games: deviations in the joint policy profile affect not only instantaneous losses but also future state occupancies. Early learning approaches in Markov games were mostly value-based. Specifically, the convergence of Nash-Q learning [Hu and Wellman, 2003] and Friend-or-Foe Q-learning [Littman, 2001], is estab-lished only under restrictions on the games encountered during learning. Related approaches based on CE computation further developed this equilibrium-computation perspective while maintaining similar structural requirements [Greenwald et al., 2003]. A separate line of research on decentral-ized Q-learning with convergence guarantees for weakly acyclic stochastic teams and games also emerged, which includes stochastic team problems, but again relies on strong structural assump-tions on the games [Arslan and Y¨ uksel, 2017]. Compared to the general-sum case, the two-player zero-sum structure in Markov games has been studied more thoroughly. There exist tractable algorithms with optimism and value-iteration variants, achieve finite sample-complexity guarantees for learning approximate Nash equilibria [Bai et al., 2020, Zhang et al., 2023]. Policy-optimization methods have also been analyzed in the decentralized learning setting, including independent policy-gradient and optimistic gradient-descent/ascent approaches [Daskalakis et al., 2020, Wei et al., 2021]. Furthermore, Cai et al. [2023], Chen et al. [2024] have developed uncoupled algorithms for two-player zero-sum Markov games with bandit feedback and finite-time last-iterate guarantees, relaxing the coordination and prior-knowledge constraints used in Wei et al. [2021]. From the value-learning angle, Sayin et al. [2021] develops a radically uncoupled Q-learning algorithm for discounted zero-sum Markov games with asymptotic convergence guarantees. Even for multi-player general-sum normal-form games, Nash equilibrium computation is known to be intractable Daskalakis et al. [2009]; and thus in Markov games provably efficient algorithms in the existing literature targets either CE or CCE. For instance, in sample-based MARL literature, 28 V-learning [Jin et al., 2023, Song et al., 2022, Mao and Ba¸ sar, 2023], SPoCMAR [Daskalakis et al., 2023] and related algorithms are utilized to compute CCE/CE policies in a decentralized setting and avoid the exponential dependence on the number of agents that appears in centralized set-tings Bai et al. [2020], Liu et al. [2021]. Near-optimal eO(1 /T ) convergence rates for both CCE and CE obtained in the full-information setting by using either value-based or stage-based policy-optimization schemes [Cai et al., 2024, Mao et al., 2024, Yorulmaz and Ba¸ sar, 2025]. These results require post-processing of the policies after the learning phase, which relies on the so-called shared randomness . In contrast to our work, their learning phases do not provide any online regret guar-antees, making their operating setting simpler than ours since they allow coordination mechanisms among the players. 
+
+# B Convergence Analysis of Algorithm 1 
+
+B.1 Properties of smoothed entropy 
+
+Lemma 4. Fix a player i ∈ [m] and a smoothing parameter λi > 0. Define the smoothed negative-entropy regularizer 
+
+Ψi(x) := X
+
+> a∈Ai
+
+ x(a) + λi
+
+ log  x(a) + λi
+
+, x ∈ ∆( Ai).
+
+Then, 
+
+Di(x, y ) = X
+
+> a∈Ai
+
+ x(a) + λi
+
+ log x(a) + λi
+
+y(a) + λi
+
+. (2) 
+
+Moreover, defining ρi := 1 + |Ai|λi, ¯ρ := max i∈[m] ρi, and Bi := ρi log 1+ λi 
+
+> λi
+
+, the following properties hold: 1. Boundedness. For all x, y ∈ ∆( Ai), Di(x, y ) ≤ Bi.
+
+2. Strong convexity. The function Ψi is 1/ρ i-strongly convex with respect to the ∥ · ∥ 1 on 
+
+∆( Ai). Equivalently, for all x, y ∈ ∆( Ai), Di(x, y ) ≥ 12ρi ∥x − y∥21.
+
+Proof. For each a ∈ Ai, we have 
+
+∇aΨi(x) = log  x(a) + λi
+
+ + 1 .
+
+Therefore, 
+
+Di(x, y ) = X
+
+> a∈Ai
+
+ x(a) + λi
+
+ log  x(a) + λi
+
+ − X
+
+> a∈Ai
+
+ y(a) + λi
+
+ log  y(a) + λi
+
+
+
+− X
+
+> a∈Ai
+
+ log( y(a) + λi) + 1   x(a) − y(a).
+
+Since x, y ∈ ∆( Ai), we have P
+
+> a∈Ai
+
+ x(a) − y(a) = 0 . The linear terms cancel, and we obtain (2). Next, we prove that Di is a bounded function. For every a ∈ Ai, x(a) + λi ≤ 1 + λi, y (a) + λi ≥ λi.
+
+Thus, 0 ≤ x(a) + λi
+
+y(a) + λi
+
+≤ 1 + λi
+
+λi
+
+=⇒ Di(x, y ) ≤ X
+
+> a∈Ai
+
+ x(a) + λi
+
+ log 1 + λi
+
+λi
+
+.
+
+29 Since X
+
+> a∈Ai
+
+ x(a) + λi
+
+ = 1 + |Ai|λi = ρi, (3) 
+
+Di is bounded above by ρi log ((1 + λi)/λ i) = Bi. Next, note that the Hessian of Ψ i is diagonal and given by ∇2Ψi(x) = diag (1 /(x(a) + λi)) a∈Ai . Thus, for any z ∈ R|Ai|, by Cauchy–Schwarz, 
+
+∥z∥21 =
+
+ X
+
+> a∈Ai
+
+|z(a)|
+
+
+
+> 2
+
+≤
+
+ X
+
+> a∈Ai
+
+(x(a) + λi)
+
+ X
+
+> a∈Ai
+
+z(a)2
+
+x(a) + λi
+
+ = ρi z⊤∇2Ψi(x)z, 
+
+where the last inequality follows from (3). Therefore, Ψ i is 1 /ρ i-strongly convex with respect to the ℓ1-norm, which implies Di(x, y ) ≥ 12ρi ∥x − y∥21. This completes the proof. 
+
+B.2 Properties of OOMD with smoothed entropy 
+
+Lemma 5. Fix player i, a base point y ∈ ∆( Ai), and g, g ′ ∈ RAi . Define 
+
+Py(g) := argmin 
+
+> x∈∆( Ai)
+
+{η ⟨g, x ⟩ + Di(x, y )} .
+
+Then 
+
+Py(g) − Py(g′) 1 ≤ ηρ i g − g′ 
+
+> ∞
+
+.
+
+In particular, 
+
+∥Py(g) − y∥1 ≤ ηρ i ∥g∥∞ .
+
+Proof. The first claim follows from Proposition B.4 in Mertikopoulos et al. [2019]. The second claim follows by taking g′ = 0 and observing that Py(0) = y, where Py is a well-defined function. 
+
+Lemma 6. Let X ⊆ RAi be a nonempty closed convex set, and let Ψ : X → R be a differen-tiable strictly convex function. Further, let D(x, y ) := Ψ( x) − Ψ( y) − ⟨∇ Ψ( y), x − y⟩ , x, y ∈ X ,
+
+denote the associated Bregman divergence. Now, fix g ∈ Rd and y ∈ X , and define x+ := argmin x∈X {η ⟨g, x ⟩ + D(x, y )} . Then, for every u ∈ X ,
+
+η x+ − u, g ≤ D(u, y ) − D(u, x +) − D(x+, y ).
+
+Proof. The claim follows from Lemma 3.2. in Chen and Teboulle [1993]. 
+
+Lemma 7. Let xt, ext ∈ ∆( Ai) be generated by xt = argmin x∈∆( Ai) {η ⟨Mt, x ⟩ + D(x, ext−1)} , ext =argmin x∈∆( A) {η ⟨ℓt, x ⟩ + D(x, ext−1)} , where Mt = ℓt−1 and ℓ0 = 0 . Suppose that the regularizer chosen for the iterations is the smoothed entropy regularizer with parameters λi, ρ i = 1 + |Ai|λi,and Bregman diameter at most B. Then, for any u ∈ ∆( Ai) and any weights qt ∈ [0 , 1] ,
+
+> T
+
+X
+
+> t=1
+
+qt ⟨xt − u, ℓ t⟩ ≤ B(q1 + TV( q)) 
+
+η + ηρ i
+
+2
+
+> T
+
+X
+
+> t=1
+
+qt ∥ℓt − ℓt−1∥2 
+
+> ∞
+
+,
+
+where we define TV( q) := PT −1 
+
+> t=1
+
+|qt+1 − qt|.
+
+30 Proof. Throughout the proof, we follow steps similar those in Rakhlin and Sridharan [2013], Syrgka-nis et al. [2015], Erez et al. [2023]. Since ext = argmin x∈∆( Ai) {η ⟨ℓt, x ⟩ + D(x, ext−1)} , from Lemma 6, for every u ∈ ∆( Ai), 
+
+⟨ext − u, ℓ t⟩ ≤ D(u, ext−1) − D(u, ext)
+
+η − D(ext, ext−1)
+
+η . (4) Next, decompose ⟨xt − u, ℓ t⟩ = ⟨ext − u, ℓ t⟩ + ⟨xt − ext, ℓ t⟩ . Substituting (4) leads to 
+
+⟨xt − u, ℓ t⟩ ≤ D(u, ext−1) − D(u, ext)
+
+η + ⟨xt − ext, ℓ t⟩ − D(ext, ext−1)
+
+η . (5) Now split 
+
+⟨xt − ext, ℓ t⟩ = ⟨xt − ext, ℓ t − Mt⟩ + ⟨xt − ext, M t⟩ . (6) Since xt = argmin x∈∆( Ai) {η ⟨Mt, x ⟩ + D(x, ext−1)} , another application of Lemma 6, with com-parator u = ext, yields 
+
+⟨xt − ext, M t⟩ ≤ D(ext, ext−1)
+
+η − D(ext, x t)
+
+η − D(xt, ext−1)
+
+η . (7) Substituting (6) and (7) into (5) cancels out the term D(ext, ext−1), yielding 
+
+⟨xt − u, ℓ t⟩ ≤ D(u, ext−1) − D(u, ext)
+
+η + ⟨xt − ext, ℓ t − Mt⟩ − D(ext, x t)
+
+η − D(xt, ext−1)
+
+η .
+
+Finally, since Bregman divergences are nonnegative, we may drop the final negative term to obtain 
+
+⟨xt − u, ℓ t⟩ ≤ D(u, ext−1) − D(u, ext)
+
+η + ⟨xt − ext, ℓ t − Mt⟩ − D(ext, x t)
+
+η .
+
+Due to Lemma 4, Ψ i is 1 /ρ i-strongly convex with respect to ℓ1, D(ext, x t) ≥ 12ρi ∥xt − ext∥21 . There-fore, by Young’s inequality, 
+
+⟨xt − ext, ℓ t − Mt⟩ − D(ext, x t)
+
+η ≤ ∥ xt − ext∥1 ∥ℓt − Mt∥∞ − 12ηρ i
+
+∥xt − ext∥21 ≤ ηρ i
+
+2 ∥ℓt − Mt∥2 
+
+> ∞
+
+.
+
+Since Mt = ℓt−1,
+
+⟨xt − u, ℓ t⟩ ≤ D(u, ext−1) − D(u, ext)
+
+η + ηρ i
+
+2 ∥ℓt − ℓt−1∥2 
+
+> ∞
+
+.
+
+Multiplying by qt and summing up yields 
+
+> T
+
+X
+
+> t=1
+
+qt ⟨xt − u, ℓ t⟩ ≤ 1
+
+η
+
+> T
+
+X
+
+> t=1
+
+qt(Dt−1 − Dt) + ηρ i
+
+2
+
+> T
+
+X
+
+> t=1
+
+qt ∥ℓt − ℓt−1∥2 
+
+> ∞
+
+,
+
+where Dt := D(u, ext). Since 0 ≤ Dt ≤ B, leveraging summation by parts we get, 
+
+> T
+
+X
+
+> t=1
+
+qt(Dt−1 − Dt) = q1D0 − qT DT + 
+
+> T−1
+
+X
+
+> t=1
+
+(qt+1 − qt)Dt ≤ Bq 1 + B TV( q).
+
+This completes the proof. 31 B.3 First order path of the played policies 
+
+Lemma 8. For every player i, layer h, state s ∈ Sh, and episode t,
+
+πit+1 ,h (· | s) − πit,h (· | s) 1 ≤ 3ρiHη h.
+
+Proof. Write xt = xi,s t,h and ext = exi,s t,h . By Lemma 5, applied with base ext and loss Qit(s, ·), 
+
+∥xt+1 − ext∥1 ≤ ηhρi Qit,h (s, ·) ∞ ≤ ηhρiH. 
+
+Again applying Lemma 5 to compare the reference point ext and the played point xt, both generated from the common base point ext−1 using the losses Qit(s, ·) and Qit−1(s, ·), respectively, we obtain: 
+
+∥ext − xt∥1 ≤ ηhρi Qit,h (s, ·) − Qit−1,h (s, ·) ∞ ≤ 2ηhρiH, 
+
+because both Q-functions lie in [0 , H ]Ai . The triangle inequality gives ∥xt+1 − xt∥1 ≤ 3ρiHη h.
+
+Since xt = πit,h (· | s), the claim follows. For later use, we define ψit,h := max s∈Sh πit+1 ,h (· | s) − πit,h (· | s) 1 . Therefore, Lemma 8 gives 
+
+ψit,h ≤ 3¯ ρHη h.
+
+B.4 History occupancy variation 
+
+Lemma 9. Fix a player i, a layer h, and a policy μi ∈ Πgen  
+
+> i
+
+. Then, we have, 
+
+TV i,μ h :=  
+
+> T−1
+
+X
+
+> t=1
+
+di,μ t+1 ,h − di,μ t,h 1 ≤ 3m¯ρHT 
+
+> h−1
+
+X
+
+> ℓ=1
+
+ηℓ.
+
+Proof. Given τℓ ∈ H ℓ, ai ∈ Ai, a−i ∈ A−i, and s′ ∈ Sℓ+1 , define the next history, τℓ+1 = τℓ, a i, a−i, s ′ ∈ H ℓ+1 . For episode t, define the history transition kernel Ki,μ t,ℓ : Hℓ → ∆( Hℓ+1 ) by 
+
+Ki,μ t,ℓ (τℓ+1 | τℓ) := X
+
+> ai∈Ai, a −i∈A−i, s ′∈Sℓ+1 :
+> τℓ+1 =
+
+ τℓ,a i,a−i,s ′
+
+
+
+μi(ai | τℓ) π−it,ℓ (a−i | s(τℓ)) Pℓ(s′ | s(τℓ), a i, a−i),
+
+First, we demonstrate that Ki,μ t,ℓ is a stochastic kernel. For every fixed τℓ ∈ H ℓ,
+
+X
+
+> τℓ+1 ∈H ℓ+1
+
+Ki,μ t,ℓ (τℓ+1 | τℓ) = X
+
+> ai∈Ai
+
+X
+
+> a−i∈A−i
+
+X
+
+> s′∈Sℓ+1
+
+μi(ai | τℓ)π−it,ℓ (a−i | s(τℓ)) Pℓ(s′ | s(τℓ), ai, a −i)= X
+
+> ai∈Ai
+
+μi(ai | τℓ) X
+
+> a−i∈A−i
+
+π−it,ℓ (a−i | s(τℓ)) X
+
+> s′∈Sℓ+1
+
+Pℓ(s′ | s(τℓ), ai, a −i)= 1 .
+
+Now, let di,μ t,h ∈ ∆( Hh) denote the distribution over histories at the beginning of layer h induced by player i using μi and the opponents using π−it . Denoting by δs ∈ ∆( S) the probability distribution placing unit mass on s, we have di,μ t, 1 = δs1 , For h ≥ 2, 
+
+di,μ t,h = δs1 Ki,μ t, 1 Ki,μ t, 2 · · · Ki,μ t,h −1.
+
+32 Here we view distributions as row vectors and kernels as row-stochastic matrices. We next compare 
+
+di,μ t+1 ,h with di,μ t,h . For notational simplicity, write Kℓ := Ki,μ t,ℓ , K ′ 
+
+> ℓ
+
+:= Ki,μ t+1 ,ℓ . Then 
+
+di,μ t+1 ,h − di,μ t,h = δs1
+
+ K′
+
+> 1
+
+K′ 
+
+> 2
+
+· · · K′ 
+
+> h−1
+
+− K1K2 · · · Kh−1
+
+
+
+= δs1
+
+> h−1
+
+X
+
+> ℓ=1
+
+K1 · · · Kℓ−1(K′ 
+
+> ℓ
+
+− Kℓ)K′ 
+
+> ℓ+1
+
+· · · K′
+
+> h−1
+
+!
+
+.
+
+Stochastic kernels are ℓ1-contractions on signed measures, i.e., it holds that ∥νK ∥1 ≤ ∥ ν∥1 for every signed measure ν and every stochastic kernel K. Hence 
+
+δs1 K1 · · · Kℓ−1(K′ 
+
+> ℓ
+
+− Kℓ)K′ 
+
+> ℓ+1
+
+· · · K′  
+
+> h−11
+
+≤ δs1 K1 · · · Kℓ−1(K′ 
+
+> ℓ
+
+− Kℓ) 1 ≤ K′ 
+
+> ℓ
+
+− Kℓ ∞,1 ,
+
+where ∥K′ 
+
+> ℓ
+
+− Kℓ∥∞,1 := max τℓ∈H ℓ
+
+P 
+
+> τℓ+1 ∈H ℓ+1
+
+|K′
+
+> ℓ
+
+(τℓ+1 | τℓ) − Kℓ(τℓ+1 | τℓ)| . Therefore, 
+
+di,μ t+1 ,h − di,μ t,h 1 ≤
+
+> h−1
+
+X
+
+> ℓ=1
+
+δs1 K1 · · · Kℓ−1(K′ 
+
+> ℓ
+
+− Kℓ)K′ 
+
+> ℓ+1
+
+· · · K′  
+
+> h−11
+
+≤
+
+> h−1
+
+X
+
+> ℓ=1
+
+Ki,μ t+1 ,ℓ − Ki,μ t,ℓ ∞,1 . (8) It remains to control the one-layer kernel differences Ki,μ t+1 ,ℓ − Ki,μ t,ℓ ∞,1. Fix τℓ ∈ H ℓ and write 
+
+s = s(τℓ). Since μi and Pℓ are the same in episodes t and t + 1, only the opponents’ product distribution changes. Therefore, 
+
+Ki,μ t+1 ,ℓ (· | τℓ) − Ki,μ t,ℓ (· | τℓ) 1 = X
+
+> τℓ+1 ∈H ℓ+1
+
+Ki,μ t+1 ,ℓ (τℓ+1 | τℓ) − Ki,μ t,ℓ (τℓ+1 | τℓ)
+
+= X
+
+> ai
+
+X
+
+> a−i
+
+X
+
+> s′
+
+μi(ai | τℓ)Pℓ(s′ | s, a i, a−i) π−it+1 ,ℓ (a−i | s) − π−it,ℓ (a−i | s)
+
+= X
+
+> a−i
+
+π−it+1 ,ℓ (a−i | s) − π−it,ℓ (a−i | s) X
+
+> ai
+
+μi(ai | τℓ) X
+
+> s′
+
+Pℓ(s′ | s, a i, a−i)= π−it+1 ,ℓ (· | s) − π−it,ℓ (· | s) 1 ≤ max 
+
+> s∈Sℓ
+
+π−it+1 ,ℓ (· | s) − π−it,ℓ (· | s) 1 .
+
+For product distributions, we have 
+
+π−it+1 ,ℓ (· | s) − π−it,ℓ (· | s) 1 ≤ X 
+
+> j̸=i
+
+πjt+1 ,ℓ (· | s) − πjt,ℓ (· | s) 1 .
+
+Since, ψjt,ℓ := max s∈Sℓ πjt+1 ,ℓ (· | s) − πjt,ℓ (· | s) 1 , it holds that Ki,μ t+1 ,ℓ − Ki,μ t,ℓ ∞,1 ≤ P  
+
+> j̸=i
+
+ψjt,ℓ .
+
+For all h > 1, combining this with (8) gives 
+
+di,μ t+1 ,h − di,μ t,h 1 ≤
+
+> h−1
+
+X
+
+> ℓ=1
+
+X 
+
+> j̸=i
+
+ψjt,ℓ .
+
+In the special case h = 1, the distribution is always di,μ t, 1 = δs1 , and hence di,μ t+1 ,1 − di,μ t, 1 1 = 0 .
+
+Finally, summing over t = 1 , . . . , T − 1 gives TV i,μ h = 
+
+> T−1
+
+X
+
+> t=1
+
+di,μ t+1 ,h − di,μ t,h 1 ≤ 
+
+> T−1
+
+X
+
+> t=1
+> h−1
+
+X
+
+> ℓ=1
+
+X 
+
+> j̸=i
+
+ψjt,ℓ ≤
+
+> h−1
+
+X
+
+> ℓ=1
+
+X 
+
+> j̸=i
+
+3¯ ρHT η ℓ ≤ 3m¯ρHT 
+
+> h−1
+
+X
+
+> ℓ=1
+
+ηℓ.
+
+This completes the proof. 33 B.5 Variation bounds on the Q-values 
+
+Lemma 10. Fix a player i and two Markov joint policies π = ( π1, . . . , π m), π′ = ( π1′, . . . , π m′).
+
+Define ∆ := Pmj=1 πj − πj′ 
+
+> ∞,1
+
+, where πj − πj′ 
+
+> ∞,1
+
+:= max h,s πjh(· | s) − πj′ 
+
+> h
+
+(· | s) 1 . Then, for every layer h and state s, Qi, π 
+
+> h
+
+(s, ·) − Qi, π′ 
+
+> h
+
+(s, ·) ∞ ≤ 2H2∆.
+
+Proof. Fix player i. Define ∆ h := max s Qi, π 
+
+> h
+
+(s, ·) − Qi, π′ 
+
+> h
+
+(s, ·) ∞ . It can be seen that, at layer 
+
+H + 1, both value functions are zero, and hence ∆ H+1 = 0 . Now, fix h ≤ H, s ∈ Sh, and ai ∈ Ai.Then, 
+
+Qi, π 
+
+> h
+
+(s, a i) − Qi, π′ 
+
+> h
+
+(s, a i) = Ea−i∼π−ih
+
+h
+
+ℓih + Es′ V i, π
+
+> h+1
+
+(s′)
+
+i
+
+− Ea−i∼π′− ih
+
+h
+
+ℓih + Es′ V i, π′ 
+
+> h+1
+
+(s′)
+
+i
+
+.
+
+Add and subtract Ea−i∼π−ih
+
+h
+
+ℓih + Es′ V i, π′ 
+
+> h+1
+
+(s′)
+
+i
+
+. Then, 
+
+Qi, π 
+
+> h
+
+(s, a i) − Qi, π′ 
+
+> h
+
+(s, a i) ≤ Ea−i∼π−ih
+
+Es′
+
+h
+
+V i, π
+
+> h+1
+
+(s′) − V i, π′ 
+
+> h+1
+
+(s′)
+
+i| {z }
+
+> future-value difference
+
++ Ea−i∼π−ih
+
+f (a−i) − Ea−i∼π′− ih
+
+f (a−i)
+
+| {z }
+
+> distribution shift
+
+,
+
+where f (a−i) := ℓih(s, a i, a−i) + Es′ V i, π′ 
+
+> h+1
+
+(s′). For the future-value term, note that 
+
+V i, π
+
+> h+1
+
+(s′) − V i, π′ 
+
+> h+1
+
+(s′) =
+
+D
+
+πih+1 (· | s′), Q i, π
+
+> h+1
+
+(s′, ·)
+
+E
+
+−
+
+D
+
+πi′
+
+> h+1
+
+(· | s′), Q i, π′
+
+> h+1
+
+(s′, ·)
+
+E
+
+≤
+
+D
+
+πih+1 (· | s′), Q i, π
+
+> h+1
+
+(s′, ·) − Qi, π′
+
+> h+1
+
+(s′, ·)
+
+E
+
++
+
+D
+
+πih+1 (· | s′) − πi′
+
+> h+1
+
+(· | s′), Q i, π′
+
+> h+1
+
+(s′, ·)
+
+E
+
+≤ ∆h+1 + πih+1 (· | s′) − πi′
+
+> h+1
+
+(· | s′) 1 Qi, π′
+
+> h+1
+
+(s′, ·) ∞ .
+
+Since per-layer losses lie in [0 , 1], the remaining loss from layer h + 1 to layer H is at most H − h.Therefore Qi, π′
+
+> h+1
+
+(s′, ·) ∞ ≤ H − h ≤ H. Thus, 
+
+V i, π
+
+> h+1
+
+(s′) − V i, π′ 
+
+> h+1
+
+(s′) ≤ ∆h+1 + H πih+1 (· | s′) − πi′
+
+> h+1
+
+(· | s′) 1 ≤ ∆h+1 + H∆.
+
+Therefore, Ea−i∼π−ih
+
+Es′ [V i, π
+
+> h+1
+
+(s′) − V i, π′ 
+
+> h+1
+
+(s′)] ≤ ∆h+1 + H∆. For the distribution-shift term, since 
+
+∥f ∥∞ ≤ H, we have 
+
+Ea−i∼π−ih
+
+f (a−i) − Ea−i∼π′− ih
+
+f (a−i) ≤ H π−ih (· | s) − π′− ih (· | s) 1 .
+
+Using the product-distribution inequality, 
+
+π−ih (· | s) − π′− ih (· | s) 1 ≤ X 
+
+> j̸=i
+
+πjh(· | s) − πj′ 
+
+> h
+
+(· | s) 1 ≤ ∆.
+
+Hence ∆ h ≤ ∆h+1 + 2 H∆. Since ∆ H+1 = 0 , backward induction yields ∆ h ≤ 2H(H − h + 1)∆ . In particular, it holds that ∆ h ≤ 2H2∆.
+
+Lemma 11. For every player i, state s, layer h, and episode t ≥ 2, Qit,h (s, ·) − Qit−1,h (s, ·) 2 
+
+> ∞
+
+≤
+
+36 m2 ¯ρ2H6η2 
+
+> H
+
+, and, with Qi
+
+> 0,h
+
+(s, ·) = 0 , Qi
+
+> 1,h
+
+(s, ·) − Qi
+
+> 0,h
+
+(s, ·) 2 
+
+> ∞
+
+≤ H2.
+
+34 Proof. The Lemma 10 bound gives 
+
+Qit,h (s, ·) − Qit−1,h (s, ·) ∞ ≤ 2H2
+
+> m
+
+X
+
+> j=1
+
+πjt − πjt−1 ∞,1 = 2 H2
+
+> m
+
+X
+
+> j=1
+
+max 
+
+> h,s ∈Sh
+
+πjt,h (· | s) − πjt−1,h (· | s) 1 .
+
+By Lemma 8 and the monotonicity η1 ≤ · · · ≤ ηH , it holds that πjt − πjt−1 ∞,1 ≤ 3¯ ρHη H , which directly implies the desired result. 
+
+B.6 Weighted value-difference decomposition 
+
+Lemma 12. Fix a player i, an episode t, and a policy μi ∈ Πgen  
+
+> i
+
+. Fix the opponents’ profile π−it .Then, 
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1) = 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> τh∈H h
+
+di,μ t,h (τh) Qit,h (s(τh), ·), π ih(· | s(τh)) − μi,h (· | τh) .
+
+Proof. Let Wh(τh) denote the expected continuation loss from history τh ∈ H h when player i follows the comparator μi from layer h onward and the opponents follow π−it . Thus WH+1 (τH+1 ) = 0 , and for τh ∈ H h with current state s = s(τh), 
+
+Wh(τh) = X
+
+> ai∈Ai
+
+μi,h (ai | τh)
+
+h
+
+ℓit,h (s, a i) + X
+
+> s′∈Sh+1
+
+Pt,h (s′ | s, a i)Wh+1 (τh+1 )
+
+i
+
+.
+
+where τh+1 = ( τh, a i, a−i, s ′) denotes the next history after player i chooses ai, the opponents’ policies are according to π−it , and the next state is s′. Then, for every history τh ∈ H h with 
+
+s = s(τh), we have 
+
+V i,π t,h (s)−Wh(τh) = Qit,h (s, ·), π ih(· | s) −X
+
+> ai∈Ai
+
+μi,h (ai | τh)
+
+h
+
+ℓit,h (s, a i)+ X
+
+> s′∈Sh+1
+
+Pt,h (s′| s, a i)Wh+1 (τh+1 )
+
+i
+
+.
+
+= Qit,h (s, ·), π ih(· | s) − μi,h (· | τh)
+
++ X
+
+> ai∈Ai
+
+μi,h (ai | τh) X
+
+> s′∈Sh+1
+
+Pt,h (s′ | s, a i)
+
+h
+
+V i,π i
+
+> t,h +1
+
+(s′) − Wh+1 (τh+1 )
+
+i
+
+.
+
+= Qit,h (s(τh), ·), π ih(· | s(τh)) − μi,h (· | τh)
+
++ E
+
+h
+
+V i,π t,h +1 (s(τh+1 )) − Wh+1 (τh+1 ) τh, μ i, π−it
+
+i
+
+.
+
+Now taking expectation with respect to τh ∼ di,μ t,h , we get, 
+
+Eτh∼di,μ t,h 
+
+h
+
+V i,π t,h (s(τh)) − Wh(τh)
+
+i
+
+= X
+
+> τh∈H h
+
+di,μ t,h (τh) Qit,h (s(τh), ·), π ih(· | s(τh)) − μi,h (· | τh)
+
++ Eτh+1 ∼di,μ t,h +1 
+
+h
+
+V i,π t,h +1 (s(τh+1 )) − Wh+1 (τh+1 )
+
+i
+
+.
+
+Summing this identity over h = 1 , . . . , H telescopes the terms. At the initial layer, di,μ t, 1 = δs1 , and thus 
+
+Eτ1∼di,μ t, 1
+
+h
+
+V i,π t, 1 (s(τ1)) − W1(τ1)
+
+i
+
+= V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1).
+
+35 At layer H + 1, both continuation values are zero, i.e. V i,π t,H +1 ≡ 0, W H+1 ≡ 0. Therefore, 
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1) = 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> τh∈H h
+
+di,μ t,h (τh) Qit,h (s(τh), ·), π ih(· | s(τh)) − μi,h (· | τh) .
+
+This completes the proof. 
+
+B.7 Proof of Theorem 1 
+
+Fix a player i and an arbitrary comparator policy μi ∈ Πgen  
+
+> i
+
+. For each layer h, define 
+
+Ri,h (μi) := X
+
+> τh∈H h
+> T
+
+X
+
+> t=1
+
+di,μ t,h (τh) Qit,h (s(τh), ·), π it,h (· | s(τh)) − μi,h (· | τh) .
+
+Now, apply Lemma 7 separately for every history τh ∈ H h, with xt = πit,h (· | s(τh)) , u = μi,h (· | 
+
+τh), ℓ t = Qit,h (s(τh), ·), q t = di,μ t,h (τh), and learning rate ηh. Summing over τ ∈ H h yields 
+
+Ri,h (μi) ≤ Bi
+
+ηh
+
+X
+
+> τh∈H h
+
+di,μ 
+
+> 1,h
+
+(τh) +  
+
+> T−1
+
+X
+
+> t=1
+
+|di,μ t+1 ,h (τh) − di,μ t,h (τh)|
+
+!
+
++ ηhρi
+
+2
+
+X
+
+> τh∈H h
+> T
+
+X
+
+> t=1
+
+di,μ t,h (τh) Qit,h (s(τh), ·) − Qit−1,h (s(τh), ·) 2 
+
+> ∞
+
+.
+
+Since P 
+
+> τh∈H h
+
+di,μ 
+
+> 1,h
+
+(τh) = 1 and is the same at every episode, Lemma 11 gives 
+
+Ri,h (μi) ≤ Bi(1 + TV i,μ h )
+
+ηh
+
++ 12 ηhρiH2 + 18 ηhρim2 ¯ρ2H6η2 
+
+> H
+
+T. 
+
+We now sum over h. First, HX
+
+> h=1
+
+Bi
+
+ηh
+
+= Bi
+
+η0
+
+> H
+
+X
+
+> h=1
+
+T αh ≤ HB i
+
+η0
+
+T β .
+
+Second, for h ≥ 2, Lemma 9 gives 
+
+Bi TV i,μ h
+
+ηh
+
+≤ 3mB i ¯ρHT 
+
+Ph−1 
+
+> ℓ=1
+
+ηℓ
+
+ηh
+
+.
+
+Since η1 ≤ · · · ≤ ηH , Ph−1 
+
+> ℓ=1
+
+ηℓ ≤ Hη h−1. Moreover, ηh−1 
+
+> ηh
+
+= T −(αh−1−αh) = T −3/(3 H+1) . Therefore, 
+
+Bi TV i,μ h
+
+ηh
+
+≤ 3mB i ¯ρH 2T 1−3/(3 H+1) = 3 mB i ¯ρH 2T β ,
+
+and hence HX
+
+> h=1
+
+Bi TV i,μ h
+
+ηh
+
+≤ 3mB i ¯ρH 3T β .
+
+Third, HX
+
+> h=1
+
+12 ηhρiH2 ≤ 12 ρiH2 · Hη H ≤ 12 η0ρiH3T β ,
+
+36 where we used T −αH ≤ T β for T ≥ 1. Fourth, 
+
+> H
+
+X
+
+> h=1
+
+18 ηhρim2 ¯ρ2H6η2 
+
+> H
+
+T = 18 ρim2 ¯ρ2H6T η 2
+
+> HH
+
+X
+
+> h=1
+
+ηh ≤ 18 ρim2 ¯ρ2H6T η 2 
+
+> H
+
+· Hη H
+
+≤ 18 η30 ρim2 ¯ρ2H7T 1−3αH
+
+≤ 18 η30 ρim2 ¯ρ2H7T β ,
+
+where the last line follows from αH = 1 /(3 H + 1), 1 − 3αH = 3H−23H+1 = β. Choosing λi = 1 
+
+> |Ai|
+
+, gives 
+
+ρi = 1 + |Ai|λi = 2 , ¯ρ = 2 , and Bi = 2 log( |Ai| + 1) . Combining all four pieces results in 
+
+> H
+
+X
+
+> h=1
+
+Ri,h (μi) ≤
+
+ HB i
+
+η0
+
++ 3 mB i ¯ρH 3 + 12 η0ρiH3 + 18 η30 ρim2 ¯ρ2H7
+
+
+
+T β .
+
+≤
+
+ 2H log( |Ai| + 1) 
+
+η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 144 η30 m2H7
+
+
+
+T β .
+
+Define 
+
+CSE  
+
+> i
+
+:= 2H log( |Ai| + 1) 
+
+η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 144 η30 m2H7.
+
+By Lemma 12, we have TX
+
+> t=1
+
+
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1)
+
+
+
+=
+
+> H
+
+X
+
+> h=1
+
+Ri,h (μi).
+
+The left-hand side is precisely the regret of player i with respect to the comparator policy μi. Since the bound on PTt=1 
+
+
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1)
+
+
+
+holds uniformly for all μi ∈ Πgen  
+
+> i
+
+, taking the supremum over μi ∈ Πgen  
+
+> i
+
+yields Reg gen ,i T = sup 
+
+> μi∈Πgen
+> i
+> T
+
+X
+
+> t=1
+
+
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1)
+
+
+
+≤ CSE  
+
+> i
+
+T β , β = 3H − 23H + 1 .
+
+Now we let CSE  
+
+> ∗
+
+:= max i∈[m] CSE  
+
+> i
+
+, T ε := 
+
+ CSE 
+
+> ∗
+> ε
+
+(3 H+1) /3
+
+. In particular, since β−1 = −3/(3 H +1), this choice ensures that, for every player i ∈ [m], Reg gen ,i Tε
+
+Tε
+
+≤ CSE  
+
+> i
+
+T −3/(3 H+1)  
+
+> ε
+
+≤ CSE  
+
+> ∗
+
+T −3/(3 H+1)  
+
+> ε
+
+≤ ε. 
+
+Equivalently, Reg gen ,i Tε ≤ εT ε. The ε-CCE guarantee follows by applying the standard no-regret-to-CCE equivalence to the empirical distribution bΠTε [Cesa-Bianchi and Lugosi, 2006]. 
+
+# C Convergence Analysis of Algorithm 2 
+
+C.1 Comparator smoothing 
+
+Algorithm 2 plays policies in the restricted simplex ∆ ζi . We therefore first compare an arbitrary history-dependent policy with its ζ-smoothed version. For μi ∈ Πgen  
+
+> i
+
+, define 
+
+μi,ζ h (· | τh) := (1 − ζ)μih(· | τh) + ζ Unif( Ai), h ∈ [H], τ h ∈ H h.
+
+Then μi,ζ h (· | τh) ∈ ∆ζi for every admissible history, and we have the following guarantee for the 
+
+smoothing .37 Lemma 13. Fix player i, a product Markov opponent profile π−i, and a history-dependent policy 
+
+μi ∈ Πgen  
+
+> i
+
+. Consequently, for every product Markov profile π, it holds that 
+
+V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1) ≤ V i,π t, 1 (s1) − V i,μ i,ζ  
+
+> t, 1
+
+(s1) + 2 ζH 2.
+
+Proof. For r = 0 , 1, . . . , H , define a policy νi,r by 
+
+νi,r h (· | τh) := 
+
+(
+
+μi,ζ h (· | τh), h ≤ r, μih(· | τh), h > r. 
+
+Then νi, 0 = μi and νi,H = μi,ζ . Hence 
+
+V i,μ i,ζ  
+
+> t, 1
+
+(s1) − V i,μ i 
+
+> t, 1
+
+(s1) = 
+
+> H
+
+X
+
+> r=1
+
+h
+
+V i,ν i,r  
+
+> t, 1
+
+(s1) − V i,ν i,r −1 
+
+> t, 1
+
+(s1)
+
+i
+
+. (9) The policies νi,r and νi,r −1 agree on all layers ℓ < r , and their only possible difference is at layer r.For τr ∈ H r, let Qit,r (s(τr), ·) denote the Q-function whose ai-th coordinate is the expected payoff obtained by taking ai at τr, then following πi, while the opponents follow π−i. Since the remaining total cost is at most H, ∥Qit,r (s(τr), ·)∥∞ ≤ H. Moreover, by the definition of the smoothed policy, 
+
+μi,ζ r (· | τr) − μir(· | τr) = ζ Unif( Ai) − μir(· | τr). Hence, 
+
+μi,ζ r (· | τr) − μir(· | τr) 1 = ζ Unif( Ai) − μir(· | τr) 1 ≤ 2ζ. 
+
+Thus, by Lemma 12 
+
+V i,ν i,r  
+
+> t, 1
+
+(s1) − V i,ν i,r −1 
+
+> t, 1
+
+(s1) ≤ X 
+
+> τr∈H r
+
+di,ν i,r −1 
+
+> t,r
+
+(τr)∥Qt,r (τr, ·)∥∞ μi,ζ r (· | τr) − μir(· | τr) 1
+
+≤ X 
+
+> τr∈H r
+
+di,ν i,r −1 
+
+> t,r
+
+(τr) · H · 2ζ = 2 ζH. 
+
+Summing over r = 1 , . . . , H by (9) we obtain 
+
+V i,μ i,ζ  
+
+> t, 1
+
+(s1) − V i,μ i 
+
+> t, 1
+
+(s1) ≤ 2ζH 2.
+
+The final claim follows by adding and subtracting V i,μ i,ζ  
+
+> t, 1
+
+(s1) to V i,π t, 1 (s1) − V i,μ i 
+
+> t, 1
+
+(s1). 
+
+C.2 Uniform estimation of Q-values 
+
+At block k, conditional on the past, the block policy πk is fixed and the B trajectories in that block are independent. The reachability condition, together with the action-probability floor for player i,gives a uniform lower bound on the probability of observing each state–player-i-action pair. We state the resulting estimation guarantee for the player-i Q -function estimates as follows. 
+
+Lemma 14. Fix K, B ∈ N, δ ∈ (0 , 1) , and ξ > 0. MK := KmA max S, u K := log 4MK 
+
+> δ
+
+, n Q := l H2 
+
+> 2ξ2
+
+uK
+
+m
+
+, p min := κζ Amax . If B ≥
+
+l 8 
+
+> pmin
+
+(nQ + uK )
+
+m
+
+, then, with probability at least 1 − δ,
+
+max 
+
+> k∈[K],i ∈[m],h ∈[H],s∈Sh,a ∈Ai
+
+bQik,h (s, a ) − Qik,h (s, a ) ≤ ξ. 
+
+38 Proof. First, fix a tuple ( k, i, h, s, a i), with s ∈ Sh. Then, let Fk−1 be the sigma-field generated by all randomness before block k. Let P denote the probability measure induced by Algorithm 2 and the game itself. Conditional on Fk−1 under P, the policy πk is fixed and the B trajectories in block k are independent. For episode r ∈ [B], define Xr := 1{sk,r h = s, a i,k,r h = ai}, thus Nk,i (s, a i) = PBr=1 Xr
+
+by (1). Then, by Definition 1 conditional on Fk−1, the random variables X1, . . . , X B are i.i.d. Bernoulli random variables with success probability pk,i,h,s,a i := P(sk,r h = s, a i,k,r h = ai | F k−1). By the reachability assumption and the action-floor condition, 
+
+pk,i,h,s,a i = P(sk,r h = s | F k−1)πik,h (ai | s) ≥ κ ζ
+
+|Ai| ≥ κζ Amax 
+
+=: pmin 
+
+P-almost surely. Hence, under the conditional law P(· | F k−1), 
+
+Nk,i (s, a i) ∼ Bin( B, p k,i,h,s,a i ), pk,i,h,s,a i ≥ pmin P-a.s. Since the lower-tail probability of a binomial random variable is nonincreasing in its success prob-ability, it follows that, for every threshold n,
+
+P(Nk,i (s, a i) < n | F k−1) ≤ Pr(Bin( B, p min ) < n )
+
+P-almost surely. Since Bp min ≥ 8( nQ + uK ), we have nQ ≤ Bp min /2. Therefore, Chernoff’s inequality gives 
+
+P(Nk,i (s, a i) < n Q | F k−1) ≤ Pr 
+
+
+
+Bin( B, p min ) < 12 Bp min 
+
+
+
+≤ exp 
+
+
+
+− Bp min 
+
+8
+
+
+
+≤ e−uK ,
+
+P-almost surely. Now, let A := {Nk,i (s, a i) ≥ nQ}. On A, the estimator is 
+
+bQik,h (s, a i) = 1
+
+Nk,i (s, a i)
+
+> B
+
+X
+
+> r=1
+
+XrY i,k,r h .
+
+Fix a realization x1, . . . , x B ∈ { 0, 1} with PBr=1 xr ≥ nQ. Conditional on Fk−1 and on {Xr =
+
+xr, r ∈ [B]}, the variables {Y i,k,r h : xr = 1 } are independent, since the B trajectories in block k are conditionally independent. Moreover, for each r with xr = 1, 
+
+E
+
+h
+
+Y i,k,r h Fk−1, s k,r h = s, a i,k,r h = ai
+
+i
+
+= E
+
+" HX 
+
+> τ=h
+
+ℓiτ (sk,r τ , ak,r τ ) Fk−1, s k,r h = s, a i,k,r h = ai
+
+#
+
+= Qik,h (s, a i).
+
+as conditional on Fk−1, the policy πk is fixed, so the conditional expected tail cost from layer h
+
+onward is precisely the state-action value Qik,h (s, a i). Also, Y i,k,r h ∈ [0 , H ]. Therefore, Hoeffding’s inequality gives 
+
+P 1
+
+PBr=1 xrBX
+
+> r=1
+
+xrY i,k,r h − Qik,h (s, a i) > ξ Fk−1, X r = xr, r ∈ [B]
+
+!
+
+≤ 2 exp 
+
+
+
+− 2nQξ2
+
+H2
+
+
+
+.
+
+Averaging over all realizations x1, . . . , x B with PBr=1 xr ≥ nQ, we obtain 
+
+P
+
+ bQik,h (s, a i) − Qik,h (s, a i) > ξ, A Fk−1
+
+
+
+≤ 2 exp 
+
+
+
+− 2nQξ2
+
+H2
+
+
+
+≤ 2e−uK .
+
+39 Combining the bound on Ac = {Nk,i (s, a i) < n Q} with the bound on the estimation error on A, we obtain, for the fixed tuple ( k, i, h, s, a i), 
+
+P
+
+ bQik,h (s, a i) − Qik,h (s, a i) > ξ Fk−1
+
+
+
+≤ P(Ac | F k−1) + P
+
+ bQik,h (s, a i) − Qik,h (s, a i) > ξ, A Fk−1
+
+
+
+≤ e−uK + 2 e−uK = 3 e−uK ,
+
+P-almost surely. Taking expectations on both sides gives the unconditional bound 
+
+P
+
+ bQik,h (s, a i) − Qik,h (s, a i) > ξ 
+
+
+
+≤ 3e−uK .
+
+Now take a union bound over all tuples ( k, i, h, s, a i) with k ∈ [K], i ∈ [m], h ∈ [H], s ∈ Sh, a i ∈ Ai.
+
+The number of such tuples is at most MK = KmA max S. Therefore, 
+
+P
+
+ max 
+
+> k∈[K],i ∈[m],h ∈[H],s∈Sh, a i∈Ai
+
+bQik,h (s, a i) − Qik,h (s, a i) > ξ 
+
+ ≤ 3MK e−uK = 3 MK
+
+δ
+
+4MK
+
+≤ δ. 
+
+Equivalently, with probability at least 1 − δ,max 
+
+> k∈[K],i ∈[m],h ∈[H],s∈Sh, a i∈Ai
+
+bQik,h (s, a i) − Qik,h (s, a i) ≤ ξ. 
+
+This proves the result. 
+
+C.3 Regret with uniformly accurate estimates 
+
+We next prove a deterministic regret bound for Algorithm 2 on the event that all estimated Q-vectors are uniformly accurate. Define Eξ := 
+
+n
+
+max k,i,h,s,a i bQik,h (s, a i) − Qik,h (s, a i) ≤ ξ
+
+o
+
+. On this event, the regret analysis of the estimated-Q functions differs from the full-feedback case only through the estimation-error terms that appear. 
+
+Proposition 2. Suppose Algorithm 2 is run for K blocks. On the event Eξ, for every player i ∈ [m],
+
+sup 
+
+> μi∈Πgen
+> i
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+≤ eCSE  
+
+> i
+
+K−3/(3 H+1) + 2 Hξ + 2 ζH 2 + 8 η0Hξ 2K−αH ,
+
+where eCSE  
+
+> i
+
+:= 2H log( |Ai|+1)  
+
+> η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 288 η30 m2H7.
+
+Proof. Fix player i and a comparator μi ∈ Πgen  
+
+> i
+
+. Let μi,ζ be its ζ-smoothed version defined as in Appendix C.1. By Lemma 13, it is enough to control the regret against μi,ζ and then add 2 ζH 2 to the average regret. For block k, let di,μ ζ 
+
+> k,h
+
+∈ ∆( Hh) be the history distribution at layer h generated when player i uses 
+
+μi,ζ and the opponents use π−ik . Applying Lemma 12 to the block profile πk gives 
+
+V i,π i 
+
+> k, 1
+
+(s1) − V i,μ i,ζ  
+
+> k, 1
+
+(s1) = 
+
+> H
+
+X
+
+> h=1
+
+X
+
+> τh∈H h
+
+di,μ ζ 
+
+> k,h
+
+(τh)
+
+D
+
+Qik,h (s(τh), ·), π ik,h (· | s(τh)) − μi,ζ h (· | τh)
+
+E
+
+,
+
+40 On the event Eξ, for every history τh, it holds almost surely that 
+
+D
+
+Qik,h (s(τh), ·) − bQik,h (s(τh), ·), π ik,h (· | s(τh)) − μi,ζ h (· | τh)
+
+E
+
+≤ ξ πik,h (· | s(τh)) − μi,ζ h (· | τh) 1 ≤ 2ξ. 
+
+Since di,μ ζ 
+
+> k,h
+
+∈ ∆( Hh) has total mass one at each layer, replacing Qik,h by bQik,h costs at most 2 HKξ 
+
+in cumulative regret. It remains to bound the corresponding weighted regret expression with bQik,h in place of Qik,h .Lemma 7 is stated for the full simplex, but its proof uses only first-order optimality over a convex decision set, the Bregman diameter bound Di ≤ Bi, and 1 /ρ i-strong convexity of the smoothed entropy regularizer. Hence the same bound applies verbatim on the restricted simplex ∆ ζi . Applying Lemma 7 separately to every history τ ∈ H h, with 
+
+xk = πik,h (· | s(τh)) , u = μi,ζ h (· | τh), ℓk = bQik,h (s(τh), ·), qk = di,μ ζ 
+
+> k,h
+
+(τh), Mk = bQik−1,h (s(τh), ·),
+
+and summing over histories gives 
+
+Rest  
+
+> i,h
+
+(μi,ζ ) ≤ Bi(1 + TV i,μ ζ 
+
+> h
+
+)
+
+ηh
+
++ ηhρi
+
+2
+
+X 
+
+> τ∈H h
+> K
+
+X
+
+> k=1
+
+di,μ ζ 
+
+> k,h
+
+(τ ) bQik,h (s(τ ), ·) − bQik−1,h (s(τ ), ·) 2 
+
+> ∞
+
+, (10) where TV i,μ ζ 
+
+> h
+
+:= PK−1 
+
+> k=1
+
+di,μ ζ 
+
+> k+1 ,h
+
+− di,μ ζ  
+
+> k,h 1
+
+.
+
+We next bound first order path of the policies generated by estimated Q-functions. The proof of Lemma 8, which is based on Lemma 5, only uses the fact that the feedback vectors lie in [0 , H ]Aj .Since bQjk,h ∈ [0 , H ]Aj , repeating the same calculation, for every player j, layer h, state s ∈ Sh, and block k, we obtain 
+
+πjk+1 ,h (· | s) − πjk,h (· | s) 1 ≤ 3ρj Hη h ≤ 3¯ ρHη h. (11) Applying the Lemma 9 to the block sequence π1, . . . , π K , and using (11), yields TV i,μ ζ 
+
+> h
+
+≤ 3m¯ρHK X
+
+> ℓ<h
+
+ηℓ.
+
+We now control the variation of the estimated Q-function. For the exact values, Lemma 10 and (11) imply, for k ≥ 2, 
+
+Qik,h (s, ·) − Qik−1,h (s, ·) ∞ ≤ 2H2
+
+> m
+
+X
+
+> j=1
+
+∥πjk,h − πjk−1,h ∥∞,1
+
+≤ 2H2 · m · 3¯ ρHη H = 6 m¯ρH 3ηH .
+
+On the good event Eξ, for k ≥ 2, 
+
+bQik,h (s, ·) − bQik−1,h (s, ·) ∞ ≤ Qik,h (s, ·) − Qik−1,h (s, ·) ∞ + 2 ξ ≤ 6m¯ρH 3ηH + 2 ξ
+
+Then, we have 
+
+bQik,h (s, ·) − bQik−1,h (s, ·) 2 
+
+> ∞
+
+≤ 72 m2 ¯ρ2H6η2 
+
+> H
+
++ 8 ξ2,
+
+41 where the last line follows from the inequality ( a + b)2 ≤ 2a2 + 2 b2. On the first block, bQi 
+
+> 0,h
+
+≡ 0 and 
+
+bQi 
+
+> 1,h
+
+∈ [0 , H ]Ai , so bQi
+
+> 1,h
+
+(s, ·) − bQi
+
+> 0,h
+
+(s, ·) 2 
+
+> ∞
+
+≤ H2. Substituting these estimates into the weighted OOMD bound (10) gives, on every layer h,
+
+Rest  
+
+> i,h
+
+(μi,ζ ) ≤ Bi
+
+ηh
+
++ Bi TV i,μ ζ
+
+> h
+
+ηh
+
++ 12 ηhρiH2 + 36 ηhρim2 ¯ρ2H6η2 
+
+> H
+
+K + 4 ηhρiξ2K. (12) We now sum over h ∈ [H], using the same bounds on the learning-rate related terms as in the proof of Theorem 1 in Appendix B. Namely, with β = (3 H − 2) /(3 H + 1), 
+
+> H
+
+X
+
+> h=1
+
+Bi
+
+ηh
+
+≤ HB i
+
+η0
+
+Kβ ,
+
+> H
+
+X
+
+> h=1
+
+Bi TV i,μ ζ
+
+> h
+
+ηh
+
+≤ 3mB i ¯ρH 3Kβ ,
+
+> H
+
+X
+
+> h=1
+
+12 ηhρiH2 ≤ 12 η0ρiH3Kβ , (13) and 
+
+> H
+
+X
+
+> h=1
+
+36 ηhρim2 ¯ρ2H6η2 
+
+> H
+
+K ≤ 36 η30 ρim2 ¯ρ2H7Kβ . (14) Then the final term in (12) satisfies 
+
+> H
+
+X
+
+> h=1
+
+4ηhρiξ2K ≤ 4η0ρiHξ 2K1−αH . (15) Choosing λi = 1 
+
+> |Ai|
+
+, gives ρi = 1 + |Ai|λi = 2 , ¯ρ = 2 , and Bi = 2 log( |Ai| + 1). Then, substituting these bounds into the (13), (14), (15) yields, 
+
+Rest  
+
+> i,h
+
+(μi,ζ ) ≤ eCSE  
+
+> i
+
+Kβ + 8 η0Hξ 2K1−αH . (16) Finally, combining (16) with the error from comparing the played policies against μi,ζ , namely 2ζH 2K, and the error from Q-function estimation, namely 2 HKξ , we obtain, 
+
+> K
+
+X
+
+> k=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+≤ eCSE  
+
+> i
+
+Kβ + 2 HKξ + 2 ζH 2K + 8 η0Hξ 2K1−αH .
+
+Dividing by K and taking the supremum over μi ∈ Πgen  
+
+> i
+
+proves the proposition. 
+
+C.4 Proof of Theorem 2 
+
+Proof. Apply Lemma 14 with K = Kε, B = Bε, ζ = ζε, ξ = ξε. By the definition of Bε, the event 
+
+Eξε holds with probability at least 1 − δ. On this event, Proposition 2 gives, for every player i ∈ [m], sup 
+
+> μi∈Πgen
+> i
+
+1
+
+KεKεX
+
+> k=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+≤ eCSE  
+
+> i
+
+K−3/(3 H+1)  
+
+> ε
+
++ 2 Hξ ε + 2 ζεH2 + 8 η0Hξ 2 
+
+> ε
+
+K−αH 
+
+> ε
+
+.
+
+• By the definition of Kε, eCSE  
+
+> i
+
+K−3/(3 H+1)  
+
+> ε
+
+≤ eCSE  
+
+> ∗
+
+K−3/(3 H+1)  
+
+> ε
+
+≤ ε 
+
+> 4
+
+.
+
+• By the definition of ξε, 2 Hξ ε ≤ ε 
+
+> 4
+
+.
+
+• By the definition of ζε, 2 ζεH2 = ε 
+
+> 4
+
+.
+
+42 • Finally, since K−αH 
+
+> ε
+
+≤ 1, ρi = 2, and ξ2 
+
+> ε
+
+≤ ε/ (32 η0H), 8 η0Hξ 2 
+
+> ε
+
+K−αH 
+
+> ε
+
+≤ 8η0Hξ 2 
+
+> ε
+
+≤ ε 
+
+> 4
+
+.
+
+Thus, with probability at least 1 − δ, for every player i ∈ [m], sup 
+
+> μi∈Πgen
+> i
+
+1
+
+KεKεX
+
+> k=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+≤ ε. (17) It remains to translate this block-level guarantee into a guarantee over the actual trajectory episodes. By construction, during block k the algorithm plays the same product Markov policy πk
+
+for all Bε episodes in that block. Therefore 1
+
+NεNεX
+
+> n=1
+
+h
+
+V i,π n (s1) − V i,μ i 
+
+> n
+
+(s1)
+
+i
+
+= 1
+
+KεBεKεX
+
+> k=1
+> Bε
+
+X
+
+> r=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+= 1
+
+KεKεX
+
+> k=1
+
+h
+
+V i,π k, 1 (s1) − V i,μ i 
+
+> k, 1
+
+(s1)
+
+i
+
+.
+
+Hence the bound given in (17) holds when the average is taken over the Nε = KεBε actual trajectory episodes. Moreover, the empirical distribution policies over π1, . . . , π Nε , is identical to the empirical distribution over the block policies π1, . . . , π Kε , since each policy πk appears exactly Bε times. Thus, the empirical distribution over block policies is an ε-approximate CCE. Finally, the total number of episodes is Nε = KεBε. By the definitions of Kε, Bε, ζε, nε, uε, and using the fact ξε ≤ ε/ (8 H), 
+
+Nε = eO
+
+ Amax H6
+
+κε 3
+
+eCSE 
+
+> ∗
+
+ε
+
+!(3 H+1) /3 ,
+
+where eO(·) hides logarithmic factors in ( m, S nt , A max , K ε, 1/δ ), and 
+
+eCSE  
+
+> ∗
+
+≤ max 
+
+> i∈[m]
+
+ 2H log( |Ai| + 1) 
+
+η0
+
++ 12 mH 3 log( |Ai| + 1) + η0H3 + 288 η30 m2H7
+
+
+
+.
+
+This completes the proof. 
+
+# D Proofs for the Approximation of Discounted Markov Games (Section 4) 
+
+This appendix proves the truncation statements used in Section 4. Throughout this appendix, we fix the discount factor γ ∈ (0 , 1).The argument is written once for the unified discounted model with original horizon ¯H ∈ N+ ∪ {∞} . The case ¯H < ∞ corresponds to the finite-horizon discounted games, while ¯H = ∞ corresponds to the discounted infinite-horizon games. 
+
+Lemma 15. For every ¯H-horizon policy profile σ ∈ Πgen , ¯H , every L ≤ ¯H, and every player i ∈ [m],
+
+0 ≤ Jγi, ¯H (σ) − Jγi,L (σ[L]) ≤ τL, ¯H (γ) ≤ γL
+
+1 − γ .
+
+Proof. The policy profile σ and its truncation σ[L] have the same first L decision rules. Therefore they induce the same distribution over trajectories up to the beginning of layer L + 1. Hence, 
+
+Jγi, ¯H (σ) − Jγi,L (σ[L]) = Eσ
+
+
+
+> ¯H
+
+X
+
+> h=L+1
+
+γh−1ℓih(sh, ah) s1
+
+ .
+
+43 The right-hand side is nonnegative. Since 0 ≤ ℓih ≤ 1, we have 
+
+> ¯H
+
+X
+
+> h=L+1
+
+γh−1ℓih(sh, ah) ≤
+
+> ∞
+
+X
+
+> h=L+1
+
+γh−1 = γL
+
+1 − γ ,
+
+which concludes the proof. 
+
+Lemma 16. Let π[L] ∈ Πmarkov ,L , be an L-step product Markov profile, and define ¯π := Ext L(π[L]).
+
+Then, 
+
+Jγi, ¯H ( ¯ π) − Jγi, ¯H (μi ⊙ ¯π−i) ≤ Jγi,L (π[L]) − Jγi,L (μi, [L] ⊙ π[L],−i) + τL, ¯H (γ).
+
+Proof. Applying Lemma 15 with π = ¯ π, we obtain 
+
+Jγi, ¯H ( ¯ π) ≤ Jγi,L (π[L]) + τL, ¯H (γ). (18) On the other hand, the first L decision rules of μi ⊙ ¯π−i are exactly those of μi, [L] ⊙ π[L],−i. Since all costs are nonnegative, ignoring the layers after L can only decrease the term Jγi, ¯H (μi ⊙ ¯π−i). Therefore, 
+
+Jγi, ¯H (μi ⊙ ¯π−i) ≥ Jγi,L (μi, [L] ⊙ π[L],−i). (19) Then, subtracting (19) from (18) proves the claim. 
+
+Proof of Theorem 3. Fix a player i ∈ [m] and a policy μi ∈ Πgen , ¯Hi . For each output profile 
+
+π[L] 
+
+> n
+
+∈ Πmarkov ,L , define ¯ πn := Ext L(π[L] 
+
+> n
+
+). By Lemma 16, for every n,
+
+Jγi, ¯H ( ¯ πn) − Jγi, ¯H (μi ⊙ ¯π−in ) ≤ Jγi,L (π[L] 
+
+> n
+
+) − Jγi,L (μi, [L] ⊙ π[L],−in ) + τL, ¯H (γ).
+
+Averaging over n = 1 , . . . , N gives 1
+
+N
+
+> N
+
+X
+
+> n=1
+
+h
+
+Jγi, ¯H ( ¯ πn) − Jγi, ¯H (μi ⊙ ¯π−in )
+
+i
+
+≤ 1
+
+N
+
+> N
+
+X
+
+> n=1
+
+h
+
+Jγi,L (π[L] 
+
+> n
+
+) − Jγi,L (μi, [L] ⊙ π[L],−in )
+
+i| {z }
+
+> ∗
+
++τL, ¯H (γ). (20) Since μi, [L] ∈ Πgen ,L i , the assumed finite-horizon regret guarantee implies that the term ( ∗) in (20) is at most εalg , simultaneously for all players i ∈ [m]. The resulting bound is uniform over μi, and thus taking the supremum over Π gen , ¯Hi proves the statement. 
+
+D.1 Proofs for the full-feedback case 
+
+We first note that Algorithm 1 can be applied to game G[Lε]  
+
+> γ, ¯H
+
+, as G[Lε]  
+
+> γ, ¯H
+
+is simply an undiscounted finite-horizon Markov game with costs cih(s, a ) = γh−1ℓih(s, a ), and these costs remain in [0 , 1]. Hence Theorem 1 applies directly with the horizon parameter H replaced by Lε.
+
+Proof of Corollary 1. We apply Theorem 3 when Algorithm 1 runs on the truncated discounted game G[Lε]  
+
+> γ, ¯H
+
+. By Theorem 1, applied with horizon Lε, the finite-horizon average regret on the truncated game G[Lε]  
+
+> γ, ¯H
+
+is bounded by εalg = CSE  
+
+> ∗
+
+(Lε)T −3/(3 Lε+1)  
+
+> ε
+
+. The definition of Tε gives 
+
+CSE  
+
+> ∗
+
+(Lε)T −3/(3 Lε+1)  
+
+> ε
+
+≤ ε
+
+2 .
+
+44 It remains to bound the truncation error. If Lε = ¯H < ∞, then the truncated game G[Lε]  
+
+> γ, ¯H
+
+, is the same as the original game Gγ, ¯H and τLε, ¯H (γ) = 0 . Otherwise, by the definition of Lε = min { ¯H, H γε },
+
+we have Lε = Hγε . In that case, by Lemma 15 
+
+τLε, ¯H (γ) ≤ γLε
+
+1 − γ ≤ ε
+
+2 ,
+
+where the last inequality follows from the choice Hγε =
+
+& log  
+
+> 2(1 −γ)ε
+> 
+> log(1 /γ )
+
+'
+
+. Therefore, for every player 
+
+i ∈ [m], Theorem 3 gives sup  
+
+> μi∈Πgen ,¯Hi
+> Tε
+
+X
+
+> t=1
+
+h
+
+Jγi, ¯H ( ¯ πt) − Jγi, ¯H (μi ⊙ ¯π−it )
+
+i
+
+≤ εT ε.
+
+The discounted CCE conclusion in Corollary 1 follows from the standard no-regret-to-CCE equiv-alence [Cesa-Bianchi and Lugosi, 2006] applied to the empirical distribution of joint policies over ¯π1, . . . , ¯πTε .We now justify the upper bound for the total number of episodes. Since log(1 /γ ) ≥ 1 − γ, we have 
+
+Lε ≤ L ¯Hγ,ε := min 
+
+
+
+¯H, 1 + 11 − γ log 
+
+ 2(1 − γ)ε
+
+ 
+
+,
+
+with the convention that when ¯H = ∞, L ¯Hγ,ε = 1 + 11−γ log 
+
+ 2(1 −γ)ε
+
+
+
+. Under the choice λi = 1 /|Ai|,from Theorem 1 we have, 
+
+CSE  
+
+> ∗
+
+(L) ≤
+
+ 2Alog 
+
+η0
+
++ 12 mA log + η0 + 144 η30 m2
+
+
+
+L7, Alog := max  
+
+> i∈[m]
+
+log( |Ai| + 1) .
+
+Substituting this estimate into the definition of Tε, using ⌈x⌉ ≤ 1 + x, gives, for every fixed γ < 1, 
+
+Tε ≤
+
+ Alog  
+
+> η0
+
++ mA log + m2 + 1 
+
+
+
+min { ¯H, log(1 /ε )}7
+
+ε
+
+ 
+
+> O(min {¯H, log(1 /ε )})
+
+.
+
+This concludes the proof. 
+
+D.2 Proof of the partial-feedback case 
+
+Now, similar to Subsection D.1, Theorem 2 can be applied to the game G[Lε]  
+
+> γ, ¯H
+
+, as its scaled costs 
+
+cih(s, a ) = γh−1ℓih(s, a ) still lie in [0 , 1]. Hence Theorem 2 applies directly with the horizon parameter 
+
+H replaced by Lε and the ( κ, ζ ¯ε,L )-reachability condition for G[Lε]  
+
+> γ, ¯H
+
+.
+
+Proof of Corollary 2. Set L = Lε, ¯ε = ε 
+
+> 2
+
+. By assumption, the truncated discounted game G[L] 
+
+> γ, ¯H
+
+is ( κ, ζ ¯ε,L )-reachable. Therefore, applying Theorem 2 to G[L]  
+
+> γ, ¯H
+
+with stated parameters, we obtain that, with probability at least 1 − δ, for every player i ∈ [m], sup 
+
+> νi∈Πgen ,L i
+
+1
+
+Nε, ¯H,δ K¯ε,Lε X
+
+> k=1
+> Bε,Lε,δ
+
+X
+
+> t=1
+
+h
+
+Jγi,L (π[L] 
+
+> k
+
+) − Jγi,L (νi ⊙ π[L],−ik )
+
+i
+
+≤ ¯ε = ε
+
+2 .
+
+45 By Theorem 3, the average regret of the extended block policies ¯ πk := Ext L(π[L] 
+
+> k
+
+) is at most  
+
+> ε
+> 2
+
++ τL, ¯H (γ). It remains to bound the truncation error. If Lε = ¯H < ∞, then the truncation is the original game and τLε, ¯H (γ) = 0 . Hence 
+
+τL, ¯H (γ) ≤ γL
+
+1 − γ ≤ ε
+
+2by the Lemma 15. Consequently, with probability at least 1 −δ, for every player i ∈ [m], Theorem 3 gives, sup  
+
+> μi∈Πgen ,¯Hi
+
+1
+
+Nε, ¯H,δ K¯ε,Lε X
+
+> k=1
+> Bε,Lε,δ
+
+X
+
+> t=1
+
+h
+
+Jγi, ¯H (¯ πk) − Jγi, ¯H (μi ⊙ ¯π−ik )
+
+i
+
+≤ ε. 
+
+The discounted CCE statement follows from the standard no-regret-to-CCE equivalence [Cesa-Bianchi and Lugosi, 2006] applied to the empirical distribution over the extended block policies. It remains to justify the upper bound on N band  
+
+> ε, ¯H,δ
+
+. We have, Lε = O(L ¯H,ε ), L ¯H,ε := min { ¯H, log(1 /ε )},
+
+with the convention L∞,ε = log(1 /ε ). Then, 
+
+K¯ε,L ε =
+
+
+
+4 eCSE  
+
+> ∗
+
+(Lε)¯ε
+
+!(3 Lε+1) /3 ≤
+
+" Cband L7¯H,ε 
+
+ε
+
+#O(L ¯H,ε )
+
+, (21) where, Cband := 2Alog  
+
+> η0
+
++ 12 mA log + η0 + 288 m2η30 . Next, by the definitions ζ¯ε,L = ¯ε 
+
+> 8L2
+
+, ξ ¯ε,L =min 
+
+n ¯ε 
+
+> 8L
+
+,
+
+q ¯ε
+
+> 32 η0L
+
+o
+
+, we have, up to universal constants, 1
+
+ζ¯ε,L ε
+
+≲ L2¯H,ε 
+
+ε , L2
+
+> ε
+
+ξ2¯ε,L ε
+
+≲ L4¯H,ε 
+
+ε2 + η0L3¯H,ε 
+
+ε . (22) Using the definitions M¯ε,L = K¯ε,L mA max S, u ¯ε,L,δ = log 4M¯ε,L  
+
+> δ
+
+, we obtain 
+
+u¯ε,L ε,δ ≤ O L ¯H,ε log Cband L7¯H,ε 
+
+ε + log mA max Sδ
+
+!
+
+. (23) Finally, substituting (22),(23) into B¯ε,L ε,δ =
+
+l 8Amax 
+
+> κζ ¯ε,Lε
+
+(n¯ε,L ε,δ + u¯ε,L ε,δ )
+
+m
+
+, n ¯ε,L ε,δ =
+
+ L2
+
+> ε
+> 2ξ2¯ε,Lε
+
+u¯ε,L ε,δ 
+
+
+
+,
+
+up to universal constants we get; 
+
+B¯ε,L ε,δ ≲
+
+&
+
+Amax 
+
+κ
+
+L2¯H,ε 
+
+ε
+
+L4¯H,ε 
+
+ε2 + η0L3¯H,ε 
+
+ε + 1 
+
+!
+
+u¯ε,L ε,δ 
+
+'
+
+, (24) and multiplying (24) by (21), yields 
+
+Nε, ¯H,δ ≤
+
+" Amax L2¯H,ε 
+
+κε 1 + L4¯H,ε 
+
+ε2 + η0L3¯H,ε 
+
+ε
+
+!
+
+× L ¯H,ε log Cband L7¯H,ε 
+
+ε +log mA max Sδ
+
+!#" Cband L7¯H,ε 
+
+ε
+
+#O(L ¯H,ε )
+
+This concludes the proof. 46 E Proofs for the Computational Lower Bounds (Section 5) 
+
+For an encoded object z, we write bits( z) for the length of its binary encoding. Rational numbers are encoded in reduced form: a rational number q ∈ Q is written as q = p/r , where p ∈ Z, r ∈ N,and gcd( |p|, r ) = 1. We define bits( q) := 1 + ⌈log 2(|p| + 1) ⌉ + ⌈log 2(r + 1) ⌉ .
+
+E.1 Proof of Algorithms 1 and 2 solving the sparse discounted-CCE problem 
+
+Proof of Proposition 1. We verify separately the policy-class requirement and the discounted CCE requirement appearing in Definition 8. First consider Algorithm 1. At every episode t, player i, layer h, and state s, the algorithm sets πi, [Lε] 
+
+> t,h
+
+(· | s) = xi,s t,h ∈ ∆( Ai) independently for each instance. Hence πi, [Lε] 
+
+> t
+
+= πi, [Lε] 
+
+> t,h
+> Lε
+> h=1
+
+∈
+
+Πmarkov ,L ε 
+
+> i
+
+, and therefore π[Lε] 
+
+> t
+
+=  π1,[Lε] 
+
+> t
+
+, . . . , π m, [Lε]
+
+> t
+
+ ∈ Πmarkov ,L ε . The continuation used by Ext Lε
+
+is itself a fixed product Markov policy. Consequently, ¯ πt = Ext Lε
+
+ π[Lε]
+
+> t
+
+ ∈ Πmarkov , ¯H for every t ∈
+
+[Tε]. Corollary 1 gives, for every player i ∈ [m], sup μi∈Πgen , ¯Hi
+
+PTε
+
+> t=1
+
+h
+
+Jγi, ¯H ( ¯ πt) − Jγi, ¯H
+
+ μi ⊙ ¯π−it
+
+i
+
+≤
+
+εT ε. Thus the sequence   ¯π1, . . . , ¯πTε
+
+ satisfies both requirements of Definition 8, and therefore solves ( Tε, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+.
+
+We next consider Algorithm 2. At every block k, player i, layer h, and state s, the algorithm sets πi, [Lε] 
+
+> k,h
+
+(· | s) = xi,s k,h ∈ ∆ζi ⊆ ∆( Ai) independently for each instance. Therefore, π[Lε] 
+
+> k
+
+∈
+
+Πmarkov ,L ε , ¯πk = Ext Lε
+
+ π[Lε]
+
+> k
+
+ ∈ Πmarkov , ¯H . Since the policy ¯ πk is played throughout block k, every entry of the sequence σ(k−1) Bε+r := ¯ πk belongs to Π markov , ¯H . By Corollary 2, with probability at least 1 − δ, for any player i ∈ [m], sup μi∈Πgen , ¯Hi
+
+PNε
+
+> n=1
+
+h
+
+Jγi, ¯H (σn) − Jγi, ¯H
+
+ μi ⊙ σn, −ii
+
+≤ εN ε. Hence the episode-level sequence solves ( Nε, ε )-DiscSparseMarkovCCE gen  
+
+> γ
+
+on this event. 
+
+E.2 Game size and encoding conventions 
+
+For a finite-horizon Markov game GH =
+
+
+
+H, {Sh}H+1  
+
+> h=1
+
+, {Ai}mi=1 , {Ph}Hh=1 , {ℓih}i∈[m],h ∈[H], s 1
+
+
+
+, we define the term β(GH ) as 
+
+β(GH ) := max 
+
+(
+
+max 
+
+> h∈[H],s ∈Sh,a∈A, s ′∈Sh+1
+
+bits  Ph(s′ | s, a) , max  
+
+> i∈[m],h ∈[H],s ∈Sh,a∈A
+
+bits  ℓih(s, a))
+
+.
+
+Thus, β(GH ) is the largest bit length of one transition-probability entry or one loss entry. We define |GH | := max {H, S, A max , β (GH )} . Consequently, GH can be described using |GH |O(1) bits for fixed m. For the special case of H = 1, we simply denote the size of a normal-form game by 
+
+|G| under this convention. Similarly, for a discounted infinite-horizon Markov game Gγ =
+
+
+
+S, {Ai}mi=1 , P, {ℓi}mi=1 , γ, s 1
+
+
+
+, we define the term β(Gγ ) as 
+
+β(Gγ ) := max 
+
+(
+
+bits( γ), max  
+
+> s∈S, a∈A,s ′∈S
+
+bits  P (s′ | s, a) , max  
+
+> i∈[m],s ∈S, a∈A
+
+bits  ℓi(s, a))
+
+.
+
+We then define |Gγ | := max {S, A max , β (Gγ )} . If γ is fixed before the input is given, then bits( γ) = 
+
+O(1), and including bits( γ) in β(Gγ ) changes |Gγ | only by a fixed constant factor inside the maxi-mum. 47 For a finite-horizon discounted Markov game Gγ, ¯H , we use the same convention as above with the horizon parameter included: |Gγ, ¯H | := max  ¯H, S, A max , β (Gγ, ¯H ) , and 
+
+β(Gγ, ¯H ) := max 
+
+(
+
+bits( γ), max 
+
+> h∈[ ¯H],s ∈Sh,a∈A, s ′∈Sh+1
+
+bits  Ph(s′ | s, a) , max 
+
+> i∈[m],h ∈[ ¯H],s ∈Sh,a∈A
+
+bits  ℓih(s, a))
+
+.
+
+Throughout Section 5, by N , we denote an upper bound on the game-size parameters. Specifically, 
+
+|GH | ≤ N, |Gγ, ¯H | ≤ N, |Gγ | ≤ N, for finite-horizon, finite-horizon discounted, and infinite-horizon discounted Markov games, respectively. The letter n is reserved for the number of actions per player in the corresponding games. We particularly name the cM from Lemma 3 as the source 
+
+game after the bimatrix game described in Lemma 8.3 of Rubinstein [2016], which is used in the reduction underlying Theorem 4. Furthermore, we emphasize that, to remain consistent with the previous sections, we will use these games under the loss convention instead of the utility-payoff 
+
+convention, since this conversion neither changes the equilibrium points nor the size of the games in view of Lemma 20 and the subsequent results. For brevity, for further details regarding the exact construction of the game, we refer to Rubinstein [2016]. 
+
+E.3 The logarithmic-horizon undiscounted Markov game 
+
+We use a finite-horizon Markov game construction from Foster et al. [2023]. Let M = ( L1, L 2) be a bimatrix n × n game. For M , we identify a corresponding finite-horizon Markov game FH (M ) as follows, where H ≥ 2 is a fixed even (numbered) horizon length. In FH (M ), both players share the same state and action sets. The admissible action set is [ n] at every non-terminal layer. For odd (numbered) layers h, the state set is a singleton Sh = {s⋆h}, and for even (numbered) layers h, the state set is Sh = [ n] × [n]. For each layer h, the state transition probability kernels Ph ×[n]×[n] → ∆( Sh+1 ) are “deterministic” and are defined as follows. For an odd layer h, if the current state is s⋆h and the players choose the joint action ( a, b ) ∈ [n] × [n], then the next state records this joint action: Ph
+
+ (a, b ) | s⋆h, (a, b ) = 1 .
+
+For an even layer h < H , the transition probability is independent of both the current state and the joint action: for every ( x, y ) ∈ [n] × [n] and every ( a, b ) ∈ [n] × [n], Ph
+
+ s⋆h+1 | (x, y ), (a, b ) = 1 .
+
+All other transition probabilities are zero. Furthermore, at an odd layer h, if the players choose the action profile ( a, b ) ∈ [n] × [n], then the player i incurs cost ℓih(s⋆h, (a, b )) := 1 
+
+> H
+
+Li(a, b ), At an even layer h < H , all costs are zero and the next state is the next odd-layer singleton s⋆h+1 .Let OH := {1, 3, 5, . . . , H − 1} be the set of odd layers. For a given product Markov profile πt and odd layer h ∈ O H , define the corresponding local mixed strategies of players as xt,h := π1 
+
+> t
+
+(· | s⋆h),
+
+and yt,h := π2 
+
+> t
+
+(· | s⋆h). Finally, it can be clearly seen that the described construction takes polynomial time. 
+
+Lemma 17 (Lemma D.4 Foster et al. [2023]) . Let M be a bimatrix game. There exists an absolute constant cF > 0, independent of any problem parameter, such that the following holds. Let H ≥ 2
+
+be even, T ∈ N+, and let FH (M ) be the finite-horizon Markov game constructed as described in Appendix E.3. Suppose, LH = ( π1, . . . , πT ) is an ε⋆/4-approximate T -sparse CCE of FH (M ),against non-Markov deviations. If T < exp( cF ε2
+
+> ⋆
+
+H), then there exist t ∈ [T ] and h ∈ O H such that (xt,h , y t,h ) is an ε⋆-approximate Nash equilibrium of M , where OH is the set of odd numbered layers. 
+
+48 E.4 Embedding into a fixed-discount game 
+
+We extend the construction of FH (M ) to the infinite-horizon setting. This enables us to establish a connection between the notion of CCE in discounted infinite-horizon Markov games and the notion of Nash equilibrium in the associated normal-form game M .For a finite-horizon Markov game GH =
+
+
+
+H, {Sh}H+1  
+
+> h=1
+
+, {Ai}mi=1 , {Ph}Hh=1 , {ℓih}i∈[m],h ∈[H], s 1
+
+
+
+, we de-fine a corresponding infinite-horizon discounted Markov game eGH,γ = ( eS, {Ai}mi=1 , eP , {eℓi}mi=1 , γ, s 1), where γ ∈ (0 , 1) ∩ Q as follows. The state space is eS := {(h, s ) : h ∈ [H], s ∈ Sh} ∪ {⊥} , where ⊥ is an absorbing state. The action sets of the players stay the same. In this configuration, we define the transition kernel of the players in eGH,γ as, 
+
+eP (x′ | x, a ) = 
+
+
+
+Ph(s′ | s, a ), if x = ( h, s ), h < H, x ′ = ( h + 1 , s ′),
+
+1, if x = ( H, s ), x ′ = ⊥,
+
+1, if x = ⊥, x ′ = ⊥,
+
+0, otherwise .
+
+Choose a scaling parameter α := γH−1, and define the cost function of player i as 
+
+eℓi(( h, s ), a ) := αγ −(h−1) ℓih(s, a ) = γH−hℓih(s, a ), h ∈ [H],
+
+while eℓi(⊥, ·) : ≡ 0. Moreover, as eGH,γ can be constructed from GH in polynomial time, since it only adds one absorbing state and rescales the finitely many transition and cost entries of GH .Then, we have the following result. 
+
+Lemma 18. For every policy profile σ ∈ Πmarkov in eGH,γ and every player i, Jγi (σ; eGγ ) = 
+
+αV i, σ[H]
+
+(s1; GH ). Moreover, for every sparse list eL = ( σ1, . . . , σT ) where, for all t ∈ [T ] σt ∈
+
+Πmarkov ,∞, it holds that, if eL is an ε-approximate discounted CCE of eGH,γ , then eL[H] is an (ε/α )-approximate CCE of GH .Proof. For the first H layers, the infinite-horizon game eGH,γ exactly emulates GH . By construction, after the layer H, the state of the players in the game eGH,γ permanently moves to ⊥, where all future costs of the players are zero. Along every simulated state-action pair, i.e. (( h, s h), a h), for 
+
+h ≤ H, we obtain 
+
+γh−1 eℓi(( h, s h), a h) = γh−1αγ −(h−1) ℓih(sh, a h) = αℓ ih(sh, a h).
+
+Taking the expectation of the expression above, we obtain 
+
+Jγi (σ; eGγ ) = αEσ[H]
+
+" HX
+
+> h=1
+
+ℓih(sh, a h)
+
+#
+
+= αV i, σ[H]
+
+(s1; GH ).
+
+Now fix a list eL. Then, for any infinite-horizon deviation μi ∈ Πgen ,∞ 
+
+> i
+
+we get the following equality 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+h
+
+Jγi (σt; eGγ ) − Jγi (μi ⊙ σ−it ; eGγ )
+
+i
+
+= α 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+h
+
+V i, σ[H] 
+
+> t
+
+(s1; GH ) − V i,μ i, [H]⊙σ[H],−it (s1; GH )
+
+i
+
+.
+
+(25) 49 It can be seen that, every H-step deviation can be extended arbitrarily to infinite horizon after the absorbing layer H, and the discounted value of the players remains the same because all post-H
+
+costs are zero. Thus, taking the supremum over deviations on the LHS of (25) is equivalent to taking the supremum over H-step deviations on the right. This completes the proof. Now, we describe the expression sizes of the source game cM and its corresponding encoding eFH,γ ( cM )in the next two lemmas, Lemmas 19 and 20. 
+
+Lemma 19 (Size of the source game) . Let cM be the source two-player game described in Lemma 8.3 of Rubinstein [2016], and let n be the number of pure actions per player in cM . Then, there exist absolute constants qsrc , n src ≥ 1, such that n ≤ | cM | ≤ (n + 2) qsrc for all n ≥ nsrc .Proof outline. The lower bound follows immediately from the definition of | cM |. For the upper bound, observe that the payoff functions of the bimatrix game constructed in Lemma 8.3 of Rubin-stein [2016] consist of two types of components: a scaled bipartite polymatrix game constructed in Section 7 of Rubinstein [2016], and the payoffs of the two auxiliary Alth¨ ofer games. We first consider the polymatrix component. The bipartite polymatrix game constructed in Sec-tion 7 of Rubinstein [2016] contains number of players that is at most polynomial in n for each 
+
+side of the bipartite polymatrix game. Moreover, as described in Sections 7.2–7.4 of Rubinstein [2016], each polymatrix payoff entry is computed from a number of quantities that is polynomially bounded by n. Moreover, all numerical quantities are represented at the fixed precision. There-fore, there exist an absolute constant r1 and a sufficiently large absolute threshold nsrc such that every payoff entry of the bipartite polymatrix game has binary encoding length at most ( n + 2) r1
+
+whenever n ≥ nsrc .Then, the main payoff component is obtained by multiplying the bipartite polymatrix payoff by factors of the form λn A or λn B , where λ is an absolute constant and nA, n B are the numbers of players on the two sides of the bipartite polymatrix game. It follows that the binary encoding length of every payoff entry arising from the scaled polymatrix component is at most ( n + 2) r2 for some absolute constant r2 and all n ≥ nsrc , after sufficiently large nsrc .We next consider the two Alth¨ ofer -game components used in Lemma 8.3 of Rubinstein [2016]. Their payoff entries belong to {0, 1}, and therefore have constant binary encoding length. Since each final bimatrix payoff is the sum of one scaled polymatrix payoff and a constant number of Alth¨ ofer payoffs, there exists an absolute constant r0 such that β( cM ) ≤ (n + 2) r0 for all n ≥ nsrc ,where β( cM ) denotes the maximum binary encoding length of any payoff entry of M . Consequently, 
+
+| cM | = max {n, β ( cM )} ≤ max n, (n + 2) r0 ≤ (n + 2) qsrc for a sufficiently large absolute constant 
+
+qsrc .
+
+Finally, the payoff range of the source game need not initially be normalized to [0 , 1]. Since the payoffs in the construction are bounded by absolute constants, such a normalization can be carried out by an affine transformation with fixed coefficients. This changes the payoff bit complexity by at most an absolute additive amount and therefore does not affect the asserted polynomial relation for sufficiently large n.
+
+Lemma 20 (Size of the discounted embedding) . Fix a rational discount factor γ ∈ (0 , 1) ∩ Q.Let qsrc ≥ 1 be the absolute constant from Lemma 19. Define d0 := max {4, q src + 2 }. Then, for every finite constant BH ≥ 2, there exists an integer nsize = nsize (γ) such that the following holds for every n ≥ nsize . Let cM be the source two-player game described in Lemma 8.3 of Rubinstein [2016], with n pure actions per player, and let H ≥ 2 be an even integer satisfying H ≤ BH log( n + 2) .
+
+50 Let FH ( cM ) be the finite-horizon Markov game constructed according to Subsection E.3, and let 
+
+eFH,γ ( cM ) be the discounted game obtained from FH ( cM ) as described in Subsection E.4. Then 
+
+n ≤ | eFH,γ ( cM )| ≤ (n + 2) d0 .
+
+Proof. To construct eFH,γ ( cM ) from cM , we first denote it in loss convention through well known conversions from payoffs to losses. By Lemma 19, the source game satisfies | cM | ≤ (n + 2) qsrc . Then, every loss entry of cM has bit length at most max  
+
+> i∈{ 1,2}
+
+max  
+
+> a,b ∈[n]
+
+bits( Li(a, b )) ≤ (n + 2) qsrc .
+
+We now bound the size of eFH,γ ( cM ). First, consider the state and action sets. In FH ( cM ), every odd layer is a singleton and every even layer has state set [ n] × [n]. Hence, PHh=1 |Sh| = H 
+
+> 2
+
++ H 
+
+> 2
+
+n2. Recall that the state space of the players in the game eFH,γ ( cM ) is eS := {(h, s ) : h ∈ [H], s ∈ Sh} ∪ {⊥} .
+
+Therefore 
+
+| eS| = 1 + H
+
+2 + H
+
+2 n2 ≤ 1 + H(n + 2) 2.
+
+Since H ≤ BH log( n + 2), we have H ≤ n + 2 whenever n ≥ nsize . Consequently, 
+
+| eS| ≤ 1 + ( n + 2) 3 ≤ (n + 2) 4. (26) Moreover, both players in eFH,γ ( cM ) have the action set [ n], and thus Amax = n. This already gives the lower bound 
+
+| eFγ ( cM )| = max {| eS|, A max , β ( eGγ ( cM )} ≥ Amax = n. 
+
+It remains to bound β( eFH,γ ( cM )). The transition probabilities of the players in eFH,γ ( cM ) are all ei-ther 0 or 1, and hence the transition entries have constant bit length. We only need to bound the loss entries. For h ∈ [H], the discounted embedding uses losses of the form eℓi(( h, s ), a ) = γH−hℓih(s, a ),
+
+and eℓi(⊥, a ) = 0. Thus every nonzero loss entry in eFH,γ ( cM ) has the form γH−h 1 
+
+> H
+
+Li(a, b ). Since 
+
+γ ∈ (0 , 1) ∩ Q is fixed, there is a constant cγ ≥ 1, depending only on γ, such that bits( γk) ≤ cγ (k +1) for all k ≥ 0. Also, bits   1
+
+> H
+
+ ≤ O(log( H + 1)) . Furthermore, there is a universal constant crat ≥ 1such that, for every finite collection of rationals r1, . . . , r k, bits 
+
+Qkℓ=1 rℓ
+
+
+
+≤ crat 
+
+
+
+1 + Pkℓ=1 bits( rℓ)
+
+
+
+.
+
+Then, there exists a universal constant crat ≥ 1 such that every loss entry of eFH,γ ( cM ) satisfies bits 
+
+
+
+γH−h 2
+
+H Li(a, b )
+
+
+
+≤ crat 
+
+ cγ (H + 1) + O(log( H + 1)) + bits( Li(a, b )) + 1 
+
+≤ crat (cγ (H + 1) + O(log( H + 1)) + ( n + 2) qsrc + 1) .
+
+Since H ≤ BH log( n + 2), for sufficiently large nsize we have 
+
+β( eFH,γ ( cM )) ≤ (n + 2) qsrc +2 (27) for all n ≥ nsize . Combining (26) and (27) we obtain 
+
+| eFγ ( cM )| ≤ max {(n + 2) 4, n, (n + 2) qsrc +2 } ≤ (n + 2) d0 ,
+
+where d0 = max {4, q src + 2 }. Together with | eFH,γ ( cM )| ≥ n, we have n ≤ | eFH,γ ( cM )| ≤ (n + 2) d0 .
+
+51 F Details for the Numerical Experiments (Section 6) 
+
+F.1 Implementation and evaluation protocol 
+
+Both finite-horizon experiments use the four games specified below without any changes. The two experiments differ only in the feedback available to the players. 
+
+F.2 Finite-Horizon Episodic Games 
+
+Below, we list the transition and cost tables used for the finite-horizon experiments. 
+
+F.2.1 Markov battle-of-the-sexes chain 
+
+This is a two-player, two-action, horizon-2 game with state layers S1 = {0}, S 2 = {1, 2}, S 3 = {3}.
+
+At the initial state 0, the transition and costs are Joint action a Transition to (1 , 2) c1(0 , a ) c2(0 , a )(0 , 0) (0 .9, 0.1) 0.05 0.20 (1 , 1) (0 .1, 0.9) 0.20 0.05 (0 , 1) , (1 , 0) (0 .5, 0.5) 0.55 0.55 At the second layer, the game terminates deterministically. Explicitly, for s = 1, costs are 
+
+c1(1 , a ) = 
+
+
+
+0.15 , a = (0 , 0) ,
+
+0.35 , a = (1 , 1) ,
+
+0.65 , a ∈ { (0 , 1) , (1 , 0) },c2(1 , a ) = 
+
+
+
+0.35 , a = (0 , 0) ,
+
+0.15 , a = (1 , 1) ,
+
+0.65 , a ∈ { (0 , 1) , (1 , 0) }.
+
+For s = 2, 
+
+c1(2 , a ) = 
+
+
+
+0.15 , a = (1 , 1) ,
+
+0.35 , a = (0 , 0) ,
+
+0.65 , a ∈ { (0 , 1) , (1 , 0) },c2(2 , a ) = 
+
+
+
+0.35 , a = (1 , 1) ,
+
+0.15 , a = (0 , 0) ,
+
+0.65 , a ∈ { (0 , 1) , (1 , 0) }.
+
+F.2.2 Routing/congestion game 
+
+This is a two-player, two-action, horizon-3 game with layers S1 = {0}, S2 = {1, 2}, S3 =
+
+{3, 4}, S4 = {5}. Actions are interpreted as route choices: 0 is an upper/fast route and 1 is a lower/safe route. Congestion occurs when both players choose the same action. At h = 1, let n0(a) = 1{a1 = 0 } + 1{a2 = 0 } and κ(a) = 1{a1 = a2}. The transition is 
+
+P (1 | 0, a ) = 
+
+(
+
+0.75 , n0(a) ≤ 1,
+
+0.25 , n0(a) = 2 , P (2 | 0, a ) = 1 − P (1 | 0, a ), (28) with player-i cost ci(0 , a ) = 0 .10 + 0 .45 κ(a) + 0 .05 ai. At h = 2, for s ∈ { 1, 2},
+
+P (3 | s, a ) = 
+
+
+
+0.85 , s = 1 , κ (a) = 0 ,
+
+0.35 , s = 1 , κ (a) = 1 ,
+
+0.35 , s = 2 , κ (a) = 0 ,
+
+0.15 , s = 2 , κ (a) = 1 ,P (4 | s, a ) = 1 − P (3 | s, a ), (29) 52 with base cost 0 .05 at state 1 and 0 .20 at state 2: ci(s, a ) = base( s) + 0 .50 κ(a) + 0 .05 1{ai = 0 }. At 
+
+h = 3, the game terminates. Costs are ci(s, a ) = 0 .10 + 0 .55 κ(a) + pi(s, a ), where pi(s, a ) = 0 .10 if (s = 3 , a i = 1) or ( s = 4 , a i = 0), and pi(s, a ) = 0 otherwise. 
+
+F.2.3 Three-player public-goods game 
+
+This game has m = 3, binary actions, horizon 2, and layers S1 = {0}, S 2 = {1, 2}, S 3 = {3}.
+
+Action 1 means contribute. Let k(a) = a1 + a2 + a3 be the number of contributors. At the first layer, 
+
+P (1 | 0, a ) = 
+
+(
+
+0.85 , k(a) ≥ 2,
+
+0.20 , k(a) < 2, P (2 | 0, a ) = 1 − P (1 | 0, a ), (30) with ci(0 , a ) = 0 .08 + 0 .22 ai + 0 .35 max {0,2−k(a)} 
+
+> 2
+
+. At the second layer, the game terminates. If s = 1, then 
+
+ci(1 , a ) = 0 .10 + 0 .18 ai + 0 .08 1{k(a) < 1}. (31) If s = 2, then 
+
+ci(2 , a ) = 0 .55 + 0 .15 ai − 0.10 min {k(a), 2}. (32) 
+
+F.2.4 Transition-trap game 
+
+This is a two-player, two-action, horizon-3 game with layers S1 = {0}, S2 = {1, 2}, S3 =
+
+{3, 4}, S4 = {5}. Action 0 is a shortcut and action 1 is safe. The shortcut gives lower imme-diate cost but increases the probability of entering a dangerous or trapped state. At h = 1, let n0(a) = 1{a1 = 0 } + 1{a2 = 0 }. The probability of moving to state 2 is 
+
+pdanger (n0) = 
+
+
+
+0.10 , n0 = 0 ,
+
+0.50 , n0 = 1 ,
+
+0.80 , n0 = 2 .
+
+(33) The transition is P (2 | 0, a ) = pdanger (n0(a)), and the immediate cost is 0 .05 for choosing action 0 and 0 .13 for choosing action 1. At h = 2, from s = 1 the trap probability is (0 .05 , 0.20 , 0.50) for n0 = 0 , 1, 2, while from s = 2 it is (0 .10 , 0.50 , 0.80). The immediate cost is 0 .06 for action 0 and 0 .20 for action 1, with an additional 0.02 cost in state 2. At h = 3, the game terminates. In state 3, every action has cost 0 .20. In the trap state 4, choosing shortcut action 0 costs 0 .80, while action 1 costs 0 .60. 
+
+F.3 Discounted LQ Markov Game 
+
+The discounted case is a two-player, two-state, zero-sum Markov game. The state is s ∈ { 0, 1},player 0 chooses u ∈ [−U, U ], and player 1 chooses v ∈ [−U, U ]. Player 0 minimizes the raw cost 
+
+gs(u, v ) = r
+
+2 u2 − r
+
+2 v2 + bsuv + asu + dsv + ks, (34) while player 1 minimizes −gs(u, v ). The transition is 
+
+P (s′ = 1 | s, u, v ) = ps + αsu + βsv. (35) 53 For the numerical experiment, the raw zero-sum costs have been transformed by 
+
+c0(s, u, v ) = 12 + gs(u, v )2M , c1(s, u, v ) = 12 − gs(u, v )2M . (36) The parameters are 
+
+s r bs as ds ks ps αs βs U γ M
+
+0 1.50 0.35 1.10 0.90 −0.35 0.22 0.07 −0.055 1 0.90 2.40 1 1.50 −0.30 −1.05 −0.95 0.45 0.78 −0.05 0.060 1 0.90 2.40 Also, our infinite-horizon benchmark can be viewed as a finite-state stochastic dynamic-game ana-logue of the classical two-player zero-sum LQ dynamic games studied in Ba¸ sar and Olsder [1998]. 
+
+F.3.1 Closed-form saddle-point solution 
+
+Let Vs be the raw, unnormalized infinite-horizon discounted value of player 0 at state s, and define ∆ := V1−V0. The Bellman-Isaacs saddle-point equation is Vs = min u max v {gs(u, v ) + γE[Vs′ | s, u, v ]} .
+
+Thus, 
+
+E[Vs′ | s, u, v ] = (1 − ps − αsu − βsv)V0 + ( ps + αsu + βsv)V1 = V0 + ( ps + αsu + βsv)∆ . (37) Therefore the Bellman-Isaacs objective equals 
+
+γV 0 + γp s∆ + ks + r
+
+2 u2 − r
+
+2 v2 + bsuv + As(∆) u + Ds(∆) v, (38) where As(∆) := as + γα s∆, D s(∆) := ds + γβ s∆. Thus 
+
+Vs = γV 0 + γp s∆ + ks + ϕs(∆) , (39) where ϕs(∆) := min u max v
+
+ r 
+
+> 2
+
+u2 − r 
+
+> 2
+
+v2 + bsuv + As(∆) u + Ds(∆) v . The first-order saddle-point equations are 
+
+ru + bsv + As(∆) = 0 , −rv + bsu + Ds(∆) = 0 . (40) Solving these gives 
+
+u∗ 
+
+> s
+
+(∆) = − rA s(∆) + bsDs(∆) 
+
+r2 + b2
+
+> s
+
+, v∗ 
+
+> s
+
+(∆) = rD s(∆) − bsAs(∆) 
+
+r2 + b2
+
+> s
+
+. (41) Substituting (41) into the optimized quadratic yields 
+
+ϕs(∆) = 12
+
+r Ds(∆) 2 − As(∆) 2 − 2bsAs(∆) Ds(∆) 
+
+r2 + b2
+
+> s
+
+. (42) Subtracting (39) for s = 0 from the same equation for s = 1 yields the scalar equation ∆ = γ(p1 − p0)∆ + ( k1 − k0) + ϕ1(∆) − ϕ0(∆) . (43) Since ϕs is quadratic in ∆, equation (43) is a scalar quadratic. We solve this equation numerically, and select the feasible root whose saddle-point actions lie in [ −U, U ], and then recovers V0 = 
+
+> γp 0∆+ k0+ϕ0(∆) 1−γ
+
+, V 1 = V0 + ∆ . For the transformed normalized costs, the corresponding values are 
+
+J∗ 
+
+> 0
+
+(s) = 12 + (1 − γ)Vs
+
+2M , J∗ 
+
+> 1
+
+(s) = 12 − (1 − γ)Vs
+
+2M . (44) 54
