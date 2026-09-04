@@ -6,28 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-03
-- 运行时间：2026-09-03 23:05:57 UTC
+- 最新运行日期：2026-09-04
+- 运行时间：2026-09-04 22:12:07 UTC
 - 运行状态：成功
 - 本次总论文数：2
 - 精读区：1
 - 速读区：1
 
 ### 今日简报（AI）
-今日精读1篇高分论文、速读1篇，聚焦博弈论与车辆路径优化两大方向。
-最值得关注的是《Constant Individual Regret in General Games》（8.0分），为一般博弈中的个体遗憾问题提供了新视角。
-若想快速入门，可先浏览《Reinforcement Learning Enhanced LLM Agents for Complex Vehicle Routing Problems》（6.0分），了解大模型在复杂路径规划中的应用。
-- 详情：[/202609/03/README](/202609/03/README)
+今日精读离线多智能体强化学习中的序列模型与分布外泛化，并速读知识图谱上的可解释推理协作，共处理2篇论文。  
+最值得关注的是精读论文（9.0/10），其探讨序列模型如何提升离线多智能体在分布外场景的泛化能力，方向前沿且结论务实。  
+普通读者可优先从该精读入手，理解模型对未知环境的适应机制；速读的RACER（6.0/10）适合作为知识图谱推理的扩展参考。
+- 详情：[/202609/04/README](/202609/04/README)
 
 ### 精读区论文标签
-1. [Constant Individual Regret in General Games](/202609/03/2608.31166v1-constant-individual-regret-in-general-games)  
-   标签：评分：8.0/10、query:marl
-   evidence：完全解耦的无遗憾动力学为均衡提供去中心化路径，与去中心化多智能体强化学习直接相关
+1. [Out-of-Distribution Generalisation with Sequence Models in Offline Multi-Agent Reinforcement Learning](/202609/04/2609.03667v1-out-of-distribution-generalisation-with-sequence-models-in-offline-multi-agent-reinforcement-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：面向离线多智能体强化学习，用序列模型实现跨任务零样本分布外泛化
 
 ### 速读区论文标签
-1. [Reinforcement Learning Enhanced LLM Agents for Complex Vehicle Routing Problems](/202609/03/2609.00859v1-reinforcement-learning-enhanced-llm-agents-for-complex-vehicle-routing-problems)  
+1. [RACER: Reinforced Agent Collaboration for Explainable Reasoning on Knowledge Graphs](/202609/04/2608.29263v1-racer-reinforced-agent-collaboration-for-explainable-reasoning-on-knowledge-graphs)  
    标签：评分：6.0/10、query:marl
-   evidence：多智能体LLM框架结合强化学习规划的VRP应用
+   evidence：利用教师引导强化学习训练协作智能体在知识图谱上抽取推理路径，属于合作式多智能体强化学习应用
 
 
 <div class="dpr-home-promo-card">
