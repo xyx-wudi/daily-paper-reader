@@ -1,0 +1,69 @@
+{
+  "label": "2026-09-07",
+  "date": "2026-09-07",
+  "generated_at": "2026-09-07T23:09:56",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202609/07/2609.04189v1-robust-pac-learning-of-concurrent-stochastic-games",
+      "section": "deep",
+      "title_en": "Robust PAC Learning of Concurrent Stochastic Games",
+      "authors": "Angel Y. He, David Parker",
+      "date": "2026-09-03",
+      "pdf": "https://arxiv.org/pdf/2609.04189v1",
+      "score": "9.0",
+      "evidence": "面向并发随机博弈的鲁棒PAC学习与均衡计算，属于MARL中马尔可夫博弈的核心范畴",
+      "tldr": "针对转移不确定性下的一般和并发随机博弈，提出首个鲁棒PAC学习框架。利用数据驱动的L1置信集建立鲁棒CSG模型，并借助基于鲁棒MDP的探索机制充分覆盖联合状态-动作，从而计算社会福利最优的ε-纳什均衡。引入Nash margin刻画均衡存在性：要么返回近似均衡，要么给出无精确均衡的证书。在最小可达性条件下，样本复杂度为多项式，实验验证其在基准CSG上接近最优。",
+      "tags": "query:marl",
+      "abstract_en": "We introduce the first Probably Approximately Correct (PAC) learning framework for general-sum concurrent stochastic games (CSGs) with transition uncertainty, while addressing the challenge of Nash equilibrium (NE) existence. Our algorithm maintains data-driven $L^1$ confidence sets over transition kernels and solves a robust CSG to compute a social-welfare optimal $\\varepsilon$-NE, using a robust MDP-based exploration mechanism to drive joint state-action coverage. Crucially, we introduce a Nash margin characterisation that enables principled reasoning about equilibrium existence: the framework either returns an $\\varepsilon$-approximate NE whose social-welfare value is $\\varepsilon$-close to optimal, or provides a sound certificate that no exact NE exists. Under a minimum reachability condition $p_{\\mathrm{reach}}>0$ over relevant state-action pairs, the algorithm terminates after a polynomial number of trajectory samples, with sample complexity $\\widetilde{O}\\left( {R_{\\max}^2 H^4 |S|^2 |A| / (p_{\\mathrm{reach}} \\varepsilon^2)} \\right)$. Empirical results on benchmark CSGs demonstrate near-optimal performance, correct handling of equilibrium (non-)existence, and sample complexity consistent with theory.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/07/2609.05298v1-online-change-point-detection-for-cooperative-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Online Change-point Detection for Cooperative Multi-Agent Reinforcement Learning",
+      "authors": "Fatemeh Saberi Khomami, Julita Vassileva",
+      "date": "2026-09-04",
+      "pdf": "https://arxiv.org/pdf/2609.05298v1",
+      "score": "9.0",
+      "evidence": "直接针对合作式多智能体强化学习，提出基于奖励信号的在线变点检测算法",
+      "tldr": "合作多智能体强化学习依赖过去经验，但环境或任务目标变化会使经验失效，因此需先在线识别变化。提出PPR，一种轻量级算法无关的检测器，通过平滑回报流、突出近期变化并应用统计漂移检测来标记显著偏移。在基于MPE的自定义说话者-听者环境两个非平稳场景中测试，PPR在检测速度与报警稳定性间取得平衡，能有效识别受控变化。作为轻量级回报监控工具，PPR可为合作MARL系统提供可靠的变化信号。",
+      "tags": "query:marl",
+      "abstract_en": "Cooperative multi-agent reinforcement learning (MARL) systems rely on past experience for learning coordinated behaviour, but this experience may become unreliable if the environment or task objective changes during training. In such cases, agents first need a way to recognize that the situation has changed before deciding how to adapt. This paper studies online change-point detection for cooperative MARL using reward-derived signals. We propose \\emph{Patterns of Past Rewards} (PPR), a lightweight algorithm-agnostic detector that smooths agents' return streams, highlights recent changes, and applies a statistical drift detector to flag significant shifts. We evaluate PPR in a custom Speaker-Listener environment based on the Multi-Agent Particle Environment under two controlled non-stationarity scenarios. Our results show a trade-off between detection speed and alarm stability. A smoothed-return baseline detects earlier but produces many repeated alarms. In contrast, applying the detector directly to raw returns often misses the shift. PPR offers a more balanced approach by limiting redundant detections while still identifying the controlled shifts. These findings highlight PPR as a lightweight, reward-based monitoring tool that enables cooperative MARL systems to reliably identify major changes during training.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/07/2609.05133v1-a-schema-bounded-language-model-for-refining-robot-policies-without-destabilizing-local-learning",
+      "section": "quick",
+      "title_en": "A Schema Bounded Language Model for Refining Robot Policies Without Destabilizing Local Learning",
+      "authors": "Chongwen Dong, Mithun Paul Saint-Germain, Pinjari Asif, Carlo R. daCunha",
+      "date": "2026-09-04",
+      "pdf": "https://arxiv.org/pdf/2609.05133v1",
+      "score": "7.0",
+      "evidence": "去中心化多机器人系统使用独立Double DQN控制器进行策略学习，无中心LLM统一生成团队动作，契合分散式多智能体强化学习",
+      "tldr": "针对复合异构机器人分散式系统中策略推理与本地控制层级不同的问题，提出模式受限语言模型。将语言模型限制在回合级策略生成与优化，利用上置信界算法选择改进模式，由双重深度Q网络执行细粒度动作，同时用共享回合摘要进行跨模型通信。固定仿真中，完整配置在九十条机器人回合记录里全部到达目标，中位结束时间为四十二个时钟周期，比其他配置低百分之二十五至三十九点一。该结果表明模式约束可在保持本地学习稳定下有效提升策略优化。",
+      "tags": "query:marl",
+      "abstract_en": "This paper addresses navigation by composite heterogeneous robots in a decentralized system when policy reasoning and local control operate at different update levels. In a NetLogo--Python implementation, three robots share motion dynamics but use different LLM backends. Each robot independently combines a large language model (LLM) policy agent, an Upper Confidence Bound (UCB) bandit, and a Double Deep Q-Network (Double DQN) controller; no central LLM generates team actions. LLM inference is confined to round-level policy generation and refinement rather than tick-level action selection. The robots perform cross-LLM communication through a shared round summary containing policies, outcomes, and learning feedback. UCB performs refinement-mode selection, and the policy-conditioned Double DQN performs tick-level action selection from navigation variables, active policy parameters, and the LLM action prior. Each of the four configurations was evaluated over 30 rounds. In the fixed simulation, the complete configuration reached the goal in all 90 correlated robot--round records and achieved the lowest median completion time (42 ticks) and P90 (73.2 ticks); its median was 25.0--39.1\\% lower than those of the other configurations. These observations provide descriptive, configuration-level evidence from the evaluated configurations.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/07/2609.04865v1-coskill-joint-reinforcement-learning-of-reasoning-and-meta-skill-agents-for-hierarchical-skill-evolution",
+      "section": "quick",
+      "title_en": "CoSkill: Joint Reinforcement Learning of Reasoning and Meta-Skill Agents for Hierarchical Skill Evolution",
+      "authors": "Jinyuan Feng, Dongmin Li, Yiqun Chen, Yang Gao, Xing Chen, Huimu Wang, Zhiqiang Pu",
+      "date": "2026-09-04",
+      "pdf": "https://arxiv.org/pdf/2609.04865v1",
+      "score": "6.0",
+      "evidence": "提出联合训练推理体与元技能体的多智能体强化学习算法",
+      "tldr": "现有技能库方法或把技能演化与策略优化分离，或将元技能固化为固定流程，限制了技能灵活演化及与推理代理的协同适应。CoSkill将静态元技能工作流重构为可学习的元技能代理，并与推理代理通过共享主干联合训练，形成层次化技能库上的端到端协同适应。在ALFWorld与WebShop上分别达到98.4%和90.6%的成功率，显著超越先前方法。",
+      "tags": "query:marl",
+      "abstract_en": "Skill libraries improve the sample efficiency of agentic reinforcement learning (RL) by enabling large language model (LLM) agents to reuse procedural knowledge. Yet existing paradigms exhibit structural shortcomings: they either decouple skill evolution from policy optimization or instantiate meta-skills as fixed workflows. Both treat skills as passive objects to be managed, limiting the flexible evolution of skills and their co-adaptation with the reasoning agent. To address the limitations, we propose CoSkill, a unified multi-agent RL framework that recasts the static meta-skill workflow as a learnable Meta-Skill Agent and jointly trains it with a Reasoning Agent over a hierarchical skill library. By modeling the Reasoning and Meta-Skill Agents as a cooperative team sharing a single backbone, CoSkill enables end-to-end co-adaptation: the Reasoning Agent conditions its actions on a retrieved task skill and step skills selected from its child set, while its task performance guides the Meta-Skill Agent in refining those step skills. Experiments on ALFWorld and WebShop show that CoSkill substantially outperforms prior skill-based and RL baselines, achieving success rates of 98.4% and 90.6%, respectively (+3.5 and +6.2 pp). As shown in Figure 1, CoSkill achieves superior early-stage sample efficiency, asymptotic performance, and wall-clock efficiency. Our code is available at https://github.com/jinyuan-cookie/CoSkill.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
