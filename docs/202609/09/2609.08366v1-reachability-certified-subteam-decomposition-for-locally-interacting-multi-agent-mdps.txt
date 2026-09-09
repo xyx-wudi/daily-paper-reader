@@ -1,0 +1,942 @@
+Title: Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+URL Source: https://arxiv.org/pdf/2609.08366v1
+
+Published Time: Wed, 09 Sep 2026 03:05:24 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs 
+
+# Xiangwu Wang 
+
+University of Hong Kong 
+
+# Chengwei Cao 
+
+University of California, San Diego 
+
+# Hongyuan Tang 
+
+Carnegie Mellon University 
+
+## Abstract 
+
+Persistent communication limits force a multi-agent system to decide which agents may coordinate throughout a rollout. Cur-rent proximity alone is insufficient: separated agents may interact later, whereas a large pair reward may remain unreachable until it is heavily discounted. We introduce Reachability-Certified Sub-team Decomposition (RCSD) for finite multi-agent Markov decision processes with factorized physical dynamics, finite-range ordered pair rewards, and almost-sure motion bounds. RCSD combines a speed-limit lower bound on pairwise contact time with a reward envelope to form a current-state affinity. For any capacity-valid persistent partition, the sum of cut affinities bounds the reward-deletion error of every unchanged stationary Markov state-feedback policy. A product of team-optimal policies for the resulting cut MDP incurs at most twice this certificate in regret against the centralized optimum. Both bounds are worst-case tight. On a con-trolled five-agent family, RCSD-Exact reduces aggregate normal-ized execution regret by 56.0%, 28.8%, and 25.3% relative to uniform, distance-only, and envelope-only partitions. A separate stochastic two-dimensional study finds no bound violation over 384 exact-partition and 1,440 restricted-controller evaluations. Exact four-agent evidence favors RCSD over uniform and distance-only group-ing; raw evidence for current contact is borderline and envelope-only is unresolved. Across balanced 8–20-agent strata, controller-library utility is mixed: pointwise paired intervals favor RCSD over distance and current contact, include zero for uniform, and favor envelope-only and Value-MIP over RCSD. Partition construction remains subsecond in median up to 100 agents; this last result does not include affinity formation or MDP planning. 
+
+## CCS Concepts 
+
+• Computing methodologies → Multi-agent systems ; Planning and scheduling .
+
+## Keywords 
+
+multi-agent systems, subteam coordination, communication con-straints, factored MDPs, reachability certificates 
+
+## 1 Introduction 
+
+Multi-agent planning often exploits sparse transition and reward structure to avoid a single monolithic controller [11, 28]. Coopera-tive learning methods likewise factor values or learn communica-tion protocols [10, 27, 31]. These approaches do not, by themselves, answer a deployment decision that precedes planning: under a hard limit on persistent team size, which agents should retain a shared state channel? Neither current proximity nor a static reward graph resolves this decision. Agents that are separated now may enter interaction range later, and connected components of local contacts can grow through moving chains. Conversely, an interaction that cannot oc-cur for many steps contributes only a discounted tail to present value. LIMDPs formalize dynamic spatial dependencies and state-dependent communication groups [6]. Here the resource model is different: a dispatcher observes the initial state once, forms teams of at most 𝐿 agents, and maintains full state sharing within each team but no cross-team channel for the entire rollout. The result-ing persistent overlay fixes the information scope of every team planner. This setting raises a concrete question: before solving the task, can the value at risk from a capacity-constrained partition be bounded from the current state? When motion is bounded and pair rewards have finite range, initial separation yields a policy-independent lower bound on the first possible contact. Discounting a valid pair-reward envelope from that time gives an affinity whose cut sum bounds the consequence of ignoring cross-team rewards during planning. RCSD-Exact minimizes this sum to choose persistent subteams (Figure 1). RCSD supplies both a pre-planning certificate and an executable decomposition. It turns LIMDP-style dependence-time reasoning into heterogeneous, initial-state edge costs derived from distances, speed bounds, interaction ranges, and both directed reward en-velopes. For any capacity-valid partition, the cut sum 𝐵 P (𝑥 ) bounds the value change of an unchanged stationary Markov policy after cross-team reward deletion. Under product dynamics and within-team rewards, the cut MDP separates into team problems, and executing a team-product cut-MDP optimum in the original MDP incurs at most 2 𝐵 P (𝑥 ) regret against the centralized optimum. Both constants are worst-case tight for signed rewards. Minimizing the certificate yields RCSD-Exact, while scalable fea-sible solvers return partitions with certificates of their own. We ver-ify the theory on finite MDPs, compare partition selectors under ex-act team planning on a controlled five-agent problem, and evaluate partition construction up to 100 agents. An omitted-feature control tests whether the advantage persists when the affinity lacks the fea-ture that determines useful coordination. Random two-dimensional obstacle grids then separate exact unrestricted four-agent regret from controller-library regret at 8–20 agents, testing richer dynam-ics without conflating the two estimands. 
+
+## 2 Related Work 
+
+Factored and transition-independent decentralized MDPs provide a natural context for local multi-agent planning: they represent local dynamics and structured joint rewards [1, 11], while transition-independent multi-agent MDP solvers exploit sparse reward in-teractions without discarding them [28]. Payoff propagation simi-larly uses sparse coordination graphs [17]. Localized networked-control analyses show discount-decaying influence with graph dis-tance [25]. Most closely, LIMDPs combine factorized dynamics,                                    
+
+> 1arXiv:2609.08366v1 [cs.MA] 8 Sep 2026 Xiangwu Wang, Chengwei Cao, and Hongyuan Tang 1Interaction geometry 2Reachability score 3Capacity partition 4Certified execution
+> 12345
+> D12 (x)
+> R12
+> motion virange Rij
+> envelope λij =bij +bji
+> Contact delay
+> τij (x) = ⌈∆ij /s ij ⌉
+> ∆ij = [ Dij (x)−Rij ]+
+> Discounted pair affinity
+> qij (x) = λij γτij (x)
+> 1−γ
+> sij =vi+vj; high only when valuable and soon reachable
+> Minimize deleted affinity
+> C1
+> {1,2,3 }
+> C2
+> {4,5 }
+
+# × 
+
+> BP(x) =
+
+∑︁ i<j : cut qij (x)    
+
+> choose Psubject to |C| ≤ L
+> Same stationary Markov policy
+
+⃓⃓       
+
+> VπM(x)−VπMP(x)
+
+⃓⃓ ≤ BP (x)    
+
+> Team-product policy
+> V∗
+> M(x)−V
+
+ˆ︁ π P    
+
+> M(x)≤2BP(x)
+> same dynamics; team-local information no persistent cross-team channel
+
+Figure 1: Reachability-Certified Subteam Decomposition. Current geometry, almost-sure speed limits, and the aggregate directed reward envelope 𝜆 𝑖 𝑗 = 𝑏 𝑖 𝑗 + 𝑏 𝑗𝑖 give a contact-time lower bound and discounted affinity. RCSD chooses a capacity-valid persistent partition, deletes cross-team rewards only in the planning surrogate, and executes the resulting team policies in the original MDP. The fixed-policy inequality compares the same Markov policy in both MDPs; the regret inequality applies to a team-product cut-MDP optimum. 
+
+finite-range ordered pair rewards, bounded movement, and dynam-ically changing communication groups [6]. Their Dependence-Time Lemma turns bounded motion and a visibility–reward-range gap into a uniform zero-reward prefix, and their Cutoff analysis con-verts that prefix into a discounted value bound. Unlike LIMDP’s visibility-dependent execution groups and monotone-refining aux-iliary cutoff partition, RCSD selects an arbitrary capacity-valid overlay from heterogeneous edge certificates and holds it fixed throughout execution. Its contribution is not a new coalition objec-tive, but the combination of an initial-state heterogeneous per-edge certificate, a fixed-policy deletion bound for every capacity-valid persistent partition, and a 2 𝐵 P execution-regret bound for the re-sulting product-team policy. Learned coordination offers a complementary route. Value factor-ization [27, 32], centralized-training actor–critic methods [21], and differentiable communication [10, 31] address cooperative learn-ing. Targeted communication learns whom to message online [4], but does not impose a rollout-persistent block-size cap or return a pre-planning worst-case value certificate. VAST learns variable subteams for value factorization [23]; SOG self-organizes groups [29]; QSCAN represents subteam coordination within value factor-ization [15]; and GoMARL and HYGMA learn dynamic grouping structures [20, 35]. Correlated Policy Optimization dynamically allocates a DAG edge budget using dependency scores and analyzes policy optimization under decomposability conditions [3]; RCSD instead enforces block cardinality and certifies every feasible fixed partition before policy optimization. STAF uses spatial graph cuts for multi-robot formations [5]. In contrast to these learned or dy-namically structured coordination methods, RCSD supplies an a priori, planner-independent sufficient loss certificate under a stated physical model. From an optimization perspective, capacity-bounded nonnega-tive edge-weight coalition formation is an established optimization problem with hardness and approximation results [19]; broader coalition-structure generation also has exact and anytime algo-rithms [26]. Our induced partition objective is an instance of this problem. Most directly, Fiscko et al. cluster transition- independent MDPs around shared controls and clustered value iteration, and separately optimize reachable state-space size in factored MDPs under a cluster budget [8, 9]. RCSD instantiates this established ob-jective with heterogeneous initial-state speed-limit delay/envelope costs and uses their cut sum to bound discounted distortion from deleting finite-range cross-team rewards. Standard simulation ar-guments relate model perturbations to policy value and transfer op-timal policies with a two-sided loss [16]. The distinction here is the reachability-derived per-edge aggregation used as the persistent-overlay capacity objective. 
+
+## 3 Model and Capacity-Limited Overlay 
+
+Let I = [𝑛 ] index agents and M = (X , A, 𝐾, 𝑟, 𝛾 ) be a finite dis-counted MDP, with X = Î𝑖 X𝑖 , A = Î𝑖 A𝑖 , and 0 < 𝛾 < 1. Physical transitions are agent-factorized, 
+
+𝐾 (𝑥 ′ | 𝑥, 𝑎 ) =
+
+> 𝑛
+
+Ö
+
+> 𝑖 =1
+
+𝐾 𝑖 (𝑥 ′ 
+
+> 𝑖
+
+| 𝑥 𝑖 , 𝑎 𝑖 ). (1) Each local state has a position 𝑝 𝑖 (𝑥 𝑖 ) in a common metric space 
+
+(Z , 𝑑 ). Every positive-probability local transition has displacement at most 𝑣 𝑖 under 𝑑 ; this is an almost-sure, not expected, motion bound. Rewards are evaluated from the pre-transition state and action and decompose into local and ordered pair terms, 
+
+𝑟 (𝑥, 𝑎 ) =∑︁ 
+
+> 𝑖
+
+𝑟 𝑖 (𝑥 𝑖 , 𝑎 𝑖 ) + ∑︁ 
+
+> 𝑖 ≠𝑗
+
+𝑟 𝑖 𝑗 (𝑥 𝑖 , 𝑥 𝑗 , 𝑎 𝑖 , 𝑎 𝑗 ). (2) For symmetric interaction range 𝑅 𝑖 𝑗 = 𝑅 𝑗𝑖 , 𝑟 𝑖 𝑗 = 0 whenever 
+
+𝐷 𝑖 𝑗 (𝑥 ) := 𝑑 (𝑝 𝑖 (𝑥 𝑖 ), 𝑝 𝑗 (𝑥 𝑗 )) > 𝑅 𝑖 𝑗 , and |𝑟 𝑖 𝑗 | ≤ 𝑏 𝑖 𝑗 . The speed, range, and reward-envelope quantities are known valid upper bounds; underestimation would void the certificate. At initial state 𝑥 , a dispatcher announces a partition P once. Every block 𝐶 ∈ P obeys |𝐶 | ≤ 𝐿 , and the partition remains fixed. Members of 𝐶 persistently share 𝑥 𝐶 and select 𝑎 𝐶 jointly; no cross-team information channel exists. The cut MDP MP keeps the physical kernel and deletes precisely the pair rewards crossing teams: 
+
+𝑟 P (𝑥, 𝑎 ) =∑︁ 
+
+> 𝑖
+
+𝑟 𝑖 (𝑥 𝑖 , 𝑎 𝑖 ) + ∑︁     
+
+> 𝑖 ≠𝑗 :P ( 𝑖 )=P ( 𝑗 )
+
+𝑟 𝑖 𝑗 (𝑥 𝑖 , 𝑥 𝑗 , 𝑎 𝑖 , 𝑎 𝑗 ). (3) The cut reward is a planning surrogate. The resulting team policies are always evaluated in the original reward model M.
+
+> 2Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+## 4 Reachability Certificate 
+
+Write 𝑠 𝑖 𝑗 = 𝑣 𝑖 + 𝑣 𝑗 and [𝑧 ]+ = max {𝑧, 0}. The speed-limit contact-time lower bound is 
+
+𝜏 𝑖 𝑗 (𝑥 ) =
+
+[𝐷 𝑖 𝑗 (𝑥 ) − 𝑅 𝑖 𝑗 ]+/𝑠 𝑖 𝑗 
+
+ , 𝑠 𝑖 𝑗 > 0,
+
+0, 𝑠 𝑖 𝑗 = 0, 𝐷 𝑖 𝑗 (𝑥 ) ≤ 𝑅 𝑖 𝑗 ,
+
+∞, 𝑠 𝑖 𝑗 = 0, 𝐷 𝑖 𝑗 (𝑥 ) > 𝑅 𝑖 𝑗 .
+
+(4) Obstacles, clipping, or the policy can delay contact, so 𝜏 𝑖 𝑗 need not be the exact achievable time. It is sufficient that contact is impossible earlier. Aggregate both directed envelopes as 𝜆 𝑖 𝑗 = 𝑏 𝑖 𝑗 + 𝑏 𝑗𝑖 and define, with 𝛾 ∞ = 0, 
+
+𝑞 𝑖 𝑗 (𝑥 ) = 𝜆 𝑖 𝑗 𝛾 𝜏 𝑖 𝑗 (𝑥 )
+
+1 − 𝛾 , 𝐵 P (𝑥 ) =∑︁    
+
+> 𝑖 <𝑗 :
+> P ( 𝑖 )≠P ( 𝑗 )
+
+𝑞 𝑖 𝑗 (𝑥 ). (5) The affinity 𝑞 𝑖 𝑗 charges the full pair envelope at every time from the certified lower-bound index onward. It is neither a contact probability nor an action value. Lemma 1 (Speed-limit contact). Along every feasible trajectory starting at 𝑥 , both ordered rewards of pair (𝑖, 𝑗 ) vanish at every pre-transition return index 𝑡 < 𝜏 𝑖 𝑗 (𝑥 ).
+
+Proof. Repeated reverse triangle inequality and the almost-sure step bounds give 𝐷 𝑖 𝑗 (𝑋 𝑡 ) ≥ 𝐷 𝑖 𝑗 (𝑥 ) − 𝑡 (𝑣 𝑖 + 𝑣 𝑗 ). For every integer 
+
+𝑡 < ⌈[ 𝐷 𝑖 𝑗 (𝑥 ) − 𝑅 𝑖 𝑗 ]+/( 𝑣 𝑖 + 𝑣 𝑗 )⌉ , the right-hand side is strictly larger than 𝑅 𝑖 𝑗 whenever the pair starts outside range. The zero-speed cases follow directly. Finite-range support then makes both ordered rewards zero. □
+
+Theorem 2 (Policy-wise deletion certificate). Let 𝜋 (𝑎 | 𝑥 )
+
+be any stationary randomized Markov state-feedback policy used unchanged in M and MP . For every initial state 𝑥 ,
+
+𝑉 𝜋  
+
+> M
+
+(𝑥 ) − 𝑉 𝜋  
+
+> MP
+
+(𝑥 ) ≤ 𝐵 P (𝑥 ). (6) Here 𝜋 may depend on the full joint state: “unchanged” means that the same action kernel 𝜋 (· | 𝑥 ), rather than a policy reopti-mized after reward deletion, is evaluated in both MDPs. Proof. The two MDPs have identical policy and transition ker-nels, hence the same state–action law. Their only return difference is the deleted reward. Lemma 1 makes each cut pair’s absolute con-tribution zero before 𝜏 𝑖 𝑗 and the two directed envelopes bound it by 
+
+𝜆 𝑖 𝑗 thereafter. Triangle inequality and the discounted tail Í∞ 
+
+> 𝑡 =𝜏 𝑖 𝑗
+
+𝛾 𝑡 
+
+give Eq. (6). □
+
+The unchanged-policy condition is substantive: a controller that observes deleted rewards and reacts through reward history need not induce the same future actions. The appendix gives an exe-cutable counterexample. Reward-blind history-dependent policies held fixed across models also admit the coupling, but we state the Markov class used by the optimization result. Proposition 3 (Cut-MDP factorization). Under Eqs. (1) –(3) ,the centralized optimal value of MP is attained by a product of team-local stationary Markov policies b𝜋 P (𝑎 | 𝑥 ) = Î𝐶 ∈ P b𝜋 𝐶 (𝑎 𝐶 | 𝑥 𝐶 ).
+
+Proof. Collect local and within-team rewards into 𝑟 𝐶 and write 
+
+𝐾 𝐶 = Î𝑖 ∈𝐶 𝐾 𝑖 . Then 𝑟 P = Í𝐶 𝑟 𝐶 and 𝐾 = Î𝐶 𝐾 𝐶 . The Bellman maximum separates over the Cartesian action blocks 𝑎 𝐶 , so the sum of team-optimal value functions is the unique cut-MDP optimal value. Team argmax policies form a product optimum; discounted finite-MDP optimality is standard [24]. □
+
+Corollary 4 (Execution regret). Execute a product-optimal cut policy b𝜋 P in the original MDP. Then 
+
+𝑉 ∗ 
+
+> M
+
+(𝑥 ) − 𝑉 b𝜋 P 
+
+> M
+
+(𝑥 ) ≤ 2𝐵 P (𝑥 ). (7) 
+
+The constants in Eqs. (6) and (7) are worst-case tight when signed rewards are allowed; the 2𝐵 P witness is worst-case over the cut-MDP-optimal policy returned when cut rewards tie. 
+
+Proof. Insert the values of a full-MDP optimum 𝜋 ∗ and b𝜋 P in the cut MDP. The middle difference is nonpositive by cut optimality; Theorem 2 bounds each of the two outer differences by 𝐵 P (𝑥 ).This is the standard two-sided reward-perturbation transfer [16]. Appendix A gives the expanded proof and one-state witnesses attaining 𝐵 and 2 𝐵 . □
+
+The constants are tight. With two singleton teams in a one-state MDP, a unique joint action and a constant deleted reward 𝑏 give value difference 𝑏 /( 1 − 𝛾 ) = 𝐵 P . For the factor two, let the cut reward be zero for two product actions while their deleted rewards are +𝑏 and −𝑏 . Both actions are cut-optimal; if the team solver selects the negative-reward tie and the original optimum selects the positive one, execution regret is 2 𝑏 /( 1 −𝛾 ) = 2𝐵 P . Thus neither constant can be reduced for signed rewards without an additional structural or tie-breaking condition. Corollary 5 (Approximate team planning). Let e𝜋 P (𝑎 | 𝑥 ) =
+
+Î𝐶 ∈ P e𝜋 𝐶 (𝑎 𝐶 | 𝑥 𝐶 ) be a stationary Markov team-product policy used unchanged in M and MP , whose aggregate cut-MDP planning error at 𝑥 is at most ¯𝜖 P (𝑥 ):
+
+𝑉 ∗ 
+
+> MP
+
+(𝑥 ) − 𝑉 e𝜋 P 
+
+> MP
+
+(𝑥 ) ≤ ¯𝜖 P (𝑥 ).
+
+Then its execution regret in the original MDP satisfies 
+
+𝑉 ∗ 
+
+> M
+
+(𝑥 ) − 𝑉 e𝜋 P 
+
+> M
+
+(𝑥 ) ≤ 2𝐵 P (𝑥 ) + ¯𝜖 P (𝑥 ).
+
+Proof. Let 𝜋 ∗ be optimal in M. Then 𝑉 ∗ 
+
+> M
+
+− 𝑉 ∗ 
+
+> MP
+
+≤ 𝑉 𝜋 ∗ 
+
+> M
+
+− 𝑉 𝜋 ∗ 
+
+> MP
+
+≤
+
+𝐵 P by Theorem 2. Insert 𝑉 ∗ 
+
+> MP
+
+and 𝑉 e𝜋 P 
+
+> MP
+
+between the original-MDP values; the middle term is at most ¯ 𝜖 P by assumption, and the final reward-model change is at most 𝐵 P by the same theorem. □
+
+## 4.1 Certificate Properties 
+
+The construction separates three quantities that are easily conflated in a static interaction graph. The envelope 𝜆 𝑖 𝑗 bounds how much the pair can contribute once active; 𝜏 𝑖 𝑗 (𝑥 ) certifies how long it must remain inactive; and 𝑞 𝑖 𝑗 (𝑥 ) combines them at the current discount. For fixed envelope and discount, 
+
+𝑞 𝑖 𝑗 (𝜏 + 1) = 𝛾𝑞 𝑖 𝑗 (𝜏 ), (8) so one additional certified zero-reward step reduces that pair’s charge by exactly 𝛾 . The affinity is linear in the valid reward enve-lope, nonincreasing in initial separation through the integer-valued contact delay, and nondecreasing when a larger speed or interaction 
+
+> 3Xiangwu Wang, Chengwei Cao, and Hongyuan Tang
+
+range permits earlier contact. These are algebraic properties of the sufficient bound, not fitted empirical relationships. Additivity has two consequences. First, Theorem 2 holds for ev-ery capacity-valid partition, not only the partition selected by RCSD. The solver can therefore return an explicit certificate even if stopped early or replaced by a different feasible coalition routine. Second, exact minimization of 𝐵 P (𝑥 ) selects the smallest theorem-derived upper bound within the stated partition class. It does not neces-sarily select the partition with minimum realized regret: deleted rewards can cancel, remain unreachable after the certified prefix, or be irrelevant to the optimal action. The hindsight regret oracle in the experiment measures this distinction but is never available to RCSD. Several edge cases clarify interpretation. A zero-speed pair ini-tially outside range has 𝜏 𝑖 𝑗 = ∞ and zero certified affinity, so sepa-rating it cannot change value through that pair under the model. A pair already in range has 𝜏 𝑖 𝑗 = 0 and receives the undiscounted infinite-horizon envelope 𝜆 𝑖 𝑗 /( 1 − 𝛾 ), representing the worst-case repeated tail rather than a prediction that the reward will recur. Conservative overestimates of speed, range, or reward magnitude preserve validity while weakening selection resolution. Underesti-mates can break the zero-prefix or tail bound and therefore receive no guarantee. The certificate is initial-state conditional. Recomputing it later creates a new optimization problem because a new partition changes the information structure, cut reward, and policy being evaluated. The fixed-overlay setting keeps setup communication distinct from persistent per-decision links. These results form a hierarchy of guarantees. The policy-wise certificate uses finite-range pre-transition rewards, almost-sure mo-tion bounds, both directed reward envelopes, and one stationary Markov policy held fixed across the two reward models. These conditions establish the common trajectory law and bound every cut-pair tail. Within our global product-kernel model, this policy-wise step uses only the common kernel and does not invoke fac-torization. The execution-regret result adds product dynamics and actions, complete cross-team reward deletion in the surrogate, and team-optimal planning so that the cut optimum is an executable product policy. A bounded-error team planner adds ¯ 𝜖 P through Corollary 5. Both guarantees are conditional on the initial state, fixed partition, and valid parameter bounds. 
+
+## 5 Certificate-Guided Partitioning 
+
+RCSD denotes the certificate construction in Eq. (5) together with a capacity-valid partition solver. RCSD-Exact minimizes the cer-tificate exactly; RCSD-Greedy and RCSD-MnM-sum are scalable heuristics whose outputs retain valid certificates but need not min-imize them. After partitioning, exact team-local planning returns the product-optimal cut policy used by Corollary 4. Because total pair affinity is partition-independent, min    
+
+> P:|𝐶 | ≤ 𝐿
+
+𝐵 P (𝑥 ) ⇐⇒ max   
+
+> P:|𝐶 | ≤ 𝐿
+
+∑︁ 𝐶 ∈ P ∑︁ 𝑖 <𝑗 ∈𝐶 
+
+𝑞 𝑖 𝑗 (𝑥 ). (9) Equation (9) is the known bounded edge-weight coalition objec-tive [19]. For exact optimization, let 𝑊 (𝐶 ) = Í𝑖 <𝑗 ∈𝐶 𝑞 𝑖 𝑗 and fix the least-indexed agent in each remaining set 𝑆 . The subset recurrence 
+
+𝐹 (𝑆 ) = max     
+
+> 𝐶 ⊆𝑆 : min 𝑆 ∈𝐶
+> 1≤ | 𝐶 | ≤ 𝐿
+
+{𝑊 (𝐶 ) + 𝐹 (𝑆 \ 𝐶 )} , 𝐹 (∅) = 0, (10) enumerates the unique block containing min 𝑆 and then recurses. Every feasible partition appears once at that decision level, so addi-tivity of retained affinity gives optimal substructure. RCSD-Exact uses this dynamic program at small 𝑛 .At larger 𝑛 , RCSD-Greedy repeatedly merges the feasible pair of blocks with the largest positive rescued affinity. RCSD-MnM-sum instead applies deterministic matching and contraction with cross-block affinities summed after each contraction. Both return capacity-valid partitions and therefore retain the policy-wise cer-tificate for their outputs, but neither implementation is assigned an approximation ratio here. Full pseudocode, tie-breaking, and correctness details appear in Appendix B. Pair construction takes 𝑂 (𝑛 2) time and space. For fixed capacity, our exact subset DP takes 𝑂 (𝑛 𝐿 𝐿 2 + 2𝑛 𝑛 𝐿 −1) time and 𝑂 (2𝑛 + 𝑛 𝐿 +
+
+𝑛 2) space. The direct greedy implementation uses at most 𝑛 − 1merges and a conservative 𝑂 (𝑛 3𝐿 2) time bound; no approximation guarantee is asserted. A fully connected directed channel within each team uses ∑︁  
+
+> 𝐶 ∈ P
+
+|𝐶 |(| 𝐶 | − 1) ≤ 𝑛 (𝐿 − 1) (11) persistent links per decision, versus 𝑛 (𝑛 −1) for one centralized team. This is a link count, not measured bytes or latency, and excludes one-time membership announcement. If each agent has at most 𝑆 
+
+states and 𝐴 actions, a size-𝐿 team has at most 𝑆 𝐿 joint states and 
+
+𝐴 𝐿 joint actions. RCSD caps the local planning dimension but does not remove its exponential dependence on 𝐿 .The certificate also exposes the capacity trade-off. Let P∗ 
+
+> 𝐿
+
+attain the minimum certificate over partitions with block size at most 𝐿 ,and write 𝐵 ∗ 
+
+> 𝐿
+
+(𝑥 ) = 𝐵 P∗ 
+
+> 𝐿
+
+(𝑥 ). Because the feasible sets are nested, 
+
+𝐵 ∗ 
+
+> 𝐿 +1
+
+(𝑥 ) ≤ 𝐵 ∗ 
+
+> 𝐿
+
+(𝑥 ), while Eq. (11) increases the allowed link enve-lope linearly in 𝐿 and the tabular planning dimension can grow exponentially. Given a declared value-loss tolerance 𝛿 and a valid bound ¯ 𝜖 𝐿 (𝑥 ) on the aggregate cut-MDP planning error of the un-changed stationary Markov team policy returned for P∗ 
+
+> 𝐿
+
+, a designer may select the smallest acceptable 𝐿 satisfying 2 𝐵 ∗ 
+
+> 𝐿
+
+(𝑥 ) + ¯𝜖 𝐿 (𝑥 ) ≤ 𝛿 .This is a sufficient certification rule, and it allows ¯ 𝜖 𝐿 to vary inde-pendently of capacity and actual communication to underfill its envelope. Conservative physical envelopes preserve the rule but can require a larger capacity. For a heuristic partition P𝐿 , the same rule uses its returned 𝐵 P𝐿 (𝑥 ) and corresponding planning-error bound. The partition is constructed without planned values or realized regret, so its certificate is available before team planning. Theorem 2 applies to every feasible output; Corollaries 4 and 5 connect the returned team policy to centralized execution regret. There are two distinct computational bottlenecks. Pair construc-tion and scalable partitioning are polynomial in the tested imple-mentation. Team planning remains exponential in the capacity for dense tabular models, reflecting the underlying joint-decision prob-lem rather than the partitioning routine. Accordingly, our large- 𝑛 
+
+experiment isolates partition construction, while exact five-agent 
+
+> 4Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+Table 1: RCSD construction for one initial state.                                        
+
+> Stage Operation Input Initial state 𝑥 , capacity 𝐿 , discount 𝛾 , valid (𝑣 𝑖 , 𝑅 𝑖 𝑗 , 𝑏 𝑖 𝑗 ), a partition solver, and a team planner. Edges For every 𝑖 <𝑗 , compute 𝜆 𝑖 𝑗 ,𝜏 𝑖 𝑗 (𝑥 ), and 𝑞 𝑖 𝑗 (𝑥 )by Eqs. (4)–(5). Partition Solve Eq. (9) exactly or heuristically, subject to |𝐶 | ≤ 𝐿 .Planning Form each induced cut-MDP component and obtain b𝜋 𝐶
+> independently. Output Return P,𝐵 P(𝑥 ), and b𝜋 P=Î𝐶 b𝜋 𝐶 .Run Announce the fixed teams and execute their policies in the original MDP.
+
+experiments measure policy quality. We report the two arms sepa-rately because fast graph partitioning does not imply fast end-to-end multi-agent planning. Persistence is essential to the information constraint. If member-ship followed the current visibility graph, a chain of local contacts could merge many agents into one decision group, and membership could change within the rollout [6]. The imposed capacity would then no longer bound the information scope of a local planner. A persistent partition makes the resource statement exact: each pol-icy sees at most 𝐿 agents, while physical agents continue to move and cross-team rewards remain present during execution. Deleting those rewards only in the surrogate is what connects the commu-nication decision to Theorem 2; physically removing interactions would define a different control problem. 
+
+## 6 Experimental Design 
+
+We evaluate RCSD through finite-MDP verification, exact partition utility when the certificate inputs are informative or incomplete, heuristic objective quality, partition-construction scaling, and sto-chastic two-dimensional transfer. The omitted-feature family makes compatible teams depend on information absent from the certifi-cate. Every policy-quality estimand uses exact optimization over its stated policy class, avoiding training variance. We verify the assumptions and bounds at three levels. We exhaus-tively test the contact lemma over 648 bounded-motion settings (124,380 transitions) and evaluate the policy-wise bound for 2,048 deterministic policies over signed asymmetric rewards. We add 200 randomized policies on 40 stochastic instances and 1,716 statewise factorization/regret comparisons across 96 capacity partitions. Pol-icy values come from linear solves and optima from converged dynamic programming. Counterexamples obtained by changing reward timing, omitting a directed envelope, or permitting reward-history reaction mark the boundary of the assumptions; separate witnesses attain both constants. To isolate partition selection while exactly evaluating every fea-sible equal-communication partition, we use the Meeting-Port Cor-ridor, a controlled five-agent family with seven corridor positions, three unit-step actions, deterministic clipped motion, 𝛾 = 0.85, and interaction range zero. Thus the centralized table has 7 5 = 16 ,807 states and 3 5 = 243 joint actions. Agent 𝑖 receives home-deviation and movement costs, while pair (𝑖, 𝑗 ) earns 𝜆 𝑖 𝑗 only when both agents wait at its meeting port. The informative family starts at homes (0, 1, 3, 5, 6); each port is a floor/ceiling midpoint, so first possible port contact equals ⌈| ℎ𝑖 − ℎ𝑗 |/ 2⌉. Envelopes are uniform on [0.45 , 1.35 ]. The omitted-feature control starts every agent at 3, uses near-equal envelopes on [0.78 , 0.82 ], and randomly assigns ports from a fixed multiset. Every certified delay is then zero, while useful grouping depends on incompatible ports that RCSD does not observe. This control changes several construction parameters and therefore limits family-independent claims; it is not a single-variable causal ablation. We evaluate 4,500 instances from each family, each at 𝐿 ∈ { 2, 3}.At 𝐿 = 2 we evaluate all 15 partitions of shape 2 + 2 + 1; at 𝐿 = 3, all ten of shape 3 + 2. This gives 18,000 seed/capacity strata and 225,000 complete equal-shape partition rows. The 4,500 underfilled visibility-components rows are kept separate. For every partition, team policies are solved in the cut MDP and their deterministic infinite-horizon return is evaluated in the original MDP by exact prefix–cycle summation. Regret is normalized by Í𝑖 <𝑗 𝜆 𝑖 𝑗 /( 1 − 𝛾 ).For comparison, the uniform baseline is the exact mean over the feasible set. The distance-only selector uses 1 /( 1 + 𝐷 𝑖 𝑗 ), and the envelope-only selector removes the delay and uses 𝜆 𝑖 𝑗 /( 1 −
+
+𝛾 ); RCSD-Exact uses 𝑞 𝑖 𝑗 . A current-contact selector and a hind-sight regret oracle are secondary diagnostics. The paired unit is the seed, with 𝐿 = 2, 3 averaged within seed before each pri-mary test ( 𝑛 = 4,500). For comparator 𝑄 , aggregate regret reduc-tion is 1 − Í𝑠 𝑔 RCSD ,𝑠 /Í𝑠 𝑔 𝑄,𝑠 . We report paired mean differences, paired standardized effects 𝑑 𝑧 [18], and win rates. Percentile inter-vals use 10,000 paired-seed bootstrap draws [7]; 100,000 one-sided paired sign flips are Holm-corrected over the three primary compar-isons [14]. Certificate–regret ranking uses within-stratum Spear-man correlation [30] with a seed-clustered bootstrap. Distance-only and envelope-only have the same partition support, planner, and link budget as RCSD, so they isolate the two factors in its affin-ity. They are not intended as claims of dominance over learned or dynamically regrouping methods with different information structures. We compare three solver variants: RCSD-Exact, RCSD-Greedy, and RCSD-MnM-sum. Each uses 240 seeds at 𝑛 = 8, 𝐿 ∈ { 2, 4}, and at 𝑛 = 12, 𝐿 ∈ { 2, 3, 4}. Scaling uses 300 seeds for each combination 
+
+𝑛 ∈ { 24 , 48 , 100 } and 𝐿 ∈ { 2, 4} with random 2-D positions, speeds, ranges, and envelopes. This arm constructs partitions only; it does not solve a 100-agent MDP or support a 100-agent value claim. Appendix G adds connected obstacle grids with stochastic slip and heterogeneous speeds, ranges, and rewards. In 128 four-agent instances, exact centralized and team dynamic programming mea-sure unrestricted stationary-Markov regret over all three 2 + 2 par-titions. In 120 maps with 𝑛 ∈ { 8, 12 , 16 , 20 }, a partition-independent library of four waypoint controllers makes end-to-end evaluation tractable; this tier reports only controller-library regret, with 𝐿 =
+
+2, 4 averaged within map for paired inference. 
+
+## 7 Results 
+
+Across the verification suite, all finite-state instances satisfy the scoped inequalities, factorization identity, and capacity constraints, with largest numerical residual 1 .42 ×10 −14 . One-state fixtures attain the constants 𝐵 and 2 𝐵 . Counterexamples with post-transition re-wards, one-sided envelopes, and reward-reactive policies violate the 
+
+> 5Xiangwu Wang, Chengwei Cao, and Hongyuan Tang
+
+Table 2: Summary of empirical results. Utility effects average capacities within each of 4,500 instances; rank correlation is computed within instance/capacity strata.                      
+
+> Evaluation Metric Result Partition utility ARR vs. Uniform / Distance / Envelope .5604 / .2880 / .2531 Certificate ranking median 𝜌 / clustered 95% CI .7143 / [.7091,.7212] Greedy objective quality median / p90 / max normalized gap .01110 / .05287 / .13845 100-agent construction RCSD-Greedy / RCSD-MnM-sum median at 𝐿 =4.0545 / .2333 s Omitted-feature control ARR / signed median 𝜌 / mean-diff. 95% CI .03096 / .1643 / [.00155,.00281] Random 2-D transfer exact utility; large library utility / bound violations positive; mixed / 0
+
+Table 3: Finite-MDP verification of the theorem predictions.               
+
+> Property Evaluations Outcome Pre-contact reachability 124,380 0 early contacts Policy-wise deletion 2,248 0 violations Product/regret bounds 1,716 0 violations Tightness witnesses 2𝐵 / 2 𝐵 attained Numerical solutions all max. 1 .42 ×10 −14
+
+unmodified formula, showing that the corresponding assumptions are substantive. Table 3 summarizes coverage; full constructions and boundary outcomes are in Appendix C. The random two-dimensional study extends this audit to ob-stacles, stochastic motion, and heterogeneous physical parame-ters. Across 384 exact four-agent partitions and 1,440 large-tier method evaluations, no deletion or regret bound is violated. In the exact tier, RCSD’s aggregate unrestricted regret is 21.6%, 24.1%, and 14.8% lower than Uniform, Distance, and Current. Paired raw evidence is clear for Uniform and Distance, borderline for Cur-rent, while the 2.6% Envelope difference is inconclusive. The larger controller-library result is mixed. Pooled equally across the four 
+
+𝑛 strata, raw comparator-minus-RCSD differences (pointwise 95% intervals) for Distance, Current, Uniform, Envelope, and Value-MIP are 10 .05 [5.36 , 14 .97 ], 4 .90 [.91 , 8.81 ], −1.89 [− 8.83 , 4.78 ],
+
+−5.80 [− 11 .23 , −.57 ], and −5.44 [− 8.66 , −2.30 ]. RCSD’s median/p95 regret-to-certificate ratios are .076/.206 in the exact tier and .070/.175 in the library tier. Appendix G reports normalization details and selector-plus-team-planning costs. Figure 2 and Table 4 report all primary informative-family com-parisons. Mean normalized regret is 0.03910 for RCSD-Exact, versus 0.08895 for Uniform, 0.05492 for Distance, and 0.05235 for Envelope. Across 9,000 instance/capacity strata, median Spearman correlation between 𝐵 P and actual regret is 0.7143; 8,781/9,000 are positive, and the seed-clustered 95% interval for the median is [0.7091 , 0.7212 ].These results support the mechanism on the controlled informative construction, not a universal ordering of partitions. Seed-paired bootstrap 95% intervals for ARR are [.5530 , . 5682 ],
+
+[.2763 , . 2994 ], and [.2415 , . 2647 ] against Uniform, Distance, and Envelope, respectively. The three comparisons isolate different information. Uniform measures the value of selecting any equal-communication partition; Distance keeps geometry but removes reward magnitude; Enve-lope keeps reward magnitude but removes contact delay. Since 
+
+Table 4: Informative-family paired utility results. CI is for mean 𝑔 𝑄 − 𝑔 RCSD ; the paired unit is one of 4,500 seeds after averaging capacities.                  
+
+> 𝑄 ARR Mean diff. [95% CI] 𝑑 𝑧 Holm 𝑝
+> Uniform .5604 .04985 [.04905,.05068] 1.791 .000030 Distance .2880 .01581 [.01504,.01656] .604 .000030 Envelope .2531 .01325 [.01255,.01396] .554 .000030
+
+all three exact mechanisms optimize over the identical shape sup-port, their regret differences cannot be attributed to different link counts or a stronger partition solver. The current-contact selector is a secondary diagnostic over the same fixed shape; the visibility-components diagnostic is secondary because its 𝐿 = 3 informative-family partition keeps shape 2 + 2 + 1 rather than the primary 3 + 2shape. The hindsight regret oracle is reported only to quantify how much selection information remains outside the certificate. The within-stratum ranking in Figure 2(c) is the more infor-mative measure of selection resolution because every correlation compares partitions of the same generated MDP and capacity. Its clustered interval retains the seed, rather than the individual par-tition, as the source of independent instance-level variation. This rank statistic measures partition-selection resolution; it neither cal-ibrates 𝐵 P to typical regret nor establishes numerical tightness of the 2 𝐵 P bound. In the omitted-feature control family, ARR between RCSD-Exact and Uniform is 0.03096. The paired mean difference is 0.00219 (in-terval [0.00155 , 0.00281 ]), with 𝑑 𝑧 = 0.1000 and win rate 0.5164. Its signed median rank correlation is 0.1643; the clustered interval is 
+
+[0.1515 , 0.1758 ]. The ARR is about one eighteenth of the informa-tive Uniform comparison, the standardized effect is small, and the win rate is near one half. Overlapping partitions can induce residual rank association even when port compatibility is absent from 𝑞 𝑖 𝑗 .Together, the two families show that RCSD’s advantage is strongest when the certificate inputs encode coordination-relevant variation. Because several generator parameters differ, the control is not a single-variable ablation; additional control diagnostics appear in Appendix F. Across 1,200 oracle-sized cases, RCSD-Greedy’s normalized cer-tificate gap has median 0.01110, p90 0.05287, and maximum 0.13845 (Figure 3 and Table 5). This is empirical proximity, not an approxi-mation theorem. Every large-instance output is capacity valid. At 
+
+𝑛 = 100 , 𝐿 = 4, median (95th-percentile) seconds are 0.0545 (0.0569)     
+
+> 6Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs 0.00 0.05 0.10 0.15 0.20
+> Normalized execution regret
+> RCSD-Exact Distance Envelope Uniform
+
+(a) Regret by selector −0.1 0.0 0.1 0.2   
+
+> gQ−gRCSD
+> Uniform Distance Envelope
+
+(b) Paired regret reduction −1.0 −0.5 0.0 0.5 1.0  
+
+> Spearman ρ(B, regret)
+> Informative · L=2 Informative · L=3 Control · L=2 Control · L=3
+
+(c) Certificate–regret alignment 
+
+Figure 2: Partition quality on Meeting-Port Corridor families. Density envelopes and faint unit marks use all 4,500 paired seeds after averaging capacities in (a,b). Thin/thick summaries in (a,c) are 5–95% ranges/IQRs, circles are medians, and diamonds with capped segments in (b) are paired means with 95% bootstrap intervals for 𝑔 𝑄 − 𝑔 RCSD , so positive values favor RCSD. Panel (c) shows 4,500 correlations per family–capacity cell (18,000 total). RCSD-Exact lowers regret in the informative family; the control shift is much smaller. 0.00 0.05 0.10                
+
+> Normalized certificate gap
+> N= 8, L= 2
+> N= 8, L= 4
+> N= 12, L= 2
+> N= 12, L= 3
+> N= 12, L= 4
+
+(a) Approximation gap 24 48 100  
+
+> Agents N
+> 10 −4
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> Construction time (s, log)
+
+(b) Construction time, L = 4       
+
+> RCSD-Greedy RCSD-MnM-sum 0.00 0.25 0.50 0.75 1.00
+> Directed links / [N(L− 1)]
+> RCSD-Greedy RCSD-MnM-sum Distance-Greedy Current-Greedy Envelope-Greedy
+
+(c) Link utilization, L = 4   
+
+> N=24 N=48 N=100
+
+Figure 3: Certificate optimization and scaling. Density envelopes and faint unit marks use all seed-level values (ties overplot); thin/thick intervals are empirical 5–95% ranges/IQRs and circles are medians. Panel (a) uses 240 seeds per exact-oracle cell; (b) uses 300 runtime seeds per method and agent count at 𝐿 = 4 (log scale); and (c) keeps the 300 seeds in each method–agent-count stratum separate. The 𝑥 = 1 reference is the 𝑁 (𝐿 − 1) capacity ceiling. Except RCSD-MnM-sum, panel (c) reports the corresponding greedy construction. 
+
+for RCSD-Greedy and 0.2333 (0.2469) for RCSD-MnM-sum. Tim-ings begin after affinity matrices have been formed and exclude instance generation, affinity construction, and team-MDP plan-ning; they establish partition-construction feasibility only. These implementation-specific timings are not hardware-independent performance guarantees. Across all measured cells, RCSD-Greedy is faster and its median normalized gap remains below 0.027. RCSD-MnM-sum is exact in the two tested 𝐿 = 2 cells and less accurate at larger capacities under our summed-contraction completion. These are empirical comparisons rather than approximation guarantees [19]. Figure 3(c) also distinguishes capacity from utilization. Envelope-Greedy fills the allowance in all plotted cases; RCSD-Greedy and Distance-Greedy do so in 898/900 and 894/900 cases. RCSD-MnM-sum at 𝐿 = 4 uses one third of the maximum because its perfect first-round matching leaves no singleton, so the implementation stops with pairs. Current’s median fraction rises from 0.444 to 0.667 to 0.833 at 𝑁 = 24 , 48 , 100, with overall range 0.139–0.913. Under-filling can reduce communication, but it is not a free performance comparison; that is why only exact equal-shape partitions enter the primary utility tests. 
+
+## 8 Discussion 
+
+Informative-family selectors share the instance, capacity, team plan-ner, partition set, and communication budget, so their differences isolate edge scoring. The results support 𝑞 𝑖 𝑗 when its inputs encode 
+
+> 7Xiangwu Wang, Chengwei Cao, and Hongyuan Tang
+
+Table 5: Certificate gap to the exact capacity-partition optimum over 240 instances per cell.                                                        
+
+> 𝑛 𝐿 Solver Median p90 Maximum 82RCSD-Greedy .00025 .04024 .06324 82RCSD-MnM-sum .00000 .00000 .00000 84RCSD-Greedy .00890 .09264 .13845 84RCSD-MnM-sum .30076 .34496 .39753 12 2RCSD-Greedy .00725 .02165 .03823 12 2RCSD-MnM-sum .00000 .00000 .00000 12 3RCSD-Greedy .01747 .04325 .08698 12 3RCSD-MnM-sum .12541 .14642 .17929 12 4RCSD-Greedy .02600 .05885 .10370 12 4RCSD-MnM-sum .22599 .25123 .26840
+
+coordination-relevant variation. In the omitted-feature control, cer-tified delays are zero and port compatibility is absent from 𝑞 𝑖 𝑗 ;standardized effect and win-rate shifts are much smaller. Because other generator parameters also differ, this contrast defines a scope boundary rather than a causal ablation. Capacity has different effects on certificate quality and computa-tion. For the inequality-constrained objective |𝐶 | ≤ 𝐿 , the feasible set at capacity 𝐿 is contained in the feasible set at 𝐿 + 1. The ex-act minimum certificate is therefore nonincreasing in 𝐿 . At the extremes, 𝐿 = 1 cuts every pair, while 𝐿 = 𝑛 permits one team and 
+
+𝐵 P = 0. The latter recovers centralized information and joint plan-ning rather than resolving the resource constraint. Increasing 𝐿 can reduce the worst-case deletion budget, but it raises the directed-link envelope 𝑛 (𝐿 − 1) and expands a tabular team’s state–action space exponentially. The capacity rule in Section 5 makes this trade-off explicit: a designer can choose the smallest 𝐿 whose certificate and planning error meet a declared loss tolerance, then apply a separate application cost model for communication and computation. The 100-agent experiment isolates graph partitioning and does not time affinity construction or team-MDP planning. The corri-dor instead permits exact evaluation of every feasible partition, while the random two-dimensional study bridges these regimes: unrestricted planning remains exact at four agents, and 8–20-agent evaluation is exact only within a fixed controller library. This sep-aration prevents scalable construction from being mistaken for scalable unrestricted planning and keeps each selector comparison within the same partition shape and policy class. The certificate is intentionally conservative. Equation (5) pes-simistically charges the full pair envelope at every step after the certified contact-time lower bound. This makes the quantity policy-uniform and computable before planning. A sharper score could use obstacles, reachable sets, occupancy bounds, or policy restric-tions, but each requires additional verified information and a new argument bounding discounted deleted reward. Empirical contact frequencies or point predictions from a learned model may be useful ranking features, but they enter the guarantee only through valid uncertainty bounds. RCSD can therefore become sharper as addi-tional certified reachability information becomes available without changing the perturbation argument. Exact RCSD minimizes the available upper bound within its par-tition class; it need not minimize realized regret. Deleted rewards may cancel, contact may occur later than the speed limit permits, and some interactions may be irrelevant to the optimal action. Con-versely, a heuristic solver returns a valid certificate for its feasible partition even when it misses the minimum. This distinction ex-plains why the experiments report certificate validity, objective quality, and execution regret separately: each measures a different property of the method. By treating subteams as persistent, RCSD makes communication membership a resource decision rather than a visualization of the current reward graph. Its scientific role is to connect a fixed bound on each planner’s information scope with a bound on execution loss in the unchanged physical MDP. Cross-team interactions re-main present during execution; only the team-planning surrogate omits them. This connection between an executable information structure and policy value is what distinguishes the setting from state-dependent visibility groups. These guarantees have a specific scope. The policy-wise certifi-cate assumes finite state and action spaces, pre-transition finite-range rewards, valid almost-sure motion and reward envelopes, symmetric pair ranges, and the same stationary Markov policy in both reward models. Its proof uses the common trajectory kernel without invoking the global product factorization. The execution-regret corollary additionally uses product transitions and actions, complete deletion of cross-team rewards in the surrogate, and team-optimal cut planning so that the selected policy is independently executable. With an approximate stationary Markov team planner, Corollary 5 adds its bounded cut-MDP planning error. Coupled dy-namics, shared action constraints, higher-order rewards, dynamic repartitioning, and general Dec-POMDP observation structures require different decompositions or guarantees [2, 22]. 
+
+## 9 Conclusion 
+
+RCSD turns heterogeneous reachability and finite-range reward en-velopes into a computable certificate for capacity-limited persistent subteams. Its cut-affinity objective bounds unchanged-policy re-ward deletion and, under product dynamics, centralized execution regret. Exact and stochastic tests produced no certificate violations; partition experiments scaled to 100-agent affinity graphs. Across selectors, mixed large-tier rankings show that certificate tightness remains central to empirical team selection. Together, these re-sults establish RCSD as a certifiable basis for persistent multi-agent decomposition. 
+
+> 8
+
+Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs 
+
+## References 
+
+[1] Raphen Becker, Shlomo Zilberstein, Victor R. Lesser, and Claudia V. Goldman. 2004. Solving Transition Independent Decentralized Markov Decision Processes. 
+
+Journal of Artificial Intelligence Research 22 (2004), 423–455. doi:10.1613/jair.1497 [2] Daniel S. Bernstein, Robert Givan, Neil Immerman, and Shlomo Zilberstein. 2002. The Complexity of Decentralized Control of Markov Decision Processes. 
+
+Mathematics of Operations Research 27, 4 (2002), 819–840. doi:10.1287/moor.27.4. 819.297 [3] Dingyang Chen, Jianing Ye, Zhenyu Zhang, Xiaolong Kuang, Xinyang Shen, Ozalp Ozer, Chongjie Zhang, and Qi Zhang. 2026. Correlated Policy Optimization in Multi-Agent Subteams. In The Fourteenth International Conference on Learning Representations . https://openreview.net/forum?id=Tke3BVwUz6 [4] Abhishek Das, Théophile Gervet, Joshua Romoff, Dhruv Batra, Devi Parikh, Mike Rabbat, and Joelle Pineau. 2019. TarMAC: Targeted Multi-Agent Com-munication. In Proceedings of the 36th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 97) . PMLR, 1538–1546. https://proceedings.mlr.press/v97/das19a.html [5] Zihao Deng, Peng Gao, Williard Joshua Jose, Maggie Wigness, John G. Rogers, III, Brian Reily, Christopher M. Reardon, and Hao Zhang. 2025. Subteaming and Adaptive Formation Control for Coordinated Multi-Robot Navigation. In 
+
+Proceedings of The 9th Conference on Robot Learning (Proceedings of Machine Learning Research, Vol. 305) . PMLR, 2665–2677. https://proceedings.mlr.press/ v305/deng25b.html [6] Alex Deweese and Guannan Qu. 2024. Locally Interdependent Multi-Agent MDP: Theoretical Framework for Decentralized Agents with Dynamic Dependencies. In 
+
+Proceedings of the 41st International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 235) . PMLR, 10687–10709. https://proceedings. mlr.press/v235/deweese24a.html [7] Bradley Efron and Robert J. Tibshirani. 1993. An Introduction to the Bootstrap .Chapman and Hall/CRC. doi:10.1201/9780429246593 [8] Carmel Fiscko, Soummya Kar, and Bruno Sinopoli. 2023. Maximizing Reachability in Factored MDPs via Near-Optimal Clustering with Applications to Control of Multi-Agent Systems. In 2023 62nd IEEE Conference on Decision and Control (CDC) . IEEE, 7970–7975. doi:10.1109/CDC49753.2023.10383361 [9] Carmel Fiscko, Soummya Kar, and Bruno Sinopoli. 2025. Clustered Control of Transition-Independent MDPs. IEEE Transactions on Control of Network Systems 
+
+12, 3 (2025), 1881–1893. doi:10.1109/TCNS.2023.3330925 [10] Jakob N. Foerster, Ioannis Alexandros Assael, Nando de Freitas, and Shimon Whiteson. 2016. Learning to Communicate with Deep Multi-Agent Rein-forcement Learning. In Advances in Neural Information Processing Systems 29 . 2137–2145. https://proceedings.neurips.cc/paper_files/paper/2016/hash/ c7635bfd99248a2cdef8249ef7bfbef4-Abstract.html [11] Carlos Guestrin, Daphne Koller, and Ronald Parr. 2001. Multiagent Planning with Factored MDPs. In Advances in Neural Information Processing Systems 14 .MIT Press, 1523–1530. https://proceedings.neurips.cc/paper_files/paper/2001/ hash/7af6266cc52234b5aa339b16695f7fc4-Abstract.html [12] Aric A. Hagberg, Daniel A. Schult, and Pieter J. Swart. 2008. Exploring Network Structure, Dynamics, and Function Using NetworkX. In Proceedings of the 7th Python in Science Conference . 11–15. doi:10.25080/TCWV9851 [13] Charles R. Harris, K. Jarrod Millman, Stéfan J. van der Walt, Ralf Gommers, Pauli Virtanen, David Cournapeau, Eric Wieser, Julian Taylor, Sebastian Berg, Nathaniel J. Smith, Robert Kern, Matti Picus, Stephan Hoyer, Marten H. van Kerkwijk, Matthew Brett, Allan Haldane, Jaime Fernández del Río, Mark Wiebe, Pearu Peterson, Pierre Gérard-Marchant, Kevin Sheppard, Tyler Reddy, Warren Weckesser, Hameer Abbasi, Christoph Gohlke, and Travis E. Oliphant. 2020. Array Programming with NumPy. Nature 585 (2020), 357–362. doi:10.1038/ s41586-020-2649-2 [14] Sture Holm. 1979. A Simple Sequentially Rejective Multiple Test Procedure. 
+
+Scandinavian Journal of Statistics 6, 2 (1979), 65–70. doi:10.2307/4615733 [15] Wenhan Huang, Kai Li, Kun Shao, Tianze Zhou, Matthew E. Taylor, Jun Luo, Dongge Wang, Hangyu Mao, Jianye Hao, Jun Wang, and Xiaotie Deng. 2022. Multiagent Q-Learning with Sub-Team Coordination. In Ad-vances in Neural Information Processing Systems 35 . Curran Associates, Inc., 29427–29439. https://proceedings.neurips.cc/paper_files/paper/2022/hash/ bd31bfd4caa85bffe07a35568182cdfa-Abstract-Conference.html [16] Michael J. Kearns and Satinder P. Singh. 2002. Near-Optimal Reinforcement Learning in Polynomial Time. Machine Learning 49, 2–3 (2002), 209–232. doi:10. 1023/A:1017984413808 [17] Jelle R. Kok and Nikos Vlassis. 2006. Collaborative Multiagent Reinforcement Learning by Payoff Propagation. Journal of Machine Learning Research 7, 65 (2006), 1789–1828. https://www.jmlr.org/papers/v7/kok06a.html [18] Daniël Lakens. 2013. Calculating and Reporting Effect Sizes to Facilitate Cumula-tive Science: A Practical Primer for 𝑡 -Tests and ANOVAs. Frontiers in Psychology 
+
+4 (2013), 863. doi:10.3389/fpsyg.2013.00863 [19] Chaya Levinger, Noam Hazon, Sofia Simola, and Amos Azaria. 2024. Coalition Formation with Bounded Coalition Size. In Proceedings of the 23rd International Conference on Autonomous Agents and Multiagent Systems . IFAAMAS, 1119–1127. https://www.ifaamas.org/Proceedings/aamas2024/pdfs/p1119.pdf [20] Chiqiang Liu and Dazi Li. 2025. HYGMA: Hypergraph Coordination Networks with Dynamic Grouping for Multi-Agent Reinforcement Learning. In Proceedings of the 42nd International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 267) . PMLR, 38767–38788. https://proceedings.mlr.press/ v267/liu25af.html [21] Ryan Lowe, Yi Wu, Aviv Tamar, Jean Harb, Pieter Abbeel, and Igor Mor-datch. 2017. Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments. In Advances in Neural Information Processing Systems 30 .6379–6390. https://proceedings.neurips.cc/paper_files/paper/2017/hash/ 68a9750337a418a86fe06c1991a1d64c-Abstract.html [22] Frans A. Oliehoek and Christopher Amato. 2016. A Concise Introduction to Decentralized POMDPs . Springer Cham. doi:10.1007/978-3-319-28929-8 [23] Thomy Phan, Fabian Ritz, Lenz Belzner, Philipp Altmann, Thomas Gabor, and Claudia Linnhoff-Popien. 2021. VAST: Value Function Factorization with Vari-able Agent Sub-Teams. In Advances in Neural Information Processing Systems 34 . Curran Associates, Inc., 24018–24032. https://proceedings.neurips.cc/paper/ 2021/hash/c97e7a5153badb6576d8939469f58336-Abstract.html [24] Martin L. Puterman. 1994. Markov Decision Processes: Discrete Stochastic Dynamic Programming . Wiley. doi:10.1002/9780470316887 [25] Guannan Qu, Adam Wierman, and Na Li. 2020. Scalable Reinforcement Learning of Localized Policies for Multi-Agent Networked Systems. In Proceedings of the 2nd Conference on Learning for Dynamics and Control (Proceedings of Machine Learning Research, Vol. 120) . PMLR, 256–266. https://proceedings.mlr.press/v120/ qu20a.html [26] Talal Rahwan, Sarvapali D. Ramchurn, Nicholas R. Jennings, and Andrea Giovan-nucci. 2009. An Anytime Algorithm for Optimal Coalition Structure Generation. 
+
+Journal of Artificial Intelligence Research 34 (2009), 521–567. doi:10.1613/jair.2690 [27] Tabish Rashid, Mikayel Samvelyan, Christian Schroeder, Gregory Farquhar, Jakob Foerster, and Shimon Whiteson. 2018. QMIX: Monotonic Value Function Fac-torisation for Deep Multi-Agent Reinforcement Learning. In Proceedings of the 35th International Conference on Machine Learning (Proceedings of Machine Learn-ing Research, Vol. 80) . PMLR, 4295–4304. https://proceedings.mlr.press/v80/ rashid18a.html [28] Joris Scharpff, Diederik M. Roijers, Frans A. Oliehoek, Matthijs T. J. Spaan, and Mathijs M. de Weerdt. 2016. Solving Transition-Independent Multi-Agent MDPs with Sparse Interactions. In Proceedings of the Thirtieth AAAI Conference on Artificial Intelligence . 3174–3180. doi:10.1609/aaai.v30i1.10405 [29] Jianzhun Shao, Zhiqiang Lou, Hongchang Zhang, Yuhang Jiang, Shuncheng He, and Xiangyang Ji. 2022. Self-Organized Group for Cooperative Multi-agent Reinforcement Learning. In Advances in Neu-ral Information Processing Systems 35 . Curran Associates, Inc., 5711– 5723. https://proceedings.neurips.cc/paper_files/paper/2022/hash/ 25b040c97a75021e57100648a20b1e10-Abstract-Conference.html [30] Charles Spearman. 1904. The Proof and Measurement of Association between Two Things. The American Journal of Psychology 15, 1 (1904), 72–101. doi:10. 2307/1412159 [31] Sainbayar Sukhbaatar, Arthur Szlam, and Rob Fergus. 2016. Learning Multia-gent Communication with Backpropagation. In Advances in Neural Information Processing Systems 29 . 2244–2252. https://proceedings.neurips.cc/paper_files/ paper/2016/hash/55b1927fdafef39c48e5b73b5d61ea60-Abstract.html [32] Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vini-cius Zambaldi, Max Jaderberg, Marc Lanctot, Nicolas Sonnerat, Joel Z. Leibo, Karl Tuyls, and Thore Graepel. 2018. Value-Decomposition Networks for Cooperative Multi-Agent Learning Based on Team Reward. In Proceedings of the 17th Inter-national Conference on Autonomous Agents and Multiagent Systems . IFAAMAS, 2085–2087. https://www.ifaamas.org/Proceedings/aamas2018/pdfs/p2085.pdf [33] Pauli Virtanen, Ralf Gommers, Travis E. Oliphant, Matt Haberland, Tyler Reddy, David Cournapeau, Evgeni Burovski, Pearu Peterson, Warren Weckesser, Jonathan Bright, Stéfan J. van der Walt, Matthew Brett, Joshua Wilson, K. Jar-rod Millman, Nikolay Mayorov, Andrew R. J. Nelson, Eric Jones, Robert Kern, Eric Larson, C. J. Carey, İlhan Polat, Yu Feng, Eric W. Moore, Jake VanderPlas, Denis Laxalde, Josef Perktold, Robert Cimrman, Ian Henriksen, E. A. Quintero, Charles R. Harris, Anne M. Archibald, Antônio H. Ribeiro, Fabian Pedregosa, Paul van Mulbregt, and SciPy 1.0 Contributors. 2020. SciPy 1.0: Fundamental Al-gorithms for Scientific Computing in Python. Nature Methods 17 (2020), 261–272. doi:10.1038/s41592-019-0686-2 [34] Michael L. Waskom. 2021. seaborn: Statistical Data Visualization. Journal of Open Source Software 6, 60 (2021), 3021. doi:10.21105/joss.03021 [35] Yifan Zang, Jinmin He, Kai Li, Haobo Fu, Qiang Fu, Junliang Xing, and Jian Cheng. 2023. Automatic Grouping for Efficient Cooperative Multi-Agent Reinforcement Learning. In Advances in Neural Information Processing Systems 36 . Curran As-sociates, Inc., 46105–46121. https://proceedings.neurips.cc/paper_files/paper/ 2023/hash/906c860f1b7515a8ffec02dcdac74048-Abstract-Conference.html 9Xiangwu Wang, Chengwei Cao, and Hongyuan Tang 
+
+## A Assumptions and Expanded Proofs 
+
+This appendix makes every scope condition used by the certificate explicit and expands the compact arguments in the main paper. The setting is a finite discounted MDP. Local states need not consist only of positions: the map 𝑝 𝑖 : X𝑖 → Z extracts position in a shared metric space. The motion inequality holds almost surely for every transition with positive probability. An expectation-only speed bound is insufficient for the pathwise zero-reward prefix. Rewards use (𝑋 𝑡 , 𝐴 𝑡 ) before the transition to 𝑋 𝑡 +1, pair ranges are symmetric, and both ordered envelopes are included in 𝜆 𝑖 𝑗 . The partition is selected for one initial state and held fixed. 
+
+## A.1 Pathwise contact bound 
+
+Expanded proof of Lemma 1. Let 𝑋 𝑡 = (𝑋 1,𝑡 , . . . , 𝑋 𝑛,𝑡 ) and ab-breviate 𝐷 𝑡 = 𝑑 (𝑝 𝑖 (𝑋 𝑖,𝑡 ), 𝑝 𝑗 (𝑋 𝑗,𝑡 )) . Repeated reverse triangle in-equality gives, pathwise, 
+
+𝐷 𝑡 ≥ 𝐷 0 − 
+
+> 𝑡 −1
+
+∑︁ 
+
+> 𝑘 =0
+
+𝑑 (𝑝 𝑖 (𝑋 𝑖,𝑘 +1), 𝑝 𝑖 (𝑋 𝑖,𝑘 )) + 𝑑 (𝑝 𝑗 (𝑋 𝑗,𝑘 +1), 𝑝 𝑗 (𝑋 𝑗,𝑘 )) 
+
+≥ 𝐷 0 − 𝑡 (𝑣 𝑖 + 𝑣 𝑗 ). (12) If 𝐷 0 ≤ 𝑅 𝑖 𝑗 , then 𝜏 𝑖 𝑗 = 0 and there is no integer 𝑡 < 𝜏 𝑖 𝑗 . Otherwise write 𝛿 = 𝐷 0 − 𝑅 𝑖 𝑗 > 0. When 𝑠 𝑖 𝑗 = 𝑣 𝑖 + 𝑣 𝑗 > 0, every integer 
+
+𝑡 < ⌈𝛿 /𝑠 𝑖 𝑗 ⌉ satisfies 𝑡𝑠 𝑖 𝑗 < 𝛿 , and Eq. (12) yields 𝐷 𝑡 > 𝐷 0 − 𝛿 = 𝑅 𝑖 𝑗 .When 𝑠 𝑖 𝑗 = 0, the same equation yields 𝐷 𝑡 ≥ 𝐷 0 > 𝑅 𝑖 𝑗 for all 𝑡 and 
+
+𝜏 𝑖 𝑗 = ∞. Finite-range support makes 𝑟 𝑖 𝑗 and 𝑟 𝑗𝑖 zero in either case. The index is unshifted precisely because the return term at index 𝑡 
+
+evaluates the pre-transition state 𝑋 𝑡 . □
+
+The bound can be conservative. Walls, clipped motion, stochastic slip, or an agent’s policy can postpone or prevent contact. Such delays do not threaten the certificate: they only extend the actual zero-reward prefix beyond the certified one. 
+
+## A.2 Policy-wise value difference 
+
+For each cut pair, define its deleted reward and their sum by 
+
+𝛿 𝑖 𝑗 (𝑥, 𝑎 ) = 𝑟 𝑖 𝑗 (𝑥 𝑖 , 𝑥 𝑗 , 𝑎 𝑖 , 𝑎 𝑗 )+ 𝑟 𝑗𝑖 (𝑥 𝑗 , 𝑥 𝑖 , 𝑎 𝑗 , 𝑎 𝑖 ),
+
+ΔP (𝑥, 𝑎 ) = 𝑟 (𝑥, 𝑎 ) − 𝑟 P (𝑥, 𝑎 )
+
+=∑︁    
+
+> 𝑖 <𝑗 :
+> P ( 𝑖 )≠P ( 𝑗 )
+
+𝛿 𝑖 𝑗 (𝑥, 𝑎 ). (13) Expanded proof of Theorem 2. The models share the initial state, transition kernel, and stationary action kernel 𝜋 (𝑎 | 𝑥 ). Cou-ple their randomness to produce the same (𝑋 𝑡 , 𝐴 𝑡 ) path. Lemma 1 and both directed envelopes give 
+
+|ΔP (𝑋 𝑡 , 𝐴 𝑡 )| ≤ ∑︁    
+
+> 𝑖 <𝑗 :
+> P ( 𝑖 )≠P ( 𝑗 )
+
+𝜆 𝑖 𝑗 I{𝑡 ≥ 𝜏 𝑖 𝑗 (𝑥 )} . (14) Consequently, 
+
+𝑉 𝜋  
+
+> M
+
+(𝑥 ) − 𝑉 𝜋  
+
+> MP
+
+(𝑥 ) = E𝜋 𝑥 
+
+> ∞
+
+∑︁  
+
+> 𝑡 =0
+
+𝛾 𝑡 ΔP (𝑋 𝑡 , 𝐴 𝑡 )
+
+≤ E𝜋 𝑥 
+
+> ∞
+
+∑︁  
+
+> 𝑡 =0
+
+𝛾 𝑡 |ΔP (𝑋 𝑡 , 𝐴 𝑡 )| ≤∑︁     
+
+> 𝑖 <𝑗 :
+> P ( 𝑖 )≠P ( 𝑗 )
+
+𝜆 𝑖 𝑗 
+
+> ∞
+
+∑︁   
+
+> 𝑡 =𝜏 𝑖 𝑗 (𝑥 )
+
+𝛾 𝑡 = 𝐵 P (𝑥 ). (15) Bounded rewards and 0 < 𝛾 < 1 justify exchanging the finite pair sum, expectation, and discounted series. □
+
+The proof also covers a reward-blind history-dependent action kernel if exactly the same kernel is held fixed across models. It does not cover a controller that reads deleted rewards and changes future actions: then the coupled state–action paths can diverge even though the physical kernel is unchanged. 
+
+## A.3 Cut-MDP factorization 
+
+Expanded proof of Proposition 3. For each 𝐶 ∈ P , define 
+
+𝑟 𝐶 (𝑥 𝐶 , 𝑎 𝐶 ) =∑︁  
+
+> 𝑖 ∈𝐶
+
+𝑟 𝑖 (𝑥 𝑖 , 𝑎 𝑖 ) + ∑︁  
+
+> 𝑖,𝑗 ∈𝐶 :
+> 𝑖 ≠𝑗
+
+𝑟 𝑖 𝑗 (𝑥 𝑖 , 𝑥 𝑗 , 𝑎 𝑖 , 𝑎 𝑗 ), (16) 
+
+𝐾 𝐶 (𝑥 ′ 
+
+> 𝐶
+
+| 𝑥 𝐶 , 𝑎 𝐶 ) =
+
+Ö 
+
+> 𝑖 ∈𝐶
+
+𝐾 𝑖 (𝑥 ′ 
+
+> 𝑖
+
+| 𝑥 𝑖 , 𝑎 𝑖 ). (17) Then 𝑟 P = Í𝐶 𝑟 𝐶 and 𝐾 = Î𝐶 𝐾 𝐶 . Let 𝑉 ∗ 
+
+> 𝐶
+
+be the unique discounted Bellman fixed point for team 𝐶 and set 𝑉 (𝑥 ) = Í𝐶 𝑉 ∗ 
+
+> 𝐶
+
+(𝑥 𝐶 ). Apply-ing the centralized cut-MDP Bellman operator yields 
+
+(𝑇 P𝑉 )( 𝑥 ) = max  
+
+> 𝑎 ∈Î𝐶 A𝐶
+
+∑︁ 𝐶 
+
+𝑟 𝐶 (𝑥 𝐶 , 𝑎 𝐶 ) + 𝛾 E𝐾 𝐶 𝑉 ∗ 
+
+> 𝐶
+
+(𝑋 ′ 
+
+> 𝐶
+
+)
+
+=∑︁ 
+
+> 𝐶
+
+max  
+
+> 𝑎 𝐶 ∈ A 𝐶
+
+𝑟 𝐶 (𝑥 𝐶 , 𝑎 𝐶 ) + 𝛾 E𝐾 𝐶 𝑉 ∗ 
+
+> 𝐶
+
+(𝑋 ′ 
+
+> 𝐶
+
+)
+
+=∑︁ 
+
+> 𝐶
+
+𝑉 ∗ 
+
+> 𝐶
+
+(𝑥 𝐶 ) = 𝑉 (𝑥 ). (18) The discounted Bellman operator is a contraction, hence 𝑉 = 𝑉 ∗ 
+
+> MP
+
+.Selecting a maximizing action separately in each team gives a de-terministic Markov product policy attaining this value. □
+
+This separation needs Cartesian team action spaces, product transitions, and the absence of all cross-team reward terms. Shared action constraints, coupled dynamics, or undeleted higher-order re-wards crossing teams invalidate the exchange of the joint maximum and team sum. 
+
+## A.4 Two-sided transfer and tight constants 
+
+Expanded proof of Corollary 4. A finite discounted MDP ad-mits a stationary Markov optimum 𝜋 ∗. Insert cut-MDP values: 
+
+𝑉 𝜋 ∗ 
+
+> M
+
+− 𝑉 b𝜋 P 
+
+> M
+
+= (𝑉 𝜋 ∗ 
+
+> M
+
+− 𝑉 𝜋 ∗ 
+
+> MP
+
+)+ ( 𝑉 𝜋 ∗ 
+
+> MP
+
+− 𝑉 b𝜋 P 
+
+> MP
+
+)+ ( 𝑉 b𝜋 P 
+
+> MP
+
+− 𝑉 b𝜋 P 
+
+> M
+
+). (19) 
+
+> 10 Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+Cut optimality makes the middle term nonpositive. Theorem 2 upper-bounds each remaining signed term by 𝐵 P (𝑥 ), proving the result. □
+
+Tight fixed-policy constant. Use two singleton teams in a one-state MDP, 𝜏 12 = 0, and one constant deleted ordered reward 𝑏 > 0. There is a unique policy, and the value difference is 𝑏 /( 1 − 𝛾 ) = 𝐵 P .
+
+Tight factor two. Again use two singleton teams and one state, now with two actions per agent. All local and cut rewards are zero. The deleted reward is +𝑏 at joint action (1, 1), −𝑏 at (0, 0),and zero otherwise. Both are cut-optimal product policies. If the cut solver returns the (0, 0) tie while the original optimum selects 
+
+(1, 1), their original values are −𝑏 /( 1 − 𝛾 ) and +𝑏 /( 1 − 𝛾 ). The regret equals 2 𝑏 /( 1 −𝛾 ) = 2𝐵 P . Thus no smaller universal constant is possible without an additional sign, tie-breaking, or structural condition. This worst-case witness does not imply that typical instances approach the bound. 
+
+## B Algorithms and Correctness B.1 RCSD algorithm 
+
+The following pseudocode maps the certificate construction to partitioned planning. (1) Input: initial state 𝑥 , capacity 𝐿 , discount 𝛾 , valid bounds 
+
+(𝑣 𝑖 , 𝑅 𝑖 𝑗 , 𝑏 𝑖 𝑗 ), and a capacity-partition solver. (2) For every unordered pair 𝑖 < 𝑗 , set 𝜆 𝑖 𝑗 ← 𝑏 𝑖 𝑗 +𝑏 𝑗𝑖 , compute 
+
+𝜏 𝑖 𝑗 (𝑥 ) by Eq. (4), and set 𝑞 𝑖 𝑗 ← 𝜆 𝑖 𝑗 𝛾 𝜏 𝑖 𝑗 /( 1 − 𝛾 ).(3) Invoke the solver on the complete weighted graph (𝑞 𝑖 𝑗 )
+
+and capacity 𝐿 , returning a capacity-valid partition P. The exact variant maximizes retained affinity; heuristic variants need not do so. (4) For every 𝐶 ∈ P , construct (X 𝐶 , A𝐶 , 𝐾 𝐶 , 𝑟 𝐶 ) and solve it for a team-optimal policy b𝜋 𝐶 .(5) Return P and product policy b𝜋 P = Î𝐶 b𝜋 𝐶 .(6) Return the certificate 𝐵 P (𝑥 ) = Í𝑖 <𝑗 :P ( 𝑖 )≠P ( 𝑗 ) 𝑞 𝑖 𝑗 (𝑥 ).Step 2 is the scientific mechanism. Step 3 is a standard capacity-bounded coalition optimization problem [19]; replacing its solver does not alter Theorem 2 for the returned partition. The 2 𝐵 P corol-lary additionally requires the team-optimal policies in Step 4; an approximate planner retains the same-policy deletion certificate but does not inherit that regret bound without an additional planning-error term. Exact value iteration is used in our finite experiments. 
+
+## B.2 Exact subset dynamic program 
+
+For a remaining agent set 𝑆 , fix 𝑖 = min 𝑆 and enumerate all blocks 
+
+𝐶 such that 𝑖 ∈ 𝐶 ⊆ 𝑆 and 1 ≤ | 𝐶 | ≤ 𝐿 . Let 𝑊 (𝐶 ) = Í𝑢 <𝑣 ∈𝐶 𝑞 𝑢𝑣 
+
+and define 
+
+𝐹 (𝑆 ) = max     
+
+> 𝐶 ⊆𝑆 : min 𝑆 ∈𝐶
+> 1≤ | 𝐶 | ≤ 𝐿
+
+{𝑊 (𝐶 ) + 𝐹 (𝑆 \ 𝐶 )} , 𝐹 (∅) = 0. (20) Memoize the maximizing block and recurrence value. Every feasible partition of a nonempty 𝑆 contains exactly one block containing min 𝑆 ; enumerating that block and recursing lists every feasible par-tition exactly once at the recurrence level. Additivity gives optimal substructure, and induction on |𝑆 | proves exactness. The imple-mentation caches values and block backpointers and compares objectives at absolute tolerance 10 −12 . Within tolerance, ties prefer more internal links and then the lexicographic partition; “exact” is relative to this tolerance. For fixed 𝐿 , there are 2 𝑛 subset states and at most Í𝐿 −1
+
+> 𝑘 =0
+
+ 𝑛 −1
+
+> 𝑘
+
+ =
+
+𝑂 (𝑛 𝐿 −1) candidate blocks per state. Direct block-affinity precom-putation gives the conservative bounds reported in the main paper. The exact method is used at oracle sizes only. 
+
+## B.3 Direct feasible greedy merge 
+
+(1) Initialize P ← {{ 1}, . . . , {𝑛 }} .(2) Among pairs 𝐴, 𝐵 ∈ P satisfying |𝐴 | + | 𝐵 | ≤ 𝐿 , compute merge gain 𝐺 (𝐴, 𝐵 ) = Í𝑖 ∈𝐴,𝑗 ∈𝐵 𝑞 𝑖 𝑗 .(3) If no feasible pair exists or the best gain is nonpositive, return P. Otherwise replace 𝐴, 𝐵 by 𝐴 ∪ 𝐵 and repeat Step 2. Every merge preserves capacity, and 𝐺 (𝐴, 𝐵 ) is exactly the cut certificate rescued when the 𝐴 –𝐵 edges become internal. Greedy therefore monotonically decreases 𝐵 P , but monotonicity supplies no global approximation ratio. Canonical ties are resolved by the resulting directed link count and lexicographic partition. 
+
+## B.4 MnM-sum implementation 
+
+Our baseline first computes a deterministic maximum weight match-ing among singletons. Each later round matches newly grown coali-tions to remaining singletons. A contracted edge sums all cross-coalition 𝑞 𝑖 𝑗 values. Matched coalitions grow by one; unmatched grown coalitions remain unchanged. The process stops at capac-ity or when no positive match remains. “MnM-sum” records this summed contraction because the published pseudocode does not uniquely prescribe weighted contracted edges [19]. We treat it only as an implementation baseline and do not transfer the paper’s ap-proximation statement to this completion. 
+
+## C Finite-MDP Verification and Boundary Cases 
+
+The verification suite covers finite discounted MDPs with product state/action spaces, independent bounded-motion transitions, pre-transition local and ordered- pair rewards, fixed partitions, and stationary Markov policies. It checks the implementation against the analytical results and constructs boundary examples; it is not a substitute for the proofs. Learning, partial observation, dynamic repartitioning, and LIMDP visibility policies are not evaluated. 
+
+Reachability enumeration. The sweep exhausts two-agent one-dimensional grids of widths two through five, ranges zero through two, speed indicators zero or one, every initial state, and all feasible action sequences through horizon six. It expands 124,380 transitions and checks 23,268 reachable states. Sixty-eight cases have zero relative speed outside range and correctly return infinite contact time and zero affinity. 
+
+Fixed-policy enumeration. The validation evaluates all 256 sta-tionary joint policies for each of eight asymmetric signed reward tables, totaling 2,048 policy evaluations. It adds 200 seeded ran-domized policies over 40 stochastic independent-motion instances, all with nonzero slip. Policy evaluation solves (𝐼 − 𝛾𝑃 𝜋 )𝑉 = 𝑟 𝜋 
+
+rather than sampling rollouts. For deleted rewards it also solves the reward and its negation, computing an extremal Markov-policy gap instead of relying only on sampled policies. 
+
+> 11 Xiangwu Wang, Chengwei Cao, and Hongyuan Tang
+
+Table 6: Finite-MDP verification measurements and out-comes.                   
+
+> Measurement Quantity evaluated Result Pre-contact reachability 648 settings 0 early contacts Same-policy value maximum gap −𝐵 −0.3547 Extremal reward oracle maximum gap −𝐵 −0.1906 Cut vs. product optimum maximum value dif-ference 0.0 Execution regret maximum regret −2𝐵
+> −1.4287 Numerical residual maximum Bellman residual 1.42 ×10 −14
+> Invalid-scope controls excess over invalid bound 1.0, 2.0, 3.0 Tight 𝐵 / 2 𝐵 examples observed/bound ra-tio 1.0 / 1.0 Positive-regret example centralized regret 1.0
+
+Optimization enumeration. Eighteen two-, three-, and four-agent fixtures generate 96 capacity-feasible partitions and 1,716 statewise product-optimum/regret comparisons. The centralized cut optimum is compared with independently solved team optima; the product policy is then evaluated under both cut and original rewards. 
+
+Verification procedure. Bounded grid trajectories establish the absence of range entry before 𝜏 𝑖 𝑗 . Original and cut values are then solved for every signed reward table and stationary deterministic policy, followed by stochastic kernels and randomized Markov poli-cies. For each optimization fixture and partition, we compare the centralized cut optimum with independently solved team optima and evaluate the product policy in both reward models. Boundary constructions vary reward timing, directed-envelope availability, and policy class, while separate witnesses attain 𝐵 and 2 𝐵 . Counts, extrema, residuals, and seeds are retained with the numerical re-sults. 
+
+## C.1 Counterexamples Beyond the Assumptions 
+
+Table 7: Counterexamples obtained after removing individ-ual assumptions.             
+
+> Invalid extension Gap Wrong bound Scoped bound Post-transition reward 2.0 1.0 2.0 One directed envelope 2.2 0.2 2.2 Reward-history reaction 5.0 2.0 1.0 †
+> †The final number is the gap for the fixed Markov comparator, not a bound on the reward-reactive policy.
+
+The timing example demonstrates an off-by-one: if reward is defined on 𝑋 𝑡 +1, first contact at state time 𝜏 can contribute at return index 𝜏 − 1. The directed example enforces the ordered reward convention of Eq. (2). The history-dependent example shows that Theorem 2 applies to a fixed policy rather than a reward-observing controller. 
+
+## D Meeting-Port Corridor Protocol D.1 Generator and exact evaluation 
+
+Positions are 𝑥 𝑖 ∈ { 0, . . . , 6}, actions are 𝑢 𝑖 ∈ {− 1, 0, +1}, and 𝑥 ′ 
+
+> 𝑖
+
+=
+
+clip (𝑥 𝑖 + 𝑢 𝑖 , 0, 6). Local reward is 
+
+𝑟 𝑖 (𝑥 𝑖 , 𝑢 𝑖 ) = −𝑐 𝑖 |𝑥 𝑖 − ℎ𝑖 | − 𝜂 − 
+
+> 𝑖
+
+I{𝑢 𝑖 = −1} − 𝜂 + 
+
+> 𝑖
+
+I{𝑢 𝑖 = +1}. (21) For a meeting port 𝑚 𝑖 𝑗 ,
+
+𝑟 𝑖 𝑗 + 𝑟 𝑗𝑖 = 𝜆 𝑖 𝑗 I{𝑥 𝑖 = 𝑥 𝑗 = 𝑚 𝑖 𝑗 }I{𝑢 𝑖 = 𝑢 𝑗 = 0}, (22) The implementation stores this sum as one aggregate pair term; equivalently, each ordered direction may be assigned 𝜆 𝑖 𝑗 /2. We draw 𝑐 𝑖 ∼ 𝑈 [0.025 , 0.050 ] and 𝜂 − 
+
+> 𝑖
+
+, 𝜂 + 
+
+> 𝑖
+
+∼ 𝑈 [0.006 , 0.014 ]. The exact generator consumes random draws in the order: five 𝑐 𝑖 , five 𝜂 − 
+
+> 𝑖
+
+, five 
+
+𝜂 + 
+
+> 𝑖
+
+, ten envelopes in lexicographic pair order, then family-specific port randomness. PCG64 is seeded directly by the stored integer. The informative family uses homes (0, 1, 3, 5, 6) and envelopes 
+
+𝑈 [0.45 , 1.35 ]. Each pair’s port is a Bernoulli choice between the floor and ceiling midpoint, so first possible port contact equals 
+
+𝜏 𝑖 𝑗 = ⌈| ℎ𝑖 − ℎ𝑗 |/ 2⌉. In the omitted-feature control, all homes are at position 3 and envelopes follow 𝑈 [0.78 , 0.82 ]. Its ports are a seeded permutation of the multiset 
+
+{0, 0, 1, 1, 1, 5, 5, 5, 6, 6}.
+
+This makes delay uninformative and hides incompatible-port struc-ture from RCSD. For a partition, each team MDP is solved independently. The team policies form a global product action. Deterministic execution from the home state eventually revisits a state; the infinite return is evaluated exactly as a finite discounted prefix plus a geometric cycle. The cut-return evaluation must agree with the sum of team initial values within 2 × 10 −8; the observed maximum discrepancy is 1 .33 × 10 −9.
+
+## D.2 Stratum-evaluation pseudocode 
+
+(1) Solve the full-reward centralized MDP by value iteration. (2) Solve every agent subset of size at most 𝐿 as a team MDP. (3) Enumerate every canonical partition with the fixed equal-communication shape. (4) Compute all 𝑞 𝑖 𝑗 values and select exact RCSD, distance, envelope, current, uniform, and oracle partitions using only each selector’s specified inputs. (5) For each partition, assemble the product team policy; eval-uate original and cut returns by prefix–cycle summation; save partition, 𝐵 P , centralized regret, normalized regret, residuals, and directed links. (6) Evaluate capacity-valid underfilled solver/Pareto partitions separately, never mixing them into equal-shape primary tests. For the informative family, the visibility-components selector is feasible in every stratum. At 𝐿 = 2 it has shape 2 + 2 + 1; at 𝐿 = 3 it remains 2 + 2 + 1, creating 4,500 auxiliary rows outside the primary 3 + 2 support. It is infeasible on all omitted-feature-control strata because the initially coincident agents form a component larger than capacity, so it is omitted for those strata. 
+
+> 12 Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+Table 8: Complete partition-mechanism specification. Only the first four rows enter the primary equal-shape comparisons.                                 
+
+> Mechanism Information used Partition support Role RCSD (exact) 𝜆 𝑖 𝑗 , 𝜏 𝑖 𝑗 , 𝛾 all equal-shape partitions proposed Distance only initial distance same set primary single-factor Envelope only 𝜆 𝑖 𝑗 same set primary single-factor Uniform none exact mean over same set primary random Current contact current in-range envelope same set diagnostic Hindsight oracle realized regret same set diagnostic only RCSD (greedy) RCSD affinity all capacity-valid scalable solver RCSD (MnM-sum) RCSD affinity all capacity-valid solver baseline Visibility components initial-distance components capacity-valid if available secondary
+
+## E Evaluation Protocol and Complete Results 
+
+Numerical-accuracy and reported evaluations use fixed disjoint seed sets; the exact integers are provided with the supplementary material. At 𝐿 = 2, shape 2 +2+1 has 15 partitions and four directed internal links; at 𝐿 = 3, shape 3 + 2 has ten partitions and eight links. The resulting 18,000 strata contain 225,000 complete equal-shape rows plus 4,500 visibility-components auxiliary rows. 
+
+## E.1 Paired statistical procedure 
+
+For each evaluation seed 𝑠 , let 𝑟 𝑠 be RCSD-Exact normalized regret averaged over 𝐿 = 2, 3, and let 𝑞 𝑠 be the corresponding baseline average. Set 𝑑 𝑠 = 𝑞 𝑠 − 𝑟 𝑠 . The analysis computes (1) ARR = 1 − Í𝑠 𝑟 𝑠 /Í𝑠 𝑞 𝑠 ;(2) paired standardized effect 𝑑 𝑧 = 𝑑 /sd (𝑑 );(3) win rate mean (I{𝑑 > 10 −10 } + 12 I{| 𝑑 | ≤ 10 −10 }) ;(4) 10,000 paired seed bootstrap resamples; (5) 100,000 paired sign-flips, followed by Holm adjustment of Uniform, Distance, and Envelope 𝑝 -values as one family. For certificate ranking, bootstrap draws resample instance seeds and carry both capacities as one cluster. Thus the 9,000 rank correlations per family are not treated as independent for the interval. 
+
+## E.2 Full utility statistics 
+
+The 95% paired-reduction intervals and Holm-adjusted one-sided sign-flip tests are CI 𝑈 = [0.04905 , 0.05068 ], 𝑝 𝑈 = 2.99997 ×10 −5,
+
+CI 𝐷 = [0.01504 , 0.01656 ], 𝑝 𝐷 = 2.99997 ×10 −5,
+
+CI 𝐸 = [0.01255 , 0.01396 ], 𝑝 𝐸 = 2.99997 ×10 −5.
+
+All 4,500 informative-family seeds have nonzero aggregate Uniform comparator regret. Of 107,833 partition rows with positive regret, 97.3% have regret /( 2𝐵 ) ≥ .01. This indicates that the certificate is numerically non-negligible on most tested rows; it is not evidence that the bound is generally tight. 
+
+## E.3 Exact solver quality 
+
+Table 5 reports every exact-oracle cell. The zero RCSD-MnM-sum gaps at 𝐿 = 2 reflect singleton maximum-weight matching on the tested positive even-𝑛 graphs and do not extend to larger capacities. At 𝐿 = 4, RCSD-MnM-sum uses one third of the permitted directed communication, explaining its larger objective gaps. Greedy and dense positive-weight mechanisms fill capacity; Current may un-derfill because only strictly positive edges are merged. 
+
+## E.4 Scaling details 
+
+The scaling generator draws positions uniformly in [0, 10 ]2, speeds in [0.5, 1.5], symmetric ranges in [0.5, 2], aggregate envelopes log-uniformly in [0.25 , 4], and uses 𝛾 = 0.9. There are 300 seeds in every cell. These empirical timings characterize the implementation rather than asymptotic complexity. No MDP planning occurs in this arm. 
+
+## F Omitted-Feature Control Analysis 
+
+Because every initial distance and delay is zero, the RCSD-Exact, envelope-only, and current-contact selectors are algebraically iden-tical; all three select the same partition in all 9,000 control strata. The large-sample ARR is .03096 with 𝑑 𝑧 = .1000 and win rate .5164: precisely estimated, but much smaller than the informative-family effects. The signed median rank association is .1643 and the median absolute magnitude is .2929. These residual associations show that this control does not establish equivalence or exact specificity. On an exploratory 60-stratum subset, recomputing every selec-tion from envelopes alone, without reading ports, reproduces 60/60 selections. No exact objective tie occurs at tolerance 10 −12 ; the smallest non-tied top-two margin is 0.001201. Two post hoc analyses on that subset are reported as exploratory. A naive row-permutation null places the observed median absolute rank correlation above its 95% interval [.1543 , . 2732 ] (upper-tail 
+
+𝑝 = .00090), but ignores that partitions share edges. A mechanism-aware null reassigns the ten observed envelopes to edges within each seed, uses the same reassignment at both capacities, and pre-serves the partition/regret incidence structure. Its 95% interval is 
+
+[.1821 , . 3375 ]. It contains the observation (upper-tail 𝑝 = .0774). Di-rect recomputation confirms that the selector uses only envelopes, and the margin analysis rules out an exact-tie explanation. These analyses do not turn the control into an equivalence test or identify the omitted feature as the sole causal difference between generators. 
+
+## G Random Two-Dimensional End-to-End Evaluation G.1 Task and estimands 
+
+Both tiers use connected grids with static obstacles, fixed subteams, independent agent motion, and pre-transition rewards. Agents may 
+
+> 13 Xiangwu Wang, Chengwei Cao, and Hongyuan Tang
+
+Table 9: Complete evaluation summary. Utility effects average 𝐿 = 2, 3 within each of 4,500 instances; rank statistics use 9,000 instance/capacity strata. 
+
+Evaluation Metric Result Informative utility Uniform ARR / win / 𝑑 𝑧 / Holm 𝑝 .5604/.9709/1.7911/.000030 Informative utility Distance ARR / win; Envelope ARR / win .2880/.7353; .2531/.7323 Certificate ranking median Spearman / positive strata .7143/.9757 Certificate ranking clustered 95% interval [.7091,.7212] Greedy objective quality median/p90/max normalized gap .01110/.05287/.13845 100-agent construction MnM-sum median/p95 at 𝐿 = 4 .2333/.2469 s Omitted-feature control absolute / signed median Spearman .2929/.1643 Omitted-feature control ARR / win / paired 95% interval .03096/.5164/[.00155,.00281] 
+
+Table 10: Informative-family exact utility comparison ( 𝑛 =
+
+4,500 paired seeds). 
+
+Comparator ARR Mean diff. 𝑑 𝑧 Win Uniform .56042 .04985 1.7911 .9709 Distance .28796 .01581 .6039 .7353 Envelope .25313 .01325 .5541 .7323 Current .31315 .01783 .7083 .7777 
+
+Table 11: Partition-only scaling. Entries are median / em-pirical 95th percentile seconds; Comm. is Current’s median [range] fraction of the 𝑛 (𝐿 − 1) ceiling.                             
+
+> 𝑛 𝐿 Greedy MnM-sum Comm. 24 2.00065 / .00074 .00374 / .00442 .583 [.250,.833] 24 4.00094 / .00103 .00377 / .00440 .444 [.139,.722] 48 2.00455 / .00474 .02695 / .02946 .750 [.542,.875] 48 4.00647 / .00673 .02699 / .02951 .667 [.500,.889] 100 2.03822 / .04009 .23408 / .24885 .860 [.740,.920] 100 4.05453 / .05694 .23326 / .24689 .833 [.760,.913]
+
+co-locate and cross, so collisions do not couple the transition kernel. A failed move leaves an agent in place; otherwise it follows its selected local move. Unary rewards combine service-site prefer-ences and movement costs. Pair rewards are positive only inside a symmetric finite interaction range and a seeded pair-specific ren-dezvous region. Cross-team pair rewards are removed from the planning surrogate but remain present when the returned policy is evaluated in the original task. The small tier uses a 3 × 3 grid with one obstacle, four agents, five local actions, 𝛾 = .85, speeds in {1, 2}, independent stay-slip probabilities in [.08 , . 25 ], and pair ranges in {0, 1}. Capacity 𝐿 = 2gives exactly three 2 + 2 partitions. For each of 128 maps, value iter-ation solves the unrestricted centralized stationary-Markov MDP, every two-agent team MDP, and all three product team policies. Its reported regret is therefore against the unrestricted stationary-Markov optimum, not against a hand-designed controller set. The larger tier uses a connected 7 × 7 grid with 10–22% obstacles, four service sites, 𝑛 ∈ { 8, 12 , 16 , 20 }, and 𝐿 ∈ { 2, 4}. Speeds, slip probabilities, local rewards, ranges in {0, 1, 2}, and both directed reward envelopes are heterogeneous. Four stationary shortest-path waypoint controllers are generated before partition selection and shared by every method. Exact finite-prefix marginal occupancy propagation evaluates their unary and pairwise returns; a target-absorbing tail approximation is continued until each utility term has error below 10 −9. Mixed-integer optimization then finds the best controller assignment centrally and within each selected team. Incumbent–dual gaps and accumulated tail errors give the finite-precision audit Reg lib (P) ≤ 2𝐵 P + 𝜖 num . (23) This tier measures regret only within the fixed waypoint-controller library. 
+
+## G.2 Comparators and statistics 
+
+RCSD-MIP, Distance-MIP, Envelope-MIP, and Current-MIP opti-mize the same complete block shape using, respectively, 𝑞 𝑖 𝑗 , 1 /( 1 +
+
+𝐷 𝑖 𝑗 ), 𝜆 𝑖 𝑗 /( 1 − 𝛾 ), and the current-contact envelope. Uniform sam-ples the same shape. Value-MIP scores coalitions with their optimal cut-library value and is an information-richer planning-aware com-parator. Every method therefore uses the same 𝑛 (𝐿 − 1) directed persistent links; online message traffic is not measured. Generated maps are the statistical units: 128 paired seeds in the small tier and 30 maps at each 𝑛 in the large tier, where 𝐿 = 2, 4is averaged within map and the paired bootstrap is stratified by 
+
+𝑛 . Confirmatory large-tier differences use raw controller-library regret. For cross-task display, normalized regret is 𝑔 /𝑍 , where 𝑍 =
+
+[Í𝑖 < 𝑗 𝜆 𝑖 𝑗 + Í𝑖 max 𝑘 𝑢 𝑖𝑘 ]/( 1 −𝛾 ) and 𝑢 𝑖𝑘 is agent 𝑖 ’s service reward at site 𝑘 . Figure 4a shows these per-map normalized differences. All intervals are per-comparator 95% intervals, not simultaneous family-wise statements. 
+
+## G.3 Certificate tightness and utility boundary 
+
+All 384 small-tier partition evaluations have positive 𝐵 P , and 366 have positive unrestricted regret. RCSD has lower aggregate regret than Uniform, Distance, and Current, but paired raw evidence is borderline for Current; its difference from Envelope is unresolved. The Current raw interval has a .0026 lower endpoint under the original 10,000-draw bootstrap and becomes [− .00035 , . 83245 ] in a one-million-draw Monte Carlo sensitivity check. In the large tier, pooled pointwise intervals favor RCSD over Distance and Current, include zero for Uniform, and favor Envelope and Value-MIP over RCSD. The normalized paired analysis has the same interval con-clusions. One plausible task-specific explanation is that the fixed waypoint library makes long-run service location and reward mag-nitude more predictive of realized value than the initial speed-limit delay. This does not affect the conditional certificate: it shows that 
+
+> 14 Reachability-Certified Subteam Decomposition for Locally Interacting Multi-Agent MDPs
+
+Table 12: Random 2-D selector utility. Normalized regret is scaled within the generated task. Small ARR is the aggregate raw-regret reduction achieved by RCSD relative to each comparator. Large Δ is raw comparator regret minus RCSD regret after averaging capacities; positive values favor RCSD, and intervals use an 𝑛 -stratified map bootstrap. Value-MIP is available only in the fixed-controller tier. 
+
+Method Small norm. regret Small ARR Large norm. regret Large Δ [95% CI] RCSD .0826 – .0963 –Uniform .1070 .216 .1005 −1.89 [ −8.83, 4 .78] Distance .1110 .241 .1164 10 .05 [5 .36, 14 .97] Envelope .0850 .026 .0876 −5.80 [ −11 .23, −.57] Current .0978 .148 .1082 4.90 [ .91, 8 .81] Value-MIP – – .0879 −5.44 [ −8.66, −2.30] −0.2 0.0 0.2 0.4   
+
+> Normalized comparator regret −RCSD
+> Distance Envelope Current Uniform Value
+
+(a) Paired regret difference      
+
+> Small exact Large restricted 0.00 0.25 0.50 0.75 1.00
+> Empirical ratio (1 = certified ceiling)
+> Small Regret / 2B Large Regret / 2B Small Deletion / B Large Deletion / B
+
+(b) Certificate tightness 10 −2 10 −1 10 0 10 1
+
+> Selection + team-planning time (s)
+> N=8 N=12 N=16 N=20
+
+(c) Selector + team planning, L = 4   
+
+> RCSD Ablation MIPs Value
+
+Figure 4: Random two-dimensional end-to-end evaluation. (a) Seed-paired normalized regret differences 𝑔 𝑄 − 𝑔 RCSD ; positive values favor RCSD. Small exact retains 128 four-agent MDPs; large restricted retains 120 map units and averages 𝐿 = 2, 4 within each map. Value-MIP uses planning information unavailable to certificate-input selectors. (b) RCSD fixed-policy deletion error divided by 𝐵 P and execution regret divided by 2𝐵 P ; large-tier regret is controller-library restricted, and the dashed line is the certified ceiling. (c) At 𝐿 = 4, precomputed-score aggregation, fixed-shape partitioning, and selected-team planning time; controller-utility and pair-feature construction are excluded. Ablation MIPs is the within-map median of Distance, Envelope, and Current. Violins retain all plotted observations; inference in (a) uses maps as the unit. Points and thick/thin intervals denote medians, interquartile ranges, and 5th–95th percentiles. Table 13: Empirical RCSD certificate ratios (median/p90/p95). Quantiles use point values for RCSD-selected partitions; vio-lation counts use the numerically enlarged upper interval and cover all evaluated partitions or method rows.           
+
+> Tier |Δ𝑉 |/ 𝐵 Regret/ 2𝐵 Viol. Small exact .0001/.323/.387 .076/.184/.206 0/384 Large library .158/.341/.452 .070/.149/.175 0/1,440
+
+minimizing a worst-case upper bound need not minimize typical regret. The ratios in Table 13 are well below one, so the certificate is conservative rather than calibrated to realized loss. Its upper tail is not vacuous: the largest audited ratios over all large-tier methods are .816 for deletion and .356 for restricted regret. Every map is connected, every reward and speed audit passes, all mixed-integer gaps are zero at the solver tolerance, and the maximum propagated regret-interval width is 7 .74 × 10 −7. At 𝑛 = 20, the complete six-method, two-capacity suite has median/95th-percentile runtime 50.16/52.34 seconds; this is an implementation observation, not a deployment latency guarantee. 
+
+## H Reproducibility Details 
+
+Reproduction supports Python 3.12 or later; reported outputs use Python 3.13.1, NumPy 1.26.4, SciPy 1.15.2, NetworkX 3.6.1, and seaborn [12, 13, 33, 34]. The supplementary material contains imple-mentation, fixed configurations, and seed-level outputs; no learned model, external service, or network call is needed. Checks cover contact and value bounds, exact five-agent evaluation, approximate-versus-exact minimization, construction scaling, both 2-D tiers, complete seed sets and capacities, Bellman and cut-policy residuals, regret nonnegativity to 10 −8, finite-tail and solver intervals, and Eq. (7).

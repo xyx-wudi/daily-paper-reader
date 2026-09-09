@@ -1,0 +1,346 @@
+Title: Games Over Observation Spaces in Multi-Agent Capture the Flag
+
+URL Source: https://arxiv.org/pdf/2609.06178v1
+
+Published Time: Wed, 09 Sep 2026 00:50:08 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Games Over Observation Spaces in Multi-Agent Capture the Flag 
+
+Mae Frost 1[0009 −0008 −9945 −979 X], Michael Amir 2[0000 −0002 −5519 −0206] , and Shaunak D. Bopardikar 3[0000 −0002 −0813 −7867]  
+
+> 1
+
+Department of Computer Science and Engineering, Michigan State University, East Lansing MI 48824, USA 
+
+frostric@msu.edu  
+
+> 2
+
+University of Cambridge, UK 
+
+ma2151@cst.cam.ac.uk  
+
+> 3
+
+Department of Electrical and Computer Engineering, Michigan State University, East Lansing MI 48824, USA 
+
+shaunak@msu.edu 
+
+Abstract. We consider a multi-agent Capture the Flag (CtF) scenario in a graph-based environment, where a team of attackers seeks to reach designated flag vertices while a defending team attempts to intercept them. In our setting, both teams operate using decentralized heuristic policies. While the attacking team may choose its heuristic from a diverse library of policies, the defense is restricted to playing a single fixed pol-icy. To overcome this limitation, a centralized defense oracle strategically restricts the portion of the graph visible to each of its agents in order to elicit a wider range of emergent behaviors from its fixed policy. We formalize this interaction as a two-player zero-sum game, where the at-tacker reasons over its library of heuristics and the defense reasons over the combinatorial space of visibility profiles. To solve this intractably large game, we propose a Double Oracle algorithm to find approximate empirical equilibria, and we empirically validate that observation manip-ulation can improve the defense’s performance. 
+
+Keywords: Multi-Agent Systems · Reinforcement Learning · Capture the Flag 
+
+# 1 Introduction 
+
+Consider an adversarial game of Capture the Flag (CtF) played between two teams of homogeneous agents over a graph. One team, the attackers, tries to reach a set of flag vertices, while the second team, the defenders, tries to prevent flag captures by intercepting the attackers. This leads to a two-team zero-sum game in which the defense minimizes the number of flag captures, while the attackers try to maximize it. In order to accomplish their respective goals, each team uniformly deploys a decentralized policy across its agents, that is, each agent on the same team uses the same policy. In an ideal case, each team would arXiv:2609.06178v1 [cs.GT] 5 Sep 2026 2 M. Frost et al. 
+
+derive an optimal stochastic policy against its opponent, jointly forming a mixed-strategy Nash equilibrium. However, in practice, it is often infeasible to derive optimal policies for either team, especially when the team or graph size is large. For this reason, we assume that both teams deploy heuristic policies, which, while suboptimal, are both easier to design and can often be more generalizable across different graphs. With the restriction to decentralized heuristic approaches in place, the question arises of how each team can best shape its behavior to achieve its goal. An intuitive way to do this would be to build a diverse library of heuristics to hopefully allow for a more performant best response to a poten-tial opponent. A second method, however, might be to maintain only a small number of heuristics, and instead shape how each agent perceives the environ-ment by masking portions of the graph. This underlies the central premise of this work, that information restriction can be treated as a strategic resource. While compiling an exhaustive library of heuristics is both labor-intensive and often manual, selectively altering the environment perceived by a fixed policy provides an automated alternative. By selectively withholding specific data, a centralized oracle can effectively restrict each agent’s action space to trigger spe-cific heuristic behaviors, such as forcing an agent to hold a choke-point rather than blindly pursuing a target. Under such a profile over the observation and action spaces, each agent on the team potentially plays the game in a differ-ent environment, allowing for heterogeneous behaviors despite the homogeneous policy [1]. In physical deployments, these types of observation restrictions have natural analogs in terms of selective sensor filtering, explicit communication con-straints, or dynamic mission assignment. We study the interplay between these two methodologies by considering a game over visibility profiles in which the attacking team is allowed access to a library of heuristics, while restricting the defense to only a single policy but allowing it to define an observation mask for each of its agents. 
+
+Contribution The primary contribution of this paper is an algorithm that finds approximate empirical equilibrium policies for both teams in the proposed game over visibility profiles. Our algorithm uses the Double Oracle framework to avoid reasoning over the space of all possible observation masks for each defending agent. While the oracle deciding the attacker’s choice of policy is exact, the ora-cle used to create the visibility profile used by the defense is approximated using deep reinforcement learning techniques to optimize a graph neural network. We then validate our algorithm and oracles in both a small gridworld and a larger setting modeled after urban street maps. Serving as an empirical proof of con-cept for our framework, these trials demonstrate that manipulating the defense’s observation space can impact team behavior enough to shift the value of the CtF game’s equilibrium in favor of the defense. Specifically, against our defined set of heuristics, our methodology reduces the expected game value from 1 flag capture to 0 flag captures in the gridworld setting, and from 2 flag captures to 0 flag captures in a 200-vertex urban environment, both representing maximal improve-ments for the defense. These results provide empirical evidence that observation Games over Observation Spaces 3
+
+manipulation can introduce useful heterogeneity to enforce favorable equilibria without engineering new defense policies. 
+
+Related Work. While multi-agent competitive games have been studied in a vari-ety of contexts, our CtF game is most similar to pursuit-evasion [13] and perime-ter defense games [11, 20], which both feature teams with diametrically opposing goals. However, while the defense must both pursue attackers and protect the flag vertices in CtF, the balance between these goals, particularly across a team, makes defense in CtF an altogether distinct task, a dynamic that equally com-plicates the attacker’s objective. Similar capture the flag settings have also been studied in the context of differential games [5, 23]. However, these formulations differ from our own by incorporating a “safe zone” to which the attacker must return. Regardless of the formulation, the large state-space associated with multi-ple interacting agents has necessitated the creation of algorithmic techniques for solving large games. This led to the creation of the Double Oracle framework [15], which allows for matrix game solutions to be computed without enumerating ei-ther player’s action space, as long as a best response oracle is available for both players. The Double Oracle technique has since been extended to a variety of contexts, including extensive form games [14] and machine learning-derived or-acles [10]. A final related topic is agent-environment co-design , which considers how to optimize not only an agent’s behavior for a task, but also the environ-ment around the agent [4, 12, 19, 9]. This idea, that environment design inher-ently shapes agent behavior, mirrors how our game tries to design optimal CtF graphs for the defending agents. Of particular relevance to our setting are [4, 12], which utilize a coordinated learning approach to optimize both robot navigation and obstacle placement. 
+
+# 2 Problem Formulation 
+
+In this section, we define the graph-based CtF setting, decentralized heuristics, and the game over visibility profiles. We begin by formulating the game environ-ment. 
+
+2.1 Environment and Agent Formulation 
+
+We formulate the scenario as a discrete time, graph-based Capture the Flag (CtF) game. The game environment is a 7-tuple E = ( G, V F , V a, V d, r a, r d, T ).
+
+G = ( V, E ) is a connected, undirected graph, where vertex set V defines the set of valid locations for agents and edge set E defines the connectivity between those locations. We define VF ⊂ V as a set of static flag locations that the defending team must protect. The initial locations for the defending and attacking teams are given by the sets Vd, V a ⊂ V respectively. We assume the attacker team is of size m and the defense of size n, such that |Va| = m and |Vd| = n. To ensure non-trivial initial conditions, we impose that team starting locations are strictly 4 M. Frost et al. 
+
+disjoint and that no attacker begins at a flag location, i.e., Vd ∩ Va = ∅ and 
+
+VF ∩ Va = ∅.At any timestep t, the global game state is a tuple X(t) = ( Xa(t), X d(t)) and is fully observable to all agents, where Xa(t) = ( xa, 1(t), . . . , x a,m (t)) and Xd(t) = (xd, 1(t), . . . , x d,n (t)) are tuples representing the current positions (vertices) of the attacking and defending teams respectively. Notably, while we will later introduce restrictions on the state observability for the defense, the attacking team will always maintain access to this global state. As the state transitions, agents either traverse an incident edge to an adjacent location or maintain their current position. At any time step t, each agent still in play is located at exactly one vertex in V , with no restriction on how many agents can be located at any given vertex. The attacking team Aa = {a1, . . . , a m} acts according to a decentralized pol-icy πa with the overall goal of capturing flags. An attacker agent successfully secures a capture if it navigates to within a capture radius ra ∈ N0 (as measured in edges) of any flag vertex. Upon a successful capture, the capturing agent is re-moved from the environment, while the flag remains active for potential capture by remaining attackers. As the movement of the attacking team is dictated by 
+
+πa, the attackers’ objective can be posed as selecting a policy πa that maximizes the total number of flag captures. The defending team Ad = {d1, . . . , d n} operates according to a decentral-ized policy πd with the goal of preventing the attackers from capturing flags. A defender is said to tag an attacker if it closes the distance between itself and an at-tacker to within a tagging radius rd ∈ N0. A successful tag results in the removal of both the tagging defender and any tagged attackers from the environment. We give capture priority over tagging should they happen simultaneously. Thus, if an attacker would both capture a flag and be tagged by a defender, the capture will be processed rather than the tag. Furthermore, as tagging is evaluated based only on the final vertex distance after all movements have taken place, agents that ‘swap’ vertices along the same edge will not trigger a tag unless the vertex distance tagging condition holds. Thus, in the case that rd = 0 the defense is incentivized to hold stationary positions rather than pursuing attackers directly. As the defense has directly opposing goals to the attacking team, its objective is to select a policy πd that minimizes the total number of flag captures. The game transitions between states in the following manner: all agents select a valid action, i.e., movement to a neighbor or remaining in place, according to 
+
+πa and πd simultaneously. All actions are then processed at once, updating the agents’ locations. Flag captures are then processed, and any attackers that have captured a flag are removed from play. Finally, any agents that meet the tagging condition are removed from play. The game terminates when either one team’s agents are entirely removed from play, or when a maximum time horizon T is reached. Notably, the capture and tagging dynamics described tie the maximum number of flag captures to the size of the attacker team rather than the number of flags. This means that a larger flag set corresponds to a more difficult defensive Games over Observation Spaces 5
+
+task, i.e., more locations to defend, as opposed to a change in possible payoffs achievable by either team. 
+
+2.2 Game Utility 
+
+While the environment as described above is fully deterministic, the policies 
+
+πa and πd may contain stochastic elements. Thus, we will consider the game’s utility based on their expected outcome. Let C(πa , π d | E ) be a random variable representing the total number of flag captures that occur in a single play of the CtF game in environment E with attacker and defender policies πa and πd
+
+respectively. We then define the objective function for the game as 
+
+J(πa, π d | E ) = E[C(πa , π d | E )] . (1) Observe that the game utility is strictly zero-sum as the attacking team wishes to maximize J(πa, π d | E ), while the defending team tries to minimize it. 
+
+2.3 Policy Structure 
+
+While there exist numerous techniques in the literature that could be adapted to find optimal values of πa and πd, we are primarily interested in the theoretical properties of the CtF game when both teams deploy suboptimal, rule-based policies. While such policies may perform worse than what is optimal, they are often significantly easier to design and can often maintain good performance across a wide range of environments. Specifically, we restrict both πa and πd to the class of decentralized heuristics , which we define by the following conditions: 1. Topological Agnosticism: The policy must be executable across any valid game environment E. This ensures the policy produces valid actions regard-less of vertex count, edge density, flag placement, or the cardinality of the agent teams. 2. Uniform Decentralized Execution: The policy is homogeneous across all agents of a given team. Furthermore, execution is strictly localized; agents independently map their observation of the state to an action without access to any shared hidden state or inter-agent communication. A trivial example of a decentralized heuristic for the defense might be for each agent to take a step along the shortest path to the nearest attacker and to re-main in place if there is no attacker to move towards. This policy is topologically agnostic as it can produce a valid action regardless of the environment config-uration or number of agents. Furthermore, it meets the uniform decentralized execution condition as all defending agents use the same process to determine their action, and their action only depends on their observation of the current state of the game. Now that we have formalized the CtF game setting and the policy space, we can turn to our problem formulation. 6 M. Frost et al. 
+
+2.4 Games Over Visibility Profiles 
+
+Consider a scenario in which the defending team plays a fixed heuristic policy 
+
+πd. Meanwhile, the attacking team has access to a finite set of heuristic policies 
+
+Πa = {πa1, . . . , π ak } to choose from. Under these conditions, the objective for the game becomes only a function of the attacker’s policy choice. Thus, the attacker may simply evaluate the expected utility of each of its policies against the known defense and select the best response, 
+
+π∗ 
+
+> a
+
+∈ arg max 
+
+> πa∈Πa
+
+J(πa | πd, E). (2) In this formulation, an attacker with access to a diverse set of policies Πa can exploit the static πd, leading to poor outcomes for the defense. In order to restore the defender’s agency in this scenario, we must find a way to manipulate the behavior of its agents without altering the underlying policy πd. To this end, we introduce the concept of a visibility profile over the defending agents. While the defense cannot change the policy πd, a centralized oracle can alter the observation space that the defender agents perceive. That is, by restricting the portion of the graph visible to each defender agent at the beginning of the game, the defense can alter the overall behavior of its team. Formally, a visibility profile , p, over graph G for a team of n defenders is defined as an n-tuple 
+
+p = ( S1 = ( V1, E 1), . . . , S n = ( Vn, E n)) , (3) where Si, i = 1 . . . n are induced subgraphs of G. To employ a profile p, the defense restricts the attention of each agent di to only the subgraph Si. That is, from the perspective of agent di under some profile p, the game environment is E′ = ( Si, V F ∩ Vi, V a ∩ Vi, V d ∩ Vi, r a, r d, T ), restricting the agent’s action space accordingly. Similarly, the agent’s state observation at time t becomes 
+
+X′(t) = ( Xa(t), X d(t)) ◦ Vi, where ◦ denotes the operation of removing all entries in Xa(t) and Xd(t) that do not appear in Vi. We emphasize that because the visibility profile is enforced prior to the game’s start, defender agents under a profile are unaware of the true environment E.In order to ensure that πd still functions after the profile is applied, we require that each subgraph of the profile forms a valid CtF environment. Specifically, for each subgraph Si, i ∈ 1 . . . n :1. Si must be connected; 2. Si must contain at least one flag vertex and attacker starting position, 
+
+Vi ∩ VF 6 = ∅, Vi ∩ Va 6 = ∅; and 3. Si must contain the starting vertex of agent di.Observe that employing a profile can change the behavior of the defense under πd. For instance, consider the shortest path heuristic described previously. A carefully designed profile could direct each defender to pursue entirely different targets than in the full-visibility setting. Notably, the profile may restrict the Games over Observation Spaces 7
+
+ability of a given defender to see its own team’s current locations, which can sever implicit coordination between teammates provided by the heuristic. Suppose that the defense employs a visibility profile p over its agents at the start of the game. Since the behavior of the defending team is now determined by both the fixed defense policy πd and the profile p, the objective of the game becomes 
+
+J(πa, p | πd, E) = E[C(πa , p | πd, E)] , (4) where C(πa, p |πd, E) is a random variable representing the total number of flag captures that occur in a single instance of CtF in environment E with the attacker playing πa and the defense playing πd under the visibility profile p. This leads to the following minimax optimization problem for a fixed environment E:
+
+min  
+
+> y∈∆(P)
+
+max  
+
+> z∈∆(Πa)
+
+∑
+
+> p∈P
+
+∑
+
+> πa∈Πa
+
+y(p)J(πa, p | πd, E)z(πa), (5) where ∆(P) and ∆(Πa) are the probability simplices over the space of valid vis-ibility profiles and attacker heuristics, respectively. We impose that both teams’ choices of strategy are made simultaneously; neither team observes the oppo-nent’s strategy distribution or realized choice prior to execution. The solution to this objective represents the Nash equilibrium of a CtF game where the defense reasons over the space of visibility profiles while the attackers reason over a set of heuristics. For notational clarity, we will refer to possible values of y and z as the defender and attacker strategies , as to distinguish them from the CtF policies 
+
+πd and πa ∈ Πa.
+
+Problem Statement: Determine a methodology for solving the objective in Equation (5) by finding empirical equilibrium strategies (y∗, z ∗).
+
+# 3 Methodology 
+
+In this section, we describe a Double Oracle approach for solving the zero-sum visibility profile game described above. While zero-sum games can typically be solved efficiently through the use of linear programming, the large quantity of pure strategies available to the defense makes this challenging in practice. Since each pure strategy for the defense corresponds to an n-tuple of subgraphs of the game graph G, we have that the total number of possible defense strategies is upper bounded by |P| < 2n|V |, where n is the number of defenders. To avoid enumerating this strategy space, we utilize the Double Oracle technique which allows us to only explore relevant portions of the visibility profile space. The formal statement of our algorithm is given in Algorithm 1 and is summa-rized as follows. The set Y contains the defense visibility profiles that have been generated so far, while Z is the current subset of Πa under consideration. We initialize Y to contain the visibility profile corresponding to full visibility for all agents. This ensures that the equilibrium value for the defense is no worse than the full-visibility baseline. Z is initialized with a randomly selected attacker pol-icy. In each iteration of the algorithm, the profiles and policies in Y and Z form 8 M. Frost et al. 
+
+a two-player zero-sum sub-game where Y and Z serve as the sets of pure strate-gies available to each player. U ∈ R|Y |×| Πa| is a utility matrix which holds the estimated expected game payoff for the current set of visibility profiles against 
+
+all attacker policies. The subroutine N ash (Y, Z, U k) finds equilibrium strategies, 
+
+yk ∈ ∆(Y ) and zk ∈ ∆(Z), for the current sub-game using a standard linear programming formulation, drawing the game’s utilities from the matrix Uk. The 
+
+Profile Oracle then calculates a visibility profile pbr ∈ P that is a best response to the current attacker mixed policy zk. Similarly, the Attacker Oracle deter-mines a pure policy πbr ∈ Πa as the best response to the current defender mixed policy yk. Note that pbr and πbr are drawn from the full sets P and Πa, not just from Y and Z. The best response profile and policy are then added to the sets 
+
+Y and Z respectively, and a new row is computed for the utility matrix U if pbr 
+
+is a new addition to Y .
+
+Algorithm 1 Double Oracle for Visibility Profile Game                                                               
+
+> 1: Initialize Ywith profile p0= ( S1=G, . . . , S n=G)
+> 2: Initialize Zwith a randomly selected policy from Πa
+> 3: Initialize Uby estimating ˆJ(πa, p 0|πd,E)∀πa∈Πa
+> 4: k←0
+> 5: while not converged do
+> 6: Uk←U
+> 7: (yk, z k)←N ash (Y, Z, U k)
+> 8: pbr ←P rof ileOracle (zk)
+> 9: πbr ←AttackerOracle (yk, U k)
+> 10: Y←Y∪ { pbr }
+> 11: Z←Z∪ { πbr }
+> 12: Update Ufor profile pbr if needed. 13: k←k+ 1
+> 14: end while
+
+The algorithm formally converges if, in some iteration, both pbr and πbr 
+
+are already in Y and Z respectively. That is, the algorithm terminates if both oracles cannot find a best response that is not already part of the sub-game. More commonly, however, Double Oracle algorithms are set to terminate if the difference in utility between the sub-game’s Nash equilibrium on subsequent iterations falls below some threshold δ [15]. The maintenance of the utility matrix 
+
+U is borrowed from the Policy Space Response Oracle (PSRO) framework [10] and is not strictly necessary. However, it can greatly speed up computation through memoization as utilities are calculated by policy rollout. Under the assumption that both oracles can accurately give the best response, the double oracle method is known to converge in a finite number of iterations [15]. However, as our Profile Oracle is approximated, Algorithm 1 terminates in an approximate empirical equilibrium. We now cover the details of each of the oracles used in Algorithm 1. Games over Observation Spaces 9
+
+3.1 Attacker Oracle 
+
+Recall that the purpose of the Attacker Oracle is to quickly choose a best re-sponse pure policy πbr ∈ Πa to the current profile mixed strategy yk. In practice, the set of pure policies available to the Attacker is significantly smaller than the space of pure profiles, that is, |Πa| ≪ |P| . This allows us to calculate the best response for the attacker directly as, 
+
+πbr ∈ arg max 
+
+> π∈Πa
+
+[y′
+
+> k
+
+Uk]π , (6) where yk ∈ R|Y |× 1 is the defender mixed strategy over the visibility profiles within the sub-game, and Uk is the current utility matrix. 
+
+3.2 Profile Oracle 
+
+Unlike the Attacker Oracle, the Profile Oracle must select a pure strategy from the combinatorial space of all valid visibility profiles, P. Formally, the oracle’s task is to select visibility profile pbr ∈ P that minimizes the expected CtF game utility against the current mixed attacker strategy, zk ∈ ∆(Z), that is, 
+
+pbr ∈ arg min 
+
+> p∈P
+
+∑
+
+> πa∈Z
+
+zk(πa)J(πa, p | πd, E). (7) As |P| scales exponentially with the size of the game graph G, exhaustive evaluation of Equation 7 is intractable for all except the smallest of graphs. For this reason, we instead approximate the Profile Oracle using Deep Reinforcement Learning (DRL). This is accomplished by reframing the selection of the profile as an iterative vertex selection task, where a centralized visibility agent sequentially chooses vertices to exclude from each defender’s observation set to support the performance of πd.This process of sequential vertex exclusion is modeled as a Markov Decision Process (MDP) defined by the tuple (S, A, r, T ). The state at time step t, st ∈ S ,encodes the graph topology of the CtF game G, the flag locations, agent starting positions, and the current state of the constructed profile. The action space A is composed of n · | V | discrete actions, corresponding to removing a specific vertex from the observable subgraph of a specific defender agent. The action space also includes a single designated “commit” action, which causes the end of the episode. The transition function, T , is fully deterministic, simply updating the state to reflect the updated visibility profile based on the removal of the chosen vertex. The reward function, r, is sparse, only evaluated after the agent has chosen the commit action finalizing the choice of profile, p. The reward is determined by using the negative number of flag captures that occur in a simulated CtF game, using the profile p and an attacker policy πa ∼ zk.To solve this MDP, we parameterize the visibility agent as a neural policy 
+
+πΘ (at ∈ A|st ∈ S ), optimizing the parameters Θ using an Actor-Critic archi-tecture. Here, we utilize a Graph Neural Network (GNN) to parametrize our 10 M. Frost et al. 
+
+policy due to the graph-based state space of the MDP. However, in practice the technique is agnostic to the choice of function approximator. We now turn to a discussion of some modifications we apply to the profile MDP to better facilitate the optimization of the model parameters, Θ.
+
+Reward Shaping As mentioned above, the reward associated with a generated visibility profile is determined by using the negative number of flag captures that result from simulating the CtF game. In practice, this means that the only possible rewards that can be obtained for a given CtF environment E are integers from the set {−| VF |, . . . , 0}. While theoretically grounded in optimizing the objective given in Equation (7), the sparse reward signals can often lead to high variance gradient updates during the optimization of πΘ, particularly in early training iterations. In preliminary evaluations, we observed that optimizing the visibility agent using only the flag captures frequently struggled early on. To help stabilize the training process in early iterations, we augment the objective with a surrogate reward, rdense , that encourages the visibility agent to generate profiles that minimize the shortest path distance between defender and attacker agents at the termination of the CtF game. More formally, let Afa , Afd ⊂ V
+
+be the locations of any active attacker and defender agents respectively at the conclusion of a CtF game before the final checks for capture and tagging, the dense reward when |A fa |, |A fd | > 0 is then given by, 
+
+rdense (p) = − min {dist (af , d f ) | af ∈ A fa , d f ∈ A fd }
+
+max {dist (i, j ) | i, j ∈ V } , (8) where dist : V × V → N gives the shortest path distance between vertices in G,and 0 otherwise. The total reward observed by the visibility agent is given by 
+
+ragent = r(p) + β · rdense (p), (9) where β is a dynamic weighting parameter, controlling the influence of the sur-rogate reward. At the beginning of training, β is initialized to 1, providing an additional reward signal to help guide the agent in early iterations. However, to ensure that the visibility agent ultimately optimizes Equation (7) without becoming overly biased by rdense , β is linearly annealed to 0 over the course of policy optimization. 
+
+Profile Action Masking A critical challenge in generating the profile p is en-suring that the final subgraphs each form a valid CtF environment. While this could, in theory, be enforced by introducing additional penalties in the reward function, such a scheme would likely slow down the optimization process con-siderably. Instead, we employ autoregressive action masking during the policy’s forward pass to enforce the following conditions. Suppose an action at time t, at,would cause the removal of some vertex j from subgraph Si creating the updated subgraph S′ = ( V ′, E ′) for some defender i, we require: Games over Observation Spaces 11 
+
+1. The vertex j has not already been removed from Si, i.e., j ∈ Vi;2. S′ is connected; 3. S′ contains at least one flag, i.e., VF ∩ V ′ 6 = ∅;4. S′ contains at least one attacker starting vertex, i.e., Va ∩ V ′ 6 = ∅; and 5. S′ contains the starting location of defender i.At each time step t, we compute a binary mask to determine the legal actions given the current topology of the profile. This mask is then used to set the logits corresponding to invalid vertices to −∞ , ensuring that these vertices will never be selected and that the resulting policy πΘ (at|st) can only sample valid profiles. On a practical note, enforcing the second condition ( S′ is connected) is a non-trivial operation, requiring computation and masking of the articulation points of Si. In general, this can be done in time O(|Vi| + |Ei|) using the method of Hopcroft and Tarjan [7]. However, since this process must be repeated for all 
+
+n defenders, it can become burdensome when either the graph or team size is particularly large. In such cases, it may prove more efficient to employ a reward shaping approach to maintaining connectivity, rather than action masking. A complete schematic of Algorithm 1’s execution loop is shown in Figure 1.                
+
+> Current Sub-game Matrix Uk
+> LP Solver Nash Eq. (yk, z k)
+> Profile Oracle (pbr ∈ P )Attacker Oracle (πbr ∈Πa)GNN Actor-Critic Autoregressive Masking Simulation & Reward
+> DRL Approximation
+> Exact evaluation over Πa
+> Defender Strategy ykAttacker Strategy zk
+> Add pbr to YAdd πbr to Z
+
+Fig. 1: A block diagram visualizing the major components and information flow of Algorithm 1. 
+
+3.3 On Convergence and Termination 
+
+The standard Double Oracle framework has been shown to converge to an exact Nash equilibrium provided that the oracles return a true best response. While this is the case for our Attacker Oracle, our Profile Oracle is approximated via Deep Reinforcement Learning (DRL), causing our approach to fall under the framework of PSRO [10]. Under PSRO, if the approximate oracle is assumed to find an ǫ-best response, then the overall solution can be shown to be an 12 M. Frost et al. 
+
+ǫ-Nash equilibrium [15, 14]. However, as the DRL-based oracle lacks a formal ǫ-best response bound, the outputs of Algorithm 1 form an empirical equilibrium 
+
+rather than an exact Nash equilibrium. For this reason, we employ a termination condition based on the stagnation of the sub-game equilibrium value. Let vk denote the value of the sub-game equilibrium in the k-th iteration of Algorithm 1. The algorithm terminates when the addition of a new profile policy fails to reduce the equilibrium value by more than a hyperparameter threshold δ. Specifically, we terminate if |vk − vk−1| < δ 
+
+and no new attacker heuristic has been added to the sub-game. This indicates that the Profile Oracle has plateaued in its ability to find new visibility profiles that can improve performance against the current attacker mixed strategy. We know that in any iteration of Algorithm 1, the Attacker Oracle produces a true best response as it performs an exact argmax over its finite policy library. However, due to the combinatorial complexity of finding an optimal profile, it is difficult to measure the quality of the approximate Profile Oracle. However, because the value of the CtF game is strictly lower bounded by 0, we have that any strategy returned by the Profile Oracle with a value of 0 must be a true best response. Thus, under the assumption that the utility matrix U accurately estimates the expected game payoffs, the special case of convergence to a zero-capture final solution guarantees that the resulting strategies form a true Nash equilibrium. 
+
+# 4 Experiments 
+
+In this section, we empirically evaluate the performance of Algorithm 1 and the approximate Profile Oracle. We begin with an illustrative example played over a 12-vertex gridworld, which allows for easy qualitative analysis of the profile. We then gain insight into the average performance of Algorithm 1 through a set of random trials on larger graphs with more realistic topologies. We then conclude with a detailed case study of the algorithm’s execution in one of these randomized trials. All experiments are performed on a computer with an Intel Core i7-12700 CPU, a GeForce RTX 3060 Ti, and 32 GB of memory. 1
+
+4.1 Experimental Setup 
+
+We evaluate our approach under two classes of CtF graphs and across a small set of attacker and defender heuristics. 
+
+Graph Settings As noted previously, the first experiment demonstrates our ap-proach’s performance on a 12-vertex gridworld. The scenario features one de-fending agent, one attacking agent, and one flag, each positioned in one of the “corner” vertices. The defending team is given a tagging radius of rd = 1 , while the attackers are given a smaller capture radius of ra = 0 . The time horizon in   
+
+> 1Code available at https://github.com/rfrost114/Visibility-Profile-Games Games over Observation Spaces 13
+
+this setting is set to T = 50 . The setting for both the randomized trials and the final case study are played over two graphs extracted from OpenStreetMap (OSM) data [6], with 100 and 200 vertices respectively. For both of these graphs, the scenario is a two-versus-two setting featuring 2 attackers and 2 defenders. The 100-vertex graph features 2 flag vertices that are spread across the graph. In contrast, the 200-vertex graph has 3 tightly clustered flag vertices. The OSM graphs are shown in Figure 2. In this setting, both the capture and tagging ra-dius are set to ra = rd = 1 , and games are played for a maximum of T = 200 
+
+steps.  
+
+> (a) 100-Vertex Environment (b) 200-Vertex Environment
+
+Fig. 2: One configuration of the OSM-based CtF environments used in the ran-domized trials. Flags are shown in green, attacker starting locations in red, and defender starting locations in blue. 
+
+Heuristic Library For our experiments, we utilize a set of baseline decentralized heuristics for both the attacker and defender. In each game, the attacker oracle uses a library of three distinct routing behaviors, while the defense is locked to one of two preset policies. These policies are summarized in Table 1. Notably, while each of the attacker heuristics contain stochastic elements, they only arise when the heuristic must break a tie between two equal options. In general, how-ever, we observe that the behavior of the heuristics is largely deterministic within our experimental settings. 
+
+4.2 Implementation Details 
+
+To solve the profile MDP, we parameterize the profile policy using a GNN. The GNN is then optimized using Maskable Proximal Policy Optimization (Masked PPO) [8]. We do not use a warm starting mechanism in our experiments, with the GNN being retrained from scratch in each iteration. As mentioned above, the state representation that the GNN receives as input is in two parts: a CtF graph representation (which remains the same across all states) and an encoding 14 M. Frost et al. 
+
+of the current profile (which changes between states). The CtF graph represen-tation is given by a vertex feature matrix, where each vertex is represented by a 21-dimensional feature vector. This feature vector can be broken into three con-ceptual sections: a 4-dimensional one-hot encoding of the vertex’s presence in 
+
+VF , Va, or Vd; a 4-dimensional encoding of local graph information (the vertex’s degree along with the minimum, maximum and mean degree of its neighbors); and a 13-dimensional encoding of the vertex’s global position within the graph using 8 Laplacian eigenvectors [2] and 5 random walk [3] positional embeddings. The current profile is represented by a |V | × n binary matrix, where the entry at row i and column j is 1 if vertex i is included in the current profile for defender 
+
+j and 0 otherwise. These two matrices are then concatenated to form the final state representation matrix: st ∈ R|V |× (21+ n).Table 1: Agent Heuristics              
+
+> Role Heuristic Name Behavior Description
+> Defender Baseline Navigates along the shortest path to the nearest attacker. Defender Patrolling Patrols between high degree vertices in the vicinity of the flags. Attacker Shortest Path Navigates along the shortest path to the nearest flag Attacker Evasive Routing Navigates to the nearest flag while main-taining distance from nearby defenders. Attacker Receding Horizon Assigns a vertex score within a 5-hop neigh-borhood based on flag and defender proxim-ity, and steps based on the least score path.
+
+The message-passing architecture in our GNN is composed of two Graph Attention Network (GAT) layers [22] each with a hidden dimension of 64. The first layer utilizes 4 attention heads, each of which generates a 16-dimensional embedding. The second layer then uses a single attention head to aggregate these embeddings into a single 64-dimensional embedding for each vertex. After each layer, the ELU activation function is used to provide nonlinearity. To help prevent the oversquashing phenomenon that can plague shallow GNNs, we utilize a global virtual vertex within our network which helps to aggregate information between distant vertices in the graph [17, 21]. To help stabilize policy optimization and reduce variance in the critic’s advantage estimates, we employ an asymmetric, centralized critic architecture during training [18]. While the actor model is constrained to the state space described above to ensure it learns a generalized best response, we allow the critic model privileged access to the specific attacker heuristic sampled for the current episode. As the critic model is only utilized in training to guide the actor’s gradient updates and is entirely unused during evaluation, this methodology maintains the information boundaries needed to ensure a generalized Profile Oracle while increasing the training efficiency. Games over Observation Spaces 15 
+
+During policy optimization, the network was trained for a maximum of one million time steps, incorporating an early stopping mechanism to halt training on convergence. This mechanism halts training early if the average reward across 100 episodes rises above -0.15. In each update cycle, we collected 2000 environment steps per rollout and updated the network using a batch size of 256 and a learning rate of 3 × 10 −4. To stabilize training and encourage exploration, we used a PPO clip range of 0.15, a target KL divergence of 0.015, and an entropy coefficient of 0.01. As the profile generation process is a finite-horizon task with rewards only evaluated at termination, we used a discount factor and Generalized Advantage Estimation (GAE) lambda of 1. This helps to ensure that early node-masking actions are not arbitrarily penalized relative to actions taken immediately prior to episode termination. Finally, the simulation required throughout Algorithm 1 was implemented using the GAMMS Python package [16], which allows for the efficient implemen-tation of multi-agent games in graph settings. Due to the largely deterministic behavior of our test heuristics, simulations for calculating values in the utility matrix Uk are run 20 times, with the mean flag captures reported.       
+
+> (a) The 12-vertex gridworld
+> 1234512345
+> (b) Profile 0
+> 1234512345
+> (c) Profile 1
+> 12341234
+> (d) Profile 3
+
+Fig. 3: Evolution of the defense profile over multiple double oracle iterations. (a) The base gridworld with the flag (green), attacker starting location (red), and defender starting location (blue) shown. (b) When the defender uses no profile, the Evasive Routing attacker (red arrows) captures the flag. (c) The Profile Oracle drops 2 vertices (gray) and 6 incident edges (dashed) allowing the defender (blue arrows) to tag the attacker. (d) The final profile allows the defense to tag the attacker regardless of heuristic. 16 M. Frost et al. 
+
+4.3 Gridworld Experiment 
+
+The first experiment takes place in the 12-vertex gridworld graph shown in Fig-ure 3a. The defense utilizes the Baseline heuristic, while the attacker has access to all of the attack heuristics listed in Table 1. As a baseline, when the defense plays in a full visibility setting, the Shortest Path and Evasive Routing have an expected payoff of 1 flag capture, while the Receding Horizon policy has an expected payoff of 0. All three policies deterministically give these performance levels in the gridworld. Under this baseline, the attacker will choose to use either the Shortest Path or Evasive Routing heuristic, achieving a payoff of 1 for the CtF game. Algorithm 1 will allow the defense to outperform this baseline. In the experiment, the attacker sub-game is initialized with the Evasive Rout-ing heuristic, while the defense begins by using no visibility profile (Profile 0), leading to a sub-game equilibrium payoff of 1 capture. The unrolling of these policy choices is shown in Figure 3b. The Profile Oracle then calculates a best response profile (Profile 1) to the Evasive Routing attacker, and the Attacker Or-acle adds the Shortest Path Heuristic to the sub-game. The best response profile effectively mitigates the Evasive Routing attacker leading to a payoff of 0 cap-tures (Figure 3c). However, the Shortest Path heuristic added to the sub-game is unaffected by this new defender behavior and can still score the flag capture. This leads to the sub-game equilibrium value at the beginning of the algorithm’s second iteration remaining at 1 flag capture, with the defender mixing between its two profiles and the attacker always playing the Shortest Path heuristic. The algorithm iterates several more times, with the defense next creating a profile (Profile 2) that beats the Shortest Path heuristic but not the Evasive Routing heuristic, leading to mixed strategies for both players and an expected equilibrium value of 0.5. Eventually, at termination, the defense has access to two separate profiles (Profiles 3 and 4), both of which can mitigate the Evasive Routing and Shortest Path heuristics, over which the defense mixes equally. The Receding Horizon heuristic ends up always being suboptimal and is never added to the sub-game, leading to a final attacker strategy of mixing evenly over Evasive Routing and Shortest Path. The final sub-game equilibrium value is 0 captures, which corresponds to the maximum possible improvement for the defense. The unrolling of the game when the defense applies Profile 3 against the Shortest Path Attacker is shown in Figure 3d. Interestingly, both Profiles 1 and 3 learn to exploit a fail case in the defense policy, in which the defender holds position if it cannot see the attacker. By strategically hiding the attacker’s position at a critical time-step, the defense can better position itself and tag the attacker. 
+
+4.4 Randomized Trials 
+
+In our second experiment, we utilize the two OSM graphs described above to test the performance of our technique on arbitrary starting conditions. For each graph we generate 10 random configurations of agent starting positions and flag locations. We then report the mean performance of Algorithm 1 over all configurations. For the 100-vertex OSM graph, we report results for the both Games over Observation Spaces 17 
+
+the Baseline and Patrolling defender heuristics. For the 200-vertex OSM graph we report only the Patrolling defender’s results for brevity. As a baseline, we report the average game payoff when the defense uses a full visibility profile averaged over 100 simulations per configuration. As a secondary baseline, we also generate a set of 100 random valid visibility profiles for each configuration and report the mean CtF payoff when the attacker chooses its best response policy over 100 rollouts. While we continue to use 20 policy rollouts for calculating 
+
+Uk during execution, we reevaluate the utility for any profile that appears in the equilibrium on termination using 100 rollouts to ensure a greater degree of accuracy. The results of these trials can be seen in Table 2. Table 2: Randomized Trial Results: Mean over 10 Starting Configurations                
+
+> Heuristic Graph Full Visibility Mean Random Algorithm 1
+> Baseline 100-Vertex 0.80 ±0.40 0.97 ±0.59 0.50 ±0.50
+> Patrolling 100-Vertex 1.30 ±0.64 1.28 ±0.64 0.60 ±0.48
+> Patrolling 200-Vertex 1.40 ±0.66 1.49 ±0.59 0.65 ±0.63
+
+Across both heuristics and both graphs, the mean game payoff for the de-fense improves when utilizing Algorithm 1 as compared to using full visibility. Furthermore, using a random choice of profile is, on average, disadvantageous compared to simply using full visibility. We also observe that for some trials, Algorithm 1 cannot find a profiling strategy that improves performance. In some cases, this was because the initial conditions were so favorable to one team that the baseline payoff could not mathematically be improved. In other cases, it is less clear if no such profile exists or if the Profile Oracle simply did not find it. We can gain some insight into these cases by comparing the final payoffs per con-figuration in the 100-vertex graph for the two separate defense heuristics. Save for one configuration, the policies achieve the same final payoffs after applying Algorithm 1. This suggests that the final payoffs obtained in these trials are at least a local minimum in the space of profile performances. The final observation we draw is that, while the Baseline heuristic outperforms the Patrolling heuristic significantly in the full visibility setting, the two heuristics have similar expected performance after applying Algorithm 1. This suggests, the Patrolling heuristic gains more from the heterogeneity introduced through observation profiling than the Baseline heuristic. 
+
+4.5 200-Vertex Case Study 
+
+We conclude our experiments with a case study on one configuration of the 200-vertex OSM graph (Figure 2b). In theory, this particular trial should be favorable to the Patrolling policy as the flag vertices are clustered close together, forming a tight patrol route. That said, the policy struggles against the attack 18 M. Frost et al. 
+
+in a full-visibility setting with an equilibrium of 2 flag captures out of a possible 2. The algorithm’s execution is visualized in Figure 4.      
+
+> 1'%'"! ( %      1 $(%(   % "'*
+> '' %  "*  '&   " %#
+> ! "%+"! )&)  "('! "%'&'  '
+
+(a) Sub-game Attacker Mixed Strate-gies        
+
+> 1      1 1 1 1    
+>          
+
+(b) Sub-game Equilibrium Values 
+
+Fig. 4: Algorithm execution for a single trial of the 200-vertex graph trial using the Patrolling defender policy. (a) The weight of each attacker heuristic in the sub-game equilibrium. (b) The sub-game equilibrium value at each iteration. Figure 4a visualizes how the attacker sub-game evolves over time. Initially, the Receding Horizon (green) heuristic is the dominant policy. However, as the Profile Oracle begins to adapt, we begin to see mixing between the Receding Horizon and Shortest Path (blue) policies starting by the third iteration. This continues until iteration 5, where the Shortest Path is subsumed by the Evasive Routing policy (pink). An interesting observation is that whenever a new attacker policy enters the sub-game, it is given the highest weight of any policy in that equilibrium. This could imply that the profiles fitted in each equilibrium are highly specialized to the attacker policies in that equilibrium, leading to poor performance against new additions to the sub-game. The expected number of captures at the sub-game equilibrium over the al-gorithm’s execution is shown in Figure 4b. In early iterations, we see that the number of captures fluctuates between positive values and zero. Specifically, we see a pattern of a new attacker policy being added to the subgame leading to a positive number of captures (iterations 1 and 3) and the profile adapting to get zero captures in the subsequent iteration (iterations 2 and 4). This pattern breaks in iteration 6, where the defense is not able to isolate a profile that can per-fectly match the attacker’s mixed strategy (i.e., zero flag captures). The profile generated at the end of iteration 7 does manage to achieve zero flag captures for the defense, representing a maximal improvement from the full-visibility setting. The final observable subgraphs for each player are shown in Figure 5. Games over Observation Spaces 19 (a) First defender graph (b) Second defender graph 
+
+Fig. 5: The final visibility profile generated on the 200-node OSM graph. 
+
+# 5 Conclusions and Future Directions 
+
+We introduced a multi-agent zero-sum CtF game in which teams utilize decentral-ized heuristics rather than optimal policies. Each team takes a separate approach to mitigating its opponent’s policies, with the attackers using heuristic diversity and the defense relying on altering its agents’ observations. We proposed a Dou-ble Oracle algorithm for solving this game, where the Profile Oracle is approxi-mated by a GNN. Our experiments show that our algorithm and approximate oracle can be effective in practice, and that altering agents’ observations can elicit improved behaviors from a fixed policy. A natural extension would be to allow both teams to reason over both a pol-icy library and the space of visibility profiles. Furthermore, as observed in the 200-vertex case study, profiles generated as best responses tend to be highly spe-cialized to the current attacker policies weighted in the sub-game. This tendency to overfit on seen policies remains a critical limitation of our approach. Thus, evaluating the transferability of these visibility profiles against policies outside of Πa or developing methodologies to improve their generalization is an impor-tant direction for future work. Finally, expanding the formulation to allow for time-varying observation control and policy adaptation could provide an even greater range of behaviors to the defense than the static formulation considered here.   
+
+> Acknowledgments. This work was sponsored by the Army Research Laboratory and was accomplished under Cooperative Agreement Number W911NF-17-2-0181. The au-thors would like to thank Dr. Amanda Prorok at the University of Cambridge for several helpful discussions regarding this work, Arijit Bhowmik at Michigan State University for contributing the Patrolling Defender and Receding Horizon attacker policies used in our experiments, and Hanqing Qi at George Mason University for his assistance in implementing the simulation environment.
+> Disclosure of Interests. The authors have no competing interests to declare that are relevant to the content of this article.
+
+20 M. Frost et al. 
+
+# References 
+
+1. Amir, M., Bettini, M., Prorok, A.: When is diversity rewarded in cooperative multi-agent learning? In: International Conference on Learning Representations (2026), https://openreview.net/forum?id=uJCGMBO6Qx 2. Dwivedi, V.P., Joshi, C.K., Luu, A.T., Laurent, T., Bengio, Y., Bresson, X.: Bench-marking graph neural networks. Journal of Machine Learning Research 24 (43), 1–48 (2023) 3. Dwivedi, V.P., Luu, A.T., Laurent, T., Bengio, Y., Bresson, X.: Graph neural networks with learnable structural and positional representations (2021), arXiv: 2110.07875 
+
+4. Gao, Z., Yang, G., Prorok, A.: Co-optimizing reconfigurable environments and policies for decentralized multiagent navigation. IEEE Transactions on Robotics 
+
+41 , 4741–4760 (2025). https://doi.org/10.1109/TRO.2025.3588449 5. Garcia, E., Casbeer, D.W.: The capture-the-flag differential game: Attack, transi-tion and retreat. IEEE Open Journal of Control Systems (2025) 6. Haklay, M., Weber, P.: Openstreetmap: User-generated street maps. IEEE Perva-sive computing 7(4), 12–18 (2008) 7. Hopcroft, J., Tarjan, R.: Algorithm 447: efficient algorithms for graph manipulation. Communications of the ACM 16 (6), 372–378 (1973) 8. Huang, S., Ontañón, S.: A closer look at invalid action masking in policy gradient algorithms. In: The International FLAIRS Conference Proceedings. vol. 35 (2022) 9. Jain, R., Panda, P.R., Subramoney, S.: Cooperative multi-agent reinforcement learning-based co-optimization of cores, caches, and on-chip network. ACM Trans-actions on Architecture and Code Optimization (TACO) 14 (4), 1–25 (2017) 10. Lanctot, M., Zambaldi, V., Gruslys, A., Lazaridou, A., Tuyls, K., Pérolat, J., Silver, D., Graepel, T.: A unified game-theoretic approach to multiagent reinforcement learning. Advances in neural information processing systems 30 (2017) 11. Lee, E.S., Zhou, L., Ribeiro, A., Kumar, V.: Graph neural networks for decentral-ized multi-agent perimeter defense. Frontiers in Control Engineering 4, 1104745 (2023) 12. Li, H.X., Amir, M., Prorok, A.: Scaling multi-agent environment co-design with diffusion models. arXiv preprint arXiv:2511.03100 (2025) 13. Ma, X., Lv, M., Duan, K., Xie, W., Yang, J., Zhang, W.: Multi-player pursuit-evasion game with interaction constraints: A cooperative game theoretic approach based on coalition structure. IEEE Transactions on Automation Science and Engi-neering (2025) 14. McAleer, S., Lanier, J.B., Wang, K.A., Baldi, P., Fox, R.: Xdo: A double oracle algorithm for extensive-form games. Advances in Neural Information Processing Systems 34 , 23128–23139 (2021) 15. McMahan, H.B., Gordon, G.J., Blum, A.: Planning in the presence of cost functions controlled by an adversary. In: Proceedings of the 20th international conference on machine learning (ICML-03). pp. 536–543 (2003) 16. Patil, R., Malegaonkar, J., Jiang, X., Dion, A., Sukhatme, G.S., Christensen, H.I.: Gamms: Graph based adversarial multiagent modeling simulator (2026), arXiv: 2602.05105 
+
+17. Pham, T., Tran, T., Dam, H., Venkatesh, S.: Graph classification via deep learning with virtual nodes (2017), arXiv: 1708.04357 
+
+18. Pinto, L., Andrychowicz, M., Welinder, P., Zaremba, W., Abbeel, P.: Asymmetric actor critic for image-based robot learning (2017), arXiv: 1710.06542 Games over Observation Spaces 21 19. Schaff, C., Yunis, D., Chakrabarti, A., Walter, M.R.: Jointly learning to construct and control agents using deep reinforcement learning. In: 2019 international con-ference on robotics and automation (ICRA). pp. 9798–9805. IEEE (2019) 20. Shishika, D., Paulos, J., Kumar, V.: Cooperative team strategies for multi-player perimeter-defense games. IEEE Robotics and Automation Letters 5(2), 2738–2745 (2020) 21. Southern, J., Di Giovanni, F., Bronstein, M., Lutzeyer, J.: Understanding vir-tual nodes: Oversquashing and node heterogeneity. In: International Conference on Learning Representations. vol. 2025, pp. 27512–27540 (2025) 22. Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., Bengio, Y.: Graph attention networks. In: International Conference on Learning Representations (2018) 23. Wang, J., Zhou, Z., Jin, X., Mao, S., Tang, Y.: Matching-based capture-the-flag games for multiagent systems. IEEE Transactions on Cognitive and Developmental Systems 16 (3), 993–1005 (2023)

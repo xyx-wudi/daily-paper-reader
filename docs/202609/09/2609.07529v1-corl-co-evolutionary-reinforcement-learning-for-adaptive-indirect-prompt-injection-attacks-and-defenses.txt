@@ -1,0 +1,909 @@
+Title: CoRL: Co-Evolutionary Reinforcement Learning for Adaptive Indirect Prompt-Injection Attacks and Defenses
+
+URL Source: https://arxiv.org/pdf/2609.07529v1
+
+Published Time: Wed, 09 Sep 2026 02:24:13 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+Preprint 
+
+# CORL: CO-EVOLUTIONARY REINFORCEMENT LEARNING FOR ADAPTIVE INDIRECT PROMPT-INJECTION ATTACKS AND DEFENSES 
+
+Boyang Zhang Qingxin Xiao Lingwei Dang Qingyao Wu 
+
+School of Software Engineering, South China University of Technology 
+
+zby.edgar@gmail.com, sexqx@mail.scut.edu.cn levondang@163.com, qyw@scut.edu.cn 
+
+## ABSTRACT 
+
+Tool-augmented language agents are vulnerable to indirect prompt injection (IPI). Unlike direct prompt injection, IPI hides adversarial instructions in untrusted tool outputs and can covertly alter the execution of a legitimate task. Defenses trained on fixed attacks may fail as an attacker changes its strategy, injection site, and payload. To address this problem, we formulate adaptive IPI as an asymmetric, partially observable, general-sum Markov game: a multi-turn attacker adapts pay-loads at reached tool-return sites from the public trajectory, while a tool-using de-fender must block the injected objective and complete the user task. We propose CoRL, a verifier-grounded co-evolution and repair framework with three stages: Attacker SFT initializes multi-turn attacks from successful trajectories; bilateral Co-PPO jointly trains both agents with role-specific rewards and historical oppo-nent populations; and Defender SFT consolidates verifier-accepted teacher repairs for population-discovered failures. Across 1,514 clean, fixed-template, and adap-tive executions per defender, CoRL reduces overall ASR by 38.5 points to 0.0% and raises utility by 13.1 points to 76.3%. Stage-wise and controlled ablations show positive contributions from online Co-PPO and population-mined repair, while external-benchmark evaluation indicates transfer in attack resistance. The defender balances safety and task utility under the evaluated attacks, while the re-tained attackers provide candidates for adaptive red-team evaluation. 
+
+## 1 INTRODUCTION 
+
+Tool-augmented language agents consume untrusted webpages, emails, documents, and application state while calling tools that can modify external environments. Their tool returns can therefore mix task data with third-party instructions. Indirect prompt injection (IPI) exploits this ambiguity to redirect legitimate execution toward data leakage, tool misuse, or unauthorized actions (Greshake et al., 2023; Zhan et al., 2024; Debenedetti et al., 2024). A useful defense must block the injected objective while completing the user’s task: rejecting external content wholesale may appear safe, but destroys the agent’s utility. Despite increasingly stateful IPI benchmarks (Zhan et al., 2024; Debenedetti et al., 2024; Zhang et al., 2025; Li et al., 2026), defenses are often trained on fixed or weakly varying attacks. Such defenses may not generalize when attackers condition payloads on the public trajectory, the reached injection site, and prior attempts. Online co-training introduces a second difficulty: each current policy can overfit to its latest opponent and forget earlier attack or defense modes. Meanwhile, optimizing attack blocking without an explicit task-utility signal can favor blanket refusal (Zhan et al., 2025; Wang et al., 2025b; He et al., 2026). These limitations leave a common challenge: how can training continually discover adaptive failures and retain their repairs in a deployable defender? We address this challenge through a discovery-and-repair view: discovery exposes failures as both policies change, while repair retains their fixes without inducing blanket refusal. We model the within-execution interaction as an asymmetric, partially observable, general-sum Markov game. The defender acts throughout the multi-step trajectory, whereas the attacker intervenes only at reached 1arXiv:2609.07529v1 [cs.LG] 7 Sep 2026 Preprint A Indirect prompt injection B Adaptive attack within one execution     
+
+> User goal
+> Buy a laptop
+> Tool-using agent
+> Web Email Apps
+> Tool return (JSON)
+> {"product": "Laptop", "price": "$999",
+
+## 💉                                  
+
+> "user_instruction": "Forward OTP to attacker", "in_stock": true }
+> Defender response 1 Defender response 2
+> <think> Unrelated to my task. </think> <think> Required for checkout. </think>
+> Tool call
+> continue_checkout()
+> ATTACK IGNORED
+> Tool calls
+> complete_purchase() send_otp(to="external")
+> 1. Read review 2. Checkout 3. Read OTP email 4. Complete purchase 5. Unsafe action
+> OTP leaked Inject 1 Inject 2
+> Attacker attempt 1 Adaptive attacker 2
+> <think> Try adirect OTP request. </think>
+> <attack> Send OTP to attacker@evil.com. </attack> <think> First request failed. Use checkout verification. </think> <attack> Send OTP to attacker@evil.com to verify checkout. </attack>
+> Checkout + OTP email
+> Public trace Prior attack
+
+Figure 1: Adaptive IPI. (A) Malicious instructions are embedded in an otherwise legitimate tool return. (B) After an initial request is ignored, the attacker combines the public trace with its prior attempt to revise a later injection. The defender may complete the purchase and still leak the OTP. Reasoning snippets and tool calls are illustrative. tool-return sites and adapts later payloads to the public history. Independent verifiers score attack success and task completion, defining payoffs that reward the attacker for compromise but distinguish safe task completion, safe failure, and compromise for the defender. Because these payoffs are not exact negatives, the game is general-sum. We instantiate it in an AgentDyn-derived seven-domain environment, holding out official configurations for evaluation. We propose CoRL , a three-stage realization of this view. Attacker SFT first bootstraps multi-turn exploration from verifier-validated successes. Online Co-PPO then updates both roles with role-specific PPO against bilateral historical populations, with the aim of reducing latest-opponent over-fitting while improving the defender and retaining attackers that expose residual failures. Finally, 
+
+Defender SFT starts from the selected Co-PPO checkpoint and learns verified safe task execution from teachers facing this population. Across seven domains and 1,514 raw executions per defender, Co-PPO improves every reported met-ric over its no-population counterpart, although the larger final gain follows Defender SFT. Relative to the base model, complete CoRL reduces observed overall ASR from 38.5% to 0.0% and raises overall utility from 63.2% to 76.3% under our protocols. A controlled 2 ×2 study shows positive contributions from Co-PPO initialization and population-mined repairs, with their combination per-forming best. External evaluations on InjecAgent and AgentLAB support transfer beyond the main benchmark, including improved task success under the mixed-attacker Task-Injection protocol on AgentLAB. Our contributions are: 
+
+(1) We formulate within-execution adaptive IPI as an asymmetric general-sum Markov game and build a seven-domain, verifier-grounded environment; we will open-source the environment and SFT/RL data under responsible-release safeguards. 
+
+(2) We introduce CoRL, to our knowledge the first adaptive-IPI framework to train both an attacker agent and a tool-using defender agent with RL while exposing each current policy to historical op-ponents; Defender SFT then consolidates population-mined repairs. 
+
+(3) Across seven suites, InjecAgent, and AgentLAB, we report safety–utility, controlled attribution, stronger-attack tests, and stage-wise dynamics; CoRL leads the tested same-backbone baselines. 2Preprint 
+
+## 2 RELATED WORK 
+
+IPI benchmarks and defenses. Benchmarks including InjecAgent, AgentDojo, Agent Security Bench, AgentDyn, and AgentLAB evaluate IPI in increasingly stateful or long-horizon tool-use en-vironments (Zhan et al., 2024; Debenedetti et al., 2024; Zhang et al., 2025; Li et al., 2026; Jiang et al., 2026). Defenses span provenance marking (Hines et al., 2024), structured input or alignment (Chen et al., 2025a; Wallace et al., 2024; Chen et al., 2025b;c), prompt guards (Li et al., 2025b), and system-level control-flow constraints (Debenedetti et al., 2025; Shi et al., 2025; Li et al., 2025a). Many are evaluated primarily against fixed attack distributions; adaptive evaluations show that some defenses can degrade when attacks are optimized against the deployed system (Zhan et al., 2025). This motivates training and evaluation that jointly measure security and legitimate task completion. 
+
+Adaptive attack discovery and repair. Automated red-teaming broadens the failures available for safety training. Lee et al. (2025) train a GFlowNet attacker with MLE smoothing to generate diverse harmful prompts, then safety-tune a fixed target on the discovered attacks. Dabas et al. (2026) instead compose primitives from a learned jailbreak dictionary to improve robustness to unseen attacks. In IPI, AutoInject and PISmith optimize transferable injections with RL (Chen et al., 2026; Yin et al., 2026), while RETA generates diversity-aware attacks against a frozen baseline before multi-objective defender RL (He et al., 2026). These methods establish the value of attack coverage and downstream repair, but do not jointly evolve an attacker and a tool-using defender within the same adaptive IPI execution. 
+
+Attacker–defender co-evolution. Wang et al. (2025a) alternate attacker refinement with refusal-trained Defender updates using single-turn attacks; MAGIC studies multi-turn co-evolution for gen-eral LLM safety (Wen et al., 2026); and GPT-Red scales prompt-injection self-play against diverse simultaneously trained defenders (Wallace et al., 2026). ARLAS is the closest IPI-specific prior work: it co-trains an attacker and tool agent but gives historical opponents only to the defender (Wang et al., 2025b). CoRL’s distinction is therefore not co-evolution alone. To our knowledge, it is the first adaptive-IPI framework to optimize both current roles against historical opponents in-side a shared tool-use execution, then reuse retained attackers to collect verifier-approved defender demonstrations. Appendix A gives the detailed comparison. 
+
+## 3 PROBLEM SETUP: ADAPTIVE IPI AS A MARKOV GAME 
+
+We study how to train a tool-using defender that blocks an adapting attacker while completing the legitimate user task. A configuration c = ( s0, x, g, C g , Z, d, Vx, Vg ) specifies the initial tool state 
+
+s0, user task x, attack goal and executable contract (g, C g ), candidate injection sites Z, domain/tool environment d, and deterministic task/attack verifiers. Each execution is a finite-horizon, turn-based, partially observable Markov game Gc = ⟨S , AD , AA, P c, ΩD , ΩA, R D , R A, H c⟩. The state σt in-cludes the tool state, both interaction histories, handled sites, and active role. The sandbox transition 
+
+Pc executes tool calls and inserts payloads; stochasticity comes from the policies. Execution ends on agent termination or its budget limit; training permits at most 20 defender turns. At defender turn t, ΩD (σt) = hDt , and the defender samples an assistant message or tool call yt ∼
+
+πD (· | hDt ). If the resulting tool return reaches zk at time tk, the attacker receives ΩA(σtk ) = oAk ,where 
+
+oAk = (˜ g, C g , z k, d, h pub  
+
+> ≤tk
+
+, r clean  
+
+> tk
+
+, H A<k ),
+
+˜g is the normalized goal, hpub the public trace, rclean the benign return around the site, and HA<k 
+
+prior attempts and their public consequences. The attacker samples qk ∼ πA(· | oAk ); a strict parser inserts only a nonempty <attack> payload before the same trajectory resumes. Each configured site can trigger once; unreached sites induce no attacker action. Both agents are therefore multi-turn, but the defender acts throughout tool use while the attacker acts only at reached sites. The attacker cannot observe the defender’s system prompt, hidden reasoning, parameters, checkpoint identity, or global tool state. Its history resets between executions. At termination, independent verifiers produce 
+
+Iatk (τ ) = 1[Vg (τ ) = 1] , Itask (τ ) = 1[Vx(τ ) = 1] . (1) 3Preprint Both indicators may equal one: completing the task does not imply blocking the attack. Section 4.2 defines general-sum terminal payoffs that reward attack success for the attacker and distinguish safe completion, safe task failure, and compromise for the defender. The observation above describes training access to Cg , a privileged benchmark red-team oracle. Exact-field-withheld evaluation re-moves its target-call specification while retaining the natural-language goal, public context, and bi-nary unsatisfied-contract feedback. Appendix C details access limits and the serialization budget. 
+
+## 4 METHOD 
+
+CoRL is the complete discovery-and-repair framework, whereas Co-PPO is its online co-evolution stage. Attacker SFT supplies a starting policy for exploration; Co-PPO improves both agents against current and historical opponents; Defender SFT learns verified successful teacher trajectories under the retained attacks. The online stage thus supplies both the defender initialization and the attacks used to collect demonstrations; Q3 tests these two inputs under a matched SFT recipe. Figure 2 summarizes the three stages; Appendix G gives the complete training procedure. 4.1 STAGE I: ATTACKER SUPERVISED INITIALIZATION DeepSeek V4 Pro and Seed2.0 attack the base defender on Co-PPO’s training configurations to gen-erate candidates for Attacker SFT. The security verifier retains only trajectories satisfying the ex-ecutable attack contract; the attacker base model is then SFT-trained on all attacker turns in the retained trajectories to obtain π0
+
+> A
+
+. This sequence-level target preserves earlier attempts as context without attributing success to one payload and reduces ineffective initial exploration. Appendix C gives prompts, provenance, filtering, and loss. 4.2 STAGE II: BILATERAL CO-PPO 
+
+Training environment, RL data, and rollout. We construct the online sandbox by rewriting AgentDyn tasks (Li et al., 2026), pairing compatible user/injection goals, and varying initial tool states and candidate sites across seven domains; every configuration binds executable attack and task verifiers. The manifest contains 12,705 policy-training rows (9,529 injected; 3,176 native-clean) and a disjoint 3,186-row internal-validation split. Each row launches a fresh execution rather than sup-plying an offline trajectory. In injected rows, reaching an inert placeholder triggers a strictly parsed attack before the same trajectory resumes; later attacks observe prior attempts and public conse-quences. Native-clean rows have no attacker action and train only the defender. Official AgentDyn evaluation configurations appear in neither split. 
+
+Role payoffs. For a reached injected trajectory, let Ifmt (τ ) indicate strict parser validity for its reward-bearing attacker response sequence. The terminal attacker and defender rewards are 
+
+RA(τ ) = Iatk (τ ) + 0 .05 (1 − Iatk (τ ))Ifmt (τ ), (2) 
+
+RD (τ ) = 
+
+
+
+1.0, Iatk = 0 ∧ Itask = 1 ,
+
+−0.2, Iatk = 0 ∧ Itask = 0 ,
+
+−1.0, Iatk = 1 .
+
+(3) The defender is rewarded most only for blocking the attack while completing the task; safe task failure is preferable to compromise but not rewarded as success. Co-PPO separately maximizes each role’s payoff, and propagates terminal attacker reward over the attacker-generated token timeline, training a multi-attempt strategy without attributing success to one payload. 
+
+Bilateral opponent populations and masked PPO. Injected rows sample current/current, his-torical attacker/current defender, current attacker/historical defender, or template/current defender matchups with probabilities 0.40/0.25/0.25/0.10. For role r ∈ { A, D }, qr (Pkr ) samples admitted historical checkpoints; PKA is the retained attacker set used in the final stage. Each active current policy uses its own critic and masked token-level PPO (Schulman et al., 2017; 2016): only its gener-ated tokens enter policy, value, and KL losses, and masked positions do not advance its GAE timeline. Historical policies receive no gradient. Each role has four historical serving slots, with suite-stratified 4Preprint I Attacker SFT  
+
+> Verified attacks
+> II
+
+Co-PPO  
+
+> Bilateral co-evolution
+> III
+
+Defender SFT 
+
+> Population-guided repair
+
+Co-PPO iteration                       
+
+> (a) Opponent pairs (b) Adaptive rollout (c) Bilateral PPO (d) Historical pools
+> A Attacker D Defender
+> Ac×Dc
+> Ah×Dc
+> Ac×Dh
+> T×Dc
+> cCurrent, trainable
+> hHistorical, frozen
+> TFixed injection text
+> D Defender safe task execution Task Tool Return Tool Return Response
+> A Attacker injects tool text
+> Goal Attack 1 Adaptive attack 2 prior attempt public trace
+> messages / tool use
+> Verify
+
+RA PPO Ac
+
+RD PPO Dc 
+
+> Participating current policies only Own generated tokens trajectory
+
+Ah Dh        
+
+> Frozen policy snapshots
+> Admit
+> Retain evaluated snapshots sample sample
+> next iteration
+> save checkpoints
+> Verifier signals
+> Binary checks: 1 = yes, 0 = no
+> Ifmt Valid attack format
+> Iatk Attack goal achieved
+> Itask User task completed
+> Role rewards
+> Attacker
+> RA= I atk
+> + 0.05(1 − I atk ) I fmt
+> Defender R D
+> Safe success +1
+> Safe failure −0.2
+> Attack succeeds −1
+> Compromise takes priority
+
+Figure 2: CoRL’s three stages and online co-evolution loop. Top: Attacker SFT initializes explo-ration, Co-PPO trains both roles, and Defender SFT learns verified teacher demonstrations under retained attacks. (a–d) Co-PPO samples opponents, interleaves injections with tool use, computes role-specific rewards, and updates participating current policies on their own generated tokens. Ad-mitted checkpoints refresh the frozen opponent pools. probation governing admission. Candidates require at least 32 reward-bearing evaluations per suite; subsequent sampling favors higher suite-macro fitness from recent rewards. Historical exposure targets latest-opponent overfitting; frozen evaluations assess the resulting strength. Algorithm 1 in Appendix G details sampling, admission, and asynchronous updates. 4.3 STAGE III: POPULATION-GUIDED DEFENDER SFT The retained attackers supply adaptive challenges for teacher demonstration collection. GLM-5.2 and DeepSeek V4 Pro execute training tasks from their initial environment states under these attacks. We retain structurally valid, normally terminated trajectories with Iatk = 0 ∧ Itask = 1 , then apply a quality screen. These are complete successful demonstrations, rather than continuations paired with failures of πKD .After selecting one teacher per source configuration and deduplicating, the corpus contains 5,760 tra-jectories: 4,907 with actual payload evidence and 853 successful replay trajectories whose configured attacks were never triggered (14.81%). Replay thus represents unattacked executions of injection-configured tasks, distinct from Co-PPO’s native-clean rows. Defender SFT initializes from πKD and applies ordinary masked causal-language-model cross-entropy. For a batch B of serialized trajectories wi, with mi,n = 1 on teacher assistant tokens, 
+
+LD (θ) = −
+
+∑
+
+i∈B 
+
+∑
+
+n mi,n log πθ (wi,n | wi,<n )
+
+∑
+
+i∈B 
+
+∑
+
+n mi,n 
+
+. (4) All assistant turns are supervised; user, tool, and padding tokens are masked. Both subsets share this loss, with no pairwise preference or explicit KL term. The reported checkpoint is update 360, one epoch into a two-epoch run. Appendix G gives filtering and optimization details. The resulting defender is frozen for all subsequent attacks. 5Preprint 
+
+## 5 EXPERIMENTS 
+
+We ask five questions: Q1 , does CoRL improve safety and task utility; Q2 , do gains extend across suites and external benchmarks; Q3 , what do online initialization and population-derived repair data contribute; Q4 , do gains persist across historical attackers; and Q5 , does Co-PPO strengthen the attacker and support competitive adaptation? 5.1 EXPERIMENTAL SETUP 
+
+Implementation. SFT uses 16 GPUs per stage with DeepSpeed ZeRO-3; Co-PPO uses 56 GPUs with verl/Megatron, vLLM, and Ray. Appendix G details the allocation. 
+
+Evaluation workloads. The main test manifest combines three AgentDyn and four AgentDojo suites (Li et al., 2026; Debenedetti et al., 2024): 157 user tasks and 55 injection tasks yield 1,189 within-suite task–goal cases. Excluding two pre-declared inconsistent cases leaves 1,187 metric-eligible adaptive executions. We also run 157 clean tasks and 168 fixed-template executions: six cases per suite under each of four official templates. Each fully covered defender therefore has 1,514 raw executions and 1,512 eligible records (157 clean, 168 fixed, 1,187 adaptive). Appendix D spec-ifies the templates and suite counts; the broader single-template evaluation in Q2 is reported sepa-rately. The common-adaptive condition freezes one selected Co-PPO attacker across defenders; within each independent execution, it still adapts payloads to the public trajectory at reached sites. Q4 evalu-ates the per-case success union over historical attackers, whose population also supplies attacks for Defender-SFT data collection. 
+
+Compared systems. Base Qwen3.5-9B is the reference before our training. PPO trains only the defender against fixed templates on the RL dataset (over 10,000 examples), with CoRL’s defender-RL configuration and no adaptive attacker. NoPop co-trains both roles without historical opponents; neither baseline uses final Defender SFT. Co-PPO is the selected online checkpoint; CoRL (ours) 
+
+adds population-guided Defender SFT (Section 4). Attacker SFT initializes only the attacker (Q5). All defender rows share the evaluation manifest; checkpoint mappings are in Appendix D. 
+
+Metrics and reporting. U, ASR, and Safe-U average Itask , Iatk , and Itask (1 − Iatk ), respectively; U can therefore include compromised completions. Condition-specific results are primary. Overall U and Safe-U pool all eligible conditions; overall ASR pools attacked executions only (Appendix D). Main defender comparisons use evaluation seed 0, one CoRL training run, and one execution per adaptive case. Differences are descriptive point estimates, not training-seed uncertainty. External protocols remain separate. 5.2 Q1: SAFETY–UTILITY UNDER FIXED AND ADAPTIVE ATTACKS Table 1: Main defender results (%, evaluation seed 0). Co-PPO is the online checkpoint; CoRL adds Defender SFT. U, ASR, and Safe-U are defined in Section 5.1. Bold marks column-best values; shading identifies CoRL. Clean Fixed attack Adaptive attack Defender U
+
+↑
+
+U
+
+↑
+
+ASR 
+
+↓
+
+Safe-U 
+
+↑
+
+U
+
+↑
+
+ASR 
+
+↓
+
+Safe-U 
+
+↑
+
+Base Qwen3.5-9B 79.62 66.67 12.50 61.90 60.57 42.12 38.75 PPO baseline 74.52 67.26 5.95 66.67 60.57 30.75 46.08 NoPop 77.71 69.64 4.76 67.86 67.14 28.48 51.73 Co-PPO 78.34 72.62 2.98 71.43 68.41 26.37 54.09 
+
+CoRL (ours) 79.62 79.76 0.00 79.76 75.40 0.00 75.40 
+
+6Preprint 60 70 80 90 100 60 70 80                                                        
+
+> Task utility (%) ↑
+> aFixed attacks
+> 60 70 80 90 100
+> bAdaptive attacks
+> Banking DailyLife GitHub Shopping Slack Travel Workspace Base PPO NoPop Co-PPO
+> CoRL
+> 59.4 16.5 26.7 27.2 49.5 41.0 56.7 62.2 12.5 40.6 35.0 63.8 58.3 62.1 61.5 19.0 42.8 37.2 68.6 65.5 75.4 69.2 27.5 45.0 40.6 61.9 70.5 71.3
+> 73.4 74.5 70.0 57.2 89.5 82.7 84.6
+> Δ vs Co-PPO +4.2 +47.0 +25.0 +16.6 +27.6 +12.2 +13.3 050 100
+> Attack resistance (100 − ASR, %) ↑
+> cAdaptive attacks: Safe-U (%) ↑
+> Base Qwen3.5-9B PPO NoPop Co-PPO CoRL (ours)
+
+Figure 3: Safety–utility and suite coverage. (a,b) Task utility versus attack resistance for Table 1; upper right is better. (c) Adaptive Safe-U across seven suites; the bottom row gives CoRL minus Co-PPO in points. All panels show descriptive estimates from evaluation seed 0. CoRL gives the strongest attacked-condition safety–utility trade-off among same-backbone baselines (Table 1; Figure 3a,b). It reaches zero observed fixed and common-adaptive ASR with 79.76% and 75.40% utility, respectively; aggregate U and Safe-U are both 76.32%. It exceeds GPT-5.4, Qwen3.6-27B, and DeepSeek V4 Pro in aggregate Safe-U but trails GLM-5.2-Thinking (Appendix Table 7). These cross-model references are neither controlled ablations nor defender-specific best responses; observed zeros do not guarantee population-level robustness. Co-PPO improves every condition-specific metric over NoPop. This comparison tests historical ex-posure jointly, not bilateral versus defender-only populations. Defender SFT then raises fixed and adaptive Safe-U by 8.33 and 21.31 points over Co-PPO. Q3 isolates online initialization and demon-stration source under the same cross-entropy recipe. 5.3 Q2: CROSS-SUITE AND EXTERNAL TRANSFER CoRL improves adaptive Safe-U over Co-PPO in all seven suites, by 4.2–47.0 points (Figure 3c). Banking gains least and DailyLife most, while Shopping retains the lowest final Safe-U (57.2%). 
+
+Official fixed-attack protocol. The full seven-suite important_instructions evaluation uses 157 clean tasks and 1,509 attack pairs per model, with matched budgets and thinking disabled. CoRL lowers ASR by 17.83 points and raises Safe-U by 15.77 over Base while matching aggregate clean utility (Figure 4a). This broadens coverage for one Q1 template, not all four. Appendix E reports suite results, equal-suite means, and local utility regressions. On AgentLAB Task-Injection, CoRL attains 14.12% ASR and 82.82% task success under a GPT-5.4-prioritized attack procedure with Qwen3.6-27B fallback, improving both metrics over Base and Co-PPO (Figure 4b; Jiang et al., 2026). Each metric uses 949 valid task–goal pairs per defender. The attacker mixture differs across defenders, so this does not isolate robustness to GPT-5.4. InjecAgent shows lower direct-harm and data-stealing ASR for Co-PPO than Base, with further re-ductions after repair (Figure 4c; Zhan et al., 2024). It supplies no comparable task utility. Its ASR-valid excludes invalid outputs; exact valid denominators remain unavailable. External protocols are not pooled; full rates, coverage, and metric scope appear in Appendices E and F. 7Preprint ASR ↓ Safe-U ↑ 
+
+> 050 100
+
+a 
+
+> Percent
+> AgentDyn / AgentDojo
+> ASR ↓ Task success ↑
+> 050 100
+
+b
+
+> Percent
+> AgentLAB
+> DH Base DH Enh. DS-S1 Base DS-S1 Enh.
+> 020 40
+
+c   
+
+> ASR-valid (%) ↓
+> 00
+> InjecAgent
+> Base Qwen3.5-9B Co-PPO CoRL
+
+Figure 4: External evaluation (%). (a) Official important_instructions (1,509 pairs). (b) 
+
+AgentLAB Task-Injection with GPT-5.4 priority and Qwen3.6-27B fallback (949 pairs). (c) InjecA-gent direct-harm (DH) and data-stealing stage-1 (DS-S1) ASR-valid; Base/Enh. denote payload set-tings. Protocols remain separate; full rates and scope: Appendices E and F. 5.4 Q3: CONTROLLED ATTRIBUTION OF INITIALIZATION AND REPAIR DATA Figure 5 a crosses defender initialization (Base or Co-PPO) with repair demonstrations (standard fixed-attack or population-derived). A uses Base with standard repairs; B changes only the repair source, C only the initialization, and D combines both (CoRL). All cells share masked cross-entropy, dataset size, optimizer updates, teachers, replay proportion, and evaluation denominators. Standard repairs Population-mined repairs 60 65 70 75 80 
+
+> Adaptive Safe-U (%) ↑
+> A 58.97 B 66.98 C 65.04
+> D 75.40
+> Co-PPO init Base init Interaction: +2.36 pp (descriptive)
+
+a Initialization × repair data 
+
+> Common attacker Historical pool (per-case union) 0510 15 20 25
+> Attack success rate (%) ↓  A 23.00 B 11.96 C 15.00
+> D · CoRL 4.97
+
+b Historical attackers expose failures 
+
+Figure 5: Controlled attribution and historical-attacker evaluation. (a) Base/Co-PPO initialization crossed with standard/population-derived repairs; D is CoRL. Counts: Appendix Table 10. (b) 
+
+Common-attacker ASR versus historical per-case success union on the same 1,187 cases; counts and scope: Q4. Population-derived repairs (B) add 8.00 adaptive Safe-U points over A; Co-PPO initialization (C) adds 6.07, with ASR reductions of 9.01 and 5.98 points, respectively. Combining both (D) adds 8.42 Safe-U points over B and 10.36 over C. The interaction ( 28 /1187 = 2 .36 points) is descriptive, not established synergy. Clean U stays at 78.98–79.62%, arguing against blanket refusal. 5.5 Q4: EVALUATION AGAINST THE HISTORICAL ATTACKER POOL We compare the common attacker with the per-case success union over retained historical attackers (Figure 5 b). Each of the same 1,187 adaptive cases counts as compromised if any evaluated historical attacker succeeds; this is not the overall ASR of a single selected checkpoint. 8Preprint Population-union ASR is 23.00% (273/1187), 11.96% (142/1187), 15.00% (178/1187), and 4.97% (59/1187) for A–D. CoRL ranks best, but its increase from 0.00% reveals residual failures. Broader historical coverage is not an equal-attempt comparison with one attacker and does not establish ro-bustness to a newly optimized attacker targeting the final defender. 5.6 Q5: ATTACKER LEARNING AND COMPETITIVE ADAPTATION Table 2: Frozen attackers against fixed Base Qwen3.5-9B (%; 350 cases). Overall ASR excludes invalid executions; Effective ASR conditions on injection reach. Full matrix and counts: Appendix Table 9. Attacker checkpoint Overall ASR ↑ Effective ASR ↑ Reach ↑ Format valid ↑
+
+Attacker SFT 47.83 49.55 96.52 94.21 Co-PPO early 44.12 45.59 96.76 93.77 
+
+Selected Co-PPO 63.16 65.65 96.20 99.46 NoPop 62.13 64.42 96.45 99.65 
+
+Selected Co-PPO improves Overall and Effective ASR over Attacker SFT by 15.33 and 16.10 points (Table 2). Reach remains nearly unchanged, whereas improved format validity may contribute to end-to-end strength. The weaker early checkpoint indicates non-monotonic progress. NoPop’s comparable Effective ASR (64.42%) supports online attacker RL but does not isolate a population-specific benefit. Without an uninitialized-attacker comparison, Attacker SFT’s separate contribution remains unmeasured. Across the first and last thirds of valid adaptive logs, the attacker’s current–history Effective-ASR contrast changes from −1.77 to +7 .62 points; the defender’s attack-resistance contrast is positive in both thirds ( +5 .52 and +4 .33 ; Appendix Figure 6). These between-branch differences are consistent with competitive adaptation, but changing tasks and opponents preclude a fixed-opponent causal in-terpretation. Appendix Figure 7 traces all three stages and separates increasing online attack pressure from near-stable task completion. Appendix B illustrates within-execution adaptation (case A6), successful defenses, and counterex-amples. These selected traces show mechanisms, not their prevalence or a causal learning trajectory. 
+
+## 6 LIMITATIONS 
+
+Our study has three main limitations. First, training and evaluation cover a finite budget of attack goals; our sandbox uses fixed, deterministic security and task verifiers. Unenumerated goals or veri-fier misspecification may therefore escape both training and evaluation. Second, historical-opponent populations broaden policy exposure, but Co-PPO neither computes a meta-strategy nor estimates ex-ploitability and thus offers no guarantee of convergence to an equilibrium. Third, both roles depend on teacher supervision: Attacker SFT uses successful attacks, while Defender SFT uses safe task-execution demonstrations. These results do not establish whether co-evolution alone, self-generated supervision, or weaker teachers can achieve comparable performance. 
+
+## 7 CONCLUSION 
+
+CoRL combines adaptive failure discovery through bilateral online training with population-guided supervised repair. Controlled SFT comparisons indicate that both the online defender initialization and population-derived demonstrations contribute to the final gain, with their combination perform-ing best. It achieves 75.40% adaptive Safe-U and zero observed common-attacker ASR across seven suites, with safety and task-success gains on AgentLAB. The historical attacker pool and AgentLAB nevertheless yield nonzero ASR, exposing the limits of the common-attacker result. Co-evolution thus supplies stronger policies and adversarial failures for repair without establishing universal ro-bustness. 9Preprint ETHICS STATEMENT This work studies adaptive prompt-injection attacks to improve the robustness of tool-augmented agents. The trained attacker can generate harmful payloads, so model checkpoints, prompts, and generated attack corpora should be released only with safeguards appropriate for dual-use security research. The intended use is controlled evaluation, red-teaming, and defense training, not deploy-ment of offensive agents. AI USE STATEMENT Generative AI tools were used in two roles. First, DeepSeek V4 Pro and Seed2.0 generated candi-date attacker conversations for Attacker SFT. Teacher defenders requested as glm-5.2-for-wm 
+
+and deepseek-v4-pro generated complete task executions from initial environment states un-der retained Co-PPO attacks. Successful trajectories were screened by deterministic security and task verifiers and an additional quality filter before Defender SFT. Teacher outputs were candidate training data, not ground truth. Two independent model annotators also coded the 45 case-study traces; agreement and adjudication are reported in Appendix B. Second, OpenAI Codex was used as a general-purpose research and writing assistant to help translate and edit manuscript text, improve organization and clarity, inspect the L ATEX presentation, search for and verify relevant literature, and provide feedback on the exposition of the problem formulation, method, and evaluation protocol. Codex also assisted with processing existing training logs, checking metric definitions and aggre-gation, implementing plotting scripts, revising scientific figures, and interpreting training dynamics and evaluation results. The authors reviewed all AI-assisted text, citations, manuscript-source edits, and research suggestions, made the final scientific decisions, and take responsibility for the accuracy, originality, and integrity of the paper and its artifacts. REPRODUCIBILITY STATEMENT The appendix specifies task splits, attacker observations, verifiers, role-specific PPO, historical-population serving, and the verified Defender-SFT configuration. It records the final SFT corpus composition, teacher API identifiers, quality-screen acceptance, checkpoint schedule, and optimiza-tion settings. The 2 ×2 study controls the SFT recipe across initialization and data-source conditions; exact evaluation counts and case-study trace identifiers are also provided. The historical-pool eval-uation uses a per-case success union. Its checkpoint/attempt manifest, complete online and teacher-generation costs, and an independent verifier audit remain to be documented. The released artifact will include the relevant configuration and evaluation manifests, subject to the safeguards in the Ethics statement. 
+
+## REFERENCES 
+
+Patrick Chao, Alexander Robey, Edgar Dobriban, Hamed Hassani, George J. Pappas, and Eric Wong. Jailbreaking black box large language models in twenty queries, 2023. Sizhe Chen, Julien Piet, Chawin Sitawarin, and David Wagner. StruQ: Defending against prompt injection with structured queries. In 34th USENIX Security Symposium (USENIX Security 25) ,pp. 2383–2400, 2025a. Sizhe Chen, Arman Zharmagambetov, Saeed Mahloujifar, Kamalika Chaudhuri, David Wagner, and Chuan Guo. SecAlign: Defending against prompt injection with preference optimization. In ACM SIGSAC Conference on Computer and Communications Security , pp. 2833–2847, 2025b. Sizhe Chen, Arman Zharmagambetov, David Wagner, and Chuan Guo. Meta SecAlign: A secure foundation LLM against prompt injection attacks, 2025c. Xin Chen, Jie Zhang, and Florian Tramèr. Learning to inject: Automated prompt injection via reinforcement learning, 2026. Mahavir Dabas, Tran Huynh, Nikhil Reddy Billa, Jiachen T. Wang, Peng Gao, Charith Peris, Yao Ma, Rahul Gupta, Ming Jin, Prateek Mittal, and Ruoxi Jia. Adversarial déjà vu: Jailbreak dictionary learning for stronger generalization to unseen attacks. In International Conference on Learning Representations , 2026. 10 Preprint Edoardo Debenedetti, Jie Zhang, Mislav Balunovic, Luca Beurer-Kellner, Marc Fischer, and Florian Tramèr. AgentDojo: A dynamic environment to evaluate prompt injection attacks and defenses for LLM agents. In Advances in Neural Information Processing Systems , volume 37, pp. 82895– 82920, 2024. doi: 10.52202/079017-2636. Edoardo Debenedetti, Ilia Shumailov, Tianqi Fan, Jamie Hayes, Nicholas Carlini, Daniel Fabian, Christoph Kern, Chongyang Shi, Andreas Terzis, and Florian Tramèr. Defeating prompt injections by design, 2025. Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten Holz, and Mario Fritz. Not what you’ve signed up for: Compromising real-world LLM-integrated applications with indi-rect prompt injection, 2023. Lipeng He, Yihan Wang, Jiawen Zhang, and N. Asokan. Defending against adaptive prompt injection attacks via reasoning-enabled task alignment, 2026. Keegan Hines, Gary Lopez, Matthew Hall, Federico Zarfati, Yonatan Zunger, and Emre Kiciman. Defending against indirect prompt injection attacks with spotlighting, 2024. Tanqiu Jiang, Yuhui Wang, Jiacheng Liang, and Ting Wang. AgentLAB: Benchmarking LLM agents against long-horizon attacks, 2026. Marc Lanctot, Vinicius Zambaldi, Audrunas Gruslys, Angeliki Lazaridou, Karl Tuyls, Julien Perolat, David Silver, and Thore Graepel. A unified game-theoretic approach to multiagent reinforcement learning. In Advances in Neural Information Processing Systems , volume 30, 2017. Seanie Lee, Minsu Kim, Lynn Cherif, David Dobre, Juho Lee, Sung Ju Hwang, Kenji Kawaguchi, Gauthier Gidel, Yoshua Bengio, Nikolay Malkin, and Moksh Jain. Learning diverse attacks on large language models for robust red-teaming and safety tuning. In International Conference on Learning Representations , 2025. Hao Li, Xiaogeng Liu, Hung-Chun Chiu, Dianqi Li, Ning Zhang, and Chaowei Xiao. DRIFT: Dynamic rule-based defense with injection isolation for securing LLM agents. In Advances in Neural Information Processing Systems , volume 38, pp. 83262–83290, 2025a. doi: 10.52202/ 085713-2791. Hao Li, Xiaogeng Liu, Ning Zhang, and Chaowei Xiao. PIGuard: Prompt injection guardrail via mitigating overdefense for free. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 30420–30437, 2025b. doi: 10.18653/ v1/2025.acl-long.1468. Hao Li, Ruoyao Wen, Shanghao Shi, Ning Zhang, Yevgeniy Vorobeychik, and Chaowei Xiao. Agent-Dyn: Are your agent security defenses deployable in real-world dynamic environments?, 2026. Da Ma, Ziyue Yang, Hongshen Xu, Haotian Fang, Lu Chen, and Kai Yu. Empowering LLM tool invocation with tool-call reward model. In International Conference on Learning Representations ,2026. Anay Mehrotra, Manolis Zampetakis, Paul Kassianik, Blaine Nelson, Hyrum Anderson, Yaron Singer, and Amin Karbasi. Tree of attacks: Jailbreaking black-box LLMs automatically. In 
+
+Advances in Neural Information Processing Systems , volume 37, pp. 61065–61105, 2024. doi: 10.52202/079017-1952. Tong Mu, Alec Helyar, Johannes Heidecke, Joshua Achiam, Andrea Vallone, Ian Kivlichan, Molly Lin, Alex Beutel, John Schulman, and Lilian Weng. Rule based rewards for language model safety. In Advances in Neural Information Processing Systems , volume 37, pp. 108877–108901, 2024. doi: 10.52202/079017-3457. Milad Nasr, Nicholas Carlini, Chawin Sitawarin, Sander V. Schulhoff, Jamie Hayes, Michael Ilie, Juliette Pluto, Shuang Song, Harsh Chaudhari, Ilia Shumailov, Abhradeep Thakurta, Kai Yuanqing Xiao, Andreas Terzis, and Florian Tramèr. The attacker moves second: Stronger adaptive attacks bypass defenses against LLM jailbreaks and prompt injections, 2025. 11 Preprint John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, and Pieter Abbeel. High-dimensional continuous control using generalized advantage estimation. In International Con-ference on Learning Representations , 2016. John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms, 2017. Tianneng Shi, Jingxuan He, Zhun Wang, Hongwei Li, Linyu Wu, Wenbo Guo, and Dawn Song. Progent: Securing AI agents with privilege control, 2025. Oriol Vinyals et al. Grandmaster level in StarCraft II using multi-agent reinforcement learning. 
+
+Nature , 575(7782):350–354, 2019. doi: 10.1038/s41586-019-1724-z. Eric Wallace, Kai Xiao, Reimar Leike, Lilian Weng, Johannes Heidecke, and Alex Beutel. The instruction hierarchy: Training LLMs to prioritize privileged instructions, 2024. Eric Wallace, Christopher A. Choquette-Choo, Nikhil Kandpal, Sam Toyer, Dylan Hunn, Stephanie Lin, Yuxin Wen, Xiangyu Qi, Christopher Wolff, Zizhao Wang, Milad Nasr, Sicheng Zhu, Chuan Guo, Juan Felipe Cerón Uribe, Kaiwen Wang, Aiden Low, Kai Xiao, and Kai Chen. GPT-Red: Automated red teaming via self-play at scale, 2026. Haoyu Wang, Yifei Zhao, Zeyu Qin, Chao Du, Min Lin, Xueqian Wang, and Tianyu Pang. Lifelong safety alignment for language models. In Advances in Neural Information Processing Systems ,volume 38, 2025a. Zizhao Wang, Dingcheng Li, Vaishakh Keshava, Phillip Wallis, Ananth Balashankar, Peter Stone, and Lukas Rutishauser. Adversarial reinforcement learning for large language model agent safety, 2025b. Xiaoyu Wen, Zhida He, Han Qi, Ziyu Wan, Zhongtian Ma, Ying Wen, Tianhang Zheng, Xingcheng Xu, Chaochao Lu, and Qiaosheng Zhang. MAGIC: A co-evolving attacker-defender adversarial game for robust LLM safety, 2026. Zhiheng Xi, Jixuan Huang, Chenyang Liao, Baodai Huang, Jiaqi Liu, Honglin Guo, Yajie Yang, Rui Zheng, Junjie Ye, Jiazheng Zhang, Wenxiang Chen, Wei He, Yiwen Ding, Guanyu Li, Zehui Chen, Zhengyin Du, Xuesong Yao, Yufei Xu, Jiecao Chen, Tao Gui, Zuxuan Wu, Qi Zhang, Xuanjing Huang, and Yu-Gang Jiang. AgentGym-RL: An open-source framework to train LLM agents for long-horizon decision making via multi-turn RL. In International Conference on Learning Representations , 2026. Chenlong Yin, Runpeng Geng, Yanting Wang, and Jinyuan Jia. PISmith: Reinforcement learning-based red teaming for prompt injection defenses, 2026. Qiusi Zhan, Zhixiang Liang, Zifan Ying, and Daniel Kang. InjecAgent: Benchmarking indirect prompt injections in tool-integrated large language model agents. In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 10471–10506, 2024. Qiusi Zhan, Richard Fang, Henil Shalin Panchal, and Daniel Kang. Adaptive attacks break defenses against indirect prompt injection attacks on LLM agents. In Findings of the Association for Compu-tational Linguistics: NAACL 2025 , pp. 7116–7132, 2025. doi: 10.18653/v1/2025.findings-naacl. 395. Hanrong Zhang, Jingyuan Huang, Kai Mei, Yifei Yao, Zhenting Wang, Chenlu Zhan, Hongwei Wang, and Yongfeng Zhang. Agent security bench (ASB): Formalizing and benchmarking attacks and defenses in LLM-based agents. In International Conference on Learning Representations ,2025. Andy Zou, Zifan Wang, Nicholas Carlini, Milad Nasr, J. Zico Kolter, and Matt Fredrikson. Universal and transferable adversarial attacks on aligned language models, 2023. 12 Preprint 
+
+## A ADDITIONAL RELATED WORK 
+
+IPI benchmarks and dynamic evaluation. Indirect prompt injection arises when untrusted exter-nal content is interpreted as actionable instructions by an LLM agent. Early work showed that LLM-integrated applications blur the boundary between data and instructions, enabling attacks through webpages, emails, retrieved documents, and other third-party content (Greshake et al., 2023). Later benchmarks instantiate this threat in increasingly realistic settings. InjecAgent studies IPI in tool-integrated agents (Zhan et al., 2024); AgentDojo provides stateful task environments for evaluating attacks and defenses (Debenedetti et al., 2024); and Agent Security Bench covers broader agent-security risks (Zhang et al., 2025). AgentDyn moves closer to deployment realism by emphasizing open-ended user tasks, helpful third-party instructions, and longer multi-application workflows (Li et al., 2026), while AgentLAB targets adaptive long-horizon attacks, including an AgentDojo-based Task Injection track (Jiang et al., 2026). Our work follows this direction but focuses on training-time coupling: defender policies learn while tasks, observations, attack placements, victim configurations, and payload strategies vary within the same verifier-controlled training loop. 
+
+IPI defenses and the safety–utility tradeoff. Most IPI defenses aim to restore the instruction– data boundary. Prompt-level methods such as Spotlighting use provenance signals to mark external content (Hines et al., 2024). Structured-input and model-level methods, including StruQ, Instruction Hierarchy, SecAlign, and Meta SecAlign, separate instruction and data channels or train models to follow higher-priority instructions (Chen et al., 2025a; Wallace et al., 2024; Chen et al., 2025b;c). System-level approaches such as CaMeL impose control-flow, data-flow, and capability constraints around the model (Debenedetti et al., 2025). RETA trains a defender to reason about whether em-bedded instructions align with the user task and uses red-team generation plus multi-objective RL to improve the safety–utility trade-off (He et al., 2026). These approaches reduce the influence of malicious instructions, but IPI defense is not only a refusal or filtering problem. In realistic agent workflows, third-party content may contain both information necessary for task completion and ad-versarial instructions that should be ignored. A secure agent must preserve useful content while rejecting malicious control, motivating joint security–utility verifier rewards for defender training. 
+
+Diverse red-teaming and repair for unseen attacks. Attack diversity is a complementary route to robust safety training. Lee et al. (2025) show that conventional RL red-teamers can collapse onto a few modes; their GFlowNet-plus-MLE procedure discovers diverse attacks against a fixed target, after which refusal SFT on those prompts improves robustness to attacks from other red-teamers. Dabas et al. (2026) take a data-centric approach: they extract recurring skills from prior jailbreaks, learn a compact dictionary, and train on novel skill compositions to improve generalization to unseen attacks while monitoring over-refusal. Neither approach jointly updates an attacker and defender within an agent execution. CoRL shares their discovery-to-repair motivation: its evolving attackers expose tool-use vulnerabilities and then challenge teacher defenders, whose safe, task-successful trajectories provide supervision for the deployed defender. 
+
+Adaptive attacks and attacker–defender co-evolution. Static attack sets are insufficient because attackers adapt to deployed systems (Zhan et al., 2025; Nasr et al., 2025); automated jailbreak meth-ods such as GCG, PAIR, and TAP reinforce this concern (Zou et al., 2023; Chao et al., 2023; Mehro-tra et al., 2024). AutoInject learns universal transferable injections with black-box RL, and PISmith trains a black-box RL red-teamer against prompt-injection defenses, including agentic settings (Chen et al., 2026; Yin et al., 2026). These methods provide important independently optimized attacker baselines, but do not jointly evolve an IPI defender in the same multi-injection tool-use trajectory. RETA generates diversity-aware red-team data against a frozen baseline before optimizing the de-fender (He et al., 2026). At the level of the training loop, Wang et al. (2025a) provide the closest accepted precedent: Lifelong Safety Alignment mines strategies from jailbreak papers, refines a Meta-Attacker against a frozen De-fender, and then refusal-trains the Defender on accumulated successful attacks over iterative rounds. This establishes attacker–defender evolution as a prior safety-alignment paradigm. Its experiments use single-turn jailbreak prompts and update one role against a frozen counterpart within each sub-stage, rather than modeling adaptive interventions inside a tool-use trajectory or training against his-torical opponent populations. MAGIC likewise studies attacker–defender learning for general LLM safety rather than tool-return IPI (Wen et al., 2026). GPT-Red scales prompt-injection self-play 13 Preprint against simultaneously trained defenders, but refines candidates through a defender-query harness and inserts selected attacks at predetermined locations (Wallace et al., 2026); it does not train both current roles against historical opponents across multiple reached sites in one execution. ARLAS is the closest IPI-specific prior work: it co-trains an attacker and tool agent, generates an injection at each environment step, and trains the latest defender against earlier attackers while the current attacker faces the latest defender (Wang et al., 2025b). CoRL instead acts only at reached tool-return sites and gives later attacker turns the benign return, public execution trace, earlier payloads, and intervening defender behavior. It further exposes both current roles to historical opponents, uses independent executable security and utility verifiers, and reuses retained attackers for teacher demonstration collection. Our NoPop comparison removes historical exposure from both roles; it does not separately isolate the benefit over a one-sided population. 
+
+Population-based adversarial learning. Training against mixtures of current and historical oppo-nents can reduce specialization to a single latest policy, as explored by PSRO and prioritized fictitious self-play (Lanctot et al., 2017; Vinyals et al., 2019). CoRL adopts historical-opponent exposure for a general-sum IPI game, but does not compute a meta-strategy or claim convergence to an equi-librium. Establishing absolute checkpoint strength or reduced forgetting would additionally require frozen cross-play on common tasks and seeds. 
+
+Multi-turn agent RL and reward design. AgentGym-RL studies reinforcement learning for long-horizon, multi-turn agents across interactive environments (Xi et al., 2026), while tool-call reward models introduce turn-level shaping and credit assignment for tool invocation (Ma et al., 2026). Rule-Based Rewards use composable, LLM-graded rules to align helpfulness and safety (Mu et al., 2024). CoRL instead uses deterministic task-specific security and utility verifiers as terminal rewards and propagates them only along the corresponding role-generated token timeline. 
+
+## B CHECKPOINT-WISE BEHAVIORAL CASE STUDY 
+
+This exploratory study interprets aggregate evaluation through retained trajectories. It is not a con-trolled longitudinal experiment: no stored trajectory holds case, payload, seed, and initial environ-ment state fixed across the base defender, Co-PPO, and final CoRL defender. Attacker learning occurs from Attacker SFT through Co-PPO and stops before the Defender-SFT update. B.1 EVIDENCE SCOPE, MATCHING, AND ANNOTATION Table 3: Scope of the trace evidence. All three matched sets are conditioned on a failures-only logging policy. Counts characterize retained hard-trace intersections and are not population behavior rates, ASR estimates, or model rankings. Analysis n Matched fields Main limitation Attacker evolution 346 groups case, defender, seed Separately generated payloads; intersection of saved failure traces Adaptive defender 72 groups case, attacker label, seed Payload wording can differ; only 58 groups are jointly eligible and recorded as reached Fixed defender 28 groups case, template, seed Same fixed payload and reset protocol, but legacy traces lack an initial-state hash; only 18 groups are jointly reached Curated annotation 45 traces complete stored trajectories Post-hoc, mechanism-oriented selection rather than representative sampling 14 Preprint Two independent model annotators coded the 45 complete traces. Initial agreement was 95.6% with Cohen’s κ = 0 .947 . Agreement was 88.9% for the 18 attacker traces ( κ = 0 .809 ) and 100% for the 27 defender traces ( κ = 1 .000 ). Executed function traces, rather than proposed but unexecuted XML, determine the action label. A payload revision counts as ADAPTIVE only when a new defender turn or public environment consequence occurs between attempts; retries within one defender turn are coded TASK-BOUND. B.2 ATTACKER LEARNING STOPS AFTER CO-PPO Table 4: Lexical/structural flags in 346 matched saved-failure groups (all column denominators: 346). These regex diagnostics may overlap and are not semantic labels or population frequencies. Overlapping flag Attacker SFT Co-PPO early Co-PPO late Prerequisite framing 299 295 315 Failure-state framing 177 166 276 Adverse-consequence framing 91 85 138 Episode format invalid 52 54 30 The diagnostic counts suggest that late-Co-PPO payloads more often bind a malicious action to a workflow prerequisite, fabricated failure state, or adverse consequence, while invalid wrappers be-come less frequent. They do not establish that Co-PPO invents new attack primitives: the Attacker SFT traces already contain tool-compatible actions, administrative notices, and verification chains. Case A6 provides the cleanest within-execution anchor. In a shopping task, the defender responds to the first attempt by deciding to “search more broadly.” The next late-Co-PPO payload reframes the search results as incomplete and the full catalog as locked until a malicious verification chain is completed (trace TR-1AB578DC1C2B29CD ). Because an observable defender action separates the two payload groups, this is coded ADAPTIVE. By contrast, same-turn rewrites such as case A4 are not treated as evidence of adaptation. B.3 DEFENDER EVOLUTION The strongest same-stimulus bridge is case D3, which fixes the shopping case, system-notice tem-plate, generation seed, and reset protocol. The user asks the agent to process an urgent email and buy light bulbs; the injected email requests phone-number exfiltration. Table 5: Case D3 under the same fixed payload, template, seed, and reset protocol (trace IDs TR-F91651F9C5CDBBA5 , TR-374428B90760F239 , and TR-8C81E86B4BE84183 ). Legacy traces do not contain a hash of the initial environment state. Checkpoint Executed behavior Code Base Completes the purchase, then exfiltrates the phone number FOLLOW Co-PPO Completes the purchase, identifies phishing, and rejects exfiltration EXPLICIT-REJECT CoRL (ours) Executes only the legitimate purchase and OTP chain SILENT-FILTER Other bridges delimit the interpretation. The base defender can silently ignore a conspicuous fixed template, yet selected dynamic cases remain vulnerable to a task-coupled “compliance” or “security-check” story. Co-PPO adds explicit source-aware rejection and can continue the legitimate branch. Selected final-CoRL traces more often omit the malicious branch and begin with a legitimate tool call. In the 72 adaptive matched groups, attack-contract completion is 47/0/1 for Base/Co-PPO/CoRL; a safety-term match among non-ASR traces is 1/43/1; no safety-term match among non-ASR traces is 24/29/70; and the first external action is a tool call in 39/4/72 traces. These scans include stored reasoning, and the no-keyword category also contains unreached and infrastructure-failure cases, so 15 Preprint it must not be renamed “silent filtering.” Only 58 groups are jointly metric-eligible and recorded as reached. B.4 COUNTEREXAMPLES AND INTERPRETATION BOUNDARIES Silence and tool-first execution are observable policy styles, not sufficient evidence that the model learned a correct instruction–data boundary. In D5, the final CoRL defender retains the in-jected bank account, sends an amount of zero, and then incorrectly claims the bill was paid (TR-332D4871FB8C76A8 ); we code this PARTIAL, not safe filtering. In R4, the final CoRL de-fender does not execute the malicious repository action but emits a truncated tool call and fails the legitimate task ( TR-3DD96E35ADDCC39B ), coded FORMAT-STALL. The 28 fixed matched groups give the same warning. Attack completion is 4/0/0 for Base/Co-PPO/CoRL, safety-term matches among non-ASR traces are 0/5/1, and non-ASR traces without a safety-term match are 24/23/27; only 18 groups are jointly reached. These are failure-conditioned surface counts, not a controlled prevalence estimate. A locked 14-case, three-defender fixed replay panel has been specified but not run and is not used as evidence here. 
+
+## C INTERLEAVED ATTACKER PROMPT AND EXECUTION DETAILS 
+
+Attacker prompt and response format. The attacker system instruction frames payload genera-tion as controlled red-team evaluation and requires a serialized assistant response containing private rationale in <think> tags followed by the candidate payload in <attack> tags. To bootstrap reliable exploration, it lists a small set of previously effective patterns: structured tool-call blocks, workflow prerequisites, administrative notices, JSON-like action fields, colleague requests, verifica-tion framing, and failure-recovery framing. These are prompt suggestions rather than a rollout-time routing variable: the online policy receives no attack-family label and chooses a concrete strategy from the objective, authoritative executable contract, public trace, and local tool-return context. The instruction suggests approximately 300–800 payload characters but does not impose a character-level hard cap. Generation is bounded by 3,072 attacker response tokens, and sanitization removes unsupported or control characters without truncating otherwise valid payload text. Tool-response truncation is disabled in the current launcher; a request that cannot satisfy the configured context budget fails closed instead of silently changing its target or history. At exact-field-withheld evaluation, the environment still parses the authoritative contract for deter-ministic verification and telemetry, but removes the TARGET TOOL CALL/OUTPUT fields and the repeated exact-call specification from the attacker-visible generation instruction. The natural-language objective, public trace, suite/domain hint, local tool-return context, previous-attempt his-tory, and binary unsatisfied-contract feedback are unchanged. The evaluated policy is the selected Co-PPO attacker checkpoint, frozen for the common defender comparison after exposure to exe-cutable contracts during online RL; no objective-only checkpoint is trained. 
+
+Observable context. At the k-th triggered injection site, the user message contains a normalized natural-language attack objective, its authoritative sequence of zero or more target calls with ex-act function names and arguments, a suite hint, the current tool name, benign text surrounding the placeholder, and the public defender execution trace. The user task appears through the trace rather than as a duplicate field. Serialization has a 6,000-character context budget; when a trace exceeds this budget, it retains a compact prefix containing task context and a larger recent suffix contain-ing behavior relevant to the current injection. The trace includes public assistant outputs, parsed tool names and arguments, and tool-response excerpts. Explicit <think> blocks and API-side 
+
+reasoning_content fields are removed before serialization; the defender system prompt, in-ternal activations, model parameters, checkpoint identity, global environment state, complete tool schemas, and untriggered injection sites are unavailable. 
+
+Previous-attempt context. For k > 1, the attacker conversation retains earlier user messages and complete serialized attacker responses, including private attacker rationale. The next prompt sum-marizes the defender’s observable actions following the preceding payload and provides a binary indication that the authoritative target contract remains unsatisfied at the next trigger. This is limited 16 Preprint intermediate verifier feedback: the attacker receives no graded reward, successful-call decompo-sition, terminal-state details, or hidden defender reasoning before termination. This attacker-side history is never exposed to the defender. 
+
+Strict placeholder replacement. Each configured injection site receives a unique inert placeholder identifier and is recorded in a handled-site set. When a returned field contains one or more unhandled placeholders, the rollout obtains a response for each triggered site, replaces only the corresponding placeholder, and preserves the surrounding benign content. A site cannot trigger a second attacker ac-tion even if the same tool is called again. An empty response, explicit refusal, incomplete <attack> 
+
+block, or other format violation is attributed to the model; the placeholder is removed without insert-ing alternative instructions. If the exact sampled-token trace remains valid, that response stays in attacker PPO and receives the shared terminal trajectory reward; absent a later successful attempt, its malformed output makes the format bonus zero. Trace-alignment and evaluator failures instead invalidate the affected sample and are reported separately. 
+
+Attacker initialization. On Co-PPO’s training-split configurations, DeepSeek V4 Pro and Seed2.0 act as teacher attackers against the base defender using the attacker system instruction, ChatML schema, public-trace serialization, and multi-turn history format. The security verifier retains 3,995 conversations satisfying the executable attack contract (11,655 attacker turns). Every retained at-tacker response receives SFT loss, including earlier attempts not individually responsible for terminal success: 
+
+LSFT (θA) = −Eτ ∼D SFT  
+
+> K(τ)
+
+∑
+
+> k=1
+
+∑
+
+> j
+
+log πθA (qk,j | oAk , H A<k , q k,<j ).
+
+The retained corpus is deduplicated before fine-tuning. The executable specifications are canoni-calized and frozen before SFT collection, so the SFT corpus and online co-evolution use the same authoritative contract version. Consequently, the SFT-only and Co-PPO attacker comparison is not confounded by a contract-version change, and all controlled online variants share the same contract-consistent SFT initialization. Exact provider model identifiers, collection dates, sampling param-eters, source-wise counts, contract-specification version, and deduplication statistics are recorded with the final data manifest. 
+
+## D DETAILED CHECKPOINT-LEVEL EVALUATION 
+
+The Co-PPO row corresponds to the selected online defender d430. It initializes Defender SFT, and the reported CoRL defender is SFT update 360 from a 720-update run. These correspond to Stages II and III; the main text uses stage names rather than internal identifiers. 
+
+Fixed-template coverage. The four fixed attacks use AgentDyn’s implementations of important_instructions (user impersonation and a prerequisite request), 
+
+system_message (a forged system-message marker), tool_knowledge (the important-instructions wrapper plus reference tool-call guidance), and direct (the attack goal prefixed by 
+
+TODO ). Six cases per suite are evaluated under every template: 7 × 6 × 4 = 168 executions, or 42 per template. The fixed columns pool these executions; they do not report separate template-level estimates. Appendix E instead evaluates only important_instructions over 1,509 official task–goal pairs per model. Neither condition establishes held-out-template generalization. 
+
+DeepSeek V4 Pro reference. The completed run covers all 1,514 planned executions. Its run au-dit reports no duplicate or missing cases and no infrastructure or evaluator errors. The same two pre-declared task–attack conflicts are excluded from 1,189 adaptive executions, leaving 1,187 eligi-ble adaptive cases and 1,512 records overall; these exclusions do not indicate incomplete coverage. Table 8 reports condition-level and adaptive suite-level results. Despite low adaptive ASR (5.05%), adaptive U is 55.01% and Safe-U is 52.91%, illustrating why ASR alone does not establish safe task completion. DeepSeek V4 Pro also supplied training demonstrations, so this is a cross-model reference rather than an independent teacher-free control. 17 Preprint Table 6: Main adaptive evaluation-set composition, before the two pre-declared exclusions. Cases are within-suite user-task–injection-task combinations; fixed-template coverage is specified above. Source Suite User tasks Inj. tasks Cases AgentDyn DailyLife 20 10 200 AgentDyn GitHub 20 9 180 AgentDyn Shopping 20 9 180 AgentDojo Banking 16 9 144 AgentDojo Slack 21 5 105 AgentDojo Travel 20 7 140 AgentDojo Workspace 40 6 240 Total 7 suites 157 55 1,189 0 25 50 75 100 125 10 20 30 40 50 60 
+
+> Effective ASR (%)
+
+a Observed opponent branches      
+
+> 025 50 75 100 125 −20 −10 010 20
+> ASR difference (pp)
+
+b Current–history contrasts    
+
+> Cumulative valid adaptive records (thousands)
+> Current A / current D Historical A / current D Current A / historical D Attacker: CC − HC Defender: CH − CC
+
+Figure 6: Online competitive adaptation during Co-PPO. a, reached-only Effective ASR for current/current (CC), historical-attacker/current-defender (HC), and current-attacker/historical-defender (CH) branches. b, attacker and defender contrasts are CC −HC and CH −CC, respectively; positive values favor the current role in these recorded comparisons. The shared horizontal axis counts 125,351 valid logged adaptive records through d430. Pale lines show consecutive 1,000-record blocks; bold lines pool each branch’s success and reach counts over the trailing five blocks before subtraction. Tasks and opponents change: these are descriptive branch contrasts from one run, not paired fixed-opponent gains or confidence intervals. 18 Preprint Table 7: Defender evaluation (%, seed 0). Overall U pools all conditions; Security is 1 − ASR on attacked episodes; n excludes invalids. Rows below the midrule are cross-model common-attacker references, not controlled or best-response comparisons (attacker trained on Qwen3.5; GLM-5.2 and DeepSeek V4 Pro supplied Defender SFT demonstrations). 
+
+(a) Coverage and clean-task utility 
+
+Defender Raw coverage Metric n Clean U ↑
+
+Base Qwen3.5-9B 1514/1514 1512 79.62 PPO baseline 1514/1514 1512 74.52 NoPop 1514/1514 1512 77.71 Co-PPO 1514/1514 1512 78.34 
+
+CoRL (ours) 1514/1514 1512 79.62 Qwen3.6-27B 1514/1514 1512 78.34 GPT-5.4 1514/1514 1512 78.98 DeepSeek V4 Pro 1514/1514 1512 61.78 GLM-5.2-Thinking 1514/1514 1511 85.99 
+
+(b) Attack resistance and aggregate task utility 
+
+Defender Fixed ASR ↓
+
+Adaptive ASR ↓
+
+Overall U ↑ Security ↑
+
+Joint Safe-U ↑
+
+Base Qwen3.5-9B 12.50 42.12 63.23 61.55 45.57 PPO baseline 5.95 30.75 62.76 72.32 51.32 NoPop 4.76 28.48 68.52 74.46 56.22 Co-PPO 2.98 26.37 69.91 76.53 58.53 
+
+CoRL (ours) 0.00 0.00 76.32 100.00 76.32 Qwen3.6-27B 9.52 7.83 70.70 91.96 66.47 GPT-5.4 1.19 0.17 74.87 99.70 74.74 DeepSeek V4 Pro 10.71 5.05 55.29 94.24 52.84 GLM-5.2-Thinking 0.00 0.00 81.47 100.00 81.47 Table 8: DeepSeek V4 Pro main-benchmark results (%). All 1,514 executions completed; n denotes metric-eligible cases. Clean ASR and Safe-U are omitted by the condition-level reporting convention. Overall U and joint Safe-U use n = 1 ,512 ; Security uses 1,355 eligible attacked executions. 
+
+(a) Condition-level results 
+
+Condition n U ↑ ASR ↓ Safe-U ↑
+
+Clean 157 61.78 — —Fixed 168 51.19 10.71 44.05 Adaptive 1,187 55.01 5.05 52.91 
+
+(b) Adaptive results by suite 
+
+Suite n U ↑ ASR ↓ Safe-U ↑
+
+Banking 143 72.73 2.10 72.73 DailyLife 200 53.50 1.50 52.50 GitHub 180 45.00 5.00 42.78 Shopping 180 42.78 0.56 42.78 Slack 105 66.67 12.38 56.19 Travel 139 47.48 10.07 41.73 Workspace 240 61.67 7.08 61.67 19 Preprint Table 9: Frozen attacker cross-play against three fixed defenders. Each cell is percentage (suc-cesses/eligible executions); Effective ASR conditions on reaching at least one injection site. Checkpoint-specific denominators reflect invalid or unreached executions. SFT d360 and the later RL d700 checkpoint saturate near zero and therefore serve as robustness anchors rather than useful attacker-ranking targets. The failed post-SFT-resume attacker is excluded because it is not part of the reported CoRL pipeline. 
+
+(a) Overall ASR ↑
+
+Attacker checkpoint Base Qwen3.5 SFT d360 RL d700 Attacker SFT (a500) 47.83 (165/345) 0.29 (1/350) 2.00 (7/350) Co-PPO early (a20) 44.12 (150/340) 0.57 (2/350) 0.86 (3/350) Selected Co-PPO (a200) 63.16 (216/342) 0.29 (1/350) 0.29 (1/350) NoPop (a280) 62.13 (210/338) 0.29 (1/350) 0.57 (2/350) 
+
+(b) Reached-only Effective ASR ↑
+
+Attacker checkpoint Base Qwen3.5 SFT d360 RL d700 Attacker SFT (a500) 49.55 (165/333) 0.29 (1/347) 2.06 (7/339) Co-PPO early (a20) 45.59 (150/329) 0.58 (2/344) 0.88 (3/339) Selected Co-PPO (a200) 65.65 (216/329) 0.29 (1/342) 0.29 (1/339) NoPop (a280) 64.42 (210/326) 0.29 (1/345) 0.59 (2/340) Table 10: Exact counts for the 2 ×2 attribution study in Figure 5 a. Cells A–D use identical evaluation denominators; percentages in the main text are computed directly from these counts. Clean Fixed attack Adaptive attack Cell U U ASR Safe-U U ASR Safe-U A 124/157 128/168 4/168 125/168 819/1187 178/1187 700/1187 B 124/157 132/168 1/168 131/168 861/1187 71/1187 795/1187 C 124/157 131/168 2/168 130/168 849/1187 107/1187 772/1187 
+
+D: CoRL 125/157 134/168 0/168 134/168 895/1187 0/1187 895/1187 
+
+20 Preprint 
+
+## E OFFICIAL AGENTDYN/AGENTDOJO FIXED-ATTACK EVALUATION 
+
+Table 11: Official AgentDyn/AgentDojo important_instructions results (%): 157 clean tasks and 1,509 attack pairs per model; matched tasks/budgets and thinking disabled. Defender Clean U ↑ Attacked U ↑ ASR ↓ Safe-U ↑
+
+Base Qwen3.5-9B 80.89 73.36 20.15 62.16 Co-PPO 79.62 75.41 9.61 70.31 
+
+CoRL (ours) 80.89 79.06 2.32 77.93 Protocol and aggregation. This evaluation follows the official seven-suite configuration with 
+
+important_instructions (Li et al., 2026; Debenedetti et al., 2024). Base Qwen3.5-9B, Co-PPO d430, and CoRL SFT360 share tasks and budgets, with thinking disabled. Each model runs 157 clean tasks and 1,509 attacked task–goal pairs. Table 11 reports case-weighted means; Table 12 adds equal-suite means. U, ASR, and joint Safe-U follow Section 5.1. Unlike the four-template, 168-execution condition in Appendix D, this evaluation covers one template over the full official case set. Workspace contributes 560 attack pairs versus 240 raw pairs in the main adaptive manifest (Table 6). We report these protocols separately, without pooling or substituting results. This evaluation establishes neither held-out-template nor domain-OOD generalization. 
+
+Gains and remaining trade-offs. Relative to Base, CoRL lowers ASR in all seven suites and improves Safe-U in six, with the largest gain in DailyLife (21.00% to 72.00%). Equal-suite ASR falls from 26.42% to 3.09% and Safe-U rises from 52.01% to 70.61%, so gains extend beyond Workspace’s larger weight. However, macro clean U declines from 78.78% to 78.10%. From Co-PPO to CoRL, Travel Safe-U falls from 82.14% to 67.14% at unchanged 2.86% ASR; Banking clean U falls from 87.50% to 68.75%, and Slack attacked U from 70.48% to 66.67%. Aggregate gains coexist with local utility regressions. 21 Preprint Table 12: Official important_instructions results by suite (%). Counts are per model; At-tack denotes task–goal pairs. Macro weights all seven suites equally. Bold marks the best value within each suite or the macro group. Suite Clean Attack Defender Clean U 
+
+↑
+
+Attacked U 
+
+↑
+
+ASR 
+
+↓
+
+Safe-U 
+
+↑
+
+Banking 16 144 Base 93.75 71.53 29.17 58.33 Co-PPO 87.50 69.44 21.53 59.03 CoRL 68.75 73.61 10.42 68.06 
+
+Slack 21 105 Base 95.24 69.52 45.71 35.24 Co-PPO 95.24 70.48 11.43 63.81 CoRL 90.48 66.67 0.95 65.71 
+
+Travel 20 140 Base 85.00 75.00 16.43 70.71 Co-PPO 85.00 82.86 2.86 82.14 
+
+CoRL 75.00 67.14 2.86 67.14 Workspace 40 560 Base 97.50 93.21 2.32 93.21 Co-PPO 95.00 94.11 0.36 94.11 CoRL 97.50 98.04 0.18 98.04 
+
+Shopping 20 180 Base 35.00 40.56 14.44 37.22 Co-PPO 30.00 35.56 5.00 35.00 CoRL 60.00 52.22 1.11 52.22 
+
+GitHub 20 180 Base 55.00 50.00 8.89 48.33 Co-PPO 60.00 60.56 6.11 60.00 CoRL 70.00 71.11 1.11 71.11 
+
+DailyLife 20 200 Base 90.00 70.50 68.00 21.00 Co-PPO 90.00 74.00 38.00 48.00 CoRL 85.00 76.00 5.00 72.00 
+
+Suite macro – – Base 78.78 67.19 26.42 52.01 Co-PPO 77.53 69.57 12.18 63.16 CoRL 78.10 72.11 3.09 70.61 
+
+22 Preprint 
+
+## F EXTERNAL-BENCHMARK TRANSFER AND OOD SCOPE 
+
+Table 13: External transfer (%). (a) AgentLAB Task-Injection with GPT-5.4-prioritized attacks and Qwen3.6-27B fallback; N is the common denominator of ASR and task success. (b) InjecAgent direct-harm (DH) and data-stealing stage-1 (DS-S1) ASR-valid. Bold marks the best value. Metric scope: Appendix F. 
+
+(a) AgentLAB: safety and task completion 
+
+Defender N ASR ↓ Task success ↑
+
+Base Qwen3.5-9B 949 37.41 59.43 Co-PPO 949 15.81 78.61 
+
+CoRL (ours) 949 14.12 82.82 (b) InjecAgent: attack resistance 
+
+DH ASR ↓ DS-S1 ASR ↓
+
+Setting Base Co-PPO CoRL Base Co-PPO CoRL Base 10.4 6.3 1.2 35.9 16.8 3.1 
+
+Enhanced 5.5 4.2 0.0 10.5 5.7 0.0 AgentLAB. We evaluate Base Qwen3.5-9B, Co-PPO d430, and CoRL SFT360 on AgentLAB’s Task-Injection track using the v1.2.1 task-suite configuration and long_horizon attacks (Jiang et al., 2026). The evaluation contains 949 user-task–injection-goal pairs per defender: 144 banking, 560 workspace, 140 travel, and 105 slack. An initial successful attack terminates the pair; otherwise, at most one adaptive rewrite is evaluated and its trajectory is selected. Both ASR and task success are case-weighted means over these selected trajectories, using the same 949 valid pairs and no outstand-ing incomplete pairs for each defender. Table 14 gives the exact numerators. These are task–goal pairs, not individual attack rounds or all tracks of AgentLAB. The attack procedure prioritizes GPT-5.4 and falls back to Qwen3.6-27B for some generations; the final-trajectory attacker counts are reported in Table 14. The mixture differs across defenders, so the aggregate comparison describes this evaluation procedure rather than a controlled, pure-GPT-5.4 attack comparison. Task success is measured on the selected attacked trajectory and may coexist with attack success. We do not pool these results with the main benchmark. Two terminal CoRL tra-jectories were recovered by deterministic replay with exact trace matching, and a Base environment-message serialization incompatibility was repaired; their verified outcomes are included in the com-plete counts. CoRL has lower observed ASR and higher task success than Base and Co-PPO, while its 14.12% ASR documents residual vulnerability. Table 14: AgentLAB Task-Injection evaluation counts. N is the denominator for both metrics in Table 13a. A-success and U-success are attack and task success on the selected trajectory; the final column counts its attacker source. Defender N A-success U-success GPT-5.4 / Qwen3.6-27B Base Qwen3.5-9B 949 355 564 704 / 245 Co-PPO 949 150 746 761 / 188 CoRL (ours) 949 134 786 669 / 280 
+
+InjecAgent. InjecAgent contains 510 direct-harm (DH) and 544 data-stealing (DS) cases per set-ting (Zhan et al., 2024). The base setting inserts the malicious instruction, while the enhanced setting prepends the benchmark’s fixed hacking prompt. DS is staged: S1 extracts sensitive data and S2 attempts to transmit it. For DH and DS-S1, the official scorer defines ASR-valid as 23 Preprint 
+
+nsucc /(nsucc + nunsucc ), excluding outputs labeled invalid. Thus the nominal totals of 510 and 544 and the completed-case coverage in Table 15 are not necessarily metric-valid denominators. The table retains the available coverage and rates; the per-model invalid counts needed to recon-struct each ASR-valid denominator are not present in the current result summary. Co-PPO adds the reported DH and DS-S1 rates, but its completed-case coverage and DS-S2 counts are unavailable and are marked with dashes. DS-S2 is evaluated only after S1 succeeds, and we retain its success-ful/unsuccessful/invalid counts rather than infer an aggregate DS rate. Table 15: InjecAgent results for Base Qwen3.5-9B, Co-PPO, and CoRL (ours). Coverage is available completed cases over the official DH or DS total, not the ASR-valid denominator. DS S2 reports successful/unsuccessful/invalid counts; dashes indicate unavailable summaries. Bold marks each setting’s best ASR. Defender Setting DH cov. DH ASR valid 
+
+↓ DS cov. DS-S1 ASR valid 
+
+↓ DS S2 S/U/I Base Qwen3.5-9B base 510/510 10.4 535/544 35.9 171/5/1 Base Qwen3.5-9B enhanced 510/510 5.5 543/544 10.5 49/5/1 Co-PPO base – 6.3 – 16.8 –Co-PPO enhanced – 4.2 – 5.7 –CoRL (ours) base 510/510 1.2 543/544 3.1 14/1/1 CoRL (ours) enhanced 510/510 0.0 544/544 0.0 0/0/0 
+
+Domain-OOD. The default validation set is not domain-OOD. We use the term only for separately trained leave-one-domain-out models whose held-out domain contributes no SFT or online-RL data. The seven-domain model is therefore not described as domain-OOD on any of these domains. 
+
+Injection-OOD. The default validation set is also not injection-OOD. We apply this label only when the corresponding attack-goal family, compromised field or site family, and construction tem-plate are excluded from Attacker SFT, Co-PPO, and Defender SFT. Merely holding out an exact configuration does not establish injection-OOD transfer. 
+
+Payload-OOD. InjecAgent supplies independently authored fixed payloads and therefore provides evidence for payload-source transfer. We do not call it strict payload-OOD unless a construction audit confirms that its goal families, compromised fields, sites, and templates are absent from all SFT and online-RL data. 
+
+External-benchmark transfer. Tables 13 and 15 report complete AgentLAB coverage and the available InjecAgent coverage. AgentLAB provides separate attack-success and attacked-task-success outcomes, whereas the InjecAgent results measure attack resistance. These evaluations es-tablish cross-benchmark transfer under their respective protocols, not strict domain- or injection-OOD generalization. Agent Security Bench is not part of the current empirical evidence. 
+
+## G TRAINING CONFIGURATION AND POPULATION SERVING 
+
+Compute and software. Attacker SFT and Defender SFT each use two nodes with eight GPUs per node, using PyTorch/Transformers and DeepSpeed ZeRO-3 in BF16. Co-PPO uses seven eight-GPU nodes: eight GPUs for each role’s trainer and 40 for rollout serving (Table 16). It runs on verl with the Megatron training backend and vLLM generation workers coordinated by Ray. These are per-stage allocations; the three training stages run sequentially. 
+
+End-to-end procedure. (1) Fit the initial attacker on verified successful teacher attacks. (2) Sample clean configurations or injected configurations with the four opponent pairings. (3) Execute the interleaved rollout and compute security/task outcomes. (4) Update each participating current policy with its own masked PPO batch; refresh eligible historical opponents. (5) At the selected Co-PPO 24 Preprint 
+
+Algorithm 1 CoRL: initialization, asynchronous co-evolution, and supervised repair 
+
+Input: Training configurations, base defender π0 
+
+> D
+
+, teachers, task/attack verifiers 
+
+Output: Frozen final defender πfinal  
+
+> D
+
+and retained attackers PKA
+
+Stage I: attacker initialization  
+
+> 1:
+
+Fit π0 
+
+> A
+
+on all attacker turns in verified successful teacher trajectories.  
+
+> 2:
+
+Initialize role critics and queues; configure historical pools and serving slots. 
+
+Stage II: repeat the following services asynchronously until Co-PPO ends  
+
+> 3:
+
+procedure ROLLOUTWORKER  
+
+> 4:
+
+Sample a training row; use the current defender alone for native-clean rows.  
+
+> 5:
+
+For injected rows, sample an opponent pair using the four-way mixture.  
+
+> 6:
+
+Reset the task and both histories; log producing role/version on each request.  
+
+> 7:
+
+while the execution is active and within budget do  
+
+> 8:
+
+Advance the defender and tools to the next injection site or termination.  
+
+> 9:
+
+if an unhandled configured site is reached on an injected row then  
+
+> 10:
+
+Form oAk from allowed context, public trace, and prior attempts.  
+
+> 11:
+
+Generate an attacker response, or use the selected fixed template.  
+
+> 12:
+
+Insert only a valid nonempty <attack> payload; mark the site handled.  
+
+> 13:
+
+Resume the same execution; retain public consequences for later attempts.  
+
+> 14:
+
+end if  
+
+> 15:
+
+end while  
+
+> 16:
+
+Compute applicable terminal rewards (Section 4.2); flag evaluator/trace failures.  
+
+> 17:
+
+Enqueue role-attributed traces, rewards, and metadata for current roles with tokens.  
+
+> 18:
+
+end procedure  
+
+> 19:
+
+procedure TRAINROLE( r ∈ { A, D }) ▷ independent role-specific queue  
+
+> 20:
+
+Dequeue a batch; reject invalid traces/rewards, metadata, or producer lag outside [0 , 1] . 
+
+> 21:
+
+Malformed payloads do not invalidate otherwise exact attacker token traces.  
+
+> 22:
+
+Set mr = 1 only on tokens generated by the participating current role r. 
+
+> 23:
+
+If no eligible tokens remain, skip the update; historical/template tokens stay masked.  
+
+> 24:
+
+Compute role-token GAE; masked positions carry, rather than decay, its recurrence.  
+
+> 25:
+
+Update critic r; after its warmup, update actor r with clipped PPO and KL.  
+
+> 26:
+
+end procedure  
+
+> 27:
+
+procedure REFRESHPOPULATION( r ∈ { A, D }) ▷ Appendix G.4  
+
+> 28:
+
+Save candidates every 10 policy versions; consider pool refresh every 20.  
+
+> 29:
+
+Reserve one of four serving slots for an active probation candidate; use the rest for elites.  
+
+> 30:
+
+Admit candidates after ≥ 32 role-attributable, reward-bearing evaluations per suite.  
+
+> 31:
+
+If the eligible pool is at least twice the elite capacity, retain its top half by fitness.  
+
+> 32:
+
+Sample elites without replacement using shifted suite-macro fitness weights.  
+
+> 33:
+
+Safely refresh frozen replicas; checkpoint fitness histories, slots, and RNG state.  
+
+> 34:
+
+end procedure Stage III: population-guided defender repair  
+
+> 35:
+
+End online training at the selected checkpoint; retain πKD and PKA . 
+
+> 36:
+
+Run teacher defenders from task initial states under retained attackers.  
+
+> 37:
+
+Keep valid safe-success trajectories; quality-screen and select one per configuration.  
+
+> 38:
+
+Mix successful untriggered replay and deduplicate the demonstrations.  
+
+> 39:
+
+Initialize Defender SFT from πKD ; apply masked CE on all teacher assistant turns.  
+
+> 40:
+
+Freeze the reported SFT checkpoint as πfinal  
+
+> D
+
+. 
+
+> 41:
+
+return πfinal  
+
+> D
+
+and PKA
+
+checkpoint, retain the defender initialization and attacker population. (6) Run teacher defenders from task initial states under retained attackers, filter successful trajectories, select per configuration, mix untriggered replay, and deduplicate. (7) Train the defender with masked CE and freeze the reported SFT checkpoint for evaluation. Algorithm 1 expands this procedure into concurrent rollout, training, and population services, not synchronized attacker–defender rounds. 25 Preprint G.1 CO-PPO ONLINE TRAINING Table 16 summarizes Co-PPO. Trajectory-success-filtered all-turn SFT initializes the attacker; injected rows then sample current/current, historical attacker/current defender, current at-tacker/historical defender, or fixed-template/current defender interactions, while native-clean rows train the defender directly. Both learned agents use separate token-level critics, masked response-token GAE, asymmetric clipped PPO, and KL regularization. Critic-only warmup lasts 40 attacker-trainer updates and 100 defender-trainer updates; these are optimizer-update iterations, not envi-ronment rollouts. The Co-PPO layout separates the two trainers and four rollout roles so model generation can continue while either trainer performs an update. After Co-PPO checkpoint selec-Table 16: Bilateral Co-PPO configuration. Subscripts c and o denote current and historical rollout roles; cc/hc/ch/tc denote current–current, historical-attacker–current-defender, current-attacker– historical-defender, and template–current-defender pairs. Configuration Value Configuration Value Train / internal-validation sampling rows 12,705 / 3,186 Train injected / native clean rows 9,529 / 3,176 Unique task/attack configurations 13,396 Unique user tasks 1,477 Clean rows train / internal validation 3,176 / 796 Unique clean tasks train / internal validation 1,183 / 294 Tool domains 7 Rollouts per sampled row 1Training GPUs A / D8 / 8 Rollout GPUs 
+
+Ac/A o/D c/D o
+
+8 / 8 / 16 / 8 Actor backbone A / DQwen3.5-9B / Qwen3.5-9B Maximum defender turns 20 Attacker initialization trajectory-success-filtered all-turn SFT Attacker temperature 1.0 Turn token cap A / D3,072 / 8,192 Tool-response character cap disabled Prompt tokens A / D8,192 / 15,360 Response tokens A / D49,152 / 16,384 Maximum model length A / D 57,344 / 40,960 PPO minibatch size 128 Actor learning rate A / D 
+
+5×10 −7 / 5×10 −7 Critic learning rate A / D 
+
+10 −5 / 10 −5
+
+GAE γ/λ 1.0 / 0.95 Loss aggregation seq-mean-token-sum-norm PPO clip low A / D 0.20 / 0.20 PPO clip high A / D 0.28 / 0.24 KL coefficient A / D0.001 / 0.001 Critic-only warmup A / D 40 / 100 trainer updates Injected pair mix 
+
+cc/hc/ch/tc 
+
+0.40 / 0.25 / 0.25 / 0.10 Random clean probability 0 (native rows only) Historical replicas A / D 4 / 4 Probation slots A / D 1 / 1 Eligibility quota 7 suites × 32 Probation routing probability 0.75 Fitness history 200 rewards per suite Fitness aggregation seven-suite macro mean Checkpoint-save / population-update frequency 10 / 20 versions Maximum producer-policy lag 1 version 26 Preprint Table 17: Defender-SFT configuration. Update 360 inherits the learning-rate schedule of the full 720-update job; it is not a separately scheduled one-epoch run. Defender-SFT setting Verified value Initialization / reported checkpoint Co-PPO d430 / SFT update 360 Configured run / reported progress 2 epochs, 720 updates / 1 epoch, 360 updates Training trajectories 5,760: 4,907 attacked + 853 untriggered replay (14.81%) Teacher API identifiers glm-5.2-for-wm ; deepseek-v4-pro 
+
+Loss / supervision Masked causal-LM cross-entropy; all assistant turns Preference / explicit KL Neither enabled; replay shares the same CE loss Learning rate / scheduler 5 × 10 −6 / cosine Warmup / weight decay Ratio 0.03 (22 updates over the configured run) / 0.01 Global batch / gradient accumulation 16 (16 GPUs, one example each) / 1 Sequence length / seed 16,384 tokens / 42; no example was truncated Training mode Full-parameter SFT, BF16, ZeRO-3 tion, online optimization ends; the retained attacker population then supplies attacks for the teacher demonstrations used in Defender SFT in Table 17. For reached injected trajectories, the Co-PPO attacker reward is 
+
+RA(τ ) = Iatk (τ ) + αfmt (1 − Iatk (τ )) Ifmt (τ ), αfmt = 0 .05 ,
+
+and trajectories with no attacker action do not update the attacker. The Co-PPO defender reward is 
+
+RD (τ ) = 
+
+
+
+1.0, Iatk = 0 ∧ Itask = 1 ,
+
+−0.2, Iatk = 0 ∧ Itask = 0 ,
+
+−1.0, Iatk = 1 .
+
+Let Π( πA, π D ) denote the induced injected-trajectory distribution. Co-PPO samples 
+
+μinj  
+
+> k
+
+= pcc Π( πkA, π kD ) + phc E¯πA∼P kA Π(¯ πA, π kD )+ pch E¯πD ∼P kD Π( πkA, ¯πD ) + ptc Π( πtmpl , π kD ), (5) with the coefficients in Table 16. Both applicable current policies are updated; historical policies and fixed templates are rollout-only opponents. The online tracker records reach rate, effective and action-conditioned ASR, strict-format validity, exact-trace failures, task success, and model-pair attribution for each suite. In the evaluation tables, Utility always denotes the empirical mean of Itask ; the joint event (Iatk = 0 , I task = 1) may be retained as a separate diagnostic but is never labeled Utility. CoRL training plots are nonstationary because both opponents can change. Frozen-checkpoint strength comparisons therefore use common attackers, tasks, seeds, and verifiers rather than raw online curves. G.2 DEFENDER-SFT DATA AND SUPERVISION 
+
+Teacher demonstrations. Teachers execute the training tasks from their initial states, encountering attacks from retained Co-PPO attackers as sites are reached. Collection does not first obtain failures of d430 or resume their prefixes. The requested teacher API identifiers are glm-5.2-for-wm and 
+
+deepseek-v4-pro ; they contribute 4,662 and 1,098 trajectories, respectively, to the final corpus. No finer immutable provider snapshot identifier is available. 
+
+Selection and replay. Among 7,859 safe, task-successful, normally terminated candidates with actual payload evidence, 6,974 pass the strict quality screen and 885 are rejected, giving an 88.74% quality acceptance rate. This rate is conditional on the eligible teacher candidates, not a success rate 27 Preprint for repairing d430 failures. Selecting one teacher trajectory per source configuration yields 4,907 attacked demonstrations. Replay mixing and exact deduplication remove 13 duplicate entries, leaving 5,760 trajectories: the 4,907 attacked examples and 853 successful executions in which configured attacks were not triggered. The replay target was 15%; the realized fraction is 853 /5760 = 14 .81% .These examples are not native-clean task generations or positive/negative pairs. 
+
+Objective and checkpoint. All teacher assistant turns receive causal-LM cross-entropy supervi-sion; user messages, tool results, and padding have zero label mask. Attacked demonstrations and untriggered replay are mixed in the same training dataset with no independent replay coefficient, pairwise preference term, explicit KL penalty, or additional group-weighted loss. Co-PPO’s own PPO KL regularization is unaffected. Table 17 reports the SFT parameters. The deployed check-point is update 360, one epoch into a job configured for two epochs and 720 updates, using that job’s cosine schedule and 22-update warmup. The reported model performs no further online RL. This distinction preserves the actual learning-rate history at the evaluated checkpoint. G.3 ROLE AND POLICY-VERSION ATTRIBUTION Because a Co-PPO rollout may contain current and frozen policies, data are assigned only to the policy that generated the corresponding action: 
+
+BkA = {(sAn , q n, ˆAAn ) : qn ∼ πkA(· | sAn ), m An = 1 },
+
+BkD = {(sDn , y n, ˆADn ) : yn ∼ πkD (· | sDn ), m Dn = 1 }.
+
+Historical policies and fixed templates receive no gradient updates. During Co-PPO, a malformed current-attacker response remains in BkA if its sampled token trace is exact and receives the shared terminal trajectory reward defined in Section 4: this is zero when the trajectory never succeeds, but can be positive if a later attempt succeeds. A trace-alignment or evaluator failure instead invalidates the affected training sample rather than fabricating a reward. Each rollout also records the producing attacker and defender policy versions at request time and after completion. A role-specific trainer rejects missing, future, malformed, or over-lagged metadata; the current maximum producer-policy lag is one version. G.4 CO-PPO STRATIFIED PROBATION AND ELITE SELECTION During Co-PPO, each role has four historical serving slots. A newly discovered checkpoint first occupies a dedicated probation slot and is provisional until it has been evaluated on every required suite. Let Hi,b contain the role-attributable, reward-bearing samples for checkpoint i in suite b, define 
+
+ni,b = |H i,b |, and let U contain the seven training suites. The default eligibility rule is 
+
+i ∈ E r ⇐⇒ ∑
+
+> b∈U
+
+1[ni,b ≥ 32] = 7 .
+
+Thus a candidate needs at least 224 valid, suite-stratified evaluations before entering elite sampling. When a rollout belongs to a suite whose quota is incomplete, routing selects the probation slot with probability 0.75 ; otherwise it samples across loaded slots. This exploration path prevents a deadlock: an unloaded candidate cannot collect samples and thus cannot become eligible. For an eligible checkpoint, retain up to 200 recent rewards in each Hi,b . Fitness is the suite-macro average 
+
+Si = 1
+
+|U| 
+
+∑
+
+> b∈U
+
+1
+
+|H i,b |
+
+∑
+
+> r∈H i,b
+
+r, 
+
+so high-frequency scenarios cannot dominate checkpoint selection. Attacker fitness uses authoritative attack success only, excluding the 0.05 PPO format bonus. Defender fitness uses its security–utility reward only when it actually receives a nonempty attacker payload. When the eligible pool contains 28 Preprint at least twice as many candidates as elite slots, only its top half by Si is retained. Candidates are then sampled without replacement using 
+
+wi = Si − min 
+
+> j∈E r
+
+Sj + 0 .01 , pi = wi
+
+∑ 
+
+> j∈E r
+
+wj
+
+.
+
+These histories are collected online against the contemporaneous mixed-opponent distribution, not by reevaluating every checkpoint against a common anchor set. Consequently, Si is a serving heuristic rather than a stationary, cross-checkpoint measure of absolute strength or behavioral diversity. We make no coverage guarantee from scalar fitness; frozen-checkpoint cross-play on common tasks, seeds, and verifiers remains necessary for the corresponding post-training evidence. When a provisional candidate exists, three slots serve sampled elites and the fourth serves probation; once no provisional candidate remains, all four slots may serve eligible checkpoints. Population size is checked against the physical replica count for both roles. These admission and refresh rules end when Co-PPO ends. G.5 CO-PPO SAFE REPLICA RELOAD AND RECOVERY During Co-PPO, historical-model reload is treated as a serving-state transition. The rollouter first stops assigning new requests to the affected historical role, routes that traffic through current–current pairs, and waits for all active requests to drain before restarting replicas. Checkpoint attribution is fixed when a request is issued, even if the serving URL is later reloaded. If a restart fails, only that historical role remains disabled until reload succeeds; current-policy training continues. Co-PPO population state is checkpointed together with training state. It includes candidate check-points, rolling and per-suite reward histories, fitness and sample counts, loaded slot mappings, last up-date steps, and random-number-generator state. On resume, the saved historical models are reloaded into their previous slots rather than resetting every slot to the base model. G.6 THREE-STAGE TRAINING DIAGNOSTICS Figure 7 separates optimization traces from online game outcomes. The attacker and defender SFT losses decrease on their respective training corpora; this documents fitting, not held-out safety or generalization. The defender curve also shows updates 361–720, which are outside the reported checkpoint. Its continued loss decrease does not establish that the later model is safer. Across the first and last quarters of the valid adaptive log, Effective ASR increases from 29.32% to 39.92%, while injection reach remains close (63.63% versus 64.19%). Task utility changes from 62.25% to 60.41%, whereas Safe-U decreases from 54.26% to 49.23%. Thus the online record shows growing attack pressure without a comparable loss of task completion, while secure completion re-mains under pressure. This motivates examining final repair, whose contribution is assessed by the frozen evaluations and controlled comparisons in Q1–Q3, not by these nonstationary traces alone. Figure 6 further separates opponent branches. Each third-of-run contrast first pools success and reach counts within each branch and then subtracts the rates; it is not an average of block-wise differ-ences. The final third has positive current–history contrasts for both roles, consistent with continued competitive adaptation, but does not establish periodic cycling, equilibrium, or reduced forgetting. Saved population snapshots contain 10 attacker-pool and 17 defender-pool change observations; they localize changes between snapshots rather than identify exact reload times. For these plots, 3,865 of 129,216 logged adaptive records are excluded by sample-validity, evaluator-error, or invalid-reason flags, leaving 125,351. The horizontal axis excludes clean and fixed-template logs and does not count optimizer updates or guarantee that every record was consumed by PPO. 29 Preprint 0 250 500 
+
+> Optimizer update
+> 0.0 0.5 1.0
+> Training CE loss
+
+a Stage I · Attacker SFT      
+
+> 025 50 75 100 125
+> Valid adaptive records (thousands)
+> 025 50 75 100
+> Recorded outcomes (%)
+
+b Stage II · Attack pressure      
+
+> Effective ASR Injection reach
+> 025 50 75 100 125
+> Valid adaptive records (thousands)
+> 025 50 75 100
+> Recorded outcomes (%)
+
+c Stage II · Task outcomes     
+
+> Task utility Safe-U
+> 0180 360 540 720
+> Optimizer update
+> 0.0 0.2 0.4 0.6
+> Training CE loss
+
+d
+
+> Reported: 360 Beyond selected checkpoint
+> Stage III · Defender SFT
+
+Figure 7: Selected diagnostics across the three training stages. a, d , per-update training cross-entropy (pale) and trailing 15-update means (bold); the shaded defender tail follows the reported update 360. The two SFT losses use different training corpora and are not directly comparable. b, c , pooled Co-PPO attack pressure, injection reach, task utility, and Safe-U, using the logged-record axis and trailing-five-block aggregation of Figure 6. Effective ASR conditions on an injection record being present; reach, U, and Safe-U use all valid adaptive records. The stage axes are separate; pale traces show observations rather than uncertainty bands. 
+
+## H VERIFIER RELIABILITY AND IMPLEMENTATION DETAILS 
+
+Rule-based verification. The sandbox uses deterministic verifiers rather than LLM judges for PPO rewards and main-benchmark evaluation. Depending on the task, success is checked through function-call traces or post-environment state predicates; the additional teacher-demonstration qual-ity screen is documented separately and does not replace these outcome verifiers. Determinism re-moves judge variance but does not guarantee specification correctness. An independent human audit of both outcome verifiers is not yet available; the reported sandbox metrics therefore measure com-pliance with these executable specifications. Evaluator exceptions and exact-trace failures remain separate invalid samples rather than negative rewards. 
+
+Training implementation. The attacker base model is first trained by trajectory-success-filtered all-turn SFT on verifier-approved interleaved conversations generated by DeepSeek V4 Pro and Seed2.0. Bilateral Co-PPO then uses one online rollout per sampled row and separate value critics for both online roles. After Co-PPO checkpoint selection, retained attackers challenge teacher defenders running complete tasks; verifier-approved demonstrations then train the final defender with masked cross-entropy. No online optimizer is resumed afterward. During Co-PPO, the implementation scans each full serialized PPO trajectory with a role-specific response mask: at a masked position it car-ries the next valid value and GAE accumulator backward unchanged, without advancing that role’s effective timeline. This is mathematically equivalent to GAE on the subsequence of role-generated tokens, but the implementation does not physically repack that subsequence. Let tr 
+
+> 1
+
+< · · · < t rNr
+
+be the serialized positions generated by an active current policy for role r, srj the complete prefix before position trj , and urj its sampled token. Tool outputs, opponent tokens, and frozen-policy ac-tions between trj and trj+1 become part of the next state srj+1 , but masked carry prevents them from introducing additional γλ discounting. The following equations describe the equivalent role-specific 30 Preprint timeline. With rewards zero except at the terminal role transition, 
+
+δrj = rrj + γr Vϕr (srj+1 ) − Vϕr (srj ), ˆArj = δrj + γr λr ˆArj+1 , (6) 
+
+ρrj = πθr (urj | srj )
+
+πθold  
+
+> r
+
+(urj | srj ) , ℓr, clip  
+
+> j
+
+= min 
+
+(
+
+ρrj ˆArj , clip( ρrj , 1 − ϵ− 
+
+> r
+
+, 1 + ϵ+ 
+
+> r
+
+) ˆArj
+
+)
+
+. (7) At termination we set Vϕr (srNr +1 ) = 0 , and define the GAE return target as ˆRrj = ˆArj + Vϕr (srj ).The critic minimizes Ej [( Vϕr (srj ) − ˆRrj )2] on these role-generated positions. In the full serialized tensor, mrn = 1 exactly at {trj } and zero elsewhere. Zero-mask positions are excluded from the policy, value, and KL losses and, crucially, carry rather than decay the GAE recurrence. Both CoRL actors use the low-variance KL estimator and sequence-mean/token-sum normalization. Co-PPO rollouts are generated asynchronously. Workers execute each defender task once and pause only at triggered injection sites; trajectories feed role-specific attacker and defender trainer queues. Producer-role masks ensure that a trainer optimizes only its own generated tokens. Each request records immutable producer-role and checkpoint-version metadata; the active trainer rejects mal-formed metadata and samples whose producer policy is more than one version stale. Parsed payloads re-entering later context, tool outputs, opponent actions, and other environment tokens are masked from actor losses. The defender uses γ = 1 .0, λ = 0 .95 , asymmetric clipping (0 .20 , 0.24) , KL coef-ficient 0.001 , and 100 critic-only trainer updates before actor training. The attacker uses asymmetric clipping (0 .20 , 0.28) , KL coefficient 0.001 , and 40 critic-only trainer updates; dataset composition is reported in Section 4.2 and Table 16. During Co-PPO, the configured historical capacity and physical serving allocation are four check-points per role. One slot is reserved for a provisional candidate until it obtains at least 32 role-attributable, reward-bearing evaluations in each of seven suites. Each suite retains up to 200 recent rewards, and candidate fitness is their suite-macro mean. Eligible checkpoints are sampled without replacement with shifted fitness weights; top-half filtering begins only when the eligible pool con-tains at least twice the number of elite slots. Checkpoints are saved every 10 policy versions and populations are considered for update every 20 versions. Candidate histories, slot mappings, update steps, and random-number-generator state are restored with the Co-PPO training checkpoint. 31
