@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-11",
+  "date": "2026-09-11",
+  "generated_at": "2026-09-11T21:23:36",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/11/2609.11155v1-drg-mappo-hierarchical-dynamic-role-graph-multi-agent-reinforcement-learning-for-cooperative-air-combat",
+      "section": "deep",
+      "title_en": "DRG-MAPPO: Hierarchical Dynamic Role-Graph Multi-Agent Reinforcement Learning for Cooperative Air Combat",
+      "authors": "Junlin Liu, Chengwei Li, Yang Gao, Hui Chang, Xinchen Zhang, Zhijun Zhao, Hao Zhao",
+      "date": "2026-09-10",
+      "pdf": "https://arxiv.org/pdf/2609.11155v1",
+      "score": "9.0",
+      "evidence": "面向空战的分层角色图协作多智能体强化学习",
+      "tldr": "针对协同空战中多智能体强化学习难以建模时变关系、且扁平架构缺少战术角色建模的问题，本文提出DRG-MAPPO框架。该方法用图注意力提取盟友、敌人与威胁间的关键关系特征，并由高层策略动态分配“长机/僚机”等战术角色，低层策略据此执行机动动作。还设计目标优先级辅助任务以促进集火等行为涌现。实验取得87%的最优胜率，表明其在关系建模、可解释性与优化稳定性间实现有效平衡。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-Agent Reinforcement Learning (MARL) has emerged as a pivotal paradigm for complex decision-making in autonomous systems and air combat. While MARL has demonstrated significant potential in air combat, achieving sophisticated tactical coordination remains a non-trivial challenge. This difficulty is largely attributed to two primary limitations: (1) the absence of structured relational modeling hinders agents from capturing complex, time-varying interactions among battlefield entities; and (2) conventional flat architectures often lack the capability to explicitly model tactical roles, leading to ambiguous task allocation in highly dynamic environments. To address these challenges, we propose Hierarchical Dynamic Role-Graph Multi-Agent Proximal Policy Optimization (DRG-MAPPO), a novel MARL framework that integrates graph-based relational modeling with dynamic role assignment. Specifically, DRG-MAPPO constructs a graph-based representation of battlefield interactions and leverages graph attention mechanisms to extract critical relational features among allies, enemies, and threats. Subsequently, a high-level policy employs a dynamic role assignment mechanism to determine tactical responsibilities (e.g., ``leader'' and ``supporter''). Conditioned on these roles and encoded graph-relational features, a low-level policy executes discrete maneuver actions, facilitating the joint optimization of tactical strategy and collaborative execution. Furthermore, a target-priority auxiliary task is designed to foster the emergence of behaviors such as focus-fire. Experimental results demonstrate that DRG-MAPPO achieves a state-of-the-art win rate of 87%, suggesting that our framework effectively balances relational modeling, interpretability, and optimization stability for cooperative air combat.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/11/2609.06586v2-certifying-cooperation-a-novel-approach-to-cooperative-multi-agent-task-generation",
+      "section": "quick",
+      "title_en": "Certifying cooperation: a novel approach to cooperative multi-agent task generation",
+      "authors": "Yannick Molinghen, Hugo Charels, Tom Lenaerts",
+      "date": "2026-09-06",
+      "pdf": "https://arxiv.org/pdf/2609.06586v2",
+      "score": "7.0",
+      "evidence": "面向合作多智能体的任务生成与协作认证",
+      "tldr": "共享奖励只给智能体共同目标，却不保证合作是否必需。本文在Laser Learning Environment中用时序合作图表示“挡激光助队友”等交互，定义六种合作画像，并证明合作轨迹至少满足一种。通过将环境动态与画像编码为命题公式，可区分某获胜轨迹允许某画像与所有获胜轨迹都要求该画像的任务，并用其从随机布局中生成带合作认证的任务。实验表明，无合作解时训练多样性提升联合成功；必须合作时联合成功仍近零。",
+      "tags": "query:marl",
+      "abstract_en": "A shared reward gives agents a common objective, but leaves open when, how and even whether they must cooperate to succeed. We address these questions in the Laser Learning Environment, a multi-agent path-finding environment where cooperation materializes as one agent blocking a laser to let a teammate pass safely. We represent these interactions through temporal cooperation graphs whose timed edges connect helpers to beneficiaries, define six cooperation profiles as overlapping graph predicates, and prove that every cooperative trajectory satisfies at least one. By encoding the environment dynamics and profile predicates as propositional formulae, we distinguish tasks that admit}a profile in some winning trajectory from those that require it in every winning trajectory within a specified horizon. Used as filters, these queries turn a random layout sampler into a generator of tasks with certified cooperation requirements. Experiments with five multi-agent reinforcement learning algorithms show that training diversity improves joint success on unseen tasks when cooperation-free solutions exist. When cooperation is required, greater diversity improves individual-agent exits, but joint success remains near zero. Across five profile-certified pools, final exit rates averaged over algorithms separate the pools into four statistically distinguishable levels but this ordering primarily reflects partial completion: policies collect rewards for individual exits but rarely exhibit the profile required for joint success. Our framework exposes this gap between rewarded partial completion and realized cooperation by certifying what cooperation successful completion requires and using temporal cooperation graphs to reveal what policies exhibit.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/11/2609.11863v1-truncated-noisy-best-response-algorithms-toward-game-theoretic-learning-with-safety-guarantees",
+      "section": "quick",
+      "title_en": "Truncated Noisy Best-Response Algorithms: Toward Game Theoretic Learning with Safety Guarantees",
+      "authors": "Vartika Singh, Philip N. Brown",
+      "date": "2026-09-10",
+      "pdf": "https://arxiv.org/pdf/2609.11863v1",
+      "score": "6.0",
+      "evidence": "博弈论多智能体协调学习",
+      "tldr": "针对子模最大化多智能体协调的博弈论方法，已知纳什均衡可保证最优值的50%，但达到该最坏界的均衡并不稳定。本文提出截断噪声最佳响应（TNBR）算法，让智能体异步、随机地从最佳响应收益邻域中选择动作，并分析其马尔可夫链的常返类。结果表明，性能界保证算法总存在高价值常返状态，安全界保证不会出现任意差常返状态，二者呈水床效应：安全保证越弱，性能保证往往越好。",
+      "tags": "query:marl",
+      "abstract_en": "We consider a game theoretic approach to solve multi-agent coordination problems with submodular maximization objectives. It is known for such problems that the Nash equilibria for the corresponding game are always within 50% of the optimal, but that the equilibria which achieve this worst-case bound are not stable. To exploit this instability, we propose a family of algorithms which we call Truncated Noisy Best-Response (TNBR) Algorithms. These algorithms are flexibly characterized by agents asynchronously and stochastically selecting actions from a neighbourhood of their best response payoffs. We compute bounds on the recurrent classes of TNBR algorithms' associated Markov chains. Our bounds fall into two categories: first, \"Performance\" bounds ensure that TNBR algorithms always have a high-value recurrent state; second, \"Safety\" bounds ensure that TNBR algorithms never have arbitrarily-bad recurrent states. Furthermore, these two types of bounds are linked by a waterbed-like effect: every game with a poor Safety guarantee necessarily has a favorable Performance guarantee.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,648 @@
+Title: DRG-MAPPO: Hierarchical Dynamic Role-Graph Multi-Agent Reinforcement Learning for Cooperative Air Combat
+
+URL Source: https://arxiv.org/pdf/2609.11155v1
+
+Published Time: Fri, 11 Sep 2026 00:39:06 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# DRG-MAPPO: Hierarchical Dynamic Role-Graph Multi-Agent Reinforcement Learning for Cooperative Air Combat 
+
+Junlin Liu 1,2,3, Yang Gao 1,2⋆, Chengwei Li 1,2,3,Hui Chang 1,2, Xinchen Zhang 1,2, Zhijun Zhao 1,2, and Hao Zhao 1,2 
+
+> 1
+
+Institute of Automation, Chinese Academy of Sciences  
+
+> 2
+
+The Key Laboratory of Cognition and Decision Intelligence for Complex Systems, CASIA  
+
+> 3
+
+School of Artificial Intelligence, University of Chinese Academy of Sciences 
+
+{liujunlin2025, yang.gao}@ia.ac.cn 
+
+Abstract. Multi-Agent Reinforcement Learning (MARL) has emerged as a pivotal paradigm for complex decision-making in autonomous sys-tems and air combat. While MARL has demonstrated significant poten-tial in air combat, achieving sophisticated tactical coordination remains a non-trivial challenge. This difficulty is largely attributed to two pri-mary limitations: (1) the absence of structured relational modeling hin-ders agents from capturing complex, time-varying interactions among battlefield entities; and (2) conventional flat architectures often lack the capability to explicitly model tactical roles, leading to ambiguous task allocation in highly dynamic environments. To address these challenges, we propose Hierarchical Dynamic Role-Graph Multi-Agent Proximal Policy Optimization ( DRG-MAPPO ), a novel MARL framework that integrates graph-based relational modeling with dynamic role assign-ment. Specifically, DRG-MAPPO constructs a graph-based representa-tion of battlefield interactions and leverages graph attention mechanisms to extract critical relational features among allies, enemies, and threats. Subsequently, a high-level policy employs a dynamic role assignment mechanism to determine tactical responsibilities (e.g., “leader” and “sup-porter”). Conditioned on these roles and encoded graph-relational fea-tures, a low-level policy executes discrete maneuver actions, facilitating the joint optimization of tactical strategy and collaborative execution. Furthermore, a target-priority auxiliary task is designed to foster the emergence of behaviors such as focus-fire. Experimental results demon-strate that DRG-MAPPO achieves a state-of-the-art win rate of 87%, suggesting that our framework effectively balances relational modeling, interpretability, and optimization stability for cooperative air combat. 
+
+Keywords: Multi-Agent Reinforcement Learning · Hierarchical Policy · Graph Attention Network · Role Assignment · Air Combat.  
+
+> ⋆
+
+Corresponding author arXiv:2609.11155v1 [cs.AI] 10 Sep 2026 2 J. Liu et al. 
+
+1 Introduction 
+
+Modern air combat is undergoing a fundamental paradigm shift, evolving from isolated dogfights toward sophisticated multi-UAV (Unmanned Aerial Vehicle) swarm coordination [22, 1, 26, 27, 9]. In these highly contested environments, mis-sion success relies heavily on complex tactical synergies such as flanking ma-neuvers, bait-and-switch, and cooperative suppression. Existing cooperative air-combat decision systems often rely on expert rules [4, 6], optimization approaches [2, 15], or hand-crafted tactical indicators [12, 18]. These methods can encode domain-specific knowledge and behave reliably in familiar situations, but they struggle to scale in highly dynamic engagements where missile, radar, and team-mate interactions jointly dictate tactical outcomes. Multi-Agent Reinforcement Learning (MARL) has emerged as a promising paradigm for autonomous decision-making due to its efficacy in handling high-dimensional continuous spaces [7, 19, 21, 10, 11, 23]. However, existing MARL frameworks still struggle to capture the complex, time-varying topological re-lations among battlefield entities due to two primary limitations. (1) First, the absence of structured relational modeling impedes deep situational awareness. Without it, agents struggle to precisely perceive rapid topological shifts, thereby missing optimal tactical windows (e.g., an enemy redirecting its threat). (2) Sec-ond, traditional flat architectures lack explicit tactical role modeling, leading to role confusion and preventing the emergence of asymmetric coordination (e.g., "Leader-Wingman Decoy" tactics). To address these challenges, we propose Dynamic Role-Graph MAPPO (DRG-MAPPO ), a hierarchical MARL framework that integrates graph-based relational modeling with dynamic role assignment. DRG-MAPPO decouples the decision-making process into a two-level hierarchy. Specifically, a graph atten-tion mechanism first constructs structured battlefield representations to capture time-varying topological dependencies. Based on these representations, a high-level policy dynamically assigns explicit tactical responsibilities (e.g., “leader” and “supporter”) to resolve allocation ambiguity, while a low-level policy exe-cutes precise maneuvers conditioned on these roles. Furthermore, we design a target-priority auxiliary task to explicitly foster asymmetric cooperative behav-iors, and introduce a temporal commitment mechanism that enforces behavioral consistency within fixed decision intervals to prevent destabilizing role oscillation during training. The main contributions are summarized as follows: 
+
+– We introduce DRG-MAPPO, a hierarchical MARL framework that decou-ples tactical role assignment from low-level maneuver control in multi-agent air combat. 
+
+– We design a graph-attention relational module and a target-priority auxiliary task, enabling agents to capture fluid battlefield topologies and seize optimal tactical windows. 
+
+– Empirical evaluations in a high-fidelity simulation environment demonstrate that DRG-MAPPO achieves an 87% win rate, significantly outperforming state-of-the-art MARL baselines while exhibiting robust and interpretable tactical coordination. Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 3
+
+2 Related Work 
+
+2.1 Multi-Agent Reinforcement Learning in Air Combat. 
+
+MARL has increasingly replaced traditional rule-based and heuristic optimiza-tion methods in autonomous air combat, demonstrating significant potential in handling high-dimensional continuous state spaces [21]. Algorithms like MAD-DPG [13], MATD3 [25], and MAPPO [24] have established a strong foundation for centralized training with decentralized execution (CTDE) in multi-agent sys-tems. Specifically, Wu et al. [22] proposed a context-aware feature fusion method to enhance cooperative perception among multiple UAVs, improving coordina-tion under partial observability. Ding et al. [1] introduced a layer-delay dual-center MAPPO architecture to mitigate non-stationarity in multi-UAV decision-making. However, conventional MARL frameworks typically employ flat archi-tectures that conflate strategic intent with low-level maneuver execution, lacking explicit mechanisms for modeling inter-agent topological relationships. 
+
+2.2 Hierarchical Reinforcement Learning (HRL). 
+
+To alleviate the decision-making bottleneck in long-horizon and complex tasks, HRL has been introduced into multi-agent air combat. By decoupling the deci-sion process, conventional HRL frameworks typically utilize a high-level policy to generate abstract subtasks or spatial subgoals, while a low-level policy focuses on executing specific maneuver control commands to achieve these sub-objectives. Building on this paradigm, recent works [17, 8, 14] proposed hierarchical archi-tectures to explicitly decouple high-level tactical decision-making from low-level maneuver control, further leveraging mechanisms like competitive self-play to optimize dual-aircraft formation engagements. Nevertheless, these existing hi-erarchical approaches often rely on heuristic state partitioning or static task assignments. 
+
+2.3 Graph-based Relational Modeling. 
+
+Effective coordination in multi-agent systems necessitates structured perception of inter-entity relationships. Graph Neural Networks (GNNs), particularly Graph Attention Networks (GAT), have been increasingly leveraged to model complex interactions and extract relational features in multi-agent decision-making. Jing et al. [5] employed graph convolutional networks within a MARL framework to capture the topological dependencies among machines and operations in flexible job shop scheduling. In the domain of UAV confrontation, Hu et al. [3] proposed a GNN-enhanced MARL approach that constructs interaction graphs among UAVs to facilitate coordinated engagement strategies. However, most existing graph-based multi-agent frameworks either limit their scope to communication topologies among friendly units or employ static graph structures, struggling to capture comprehensive, time-varying topological shifts in dense friend-or-foe engagement scenarios. 4 J. Liu et al. 
+
+3 Preliminaries 
+
+3.1 Decentralized Partially Observable Markov Decision Process 
+
+We formulate the multi-UAV cooperative air combat problem as a Dec-POMDP, defined by the tuple M = ⟨I , S, {Ωi}, {A i}, T , Z, {Ri}, γ ⟩, where I = {1, . . . , N }
+
+is the set of N cooperative agents; S denotes the global state space; Ωi and Ai
+
+represent the local observation space and action space of each agent, with A =Q 
+
+> i
+
+Ai being the joint action space. The transition function T : S ×A×S → [0 , 1] 
+
+governs the probability of reaching state st+1 from st given joint action at. The observation function Z : S × A → Ω1 × · · · × ΩN maps the global state and joint action to individual observations {o1, . . . , o N } for each agent, where oi ∈ Ωi.Each agent receives a scalar reward via reward function Ri(st, a t), and γ ∈ [0 , 1) 
+
+is the discount factor. The goal is to learn a joint policy π that maximizes the expected discounted cumulative return for each agent i:
+
+max  
+
+> π
+
+Eπ
+
+" TX
+
+> t=0
+
+γt Ri(st, a t)
+
+#
+
+, ∀ i ∈ I (1) 
+
+3.2 Multi-Agent Proximal Policy Optimization (MAPPO) 
+
+We build upon the MAPPO algorithm [24] with a parameter-sharing scheme to enhance sample efficiency. A shared actor network πθ performs decentralized execution based on local observations, while a centralized critic Vψ evaluates global states during training. Dropping the agent index i for brevity, the actor minimizes a clipped surrogate loss to bound policy updates: 
+
+Lactor (θ) = −Et
+
+h
+
+min 
+
+
+
+ρt(θ) ˆAt, clip  ρt(θ), 1 − ϵ, 1 + ϵ ˆAt
+
+i 
+
+(2) where ρt(θ) = πθ (at|ot)  
+
+> πθold (at|ot)
+
+denotes the probability ratio between the current and the previous policy, and ϵ restricts the magnitude of policy updates. The objective function for the global critic aims to minimize the Mean Squared Error (MSE) between the state value estimation and the discounted empirical return ˆGt:
+
+Lcritic (ψ) = Et
+
+
+
+Vψ (st) − ˆGt
+
+2
+
+(3) Furthermore, the advantage function ˆAt is calculated utilizing the Generalized Advantage Estimation (GAE) [16] to balance the variance and bias: 
+
+ˆAt =
+
+> ∞
+
+X
+
+> k=0
+
+(γλ )kδt+k, δt = rt + γV ψ (st+1 ) − Vψ (st) (4) where δt represents the standard TD error, γ is the discount factor, and λ acts as the GAE smoothing parameter. Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 5Self Missile 
+
+> Enemy Ally
+> Graph-Structured Observation O
+> yzx
+> da
+> ALLY SELF
+> de
+> dm
+> vvENEMY MISSILE
+> ϕAA
+> ψ(yaw)
+> φ(roll)
+> θ(pitch)
+
+Fig. 1: Overview of the battlefield tactical geometry and observation space. 
+
+4 Simulation Environment 
+
+4.1 Observation Space 
+
+Unlike conventional monolithic state vectors, we model the battlefield at each step t as a directed graph Gt = ( Vt, Et) to explicitly capture entity interactions. As illustrated in Fig. 1, the node set is partitioned into four categories ( Vt =
+
+Vself ∪ V ally ∪ V enemy ∪ V missile ), where the self-node encodes the agent’s intrinsic state and the remaining nodes encode relative features. The exact mathematical compositions and detailed definitions of all feature components are summarized in Table 1. 
+
+Self-node features. The self-state fself ∈ R10 captures the agent’s kinematic state and resource availability: 
+
+fself = [ x, y, z, v, θ, ϕ, ψ, n m, δ det , σ m] (5) 
+
+Ally-node features. For each ally j ∈ V ally , the relative feature vector 
+
+f j 
+
+> ally
+
+∈ R6 is defined as: 
+
+f j 
+
+> ally
+
+= [ dja, θ ja, ∆v ja, ∆ψ ja, v jc,a , n jm,a ] (6) 
+
+Enemy-node features. For each detected enemy k ∈ V enemy , the feature vector f k 
+
+> enemy
+
+∈ R7 encodes the tactical geometry: 
+
+f k 
+
+> enemy
+
+= [ dke , θ ke , ∆v ke , v kc,e , ϕ k
+
+> AA
+
+, ∆h ke , ∆ψ ke ] (7) 
+
+Missile-node features. For each incoming missile l ∈ V missile , the threat feature vector f l 
+
+> missile
+
+∈ R5 is defined as: 
+
+f l 
+
+> missile
+
+= [ dlm, θ lm, v lm, ∆h lm, b lm] (8) 6 J. Liu et al. 
+
+Table 1: Summary of state variables in the graph-structured observation. 
+
+Type Symbol Description Type Symbol Description 
+
+Self 
+
+x, y, z Position coordinates Enemy 
+
+de Relative distance 
+
+v Velocity magnitude θe Relative azimuth angle 
+
+θ Pitch angle ∆v e Velocity difference 
+
+ϕ Roll angle vc,e Closing speed 
+
+ψ Yaw angle ϕAA Aspect angle 
+
+nm Remaining missiles ∆h e Altitude difference 
+
+δdet Detected by enemy (binary) ∆ψ e Heading deviation 
+
+σm Last missile status Ally 
+
+da Slant distance Missile 
+
+dm Relative distance θa Relative azimuth angle 
+
+θm Relative azimuth angle ∆v a Airspeed difference 
+
+vm Approaching speed ∆ψ a Heading deviation 
+
+∆h m Altitude difference vc,a Closing speed 
+
+bm Threat existence flag (binary) nm,a Ally’s remaining missiles 
+
+4.2 Action Space 
+
+To reduce exploration costs, we eschew continuous or fine-grained control in favor of a tactical-level discrete action space. The low-level policy outputs a discrete command ati ∈ A , which an underlying autopilot translates into flight trajec-tories, decoupling strategic decisions from low-level execution. The action set 
+
+A = Amaneuver ∪ A weapon comprises 12 commands covering tactical maneuvering (adjustment, pursuit, evasion) and missile engagement, as detailed in Table 2. Table 2: Summary of the tactical discrete action space for each agent.                       
+
+> Index Category Action Description Index Category Action Description
+> 0Maneuver Maintain current heading and altitude 6Maneuver Dive to decrease altitude 1Turn left by 30 ◦toward target 7Accelerate to gain closing speed 2Turn left by 60 ◦toward target 8Decelerate to reduce closing speed 3Turn right by 30 ◦toward target 9Perform S-shaped lateral oscillation 4Turn right by 60 ◦toward target 10 Execute notch maneuver to evade missile 5Climb to increase altitude 11 Weapon Launch missile at the designated target
+
+4.3 Reward Function 
+
+To address the sparse reward inherent in air combat, we design a composite reward combining a shared team signal with individual dense shaping terms: 
+
+rit = rcombat + α r i
+
+adv ,t + β r i
+
+threat ,t + ri
+
+bound ,t (9) The team-shared combat reward rcombat provides +Rwin / −Rlose at episode termination, and +rkill / −rdeath upon individual destruction events. The tactical advantage reward offers dense offensive guidance based on the Antenna Train Angle (ATA) and relative distance: 
+
+ri
+
+adv ,t =
+
+
+
+1 − θi
+
+ATA 
+
+π
+
+
+
+· exp 
+
+
+
+− die
+
+Dmax 
+
+
+
+(10) Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 7
+
+where θi 
+
+> ATA
+
+∈ [0 , π ] is the angle between agent i’s velocity vector and the line-of-sight to its nearest enemy, and Dmax is the maximum engagement range. This term is maximized when the agent’s nose aligns with a nearby enemy. The threat avoidance penalty compels defensive maneuvers when an incoming missile is detected: 
+
+ri 
+
+> threat ,t
+
+= −1( bim = 1) · exp 
+
+
+
+− dim
+
+Dsafe 
+
+
+
+(11) where Dsafe is the safety distance threshold. A fixed boundary penalty is imposed when agents depart the predefined operational zone B:
+
+ri 
+
+> bound ,t
+
+= −Roob · 1( pit /∈ B ) (12) where pit is the position of agent i and Roob is the out-of-boundary penalty constant. Notably, cooperative behaviors (e.g., focus-fire) are not explicitly re-warded but instead emerge from the synergy of the graph attention module, dynamic role assignment, and the target-priority auxiliary task, avoiding reward over-engineering. 
+
+5 Methods 
+
+5.1 DRG-MAPPO Framework 
+
+The DRG-MAPPO framework (Fig. 2) integrates three core components: (1) a graph-based relational encoder for capturing time-varying topological inter-actions among entities; (2) a hierarchical policy decoupling high-level tactical role assignment from low-level role-conditioned maneuvers; and (3) a target-priority auxiliary task injecting domain inductive biases to foster cooperation. The framework is optimized end-to-end via the CTDE paradigm, where the cen-tralized critic leverages global states during training to stabilize optimization, while actors execute relying strictly on local observations. 
+
+5.2 Graph-Based Entity Relational Modeling Entity graph construction. Rather than treating the raw observation as a monolithic feature vector, we decompose it into a local entity graph Gi = ( Vi, Ei)
+
+for each agent i. The node set Vi consists of four entity categories as defined in the observation space (Section 4.1): self, ally, enemy, and missile. Each node 
+
+k ∈ V i is characterized by its raw feature vector xk extracted from the corre-sponding observation partition. Since entity types possess heterogeneous feature dimensions, all node features are zero-padded to a uniform dimension draw and augmented with a learned type embedding etype (k) ∈ Rdt that encodes entity category information. The combined features are projected into a shared hid-den space via a two-layer MLP, dh is the hidden dimension and [ ; ] denotes concatenation: 
+
+hk = MLP  [pad (xk) ; etype (k)] , hk ∈ Rdh (13) 8 J. Liu et al. 2.Hierarchical RL Structure 1.Graph-Based Modeling 3.Training and Simulation    
+
+> Self Missile
+> Enemy Ally
+> Entity Relational Modeling Graph Attention Network (a) Dynamic Role Assignment (High-level)
+> Graph-Based Self-Agent
+> Global State Temporal commitment
+> Role Assignment
+> (b) Role-conditioned Action Policy (Low-level)
+> Cooperative Actions Global Info
+> (b) Target- Priority Auxiliary Task
+> （Eq. 24）
+> (a) Simulation Environmen (c) Joint Training Objective
+> （Eq. 26）
+> t
+> Blue Team Red Team
+> (d) Cooperative Tactics Emerge
+> “LeaderWingman Decoy ”
+> Leader (Attacker) Supporter (Bait) Flank Attack Opponents
+> State St
+> MLP state
+> Observation Oi
+> MLP obs
+> Entity Parsing Self Ally
+> Enemy Missile
+> fobs
+> MLP enc
+> fstate
+> Graph Attention Encoder
+> Scaled Dot-Product Residual + LN + FFN
+> X2
+> Graph Team
+> Graph Agent
+> Graph State
+
+Fig. 2: Overview of the DRG-MAPPO framework. (1) graph-based state model-ing for entity relationship extraction, (2) a hierarchical RL structure for tactical decision-making, and (3) centralized training and decentralized simulation. 
+
+Graph attention encoder. To capture the relational structure among en-tities, we implement a graph attention mechanism using a scaled dot-product formulation [20]. This approach operates over a fully-connected entity graph and was empirically found to provide more stable training dynamics, particularly for the small-scale graphs characteristic of our environment. Given the initial node representations H(0) = [ h(0) 1 , . . . , h (0) 
+
+|V i|]⊤ ∈ R|V i|× dh , the attention-based rela-tional update is computed as: 
+
+Q = H(0) WQ, K = H(0) WK , V = H(0) WV (14) 
+
+A = softmax 
+
+ QK ⊤
+
+√dh
+
+
+
+(15) 
+
+˜H = LayerNorm 
+
+
+
+H(0) + AV 
+
+
+
+, H(1) = LayerNorm 
+
+ ˜H + FFN ( ˜H)
+
+
+
+(16) where WQ, WK , WV ∈ Rdh×dh are learnable projection matrices, and FFN (·)
+
+denotes a two-layer feed-forward network with ReLU activation. The attention matrix A ∈ R|V i|×|V i| captures pairwise relational importance: entry Ajk reflects how much entity j attends to entity k. To facilitate multi-level relational rea-soning, we derive three levels of representation from the output H(L) of the final graph attention layer: 
+
+zi
+
+self = H(L)[0] , gi
+
+agent = 1
+
+|V i|
+
+X
+
+k
+
+H(L)[k], gteam = 1
+
+N
+
+NX
+
+i=1 
+
+gi
+
+agent (17) where zi
+
+self ∈ Rdh is the graph-refined self-representation; gi
+
+agent ∈ Rdh summa-rizes agent i’s local battlefield topology; and gteam ∈ Rdh provides a team-level abstraction shared across agents. Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 9
+
+5.3 Hierarchical Policy with Dynamic Role Assignment Role policy (high-level). The high-level role policy assigns a discrete tactical role ri ∈ { 1, . . . , K } to each agent, enabling explicit division of labor. The role policy takes as input the multi-level relational representations and the global context: 
+
+fstate = MLP state (s), cglobal = MLP fuse ([ fstate ; gteam ]) (18) 
+
+πrole (ri | oi) = softmax  MLP role 
+
+ [zi 
+
+> self
+
+; gi 
+
+> agent
+
+; cglobal ] (19) The selected role index is mapped to a continuous representation through a learned role embedding table Erole ∈ RK×dr . Unlike one-hot encodings, the learned embedding allows the framework to capture latent similarities between roles and provides richer gradient signals to downstream policy layers. 
+
+ei 
+
+> role
+
+= Erole [ri], ei 
+
+> role
+
+∈ Rdr (20) 
+
+Temporal commitment mechanism. In air combat, tactical roles corre-spond to sustained behavioral modes (e.g., maintaining offensive pursuit or pro-viding suppressive cover) rather than frame-by-frame switching. To reflect this and prevent destabilizing role oscillation, we introduce a temporal commitment mechanism that re-samples roles only at fixed intervals: 
+
+rti =
+
+(
+
+rti ∼ πrole (· | oti) if t mod Trole = 0 
+
+rt−1 
+
+> i
+
+otherwise (21) where Trole is the commitment horizon. This mechanism provides three benefits: (i) it enforces behavioral consistency within each commitment window; (ii) it enables teammates to anticipate each other’s sustained intentions, facilitating implicit coordination; and (iii) it reduces the effective decision frequency of the high-level policy, stabilizing training. 
+
+Role-conditioned action policy (low-level). Conditioned on the assigned role embedding, the low-level policy selects a discrete action from the tactical action space: 
+
+πθ (ai | oi, r i) = softmax  MLP actor 
+
+ [f i 
+
+> obs
+
+; zi 
+
+> self
+
+; gi 
+
+> agent
+
+; cglobal ; ei 
+
+> role
+
+; id i] 
+
+(22) where id i is a one-hot agent identity vector that enables parameter sharing while allowing agent-specific behaviors. The centralized critic estimates the state-value function using global information: 
+
+Vψ (s, r i) = MLP critic 
+
+ [fstate ; zi 
+
+> self
+
+; cglobal ; ei 
+
+> role
+
+; id i] (23) This design adheres to the CTDE principle: the actor (Eq. 22) uses only local features for decentralized execution, while the critic (Eq. 23) accesses the global state s through fstate during centralized training. Both are conditioned on the role embedding, ensuring that the value estimation accounts for the agent’s cur-rent tactical responsibility. 10 J. Liu et al. 
+
+5.4 Target-Priority Auxiliary Task 
+
+To foster cooperative behaviors like focus-fire without complex reward shaping, we introduce an auxiliary target-prioritization task that provides dense super-visory signals. As shown in Eq. (24), the auxiliary head maps concatenated self-features zi
+
+> self
+
+, graph-derived features gi
+
+> agent
+
+, and role embeddings ei 
+
+> role
+
+to a probability distribution pi 
+
+> aux
+
+∈ RNe over Ne enemy targets: 
+
+pi 
+
+> aux
+
+= softmax  MLP aux 
+
+ [zi
+
+> self
+
+; gi
+
+> agent
+
+; ei
+
+> role
+
+] (24) Ground-truth labels ytarget are derived from a heuristic priority scoring function: score (i, j ) = dij − α1 · Lij  
+
+> own
+
++ α2 · Lij  
+
+> enemy
+
+− α3 · Mj (25) where dij is the distance to enemy j; Lij 
+
+> own
+
+, L ij  
+
+> enemy
+
+∈ { 0, 1} denote radar lock statuses; and Mj is the number of friendly missiles already tracking enemy j.The enemy with the lowest score is designated as the primary target. Crucially, the auxiliary head shares the graph attention encoder with the main policy and is optimized via cross-entropy (CE) loss: Laux = CE (paux , y target ).
+
+5.5 Joint Training Objective 
+
+The framework is trained end-to-end via the Adam optimizer. The joint objective combines PPO clipped surrogates with auxiliary and entropy terms: 
+
+L = Lactor + λr Lrole + λV Lcritic + λaux Laux − X λH H(π) (26) where Lactor and Lrole denote clipped losses for action and role policies; Lcritic 
+
+and Laux represent the value MSE and auxiliary CE loss, respectively. H(π)
+
+denotes entropy bonuses for both policy levels. Crucially, role gradients are com-puted only at re-sampling intervals ( t mod Trole = 0 ), using a distinct clipping coefficient ϵr to accommodate the lower decision frequency of role assignments without undermining temporal commitment stability. 
+
+6 Experiments and Results 
+
+6.1 Simulation Setting 
+
+Our 2v2 Beyond-Visual-Range (BVR) engagement is modeled within a 200 km 
+
+× 100 km operational theater. The scenario initializes with Blue and Red flights (two aircraft each) deployed at opposing southern and northern boundaries. Ev-ery combatant is equipped with four air-to-air missiles and maintains a standard combat profile: an altitude of 3 km and an initial cruise speed of 180 m/s. The simulation environment, developed in C++ and visualized via GTacview, en-forces strict termination criteria: an episode ends upon total team elimination, boundary breach, or exceeding the maximum time limit. Victory is determined by numerical superiority at termination, while identical survival counts result in a draw. The maximum time limit is set to 800 seconds to ensure sufficient duration for tactical engagement and missile fly-out. Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 11 0 500 1000 1500 2000 2500 
+
+> Episode
+> 0.2 0.4 0.6 0.8 1.0
+> Win Rate
+> IPPO QMIX MAPPO HAPPO MAPPO+GAT DRG-MAPPO (Ours)
+
+(a) Win rate curves 0 500 1000 1500 2000 2500  
+
+> Episode
+> -500 -250 0250 500 750 1000
+> Average Reward
+> IPPO QMIX MAPPO HAPPO MAPPO+GAT DRG-MAPPO (Ours)
+
+(b) Average reward curves 
+
+Fig. 3: Training curves of DRG-MAPPO and other baselines in the 2v2 scenario. 
+
+6.2 Main Results and Performance Analysis 
+
+To evaluate the effectiveness of DRG-MAPPO, we present the training curves of all methods over 2500 episodes in Fig. 3. 
+
+Win Rate. During the initial exploration phase (0–800 episodes), all meth-ods exhibit a similar cold-start bottleneck, reflecting the inherent difficulty of learning complex 2v2 coordination from high-dimensional observations. After approximately 1250 episodes, DRG-MAPPO begins to significantly outperform the baselines, ultimately achieving a peak win rate of 87%. This performance gap underscores the synergy between relational modeling and hierarchical role assign-ment. While MAPPO+GAT and HAPPO yield moderate improvements by in-corporating graph structures or hierarchical decomposition alone, they fall short of the integrated DRG-MAPPO architecture. In contrast, standard MAPPO lacks the structural inductive biases necessary for complex entity reasoning. Furthermore, the inferior performance of QMIX and IPPO highlights that value decomposition and independent learning are insufficient for the tight tactical coordination required in adversarial BVR engagements. This demonstrates that decoupling macro-level tactical role assignment from micro-level decision-making is vital for overcoming the exploration bottleneck and achieving robust multi-agent coordination in air combat. 
+
+Average Reward. The evolution of the average episodic reward, illustrated in Fig. 3b, further corroborates the performance gains. During the initial explo-ration phase, all agents receive similar negative rewards (approximately −450 ), primarily due to frequent boundary breaches and missile attrition. As basic engagement behaviors emerge, the curves surpass the zero-threshold around episode 400. DRG-MAPPO ultimately converges to the highest asymptotic re-ward ( ∼ 950 ), outperforming the mid-tier methods, which plateau between 500 and 650. Consistent with findings in similar BVR benchmarks, standard MAPPO often struggles with exploration efficiency in discrete spaces, while independent learners like IPPO exhibit the lowest rewards due to severe non-stationarity. 12 J. Liu et al. 0 500 1000 1500 2000 2500 
+
+> Episode
+> 0.2 0.4 0.6 0.8 1.0
+> Win Rate
+> w/o Temporal Commitment w/o Graph-Based Modeling w/o Role Assignment w/o Auxiliary Task DRG-MAPPO (Ours)
+
+(a) Ablation study curves DRG-MAPPO (Ours) MAPPO +GAT HAPPO MAPPO QMIX IPPO DRG-MAPPO (Ours) MAPPO +GAT HAPPO MAPPO QMIX IPPO                                 
+
+> 0.513 0.608 0.654 0.735 0.812 0.876 0.362 0.507 0.574 0.648 0.731 0.809 0.316 0.396 0.487 0.612 0.698 0.782 0.235 0.322 0.358 0.478 0.612 0.718 0.158 0.239 0.272 0.358 0.506 0.632 0.094 0.161 0.188 0.252 0.338 0.492 0.0 0.2 0.4 0.6 0.8 1.0
+> Win Rate
+
+(b) The heatmap of experiments 
+
+Fig. 4: Comprehensive evaluation in the 2v2 scenario. (a) The training win rates of ablation experiments. (b) The heatmap of confrontation experiments. 
+
+6.3 Ablation Experiments 
+
+To quantify the individual contribution of each component, we evaluate sev-eral ablation variants of DRG-MAPPO. As illustrated in Fig. 4a, the superior performance and tactical efficiency of DRG-MAPPO stem from the synergy of four core modules: (1) Graph-Based Modeling facilitates structured relational reasoning; (2) Dynamic Role Assignment fosters emergent division of labor; (3) Target-priority Auxiliary Task effectively shapes entity representations toward combat-critical features; and (4) Temporal Commitment prevents high-frequency role oscillations that would otherwise lead to tactical inconsistency and severe performance fluctuations. 
+
+6.4 Confrontation Experiments 
+
+To further evaluate the generalization and robustness of the learned policies, we conduct a round-robin cross-play tournament among all models. Each pair of policies competes for 200 independent episodes; the resulting win-rate matrix is visualized in Fig. 4b. As shown in the matrix, DRG-MAPPO achieves a superior average win rate of 69.9%, consistently outperforming all baselines in head-to-head matchups. This performance advantage demonstrates that our role-based coordination strategy generalizes effectively to diverse adversarial behaviors in-stead of overfitting to the specific patterns of a single training opponent. Fur-thermore, the minor deviations from 0.5 observed on the diagonal are attributed to the intrinsic stochasticity in the simulation environment. 
+
+6.5 Tactical Behavior Visualization 
+
+To qualitatively validate the interpretability and coordination of DRG-MAPPO, we visualize a 2v2 engagement episode. The trained DRG-MAPPO model con-trols the blue-side agents, while the red side employs a rule-based policy. Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 13   
+
+> (a) bait-and-flank tactic (b) focus-fire tactic (c) hit the target
+
+Fig. 5: Visualization of emergent tactical behaviors in a 2v2 engagement. As shown in Fig. 5a, asymmetric role assignment fosters an emergent bait-and-flank tactic. The Supporter deliberately maintains a forward trajectory to draw enemy fire, creating a tactical window for the Leader to execute a lat-eral flanking maneuver and establish a favorable off-axis attack geometry. Fur-thermore, Fig. 5b illustrates a coordinated focus-fire behavior. After evading incoming threats, both agents converge on a single adversary guided by the target-priority auxiliary task, launching missiles from complementary angles to maximize the kill probability. Notably, as the threat diminishes, the Supporter dynamically transitions from a defensive to an offensive posture and successfully strikes the target (shown in Fig. 5c), highlighting the temporal adaptability of our role commitment mechanism. 
+
+7 Conclusion 
+
+In this paper, we presented DRG-MAPPO, a hierarchical MARL framework designed to address coordination challenges in multi-UAV air combat. By inte-grating a graph-based relational encoder with a dynamic role assignment mecha-nism, our approach effectively decouples high-level tactical intent from low-level maneuver execution. Extensive simulations in a high-fidelity BVR environment demonstrate that DRG-MAPPO achieves a superior win rate of 87%. Further-more, the emergence of advanced collaborative tactics, such as bait-and-flank and focus-fire, underscores the effectiveness of our framework in facilitating com-plex multi-agent decision-making. Future work will explore the scalability of this hierarchical paradigm in larger-scale swarm confrontations.   
+
+> Acknowledgments. This research received no external funding. The authors express gratitude to the anonymous reviewers for their insightful comments.
+> Disclosure of Interests. The authors have no competing interests to declare that are relevant to the content of this article.
+
+14 J. Liu et al. 
+
+References 
+
+1. Ding, Z., Wang, X., Cai, C., Jia, L., Xu, Z.: Multi-uav intelligent decision-making method with layer delay dual-center mappo for air combat. Applied Intelligence 
+
+55 (11), 811 (2025) 2. Duan, H., Li, P., Yu, Y.: A predator-prey particle swarm optimization approach to multiple ucav air combat modeled by dynamic game theory. IEEE/CAA Journal of Automatica Sinica 2(1), 11–18 (2015) 3. Hu, K., Pan, H., Han, C., Sun, J., An, D., Li, S.: Graph neural network-enhanced multi-agent reinforcement learning for intelligent uav confrontation. Aerospace 
+
+12 (8), 687 (2025) 4. Jiang, S., Yang, X., Delin, L.: Cooperative combat decision-making research for multi uavs. Information and Control 47 (3), 347–354 (2018) 5. Jing, X., Yao, X., Liu, M., Zhou, J.: Multi-agent reinforcement learning based on graph convolutional network for flexible job shop scheduling. Journal of Intelligent Manufacturing 35 (1), 75–93 (2024) 6. Kim, C.S., Ji, C.H., Kim, B.S.: Development of a control law to improve the han-dling qualities for short-range air-to-air combat maneuvers. Advances in Mechani-cal Engineering 12 (7), 1687814020936790 (2020) 7. Kong, W.R., Zhou, D.y., Du, Y.j., Zhou, Y., Zhao, Y.y.: Hierarchical multi-agent reinforcement learning for multi-aircraft close-range air combat. IET Control The-ory & Applications 17 (13), 1840–1862 (2023) 8. Kong, W.R., Zhou, D.y., Zhou, Y., Zhao, Y.y.: Hierarchical reinforcement learn-ing from competitive self-play for dual-aircraft formation air combat. Journal of Computational Design and Engineering 10 (2), 830–859 (2023) 9. Li, C., Liu, J., Gao, Y.: Evolutionary enhanced multi-agent reinforcement learning for cooperative air combat. arXiv preprint arXiv:2605.25091 (2026) 10. Li, S.Y., Chen, M., Wang, Y.h., Wu, Q.x.: Air combat decision-making of multiple ucavs based on constraint strategy games. Defence Technology 18 (3), 368–383 (2022) 11. Liu, J., Chen, J., Song, Z., Zhou, S., Lv, C., Wu, H., Jiang, K., Wu, J., Yu, B., Zhou, C.: From proprietary to open-source: Bridging the distribution gap via multi-agent protocol distillation in agentic search. arXiv preprint arXiv:2607.24280 (2026) 12. Liu, Y., Ding, D., Tan, M., Luo, Y., Li, N., Zhou, H.: Tactical coordination-based decision making for unmanned combat aerial vehicles maneuvering in within-visual-range air combat. Aerospace 12 (3), 193 (2025) 13. Lowe, R., Wu, Y.I., Tamar, A., Harb, J., Pieter Abbeel, O., Mordatch, I.: Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neural information processing systems 30 (2017) 14. Lv, C., Wei, Y., Liu, J., Gao, Y., Liu, M., Wang, X., Wu, J., Wang, G., Li, C.: Pcsd: Persistent consistency for self-distillation in agentic reinforcement learning. arXiv preprint arXiv:2608.01837 (2026) 15. Ruan, W., Duan, H., Deng, Y.: Autonomous maneuver decisions via transfer learn-ing pigeon-inspired optimization for ucavs in dogfight engagements. IEEE/CAA Journal of Automatica Sinica 9(9), 1639–1657 (2022) 16. Schulman, J., Moritz, P., Levine, S., Jordan, M., Abbeel, P.: High-dimensional continuous control using generalized advantage estimation. In: International Con-ference on Learning Representations (ICLR) (2016) 17. Selmonaj, A., Szehr, O., Del Rio, G., Antonucci, A., Schneider, A., Rüegsegger, M.: Hierarchical multi-agent reinforcement learning for air combat maneuvering. In: Dynamic Role-Graph Multi-Agent Proximal Policy Optimization 15 2023 International Conference on Machine Learning and Applications (ICMLA). pp. 1031–1038. IEEE (2023) 18. Shin, H., Lee, J., Kim, H., Shim, D.H.: An autonomous aerial combat framework for two-on-two engagements based on basic fighter maneuvers. Aerospace Science and Technology 72 , 305–315 (2018) 19. Sun, Z., Piao, H., Yang, Z., Zhao, Y., Zhan, G., Zhou, D., Meng, G., Chen, H., Chen, X., Qu, B., et al.: Multi-agent hierarchical policy gradient for air combat tactics emergence via self-play. Engineering Applications of Artificial Intelligence 
+
+98 , 104112 (2021) 20. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, Ł., Polosukhin, I.: Attention is all you need. In: Advances in Neural Information Processing Systems. vol. 30, pp. 5998–6008 (2017) 21. Wang, X., Wang, Y., Su, X., Wang, L., Lu, C., Peng, H., Liu, J.: Deep rein-forcement learning-based air combat maneuver decision-making: literature review, implementation tutorial and future direction. Artificial Intelligence Review 57 (1), 1 (2024) 22. Wu, J., Zhang, N., Li, D., Bi, J., Han, G.: A context-aware feature fusion method for multi-uav cooperative air combat. IEEE Transactions on Intelligent Transportation Systems 26 (5), 7197–7210 (2025) 23. Wu, X., Liu, J., Liu, X., Zhu, X., Wang, J., Guo, L., Li, X., Cao, X., Cai, X.: Contrastive reinforced policy optimization via privileged self-distillation. arXiv preprint arXiv:2607.28026 (2026) 24. Yu, C., Velu, A., Vinitsky, E., Gao, J., Wang, Y., Bayen, A., Wu, Y.: The sur-prising effectiveness of ppo in cooperative multi-agent games. Advances in neural information processing systems 35 , 24611–24624 (2022) 25. Zhan, M., Chen, J., Du, C., Duan, Y.: Twin delayed multi-agent deep deterministic policy gradient. In: 2021 IEEE International Conference on Progress in Informatics and Computing (PIC). pp. 48–52. IEEE (2021) 26. Zhu, L., Wang, J., Wang, Y., Ji, Y.: Research on multi-aircraft cooperative combat based on deep reinforcement learning. In: International Conference on Autonomous Unmanned Systems. pp. 1410–1420. Springer (2022) 27. Zihui, Y., Liang, X., Yueqi, H., Aiwu, Y., Zhang, J., Ning, W.: A sample selection mechanism for multi-ucav air combat policy training using multi-agent reinforce-ment learning. Chinese Journal of Aeronautics 38 (6), 103391 (2025)
