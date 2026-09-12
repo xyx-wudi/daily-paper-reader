@@ -6,32 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-11
-- 运行时间：2026-09-11 21:23:31 UTC
+- 最新运行日期：2026-09-12
+- 运行时间：2026-09-12 21:29:50 UTC
 - 运行状态：成功
 - 本次总论文数：3
 - 精读区：1
 - 速读区：2
 
 ### 今日简报（AI）
-- 今日共生成 3 篇推荐（精读 1 篇，速读 2 篇）
-- 精读：《DRG-MAPPO: Hierarchical Dynamic Role-Graph Multi-Agent Reinforcement Learning for Cooperative Air Combat》（9.0/10）
-- 速读：《Certifying cooperation: a novel approach to cooperative multi-agent task generation》（7.0/10）, 《Truncated Noisy Best-Response Algorithms: Toward Game Theoretic Learning with Safety Guarantees》（6.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202609/11/README](/202609/11/README)
+今日精读1篇、速读2篇，聚焦多智能体强化学习从微藻生物过程控制到机器人操作与协作AI评测。最值得看的是8.0分微藻生物过程多变量控制研究，以及7.0分用有限线性时序逻辑引导扩散策略的多机器人操作方法。普通读者可先读精读文了解数据驱动控制落地，再按兴趣速览另两篇。
+- 详情：[/202609/12/README](/202609/12/README)
 
 ### 精读区论文标签
-1. [DRG-MAPPO: Hierarchical Dynamic Role-Graph Multi-Agent Reinforcement Learning for Cooperative Air Combat](/202609/11/2609.11155v1-drg-mappo-hierarchical-dynamic-role-graph-multi-agent-reinforcement-learning-for-cooperative-air-combat)  
-   标签：评分：9.0/10、query:marl
-   evidence：面向空战的分层角色图协作多智能体强化学习
+1. [From Learning to Control: Data-Driven Multi-Agent Reinforcement Learning for Multivariable Control in a Microalgae Bioprocess](/202609/12/2609.09313v1-from-learning-to-control-data-driven-multi-agent-reinforcement-learning-for-multivariable-control-in-a-microalgae-bioprocess)  
+   标签：评分：8.0/10、query:marl
+   evidence：基于DDPG智能体的多智能体强化学习用于生物过程多变量控制
 
 ### 速读区论文标签
-1. [Certifying cooperation: a novel approach to cooperative multi-agent task generation](/202609/11/2609.06586v2-certifying-cooperation-a-novel-approach-to-cooperative-multi-agent-task-generation)  
+1. [LTLDiff: Finite Linear Temporal Logic-Guided Data Generation and Diffusion Policies for Multi-agent Robotic Manipulation](/202609/12/2609.11043v1-ltldiff-finite-linear-temporal-logic-guided-data-generation-and-diffusion-policies-for-multi-agent-robotic-manipulation)  
    标签：评分：7.0/10、query:marl
-   evidence：面向合作多智能体的任务生成与协作认证
-2. [Truncated Noisy Best-Response Algorithms: Toward Game Theoretic Learning with Safety Guarantees](/202609/11/2609.11863v1-truncated-noisy-best-response-algorithms-toward-game-theoretic-learning-with-safety-guarantees)  
+   evidence：基于LTLf引导扩散策略的多智能体机器人操作协调
+2. [The Convention Gap: Towards Measuring Implicit Communication in Cooperative AI Evaluation](/202609/12/2609.11489v1-the-convention-gap-towards-measuring-implicit-communication-in-cooperative-ai-evaluation)  
    标签：评分：6.0/10、query:marl
-   evidence：博弈论多智能体协调学习
+   evidence：衡量合作型AI中的隐式沟通
 
 
 <div class="dpr-home-promo-card">
