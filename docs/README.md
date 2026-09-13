@@ -6,29 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-12
-- 运行时间：2026-09-12 21:29:50 UTC
+- 最新运行日期：2026-09-13
+- 运行时间：2026-09-13 21:23:41 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：1
-- 速读区：2
+- 本次总论文数：0
+- 精读区：0
+- 速读区：0
 
 ### 今日简报（AI）
-今日精读1篇、速读2篇，聚焦多智能体强化学习从微藻生物过程控制到机器人操作与协作AI评测。最值得看的是8.0分微藻生物过程多变量控制研究，以及7.0分用有限线性时序逻辑引导扩散策略的多机器人操作方法。普通读者可先读精读文了解数据驱动控制落地，再按兴趣速览另两篇。
-- 详情：[/202609/12/README](/202609/12/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202609/13/README](/202609/13/README)
 
 ### 精读区论文标签
-1. [From Learning to Control: Data-Driven Multi-Agent Reinforcement Learning for Multivariable Control in a Microalgae Bioprocess](/202609/12/2609.09313v1-from-learning-to-control-data-driven-multi-agent-reinforcement-learning-for-multivariable-control-in-a-microalgae-bioprocess)  
-   标签：评分：8.0/10、query:marl
-   evidence：基于DDPG智能体的多智能体强化学习用于生物过程多变量控制
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [LTLDiff: Finite Linear Temporal Logic-Guided Data Generation and Diffusion Policies for Multi-agent Robotic Manipulation](/202609/12/2609.11043v1-ltldiff-finite-linear-temporal-logic-guided-data-generation-and-diffusion-policies-for-multi-agent-robotic-manipulation)  
-   标签：评分：7.0/10、query:marl
-   evidence：基于LTLf引导扩散策略的多智能体机器人操作协调
-2. [The Convention Gap: Towards Measuring Implicit Communication in Cooperative AI Evaluation](/202609/12/2609.11489v1-the-convention-gap-towards-measuring-implicit-communication-in-cooperative-ai-evaluation)  
-   标签：评分：6.0/10、query:marl
-   evidence：衡量合作型AI中的隐式沟通
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
