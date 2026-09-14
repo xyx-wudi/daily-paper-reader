@@ -1,0 +1,335 @@
+Title: Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning for Autonomous Quad-Copter Landing in Maritime Settings
+
+URL Source: https://arxiv.org/pdf/2609.12758v1
+
+Published Time: Mon, 14 Sep 2026 00:57:17 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning for Autonomous Quad-Copter Landing in Maritime Settings 
+
+Allan Minh-Tam Nguyen [0009 −0001 −7687 −6741] , Sree Showrya Kotala [0009 −0001 −0929 −4514] , Stefan Banioi-Crijman [0009 −0004 −5082 −606 X], Kurt Driessens [0000 −0001 −7871 −2495] , and Rico Möckel [0000 −0001 −5497 −3754] 
+
+Department of Advanced Computing Sciences, Maastricht University, Minderbroedersberg 4-6, 6211 LK Maastricht, Netherlands 
+
+rico.mockel@maastrichtuniversity.nl 
+
+Abstract. Recovering unmanned aerial vehicles (UAVs) in maritime environments is challenging due to wind turbulence and ship-deck mo-tion, making it a valuable test case for alternative control and learn-ing approaches as conventional landing approaches often become un-reliable. We study simulated mid-air capture of quadrotor UAVs by a ship-mounted robotic arm, learning robust cooperative control policies with Heterogeneous-Agent Proximal Policy Optimization (HAPPO) Re-inforcement Learning. We train with HAPPO using a curriculum and an adversarial wind agent (HARL-AC) in NVIDIA Isaac Lab, and compare the obtained control policies against those generated through curriculum-based domain randomization and a benchmark trained on a single sea state. In-distribution evaluation on sea states 0/4/5 shows comparable success for HARL-AC and domain randomization of up to 97 .5% . On out-of-distribution sea states 7/8/10 , HARL-AC generalizes better, achieving up to 16% higher median success rate at sea state 10, and substantially lower crash rates of up to 14% compared to the domain randomization policy. Furthermore, we show that the adversarially trained policy shows more cautious behavior, slightly increasing timeouts by < 3% , but yields safer recovery behavior in severe, unseen conditions. 
+
+# 1 Introduction 
+
+The safe landing of an Unmanned Aerial Vehicle (UAV) is critical to achieve fully autonomous operations. Current autonomous landing approaches circumvent the dangers from interactions of the turbulent rotor wake and landing surface by a hovering at a low altitude then cutting power to the motors, effectively dropping the drone onto the landing platform from a ‘safe’ height. This approach works for stable, large landing platforms when external perturbations such as wind are not strong enough to push the falling drone off the platform. In a less forgiving environment, for example when landing on the deck of a small ship or in stronger wind conditions, conventional landing approaches can result in damage to the equipment [8, 15]. This paper explores an alternative approach to retrieve flying arXiv:2609.12758v1 [cs.LG] 11 Sep 2026 2 A. Nguyen et al. 
+
+drones. Using a robotic arm to catch the airborne drone, a landing platform can be avoided and small movements of the boat can be compensated. Also, avoiding the use of a landing platform removes the generation of turbulent wakes. These benefits come at the cost of requiring cooperated multi agent control, coordinat-ing the behavior of the drone and the robotic arm. To address this challenge, we compare Reinforcement Learning (RL) strategies in which the UAV and robot arm control policies are derived using a Curriculum-Based Domain Random-ization (DR) approach against a Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning (HARL-AC) approach. The prevailing wind and gusts, in addition to the reactive movement of the ship deck introduce stochas-tic disturbances into the environment and provides a meaningful test medium to compare between the two derived control policies. Recent work by Huang et al. [7] presents a Deep Reinforcement Learning controller that attempts to address the issue of windy conditions for UAVs by optimizing the drone’s response to aerodynamic effects. However, this paradigm relies on an assumption of strong and responsive thrust capabilities of the UAV in highly windy and dynamic conditions. To rely less on this assumption, this work adopts an alternative of assisting the landing procedure via mid-air capture. While the mechanical viability of catching a drone mid-air has been previously demonstrated using soft robotic effectors and visual tracking in controlled en-vironments [5], this work begins to explore the potential for an autonomous controller in a more unpredictable maritime environments. Coordinating the heterogeneous interception requires a specialized Multi-Agent Reinforcement Learning framework. Standard algorithms like MAPPO [20] rely on parameter sharing across a policy. A MAPPO formulation works well for homogeneous multi-agents settings, however for heterogeneously formulated agents, it exposes itself to value collapse where the learning agent tries to over-generalize a single policy [21]. Given the degree of heterogeneity of the robot arm and UAV formulations, this work employs Heterogeneous-Agent Proximal Policy Optimization (HAPPO) [14], which provides monotonic improvement guarantees and evolves independent policies. While stochastic DR is the standard baseline for robust sim-to-real trans-fer [16], it frequently fails to expose agents to worst-case boundary conditions, flattening the learning gradient [4, 13]. To enforce genuine disturbance rejection, this work builds upon previous work [2] in IsaacLab [11] and implements a zero-sum adversary. Bound by a dynamic curriculum, the adversarial wind agent actively disrupts the successful capture of the drone using the robot arm end effector by injecting generated disturbances simulating windy gusts and corre-sponding wave conditions in sea states up to 5, further elaboration for these is included in Section 3.2. This work explores the differences during the learning process and deployment characteristics between the two heterogeneous agent controllers. HARL-AC for Autonomous Maritime Quad-Copter Landing 3
+
+# 2 Related work 
+
+Under the centralized training decentralized execution paradigm, MAPPO [20] is a standard baseline but relies on parameter sharing. While effective for ho-mogeneous multi-agent systems, policy parameter sharing forces abstractions or generalizations of structurally distinct agents, resulting in a flattened policy representation instead of training a policy that accounts for the heterogeneity of agents. As a result, the learning process is susceptible to training instability and lacks convergence guaranties [21]. To resolve this, HAPPO [21] utilizes a sequential, per-agent update scheme. This Heterogeneous Agents Reinforcement Learning (HARL) approach guarantees monotonic improvement for individual agents without requiring shared network weights [21]. To bridge the sim-to-real gap, Robust Adversary Reinforcement Learning [13] frames policy learning as a zero-sum game where an adversary applies physical disturbances to optimally destabilize the system. However, scaling this to multi-agent teams using a shared critic causing severe credit assignment failure as the advantage function vanishes due to the critic estimate collapsing to the average even if one team wins. [12]. This then results in a degraded PPO loss function and no meaningful updates can then be made to either teams policy. The Hetero-geneous Multi-Agent Adversarial Reinforcement Learning (HARL-A) framework proposed by Peterson et al. [12] resolves this by integrating team-separated critics into HAPPO’s sequential update scheme, enabling stable adversarial gradients across heterogeneous teams. Because extreme adversarial conditions often prevent initial policy conver-gence, curriculum learning is required to progressively scale task difficulty. Xiao et al. [17] showcase a cooperative approach with curriculum learning for vi-sual search with a swarm of drones. More recently Yan et al. [19] apply the curriculum-based RL paradigm where a base station facilitates communication services between the UAVs and fuses sensor data from multiple UAVs so the base station and UAVs can jointly track a target. In cooperative HARL environments, introducing pre-trained teammates in a cooperative setting accelerates coordi-nation. Bhati et al. [3] find that when comparing a curriculum of teammates with just a single pre-trained teammate helping the agent, a medium-skilled pre-trained teammate strikes the optimal balance between the overall team re-ward and individual learning for the agent. Consequently, training robust heterogeneous policies requires synthesizing both approaches: utilizing stage-based progression and individual pre-training to organically scale adversarial intensity. Some work thus far has addressed the gap where both curriculum and adver-sarial learning have been explored in conjunction. Xu et al. [18] present heteroge-neous adversarial play in which a student-teacher framework is used to develop both agents in an adversarial zero-sum manner. The teacher-student method-ology is applied to various frameworks, including Crafter [1], a multi-task RL environment inspired by Minecraft that, similar to the chosen setting of this work, introduces stochastic elements and open-world elements. A slightly ear-lier work by Kim et al. [9] implements adversarial-cooperative HARL for two 4 A. Nguyen et al. 
+
+robot arms that are performing a throwing catching task. Although the physical structures and thus representation of the agents are homogeneous, the policies trained for the throwing arm and catching arm are necessarily distinct. Extending the related work, this work develops insight on generating ro-bust cooperative control through the combination of curricula and adversarial multi-agent reinforcement learning in the instance of a cooperative team of het-erogeneous agents competing against an adversary. 
+
+# 3 Methods 
+
+An outline of the HARL-AC training regimen is provided in Fig. 1. The individ-ual components are detailed below. 
+
+Fig. 1: Flowchart outlining the curriculum components used in combination with adversarial training for the cooperative drone and arm against the wind adver-sary and environment. The curriculum introduces increasing complexity as stages are progressed in simulation. 
+
+3.1 Multi-agent formulation 
+
+The task of safe rendezvous between the end effector of the robot arm and quadcopter is formulated as a heterogeneous multi-agent task with three agents HARL-AC for Autonomous Maritime Quad-Copter Landing 5
+
+organized into two teams. Team A, the cooperative team, includes a simulated UR10 robot arm and an Avular Vertex One quadcopter UAV, with the joint goal of successful connection between the robot arm end effector and drone body. A successful landing is assumed when a fixed point under the center of the drone body can remain within a 0.5m bubble above the UR10 end effector (EE) for 
+
+3 seconds while maintaining a speed less than 3m/s for this duration. This was chosen to simplify the ‘catch’ procedure and provide results agnostic to the catch mechanism. Team B, the adversarial team, consists of the wind component aimed at preventing the drone and arm from succeeding in their task. The agents’ observations encompass the following state variables (total num-ber of observed state dimensions per agent given in brackets): For the drone (23-Dimensional State Space (D)): drone position, quaternion orientation, lin-ear and angular velocities, previous thrust/direction action, the location of the robot arm end-effector, and wind forces. For the UR10 arm (37-D): joint posi-tions/velocities, end-effector pose and velocities, previous 6-joint control actions, drone position, and wind. For the wind adversary (19-D): relative drone-to-goal distance, drone state (velocity and quaternion orientation), end-effector position, and current wind momentum. The action spaces for the agents include the following: for the UAV (4-D): the thrust and 3 axis angular rotation values (pitch, yaw, roll), for the UR10 (6-D): the joint position targets and for the wind adversary (3-D): the 3 axis wind force that is superimposed as a disturbance onto the final positions of Team A. Training uses Heterogeneous-Agent Proximal Policy Optimization (HAPPO) [14] with team-separated critics via the HARL-A framework proposed by Peter-son et al. [12]. Unlike simultaneous update algorithms, HAPPO updates policies sequentially, conditioning each agent’s update on the new policies of preceding agents. This provides theoretical guarantees of monotonic improvement without parameter sharing [21], preventing training collapse caused by a shared pol-icy between agents in highly asymmetric tasks. Furthermore, the critics remain strictly separated: Team A’s critic evaluates a centralized 60-dimensional state (concatenating both cooperative agents’ observations), while Team B’s critic independently processes the adversary’s 19-dimensional state [12]. 
+
+3.2 Adversarial model Adversarial Action Space and Target Mapping: Within the multi-agent reinforcement learning framework, the wind adversary functions as an indepen-dent policy operating within a continuous, three-dimensional action space. These dimensions directly correspond to the scaled target wind vector mapped to the global Cartesian coordinate system ( X, Y , and Z axes). To guarantee numerical stability and to enforce the physical constraints de-fined by the active curriculum stage, the raw actions generated by the adversarial policy, denoted as aadv , undergo a sequence of transformations. First, the net-work outputs are bounded to the interval [−1.0, 1.0] . Subsequently, a hyperbolic tangent activation function is applied, and the result is scaled by Vmax , repre-senting the maximum permissible wind speed for the current training stage. This 6 A. Nguyen et al. 
+
+formulation yields the bounded target wind velocity vector, wtarget , defined as: 
+
+wtarget = Vmax · tanh( aadv ).
+
+Dryden turbulence filter: To simulate realistic aerodynamic disturbances, the environment incorporates a dynamic wind model combining adversary-controlled wind with stochastic Dryden turbulence [10]. At each simulation step ∆t , the wind vector is updated in two primary steps: 
+
+Step 1: Adversarial Mean Wind The adversary’s continuous actions are scaled via a hyperbolic tangent function to define a target wind velocity. To prevent unrealistic, instantaneous shifts, this target vector passes through a first-order low-pass filter. The smoothing factor αctrl = exp( −∆t/τ ) is determined by the time constant τ = LV , where L is the turbulence scale length and V is the nominal airspeed. This exponential moving average ensures that the mean wind vector μwind transitions smoothly over time. 
+
+Step 2: Stochastic Dryden Turbulence To simulate atmospheric variations, stochastic turbulence xturb is superimposed onto the mean wind. The turbu-lence is modeled as a discrete-time first-order Markov process approximating the continuous Dryden model [10]. The state is driven by standard Gaussian white noise N (0 , I ), scaled by the standard deviation σ and a spatial frequency factor αdryden = V ∆t L . The turbulence update follows the stochastic difference equation: xt = (1 − αdryden )xt−1 + σp2αdryden N (0 , I ).Finally, the smoothed adversarial wind and the instantaneous turbulence are summed. To enforce the physical limits of the training domain, the combined velocity vector is clamped to a maximum magnitude Vmax before being applied as an external force to the UAV (see Appendix A for pseudocode). Tweaking the 
+
+Vmax and σ allows for various sea states to be represented during training and evaluation. 
+
+Wind-Wave Coupling: Unlike conventional adversarial RL where the adver-sary controls a single disturbance channel, this adversary’s actions are coupled to ocean dynamics that are introduced in the last stage of the curriculum. The instantaneous wind magnitude drives a slow exponential filter on the sea state: 
+
+Ut+1 = αsea Ut + (1 − αsea )∥wt∥, αsea = e−∆t/τ sea 
+
+with τsea = 0 .5 s. The filtered sea state Ut parameterise a Pierson–Moskowitz wave spectrum [6]: 
+
+S(ω) = αPM g2
+
+ω5 exp 
+
+
+
+−βPM 
+
+ gU ω 
+
+4
+
+with αPM = 0 .0081 , βPM = 0 .74 , sampled at 8 frequency components ω ∈
+
+[0 .4, 3.0] rad/s. Spectral amplitudes Ai = p2S(ωi) ∆ω are realized as platform motion across five degrees of freedom (surge, sway, heave, roll, pitch) via a sum-of-sines with random per-environment phases: 
+
+δx (t) = 
+
+> 8
+
+X
+
+> i=1
+
+cxAi sin( ωit + ϕxi )HARL-AC for Autonomous Maritime Quad-Copter Landing 7
+
+Table 1: Curriculum stage components with increasing difficulty as stages progress. Sigma corresponds with the wind disturbance and the values are cho-sen to reflect sea states 4 and 5. Tight limits correspond to 0.3m − 0.8m around the center of the environment, normal limits correspond to 0m − 1.7m. Ocean effects comprise of the heave, pitch. yaw, roll, surge and sway.                     
+
+> Stage Sigma value Ocean Effects Spawn Bounds
+> 00×tight tight 10×normal normal 24×normal normal 37✓normal normal
+
+with translational response coefficients c = [0 .2, 0.1, 1.0] for (surge, sway, heave) and rotational amplitudes additionally scaled by wave number ki = ω2 
+
+> i
+
+/g with ro-tational coefficients crot = [0 .5, 1.0] for (roll, pitch). Heave and pitch coefficients are gated to zero in early curriculum stages (Table 1). This coupling produces a compound disturbance: the adversary’s actions perturb the UAV aerodynam-ically and induce platform motion that displaces the robot arm’s base. The displacement components of surge, heave and sway were empirically determined to create sufficiently difficult landing conditions such that the standard motor cutoff approach would be unreliable and risk damage to the UAV. 
+
+3.3 Reward structure 
+
+Following HARL-A’s reward structure [12], each team calculates their reward independently. Team A gets rewards based on their shared cooperation, while team B’s reward is formulated by the zero-sum component against team A plus adversary-specific shaping terms. Active reward terms are listed in Appendix D. 
+
+3.4 Curriculum learning 
+
+The system is trained in a 4-stage curriculum that progressively introduces ad-versarial variables into the environment as the stages increase. Stage 0 is reserved for pre-training by freezing the arm upright and letting the drone learn by itself first. The adversarial pressure is rolled out starting from stage 2 (Table 1) 
+
+Stage progression: Stage progression is controlled by an exponential mov-ing average (EMA) of the success rate, updated in batches of Nbatch = 512 
+
+episodes: 
+
+¯rt+1 = (1 − β)¯ rt + βr t, β =
+
+(
+
+0.02 rt > ¯rt
+
+0.10 rt ≤ ¯rt
+
+The asymmetric smoothing reflects a conservative design philosophy: stage ad-vancement requires sustained improvement, reflected by a slow EMA rise, to ensure the policies have genuinely converged before facing harder conditions, 8 A. Nguyen et al. 
+
+while stage retreat is rapid, reflected by a fast EMA decline, to escape regimes where the cooperative pair has lost stability. This asymmetry mitigates the os-cillation between stages. The stage advances when ¯rt > 0.6 and retreats when 
+
+¯rt < 0.3. After each transition, a 5-batch warm-up suppresses EMA updates while the policies adapt. 
+
+3.5 Bidirectional adversarial curriculum 
+
+Unconstrained mini-max adversaries often cause training collapse by diverging to trivial extremes, i.e., physically impossible winds or no wind at all, flattening the learning gradient [4, 13]. To maintain an optimal challenge and prevent this collapse, the environment employs a bidirectional curriculum to dynamically scale high-frequency turbulence. The curriculum anchors the adversary’s win rate to a target threshold Tadv =0.30 (a 30% adversarial win rate), with an acceptable tolerance band δ = 0 .10 .At the end of each batch, the Dryden turbulence standard deviation σ is multi-plicatively updated: 
+
+σt+1 =
+
+
+
+min( σt × (1 + η), σ max ), if Radv < (Tadv − δ)max( σt × (1 − η), σ min ), if Radv > (Tadv + δ)
+
+σt, otherwise where η = 0 .05 represents the fractional step size. The turbulence intensity is strictly clamped within predefined, stage-specific boundaries [σmin , σ max ] to ensure that aerodynamic perturbations remain physically plausible for the sim-ulated environment. Ultimately, this reformulates training into a constrained mini-max game. Bound to a 30% win rate, the adversary cannot rely on brute-force magnitude to guarantee crashes. Instead, it must continuously hunt for the threshold of solvability, organically exploring a much wider and more sophisticated variety of wind conditions to exploit the drone’s vulnerabilities. 
+
+# 4 Training and Evaluation 
+
+4.1 Ablation Study: Stochastic Wind with Curriculum (Pure Dryden) 
+
+To evaluate whether a learned adversarial policy yields better results than stan-dard domain randomization approaches for HARL curriculum learning, a stochas-tic wind baseline was implemented. In this configuration, the adversarial com-ponent of the wind agent is entirely removed from the simulated curriculum. Instead, the wind’s action is fully determined by a white noise generator passed through the Dryden turbulence filter. Without the bidirectional curriculum to auto-scale the difficulty, the turbulence intensity ( σ) in this baseline is statically parametrized based on the macroscopic curriculum stage, defined as σ = 4 in Stage 2 and σ = 7 in Stage 3. HARL-AC for Autonomous Maritime Quad-Copter Landing 9
+
+The total environmental wind energy was bifurcated into two independent, superimposed stochastic processes: 
+
+Slow, Rolling Thermals: Modeled using a doubled spatial length scale (Lslow = 2 .0L), producing large, high-momentum shifts in the baseline wind vector. 
+
+Fast Micro-Turbulence: Modeled using a severely reduced length scale (Lfast = 0 .2L), generating erratic, high-frequency choppy gusts. Both processes are driven by Gaussian white noise, with total aerodynamic variance distributed to maintain a balanced root-mean-square energy. This bi-modal wind profile tests whether the cooperative policy learned true generalized disturbance rejection or merely over-fits the temporal frequencies of the training adversary. 
+
+4.2 Training Instances 
+
+The ablative baseline and HARL-AC approaches were tested using 10 random initialization each. Each individual run was executed for a total of 250 million environment steps each containing 254 intances to guarantee policy convergence across all curriculum stages and took about 6.5 hours of runtime on the hardware described previously. The complete set of hyperparameters governing the neural network architectures and the Proximal Policy Optimization (PPO) updates are detailed in Appendix B. The performance of these models was analyzed using four primary metrics: curriculum progression (retrospectively determined by a stage being progressed and never retreated to by a policy), success rate (percentage of successfully landed instances per episode) , crash rate (percentage of crashed instances per episode), and timeout rate (percentage of instances still flying after the 5 second time-limit per episode). 
+
+4.3 Evaluation Environment and Out-of-Distribution Testing 
+
+The evaluation setup for in distribution tests with both the DR and HARL-AC models is summarized in Table 2. To gauge zero-shot robustness, the trained policies were evaluated in a out-of-distribution (OOD) testing environment designed to test spectral resilience. All DR and HARL-AC models were tested under higher sea states, represented through higher σ values corresponding to sea states 7, 8, and 10. Each of the 20 trials once again included 10,000 episodes to ensure the metrics better reflect zero-shot generalization without online adaptation to the unseen environments. 
+
+# 5 Results and Discussion 
+
+5.1 Training results 
+
+In Fig. 2, the vertical solid bars and shaded rectangle around represent the mean and 95% confidence interval (CI) around the stage transitions. From left 10 A. Nguyen et al. 
+
+Table 2: Evaluation Configurations.                        
+
+> Evaluation Method Runs Trials/run σNote
+> Evaluation 1 DR 10 each 10,000 0Only UAV and UR10 move; no wind. HARL-AC Evaluation 2 DR 10 each 10,000 4Includes wind and coupled wave conditions; represen-tative of sea state 4. HARL-AC Evaluation 3 DR 10 each 10,000 7Increased wind and cou-pled wave conditions; rep-resentative of sea state 5. HARL-AC
+
+to right, these three bars denote the transitions from stage 0 to 1, 1 to 2, and 
+
+2 to 3, respectively. The line graphs display the performance metrics averaged across the 10 Monte Carlo trials conducted over 250 million training episodes; the shaded regions representing the corresponding 95% CI. The HARL-AC model converges marginally quicker in the earlier stages. Stage 0 to 1 and 1 to 2 transitions average at 37 and 93 million steps as opposed to the 38 and 94 million steps of the DR approach respectively. However, the HARL-AC model demonstrates an improved ability to adapt to the increased difficulty of the later stages, evidenced by the greater discrepancy seen in the transition between stage 2 to 3 where the HARL-AC approach transitions at 108 
+
+million steps as opposed to the 114 million steps the DR approach required. During stage 3, the adversarial model exhibits spikes in crash rates as seen in Fig. 2b that correspond directly to dips in the success rate in Fig. 2a at 138 and 
+
+159 million steps, though the success rate subsequently recovers. This behavior is expected, as it indicates the wind adversary (Team B) is continuously learning and discovering new strategies to cause the cooperative team (Team A) to fail. The HARL-AC model however does settle in these tests at a success rate of 
+
+90 .8% , falling slightly short of the DR approach which settles around 94 .3% .This is thought to stem from the added difficulty the adversarial wind agent poses as it can observe the effect of the actions chosen and strives to drive the total system back towards a 30% win rate. The quicker overall convergence is hypothesized to be a result of the adversar-ial wind agent exposing the cooperative agents to a larger portion of the search space compared to the DR approach, ultimately allowing the cooperative team to derive a more generalized and robust solution. To confirm this hypothesis an exploration into recordings of the state-ranges and wind force characteristics exposed to the cooperative team in each episode must be conducted. Finally, the adversarial models present slightly higher timeout rates shown by the gap between the two plots in Fig. 2c. An exploration into the deployed models and evaluation rounds revealed that this is due to a strict 5-second timeout limit set during training. Under the trialed sea state conditions, the HARL-AC model takes a few seconds longer to successfully land the drone compared to the DR HARL-AC for Autonomous Maritime Quad-Copter Landing 11 
+
+> (a) Average success rates. (higher is better)
+> (b) Average crash rates. (lower is better)
+> (c) Average timeout rates. (lower is better)
+
+Fig. 2: Averaged training metrics recorded over 10 repetitions during training of the HARL-AC (Adversarial) and DR (Stochastic) training paradigms. The vertical bars indicate averaged transition points through the four stages of the curriculum. Shaded regions depict the 95% confidence interval around the mean results shown. 12 A. Nguyen et al. 
+
+model, completely accounting for the elevated timeout rates of the HARL-AC derived policies. In the context of landing a drone after flight, this addition of two to three seconds in landing time has little overall impact on the deployability of the proposed solution. 
+
+5.2 Out-of-distribution evaluation 
+
+The box plots shown in Fig. 3 illustrate the difference in performance of the HARL-AC and DR models across increasingly difficult sea states. The out-of-distribution testing environment utilizes the same stochastic wind setup that was used to train the baseline DR. An adjustment is made to the sigma value to produce an environment corresponding to sea states 7, 8 and 10. The OOD test environment allows us to validate the performance of the models in out-of-distribution performance and explore the generalizability and robustness of the two modeling approaches. In addition to the DR and HARL-AC OOD tests, an additional benchmark approach ’Baseline SS4’ is included. The benchmark results are produced from a heterogeneous multi-agent training environment in which the adversary and curriculum are excluded, and the cooperative team is only exposed to conditions representative of sea state 4. Within the trained scenarios, sea state 0, 4, and 5, both the HARL-AC and DR models exhibits similar evaluation results. The median performances are comparable with slightly greater variability in the results of the HARL-AC ap-proach. Sea states 0, 4, and 5 see a success rate of 97 .5% vs 95 .4% , 96 .3% vs 
+
+95 .9% and 94 .0% vs 94 .3% for the HARL-AC vs DR models respectively. This suggests the DR approach is performing as well as the HARL-AC models, but these results exclude the outlier indicated in Fig. 3a for the DR models. HARL-AC vastly outperforms the Baseline SS4 models, meanwhile the DR models seem to perform better at sea states 4 and 5 given the smaller box dimensions com-pared to Baseline SS4. Relying solely on these in-distribution environments to draw conclusions makes the strong assumption that the simulated training envi-ronment is perfectly representative of reality. During training the Baseline SS4 model achieved a success rate of 91% , however here the benchmark models fail to generalize in the simplified wind and waveless environment. The sea state 0 median success rate of 81 .9% for the Baseline SS4 model is a clear example of an imperfect training environment representation. As the environment progresses into higher sea states unseen during train-ing, all three models naturally experience a degradation in overall performance, however, the HARL-AC model demonstrates far greater robustness. As visible in Fig. 3a, the adversarial model demonstrates a higher median success rate. The HARL-AC model records median success rates of 83 .2% , 79 .3% , and 60% 
+
+for sea states 7, 8, and 10 whereas the corresponding DR success rates are lower at 82 .6% , 65 .4% , and 45 .9% . This is also reflected in the lower mean crash rates where the performance metrics vary by a few percentage points up to sea state 7. A notable increase in crash rate of 14% is seen in both sea state 8 and 10 when comparing the DR models against the HARL-AC models. The Baseline SS4 models produce median results that fall between the HARL-AC and DR HARL-AC for Autonomous Maritime Quad-Copter Landing 13 
+
+> (a) Success rates. (higher is better)
+> (b) Crash rates. (lower is better)
+
+Fig. 3: Average final evaluation metrics of the HARL-AC (Adversarial), DR (Stochastic) and Benchmark (Baseline SS4) approaches. Results from sea states 0, 4, 5 corresponding to the the results shown from training stages shown in Fig. 2 as well as the out of distribution tests in sea states 7, 8, and 10 are included. Boxes use a 95% CI to determine outliers. 14 A. Nguyen et al. 
+
+models with the caveat of even higher variability than the corresponding DR models. 
+
+> (c) Timeout rates. (lower is better)
+
+Fig. 3: Average final evaluation metrics (continued). Conversely, the timeout rate data shown in Fig. 3c reveals a behavioral trade-off. Although timeout rates remain very low overall, under 3% , the HARL-AC model consistently yields slightly higher medians and presents several upper-bound outliers across the tested sea states. This is hypothesized to be an artifact of the learned policy - the adversarially trained agent has adopted a more wary, more cautious way of handling the turbulent conditions. By taking more time to safely navigate the stochastic disturbances, the HARL-AC model occasionally exceeds the strict time limits, as seen in fig. 3c, effectively trading a marginal increase in timeouts for a lower crash rate in OOD environments. Empirical inspection of the HARL-AC model deployed to the OOD sea states showed the same result as previously, where the HARL-AC policy takes a few seconds longer. This results in higher timeout rates but does not largely impact the operational deployability of the proposed model even into unseen environments. Furthermore, direct empirical observations of the simulation trials reveal a distinct contrast in the control strategies developed by the HARL-AC and DR agents. The DR model exhibits highly reactionary behavior, it frequently over commits to fighting the current wind conditions, leaving it highly vulnerable to crashing when the wind unexpectedly changes in OOD sea states. This obser-vation is supported by the higher relative crash out rates of the DR policies compared against the HARL-AC policies as seen in Fig. 3b. In contrast, the HARL-AC for Autonomous Maritime Quad-Copter Landing 15 
+
+HARL-AC model demonstrates far greater resistance to the unpredictable wind by actively taking its time. By adopting this wary and cautious approach, the adversarially trained agent successfully prioritizes overall stability over speed, explaining the increase in its timeout rates as a necessary trade-off to prevent crashes in unstable environments. Ultimately, if the simulation environment is not perfectly representative of deployment conditions, the HARL-AC approach shows much greater resilience to this discrepancy. The results shown illustrate that the HARL-C trained agent can generalize more effectively to unseen conditions and higher sea states. It is thus hypothesized that the adversarial model will be better equipped to handle unforeseen circumstances in live tests, providing a much smoother and safer real-world application. 
+
+# 6 Conclusion 
+
+This study demonstrates that the proposed HARL-AC framework generates a more robust model compared to a Domain Randomization training paradigm for the challenging application of autonomous UAV landing in maritime settings. The increase in robustness of the HARL-AC agents in deployment and out-of-distribution tests is hypothesized to be a result of the adversarial wind agent exposing the cooperative UAV and robot-arm team to a much larger area of the search space during training. The dips and subsequent returns of the success rate corresponding to the rises and falls in crash rates in stage 3 of the curriculum learning suggests the adversarial agent continues to find new ways to challenge the cooperative team, even after reaching the final stage. Consequently, while the training process is marginally faster overall, the continuous adversarial pres-sure forces the cooperative agents to continue learn more generalized recovery strategies. The primary result of this training dynamic is that the adversarially trained agents develop a more cautious landing policy. While this cautious behavior re-sults in slightly longer average landing times, it allows the HARL-AC model to generalize significantly better to unseen conditions and higher sea states. Both the DR and Baseline SS4 models performed poorer by up to 16% in success rates and 14% on crash rate when compared to the HARL-AC model in OOD tests. The increased landing times do not meaningfully inhibit the deployability of the proposed methodology into a practical autonomous flight solution. If these sim-ulated benefits extend to physical environments that inevitably violate the base assumptions that the simulation environment is perfectly accurate, we anticipate the HARL-AC model to be more robust against such environmental variances. Ultimately, by being exposed to greater intentional variability and continuous learning pressure, the HARL-AC policy prioritizes stability over speed. This ad-versarial framework provides a superior and more reliable landing solution for live applications of UAV landing on unstable platforms. 16 A. Nguyen et al. 
+
+# References 
+
+1. Andreas, J., Klein, D., Levine, S.: Modular multitask reinforcement learning with policy sketches. In: Precup, D., Teh, Y.W. (eds.) Proceedings of the 34th Inter-national Conference on Machine Learning. Proceedings of Machine Learning Re-search, vol. 70, pp. 166–175. PMLR (06–11 Aug 2017), https://proceedings.mlr. press/v70/andreas17a.html 2. Banioi-Crîjman, S.: Drones. [Computer software]. GitHub, https://github.com/ StefanBanioi/Drones, online; accessed 2026-07-15 3. Bhati, R., Gottipati, S.K., Mars, C., Taylor, M.E.: Curriculum learning for co-operation in multi-agent reinforcement learning. arXiv preprint arXiv:2312.11768 (2023) 4. Dennis, M., et al.: Emergent complexity and zero-shot transfer via unsupervised en-vironment design. Advances in Neural Information Processing Systems 33 , 13049– 13061 (2020) 5. Fedoseev, A., et al.: Dronetrap: Drone catching in midair by soft robotic hand with color-based force detection and hand gesture recognition. In: 2021 IEEE 4th International Conference on Soft Robotics (RoboSoft). pp. 261–266 (Apr 2021) 6. Fossen, T.I.: Handbook of Marine Craft Hydrodynamics and Motion Control. John Wiley & Sons, Chichester, U.K. (2011) 7. Huang, Y.H., Liu, E.J., Wu, B.C., Ning, Y.J.: Safe uav control against wind distur-bances via demonstration-guided reinforcement learning. Drones 10 (1), 2 (2026). https://doi.org/10.3390/drones10010002 8. Keipour, A., et al.: Visual servoing approach to autonomous uav landing on a moving vehicle. Sensors 22 (17), 6549 (2022). https://doi.org/10.3390/s22176549 9. Kim, T., Yoon, Y., Kim, J.: Learning Dexterous Bimanual Catch Skills through Adversarial-Cooperative Heterogeneous-Agent Reinforcement Learn-ing (Feb 2025). https://doi.org/10.48550/arXiv.2502.11437, http://arxiv.org/abs/ 2502.11437, arXiv:2502.11437 [cs.RO] 10. MathWorks: Dryden wind turbulence model (discrete). MATLAB Documen-tation, Aerospace Blockset (2026), https://nl.mathworks.com/help/aeroblks/ drydenwindturbulencemodeldiscrete.html, online; accessed 2026-07-15 11. Mittal, M., et al.: Isaac lab: A gpu-accelerated simulation framework for multi-modal robot learning. Tech. rep., Technical Report (2025), https://isaac-sim. github.io/IsaacLab/, online; accessed 2026-07-15 12. Peterson, I., Allred, C., Morrey, J., Harper, M.: A framework for scalable hetero-geneous multi-agent adversarial reinforcement learning in isaaclab. arXiv preprint arXiv:2510.01264 (2025) 13. Pinto, L., Davidson, J., Sukthankar, R., Gupta, A.: Robust adversarial reinforce-ment learning. In: International Conference on Machine Learning (ICML). pp. 2817–2826 (Jul 2017) 14. PKU-MARL: Harl: Heterogeneous-agent reinforcement learning. https://github. com/PKU-MARL/HARL (2024), online; accessed 2026-07-15 15. Tian, E., Li, Y., Ma, T., Liao, Y., Li, Y., Cao, J.: Design and ex-periment of a sea-air heterogeneous unmanned collaborative system for rapid inspection tasks at sea. Applied Ocean Research 143 , 103856 (2024). https://doi.org/10.1016/j.apor.2023.103856 16. Tobin, J., Fong, R., Ray, A., Schneider, J., Zaremba, W., Abbeel, P.: Domain randomization for transferring deep neural networks from simulation to the real world. In: 2017 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). pp. 23–30 (Sep 2017) HARL-AC for Autonomous Maritime Quad-Copter Landing 17 17. Xiao, J., Pisutsin, P., Feroskhan, M.: Collaborative Target Search with a Vi-sual Drone Swarm: An Adaptive Curriculum Embedded Multistage Reinforcement Learning Approach. IEEE Transactions on Neural Networks and Learning Sys-tems 36 (1), 313–327 (Jan 2025). https://doi.org/10.1109/TNNLS.2023.3331370, http://arxiv.org/abs/2204.12181, arXiv:2204.12181 [cs.RO] 18. Xu, M., Yang, X., Zhan, J., Liang, W., Zhang, C., Zhu, Y.: Heterogeneous Adver-sarial Play in Interactive Environments (2025) 19. Yan, K., Xiang, L., Zheng, K., Chen, J., Liu, J., Liu, Q., Yang, K.: Curriculum-Guided Heterogeneous Multi-Agent Intelligence for Multi-UAV Cooperative ISAC. IEEE Transactions on Communications 74 , 9944–9956 (2026). https://doi.org/10.1109/TCOMM.2026.3698854, https://ieeexplore.ieee. org/document/11543369/ 20. Yu, C., et al.: The surprising effectiveness of ppo in cooperative multi-agent games. Advances in Neural Information Processing Systems 35 , 24611–24624 (2022) 21. Zhong, Y., Kuba, J.G., Feng, X., Hu, S., Ji, J., Yang, Y.: Heterogeneous-agent reinforcement learning. Journal of Machine Learning Research 25 (32), 1–67 (2024) 18 A. Nguyen et al. 
+
+# A Adversarial wind pseudocode 
+
+Algorithm 1 Adversarial Wind Update 
+
+Input: Time step ∆t , Curriculum stage S
+
+Output: Updated wind velocity vwind 
+
+1: if S ≤ 1 then ▷ Turn off wind for early stages 2: μwind ← 0
+
+3: xturb ← 0
+
+4: return 0
+
+5: end if 
+
+6: Step 1: Calculate smoothed adversarial wind 
+
+7: wadv ← tanh( action ) × Vmax 
+
+8: αctrl ← exp( −∆t/τ mean ) ▷ Exponential moving average factor 9: μtarget ← αctrl μwind + (1 − αctrl )wadv 
+
+10: ∆w ← μtarget − μwind 
+
+11: ∆w ← Clamp (∆w, −amax ∆t, a max ∆t ) ▷ Limit maximum acceleration 12: μwind ← μwind + ∆w
+
+13: Step 2: Add Dryden turbulence 
+
+14: αdryden ← (V · ∆t )/L 
+
+15: N ← GenerateWhiteNoise () 
+
+16: xturb ← (1 − αdryden )xturb + √2αdryden · σ · N
+
+17: Step 3: Output 
+
+18: vraw ← μwind + xturb 
+
+19: return vwind HARL-AC for Autonomous Maritime Quad-Copter Landing 19 
+
+# B HAPPO training hyperparameters 
+
+Table 3: HAPPO Training Hyperparameters 
+
+Parameter Value 
+
+Total Environment Steps 250 , 000 , 000 
+
+Episode Length (Steps) 250 
+
+Network Hidden Layers (Actor & Critic) [128 , 128] 
+
+Activation Function ReLU Network Initialization Orthogonal Actor Learning Rate 5 × 10 −4
+
+Critic Learning Rate 5 × 10 −4
+
+Discount Factor ( γ) 0.99 
+
+GAE Parameter ( λ) 0.95 
+
+PPO Clip Range 0.20 
+
+PPO Epochs 5
+
+Entropy Coefficient 0.006 
+
+Max Gradient Norm 10 .0
+
+Value Normalisation True Feature Normalisation True Parameter Sharing False 20 A. Nguyen et al. 
+
+# C Active reward terms 
+
+Table 4: Active reward terms. 
+
+Term Team Weight Active condition 
+
+Team A (cooperative) 
+
+distance_to_goal A 30.0 always 
+
+proximity_bonus A 25.0 d < 0.25 m
+
+smooth_landing A 18.0 d < 0.25 , P v2 
+
+> b
+
+< 10 
+
+time_shaping A 0.5 always 
+
+alignment_reward A 2.5 d < 0.90 m
+
+magnet_reward A 1000.0 sustained capture 
+
+orientation A (arm) 2.5 always 
+
+arm_go_safe A (arm) 0.1 far + unsafe 
+
+arm_hold_still A (arm) 0.08 far + safe 
+
+arm_near_jitter A (arm) 0.025 near (penalty) 
+
+Team B (adversary) 
+
+− rTeam A B 1.0 always (zero-sum) 
+
+wind_distance B 3.0 always 
+
+wind_instability B 2.0 always 
+
+wind_misalignment B 2.0 always 
+
+wind_crash_bonus B 25.0 drone OOB 
+
+wind_attrition B 8.0 timeout w/o capture 
+
+wind_force_penalty B 0.1 always (penalty)

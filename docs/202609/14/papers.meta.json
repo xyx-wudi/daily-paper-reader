@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-14",
+  "date": "2026-09-14",
+  "generated_at": "2026-09-14T22:08:18",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/14/2609.12758v1-curriculum-based-adversarial-heterogeneous-agent-reinforcement-learning-for-autonomous-quad-copter-landing-in-maritime-settings",
+      "section": "deep",
+      "title_en": "Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning for Autonomous Quad-Copter Landing in Maritime Settings",
+      "authors": "Allan Minh-Tam Nguyen, Sree Showrya Kotala, Stefan Banioi-Crijman, Kurt Driessens, Rico Möckel",
+      "date": "2026-09-11",
+      "pdf": "https://arxiv.org/pdf/2609.12758v1",
+      "score": "8.0",
+      "evidence": "使用异构智能体强化学习HAPPO结合课程与对抗智能体学习协同控制",
+      "tldr": "海上回收四旋翼无人机受风扰与甲板运动影响，传统着陆控制常不可靠。本文于Isaac Lab中研究船载机械臂空中捕获四旋翼，采用HAPPO学习异构智能体协同控制，并引入课程学习与对抗风智能体HARL-AC。在分布内海况0/4/5上成功率与课程域随机化相当，最高97.5%；在分布外海况7/8/10上泛化更优，海况10中位成功率提升至多16%，坠毁率降低至多14%。对抗策略更谨慎，超时仅增<3%，但在严重未知海况下回收更安全。",
+      "tags": "query:marl",
+      "abstract_en": "Recovering unmanned aerial vehicles (UAVs) in maritime environments is challenging due to wind turbulence and ship-deck motion, making it a valuable test case for alternative control and learning approaches as conventional landing approaches often become unreliable. We study simulated mid-air capture of quadrotor UAVs by a ship-mounted robotic arm, learning robust cooperative control policies with Heterogeneous-Agent Proximal Policy Optimization (HAPPO) Reinforcement Learning. We train with HAPPO using a curriculum and an adversarial wind agent (HARL-AC) in NVIDIA Isaac Lab, and compare the obtained control policies against those generated through curriculum-based domain randomization and a benchmark trained on a single sea state. In-distribution evaluation on sea states $0/4/5$ shows comparable success for HARL-AC and domain randomization of up to $97.5\\%$. On out-of-distribution sea states $7/8/10$, HARL-AC generalizes better, achieving up to $16\\%$ higher median success rate at sea state 10, and substantially lower crash rates of up to $14\\%$ compared to the domain randomization policy. Furthermore, we show that the adversarially trained policy shows more cautious behavior, slightly increasing timeouts by $<3\\%$, but yields safer recovery behavior in severe, unseen conditions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/14/2609.12422v1-hierarchical-belief-modeling-for-zero-shot-opponent-adaptation-in-partially-observable-multi-agent-navigation",
+      "section": "quick",
+      "title_en": "Hierarchical Belief Modeling for Zero-Shot Opponent Adaptation in Partially Observable Multi-Agent Navigation",
+      "authors": "Kowei Shih, Lu Cheng, Zeyu Wang, Yeyun Xu, Kejian Tong",
+      "date": "2026-09-11",
+      "pdf": "https://arxiv.org/pdf/2609.12422v1",
+      "score": "7.0",
+      "evidence": "部分可观测多智能体导航中具对手自适应的分层智能体",
+      "tldr": "在Lux AI Season 3中，智能体需在部分可观测、随机化局内动态与五局三胜赛制下兼顾战术执行和快速适应。HORIZON是一种分层智能体，结合对称感知、双记忆信念追踪、遗物图注意力、信息增益探索与对手条件策略混合。它把短时控制与跨局元推理分离，并用辅助信念和世界模型目标稳定训练。实验表明其在比赛胜率、单局胜率、适应增益和联赛评分上均优于强循环与前馈基线，能零样本推断隐藏参数与对手风格。",
+      "tags": "query:marl",
+      "abstract_en": "Lux AI Season 3 requires agents to act under partial observability, randomized episode level dynamics, and a best of five match structure that rewards both tactical execution and fast adaptation. We present HORIZON, a hierarchical agent that combines symmetry aware spatial perception, dual memory belief tracking, relic centric graph attention, information gain driven exploration, and an opponent conditioned policy mixture. HORIZON separates short horizon control from cross match meta reasoning, while auxiliary belief and world model objectives stabilize learning. Trained with PPO in a large scale JAX simulator, the resulting agent explicitly infers hidden game parameters and opponent style. Experiments show consistent gains in match win rate, episode win rate, adaptation gain, and league rating over strong recurrent and feed forward baselines.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
