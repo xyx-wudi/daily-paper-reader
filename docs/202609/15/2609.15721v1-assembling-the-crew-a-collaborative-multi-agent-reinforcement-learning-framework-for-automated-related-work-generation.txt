@@ -1,0 +1,787 @@
+Title: Assembling the CREW: A Collaborative Multi-agent Reinforcement Learning Framework for Automated Related Work Generation
+
+URL Source: https://arxiv.org/pdf/2609.15721v1
+
+Published Time: Tue, 15 Sep 2026 02:42:46 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Assembling the CREW: A Collaborative Multi-agent Reinforcement Learning Framework for Automated Related Work Generation 
+
+Hai-Dang Dang 1* , Bao-Yen Pham 1* , Bao Nguyen 2
+
+Tran Thi Huong 3, Huynh Thi Thanh Binh 11Hanoi University of Science and Technology 2The Chinese University of Hong Kong 
+
+> 3
+
+Hanoi University of Industry 
+
+Abstract 
+
+Automatic Related Work Generation (RWG) significantly reduces the human time and ef-fort required to author the Related Work Sec-tion (RWS) of a research paper. However, prior methods leveraging multi-agent Large Language Models (LLMs) typically rely on a predefined workflow, where each agent is re-sponsible for a specific step in the entire pro-cess. This rigid, static inter-agent coordination limits the adaptive collaboration required to synthesize complex scientific literature. To ad-dress this limitation, we propose CREW (Col-laborative Reinforcement Learning for Related Work Generation), a novel framework where LLM agents bypass heuristic pipelines to dy-namically coordinate by autonomously select-ing actions, such as Retrieve, Disseminate, Compose, and Critique, driven by a policy op-timized via Independent Proximal Policy Opti-mization (IPPO). Extensive experiments on a standard RWG benchmark demonstrate that our approach yields substantial quality improve-ments over strong existing baselines, while significantly reducing token costs. Code is available at https://github.com/YenPBao/ CREW-Collaborative-MARL.git 
+
+1 Introduction 
+
+To translate an initial idea into scientific research, scholars often explore a range of literature, care-fully summarizing, synthesizing, and contrast-ing earlier findings. This process is both time-consuming and labor-intensive. Indeed, literature synthesis represents a major bottleneck in the scien-tific workflow, particularly given the rapid growth of scientific publications. Addressing this chal-lenge, Hoang and Kan (2010) introduced Related Work Generation (RWG) as a research direction within Natural Language Processing (NLP). The task aims to automatically transform an initial con-cept, typically consisting of a title and an abstract, 
+
+> *Both authors contributed equally to this research.
+
+together with a list of potential related references, into a coherent and logical related work draft that comprehensively covers key findings from prior studies with accurate citations. Overall, RWG research has evolved along three main methodological directions. Firstly, extractive approaches select and concatenate sentences di-rectly from source documents, making them simple to implement and generally faithful to the original content. However, their limited ability to para-phrase and abstract often results in related-work sections that are redundant and poorly structured (Hu and Wan, 2014; Chen and Zhuge, 2016; Deng et al., 2021). Secondly, abstractive supervised mod-els move beyond sentence extraction by incorporat-ing task-specific components and structured repre-sentations, including relation-aware RWG models and structured scientific summarization methods (Chen et al., 2021, 2022; Xiao et al., 2022). Al-though these models achieve strong performance within their training domains, their reliance on task-specific training and annotated datasets limits scal-ability and adaptation to new domains or topics. Thirdly, LLM-based methods leverage strong gen-erative capabilities to produce coherent and logi-cally structured related work sections. However, single-LLM approaches remain prone to hallucina-tion and constrained by context capacity, as high-quality synthesis often requires jointly reasoning over many references. Even with long-context models (e.g., GPT-4o with a 128K-token capacity), simply concatenating all references into a single input remains ineffective, as long contexts can di-lute attention and cause important inter-document relationships to be overlooked. Retrieval-based al-ternatives reduce the context burden but may omit relevant evidence and weaken coverage (Izacard and Grave, 2021; Wu et al., 2022). To overcome these obstacles, recent research has leveraged multi-agent LLM frameworks to decompose the overall RWG process into smaller subtasks, assigning each arXiv:2609.15721v1 [cs.LG] 14 Sep 2026 agent to a specific part of the workflow. This divi-sion of labor reduces the workload each agent must process, thereby lowering the risk of exceeding the context window (Wu et al., 2023; Li et al., 2023; Liu et al., 2025). However, fixed subtask assign-ments force the overall process to proceed sequen-tially, increasing inference time. More importantly, these approaches lack a mechanism that allows multiple agents to collaborate on the same subtask when it becomes critical. If too few agents are as-signed to an important subtask at a particular stage, it can become a bottleneck, producing low-quality intermediate outputs that limit subsequent agents. For example, after agents have moved from reading to drafting, they may find that the collected evi-dence remains insufficient, making further drafting ineffective despite multiple agents being assigned to writing. Therefore, agents need mechanisms to proactively select context-dependent actions and coordinate more effectively. Motivated by these observations, we introduce a multi-agent framework that enables flexible, context-dependent action selection through Multi-Agent Reinforcement Learning (MARL). MARL enables independently operating agents to coordi-nate their decisions through a shared learned pol-icy rather than a centralized orchestrator, thereby reducing computational overhead and improving scalability. To achieve this, we formulate RWG as a Decentralized Partially Observable Markov De-cision Process (Dec-POMDP), where each agent receives a distinct local observation consisting of its internal knowledge state, shared resources, and peer actions. At the same time, our environment provides a team-level global reward based on the quality of the collaboratively constructed draft and its alignment with human-written references. Im-portantly, beyond the conventional actions of litera-ture retrieval and drafting employed in prior work, we introduce two additional actions, knowledge dis-semination and draft critiquing , to promote proac-tive information sharing and adaptive inter-agent coordination throughout the RWG process. The framework is then optimized using IPPO with pa-rameter sharing to ensure computational efficiency and scalability. Extensive experiments show that our framework improves over competitive base-lines in LLM-as-a-judge evaluation and valid cita-tion grounding, while reducing inference time and token costs. Our contributions can be summarized as follows: 1. We introduce two collaborative actions, Dis-seminate and Critique, which enable agents to share useful knowledge and provide mutual feedback, improving both coordination and the quality of the generated draft. 2. We propose a MARL framework based on a Dec-POMDP formulation, allowing agents to proactively select context-dependent ac-tions from their local observations. We fur-ther optimize the decision-making policy us-ing IPPO with parameter sharing for efficient multi-agent coordination. 3. We conduct extensive experiments showing that our framework improves over strong ex-isting methods across multiple evaluation met-rics. Additional transferability experiments demonstrate that a decision-making policy trained with one LLM can be reused with different inference LLMs, indicating that the learned coordination strategy is not tied to a single backbone model. 
+
+2 Related Work 
+
+RWG has attracted growing attention for its role in supporting scientific writing and is commonly categorized into Extractive RWG (ERWG) and Ab-stractive RWG (ARWG) (Li and Ouyang, 2024). ERWG methods construct related work sections by selecting and concatenating representative sen-tences from cited papers. Early approaches such as ReWoS (Hoang and Kan, 2010) rely on hi-erarchical rule-based extraction at both coarse-and fine-grained topic levels, while subsequent methods incorporate topic modeling and learning-based importance estimation, e.g., clustering sen-tences with PLSA and ranking them using regres-sion models (Hu and Wan, 2014). To better cap-ture target–reference relationships, later studies ex-ploit citation contexts (Chen and Zhuge, 2016) or sentence-level embeddings with coherence-aware reordering, as in SERGE (Deng et al., 2021). Graph-based methods explicitly model inter-paper relations, such as ToC-RWG (Wang et al., 2020) and bibliographic graph-based neural summariza-tion (Wang et al., 2018). Overall, despite being citation-faithful, ERWG methods remain limited in producing comparative and analytical discussions, as they depend heavily on pre-existing comparative sentences that are difficult to obtain in practice. To address these limitations, recent work has shifted toward ARWG, where models generate related-work text in their own words. ARWG ap-proaches can be broadly categorized into citation-level and section-level generation. Citation-level ARWG focuses on generating short descriptions for individual citations based on local citation con-text and cited paper content, typically using ci-tation context and abstracts due to input length constraints (Luu et al., 2021; Gu and Hahnloser, 2024; Jung et al., 2022; Li et al., 2024; Xiao et al., 2022). These methods generally assume one cited paper per citation and model citations in isolation, limiting their ability to capture cross-paper relation-ships. Section-level ARWG extends this formula-tion by generating longer related-work paragraphs that contain multiple citations, explicitly modeling interactions among referenced papers to improve global coherence. Following early attention-based models (Wang et al., 2018), a common strategy is to model papers and their interactions as graphs, enabling structured reasoning over citations, top-ics, and semantic dependencies. Building upon this paradigm, Chen et al. (2021) introduced RRG, which captures relationships among referenced pa-pers using a relation graph and iteratively refines document representations prior to generation. Simi-larly, Chen et al. (2022) proposed TAG, integrating graph-guided interactions at both the encoding and decoding stages, alongside contrastive learning, to encourage well-structured outputs. In this work, we focus on section-level ARWG. Despite their demonstrated effectiveness, exist-ing section-level ARWG methods are typically trained from scratch, resulting in substantial com-putational and memory overhead when scaled to large corpora with many reference papers. To overcome this, a promising research direction is to leverage the robust generative capabilities of pretrained LLMs to bypass costly retraining. How-ever, fully unlocking LLMs for this task requires overcoming their inherent context-window limita-tions. This challenge is especially pronounced in section-level ARWG, where identifying complex latent links necessitates simultaneously processing a massive volume of text across numerous refer-ence papers. Prior attempts to handle such input-length constraints commonly rely on long-context models, iterative reading-and-summarization strate-gies (Miller et al., 2016; Chevalier et al., 2023), and retrieval-based methods (Izacard and Grave, 2021; Wu et al., 2022). However, each direction has notable drawbacks: long-context processing can dilute the effectiveness of attention, iterative reading may overwrite early evidence, and retrieval risks omitting crucial inter-document nuances. To circumvent these limitations, our framework leverages multi-LLM collaboration to effectively distribute reasoning and knowledge processing across multiple agents. Unlike many existing multi-LLM systems that rely on rigid predefined inter-action patterns or static self-reflection loops (Wu et al., 2023; Li et al., 2023; Shinn et al., 2023), our approach proposes a highly adaptable paradigm grounded in multi-agent reinforcement learning. For instance, while Liu et al. (2025) recently proposed a multi-agent system that uses citation graphs and specialized roles (Selector, Reader, and Writer), imposing these fixed roles forces agents into sequential pipelines, restricting their ability to address subtasks as they become critical. Con-versely, our approach offers a flexible collaboration paradigm by introducing explicit dynamic coopera-tion via discussion actions among complementary LLM agents and enabling step-wise situational ac-tion selection, which allows agents to dynamically determine subsequent actions, reducing unneces-sary interactions and computational overhead while improving reasoning reliability. 
+
+3 Methodology 
+
+Following the setting of Select, Read, and Write (Liu et al., 2025), the input consists of the author’s initial idea, represented by the title 
+
+TC and abstract AC of the citing paper C, to-gether with a set of potential reference papers 
+
+R = {r1, r 2, . . . , r n}. Given these inputs, our framework transforms the reference set into a co-herent related work section S that synthesizes the key ideas most relevant to C with accurate citation grounding. The overall workflow of the proposed framework is summarized in Figure 1. 
+
+3.1 Dec-POMDP Formulation 
+
+In this work, we cast RWG as a Dec-POMDP, which naturally accommodates (i) partial observ-ability , since each of M agent sees only the shared working documents and its own private knowledge, (ii) all agents act independently based on their own distinct observations, without relying on a central-ized controller, thereby distributing the computa-tion and enhancing scalability. Thus, agents oper-ate independently and in parallel over a series of timesteps: at each timestep t, the environment is in state st, each agent i receives an observation oitShared Environment        
+
+> Reference papers
+> Construct Title
+> Citing paper
+> Abstract
+> Global Knowledge Draft Feedback Board Centralized batch
+> Append
+> ...
+> 1
+> 43Agent Agent
+> IPPO Update
+> Agent
+> IPPO Update
+> Training parameters
+> 2
+> 5
+> Citation Graph Actor Network
+> I want to write a related work section based on the citing paper and the following references.
+> Training parameters
+> Critic Network
+> Local Knowledge Local Knowledge
+> Sampling phase Training phase
+> Construction & Initialization phase
+
+Figure 1: Overview of our multi-agent framework. Agents operate independently and in parallel over a series of timesteps. At each step, each agent observes the input information and current working documents, selects one of four actions, and receives a reward guided by the human-written related-work section as the gold standard. The collected interactions are aggregated into a buffer to train the policy, which is then used as the agents’ decision-making policy during inference to produce the final output. 
+
+as its partial view of the state, selects an action ait,and then receives a reward rit from the environ-ment. We define the states , observations , actions ,and rewards as follows. 
+
+States. At each time step t, the global state 
+
+st ∈ S is defined as: 
+
+st = ⟨T C , AC , R, L t, G t, D t, F t⟩, (1) where the first three components are the static task inputs introduced above. The remaining four com-ponents correspond to the four types of documents that we propose for the collaborative writing pro-cess. Local knowledge Lt = {L1 
+
+> t
+
+, . . . , L Mt } is the collection of agent-private knowledge states; each Lit accumulates reading summaries obtained through Agent i’s individual exploration of the ci-tation graph via the Retrieve action and remains 
+
+invisible to other agents. Global knowledge Gt is a shared knowledge base accessible to all agents, ag-gregated from individual local contributions via the Disseminate action; it serves as the collective un-derstanding of the literature that any agent can draw upon when drafting or critiquing. Draft Dt is the evolving text of the related-work section, iteratively refined by agents through the Compose action. 
+
+Feedback Ft stores the accumulated critiques and revision suggestions produced by agents through the Critique action, thereby providing structured signals to systematically guide subsequent draft re-visions. The detailed explanation of the Actions is provided below. 
+
+Observations. Since Agent i cannot access the local knowledge of other agents, each agent re-ceives only a partial observation oit ∈ O i:
+
+oit = Embed   Lit, G t, D t, F t
+
+ , (2) Directly feeding the raw textual content of each document into the policy network would result in an excessively large observation space, making con-vergence during training prohibitively difficult. To maintain a compact state representation, the embed-ding operator Embed( ·) encodes each component 
+
+k ∈ { L, G, D, F } into a five-dimensional numer-ical feature vector xk = [ v1,k , . . . , v 5,k ], with all feature values clipped to [0 , 1] . The resulting ob-servation has 20 dimensions and is independent of the number of agents M , so the policy architecture does not need to change when the team size varies. The five features are defined as follows: (i) Semantic relevance (v1,k ): The cosine simi-larity, denoted by c(·, ·), between the embedding 
+
+ek of component k and the initial-idea embedding eidea = embed( TC ⊕ A C ), where the initial idea consists of the title TC and abstract AC :
+
+v1,k = c(ek, eidea ). (3) (ii) Coverage and Novelty (v2,k ): A component-specific measure defined as: 
+
+v2,k =
+
+
+
+1 − α δ id − (1 −α) δsem , k = L, 
+
+1 − c(eLi , eG), k = G, c(eD, eG), k = D, c(eF , eidea −eD), k = F, 
+
+(4) where for Local Knowledge ( L), the coverage fea-ture penalizes redundancy against other agents. Specifically, δid = |P i ∩ P ¬i|/|P i| calculates the identifier-level overlap ratio between the set of papers read by Agent i (Pi) and those read by all other agents ( P¬i). Concurrently, δsem =max j̸ =i c(eLi , eLj ) captures the maximum seman-tic similarity between Agent i’s local knowledge and that of any peer. For Global Knowledge ( G), it measures semantic novelty relative to the shared knowledge. For the Draft ( D), it quantifies seman-tic coverage with reward to the G. For Feedback Board F , it measures alignment with the gap vector 
+
+eidea − eD.(iii) Personal action distribution (v3,k ): The his-torical frequency with which Agent i has selected action k, defined explicitly as: 
+
+v3,k = nikP 
+
+> a∈A
+
+nia
+
+, (5) where nik is the accumulated count of action k exe-cuted by Agent i.(iv) Token capacity (v4,k ): The remaining normal-ized token capacity for action k:
+
+v4,k = max 
+
+
+
+0, 1 − τk
+
+τmax 
+
+
+
+, (6) where τk is the current token usage associated with action k, and τmax represents the predefined maxi-mum allowable token budget. (v) Social activity distribution (v5,k ): The propor-tion of action k performed by other agents, 
+
+v5,k = n¬ik
+
+nall 
+
+> k
+
+, (7) providing Agent i with awareness of team-level coordination, where n¬ik is the number of times action k has been performed by all agents except Agent i, and nall  
+
+> k
+
+is the total number of times ac-tion k has been performed by all agents. 
+
+Actions. The joint action space is A = A1 ×· · · × A M ; each agent i selects one of four actions: Retrieve, Disseminate, Compose, or Critique, and the joint action is a = ( a1 
+
+> t
+
+, . . . , a Mt ). Each ac-tion is realized by a dedicated prompt template (Appendix G). The Retrieve action selects a can-didate paper pt−1 
+
+> c
+
+to read and updates the agent’s local knowledge. Disseminate merges local into shared knowledge; Critique reviews the current draft; Compose revises the draft from all available sources: 
+
+Lit = Retrieve  Lit−1, p t−1
+
+> c
+
+ (8) 
+
+Gt = Disseminate  Lit, G t−1
+
+ (9) 
+
+Ft = Critique  Lit, D t−1
+
+ (10) 
+
+Dt = Compose  Dt−1, G t−1, L it, F t−1
+
+ (11) 
+
+Rewards. We adopt a delta-based cooperative reward structure. The reward decomposes into two terms: a draft-quality gain reflecting overall synthe-sis progress, and a component-quality gain reflect-ing improvements in the specific artifact targeted by the agent’s action: 
+
+rit = (1 − λt) ∆ Q(t) 
+
+> D
+
++ λt ∆Q(t)
+
+> k(ai)
+
+, (12) where Q(t) 
+
+> k
+
+denotes the quality of component k ∈{L, G, D, F } at time step t, and ∆Q(t) 
+
+> k
+
+= Q(t) 
+
+> k
+
+−
+
+Q(t−1)  
+
+> k
+
+denotes its quality gain. The decaying co-efficient λt encourages agents to first improve the background documents before gradually shifting at-tention toward composing the final draft. The qual-ity Qk is estimated by document-specific heuris-tic functions, depending on the type of document. These heuristics primarily reference the human-written related-work section, whose embedding is denoted by egold . Detailed quality formulas and the credit-assignment procedure are provided in Appendix A.2 and Appendix A.3. 
+
+3.2 Proposed Algorithm 
+
+As illustrated in Figure 1, we optimize the coop-erative policy using parameter-shared IPPO, with full pseudocode provided in Appendix A.1. The framework alternates between sampling and train-ing: agents interact asynchronously under a shared behavioral policy, collect rewards from Section 3.1, and aggregate rollouts to update a single shared Actor and Critic. This design keeps the policy scal-able while reducing coordination overhead across agents. 
+
+The sampling phase. During data collection, 
+
+M agents asynchronously select actions from the discrete space A based on the shared policy πθ.This interaction occurs over a subset of papers, spanning several time steps across multiple epochs. The reward is calculated by measuring the specific semantic and structural improvements made to the draft, compared with the ground truth one. These transition tuples (oit, a it, r it, o it+1 ) are temporarily stored in local experience buffers. 
+
+The training phase. Once a predefined stopping condition is met, trajectories from all local buffers are aggregated into a centralized batch W to update the shared networks. For each sample j ∈ W , PPO defines the probability ratio 
+
+ρj (θ) = πθ(aj | oj )
+
+πθold (aj | oj ) . (13) The clipped surrogate objective for the Actor is 
+
+LCLIP (θ) = 1
+
+|W| 
+
+X
+
+> j∈W
+
+min 
+
+
+
+ρj (θ) ˆAj ,
+
+clip( ρj (θ), 1 − ϵ, 1 + ϵ) ˆAj
+
+
+
+, (14) where ˆAj is estimated with Generalized Advantage Estimation (GAE) (Schulman et al., 2016). The Critic is trained against the empirical return ˆRj
+
+using the value loss 
+
+LVF (ϕ) = 1
+
+|W| 
+
+X
+
+> j∈W
+
+
+
+Vϕ(oj ) − ˆRj
+
+2
+
+. (15) During optimization, the Actor maximizes the clipped surrogate objective while the Critic mini-mizes the value loss; this centralized optimization cycle is repeated until the policy converges. 
+
+The actor and critic networks. To ensure pa-rameter efficiency and facilitate knowledge transfer across agents, our framework maintains a single Actor network ( πθ) and Critic network ( Vϕ) ap-plied uniformly to all agents. The Actor maps the 20-dimensional observation vector to action logits z ∈ R4 for categorical sampling, while the Critic outputs a scalar value estimate ˆVϕ(oit) as the variance-reduction baseline. Both networks share the same compact feedforward design, differing only in their final output heads; detailed configura-tions are provided in Table 6 in Appendix D. 
+
+4 Experimental Results and Discussions 
+
+To evaluate the CREW framework, we design a se-ries of experiments addressing overall performance, architectural choices, and cost efficiency. 
+
+4.1 Experimental Setup Dataset. We evaluate our framework on the OAR E-
+
+> LATED
+
+WORK dataset (Docekal et al., 2024), cur-rently the primary dataset supporting full-text-based related work generation. Specifically, we use 2% of the papers (1829 papers) for training and 0.4% of the papers (366 papers) for evaluation, as detailed in Appendix B. 
+
+Implementation Details. For the main results, we use Qwen 2.5 72B Instruct 1 for both policy train-ing and inference. In the transferability study, we keep the trained controller fixed and swap the infer-ence backbone to LLaMA 8B 2, Gemini 2.0 Flash 3,Qwen 2.5 72B Instruct, and GPT-4o 4. Complete IPPO hyperparameters and network architecture are provided in Appendix D, while prompt tem-plates are provided in Appendix G. 
+
+Evaluation Metrics. Following the evaluation protocol of Select, Read, and Write (SRW) (Liu et al., 2025), we adopt an LLM-as-a-Judge setup. For robustness and fairness, final scores are com-puted as the arithmetic mean of ratings from three judges on a 1–5 Likert scale: GPT-4o, LLaMA 3.3 70B Instruct 5, and DeepSeek-V3 6. In addition to standard metrics ( Coverage , Logic , and Rele-vance ), we report Citation Verification , defined as the proportion of generated citations that exist in the database. To assess operational efficiency, we further report total input/output tokens and infer-ence time for the baselines. Detailed definitions and evaluation procedures for all metrics are pro-vided in Appendix C. 
+
+4.2 Baselines 
+
+We situate our proposed CREW framework against widely-adopted baseline paradigms (with detailed behavioral analysis in Appendix D.3): 
+
+Multi-Agent Methods. We compare against SRW (Liu et al., 2025) and our own Orchestra-tor baseline, inspired by HuggingGPT (Shen et al., 2023), with both baselines using Qwen 2.5 72B 
+
+> 1Version qwen-2.5-72b-september2024
+> 2Version llama-3.1-8b-instruct-july2024
+> 3Version gemini-2.0-flash-february2025
+> 4Version gpt-4o-may2024
+> 5Version llama-3.3-70b-december2024
+> 6Version deepseek-v3-december2024
+
+Table 1: Performance of different models on the OAR ELATED WORK dataset. The best and the runner-up results are shown in bold and underlined, respectively. Our method outperforms the strong existing baseline across all quality and citation metrics while using fewer tokens.                                                          
+
+> Model LLM-based Evaluation (Avg.) Citation Cost Efficiency Cov. ↑Logic ↑Rel. ↑Overall ↑Ver.(%) ↑Tokens ↓
+> Inf. Time (s) ↓
+> PRIMERA 1.18 1.41 2.04 1.54 0.00 0.34K 2
+> GPT-4o (Long Context) 3.20 3.28 3.76 3.41 48.61 6.61K 38 GPT-4o (RAG) 3.19 3.30 3.76 3.42 96.40 3.68K 37 SRW (Qwen 2.5 72B) 3.38 3.73 4.17 3.76 80.40 210.37K 585 Orchestrator (Qwen 2.5 72B) 3.41 3.71 4.27 3.80 99.67 181.29K 822
+> CREW (Qwen 2.5 72B, 4 Agents) 3.44 3.73 4.27 3.82 99.33 198.74K 755
+
+Table 2: Comparison with a naive orchestration strategy on the OAR ELATED WORK dataset. The best and the runner-up results are shown in bold and underlined, respectively.                           
+
+> Model LLM-based Evaluation (Avg.) Citation Cov. ↑Logic ↑Rel. ↑Overall ↑Ver.(%) ↑
+> Naive Orchestrator (Qwen 2.5 72B) 3.22 3.24 3.73 3.40 98.67 Orchestrator (Qwen 2.5 72B) 3.41 3.71 4.27 3.80 99.67 CREW (Qwen 2.5 72B, 4 Agents) 3.44 3.73 4.27 3.82 99.33
+
+Instruct to match the main setting. The Orches-trator incorporates CREW’s proposed architecture, including the shared workspace, local knowledge, and action space; its key distinction is that it re-places the autonomous RL-based policy controller with a centralized LLM coordinator that assigns actions to the agents. Further implementation and behavioral details are provided in Appendix D.3. 
+
+Single LLM Methods. We evaluate GPT-4o with either the full document context or standard Retrieval-Augmented Generation (RAG) (Lewis et al., 2020). 
+
+Abstractive Methods. We benchmark against PRIMERA (Xiao et al., 2022), a strong sequence-to-sequence model for multi-document synthesis. 
+
+4.3 Comparison Results 
+
+We present four primary experiments to validate our framework’s capabilities, covering main perfor-mance, model transferability, benchmark transfer-ability on a different dataset, and ablation analysis. The scalability analysis over different numbers of agents is deferred to Appendix E. 
+
+Main Results. As shown in Table 1, CREW improves over the SRW baseline in overall LLM-judged quality by 0.06 points on the 1–5 scale and citation verification by 23.54%, while reducing to-ken usage by 12.90%. These gains indicate that learned coordination improves generation quality, citation validity, and efficiency. Compared with our Orchestrator baseline, CREW achieves higher overall quality (+0.02 points on the 1–5 scale) and lower inference time. This modest quality margin is expected, as the Orchestrator inherits CREW’s architecture, including the shared workspace, local knowledge, and action space, and differs primar-ily by replacing the learned decentralized policy with a centralized LLM coordinator, as described in Section 4.2. To examine this structural con-tribution, we compare against a Naive Orchestra-tor adapted from HuggingGPT (Shen et al., 2023), where the coordinator handles problem decomposi-tion, task generation, and iterative task assignment based on prior agent feedback. Table 2 shows that this variant obtains Overall and Citation Verifica-tion scores of 3.40 and 98.67%, respectively, sub-stantially underperforming both the architecture-aware Orchestrator (3.80 Overall) and CREW (3.82 Overall). These results indicate that the strong per-formance of the Orchestrator derives substantially from CREW’s structural design. CREW further avoids the coordinator as a single point of failure. Under a simulated 5% API failure rate, CREW and the Orchestrator encounter similar numbers of failed calls, but CREW finishes in 812 rather than 1012 seconds because unaffected agents can con-tinue operating independently without depending on an orchestrator. Table 3: Model transferability across inference LLMs using the controller trained with Qwen 2.5 72B Instruct.                                                               
+
+> Inference Model LLM-based Evaluation (Avg.) Citation Cost Efficiency Cov. ↑Logic ↑Rel. ↑Overall ↑Ver.(%) ↑Tokens ↓
+> LLaMA 8B (Long-context) 2.97 2.99 3.17 3.04 53.23 20.52K LLaMA 8B + CREW 3.31 3.42 3.96 3.57 82.01 161.49K Gemini 2.0 Flash (Long-context) 3.11 3.17 3.54 3.28 98.61 20.93K Gemini 2.0 Flash + CREW 3.31 3.60 4.23 3.71 96.70 156.10K Qwen 2.5 72B Instruct (Long-context) 3.19 3.35 3.73 3.42 65.83 21.57K Qwen 2.5 72B Instruct + CREW 3.31 3.33 4.17 3.79 96.20 121.81K GPT-4o (Long Context) 3.20 3.28 3.76 3.42 48.61 6.61K GPT-4o + CREW 3.43 3.77 4.26 3.82 96.70 139.10K
+
+Table 4: Cross-domain transferability on Multi-News without policy retraining or reward adaptation. Best and runner-up results are shown in bold and underlined.                                            
+
+> Framework LLM-based Evaluation (Avg.) ROUGE Overall ↑Cov. ↑Logic ↑Rel. ↑R-1 ↑R-2 ↑R-L ↑
+> GPT-4o (Long Context) 3.53 3.36 3.70 3.54 40.57 11.56 19.24 SRW (Qwen 2.5 72B) 3.37 3.20 3.59 3.31 39.13 12.18 19.24 Orchestrator (Qwen 2.5 72B) 3.75 3.53 3.76 3.96 41.81 13.03 20.61 CREW (Ours) 3.84 3.65 3.91 3.97 43.74 14.08 20.29
+
+Table 5: Ablation study of key CREW components and their effects on generation quality and citation reliability.                                       
+
+> Component Configuration LLM-based Evaluation (Avg.) Citation Cost Efficiency Cov. ↑Logic ↑Rel. ↑Overall ↑Ver.(%) ↑Tokens ↓
+> w/o Draft Quality Reward 3.50 3.70 4.30 3.83 44.07 139.02K w/o Feedback Action 2.33 2.54 2.85 2.58 10.00 37.54K w/o Social Activity Observation 2.97 3.30 3.65 3.30 0.00 85.57K CREW (Full System) 3.45 3.73 4.27 3.82 96.20 152.70K
+
+Model Transferability. We evaluate whether the learned 3-agent coordination policy transfers across backbones without retraining the controller. As shown in Table 3, the policy trained with Qwen 2.5 72B Instruct remains effective when agents use other inference models to execute selected actions. CREW raises the overall score of LLaMA 8B from 3.04 to 3.57 and Gemini 2.0 Flash from 3.28 to 3.71, while GPT-4o reaches 3.82. Although citation verification varies with the generation model, ev-ery transferred configuration substantially exceeds the corresponding long-context setting in overall quality. These results indicate that the controller learns a reusable coordination protocol rather than model-specific generation patterns. The consistent gains across model sizes and providers suggest that coordination knowledge is largely decoupled from the linguistic capabilities of the executor, allow-ing CREW to adopt upgraded backbones without repeating policy training. 
+
+Benchmark Transferability. We study cross-domain generalization on Multi-News (Fabbri et al., 2019), where the system must synthesize multiple news articles describing the same event. We adapt only the task prompts and represent articles for each event as a fully connected graph; the learned policy and reward-trained controller remain frozen. Alongside LLM-based quality dimensions, we re-port ROUGE-1, ROUGE-2, and ROUGE-L to mea-sure lexical agreement with reference summaries. Table 4 shows that CREW achieves an overall score of 3.84, outperforming the Orchestrator and SRW by 0.09 and 0.47 points, respectively. It also obtains the best Coverage, Logic, Relevance, ROUGE-1, and ROUGE-2 scores, while remaining competi-tive on ROUGE-L. The gains across semantic judg-ments and reference-based metrics suggest that the policy preserves useful collaboration behaviors when the document genre, output purpose, and evi-dence structure differ from scientific related work Figure 2: Ablation failure cases of CREW. Removing social activity observation leads to poor coordination and redundant agent behavior, while removing the feedback action prevents agents from correcting citation errors introduced by others, reducing both citation accuracy and logical coherence. 
+
+generation. Notably, these improvements require neither controller retraining nor reward adaptation, indicating that the learned action-selection strat-egy remains useful when the evidence units shift from scientific papers to news articles. This result broadens CREW’s potential applicability to other multi-document synthesis tasks requiring agents to coordinate evidence gathering, integration, and revision across heterogeneous sources. 
+
+Ablation Studies. We conduct ablation stud-ies to examine the contribution of key components under the IPPO objective. As shown in Table 5, re-moving observation, reward, or action-space com-ponents generally degrades performance. Remov-ing the draft-quality reward weakens the direct signal for improving the generated draft, causing agents to rely more on retrieval and feedback while performing fewer effective writing updates. Con-sequently, citation verification drops to nearly half of the full CREW system, suggesting that retrieved evidence is less effectively grounded in the final draft. Although the overall score slightly increases in this setting, the gain is marginal and comes at the cost of substantially lower citation reliability. Figure 2 illustrates two representative failure cases. Without social activity observation, agents cannot track the action patterns of others, leading to redundant retrieval, overlapping behaviors, and weaker coordination; accordingly, Coverage, Logic, and Relevance decrease to around 3.30 on average. Removing the feedback action causes the largest degradation, with the Overall score dropping to 2.58, because agents lose an explicit mechanism for flagging hallucinated citations, missing evidence, and inconsistent claims. These results highlight the importance of both coordination-aware observation and feedback-driven revision in CREW. 
+
+5 Conclusion 
+
+We introduced CREW, a collaborative multi-agent reinforcement learning framework for automated related work generation. Instead of relying on a fixed pipeline, CREW allows multiple LLM agents to dynamically select among retrieval, knowledge dissemination, drafting, and critique actions ac-cording to a learned IPPO policy. Agents make decentralized decisions from their local observa-tions while coordinating through shared knowledge, drafts, and feedback. This combination preserves agent autonomy without sacrificing the information exchange required for coherent scientific synthesis. Experiments on the OAR ELATED WORK bench-mark show that CREW improves generation qual-ity and citation grounding over strong baselines while maintaining competitive efficiency. Compar-isons with centralized and naive orchestrators in-dicate that effective collaboration depends on both the system structure and learned action selection. Ablations show that feedback, social-activity ob-servations, and quality-oriented rewards are im-portant for coordination, revision, and citation re-liability. Transfer experiments demonstrate that the learned policy remains effective across differ-ent inference backbones and can adapt for broader multi-document synthesis without retraining. Scal-ability experiments show that additional agents can contribute complementary retrieval, writing, and review capacity, although gains must be balanced against inference cost and latency. Overall, CREW demonstrates that reinforcement-learned, decen-tralized coordination offers a flexible alternative to rigid LLM pipelines and provides a promising foundation for adaptive, citation-aware scientific writing assistants. Limitations 
+
+Although CREW achieves strong empirical perfor-mance, several limitations remain. First, the cur-rent system operates solely over a fixed candidate pool rather than dynamically querying live schol-arly databases, potentially missing newly published papers or relevant background literature. Second, our automated reward signals and LLM-dependent critique may not fully capture nuanced scholarly conventions, theoretical framing, or field-specific writing styles. Third, while the learned policy can be generalized to broader multi-document synthe-sis tasks beyond related work generation simply by modifying action prompts, our evaluation breadth across other domains is currently confined to a preliminary study on Multi-News. Fourth, due to resource constraints, our human evaluation remains relatively limited in scale, despite exhibiting strong alignment with LLM-as-a-judge assessments. Fi-nally, while parallel agents reduce wall-clock la-tency in principle, practical deployments are still constrained by backbone LLM reasoning capabili-ties, API rate limits, and hardware availability. Fu-ture work will integrate dynamic scholarly search engines, expand human evaluation, and explore broader scientific domains. 
+
+Ethical Considerations 
+
+CREW is intended to assist researchers in drafting and organizing related work sections, not to replace human scholarly judgment. Because LLM-based systems can still generate unsupported claims, mis-interpret cited work, or overstate relationships among papers, users should carefully verify all generated statements, citations, and comparisons before publication. The system should be used as a writing aid that accelerates evidence organization and revision, while final responsibility for accuracy, attribution, and intellectual contribution remains with the authors. There is also a risk that auto-mated related work generation could encourage su-perficial literature review practices if users accept outputs without critical reading. To mitigate this risk, CREW emphasizes citation grounding and cri-tique actions, but these safeguards do not eliminate the need for human review. In addition, evaluations based on LLM judges may reflect biases present in the judging models, including preferences for fluent writing or dominant research paradigms. We therefore recommend transparent reporting when such tools are used and encourage future work on stronger provenance tracking, uncertainty estima-tion, and human-centered evaluation protocols. 
+
+References 
+
+Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind Nee-lakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya Ramesh, Daniel M. Ziegler, Jeffrey Wu, Clemens Winter, and 12 others. 2020. Language models are few-shot learners. In Advances in Neural Information Processing Systems 33: Annual Con-ference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual .Jingqiang Chen and Hai Zhuge. 2016. Summarization of related work through citations. In 12th International Con-ference on Semantics, Knowledge and Grids, SKG 2016, Beijing, China, August 15-17, 2016 , pages 54–61. IEEE Computer Society. Xiuying Chen, Hind Alamro, Mingzhe Li, Shen Gao, Rui Yan, Xin Gao, and Xiangliang Zhang. 2022. Target-aware abstractive related work generation with contrastive learn-ing. In Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval , SIGIR ’22, page 373–383, New York, NY, USA. Association for Computing Machinery. Xiuying Chen, Hind Alamro, Mingzhe Li, Shen Gao, Xian-gliang Zhang, Dongyan Zhao, and Rui Yan. 2021. Cap-turing relations between scientific papers: An abstractive model for related work section generation. In Proceed-ings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers) , pages 6068–6077, Online. Association for Computational Linguistics. Alexis Chevalier, Alexander Wettig, Anirudh Ajith, and Danqi Chen. 2023. Adapting language models to compress con-texts. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 3829– 3846, Singapore. Association for Computational Linguis-tics. Zekun Deng, Zixin Zeng, Weiye Gu, Jiawen Ji, and Bolin Hua. 2021. Automatic related work section generation by sentence extraction and reordering. In Proceedings of the 1st Workshop on AI + Informetrics (AII2021) co-located with the iConference 2021, Virtual Event, March 17th, 2021 , CEUR Workshop Proceedings, pages 101–110. CEUR-WS.org. Martin Docekal, Martin Fajcik, and Pavel Smrz. 2024. Oare-latedwork: A large-scale dataset of related work sec-tions with full-texts from open access sources. Preprint ,arXiv:2405.01930. Alexander Fabbri, Irene Li, Tianwei She, Suyi Li, and Dragomir Radev. 2019. Multi-news: A large-scale multi-document summarization dataset and abstractive hierarchi-cal model. In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pages 1074–1084, Florence, Italy. Association for Computational Linguistics. William Feller. 1968. An Introduction to Probability Theory and Its Applications , 3 edition, volume 1. John Wiley and Sons. Jakob Foerster, Gregory Farquhar, Triantafyllos Afouras, Nan-tas Nardelli, and Shimon Whiteson. 2018. Counterfactual multi-agent policy gradients. Proceedings of the AAAI Conference on Artificial Intelligence , 32(1). Nianlong Gu and Richard Hahnloser. 2024. Controllable citation sentence generation with language models. In Pro-ceedings of the Fourth Workshop on Scholarly Document Processing (SDP 2024) , pages 22–37, Bangkok, Thailand. Association for Computational Linguistics. Cong Duy Vu Hoang and Min-Yen Kan. 2010. Towards au-tomated related work summarization. In Coling 2010: Posters , pages 427–435, Beijing, China. Coling 2010 Orga-nizing Committee. Yue Hu and Xiaojun Wan. 2014. Automatic generation of related work sections in scientific papers: An optimiza-tion approach. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 1624–1633, Doha, Qatar. Association for Computational Linguistics. Gautier Izacard and Edouard Grave. 2021. Leveraging pas-sage retrieval with generative models for open domain question answering. In Proceedings of the 16th Conference of the European Chapter of the Association for Computa-tional Linguistics: Main Volume , pages 874–880, Online. Association for Computational Linguistics. Shing-Yun Jung, Ting-Han Lin, Chia-Hung Liao, Shyan-Ming Yuan, and Chuen-Tsai Sun. 2022. Intent-controllable cita-tion text generation. Mathematics , 10(10). Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Kuttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-Augmented Genera-tion for Knowledge-Intensive NLP Tasks. In Advances in Neural Information Processing Systems .Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. 2023. Camel: Communicative agents for "mind" exploration of large language model society. In Advances in Neural Information Processing Systems , volume 36, pages 51991–52008. Curran Asso-ciates, Inc. Ming Li, Xin Chen, Xin Li, Bin Ma, and Paul M. B. Vitányi. 2004. The similarity metric. IEEE Transactions on Infor-mation Theory , 50(12):3250–3264. Xiangci Li, Yi-Hui Lee, and Jessica Ouyang. 2024. Cited text spans for scientific citation text generation. In Pro-ceedings of the Fourth Workshop on Scholarly Document Processing (SDP 2024) , pages 90–104, Bangkok, Thailand. Association for Computational Linguistics. Xiangci Li and Jessica Ouyang. 2024. Related work and cita-tion text generation: A survey. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pages 13846–13864, Miami, Florida, USA. Association for Computational Linguistics. J. Lin. 1991. Divergence measures based on the shan-non entropy. IEEE Transactions on Information Theory ,37(1):145–151. Pengfei Liu, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Graham Neubig. 2023. Pre-train, prompt, and predict: A systematic survey of prompting methods in natural language processing. ACM Comput. Surv. , 55(9). Xiaochuan Liu, Ruihua Song, Xiting Wang, and Xu Chen. 2025. Select, read, and write: A multi-agent framework of full-text-based related work generation. In Findings of the Association for Computational Linguistics: ACL 2025 , pages 7009–7028, Vienna, Austria. Association for Computational Linguistics. Kelvin Luu, Xinyi Wu, Rik Koncel-Kedziorski, Kyle Lo, Is-abel Cachola, and Noah A. Smith. 2021. Explaining rela-tionships between scientific documents. In Proceedings of the 59th Annual Meeting of the Association for Computa-tional Linguistics and the 11th International Joint Confer-ence on Natural Language Processing (Volume 1: Long Papers) , pages 2130–2144, Online. Association for Com-putational Linguistics. Alexander Miller, Adam Fisch, Jesse Dodge, Amir-Hossein Karimi, Antoine Bordes, and Jason Weston. 2016. Key-value memory networks for directly reading documents. In 
+
+Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing , pages 1400–1409, Austin, Texas. Association for Computational Linguistics. OpenRouter. 2026. OpenRouter API Documentation. https: //openrouter.ai/docs . Accessed: May 24, 2026. John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, and Pieter Abbeel. 2016. High-dimensional con-tinuous control using generalized advantage estimation. In 4th International Conference on Learning Representa-tions, ICLR 2016, San Juan, Puerto Rico, May 2-4, 2016, Conference Track Proceedings .Yongliang Shen, Kaitao Song, Xu Tan, Dongsheng Li, Weim-ing Lu, and Yueting Zhuang. 2023. Hugginggpt: Solving ai tasks with chatgpt and its friends in hugging face. In 
+
+Advances in Neural Information Processing Systems , vol-ume 36, pages 38154–38180. Curran Associates, Inc. Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: language agents with verbal reinforcement learning. In Advances in Neural Information Processing Systems , volume 36, pages 8634–8652. Curran Associates, Inc. J Terry, Benjamin Black, Nathaniel Grammel, Mario Jayaku-mar, Ananth Hari, Ryan Sullivan, Luis S Santos, Clemens Dieffendahl, Caroline Horsch, Rodrigo Perez-Vicente, Niall Williams, Yashas Lokesh, and Praveen Ravi. 2021. Pettingzoo: Gym for multi-agent reinforcement learning. In Advances in Neural Information Processing Systems ,volume 34, pages 15032–15043. Curran Associates, Inc. Pancheng Wang, Shasha Li, Haifang Zhou, Jintao Tang, and Ting Wang. 2020. Toc-rwg: Explore the combination of topic model and citation information for automatic related work generation. IEEE Access , 8:13043–13055. Yongzhen Wang, Xiaozhong Liu, and Zheng Gao. 2018. Neu-ral related work summarization with a joint context-driven attention mechanism. In Proceedings of the 2018 Confer-ence on Empirical Methods in Natural Language Process-ing , pages 1776–1786, Brussels, Belgium. Association for Computational Linguistics. Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, brian ichter, Fei Xia, Ed Chi, Quoc V Le, and Denny Zhou. 2022. Chain-of-thought prompting elicits reasoning in large language models. In Advances in Neural Informa-tion Processing Systems , volume 35, pages 24824–24837. Curran Associates, Inc. Jules White, Quchen Fu, Sam Hays, Michael Sandborn, Carlos Olea, Henry Gilbert, Ashraf Elnashar, Jesse Spencer-Smith, and Douglas C. Schmidt. 2023. A prompt pattern catalog to enhance prompt engineering with chatgpt. Preprint ,arXiv:2302.11382. Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, Ahmed Hassan Awadallah, Ryen W White, Doug Burger, and Chi Wang. 2023. Autogen: Enabling next-gen llm applications via multi-agent conversation. Preprint ,arXiv:2308.08155. Yuhuai Wu, Markus Norman Rabe, DeLesley Hutchins, and Christian Szegedy. 2022. Memorizing transformers. In   
+
+> The Tenth International Conference on Learning Repre-sentations, ICLR 2022, Virtual Event, April 25-29, 2022 .OpenReview.net. Wen Xiao, Iz Beltagy, Giuseppe Carenini, and Arman Co-han. 2022. PRIMERA: Pyramid-based masked sentence pre-training for multi-document summarization. In Pro-ceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,pages 5245–5263, Dublin, Ireland. Association for Com-putational Linguistics. Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R. Narasimhan, and Yuan Cao. 2023. React: Syn-ergizing reasoning and acting in language models. In The Eleventh International Conference on Learning Represen-tations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . Open-Review.net.
+
+A Algorithmic and Methodological Details 
+
+This section provides algorithmic and methodolog-ical details for the proposed framework. 
+
+A.1 Pseudocode of the Proposed Framework 
+
+Appendix A.1 summarizes the full training, sam-pling, and inference procedure of CREW. Algo-rithm 1 shows how agents interact with shared ar-tifacts over multiple rounds, collect rewards from artifact quality improvements, update the shared IPPO, and finally generate the related work draft through learned action sampling at inference time. 
+
+A.2 Reward Formulation 
+
+This appendix details our reward function, which defines component-wise quality improvement re-wards for four artifacts: draft, local knowledge, global knowledge, and feedback. These rewards provide dense and interpretable learning signals that encourage agents to produce coherent, informa-tive, and target-paper-relevant related work drafts. Draft-level improvement is measured against the human-written related work section, denoted as 
+
+egold .(i) Draft quality bQD evaluates semantic relevance alongside a compression-density score, using loss-less compression as a lightweight proxy for textual regularity (Li et al., 2004): 
+
+bQD = γD, 1 c(D, gold) + γD, 2 (1 − C(D)/|D|),
+
+(16) where C(D) is the lossless compressed byte-length and |D| is the original byte-length of the draft. (ii) Local quality bQL balances relevance and topic density against a redundancy penalty: 
+
+bQL = γL, 1 c(Li, gold) + γL, 2 c(Li, tgt) − γL, 3 ρi,
+
+(17) where c(Li, tgt) evaluates how topically focused the readings are, and ρi = max h∈H i c(Li, h ) pe-nalizes semantic overlap with the agent’s recent reading history Hi.(iii) Global quality bQG rewards alignment with the gold standard, semantic novelty relative to prior shared knowledge Gt−1, and lexical distributional similarity to the gold standard: 
+
+bQG = γG, 1 c(G, gold) + γG, 2 (1 − c(G, G t−1)) + γG, 3 (1 − JS( pG∥pgold )) , (18) where JS( ·∥· ) measures lexical coverage of the global knowledge against the gold standard, since lower distributional divergence indicates that G
+
+covers a more similar set of unigram evidence (Lin, 1991). (iv) Feedback quality bQF measures whether the critique targets draft deficiencies, using the gap vector g = egold − eD:
+
+bQF = c(eF , g) . (19) 
+
+A.3 Joint Action and Credit Assignment Joint Collaboration. When multiple agents si-multaneously perform actions that modify shared resources, namely Disseminate, Critique, and Com-pose, our framework employs a segment-level co-ordination mechanism. Each agent selects the text segment it is most confident in editing and reports a confidence score ci ∈ [0 , 1] in JSON format. Be-cause agents have distinct observations shaped by their individual exploration trajectories, they nat-urally gravitate toward different segments, mirror-ing human collaboration in which authors refine different parts of a manuscript in parallel. The en-vironment then merges these edits into a cohesive document. If multiple agents select the same seg-ment, the agent with the highest confidence score 
+
+ci is granted editing rights. Algorithm 1 CREW with Independent PPO 
+
+Input: Target paper p, paper database P, citation graph G, agents A = {Ai}Mi=1 , horizon T
+
+Output: Final related-work draft DT
+
+1: Initialize shared actor model πθ and shared critic model Vϕ.2: while step < step max do 
+
+3: // Loop through training steps 
+
+4: Initialize shared batch buffer W ← ∅ .5: while W does not reach a predefined size do 
+
+6: Create M empty episode caches E1, . . . , E M
+
+7: Initialize shared states D0, G 0, F 0, C 0 ← ∅ 
+
+8: // Reset the environment 
+
+9: Initialize local memory L0 
+
+> i
+
+← ∅ for each Ai
+
+10: for t = 1 to T do 
+
+11: for each agent Ai ∈ A in parallel do 
+
+12: Observe oit = OBSERVE (Dt−1, G t−1, F t−1, C t−1, L it−1)
+
+13: Sample ait ∼ πθ (· | oit), where ait ∈ { Retrieve, Disseminate, Critique, Compose }
+
+14: if ait = Retrieve then 
+
+15: (Lit, C t) ← RETRIEVE (Lit−1, C t−1, P, G)
+
+16: else if ati = Disseminate then 
+
+17: Gt ← DISSEMINATE (Lit, G t−1)
+
+18: else if ati = Critique then 
+
+19: Ft ← CRITIQUE (Dt−1, L it, G t−1)
+
+20: else if ati = Compose then 
+
+21: Dt ← COMPOSE (Dt−1, G t−1, L it, F t−1, C t−1)
+
+22: end if 
+
+23: rit ← REWARD (Dt, G t, F t, C t, L ti )
+
+24: Store (oit, a it, r it, log πθ (ait | oit), V ϕ(oit)) into cache Ei
+
+25: end for 
+
+26: end for 
+
+27: for each agent Ai ∈ A do 
+
+28: Append cache Ei into the shared batch buffer W.29: end for 
+
+30: end while 
+
+31: // Stop sampling, start training 
+
+32: Estimate advantages ˆA with GAE on the shared batch W
+
+33: Compute actor loss Jπ (θ) and critic loss JV (ϕ) on the shared batch W
+
+34: Update shared parameters θ and ϕ using Adam and gradient clipping 35: end while 
+
+36: Inference: At inference time, each agent samples its action from the learned shared policy, ait ∼ πθ (· | oit), over T rounds, and the final draft DT is returned. 
+
+We formalize the likelihood of such overlap us-ing the Birthday Problem and Stirling’s approxima-tion (Feller, 1968). Under a strictly uniform ran-dom policy, which serves as a worst-case baseline where agents select shared actions with probability 
+
+p = 3 /4 and choose segments uniformly, the un-conditional probability of overlapping edits for M
+
+agents across K segments is approximated as: 
+
+P (overlap) ≈
+
+> M
+
+X
+
+> n=2
+
+
+
+1 − exp 
+
+
+
+− n(n − 1) 2K
+
+ 
+
+×
+
+Mn
+
+  34
+
+n  14
+
+M −n
+
+.
+
+(20) For example, with M = 3 agents and K = 6 seg-ments, the overlap probability is only ≈ 25 .78% ,suggesting that parallel co-editing remains efficient with limited coordination overhead. 
+
+Credit Assignment. Once the joint draft is gener-ated, it is evaluated to compute a global reward. To fairly distribute this shared reward among partici-pating agents, we draw inspiration from the coun-terfactual multi-agent policy-gradient framework COMA (Foerster et al., 2018) and apply difference rewards. Formally, the difference reward for agent i
+
+is defined as: 
+
+Di(z) = G(z) − G(z−i), (21) where G(z) is the global evaluation score of the fully composed text z, and G(z−i) is the score of the text synthesized without the contributions of agent i.
+
+B Dataset Construction and Citation Graph 
+
+To ensure a rigorous and reproducible evaluation of the generated related work sections, this appendix Figure 3: Citation graph construction and agent traversal in CREW. The target paper is assigned the sentinel ID −1
+
+> and linked to its cited references to form the working citation graph. Agents then traverse the graph under local observation, selecting reachable citations and incrementally updating their reading histories.
+
+provides detailed information on the processing of the OAR ELATED WORK dataset. 
+
+B.1 OARelatedWork Dataset 
+
+We leverage the OAR ELATED WORK dataset, which contains 91,445 academic papers stored in JSONL format. Each paper record includes five fields: a unique integer id , title , abstract ,
+
+related_work (the gold-standard related work sec-tion), and referenced (the list of cited paper IDs). In our experiments, we split the dataset into two non-overlapping subsets for policy learning and experimental evaluation. Specifically, we use 2% of the papers for training and 0.4% of the papers for evaluation. The training subset is used to opti-mize both the actor and critic networks during PPO training: the actor learns agents’ action-selection policies, while the critic estimates value functions for evaluating state-action trajectories. The evalua-tion subset is kept disjoint from the training subset, ensuring that no target paper used for training ap-pears in the test set. 
+
+B.2 Citation Graph Construction 
+
+From the OAR ELATED WORK dataset, we con-struct a directed citation graph G = ( V, E), as il-lustrated in Figure 3. The graph is initialized from the target paper, assigned the sentinel ID −1, and its connected reference papers; agents then traverse valid citation transitions to select and read papers, producing agent-specific trajectories and local his-tories. We represent the graph as two adjacency lists: – Outgoing adjacency (citation_adj_out ): For each paper pi, the list of papers it cites, i.e., Nout (pi) = {pj | ei,j ∈ E} .– Incoming adjacency (citation_adj_in ): For each paper pi, the list of papers that cite it, i.e., Nin (pi) = {pj | ej,i ∈ E} .During evaluation, a target paper Ptarget is se-lected from the dataset and assigned the sentinel ID 
+
+−1. Its outgoing citation edges are injected into the graph, and its direct neighbors (papers with at least 5 valid connections) serve as the reference pool 
+
+P = Nout (Ptarget ) from which the multi-agent sys-tem must read and synthesize. The gold-standard 
+
+related_work field of Ptarget is used as the ground truth for evaluation. 
+
+C Evaluation metrics 
+
+C.1 LLM-as-a-judge 
+
+Evaluating long-form academic text generation is inherently complex, as traditional n-gram metrics fail to capture narrative flow, logical transitions, and citation discipline. We adopt an LLM-as-a-Judge protocol (using GPT-4o) scoring on a 1–5 Likert scale across three dimensions. 
+
+Coverage. Evaluates whether the generated re-lated work comprehensively covers all key areas. – Score 1: Limited coverage, touching small portions and lacking key areas. – Score 2: Covers some parts but has noticeable omissions of significant areas. – Score 3: Generally comprehensive but misses a few key points. – Score 4: Covers most key areas comprehen-sively, with only minor topics left out. – Score 5: Comprehensively covers all key and peripheral topics with detailed discussions. 
+
+Logic. Assesses the logical flow and structural coherence. – Score 1: Lacks logic, no clear connections between sentences. – Score 2: Weak logical flow, content arranged in a disordered manner. – Score 3: Reasonable structure, though transi-tions could be improved (e.g., repeating). – Score 4: Good logical consistency, natural transitions, only slightly rigid. – Score 5: Tightly structured, logically clear, smooth transitions without redundancy. 
+
+Relevance. Evaluates focus on the target paper’s core subject. – Score 1: Outdated or unrelated to the field, no alignment with the topic. – Score 2: Somewhat on topic but with several digressions. – Score 3: Generally on topic despite minor unrelated details. – Score 4: Mostly on topic and focused, without frequent digressions. – Score 5: Exceptionally focused, seamlessly contributing to core topic understanding. 
+
+C.2 Citation Verification 
+
+To complement LLM-based quality evaluation, we further assess whether the generated related work draft is grounded in the provided citation database. A high-quality draft should not only be coherent and relevant, but also cite the correct papers from the available reference pool without introducing unsupported or hallucinated references. We there-fore use citation verification to measure the validity of citations produced in the generated draft. Let ˆC(D) denote the set of paper IDs cited in a generated draft D, and let Pref denote the valid reference pool associated with the target paper. We define citation verification as the proportion of gen-erated citations that can be correctly matched to valid papers in the reference pool: 
+
+CV( D) = 
+
+ˆC(D) ∩ P ref 
+
+max 
+
+
+
+1, ˆC(D)
+
+ . (22) A higher CV( D) indicates that the generated draft cites papers grounded in the provided reference pool, while a lower score suggests the presence of invalid, unsupported, or hallucinated citations. 
+
+D Implementation Details 
+
+In this section, we provide the comprehensive setup details required to reproduce our framework, in-cluding system configurations, specific hyperpa-rameter choices for IPPO, and the network archi-tectures. 
+
+D.1 System and Training Setup 
+
+Our behavioral policy is optimized using IPPO, driven by the open-weight Qwen 2.5 72B Instruct 
+
+model to ensure robust local reasoning during cen-tralized training. The training setup involves a shared Actor and Critic network (Parameter Shar-ing) for multi agents interacting globally. The train-ing is conducted for 3 training epochs, with K = 4 
+
+PPO optimization epochs per update and an episode horizon (max rounds) of 15 steps per paper. Ac-tions are capped to a context length of 6144 tokens, and GPU memory utilization is scaled dynamically. For inference to demonstrate policy transferabil-ity, we swap the generation engine with LLaMA 8B, Gemini 2.0 Flash, Qwen 2.5 72B Instruct, and GPT-4o. Table 6 summarizes the core IPPO hyper-parameters, LLM settings, reward coefficients, and network configurations. 
+
+D.2 Network Architectures 
+
+The shared actor–critic layer configurations, includ-ing parameter counts, are detailed in Table 6. The observation vector contains 20 dimensions derived from graph features, draft quality, and social met-rics. 
+
+D.3 Baselines Detailed Analysis 
+
+To accurately situate the performance of our frame-work within the current literature, we compare CREW against three groups of baseline paradigms: multi-agent methods, single-agent LLM methods, and abstractive supervised models. Multi-Agent Methods. We include two multi-agent baselines. Select, Read, and Write 
+
+(SRW) (Liu et al., 2025) is a specialized architec-ture for related-work generation that decomposes the task into selector, reader, and writer roles. For a fair comparison with our experimental budget, we run SRW for 15 rounds of select-read interac-tions, followed by one final write round to generate the related-work section. This setting preserves SRW’s intended multi-stage evidence-gathering workflow while matching the number of interaction rounds used in our experiments. We also compare against an Orchestrator baseline inspired by Hug-gingGPT (Shen et al., 2023). It keeps the same shared documents, agent pool, and action space as CREW but replaces the learned IPPO decision-making policy with a centralized LLM coordinator. The Orchestrator is run for the same 15 rounds as CREW and assigns actions to individual agents from the full system state. This baseline tests whether CREW’s gains come from reinforcement-learned decentralized coordination rather than sim-ply from using multiple agents and shared working memory. 
+
+Single-Agent LLM Methods. We evaluate GPT-4o under two single-agent settings. In GPT-4o (Long Context) , the model receives the target pa-per context and the available reference informa-tion in a single prompt, then directly generates the related-work section. This setting represents a monolithic generation strategy that relies on the model’s long-context reasoning ability. In GPT-4o (RAG) , we first retrieve the most relevant chunks using embedding-based similarity and then prompt GPT-4o with the retrieved evidence, representing a standard retrieval-augmented search-and-generate pipeline. 
+
+Abstractive Models. PRIMERA (Xiao et al., 2022) is a supervised sequence-to-sequence model pre-trained for multi-document summarization. We adapt it to related-work generation on OAR E-
+
+> LATED
+
+WORK , using it as an abstractive baseline that tests how far a specialized summarization model can go without explicit multi-agent reason-ing, citation-graph exploration, or adaptive action selection. 
+
+D.4 System Hyperparameters and Configurations 
+
+We implemented CREW in Python 3.12.12 and used PettingZoo (Terry et al., 2021) to construct the multi-agent reinforcement learning environment. 
+
+Table 6: System hyperparameters and configurations used in CREW.                                                           
+
+> Category Notation Description Value RL
+> αωActor learning rate 3×10 −4
+> αϕCritic learning rate 1×10 −3
+> γDiscount factor 0.99
+> λGAE parameter 0.95
+> ϵClipping threshold 0.2
+> KPPO epochs 4
+> ceEntropy coefficient 0.01
+> TRollout steps 15
+> LLM
+> τTemperature 0.3
+> pTop-psampling 0.9
+> Nmax Max output tokens 1400
+> Reward
+> γD, 1Draft quality coefficient 0.8
+> γD, 2Draft quality coefficient 0.2
+> γL, 1Local quality coefficient 0.5
+> γL, 2Local quality coefficient 0.3
+> γL, 3Local quality coefficient 0.2
+> γG, 1Global quality coefficient 0.5
+> γG, 2Global quality coefficient 0.3
+> γG, 3Global quality coefficient 0.2
+> Network
+> π1Policy hidden layer 1 672
+> π2Policy hidden layer 2 1056
+> π3Policy output layer 3 132
+> V1Value hidden layer 1 672
+> V2Value hidden layer 2 1056
+> V3Value output layer 3 33
+
+All actor–critic components were trained locally on a workstation equipped with an NVIDIA RTX A5000 GPU with 24GB of GDDR6 memory. LLM-based generation and evaluation were conducted through the OpenRouter API (OpenRouter, 2026), which provides a unified interface for accessing different language model backends. Unless other-wise specified, all baselines and ablation studies were run under the same software and hardware environment. Table 6 summarizes the system hy-perparameters and configurations used in CREW, including IPPO optimization settings, LLM decod-ing parameters, and reward coefficients. 
+
+E Scalability Analysis 
+
+Multi-Agent Collaboration. To further analyze the effect of agent collaboration, we conduct an additional experiment by varying the number of agents from 1 to 5 while keeping the same back-end language model for all settings. This ensures that the comparison reflects the contribution of the multi-agent organization rather than differences in model capability. For each configuration, we evaluate the generated related work quality, execu-tion time, and total token consumption. As shown in Table 7, increasing the number of agents gen-erally improves the quality scores, especially in logic and citation quality, since different agents can specialize in retrieval, feedback, knowledge updating, and writing. Meanwhile, execution time only increases moderately because agents can per-Table 7: Impact of scaling the number of collaborative agents on generation quality, citation grounding, and token consumption.                                                    
+
+> Number of Agents LLM-based Evaluation (Avg.) Citation Cost Efficiency Cov. ↑Logic ↑Rel. ↑Overall ↑Ver.(%) ↑Tokens ↓Time(s) ↓
+> 13.04 3.36 3.82 3.41 86.10 42.26K 359 23.41 3.69 4.27 3.79 100.00 90.64K 778 33.31 3.33 4.17 3.79 96.20 121.81K 644 43.44 3.73 4.27 3.82 99.33 198.74K 755 53.48 3.77 4.36 3.87 99.17 246.49K 833
+
+form several actions in parallel, although total to-ken usage grows with the number of agents. These results suggest that multi-agent collaboration pro-vides a better trade-off between generation quality and computational cost than a single-agent setup. 
+
+Discussion. Although parallel agents should ide-ally keep wall-clock time nearly stable, inference time increases mildly and then stabilizes in Ta-ble 7. This is largely due to OpenRouter API latency, which is external to our system. At timestep t, the system waits for the slowest agent, 
+
+Tt = max 1≤i≤M τ (t) 
+
+> i
+
+. If each agent indepen-dently experiences a delayed API response with probability p (Feller, 1968), and response time is Twait under delay and Tnormal otherwise, then 
+
+E[Tt] = Twait − (Twait − Tnormal )(1 − p)M . There-fore, lim M →∞ E[Tt] = Twait for 0 < p ≤ 1.Thus, API variability may raise latency, but the expected timestep duration remains bounded rather than growing unboundedly with the number of agents. 
+
+F Qualitative Experiments 
+
+F.1 Human Evaluation 
+
+To complement the automatic evaluation, we con-ducted a human evaluation on 20 papers randomly selected from the Artificial Intelligence domain. Following the evaluation protocol of SRW (Liu et al., 2025), three graduate students performed pairwise comparisons between outputs generated by CREW and SRW. The evaluators assessed each pair in terms of coverage, logic, relevance, and overall quality. CREW achieved win rates of 53% for coverage, 60% for logic, and 57% for relevance, yielding an average overall win rate of 56.7%. These results indicate that human judges consis-tently preferred CREW to SRW across all evalu-ation dimensions. This human preference closely aligns with the automatic comparison in Table 1, jointly demonstrating the effectiveness of CREW’s learned coordination in producing higher-quality related work; the qualitative example in Section F.2 further supports this conclusion by showing that CREW provides more citation-grounded synthesis and clearer connections between prior studies and the target paper than the baselines. 
+
+F.2 Case Study 
+
+We use a challenging target paper on tweet wikifica-tion to illustrate how CREW handles short-text en-tity linking, collective inference, graph-based semi-supervision, and low-label training while ground-ing claims in the provided citation pool. Figure 4 shows the target paper, and Figure 5 compares out-puts from CREW and the baselines. 
+
+G Prompt Templates 
+
+We present the detailed prompt templates that drive each agent action. The R ETRIEVE action is fur-ther organized into two sequential phases: paper selection , which selects candidate papers related to the target work, and paper reading , which reads the selected papers and extracts useful evidence for later writing. Other prompts are designed follow-ing common prompt-engineering practices (Brown et al., 2020; Wei et al., 2022; Yao et al., 2023; White et al., 2023; Liu et al., 2023), including role specification, explicit task instructions, step-by-step task decomposition, and output format con-straints. These designs help reduce ambiguity and make the generated outputs more stable and easier to evaluate (Liu et al., 2025). Target Paper for Qualitative Case Study Title. Collective Tweet Wikification based on Semi-supervised Graph Regularization 
+
+Abstract. Wikification for tweets aims to automatically identify each concept mention in a tweet and link it to a concept referent in a knowledge base such as Wikipedia. Due to the shortness of a tweet, a collective inference model incorporating global evidence from multiple mentions and concepts is more appropriate than a non-collective approach that links each mention independently... To identify semantically related mentions for collective inference, it detects meta path-based semantic relations through social networks. Compared with a strong supervised baseline trained from 100% labeled data, the proposed approach achieves comparable performance with 31% labeled data and obtains a 5% absolute F1 gain with 50% labeled data. 
+
+Figure 4: Qualitative case-study target paper. The framed title and abstract of the target paper. 
+
+GPT-4o (RAG) 
+
+The task of wikification for tweets, which involves linking con-cept mentions in tweets to corresponding entries in a knowledge base, shares similarities with various challenges in entity link-ing and relation extraction... Distant supervision, as explored in studies [110538048, 26702637, 5884944], utilizes existing knowledge bases to generate training data by aligning known facts with text. However, this approach often introduces noise due to incorrect assumptions about entity relationships, neces-sitating methods to mitigate this issue, such as the label-free distant supervision method proposed in [26702637]... Overall, the intersection of distant supervision, collective inference, and context expansion techniques provides a robust framework for addressing the challenges of wikification in tweets. 
+
+GPT-4o (Long Context) 
+
+... Local methods, such as those employed by SemTag (Dill et al., 2003) and Wikify! (Mihalcea and Csomai, 2007), focus on resolving each mention independently by considering the simi-larity between a mention and an entity... Recent advancements have focused on semi-supervised and unsupervised learning techniques to mitigate the reliance on large labeled datasets. For instance, semi-supervised methods, such as those explored by Druck et al. (2008) and Bellare et al. (2009), incorporate unlabeled ...In the domain of semi-supervised learning, tech-niques such as graph-based label propagation (Wang and Co-hen, 2007) and posterior regularization (Ganchev et al., 2010) have shown promise in effectively utilizing both labeled and unlabeled data. These methods are particularly advantageous in scenarios where ... 
+
+PRIMERA 
+
+Collective Tweet Wikification based on Semi-supervised Graph Regularization. Wikification for tweets aims to automatically identify each concept mention in a tweet and link it to a con-cept referent in a knowledge base, e.g., Wikipedia. In order to identify semantically related mentions for collective inference, we detect meta path-based semantic relations through social networks. Compared to the strong supervised baseline trained from 100% labeled data, our proposed approach achieves com-parable performance with 31% labeled information and obtains 5% absolute F1 gain with 50% labelled data. 
+
+Select, Read and Write (SRW) 
+
+...One notable approach is the use of global coherence, where the relationships between multiple mentions...For instance, the work in “Efficient Collective Entity Linking with Stack-ing” [5310325] proposes a fast collective disambiguation method that combines local and global... Similarly, "Local and Global Algorithms for Disambiguation to Wikipedia" [7610609] analyzes the effectiveness of global...In summary, the integration of global evidence, context expansion, semi-supervised learning, graph-based methods, and collaborative ranking represents a promising direction... 
+
+CREW 
+
+The field of entity linking, particularly in the context of short texts like tweets, has seen significant advancements through the integration of collective inference models and graph-theoretic methods.... Efficient collective entity linking, as proposed by [5310325], addresses the challenge of disambiguating entity mentions in text by leveraging a stacking approach that combines local and global evidence.... Similarly, [9854940] explores the use of graph-theoretic methods, specifically centrality and regularization, to enhance class-instance label propagation. The work in [7610609] further contributes to this area by comparing local and global algorithms for disambiguation to Wikipedia. This study highlights the importance of utilizing the Wikipedia link structure to ensure coherent disambiguation, although it notes that local disambiguation remains a strong baseline. Our proposed semi-supervised graph regularization model builds upon these foundational works by incorporating both local and global evidence from multiple tweets through fine-grained relations, and by utilizing meta path-based semantic relations from social networks to identify semantically related mentions Our proposed semi-supervised graph regularization model builds upon these foundational works by incorporating both local and global evidence.... 
+
+Figure 5: Case study comparing related work generation outputs from GPT-4o (Long Context), GPT-4o (RAG), Primera, SRW, and CREW. Red highlights mark problematic content such as unsupported citations, weak synthesis, target-abstract copying, or list-like summaries. Green highlights show CREW’s citation-grounded synthesis and its ability to connect prior works to the target paper. Retrieve Action Prompt: Phase 1 – Paper Selection 
+
+System Prompt: You are a research worker with excellent paper reading skills. 
+
+User Prompt: You are helping write the Related Work section of a scientific paper. Your task is to choose the next paper section to read that adds the most new knowledge, not more of the same. 
+
+Inputs: Citation graph: {graph}; current paper (id= −1 = paper being written): {paper_details}; cited papers: {cited_papers}; citing papers: {citing_papers}; working memory: {working_memory}; reading history: {read-ing_history}; team global knowledge: {global_knowledge}. 
+
+Mandatory Reasoning: (1) Coverage audit: list research themes already covered across your memory and team global knowledge, or write “Coverage: empty.” (2) Gap identification: list 2–3 themes not yet covered, considering different method types, modalities, problem formulations, time periods, and contrastive approaches. (3) Candidate scoring: score unread candidates HIGH if their abstract addresses a gap and LOW if their themes are already covered. (4) Selection: pick the highest-scoring HIGH candidate; if all are LOW, choose the one least similar to global knowledge. 
+
+Hard Rules: Never select a paper whose themes are more than 60% covered in global knowledge. Never select a paper whose abstract overlaps more than 60% with reading history. If you have read 2+ papers on the same technique, switch clusters. The section must exist exactly in the paper’s structure list: abstract 
+
+or related_work . Never repeat a (paper_id, section) pair from reading history. Prefer related_work over 
+
+abstract when available. 
+
+Output Format: Return one JSON object only: {{"id": <paper_id>, "section": "<section_name>", "rationale": "<which gap this fills and why it is not already in global knowledge>"}} .
+
+Figure 6: Prompt template for the RETRIEVE action, Phase 1: Paper Selection. 
+
+Retrieve Action Prompt: Phase 2 – Paper Reading 
+
+System Prompt: You are a research worker with excellent paper reading skills. 
+
+User Prompt: You are updating a short working memory ( ≤4096 tokens) for writing the Related Work section. 
+
+Inputs: Current paper: {cur_paper}; cited papers: {cited_paper}; just-read section: {section} of paper {pa-per_id}; verbatim content: {content}; reading history: {reading_history}; previous memory: {memory}; current draft: {draft}; global knowledge: {global_knowledge}. 
+
+Novelty Gate: Before writing, state in one sentence the primary contribution of paper {paper_id}. Then check whether this contribution already appears in memory, draft, or global knowledge. If it is more than 60% overlap-ping, use minimal mode; if genuinely new, use full extraction. 
+
+Extraction Rules: Minimal mode extracts one distinctive sentence with [ID]. Full extraction extracts 2–4 sen-tences covering the new method, dataset, finding, contrast, or limitation. Preserve only claims grounded in the provided content and cite using the paper ID in square brackets. 
+
+Output Requirements: Return the updated working memory as plain text. No JSON and no markdown. 
+
+Figure 7: Prompt template for the RETRIEVE action, Phase 2: Paper Reading. 
+
+Critique Action Prompt 
+
+System Prompt: You are a researcher worker with excellent knowledge synthesis skills, specializing in provid-ing constructive academic feedback. 
+
+User Prompt: Synthesize feedback insights from your Local Knowledge and integrate them into the existing Shared Feedback to create a unified, high-quality feedback reference for the Related Work draft. 
+
+Inputs: Current draft: {draft}; local knowledge: {local_knowledge}; global knowledge base: {global_knowledge}; current shared feedback: {current_feedback}. 
+
+Evaluation Dimensions: If current feedback is empty, generate a comprehensive feedback outline evaluating coverage, logic, relevance, diversity, and citation quality. For each dimension, score 1–5 and provide specific edits. Diversity is critical: check whether multiple methodologies, paradigms, and viewpoints are represented, and flag over-reliance on one cluster or technique. Citation quality checks unsupported claims, citation dumping, invented IDs, and whether citations are anchored inline. 
+
+Synthesis Rules: Merge overlapping critiques, lead with the highest-impact problems, make every critique actionable with a concrete fix or suggested rewrite, and resolve contradictory prior feedback by keeping the stricter version. 
+
+Output Requirements: Return the updated synthesized feedback as plain text. No JSON and no markdown. 
+
+Figure 8: Prompt template for the CRITIQUE action. Compose Action Prompt: 
+
+System Prompt: You are a research worker with excellent paper writing skills. 
+
+User Prompt: Finalize the Related Work section of a scientific paper. 
+
+Target Context: Paper abstract: {abstract}; cited papers: {cited_paper}. 
+
+Research Intelligence: Local knowledge: {local_knowledge}; global knowledge: {global_knowledge}. 
+
+Collaboration: Existing draft: {draft}; peer feedbacks: {feedbacks}. 
+
+Strict Instructions: Group studies by theme rather than summarizing papers in isolation. Use only paper IDs from {cited_paper}; never invent IDs or use numeric indices like [1]. Ensure every claim is supported by pro-vided knowledge. Use formal academic tone and limit length to approximately 500–700 words. If a draft exists, refine it for consistency and feedback rather than rewriting unnecessarily. Every paragraph must start with a clear thematic topic sentence. 
+
+Output Format: Return only a JSON object: {{"related_work": "..."}} .
+
+Figure 9: Prompt template for the COMPOSE action. 
+
+Disseminate Action Prompt 
+
+System Prompt: You are a researcher worker with excellent knowledge synthesis skills, capable of organizing complex information into clear and logical insights. 
+
+User Prompt: Synthesize new insights from your Local Cache and integrate them into the existing Shared Knowledge Base to create a unified, high-quality reference for the entire agent network. 
+
+Inputs: Current shared knowledge base: {shared_knowledge}; new information from local cache: {lo-cal_cache}. 
+
+Quality Rules: If shared knowledge is empty, first generate a professional thematic outline and then append synthesized content into the outline. Do not simply append; merge overlaps, enrich existing points, and place new information logically. Group related concepts, explain relationships, and highlight contrasts using integrative phrasing such as “While [ID1] focuses on X, [ID2] addresses Y by ...”. Resolve contradictions when possible or document divergent views with citations. 
+
+Citation Rules: Preserve citations using only paper IDs in square brackets. Cite an ID only when the claim is explicitly supported by Local Cache or current Shared Knowledge. Do not invent claims during synthesis. Citations must appear in the same sentence immediately after supported claims; do not place large citation lists at paragraph ends. Remove untraceable citations. 
+
+Output Requirements: Return the updated Shared Knowledge as plain text. No JSON and no markdown. 
+
+Figure 10: Prompt template for the DISSEMINATE action. 
+
+Long Context Synthesis Prompt 
+
+System Prompt: You are an expert researcher with excellent paper writing skills. 
+
+User Prompt: You are writing the Related Work section of a scientific paper. 
+
+Target Context: Paper abstract: {abstract}. 
+
+Neighbor Abstracts: {neighbor_abstracts}. 
+
+Strict Instructions: Synthesize abstracts into a professional Related Work section. Group studies by theme and do not summarize papers in isolation. Use only paper IDs from the provided list in square brackets. Maintain a formal academic tone and limit length to approximately 600–800 words. Every paragraph must start with a clear thematic topic sentence. 
+
+Output Format: Return only a JSON object: {{"related_work": "..."}} .
+
+Figure 11: Prompt template for long-context synthesis. Orchestrator Prompt 
+
+System Prompt: You are a senior research coordinator managing a team of AI research agents that collabora-tively write a Related Work section. At each round, assign exactly one action to each agent to coordinate the team efficiently. 
+
+Available Actions: SEARCH reads a new paper and updates local memory; U PDATE synthesizes local memory into the shared global knowledge; W RITE drafts or refines the Related Work section; F EEDBACK reviews the current draft and provides constructive revision suggestions. 
+
+Inputs: Round index: {round_num}/{max_rounds}; target title: {paper_title}; target abstract: {abstract}; cur-rent draft preview: {draft_preview}; global knowledge preview: {global_preview}; shared feedback preview: {feedback_preview}; agent states: {agent_states}; recent action history: {action_history}. 
+
+Coordination Rules: Promote action diversity across agents; prioritize S EARCH and U PDATE when knowledge is sparse; use W RITE once sufficient evidence has been gathered; alternate W RITE and F EEDBACK when a draft exists; avoid assigning actions that are ineffective for an agent’s current local memory; balance work so that all agents contribute. 
+
+Phase Guidance: In early rounds, build coverage through searching and updating. In middle rounds, balance additional evidence gathering with writing. In late rounds, focus on writing and feedback to polish the draft. 
+
+Output Format: Return only valid JSON with a brief reasoning field and an assignments object mapping each agent ID to {"action": "<SEARCH|UPDATE|WRITE|FEEDBACK>", "rationale": "<why>"} . Do not output any extra text. 
+
+Figure 12: Prompt template for the centralized orchestrator baseline.

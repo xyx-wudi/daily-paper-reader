@@ -1,0 +1,93 @@
+Title: Multi-Agent Reinforcement Learning in Markets with Congestion
+
+URL Source: https://arxiv.org/pdf/2609.14827v1
+
+Published Time: Tue, 15 Sep 2026 01:41:35 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# Multi-Agent Reinforcement Learning in Markets with Congestion 
+
+Qixuan Zai, Randall Berry 
+
+Department of Electrical and Computer Engineering Northwestern University, Evanston, IL 60208, USA 
+
+Emails:{QixuanZai2028@u.,rberry@}northwestern.edu 
+
+## Abstract 
+
+This paper investigates multi-agent reinforcement learning (MARL) in settings where firms compete for customers using congestible resources. We consider Bertrand competition in which firms compete by announcing prices and customers choose among firms based on both price and congestion. The relationship between price, congestion and the quantity of customers willing to accept service is governed by an unknown inverse demand curve, which firms must learn through experience. Each firm is modeled as a self-interested learning agent that chooses its price to maximize profit. A growing literature has shown that independently learning MARL agents can develop tacitly collusive behavior. We examine how such behavior emerges in markets with congestible resources. Our results provide insight into how learning dynamics, state representation, and strategic interaction jointly shape competition, with implications for both economic learning and the design of learning-enabled markets. 
+
+## 1 Introduction 
+
+Many markets involve firms that compete for customers while sharing resources whose quality depends on the level of usage. Examples include cloud computing, where competing providers allocate capacity subject to congestion and performance constraints. In such markets, a firm’s competitive decisions affect not only the prices customers face but also the quality of service available through the shared resource. These congestion externalities create strategic interactions that are absent from conventional models of price competition. Existing congestion-based market models generally assume that market demand is known to all competing firms, enabling analytical characterization of equilibrium strategies [6]. In practice, however, firms rarely possess complete knowledge of demand, which evolves over time as user preferences, competing technologies, and market conditions change [3]. We instead formulate repeated Bertrand competition over shared resources as a MARL problem in which competing firms adapt their pricing strategies in the face of unknown demand. While a linear inverse demand function is assumed to derive analytical benchmarks and characterize equilibrium behavior, the learning agents are not given this demand model. Instead, using deep Q-learning, they learn pricing strategies solely through repeated interactions with the environment. We investigate whether competing firms converge to competitive or collusive outcomes and how these outcomes depend on the information available to learning agents and their exploration behavior. 
+
+## 2 System Model 
+
+We consider a shared-resource market consisting of N firms. Our model extends the congestion-market framework of [12, 11, 8] by replacing the assumption of complete demand information with 
+
+> Preprint. arXiv:2609.14827v1 [cs.GT] 13 Sep 2026
+
+repeated learning. While the market follows the same congestion and Wardrop equilibrium structure as prior work, competing firms do not know the underlying demand function and must instead learn effective pricing strategies from observed market outcomes. Firms, indexed by i = 1 , . . . , N , share access to a common resource with capacity We and compete for a common pool of non-atomic customers. Let xi denote the amount of users served by firm i
+
+and let x = ( xi)Ni=1 . The quality of service experienced by users is determined by congestion on the resource, modeled through a convex increasing congestion cost 
+
+ˆg (x) ≜ g
+
+ XWe
+
+
+
+, (1) where X = PNi=1 xi.Each firm collects a fixed service price pi from each user it serves, yielding a revenue of xipi.1 The delivered price of a firm i is the sum of its service price and the congestion of its service, i.e., pi + ˆ g(x)
+
+for 1 ≤ i ≤ N . Customer demand is characterized by an unknown inverse demand function P (X),where P (X) denotes the maximum delivered price that can be sustained when the total demand is 
+
+X. Note that the demand function depends on the delivered price, which models customers that care about both the price they pay for service and the quality of service. The amount of users served by each firm and the announced prices satisfy the Wardrop equilibrium conditions, that is, the delivered prices of all firms that are serving users are the same and are the maximum price that can be accepted by all the customers serviced [10]. If a firm i is not serving any customers, then its delivered price must be greater than or equal to P (X). This can be expressed as 
+
+P (X) ≤ pi + ˆ g(x), 1 ≤ i ≤ N, P (X) = pi + ˆ g(x), for all i with xi > 0 (2) The market is characterized by an unknown inverse demand function P (X), which is not revealed to the learning agents. In each interaction, providers observe the resulting market outcome but do not observe the underlying demand function or competitors’ private decision process. 
+
+2.1 Bertrand Congestion Competition 
+
+Under Bertrand competition, service providers compete by selecting service prices. The resulting customer allocation is determined endogenously through the Wardrop equilibrium conditions in (2), which couple the announced prices, congestion costs, and total market demand. This model captures markets in which providers compete directly on price while customers choose the provider offering the lowest delivered price. Classical Bertrand theory predicts that firms offering homogeneous products compete prices down to marginal cost, yielding the well-known Bertrand paradox [1, 9]. In contrast, recent work has demonstrated that reinforcement-learning agents may instead converge to tacitly collusive pricing strategies without explicit communication [2, 7, 4]. A primary objective of this paper is to determine how parameters of learning algorithms in congestion-based markets influence the learned pricing behavior. Each firm seeks to select its announced service price to maximize its revenue given by xipi, where the demand allocated to each firm depends on the prices announced by all competing providers together with the resulting congestion costs. 2
+
+## 3 Multi-Agent Reinforcement Learning 
+
+Now we consider a setting where each firm is a learning agent that repeatedly plays a Bertrand game with congestion as in the previous section. At each round, all firms simultaneously select prices, which lead to a market equilibrium of users. The immediate reward a firm obtains is then its revenue ri = pixi. The agents do not know the underlying demand function and must instead learn effective strategies solely through repeated interaction with the environment. Each agent’s state 
+
+> 1We consider models with any cost normalized to zero so that revenue is equivalent to profit.
+> 2When multiple firms have the same delivered price, we assume that the demand is split evenly among them.
+
+2consists of the joint actions (prices) taken during the previous K rounds, providing a finite history of market behavior. The action space consists of a discrete set of allowable prices. Unlike much of the prior literature on algorithmic collusion, which typically uses tabular Q-learning [2, 7], we employ independent Deep Q-Network (DQN) agents [5], which extend more readily to larger or continuous state and action spaces. Each agent maintains its own value network and replay buffer, while treating the remaining agents as part of the environment. Standard experience replay and target networks are used to stabilize training. 
+
+## 4 Empirical Results 
+
+In this section we give several numerical examples to illustrate the impact of the number of firms, the state representation and the exploration decay rate, δ. For all plots we normalize the capacity as We = 1 and assume the inverse demand is given by P (X) = 1 − X, with a discrete price set given by 0.05 , 0.15 , 0.25 , . . . , 0.95 . Under these assumption, we derive the full-information Nash equilibrium and a collusive benchmark, where all firms coordinate to maximize total revenue. With discrete prices, the Bertrand game will always have a Nash equilibrium where all firms select the lowest price ( 0.05 ), but may also have others. In particular, for N = 2 firms, there is also a Nash equilibrium where all firms select p = 0 .15 . Figure 1 shows an example of the learning dynamics for 
+
+N = 2 firms when the K = 2 and δ = 0 .99 . In this example it can be seen that the firms eventually learn the Pareto-dominant Nash equilibrium with p = 0 .15 .
+
+Figure 1: Learning Dynamics for Bertrand Congestion Model over episodes when We = 1 , N = 2 ,
+
+K = 2 , δ = 0 .99 .
+
+Figure 2: Learning outcomes versus number of states for Bertrand Congestion Model with We = 1 ,
+
+N = 2 , δ = 0 .99 .Figure 2 presents results to show the impact of changing the state representation K, where all other parameters are the same as in Figure 1. Here, K = 0 correspond to a setting where agents use no state information and so are essentially in a bandit setting. In that case they always appear to find a Pareto-dominant Nash Equilibrium. As the state representation increases, they do sometimes learn to coordinate on high prices, but are well below the collusive benchmark. The amount of collusion appears to increase as K grows. We note that convergence to the Pareto-dominant Nash equilibrium, even in the stateless (bandit) setting, already reflects a mild form of coordination: with multiple static Nash equilibria available, 3agents consistently select the one more favorable to firms rather than the fully competitive price 
+
+p = 0 .05 . This is distinct from the tacit collusion documented in the literature, which sustains prices above any static Nash equilibrium through implicit reward-punishment dynamics across repeated play. Our results with larger K show collusion in this stronger sense, with prices exceeding the Pareto-dominant Nash benchmark. 
+
+Figure 3: Impact of Exploration Decay Rate on the Learning Dynamics for Bertrand Congestion Model over episodes when We = 1 , N = 2 , K = 2 , δ = 0 .9.Next, in Figure 3, we show one result for a lower exploration rate ( δ = 0 .9), where all other parameters are the same as in Figure 1. In this case the learned prices for both agents are around 0.35 which is greater than the Nash equilibrium benchmark, suggesting that they are learning to collude. 
+
+Figure 4: Impact of The Number of Agents on the Learning Dynamics for Bertrand Congestion Model over episodes when We = 1 , N = 3 , K = 1 , δ = 0 .99 .Finally in Figure 4 we show an example with N = 3 agents, again with all other parameters the same as in Fig. 1. For the parameters we are using, with N = 3 agents, the only Nash equilibrium is for all agents to choose the smallest price ( p = 0 .05 ), which is the outcome of this experiment. This is consistent with our analytical result that the Pareto-dominant Nash equilibrium from the N = 2 
+
+case does not survive at N = 3 , leaving only the fully competitive price, which is exactly what the learning agents converge to. 3
+
+## 5 Conclusion 
+
+This paper investigated how firms learn in congestion-based markets when market demand is un-known. We introduced a MARL framework for this setting and evaluated how adaptive learning algorithms navigate congestion externalities in Bertrand competition. We find evidence that the state representation, the exploration decay rate, and the number of firms all have an impact on the emergence of collusive prices, suggesting that market designers and regulators should weigh these factors when assessing collusion risk in learning-enabled markets. Future work could extend this analysis to alternative demand specifications and larger markets.     
+
+> 3Lowering δ, with N= 3 can again lead to higher prices, we do not show this due to space limitations.
+
+4References 
+
+[1] J. Bertrand. Théorie mathématique de la richesse sociale. Journal des Savants , 67:499–508, 1883. [2] E. Calvano, V. Denicolò, M. Vincenzo, and S. Pastorello. Artificial intelligence, algorithmic pricing, and collusion. American Economic Review , 110(10):3267–3300, 2020. [3] A. V. den Boer. Dynamic pricing and learning: Historical origins, current research, and new directions. Surveys in Operations Research and Management Science , 20(1):1–18, 2015. [4] V. Denicolò and E. Calvano. Artificial intelligence, algorithmic pricing and collusion. European Economic Review , 153:104386, 2023. [5] V. Mnih et al. Human-level control through deep reinforcement learning. Nature , 518(7540):529– 533, 2015. [6] R. Johari and J. N. Tsitsiklis. Efficiency loss in a network resource allocation game. Operations Research , 52(3):474–485, 2004. [7] T. Klein. Autonomous algorithmic collusion: Q-learning under sequential pricing. RAND Journal of Economics , 52(3):538–558, 2021. [8] Y. Liu, Q. Zai, and R. A. Berry. Wireless market competition with time/frequency prioritized spectrum sharing. In 23rd International Symposium on Modeling and Optimization in Mobile, Ad Hoc, and Wireless Networks (WiOpt) , pages 1–8, 2025. [9] J. Tirole. The Theory of Industrial Organization . MIT Press, 1988. [10] J. G. Wardrop. Some theoretical aspects of road traffic research. Proceedings of the Institution of Civil Engineers , 1(3):325–362, 1952. [11] Q. Zai, Y. Liu, and R. A. Berry. Poster: Comparison of market models for time/frequency prioritized spectrum sharing. In Proceedings of the 26th International Symposium on Theory, Algorithmic Foundations, and Protocol Design for Mobile Networks and Mobile Computing ,pages 409–410, 2025. [12] Q. Zai, Y. Liu, and R. A. Berry. Comparison of market models for time/frequency prioritized spectrum sharing. In Proceedings of EAI GameNets , 2026. 5

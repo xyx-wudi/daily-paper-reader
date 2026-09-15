@@ -6,26 +6,47 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-14
-- 运行时间：2026-09-14 22:08:16 UTC
+- 最新运行日期：2026-09-15
+- 运行时间：2026-09-15 22:41:16 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：8
+- 精读区：6
+- 速读区：2
 
 ### 今日简报（AI）
-2026-09-14 日报精选 2 篇强化学习论文，精读 1 篇、速读 1 篇。最值得看的是 8.0 分的《Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning for Autonomous Quad-Copter Landing in Maritime Settings》，聚焦海上自主四旋翼降落；速读的 7.0 分工作则关注部分可观测多智能体导航中的零样本对手适应。建议普通读者优先从精读这篇入手，了解课程学习与对抗异构智能体在复杂降落场景中的结合思路。
-- 详情：[/202609/14/README](/202609/14/README)
+- 今日共生成 8 篇推荐（精读 6 篇，速读 2 篇）
+- 精读：《LLM-Enhanced Multi-Agent Reinforcement Learning for Unified Electric Vehicles-Charging Station-Grid Optimization in Public Charging Systems》（9.0/10）, 《Learning Communication-Conditioned Generative Policies for Decentralized Multi-Agent Collision Avoidance》（9.0/10）
+- 速读：《Assembling the CREW: A Collaborative Multi-agent Reinforcement Learning Framework for Automated Related Work Generation》（7.0/10）, 《Predefined-Time Integral Reinforcement Learning for Saturated Unknown Nonlinear Multi-Agent Systems Under FDI Attacks and Disturbances》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202609/15/README](/202609/15/README)
 
 ### 精读区论文标签
-1. [Curriculum-Based Adversarial Heterogeneous Agent Reinforcement Learning for Autonomous Quad-Copter Landing in Maritime Settings](/202609/14/2609.12758v1-curriculum-based-adversarial-heterogeneous-agent-reinforcement-learning-for-autonomous-quad-copter-landing-in-maritime-settings)  
+1. [LLM-Enhanced Multi-Agent Reinforcement Learning for Unified Electric Vehicles-Charging Station-Grid Optimization in Public Charging Systems](/202609/15/2609.13805v1-llm-enhanced-multi-agent-reinforcement-learning-for-unified-electric-vehicles-charging-station-grid-optimization-in-public-charging-systems)  
+   标签：评分：9.0/10、query:marl
+   evidence：面向多方电动汽车充电协调的LLM增强MARL框架
+2. [Learning Communication-Conditioned Generative Policies for Decentralized Multi-Agent Collision Avoidance](/202609/15/2609.14268v1-learning-communication-conditioned-generative-policies-for-decentralized-multi-agent-collision-avoidance)  
+   标签：评分：9.0/10、query:marl
+   evidence：部分可观测下基于隐消息交换的去中心化多智能体碰撞避免
+3. [Learning Multi-Agent Task Assignment and Navigation in the Factory: from Simulation to Real Robots](/202609/15/2609.14567v1-learning-multi-agent-task-assignment-and-navigation-in-the-factory-from-simulation-to-real-robots)  
+   标签：评分：9.0/10、query:marl
+   evidence：面向多机器人任务分配与导航的去中心化多智能体强化学习及仿真到现实
+4. [High-Probability Nash Regret for Decentralized Learning in Markov $α$-Potential Games: Episodic and Fully Online Asynchronous Algorithms with Applications to Markov Congestion Games](/202609/15/2609.14959v1-high-probability-nash-regret-for-decentralized-learning-in-markov--potential-games-episodic-and-fully-online-asynchronous-algorithms-with-applications-to-markov-congestion-games)  
+   标签：评分：9.0/10、query:marl
+   evidence：马尔可夫博弈中分散式纳什均衡学习
+5. [Robust and Efficient Communication for Multi-Agent Learning](/202609/15/2609.15361v1-robust-and-efficient-communication-for-multi-agent-learning)  
+   标签：评分：9.0/10、query:marl
+   evidence：面向多智能体强化学习的鲁棒通信框架
+6. [Multi-Agent Reinforcement Learning in Markets with Congestion](/202609/15/2609.14827v1-multi-agent-reinforcement-learning-in-markets-with-congestion)  
    标签：评分：8.0/10、query:marl
-   evidence：使用异构智能体强化学习HAPPO结合课程与对抗智能体学习协同控制
+   evidence：竞争市场中的多智能体强化学习
 
 ### 速读区论文标签
-1. [Hierarchical Belief Modeling for Zero-Shot Opponent Adaptation in Partially Observable Multi-Agent Navigation](/202609/14/2609.12422v1-hierarchical-belief-modeling-for-zero-shot-opponent-adaptation-in-partially-observable-multi-agent-navigation)  
+1. [Assembling the CREW: A Collaborative Multi-agent Reinforcement Learning Framework for Automated Related Work Generation](/202609/15/2609.15721v1-assembling-the-crew-a-collaborative-multi-agent-reinforcement-learning-framework-for-automated-related-work-generation)  
    标签：评分：7.0/10、query:marl
-   evidence：部分可观测多智能体导航中具对手自适应的分层智能体
+   evidence：协同多智能体强化学习框架，让LLM智能体自主协调动作
+2. [Predefined-Time Integral Reinforcement Learning for Saturated Unknown Nonlinear Multi-Agent Systems Under FDI Attacks and Disturbances](/202609/15/2609.14075v1-predefined-time-integral-reinforcement-learning-for-saturated-unknown-nonlinear-multi-agent-systems-under-fdi-attacks-and-disturbances)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体系统建模为零和微分博弈并采用强化学习
 
 
 <div class="dpr-home-promo-card">
