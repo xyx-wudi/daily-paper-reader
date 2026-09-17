@@ -1,0 +1,887 @@
+Title: CoRe-MARL: Cooperative Redistribution Under Unknown Dynamics Using Recurrent Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2609.18639v1
+
+Published Time: Thu, 17 Sep 2026 01:33:06 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# CoRe-MARL: Co operative Re distribution Under Unknown Dynamics Using Recurrent Multi-Agent Reinforcement Learning 
+
+Naimur Rahman Chowdhury a, ∗, Shatabdi Sen Prapti b, Md. Salehin Seyam b,Limon Bin Hossain b
+
+> aThis work was done prior to joining Amazon. Industrial and Systems Engineering, North Carolina State University, Raleigh, NC, United States
+> bDepartment of Industrial and Production Engineering, Bangladesh University of Engineering and Technology, Dhaka, 1000, Bangladesh
+
+Abstract 
+
+Emergency management assistance programs, such as relief distribution, are essential for delivering necessary supplies to affected communities. However, these programs operate in a decentralized network of local centers that face uncertain local demand and supply dynamics, resulting in inconsistent avail-ability of local services. Redistribution of supplies among these local centers reduces these imbalances, but the centers often make decisions independently, with limited information and disrupted transportation. This study develops CoRe-MARL, a cooperative multi-agent reinforcement learning (MARL) frame-work, by formulating a decentralized partially observable Markov decision pro-cess (Dec-POMDP). We treat each center as an agent that learns a redistribu-tion policy to improve the service in the worst-case region and reduce the service gap across regions while protecting network-wide service. We incorporate a re-current network that captures evolving supply and demand dynamics without direct observation, while multi-agent proximal policy optimization (MAPPO) enables centralized training and decentralized execution (CTDE). We evaluate the framework in a simulated environment with diverse trajectories, where ex-act dynamics are not observed by actors and the MAPPO critic. We compare the recurrent MAPPO with the recurrent independent PPO (IPPO) and a local-only heuristic, and find that MAPPO reduces the service gap across local centers and enhances service for the worst-served center while maintaining competitive network-wide service. The recurrent MAPPO also shows consistent performance across diverse trajectory patterns, demonstrating its ability to adapt to evolv-ing dynamics. The findings demonstrate the capability of cooperative learning for decentralized redistribution and improving equitable service under uncertain        
+
+> ∗Corresponding author
+> Email addresses: nchowdh2@ncsu.edu (Naimur Rahman Chowdhury),
+> shatabdisprapti@gmail.com (Shatabdi Sen Prapti), 2208018@ipe.buet.ac.bd (Md. Salehin Seyam), mdlimonbinhossain@gmail.com (Limon Bin Hossain) arXiv:2609.18639v1 [cs.LG] 16 Sep 2026
+
+and evolving dynamics. 
+
+Keywords: Multi-agent reinforcement learning, Cooperative decision making, Recurrent policy learning 21. Introduction 
+
+Emergency assistance organizations, such as the Federal Emergency Manage-ment Agency (FEMA) and the American Red Cross, receive relief supplies and aim to distribute them to communities in need (Egan and Tischler, 2010). The timely distribution of emergency supplies, such as food, water, and medicine, is critical to meeting the immediate needs of these vulnerable communities. However, these assistance programs usually operate in a network of distribution centers to get critical supplies closer to communities in times of need (Özdamar and Ertem, 2015). The supplies arrive at distribution centers on an ad hoc basis, driven by the timing and origin rather than the spatial distribution of need. Moreover, road damage, traffic disruptions, and communication failures further degrade the predictability of inbound supplies. Hence, a center’s receipt of supply in any given period is only weakly correlated with the need in the surrounding affected regions (Barbarosoğlu et al., 2002). Due to the ad hoc na-ture of incoming supplies, some relief centers receive surpluses while others face acute shortages, even when the network as a whole might hold sufficient relief inventory. This imbalance is consequential, especially for perishable items. For perishable items, surplus stock that cannot be used locally within its shelf life may go to waste, which could otherwise be used to serve a center with insuf-ficient supplies. Redistribution, the transfer of resources between distribution centers after their initial allocation, is essential in this regard to serve areas that need immediate support from centers with surplus supplies. The existing literature on redistribution traditionally treats the problem as centralized planning. Rottkemper et al. (2011, 2012) develop models for op-timal inventory redistribution that address temporal changes in demand, and assume a single decision-maker with complete knowledge of the system. Pacheco and Batta (2016) also model the prepositioning of inventories based on hurri-cane forecasts from a central perspective. These approaches demonstrate that redistribution can improve outcomes when a planner has full visibility. How-ever, during emergencies, distribution centers operate with limited information about the rest of the network, relying on delayed, aggregated reports of other sites’ operations (Ye et al., 2020; Balcik et al., 2010). Centralized optimization, therefore, struggles to capture the day-to-day decisions of the relief centers. On the other hand, cooperation among centers is necessary to mitigate the imbalance in the network. For instance, a center with a surplus is unaware of which partner is most in need, and a center facing a shortage would not know which partner has stock to redistribute unless the centers communicate and co-ordinate their actions. In addition, the emergency condition, such as a natural disaster, itself evolves through phases that differ across locations and over time. Some communities experience a sudden peak, others face a prolonged disrup-tion. These temporal trajectories are not known to decision-makers at centers in advance, and they must make decisions based on the limited observations they receive. A redistribution policy should therefore incorporate cooperation to correct imbalances, the partial observability of the network state, and the shifting dynamics that change a region’s states. 3In this study, we address the aforementioned requirements by formulating the relief redistribution problem as a cooperative multi-agent task. The centers are modeled as independent agents in a fully cooperative, partially observable, decentralized Markov decision process (Bernstein et al., 2002; Oliehoek and Amato, 2016). Each agent decides how to allocate its available supply among local service, holding for reserve, and transferring to the other centers. To handle the temporal structure of different dynamics, each agent also maintains a recurrent belief state that summarizes its history of observations, allowing it to infer the current phase of the emergency event and act accordingly. We formulate the following research questions. 
+
+RQ1. How should a relief distribution center allocate its available supply between local service, holding for reserve, and redistribution to other centers under limited information about other centers and unknown dynamics? 
+
+To address this, we formulate the redistribution problem as a cooperative partially observable Markov game and solve it using recurrent multi-agent proximal policy optimization (MAPPO). Each center uses its local obser-vation history and limited network information to dynamically allocate available inventory among local service, reserve, and redistribution. The recurrent policy enables agents (centers) to adapt their actions to evolving conditions without explicit knowledge of the trajectory. 
+
+RQ2. Can distribution centers coordinate redistribution decisions to improve ser-vice for the worst-served communities while not deteriorating the overall network performance? 
+
+To answer this, we define a shared reward that penalizes dispersion of ser-vice across centers while rewarding the minimum service level, and evalu-ate the resulting trade-off across different supply and demand realizations. 
+
+RQ3. Does a centralized cooperative learning help the network make better deci-sions compared with independent learning for relief redistribution? 
+
+To answer this, we compare recurrent MAPPO with recurrent independent PPO (IPPO) on the same trajectories to assess how centralized training affects the action performance. The remainder of the paper is organized as follows. Section 2 reviews the related literature on humanitarian logistics, reinforcement learning in emergency response, and multi-agent coordination. Section 3 presents the mathematical formulation of the redistribution problem. Section 4 details the experimental design. Section 5 reports the results, and Section 6 concludes with a discussion of limitations and directions for future work. 
+
+2. Literature Review 
+
+Studies addressing resource allocation in emergency events focus on different aspects of logistics management, including efficiency of the balanced allocation 4and costs (Sakiani et al., 2020), adequacy of the supply to demand realization under uncertainty (Rottkemper et al., 2011; Pacheco and Batta, 2016), and, most recently, equity of the outcome (Yu et al., 2021). In contrast to the ma-jority of the literature, Gutjahr and Fischer (2018) consider equity explicitly as the objective of resource allocation decisions. The authors’ contribution is to show that the minimal total deprivation cost function alone cannot adequately account for the inequity in deprivation costs and to propose adjusting it by explicitly incorporating the Gini coefficient of deprivation costs as a corrective measure. Specifically, in terms of resource redistribution, Rottkemper et al. (2012) develop a model for optimal inventory redistribution between exchange centers that accounts for changes in supply and demand after a disaster. Pacheco and Batta (2016) propose a forecast-based approach that employs pre-positioned supplies, which are updated as the hurricane track becomes clearer. Sakiani et al. (2020) propose a combined vehicle routing and network flow model, which they formulate as a rolling-horizon inventory routing problem with an objective function based on deprivation costs that embodies equity considerations. Our paper is related to the aforementioned articles in that it also concerns the re-distribution during an emergency event with unknown dynamics. However, we study a decentralized setting in which each center makes distribution decisions on its own, based solely on local observations, with limited knowledge of the other centers’ stocks and demands. Several works explore the application of RL to humanitarian logistics, pri-marily in single-agent settings. Yu et al. (2021) apply Q-learning to the alloca-tion of relief resources with costs in efficiency, effectiveness, and equity estimated separately. Lee and Lee (2021) frame the disaster response as a partially ob-servable multi-agent task, but do not account for inventory perishability and multi-day delivery uncertainty. Wu and Tai (2024) combine convolutional net-works with RL to optimize inbound logistics of food banks. Furthermore, van Steenbergen et al. (2023) apply RL to humanitarian relief distribution using trucks and UAVs under travel-time uncertainty, and Ahmad et al. (2025) pro-pose a deep RL approach that jointly targets efficiency, effectiveness, and equity in disaster relief distribution, though both retain a single centralized decision-maker. Similarly, in multi-agent settings, Yang et al. (2024) apply multi-agent deep RL to post-hazard community recovery planning, although their setting focuses on restoration scheduling rather than physical resource redistribution. In contrast to these studies, we incorporate equity into the reward function as a penalty for service gaps across agents and explicitly model the worst-case ser-vice across sites, thereby driving cooperative redistribution decisions. Second, we consider decision-making autonomy distributed among the centers with a centralized training and decentralized execution (CTDE). Several works focus on the coordination mechanism. Prior MARL studies address decentralized inventory management that evaluates several algorithms for decentralized inventory control and finds that MAPPO has an edge over independent learning variants. Liu et al. (2025) apply a heterogeneous agent version of PPO to multi-echelon inventory management and find that it re-5duces costs and the variance of order quantities (the bullwhip effect) compared to single-agent RL. We differ from the approaches mentioned by focusing not only on the multi-agent setting but also by incorporating a recurrent network into the learning model to capture unknown dynamics. We address transport uncertainty, disruption-dependent shipment losses, and inventory perishability factors. In sum, the body of literature covers centralized optimization to decentral-ized reinforcement learning. However, the question of fully decentralized co-ordination for redistribution under unknown dynamics has received insufficient attention. Most works focus on either centrally coordinated dispatching or in-ventory management in decentralized supply chains. This is an important gap, as many real-world relief networks are decentralized, with individual centers making day-to-day distribution decisions with only local information. In Table 1 we present the literature gap and the contribution of this study. 
+
+Table 1: Comparison of the current paper with related studies on resource allocation and redistribution.                                                                 
+
+> Reference Re-Perish-RL Multi-agent Decentralized Objective function Solution approach distribution ability Cooperation Execution
+> Rottkemper et al. (2011) ✓Relocation cost/coverage Exact MILP Rottkemper et al. (2012) ✓Transshipment cost Exact MILP Pacheco and Batta (2016) ✓Prepositioning cost Forecast-driven heuristic Sakiani et al. (2020) ✓Deprivation & operating cost Specialized SA Gutjahr and Fischer (2018) Deprivation-cost equity Exact / metaheuristic Yu et al. (2021) ✓Efficiency, effectiveness, equity Q-learning Wu and Tai (2024) ✓✓Quality & storage management CNN + RL van Steenbergen et al. (2023) ✓Delivery under travel-time uncertainty RL Ahmad et al. (2025) ✓Efficiency, effectiveness, equity Deep RL Lee and Lee (2021) ✓✓✓Admission/diversion decisions Multi-agent RL Yang et al. (2024) ✓✓✓Post-hazard recovery scheduling Multi-agent deep RL Mousa et al. (2024) ✓✓✓Inventory cost MAPPO / IPPO comparison Liu et al. (2025) ✓✓✓Cost & order variance Heterogeneous-agent PPO
+> This study ✓✓✓✓✓Network service, Service gap, Worst-case Service Recurrent MAPPO (CTDE)
+
+3. Methodology 
+
+In this section, we formulate the relief problem and develop the decentralized decision model. 
+
+3.1. Problem Formulation 
+
+We present a relief network problem comprising N regional distribution cen-ters connected by a complete directed transfer graph, such that each center can redistribute to any of the other N − 1 centers (as shown in Figure 1). The centers are autonomous, and redistribution decisions are made simultane-ously. Each horizon of an emergency event comprises T decision periods (days) that correspond to an acute response to a sudden-onset event. Within each period, exogenous perishable relief supply (lbs) as well as any redistribution whose stochastic travel time, τijt , ends that day, arrives at a center. We remove the additional redistribution amount as overflow if the total inventory exceeds capacity. The center then uses its entire available inventory for local service, a holding reserve, and five specific redistributions to other centers. Finally, the 6Centralized Learning    
+
+> signals for Coordination
+> Status signals
+> Transfer requests
+> Allocation guidance
+> Relief Centers
+> Center 1
+> serve hold
+> Redis tribute
+> Center 2
+> serve hold
+> Center N
+> serve hold
+> ...
+> Relief supply
+> Supply flow
+> Info / coordination
+> two-way redistribution
+> Redis tribute
+
+Figure 1: A standard relief supply network with regional relief centers that serve local demand, hold inventory for reserve, and redistribute to other centers. 
+
+inventory beyond its shelf life is disposed of, and the remaining inventory is kept. Table 2 presents all important notations used in the problem formulation. 
+
+3.2. Cooperative Redistribution Model 
+
+We formulate the redistribution problem as a cooperative Markov game, modeled as a decentralized partially observable Markov decision process (Dec-POMDP) (Bernstein et al., 2002; Oliehoek and Amato, 2016), as specified by the tuple (1). 
+
+N, S, {O i}i∈N, {U i}i∈N, P, R, γ . (1) Here, N is the set of relief distribution centers (agents) and S is the environment state space. Oi and Ui are the local observation and action spaces of center i,respectively. P represents transition kernel and R is the shared network reward followed by discount factor γ. In this problem, the environment state st ∈ S is not directly observed by the agents, and they act on local observations oit ∈ O i.
+
+3.2.1. Transitions 
+
+Transitions in the Dec-POMDP are driven by inventory, demand, supply, and transportation dynamics. We track on-hand inventory by age ℓ ∈ { 0, . . . , L −1},with the oldest quantity removed first (De Moor et al., 2022). At the start of day t, arrivals at center i include exogenous supply Sit and earlier transfers that 7Table 2: Notation used for the relief redistribution model. 
+
+Sets and Indices 
+
+N Set of relief distribution centers; i, j ∈ N 
+
+T Number of decision periods in the horizon; t = 1 , . . . , T [days] 
+
+L Shelf life of relief inventory; ℓ = 0 , . . . , L − 1 [days] 
+
+Parameters 
+
+Dit Demand at center i in period t [lbs] 
+
+Sit Exogenous perishable supply received by center i in period t [lbs] 
+
+Ki Storage capacity of center i [lbs] 
+
+¯Xi Daily outbound redistribution capacity of center i [lbs/day] 
+
+τijt Travel time for a shipment from center i to center j dispatched in period 
+
+t [days] 
+
+ρijt In-transit loss fraction for a shipment from center i to center j dispatched in period tζtrans  
+
+> it
+
+Unobserved transportation disruption at center i in period t
+
+¯ζtrans  
+
+> ijt
+
+Link disruption for a shipment from center i to center j in period t [frac-tion] 
+
+γ Discount factor 
+
+Variables and Performance Measures 
+
+I(ℓ) 
+
+> it
+
+Inventory of age ℓ at center i in period t [lbs] 
+
+Ait Total arrivals at center i in period t, including exogenous supply and delivered transfers [lbs] 
+
+Vit Available inventory at center i in period t after arrivals and overflow re-moval [lbs] 
+
+yit Demand served locally at center i in period t [lbs] 
+
+uit Unmet demand at center i in period t [lbs] 
+
+xijt Actual dispatched redistribution quantity from center i to center j in period t [lbs] 
+
+eit Quantity of expired inventory at center i in period t [lbs] 
+
+qit Service ratio of center i in period tQt Network-wide service ratio in period tEt Service gap across centers in period tqmin  
+
+> t
+
+Worst-center service ratio in period t
+
+MARL Notation 
+
+oit Local observation of center i in period tait Continuous allocation action of center i in period taloc  
+
+> it
+
+Action share allocated to local service at center iahold  
+
+> it
+
+Action share allocated to holding inventory at center iajit Action share allocated to intended redistribution from center i to center j
+
+Ui Simplex action space for center ibit Recurrent belief state of center i in period tsCt Centralized operational state available to the critic in period tRt Shared network reward in period t
+
+arrive on that day. 
+
+Ait = Sit + X 
+
+> j̸=i
+
+X
+
+> k<t
+
+(1 − ρjik )xjik 1{k + τjik = t}, (2) 
+
+eVit = Ait +
+
+> L−1
+
+X
+
+> ℓ=0
+
+I(ℓ) 
+
+> it
+
+. (3) 8Here, τjik and ρjik in Eq. (2) are the realized travel time and loss fraction for the transfer dispatched from center j to center i on day k. The indicator includes the shipment only on the day of arrival. If post-arrival inventory in Eq. (3) exceeds storage capacity Ki, overflow is removed before action as shown in Eq. (4). 
+
+Oit = max { eVit − Ki, 0}, Vit = eVit − Oit . (4) Thus, Vit is the post-arrival, post-overflow inventory available for allocation by the policy. 
+
+3.2.2. MARL Action 
+
+For each relief center i, the action is a continuous simplex ait ∈ U i that represents the fractional allocation of available inventory Vit across local service, holding, and intended redistribution to the other centers, as shown in Eq. (5). All action components are nonnegative, so akit ≥ 0 for all k, and aloc  
+
+> it
+
++ ahold  
+
+> it
+
++
+
+P  
+
+> j̸=i
+
+ajit = 1 .
+
+ait =
+
+
+
+aloc  
+
+> it
+
+, a hold  
+
+> it
+
+, {ajit }j̸ =i
+
+
+
+(5) Local service is capped by realized demand, as shown in Eq. (6). 
+
+yit = min {Dit , a loc  
+
+> it
+
+Vit }, (6) Unmet demand is shown in Eq. (7). 
+
+uit = Dit − yit . (7) For each partner j̸ = i, the action implies an intended outbound redistribution, represented by the nominal quantity exijt = ajit Vit . The total nominal outbound redistribution from center i is shown in Eq. (8). 
+
+σit = X 
+
+> j̸=i
+
+exijt . (8) Nominal redistribution quantities are proportionally scaled only if they exceed the daily outbound redistribution capacity ¯Xi:
+
+cit = min 
+
+
+
+1, ¯Xi
+
+σit + ε
+
+
+
+, xijt = cit exijt . (9) The realized held inventory is the residual after local service and dispatch: 
+
+Hit = Vit − yit − X 
+
+> j̸=i
+
+xijt . (10) 93.2.3. Local Observations 
+
+Each agent i ∈ N observes only local states and limited, delayed information about the other agents. The local observation vector for agent i in period t is presented in Eq. (11). 
+
+oit =
+
+h I(0: L−1)  
+
+> it
+> Ki
+
+,  
+
+> P
+> ℓI(ℓ)
+> it
+> Ki
+
+, Dit  
+
+> ¯Di
+
+, Sit  
+
+> ¯Si
+
+, ui,t −1 
+
+> ¯Di
+
+, P pipe  
+
+> it
+> ¯Di
+
+, q i,t −1,  
+
+> P
+> jxij,t −1
+> ¯Di
+
+,  
+
+> P
+> jxji,t −1
+> ¯Di
+
+, tT , qt−1, a i,t −1
+
+i
+
+,
+
+(11) 
+
+I(0: L−1)  
+
+> it
+
+/K i presents the inventory age profile up to the shelf-life cycle, and 
+
+P 
+
+> ℓ
+
+I(ℓ) 
+
+> it
+
+/K i is the total inventory on hand, both normalized by the center’s storage capacity Ki. Dit / ¯Di and Sit / ¯Si present the current demand and current supply relative to the center’s historical average levels, ¯Di and ¯Si. The center also records ui,t −1/ ¯Di, the unmet demand from the previous day of its demand. Next, P pipe  
+
+> it
+
+/ ¯Di is the quantity already dispatched toward the center but not yet arrived. Here, the inbound pipeline P pipe  
+
+> it
+
+denotes the total quantity previously dispatched to center i by other centers that remain in transit when center i
+
+forms its period-t observation. It is presented in Eq. (12). 
+
+P pipe  
+
+> it
+
+= X 
+
+> j̸=i
+
+X
+
+> k<t
+
+xjik 1{k + τjik > t } , (12) The indicator 1{k + τjik > t } includes only redistribution on an earlier day 
+
+k whose realized arrival day, k + τjik , occurs after period t. Following this, P 
+
+> j
+
+xij,t −1/ ¯Di and P 
+
+> j
+
+xji,t −1/ ¯Di are the redistribution amounts the center sent out and received on the previous day. Finally, t/T is the current day within the planning horizon of length T , and ai,t −1 is the center’s previous action. In the observation, the only network-wide information available to an agent is 
+
+qt−1 = ( q1,t −1, . . . , q N,t −1), the previous day’s service ratios across the network (defined in Eq. (13)). Agents do not observe partner inventories, demands, sup-plies, or current actions. Additionally, the current observation alone does not characterize the evolving system state, motivating the recurrent policy described in Section 3.3. 
+
+3.2.4. Shared Reward 
+
+For the reward, we mainly focus on the service and equity in the network. Service at a region covered by a center is measured as the fraction of demand met by the center, as shown in Eq. (13). The aggregated network service is therefore achieved as in Eq. (14). 
+
+qit = yit 
+
+Dit + ε . (13) 
+
+Qt =
+
+P 
+
+> i
+
+yit 
+
+P 
+
+> i
+
+Dit + ε . (14) 10 Equity is measured by the service gap, defined as the mean absolute deviation of center-level service ratios from their network mean, as shown in Eq. (15). 
+
+Et = 1
+
+N
+
+X
+
+> i
+
+|qit − ¯qt| , ¯qt = 1
+
+N
+
+X
+
+> i
+
+qit . (15) We also measure worst-center service with qmin  
+
+> t
+
+= min i qit . Finally, we develop a shared reward for all agents shown in Eq. (16). 
+
+Rt = w1qmin  
+
+> t
+
+− w2Et − w3 max {0, ϕ − Qt}. (16) The first term ensures improvement in the least-served center, while the second penalizes disparities in service across centers. We use the third term to penalize the network service only when Qt falls below the threshold ϕ. The third term protects the agents from serving demands rather than serving all centers equally poorly to achieve equity. We use w1, w 2, w 3 as the weights for the reward terms. For this study, we use w3 ≥ w2 ≥ w1, and ϕ = 0 .60 . The cooperative objective is presented in Eq. (17). 
+
+J(π) = Eπ
+
+"T −1X
+
+> t=0
+
+γtRt
+
+#
+
+. (17) 
+
+3.3. Learning Framework 
+
+Since we have independent agents operating in a decentralized network, we use MAPPO (Yu et al., 2022), which supports the cooperative decision-making that this study aims to achieve. MAPPO provides CTDE (Kopic et al., 2024), using a shared critic and decentralized actors. During training, the critic ob-serves the following state in Eq. (18), which includes local observations of all agents, the previous transfer matrix, and the origin-destination pipeline redis-tribution. At execution time, the critic is discarded, and each center acts on its own observations. 
+
+sCt =
+
+h
+
+o1t, . . . , o N t , {xij,t −1}i,j ∈N, {P pipe  
+
+> ijt
+
+}i,j ∈N
+
+i
+
+, (18) 
+
+3.3.1. Recurrent Actor and Policy Update 
+
+Each center (agent) maintains a memory state that is updated at each period. This memory state summarizes the history of observations seen by the agents (Cho et al., 2014). We define this by deriving a gated recurrent unit (GRU) (Chung et al., 2014) as shown in Eq. (19). For each agent, it summarizes the current observation and the previous memory update that provides the agent with the trajectory dynamics without any direct signal in the observation. 
+
+bit = GRU θi (oit , b i,t −1) (19) The action distribution over the simplex in Eq. (5) shows how agents combine the memory state and observation in their policy. 
+
+πθi (ait | oit , b i,t −1) = Dirichlet[softplus( Wibit + ci) + α0] . (20) 11 This Dirichlet distribution (Ng et al., 2011) allows distributions over the simplex that, by construction, have shares that sum to one, thus satisfying the constraint in Eq. (5). The offset α0 > 0 prevents concentration parameters from becoming zero. Actors are trained with PPO (Schulman et al., 2017), which updates the policy while not changing drastically from the previous update. For an action 
+
+ait taken by agent i at time t, the probability ratio is defined in Eq. (21). 
+
+rit (θi) = πθi (ait | oit , b i,t −1)
+
+πθold  
+
+> i
+
+(ait | oit , b old 
+
+> i,t −1
+
+) . (21) Here, πθi is the current policy and πθold  
+
+> i
+
+is the policy before the current update. The clipped PPO objective is shown in Eq. (22), where advantage estimate bAt
+
+is used to determine whether an action should become more or less likely. 
+
+Lclip  
+
+> i
+
+(θi) = Et
+
+h
+
+min 
+
+n
+
+rit (θi) bAt, clip ( rit (θi), 1 − ϵ, 1 + ϵ) bAt
+
+oi 
+
+. (22) The actor minimizes the clipped negative objective with entropy regularization, which promotes exploration, in Eq. (23). 
+
+Lπi (θi) = −Lclip  
+
+> i
+
+(θi) − η Et [H (πθi (· | oit , b i,t −1))] , (23) Here, ϵ > 0 controls the clipping range and η is the entropy coefficient. 
+
+bAt is computed using generalized advantage estimation (GAE) (Schulman et al., 2016). The centralized critic Vϕ(sCt ) estimates the expected future return from the centralized training state sCt . After observing reward Rt and the next state, the one-step temporal-difference error is defined in Eq. (24). 
+
+δt = Rt + γV ϕ(sCt+1 ) − Vϕ(sCt ), (24) where γ ∈ [0 , 1] is the discount factor. GAE combines these prediction errors over subsequent periods using Eq. (25). 
+
+bAt = 
+
+> T−t−1
+
+X
+
+> l=0
+
+(γλ )lδt+l, (25) where λ ∈ [0 , 1] controls how strongly future prediction errors contribute to the current advantage estimate. The centralized critic is trained to estimate the return target bVt computed from the sampled trajectory. Its parameters ϕ are learned by minimizing the critic value loss in Eq. (26). 
+
+LV (ϕ) = cV Et
+
+
+
+Vϕ(sCt ) − bVt
+
+2
+
+, (26) Here, cV is the value-loss coefficient. The learning framework is summarized in Algorithm 1. 12 Algorithm 1 Recurrent MAPPO  
+
+> 1:
+
+Initialize actor parameters {θi}i∈N  
+
+> 2:
+
+Initialize centralized critic parameters ϕ 
+
+> 3:
+
+Initialize experience buffer D ← ∅  
+
+> 4:
+
+for k = 1 , . . . , K do  
+
+> 5:
+
+D ← ∅  
+
+> 6:
+
+for e = 1 , . . . , N ep do  
+
+> 7:
+
+Draw the next realization from Btr  
+
+> 8:
+
+Reset environment and initialize bi, −1 ← 0 for all i ∈ N  
+
+> 9:
+
+for t = 0 , . . . , T − 1 do  
+
+> 10:
+
+Construct observation oit using Eq. (11)  
+
+> 11:
+
+Update recurrent belief bit using Eq. (19)  
+
+> 12:
+
+Sample action ait according to Eq. (20)  
+
+> 13:
+
+Execute at in the environment  
+
+> 14:
+
+Observe reward Rt from Eq. (16)  
+
+> 15:
+
+Store (oit , a it , b i,t −1, s Ct , R t) in D 
+
+> 16:
+
+end for  
+
+> 17:
+
+if the complete training-set cycle is finished then  
+
+> 18:
+
+Reshuffle Btr  
+
+> 19:
+
+end if  
+
+> 20:
+
+end for  
+
+> 21:
+
+Estimate advantages bAt using Eq. (25)  
+
+> 22:
+
+Normalize bAt over D 
+
+> 23:
+
+for j = 1 , . . . , N epoch do  
+
+> 24:
+
+for each minibatch containing M complete episodes do  
+
+> 25:
+
+Replay recurrent sequences while preserving temporal order  
+
+> 26:
+
+Update actors {θi} by ascending the PPO objective in Eq. (22)  
+
+> 27:
+
+Update critic ϕ by minimizing the value loss in Eq. (26)  
+
+> 28:
+
+end for  
+
+> 29:
+
+end for  
+
+> 30:
+
+if checkpoint interval is reached then  
+
+> 31:
+
+Evaluate actors on the validation set  
+
+> 32:
+
+end if  
+
+> 33:
+
+end for  
+
+> 34:
+
+return trained actors {θi}
+
+4. Experimental Design 
+
+We evaluate the proposed learning framework in a synthetic emergency en-vironment. The network contains N = 6 relief centers ( i ∈ N ) and each episode lasts T = 20 periods during an emergency event. In each period t, every agent observes a 29-dimensional local observation oit ∈ O i and selects a 7-dimensional simplex action ait ∈ U i. The action includes the local-service share aloc  
+
+> it
+
+, the holding share ahold  
+
+> it
+
+, and redistribution shares {ajit }j̸ =i to the other five cen-ters. The MAPPO critic uses the 246-dimensional centralized operational state 
+
+sCt defined in Eq.(18). All demand, supply, and transportation realizations are generated by the process described in Appendix A. We also generate hidden tra-13 jectory families and episode-specific relief center roles that are never observed by the actors or the critic. The primary metrics for evaluation are the service gap (equity) Et, the worst-center service qmin  
+
+> t
+
+, cumulative network service Qt, and episodic return 
+
+PT −1 
+
+> t=0
+
+γtRt. To compare the cooperative performance of recurrent MAPPO, we use two baseline policies in the same generated environment under the same realization. First, we use a recurrent IPPO that shares the actor, action space, reward, and optimizer settings but replaces the centralized critic with a local critic for each agent. The hyperparameters for both MAPPO and IPPO are obtained with a grid search and presented in Table A.7 in the Appendix. Sec-ond, a heuristic “Local-only", that serves local demand and never redistributes inventory. All methods are trained and evaluated on the same set of generated episodes and trajectories. Hence, the differences in performance are attributable to the decision policies. 
+
+5. Results and Discussion 
+
+We report the results from the experiments defined in Section 4 and Ap-pendix A. Figure 2(a)-(c) present on-policy training dynamics over 30000 episodes for both MAPPO and IPPO reporting episodic return PT −1 
+
+> t=0
+
+γtRt, mean daily network service ¯Qt =  
+
+> P
+> tQt
+> T
+
+, and mean daily service gap ¯Et =  
+
+> P
+> tEt
+> T
+
+, respec-tively. According to the results, both MAPPO and IPPO improve over their initial policies, but MAPPO achieves a stronger final policy with a mean of the last 100 episode reward of −5.68 compared with −17 .81 for IPPO, correspond-ing to a 68 .1% smaller reward penalty. MAPPO also achieves a higher network service ¯Qt of 0.599 , representing a 16 .2% relative improvement over IPPO, while reducing the service gap by 14 .1% , ensuring better equity in the network.  
+
+> Figure 2: On-policy training dynamics presenting (a) episodic reward, (b) mean daily network service, and (c) mean daily service gap. Curves are hundred-episode moving averages from sampled training actions.
+
+5.1. Validation and Held-Out Performance 
+
+To evaluate generalization on unseen trajectories, we use 20 validation tra-jectories and 20 held-out trajectories for the final test. During training, we 14 evaluate the validation set every 160 training episodes and report the policy’s performance on the 20 held-out test set. Figure 3(a)-(d) shows the evaluation of    
+
+> (a) (b)
+> (c) (d) Figure 3: Trained policies evaluated every 160 training episodes on the same 20 validation set. (a) Mean daily reward, (b) network service, (c) worst-center service, and (d) service gap.
+
+the trained policies at 160-episode intervals. Both learners start from the same policy, with a small gap across all metrics, because all centers are served poorly. As learning begins, service improves unevenly across centers, so the service gap rises as shown in Figure 3 (d). For MAPPO, the gap peaks at 0.213 around episode 960 while the network service has already reached 0.604 in Figure 3(b). After this early high-gap phase, MAPPO continues to improve service while clos-ing the gap and improving equitable distribution and network service, exceeding IPPO. At the final checkpoint, MAPPO has an 11 .4% higher network service, a 31 .0% higher worst-center service, and a 4.5% lower service gap than IPPO, demonstrating the capability of cooperative learning to improve network service while maintaining a lower service gap, thereby ensuring equitable distribution across the network. Table 3 summarizes the final generalization performance on the 20 unseen held-out test realizations. Because all methods are evaluated on the same held-out episodes, we assess the statistical significance of paired two-sided t-tests across common realizations. From the results, the Local-only operation achieves the highest network service at 0.6686 because it serves demand immediately at 15 each center and never delays inventory through redistribution. However, it results in the largest disparity across centers, with a service gap of 0.2643 , in contrast with 0.1766 for MAPPO. MAPPO reduces the service gap by 33 .2% 
+
+(p − value < 10 −9) and improves worst-center service from 0.2369 to 0.3562 , a 
+
+50 .4% increase ( p − value < 10 −10 ), both of which are statistically significant. Thus, MAPPO sacrifices some overall network service to achieve significantly better equity across relief centers. In contrast with IPPO, MAPPO performs better on all metrics. The net-work service increases from 0.5602 to 0.6276 (p − value < 10 −10 ), worst-center service increases from 0.2767 to 0.3562 (p − value < 10 −8), and daily reward improves from −0.3786 to −0.0120 (p − value < 10 −10 ). Although not statis-tically significant, the service gap is smaller for MAPPO than for IPPO, with a 1.9% reduction. Overall, the centralized training in MAPPO improves coop-eration and service levels while maintaining the equity gains obtained through redistribution.                                                           
+
+> Table 3: Generalization in 20 held-out test set. Values represent mean ±standard deviation.
+> †on the MAPPO row indicates statistical significance from IPPO at p−value < 0.05 ;‡
+> indicates statistical significance from local-only at p−value < 0.05 .Method Network service Worst-center service Service gap Daily reward
+> ¯Qt¯qmin
+> t¯Et¯Rt
+> Local-only 0.6686 ±0.0747 0.2369 ±0.0998 0.2643 ±0.0415 −0.5801 ±0.3800
+> IPPO 0.5602 ±0.0569 0.2767 ±0.0646 0.1801 ±0.0395 −0.3786 ±0.2628
+> MAPPO 0.6276 ±0.0687 †,‡0.3562 ±0.0753 †,‡0.1766 ±0.0302 ‡−0.0120 ±0.2510 †,‡
+
+Furthermore, we aim to leverage the recurrent network in the learning model to see whether the agents can adapt to unknown dynamics using their obser-vation histories. The held-out test instances comprise different trajectory types used to represent the dynamics described in Appendix A. Table 4 stratifies the results by the trajectory family. From the results, MAPPO achieves perfor-mance similar to the overall test performance in Table 3 and achieves signifi-cantly higher network service than IPPO across all five trajectory types, with improvements ranging from 10 .6% to 15 .3% . It also improves worst-center ser-vice by 19 .5% -41 .6% , with significant differences across four families, except for the Early recovery trajectory. In contrast with local-only operation, MAPPO significantly reduces the ser-vice gap and improves worst-center service in all trajectories. Since the trajec-tory types are never observed by the policies, we can infer from these results that both MAPPO and IPPO generalize across trajectories, while MAPPO sig-nificantly improves network service and maintains better equity by reducing the service gap. 
+
+6. Conclusion and Future Work 
+
+In this study, we model decentralized redistribution among relief centers under partial observation of the environment, with perishable inventory and 16 Table 4: Generalization across hidden trajectory families. Family Method Network service Worst-center service Service gap Daily reward                                                                                                                                                                                                        
+
+> ( ¯Qt)(¯ qmin
+> t)( ¯Et)( ¯Rt)
+> Early recovery Local-only 0.7437 ±0.0280 0.3531 ±0.0970 0.2242 ±0.0221 −0.1504 ±0.2770
+> IPPO 0.6126 ±0.0508 0.3645 ±0.0257 0.1473 ±0.0129 −0.0438 ±0.1437
+> MAPPO 0.6896 ±0.0507 †0.4354 ±0.0623 ‡0.1661 ±0.0360 ‡0.2159 ±0.1936 ‡
+> Delayed peak Local-only 0.6537 ±0.1262 0.2324 ±0.1268 0.2770 ±0.0564 −0.6444 ±0.5538
+> IPPO 0.5271 ±0.0860 0.2555 ±0.0677 0.1789 ±0.0418 −0.5134 ±0.3908
+> MAPPO 0.6079 ±0.1191 †,‡0.3617 ±0.1054 †,‡0.1709 ±0.0193 ‡−0.0393 ±0.4104 †,‡
+> Persistent Local-only 0.6775 ±0.0442 0.2451 ±0.0634 0.2529 ±0.0173 −0.5417 ±0.2580
+> IPPO 0.5612 ±0.0586 0.2750 ±0.0416 0.1697 ±0.0395 −0.3752 ±0.1229
+> MAPPO 0.6219 ±0.0644 †,‡0.3530 ±0.0447 †,‡0.1628 ±0.0182 ‡−0.0235 ±0.1817 †,‡
+> Progressive worsening Local-only 0.6191 ±0.0663 0.1547 ±0.0496 0.2908 ±0.0388 −0.8563 ±0.2266
+> IPPO 0.5399 ±0.0317 0.2309 ±0.0436 0.1977 ±0.0359 −0.5264 ±0.1137
+> MAPPO 0.5985 ±0.0383 †0.3054 ±0.0569 †,‡0.1799 ±0.0256 ‡−0.1075 ±0.1819 †,‡
+> Aftershock Local-only 0.6487 ±0.0242 0.1988 ±0.0451 0.2766 ±0.0419 −0.7078 ±0.1894
+> IPPO 0.5604 ±0.0206 0.2578 ±0.0584 0.2069 ±0.0463 −0.4342 ±0.1702
+> MAPPO 0.6199 ±0.0255 †0.3255 ±0.0505 †,‡0.2033 ±0.0415 ‡−0.1055 ±0.1813 †,‡
+
+delayed transportation using MAPPO. We compare the CTDE performance of MAPPO with IPPO and a local-only heuristic. The results from the study provide two meaningful insights. First, the optimal learned policy in cooperative learning with MAPPO preserves a substantial local-service component while redistributing to other centers in ways that balance network-wide service and improve equity. Second, while learned redistribution typically improves equity, it comes with a cost of overall network service. We observed that the local-only heuristic can achieve a higher overall network service, even with a large service gap. MAPPO trades off some overall network service to achieve significantly better equity by reducing the service gap. With regard to RQ1, the results show that the recurrent MAPPO policy balances local service, reserve, and redistribution without observing the true dynamics. Therefore, cooperative learning demonstrates its ability to make reasonable decisions under limited and delayed information. Moreover, in response to RQ2, coordination among centers prioritizes the worst-served locations with marginal impact on the network’s performance. The worst-case service increases significantly relative to the local-only operation, as demonstrated by MAPPO’s performance. Finally, MAPPO significantly outperforms IPPO in worst-case and network services, while still achieving a marginally smaller service gap. Future work should consider other network-wide cost effects related to volunteer availabil-ity, transportation, and efficiency analysis. Moreover, redistribution is learned only from reward, without accounting for the cost incurred, which might result in two-way redistribution between agents that requires an initial cost. Includ-ing the initial cost could explicitly preclude redundant redistribution between agents. 17 Declaration of Generative AI 
+
+During the preparation of this work, the author(s) used Grammarly/ ChatGPT/Claude to improve the quality of the writing and check for any gram-matical errors. After using this tool/service, the author(s) reviewed and edited the content as needed and take(s) full responsibility for the content of the pub-lication. 
+
+Appendix A. Synthetic Emergency Environment 
+
+Demand, available supply, and transportation conditions during an emer-gency are not known precisely in advance. Therefore, scenario-based formu-lations are commonly used to represent uncertainty (Barbarosoˇ glu and Arda, 2004; Chang et al., 2007). In this study, we construct a synthetic environment for our proposed learning model. We generate baseline demand and supply profiles that allow heterogeneity across relief centers, while stochastic shocks generate time-varying shortage, surplus, and balanced conditions that vary by the centers’ roles. 
+
+Appendix A.1. Hidden trajectories 
+
+Each episode in the environment draws an onset day τ ∈ { 2, . . . , 6} and one hidden trajectory family F . The onset day τ is the first period in which the emergency event shock takes effect. We follow disaster studies to repre-sent disruption using time-dependent functions, including simplified exponen-tial and trigonometric recovery paths (Bruneau et al., 2003; Cimellaro et al., 2010). Disaster studies also model uncertainty in the timing and dynamics of operational conditions (Chang et al., 2007; Peng et al., 2014). We follow the relevant process and define five trajectory families that represent early recovery, a delayed peak, progressive worsening, persistent disruption, and aftershock. We set p = t−τT −τ −1 , κ = T − τ . The disaster intensity is ht = 0 before onset and 
+
+ht = HF (t; τ ) afterward. The five trajectory families are defined by Eq. (A.1). 
+
+Hear = exp 
+
+
+
+− t − τωear κ
+
+
+
+, (A.1a) 
+
+Hdel =
+
+(
+
+p/μ del , p ≤ μdel ,
+
+exp [ −(p − μdel )/ω del ] , p > μ del , (A.1b) 
+
+Hwor = bwor + awor prwor , (A.1c) 
+
+Hper = bper + aper sin(2 πp ), (A.1d) 
+
+Haft = max 
+
+(
+
+exp 
+
+
+
+− t − τωaft κ
+
+
+
+, a aft exp 
+
+"
+
+− 12
+
+ p − μaft 
+
+σaft 
+
+2#) 
+
+. (A.1e) All intensity values are clipped to [0 , 1] . The parameter values and the dy-namics of the trajectory families used during training episodes are presented in Table A.5. 18 Table A.5: Hidden trajectory families and parameter values used in environment. Family Parameter values Dynamics Early recovery ωear = 0 .35 High initial disruption fol-lowed by gradual recovery. Delayed peak μdel = 0 .55 , ωdel = 0 .28 Disruption increases to a delayed peak and then de-clines. Progressive worsening bwor = 0 .15 , awor = 0 .85 , rwor = 1 .4 Disruption becomes in-creasingly severe over time. Persistent disruption bper = 0 .72 , aper = 0 .08 Disruption remains high with limited temporal variation. Aftershock ωaft = 0 .25 , aaft = 0 .90 , μaft = 0 .72 , 
+
+> σaft = 0 .12
+> Initial disruption declines before a second disruption occurs.
+
+These dynamics generate distinct but unobserved temporal dynamics. Their differences require a recurrent MAPPO policy to infer the evolving state from its observation history, as these dynamics and associated models are not observed by the policy while training. 
+
+Appendix A.2. Demand and Supply Dynamics 
+
+In addition to temporal uncertainty, the environment also introduces spatial heterogeneity across relief centers, which are also unknown to the actor and critic in the policy. At the beginning of each episode, we assign two centers randomly to a shortage role, two to a surplus role, and two to a balanced role. 
+
+rDi and rSi determine the baseline demand and supply conditions of center i,whereas βi and δi control the effects of disaster intensity on demand growth and supply reduction, respectively. Additionally, ηi controls the magnitude of the delayed supply response, while χi determines transportation vulnerability.                         
+
+> Table A.6: Relief center-role parameter ranges. Role rDirSiβiδiηiχi
+> Shortage 1.05–1.20 0.80–0.95 0.40–0.90 0.35–0.70 0.10–0.40 0.30–0.75 Surplus 0.85–0.95 1.10–1.30 0.00–0.15 0.00–0.15 0.30–0.70 0.05–0.25 Balanced 0.95–1.05 0.95–1.05 0.10–0.35 0.10–0.30 0.10–0.35 0.10–0.40
+
+The sampled roles with values in Table A.6 create a shortage center ex-periencing higher demand, lower supply, and greater transport vulnerability, while surplus centers experience the opposite, and balanced centers remain near baseline. Given the sampled center roles and trajectory family, we next generate the period-specific demand and supply at each center. Let ht = HF (t; τ ) denote the 19 disaster intensity in period t, and let z denote the episode-level severity mul-tiplier. To capture a correlated network-wide variation and local variation, ϵDt
+
+and ϵDit represent common and center-specific demand disturbances, respectively. The resulting demand at center i is defined in Eq. (A.2). 
+
+Dit = ¯DirDi (1 + zβ iht) exp 
+
+
+
+ϵDt + ϵDit − 12 σ2
+
+> D
+
+
+
+, (A.2) where ¯Di is baseline demand and σ2 
+
+> D
+
+is the variance of the combined demand disturbance. In the implementation, the episode severity is sampled as z ∼ U(0 .80 , 1.20) .The common and center-specific demand disturbances are sampled as 
+
+ϵDt ∼ N (0 , 0.05 2), ϵDit ∼ N (0 , 0.08 2)
+
+with σD = 0 .08 in Eq. (A.2). Relief supplies do not increase immediately after the emergency event onset (Anaya-Arenas et al., 2014). For each episode, a response delay d is sampled uniformly from {2, . . . , 6} days. After this delay, the supply response initially increases and then gradually declines with Eq. (A.3). 
+
+gt =
+
+(
+
+0, t < τ + d, 
+
+ 1 − e−u/ 3 e−u/ (1 .5κ), t ≥ τ + d, u = t − τ − d. (A.3) For the bootstrapped baseline supply eSit , realized supply is defined in Eq. (A.4). 
+
+Sit = eSit rSi max {0, 1 − zδ iht + zη igt} exp 
+
+
+
+ϵSt + ϵSit − 12 σ2
+
+> S
+
+
+
+, (A.4) where the common and center-specific supply disturbances are sampled as 
+
+ϵSt ∼ N (0 , 0.04 2), ϵSit ∼ N (0 , 0.06 2)
+
+and σS = 0 .06 . The term zδ iht represents the reduction in supply caused by the emergency event, while zη igt represents the delayed increase in incoming relief. The maximum operator ensures that the supply remains nonnegative. 
+
+Appendix A.3. Hyperparameter Setting 
+
+20 Table A.7: Learning configuration for the two policy-gradient methods. Setting Recurrent IPPO Recurrent MAPPO Actor GRU–128, Dirichlet GRU–128, Dirichlet Critic local MLP–128–128 CTDE MLP–128–128 Actor / critic learning rate 3×10 −4 / 10 −3 3×10 −4 / 10 −3
+
+Discount γ / GAE λ 1.0 / 0.95 1.0 / 0.95 Clip ϵ / entropy coeff. η 0.20 / 0.01 0.20 / 0.01 Value-loss coeff. cV 0.5 0.5 Epochs per rollout 5 5Episodes / transitions per update 16 / 320 16 / 320 Recurrent minibatch 4 episodes 4 episodes Episode length / training episodes 20 / 30,000 20 / 30,000 
+
+21 References 
+
+Ahmad, M., Tayyab, M., Habib, M.S., 2025. An enhanced deep reinforcement learning approach for efficient, effective, and equitable disaster relief distribu-tion. Engineering Applications of Artificial Intelligence 143, 110002. Anaya-Arenas, A.M., Renaud, J., Ruiz, A., 2014. Relief distribution networks: A systematic review. Annals of Operations Research 223, 53–79. doi: 10. 1007/s10479-014-1581-y .Balcik, B., Beamon, B.M., Krejci, C.C., Muramatsu, K.M., Ramirez, M., 2010. Coordination in humanitarian relief chains: Practices, challenges and opportunities. International Journal of Production Economics 126, 22–34. doi: 10.1016/j.ijpe.2009.09.008 .Barbarosoğlu, G., Özdamar, L., Cevik, A., 2002. An interactive approach for hierarchical analysis of helicopter logistics in disaster relief operations. Euro-pean journal of operational research 140, 118–133. Barbarosoˇ glu, G., Arda, Y., 2004. A two-stage stochastic programming frame-work for transportation planning in disaster response. Journal of the opera-tional research society 55, 43–53. Bernstein, D.S., Givan, R., Immerman, N., Zilberstein, S., 2002. The complex-ity of decentralized control of Markov decision processes. Mathematics of Operations Research 27, 819–840. doi: 10.1287/moor.27.4.819.297 .Bruneau, M., Chang, S.E., Eguchi, R.T., Lee, G.C., O’Rourke, T.D., Reinhorn, A.M., Shinozuka, M., Tierney, K., Wallace, W.A., Von Winterfeldt, D., 2003. A framework to quantitatively assess and enhance the seismic resilience of communities. Earthquake spectra 19, 733–752. Chang, M.S., Tseng, Y.L., Chen, J.W., 2007. A scenario planning approach for the flood emergency logistics preparation problem under uncertainty. Trans-portation research part E: logistics and transportation review 43, 737–754. Cho, K., van Merriënboer, B., Gulcehre, C., Bahdanau, D., Bougares, F., Schwenk, H., Bengio, Y., 2014. Learning phrase representations using RNN encoder–decoder for statistical machine translation, in: Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), pp. 1724–1734. doi: 10.3115/v1/D14-1179 .Chung, J., Gulcehre, C., Cho, K., Bengio, Y., 2014. Empirical evaluation of gated recurrent neural networks on sequence modeling. arXiv preprint arXiv:1412.3555 . Cimellaro, G.P., Reinhorn, A.M., Bruneau, M., 2010. Framework for analytical quantification of disaster resilience. Engineering structures 32, 3639–3649. 22 De Moor, B.J., Gijsbrechts, J., Boute, R.N., 2022. Reward shaping to im-prove the performance of deep reinforcement learning in perishable inven-tory management. European Journal of Operational Research 301, 535–545. doi: 10.1016/j.ejor.2021.10.045 .Egan, M.J., Tischler, G.H., 2010. The national voluntary organizations active in disaster relief and disaster assistance missions: an approach to better col-laboration with the public sector in post-disaster operations. Risk, Hazards & Crisis in Public Policy 1, 63–96. Gutjahr, W.J., Fischer, S., 2018. Equity and deprivation costs in humanitarian logistics. European journal of operational research 270, 185–197. doi: 10. 1016/j.ejor.2018.03.019 .Kopic, A., Perenda, E., Gacanin, H., 2024. A collaborative multi-agent deep reinforcement learning-based wireless power allocation with centralized train-ing and decentralized execution. IEEE Transactions on Communications 72, 7006–7016. Lee, H.R., Lee, T., 2021. Multi-agent reinforcement learning algorithm to solve a partially-observable multi-agent problem in disaster response. Eur. J. Oper. Res. 291, 296–308. Liu, X., Hu, M., Peng, Y., Yang, Y., 2025. Multi-Agent Deep Reinforcement Learning for Multi-Echelon Inventory Management. Production and Opera-tions Management 34, 1836–1856. Mousa, M., van de Berg, D., Kotecha, N., del Rio-Chanona, E.A., Mowbray, M., 2024. An analysis of multi-agent reinforcement learning for decentralized inventory control systems. Computers & Chemical Engineering 188, 108783. Ng, K.W., Tian, G.L., Tang, M.L., 2011. Dirichlet and related distributions: Theory, methods and applications. John Wiley & Sons . Oliehoek, F.A., Amato, C., 2016. A Concise Introduction to Decentralized POMDPs. SpringerBriefs in Intelligent Systems, Springer, Cham. doi: 10. 1007/978-3-319-28929-8 .Özdamar, L., Ertem, M.A., 2015. Models, solutions and enabling technologies in humanitarian logistics. European journal of operational research 244, 55–65. Pacheco, G.G., Batta, R., 2016. Forecast-driven model for prepositioning sup-plies in preparation for a foreseen hurricane. Journal of the Operational Research Society 67, 98–113. Peng, M., Peng, Y., Chen, H., 2014. Post-seismic supply chain risk management: A system dynamics disruption analysis approach for inventory and logistics planning. Computers & Operations Research 42, 14–24. 23 Rottkemper, B., Fischer, K., Blecken, A., 2012. A transshipment model for distribution and inventory relocation under uncertainty in humanitarian op-erations. Socio-Economic Planning Sciences 46, 98–109. Rottkemper, B., Fischer, K., Blecken, A., Danne, C., 2011. Inventory relocation for overlapping disaster settings in humanitarian operations. OR Spectrum 33, 721–749. Sakiani, R., Seifi, A., Khorshiddoust, R.R., 2020. Inventory routing and dynamic redistribution of relief goods in post-disaster operations. Comput. Ind. Eng. 140, 106219. Schulman, J., Moritz, P., Levine, S., Jordan, M., Abbeel, P., 2016. High-dimensional continuous control using generalized advantage estima-tion, in: International Conference on Learning Representations (ICLR). ArXiv:1506.02438. Schulman, J., Wolski, F., Dhariwal, P., Radford, A., Klimov, O., 2017. Proximal policy optimization algorithms. arXiv:1707.06347 .van Steenbergen, R., Mes, M., van Heeswijk, W., 2023. Reinforcement learning for humanitarian relief distribution with trucks and UAVs under travel time uncertainty. Transportation Research Part C: Emerging Technologies 157, 104401. doi: 10.1016/j.trc.2023.104401 .Wu, P.J., Tai, Y.C., 2024. Artificial intelligence-based food-quality and ware-housing management for food banks’ inbound logistics. Journal of Enterprise Information Management 37, 307–325. Yang, S., Zhang, Y., Lu, X., Guo, W., Miao, H., 2024. Multi-agent deep re-inforcement learning based decision support model for resilient community post-hazard recovery. Reliability Engineering & System Safety 242, 109754. doi: 10.1016/j.ress.2023.109754 .Ye, Y., Jiao, W., Yan, H., 2020. Managing relief inventories responding to natural disasters: Gaps between practice and literature. Production and Operations Management 29, 807–832. doi: 10.1111/poms.13136 .Yu, C., Velu, A., Vinitsky, E., Gao, J., Wang, Y., Bayen, A., Wu, Y., 2022. The surprising effectiveness of PPO in cooperative multi-agent games, in: Advances in Neural Information Processing Systems, pp. 24611–24624. Yu, L., Zhang, C., Jiang, J., Yang, H., Shang, H., 2021. Reinforcement Learning Approach for Resource Allocation in Humanitarian Logistics. Expert Systems with Applications 173, 114663. 24

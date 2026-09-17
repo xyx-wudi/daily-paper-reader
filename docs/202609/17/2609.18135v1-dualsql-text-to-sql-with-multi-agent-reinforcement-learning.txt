@@ -1,0 +1,664 @@
+Title: DualSQL: Text-to-SQL with Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2609.18135v1
+
+Published Time: Thu, 17 Sep 2026 00:37:31 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# DualSQL : Text-to-SQL with Multi-Agent Reinforcement Learning 
+
+Shijie Chen 1*, Yu Gan 2, Yeounoh Chung 2, Jiani Zhang 2,Quannan Li 2, Sravan Bodapati 2, Cody Greer 2,
+
+Yu Su 1, Fatma Ozcan 21The Ohio State University 2Google LLC 
+
+chen.10216@osu.edu , {gany, fozcan}@google.com 
+
+Abstract 
+
+State-of-the-art Text-to-SQL systems are typi-cally multi-agent pipelines centered around two fundamental tasks: schema linking and SQL generation. However, existing work trains sep-arate models for each task, failing to leverage the synergy between these interrelated tasks. In this work, we propose DualSQL , a new Text-to-SQL system consisting of two agents pow-ered by a single model backbone. The agents share the same model weights and agentic scaf-fold, enabling joint optimization through a ro-bust multi-agent reinforcement learning (RL) framework. We design three database access tools to facilitate effective multi-step reason-ing grounded in interactions with the databases. To improve training and avoid model collapse, we introduce a set of rollout guardrail mech-anisms that stabilize multi-agent RL training, enabling DualSQL to keep improving during training. We also introduce a new SQL cor-rectness metric, robust execution match (REX), to more accurately judge SQL correctness and assign reward signals. Trained on only 3755 examples, DualSQL -4B achieves an impres-sive 68.0% execution accuracy on the BIRD development set, matching previous 7B mod-els. DualSQL -8B further improves to 71.1%, outperforming previous state-of-the-art single-model solutions with 32B parameters. These results demonstrate the strength of joint multi-agent reinforcement learning for building high-performance Text-to-SQL pipelines. 
+
+1 Introduction 
+
+Text-to-SQL is a key technology for democratiz-ing access to data analytics for non-expert users through a natural language interface (Li et al., 2024a; Luo et al., 2025). However, this task is par-ticularly difficult due to several challenges. First, injecting the entire schema and sampled data from large-scale databases into the context window of 
+
+> *Work done during Shijie Chen’s internship at Google.
+
+language models is prohibitively impractical due to the well-known degradation of reasoning capa-bilities in long contexts (Du et al., 2025; Chung et al., 2025a; Ling et al., 2025) and high prefill-ing costs. Second, SQL queries must be strongly grounded in the database context, requiring precise schema linking for identifying relevant tables and columns, navigating complex schema relationships for formulating correct joins, and a comprehensive understanding of database content for selecting ac-curate literals (Zhang et al., 2025a; Su et al., 2024). Third, the inherent semantic complexity of the Text-to-SQL task complicates the accurate mapping of user intent to valid SQL. This complexity stems from the semantic gap between ambiguous natu-ral language and rigid SQL logic, the requirement for domain knowledge, and ambiguities within the schema itself. State-of-the-art LLM-based systems address these challenges through a modular design built around schema linking and SQL generation (Liu et al., 2025c; Pourreza and Rafiei, 2023; Pourreza et al., 2025a). Within each stage, various meth-ods have been explored, including supervised fine-tuning (Li et al., 2025), in-context learning (Talaei et al., 2024; Pourreza et al., 2025a), and reinforce-ment learning from execution feedback (Pourreza et al., 2025b; Yao et al., 2025). However, these methods optimize the two stages in isolation, point-ing to a critical gap in joint optimization of the end-to-end pipeline. We argue that, despite differing task formula-tions, schema linking and SQL generation share two core capabilities: semantic retrieval over com-plex relational schemas and reasoning grounded in database context. Therefore, instead of building separate models, it is better to treat these tasks as dual facets of a unified agent that can operate on databases, learn shared knowledge representations, and transfer reasoning skills. In this work, we propose DualSQL , a Text-to-1arXiv:2609.18135v1 [cs.CL] 16 Sep 2026 SQL framework that consolidates schema linking and SQL generation into a unified agentic pipeline powered by a single, parameter-shared open-weight LLM. Inspired by the iterative workflow of human database developers, we equip DualSQL with three database access tools: metadata profiling, full-text search, and SQL execution. Rather than relying on rigid, pre-defined workflows, DualSQL learns to autonomously interact with databases, dynamically verifying and correcting its reasoning through tool-use feedback. The entire system is jointly trained with a multi-agent reinforcement learning framework, supported by an asynchronous rollout system that decouples synchronization between stages. We find that stan-dard stabilization techniques such as importance sampling correction (Li, 2025; Liu et al., 2025a; Zheng et al., 2025a) are insufficient to prevent struc-tural degeneration in our multi-agent, multi-turn tool-use settings. We therefore introduce a set of agentic rollout guardrails, including strict format checking with rollout cutoff and error-focused loss masking. Furthermore, to provide cleaner reward signals than the standard execution accuracy (EX), which is overly sensitive to benign formatting vari-ations and insensitive to duplicates, we introduce Robust Execution Match (REX). REX can be com-puted deterministically to efficiently assess exact execution equivalence, preventing the reinforce-ment of false positives during training. By combining this stable agentic RL framework with the unified multi-agent formulation, Dual-SQL demonstrates that open-weight models can achieve strong Text-to-SQL capabilities without re-lying on massive parameter counts or multi-model ensembles. On the challenging BIRD benchmark, 
+
+DualSQL -4B achieves a competitive 68.0% EX, while DualSQL -8B establishes a new state-of-the-art for single-model solutions at 71.1% EX, rivaling systems that utilize 32B parameters. To summarize, our main contributions are: • We introduce a multi-agent Text-to-SQL framework driven by a shared LLM backbone and three database access tools. • We introduce comprehensive agentic rollout guardrails that successfully stabilize multi-agent RL training, and Robust Execution Match, which provides more accurate SQL evaluation. • We demonstrate that joint multi-agent op-timization significantly extends the perfor-mance ceiling of single-model pipelines, achieving highly competitive performance with small model sizes. 
+
+2 Related Work 
+
+2.1 LLM-based Text-to-SQL 
+
+Recent advancements in Text-to-SQL have pro-gressed from simple prompt engineering on general-purpose LLMs to specialized multi-agent systems (Biswal et al., 2026; Wang et al., 2025b; Deng et al., 2025). Initial efforts utilized in-context learning (ICL) to optimize the zero-shot and few-shot performance of proprietary LLMs like GPT-4 (Gao et al., 2023; Pourreza and Rafiei, 2023; Chung et al., 2025b). Subsequent context engineer-ing strategies (Chung et al., 2025b; Shkapenyuk et al., 2025) highlighted the criticality of schema linking via augmented metadata for accurate SQL generation. Unlike ICL-based methods, which rely on passive context engineering, DualSQL learns to perform iterative schema linking with tool use. To handle query complexity, the field shifted to-ward multi-agent collaboration (Wang et al., 2025a; Pourreza et al., 2025a) for task decomposition and external tool leverage. To reduce API dependency and improve cost-efficiency, supervised fine-tuned approaches emerged (Ma et al., 2025a), utilizing large-scale synthetic datasets to align open-source models with the Text-to-SQL task (Li et al., 2024b, 2025). This paradigm was further refined by inte-grating RL with execution feedback to optimize rea-soning chains and bridge the performance gap with larger models (Ma et al., 2025b; Yao et al., 2025; Zhang et al., 2025c). While the latest solutions syn-thesize agentic decomposition and RL (Liu et al., 2025b; Xu et al., 2025b; Yang et al., 2025b), they optimize agents for different stages separately, ne-glecting their synergy. 
+
+DualSQL differs from existing work by (1) in-troducing the robust execution match metric for precise SQL correctness evaluation, (2) providing a comprehensive database manipulation toolset, and (3) establishing a robust multi-agent RL framework for joint optimization of the Text-to-SQL pipeline. 
+
+2.2 Reinforcement Learning with Verifiable Rewards 
+
+Reinforcement Learning with Verifiable Rewards (RLVR) has become a cornerstone for enhancing LLM reasoning in domains with verifiable out-comes, such as mathematics (Shao et al., 2024) and coding (Guo et al., 2025). To address inherent 2training instabilities, recent research has introduced optimization techniques ranging from decoupled clipping and dynamic sampling (Yu et al., 2025) to variance-based rollout down-sampling (Xu et al., 2025a). In multi-turn agentic scenarios, methods such as entropy-based adaptive branching (Dong et al., 2025) and void-turn filtering (Xue et al., 2025) have been proposed to mitigate distribution shifts, while other studies have investigated the role of high-entropy tokens (Wang et al., 2025c), the boundaries of reasoning capabilities versus sam-pling efficiency, and curriculum learning for au-tonomous agents (Nguyen et al., 2025; Zheng et al., 2025b). The complex and noisy database environ-ments pose new challenges to agentic RL stability for text-to-SQL systems. Our work contributes an efficient rollout implementation and a set of agentic rollout guardrails, which effectively enhance the efficiency and stability of multi-agent RL, leading to better performance via prolonged exploration. 
+
+3 DualSQL Agentic System 
+
+This section introduces the agentic system of Du-alSQL . We introduce a unified agentic formulation for the sub-agents in Text-to-SQL systems: schema linker and SQL generator. Each agent is powered by the same backbone LLM that is equipped with a set of database access tools, engaging in multi-turn interactions to understand database context and reason about the question. 
+
+3.1 Database Access Tools 
+
+Inspired by the iterative workflow of human database developers, we equip the agents with three database access tools. Implementation details, in-cluding JSON serialization of tool outputs and asyn-chronous tool hosting, are in Appendix A. 
+
+SQL Executor. The primary interface between the agents and the database. The agents use it for (i) execution feedback to verify syntactic and seman-tic correctness, (ii) entity grounding to inspect lit-eral representations, and (iii) ad-hoc schema explo-ration via sqlite_master or PRAGMA . A content-aware truncation policy keeps standard retrievals within context limits while preserving full schema-query responses. 
+
+Full Text Search. To bridge ambiguous or abbreviated mentions in user queries to literal database content, this tool performs fuzzy matching over schema names and cell values using SQLite FTS5 inverted indices. It returns the matched schema elements and up to five matching values per column. 
+
+Database Profiler. This tool retrieves offline-prepared database metadata. For each table and column, we use an LLM to produce a description summarizing semantic intent and to infer foreign-key relationships that may be missing from the DDL. We additionally pre-compute column-level statistics (distinct counts, types, null ratios). Of-floading this analysis offline frees the agent to focus on query logic at runtime. 
+
+3.2 DualSQL Agents 
+
+DualSQL features a multi-agent pipeline consisting of two agents, both of which are powered by the same backbone LLM and can engage in multi-turn interactions with the database via the tools intro-duced in Section 3.1: 
+
+Schema linker: Given the natural language question Q and the complete database schema 
+
+S = {T , C} , where T and C are the sets of ta-bles and columns, the schema linker identifies the relevant database schema S′ ⊆ S to reduce the distraction in large databases and ensures the sub-sequent SQL generator operates within a focused context window. 
+
+SQL generator: The SQL generator generates a SQL query y′ based on the question Q and the linked schema S′. By modeling schema linking and SQL generation as a joint stochastic process, we encourage the generated SQL to be grounded in the correct schema elements, reducing hallucination from irrelevant table schemas. Despite its simplicity, this unified design proves effective and allows us to jointly optimize the entire pipeline with our multi-agent RL framework. 
+
+4 Multi-Agent RL Framework for Optimizing Text-to-SQL Pipelines 
+
+The unified agent design enables joint optimization of the two agents by training a single LLM. In this section, we introduce our multi-agent RL recipe, including an asynchronous rollout system, rollout guardrails, reward design, and training objectives. 
+
+4.1 Asynchronous Rollout System 
+
+Considering the dependency structure of the above Text-to-SQL pipeline and that agent trajectories vary greatly in length, we design an asynchronous rollout system which manages asynchronous roll-out for parsing pipelines. We treat schema linking 3Training Batch with Prompts 
+
+> Agent
+> GRPO
+> Batch-level Async Pipeline Rollout • • •
+> Trajectories
+> • • • Prompt-level Pipeline Actor
+> Agent -Schema Linking Agent -SQL Generation
+> Tool & Veri fi cation Server SQL Execution Full Text Search Database Pro fi ler SQL Veri fi cation Reward
+> Databases
+> Update LLM
+
+Figure 1: The multi-agent training framework for DualSQL . sl and sql denote schema linking and SQL generation tasks, respectively. The two agents are driven by the same LLM and tools. 
+
+and SQL generation as an integral stochastic pro-cess, which avoids synchronization between stages and improves throughput of multi-agent rollout. For each batch of B prompts, the batch-level controller manages asynchronous rollout of differ-ent prompts, each supported by the prompt-level pipeline actor. The prompt-level pipeline actor ex-ecutes individual Text-to-SQL pipelines. It flexibly supports rollout of a single task or a pipeline chain-ing schema linking and SQL generation. With a group size of G, we sample a total of 2B · G trajec-tories in each optimization step. These trajectories are later grouped by task and used for joint opti-mization of the policy model. 
+
+4.2 Agentic Rollout Guardrails 
+
+In our preliminary experiments, we observe that multi-agent RL training is much more unstable than non-agentic or single-agent RL training, shown by frequent collapse in trajectory format in one or both tasks. Existing work advocates for variants of sequence-level importance sampling or negative sampling to calibrate the distribution mismatch be-tween rollout and policy models, aiming to stabilize training (Liu et al., 2025a; Li, 2025). However, we find that representative collapse patterns, such as the incorrect use of format tokens, endless loops, and incorrect tool calls, persist even with these cal-ibration techniques. To improve the robustness of multi-agent RL training, we design a set of agentic rollout guardrails , including strict format check-ing, rollout cutoff, and loss masking. 
+
+Strict Format Checking. To maintain format correctness of agentic rollouts, we design a strict format checking mechanism that enforces the fol-lowing requirements: • In each turn, the agent should generate a non-empty <think></think> block for effective reasoning. • In each turn, the agent should generate either a <tool_call></tool_call> block for tool calls or a single ``` ... ``` code block for re-turning final answers, such as a linked schema or a SQL query. • If a tool call is generated, it should be format-ted as a JSON string following the pre-defined tool call format, including a valid tool name and tool arguments. Moreover, the tools are idempotent and the same tool should not be called more than once with the exact same argument. • If a code block is generated, the content af-ter the code block should not constitute more than half of the total length in that turn. This requirement prevents the model from collaps-ing into generating redundant or even endless explanations after the solution is given. If a trajectory violates any of the above con-straints, we set the format correctness reward Rf to 0. Otherwise, Rf = 1 . In this way, format check-ing helps reduce degeneration and mode collapse during training. 
+
+Rollout Cutoff. Allowing rollout to proceed af-ter format violations can lead to a reward hacking pattern, where agents learn that format errors are acceptable as long as the final answer is correct. Moreover, the malformed actions pollute reward 4signals, causing the policy model to reinforce in-valid actions and eventually reach an unrecoverable state. To prevent this, we stop rollout immedi-ately when detecting any format constraint viola-tion, which acts as a hard filter on the exploration space, ensuring that the agent is only rewarded when strictly adhering to the format requirements. 
+
+Loss Masking. Penalizing an entire multi-turn trajectory for a terminal format error introduces noise in reward signals, as it may discourage the valid reasoning steps that preceded the error. At the same time, rewarding correct trajectories with intermediate format or tool call errors also risks reinforcing bad behaviors. Therefore, we mask out the loss for previous turns if a trajectory ends with a turn with a format error to concentrate learning signals on format error turns. This approach ef-fectively teaches the agent to unlearn malformed actions before improving reasoning correctness. At test time, we add meaningful error messages as tool responses to the trajectory upon occasional errors, such as JSON parsing errors or argument type mismatches. In this way, the agent can correct its tool-use mistakes and continue reasoning. 
+
+4.3 Reward Design Schema Linking. We design a reward function that encourages high recall. Given the ground truth schema items S∗ and the linked schema items S′,we compute the schema linking reward as:                                
+
+> Rsl =
+> 
+> 1if S∗=S′
+> 0.9−max(0 .2−|S∗∩S′||S′|,0) if S∗⊆S′
+> 0.7−max(0 .2−|S∗∩S′||S′|,0) if T∗⊆T′
+> 0.5·2|S∗∩S′||S∗|+|S′|otherwise
+> ,(1)
+
+where T ∗ and T ′ are the sets of ground truth and linked tables, respectively. This reward function gives full credit to perfect matches. Then, partial credit is given for complete schema-level and table-level recall with a penalty for low precision. Finally, we give partial credit based on F1 score. 
+
+SQL Generation. We use the correctness of the predicted SQL query y′ as the reward signal for SQL generation. To avoid degeneration into single-turn reasoning, we add a bonus for correct trajectories that use tools Rtool = 1 .
+
+Rsql =
+
+(
+
+1 + 0 .1 · Rtool if Eq (y′,y∗)0 otherwise (2) where y∗ is the ground truth SQL query and Eq (·)
+
+indicates whether two SQL queries are equivalent. The execution match (EX) metric, widely used in Text-to-SQL benchmarks like Spider and BIRD, first converts SQL query result sets into a set of literals and evaluates equivalence. This process overlooks the important discrepancies brought by duplicated rows and row ordering, leading to false positive evaluations. Moreover, EX also does not tolerate column order permutations, which intro-duces false negative signals. We propose robust execution match (REX), a stricter metric based on data similarity, which eval-uates equivalence by finding the maximum match-ing between the result sets of two SQL queries. If the question does not demand row order matching, REX first sorts the result sets by high-cardinality columns. Then, REX tries to find a permutation of columns that leads to the maximum matching. If a perfect matching is found, the two result sets are considered equivalent. We decide whether a question requires row ordering matching based on the presence of the ORDER BY keyword in ground truth SQL queries. Algorithm details are available in Appendix E. 
+
+Format Reward and Length Penalty. We use the soft overlong punishment introduced by DAPO to penalize overlong trajectories. Additionally, the length penalty also implicitly incentivizes the agent to avoid unnecessary self-correction steps by as-signing higher marginal rewards to concise, error-free trajectories.                  
+
+> Rl=
+> 
+> 0|τ| ≤ Lmax −Lcache
+> (Lmax −Lcache −| τ|)
+> Lcache Lmax −Lcache <|τ| ≤ Lmax
+> −1,|τ|> L max
+> (3)
+
+We only apply the length penalty to trajectories with the correct format to avoid false positive sig-nals. The final reward is computed as: 
+
+R = max( Rtask , 0.1 · Rf ) + λlRl · Rf , (4) where Rtask ∈ { Rsl , R sql } is the task-specific re-ward. λl = 0 .2 is the weight for the length penalty. We further clip negative rewards to 0 to prevent undesirable trajectories from having a positive ad-vantage. 
+
+4.4 Training Objectives 
+
+We optimize DualSQL with GRPO (Shao et al., 2024), incorporating token-mean loss and clip-higher (Yu et al., 2025) into the training objec-5tive, and sequence-level masked importance sam-pling (Liu et al., 2025a) for enhancing training stability. For each prompt x, we sample 2G tra-jectories from πθ (G per task t ∈ { sl, sql }) and compute a task-specific group-relative advantage 
+
+ˆA(i) 
+
+> t
+
+for policy updates. 
+
+5 Experiments 
+
+5.1 Experiment Setup Training Data Preparation We train our mod-els on the officially revised training set of BIRD. We filter out 2715 trivial examples where Qwen3-8B has P ass 16 = 1 and 466 intractable examples where Gemini-2.5-Pro has Pass@32 = 0 when evaluated in both single-turn and agentic Text-to-SQL settings. This leads to a training set of 3376 examples. We further manually analyze the in-tractable questions and correct 384 annotation er-rors as augmented training data, leading to 3755 training examples after deduplication. 
+
+RL Setup We implement our multi-agent RL framework based on VeRL (Sheng et al., 2024). We use a learning rate of 2e-6, linear warmup of 20 steps, batch size of 256, and group size of 16 during training. For rollout, we set the temperature to 1.0, top-k = 20 and top-p = 0 .99 to encourage exploration. We use Qwen3 (Yang et al., 2025a) 4B and 8B models as the base models for training. The trajectory length limit is set to 32K tokens and the overlong buffer size Lcache to 4K tokens. More training details, including the training performance curve, can be found in Appendix B. 
+
+5.2 Experiment Results 
+
+We follow the same schema serialization procedure as OmniSQL (Li et al., 2025) to be consistent with previous work and use OmniSQL’s prompt when evaluating base LLMs. By default, we report the average performance over 8 runs. 
+
+5.2.1 In-Domain Evaluation Text-to-SQL We compare DualSQL with existing RL-based single-model Text-to-SQL methods on the BIRD development set (BIRD-Dev), including single-turn models like SQL-R1 (Ma et al., 2025b), Reasoning-SQL (Pourreza et al., 2025b) and Arctic-Text2SQL-R1 (Yao et al., 2025), and the single-agent MTIR-SQL (Xu et al., 2025b) with only the SQL execution tool. As shown by Table 1, with multi-agent RL training of both schema linking and SQL gener-                                                              
+
+> Method Size Agent EX MTIR-SQL 4B sql 64.4 Reasoning-SQL 7B ×64.0 SQL-R1 7B ×66.6 Arctic-Text2SQL-R1 7B ×68.9 MTIR-SQL 8B sql 64.6 Reasoning-SQL 14B ×65.3 SQL-R1 14B ×67.1 MTIR-SQL 14B sql 68.1 Arctic-Text2SQL-R1 14B ×70.1 Arctic-Text2SQL-R1 32B ×70.5
+> DualSQL (Ours) 4B sl +sql 68.0
+> DualSQL (Ours) 8B sl +sql 71.1
+> Table 1: Performance on the BIRD development set.
+> Method Precision Recall F1 C-Recall
+> DualSQL sl -8B 91.7 89.9 90.0 64.7
+> DualSQL -4B 92.6 89.5 90.3 63.8
+> DualSQL -8B 93.1 90.0 90.8 65.8
+> Table 2: Schema linking performance on BIRD-Dev. C-Recall denotes complete recall.
+
+ation, DualSQL achieves impressive Text-to-SQL performance with small model sizes. DualSQL -4B reaches 68.0% EX, matching prior 7B base-lines. DualSQL -8B further improves performance to 71.1% EX, surpassing previous methods built on 14B or 32B models and establishing a new single-model state-of-the-art. Breaking down by question difficulty (Appendix C), our multi-agent formulation consistently improves over the SQL-only DualSQL sql baseline across all difficulty lev-els, with the largest gain on challenging questions (3.0% EX for the 8B model). 
+
+Schema Linking We evaluate the schema link-ing performance of DualSQL on the BIRD devel-opment set by comparing linked schema S′ with the schema used by the ground truth query S∗. In addition to precision, recall, and F1 score, we also report complete recall rate (C-Recall), which mea-sures the percentage of examples where all ground truth schema entities are retrieved by the agent. Table 2 shows the schema linking performance of DualSQL . We compare the performance of standalone RL for the schema linking agent (DualSQL sl -8B) and multi-agent RL. As shown by the table, DualSQL -8B can accurately find rel-evant schema items, achieving over 90% F1 score in schema linking. Multi-agent RL training addi-tionally boosts precision by 1.4% and C-Recall by 1.1%, demonstrating the synergy between agents. 
+
+Linking Errors and Parsing Errors. We con-6Model EX REX             
+
+> DualSQL -4B 68 .0±0.74 64 .0±0.75
+> DualSQL -4B w/ oracle schema 71 .7±0.40 66 .8±0.64
+> DualSQL sql -8B 69 .6±0.28 66 .7±0.30
+> DualSQL sql -8B w/ oracle schema 75 .7±0.64 71 .1±0.60
+> DualSQL -8B 71 .1±0.23 68 .6±0.21
+> DualSQL -8B w/ oracle schema 76.5 ±0.50 72.1 ±0.48
+
+Table 3: SQL generation performance on BIRD-Dev when paired with an oracle schema linker. 
+
+duct a manual error analysis on DualSQL -8B’s er-rors and find that only 15.3% of them are due to schema linking errors such as wrong columns and tables, despite C-Recall being only 65.8%. This discrepancy exists because C-Recall is a strict and over-pessimistic metric. In practice, we find Dual-SQL can use tools to dynamically recover missing schema context during its multi-turn reasoning pro-cess in the SQL generation stage, compensating for imperfect schema linking results. To quantify the impact of imperfect schema linking, we evaluate DualSQL -8B’s performance with oracle schema linkers (Table 3). DualSQL -8B’s performance can be improved by 5.4 points, demonstrating sizable headroom for improvement in schema linking. We also notice that Dual-SQL maintains its advantage over DualSQL sql by 0.8 points in EX, indicating that joint multi-agent RL indeed improves reasoning capabilities. 
+
+5.2.2 Out-of-domain Evaluation                              
+
+> BIRD-Dev Spider Model EX REX EX REX Qwen3-4B 59 .6±0.49 52 .8±0.52 78 .9±0.22 81 .4±0.25
+> DualSQL -4B 68.0 ±0.74 64.0 ±0.75 81.9 ±0.30 85.3 ±0.27
+> Qwen3-8B 60 .9±0.60 56 .6±0.47 78 .9±0.33 76 .1±0.35
+> Single-turn RL 67 .3±0.46 61 .3±0.39 82 .3±0.37 78 .7±0.35
+> DualSQL sql -8B 69 .6±0.28 66 .7±0.30 82 .7±0.21 80 .6±0.31
+> DualSQL -8B 71.1 ±0.23 68.6 ±0.21 83.1 ±0.29 80.8 ±0.18
+
+Table 4: Comparing different RL training settings on BIRD-Dev and Spider. 
+
+Our models are trained on data from only the BIRD training set. To evaluate the generalization ability of our models, we also test DualSQL on Spi-der’s test set (Yu et al., 2018) and compare single-turn RL, single-agent RL, and multi-agent RL when using the same training data and parameter setup. As shown by Table 4, we observe a significant ad-vantage of single-agent RL over single-turn RL on the 8B models. In addition, our joint multi-agent RL training method further improves the text-to-SQL performance on both benchmarks, demon-strating that the tool-use and reasoning capabilities learned during training can generalize to Spider. 
+
+5.2.3 Ablation Studies Effectiveness of Multi-Agent RL: To understand the effectiveness of our multi-agent RL framework, we compare RL outcomes using Qwen3-8B under 3 settings: (1) single-turn Text-to-SQL with rea-soning, (2) multi-turn agentic Text-to-SQL, and (3) multi-agent Text-to-SQL (schema linking + SQL generation) trained with the same reward function and hyperparameter settings. Using the same training data and reward signal, we observe a significant performance gain of 2.3% EX and 5.4% REX when moving from single-turn Text-to-SQL to multi-turn agentic Text-to-SQL, demonstrating the effectiveness of our agentic Text-to-SQL framework. Multi-agent RL training of both schema linking and SQL generation further improves the performance by 1.5% EX and 1.9% REX on BIRD-Dev, showing the benefit of joint optimization of multiple agents. 
+
+Effectiveness of Robust Execution Match: To study the effectiveness of the proposed robust ex-ecution match as a reward signal, we compare RL outcomes in the single-agent setting when using EX or REX as Eq (·) in the reward function.       
+
+> Eq (·)EX REX EX 69.2 63.7 REX 69.6 66.7
+
+Table 5: Comparison of performance on BIRD-Dev when using EX or REX as Eq (·) in the reward function for single-agent Text-to-SQL RL. We test on 8B models. 
+
+As shown by Table 5, using the high-fidelity REX metric as the reward signal leads to better RL outcomes measured in both EX and REX met-rics. Through error analysis, we find that the model trained with EX as the reward signal struggles with questions where using DISTINCT and ORDER BY 
+
+clauses is required, which are also the scenarios where EX fails to distinguish. This demonstrates that a cleaner reward signal consistently leads to better training outcomes, although the target bench-mark is measured using a coarser metric. 
+
+Effectiveness of Agentic Rollout Guardrails: 
+
+To test the effectiveness of the proposed agentic rollout guardrails, we compare RL training runs with and without the guardrails and report execu-tion accuracy on BIRD-Dev during training. 7Figure 2: Ablation study on the effectiveness of agentic rollout guardrails. We report execution accuracy (EX) on BIRD-Dev during training. Sequence-level masked importance sampling is enabled for both models. 
+
+Fig. 2 shows that agentic rollout guardrails pre-vent mode collapse before convergence by guiding the model to unlearn erroneous behavior imme-diately at the error turns. This allows the agent to maintain format correctness and reach higher performance via sustained training. In contrast, malformed actions are retained in trajectories with high rewards without the guardrails, which are re-inforced during training and eventually lead to be-havioral collapse. 
+
+5.2.4 DualSQL Reasoning Strategies 
+
+To characterize the behavior of DualSQL , we ana-lyze the reasoning trajectories and tool usage pat-terns that emerged through joint multi-agent rein-forcement learning. Table 6 summarizes the av-erage number of tool calls made by DualSQL in each stage on BIRD-Dev. An ablation study of individual tools is available in Appendix D.               
+
+> Stage SE FTS DP Total Schema Linking 0.25 0.00 1.00 1.26 SQL Generation 1.22 0.05 0.49 1.76
+> Table 6: Average number of tools used by DualSQL -8B on BIRD-Dev. SE: SQL Execution, FTS: Full Text Search, DP: Database Profiler.
+
+We highlight two primary strategies that distin-guish DualSQL from single-turn baselines. (Please see Appendix G for example agent trajectories.) 
+
+Interactive Schema Linking: Rather than op-erating on a potentially hallucinated mental model derived from static DDL, the agents employ an interactive schema linking strategy. By leverag-ing the Database Profiler to inspect table metadata and the SQL Executor to sample specific rows, the agents actively resolve lexical mismatches and ver-ify columns, tables, and join paths before generat-ing the SQL code. The strategic separation between schema linking and SQL generation reduces the at-tention dilution of relevant information within mas-sive input sequences in the SQL generator, allowing it to operate within a pruned, high-relevance con-text window. Additionally, our two-stage approach achieves robust failure recovery by augmenting self-correction with cross-validation, mitigating the risks of relying solely on self-correction (Zhang et al., 2025b). Should the pre-filtered schema from the schema linker prove insufficient during execu-tion, the SQL generator retains the capability of using tools to refine its schema understanding. 
+
+Execution-guided Error Correction: Unlike the standard single-turn reasoning models that are prone to syntactically valid queries returning incor-rect results, DualSQL emulates the behavior of hu-man developers to transform SQL generation from a static parsing task into a dynamic hypothesis-testing loop. By analyzing intermediate execution feedback, the agents detect discrepancies (e.g., nu-merical data stored as strings, non-standard date formats, or string values in a different language) and iteratively refine their queries with precise dialect-specific adjustments, such as type casting or string manipulation. It ensures the final SQL is consistent with users’ intents and the contents stored in the database. 
+
+6 Conclusion 
+
+We propose DualSQL , a multi-agent Text-to-SQL system optimized by a robust reinforcement learn-ing framework. DualSQL unifies schema linking and SQL generation as two agents powered by a single LLM backbone and a set of database access tools, enabling effective reasoning over databases and joint optimization through RL. DualSQL -4B reaches 68.0% EX on BIRD-Dev, matching prior 7B baselines, while DualSQL -8B sets a new single-model state-of-the-art of 71.1% EX, surpassing methods built on 32B models. These results demon-strate that joint multi-agent optimization is an ef-fective path toward stronger Text-to-SQL systems. We see three promising directions for future work: (1) better reward design for multi-agent rein-forcement learning, including fine-grained process reward signals and inter-agent credit assignment mechanisms; (2) scaling training data via synthesis of large-scale databases and challenging Text-to-SQL questions; and (3) more effective multi-agent RL recipes for training larger models and support-8ing longer-horizon trajectories. 
+
+Limitations 
+
+Model backbone. We instantiate DualSQL on the Qwen3 family because (1) it natively supports both extended reasoning and tool calling, two key ca-pabilities our agentic formulation requires; and (2) it is well supported by open-source training frameworks like VeRL. Nevertheless, we believe our training recipe to be applicable to any back-bone LLMs with these capabilities, including open-weight and proprietary ones. 
+
+Reward design. REX substantially improves over EX as a reward signal, as confirmed by our ablations. However, it is still a proxy for SQL equivalence checking and could produce false sig-nals. In addition, as with any outcome-based re-ward function, our reward design lacks fine-grained process-level reward signals which could be impor-tant for training stronger Text-to-SQL agents in the future. 
+
+Security. We restrict the agents to read-only database access throughout training and evalua-tion. As with any LLM-driven system that inter-faces with live data sources, deploying DualSQL in production warrants standard precautions against query-induced resource exhaustion and adversarial prompt injection. 
+
+Artifact and Data Usage 
+
+This work leverages datasets and code from previ-ous research, including the BIRD Dataset (Li et al., 2023) (CC BY-SA 4.0), the Spider dataset (Yu et al., 2018) (CC BY-SA 4.0), code from the VeRL (Apache 2.0) framework (Sheng et al., 2024), and the Qwen3 (Apache 2.0) family of models (Yang et al., 2025a). These data, software, and models have permissive licenses for use in academic re-search. 
+
+AI Assistant Usage 
+
+The authors used AI assistants for editing and im-proving the language of the paper. All presented content is reviewed by the authors. 
+
+References 
+
+Asim Biswal, Chuan Lei, Xiao Qin, Aodong Li, Bal-akrishnan Narayanaswamy, and Tim Kraska. 2026. Agentsm: Semantic memory for agentic text-to-sql. arXiv preprint arXiv:2601.15709. Andy Chung, Yichi Zhang, Kaixiang Lin, Aditya Rawal, Qiaozi Gao, and Joyce Chai. 2025a. Evaluating long-context reasoning in llm-based webagents. arXiv preprint arXiv:2512.04307. Yeounoh Chung, Gaurav T. Kakkar, Yu Gan, Brenton Milne, and Fatma Ozcan. 2025b. Is long context all you need? leveraging llm’s extended context for nl2sql. Proc. VLDB Endow., 18(7):2735–2748. Minghang Deng, Ashwin Ramachandran, Canwen Xu, Lanxiang Hu, Zhewei Yao, Anupam Datta, and Hao Zhang. 2025. Reforce: A text-to-sql agent with self-refinement, format restriction, and column ex-ploration. In ICLR 2025 Workshop: VerifAI: AI Verification in the Wild. Guanting Dong, Hangyu Mao, Kai Ma, Licheng Bao, Yifei Chen, Zhongyuan Wang, Zhongxia Chen, Ji-azhen Du, Huiyang Wang, Fuzheng Zhang, et al. 2025. Agentic reinforced policy optimization. arXiv preprint arXiv:2507.19849. Yufeng Du, Minyang Tian, Srikanth Ronanki, Subendhu Rongali, Sravan Bodapati, Aram Galstyan, Azton Wells, Roy Schwartz, Eliu A Huerta, and Hao Peng. 2025. Context length alone hurts llm per-formance despite perfect retrieval. arXiv preprint arXiv:2510.05381. Dawei Gao, Haibin Wang, Yaliang Li, Xiuyu Sun, Yichen Qian, Bolin Ding, and Jingren Zhou. 2023. Text-to-sql empowered by large language mod-els: A benchmark evaluation. arXiv preprint arXiv:2308.15363. Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al. 2025. Deepseek-r1: In-centivizing reasoning capability in llms via reinforce-ment learning. arXiv preprint arXiv:2501.12948. Boyan Li, Yuyu Luo, Chengliang Chai, Guoliang Li, and Nan Tang. 2024a. The dawn of natural lan-guage to sql: Are we fully ready? arXiv preprint arXiv:2406.01265. Haoyang Li, Shang Wu, Xiaokang Zhang, Xinmei Huang, Jing Zhang, Fuxin Jiang, Shuai Wang, Tiey-ing Zhang, Jianjun Chen, Rui Shi, Hong Chen, and Cuiping Li. 2025. Omnisql: Synthesizing high-quality text-to-sql data at scale. Proc. VLDB Endow., 18(11):4695–4709. Haoyang Li, Jing Zhang, Hanbing Liu, Ju Fan, Xi-aokang Zhang, Jun Zhu, Renjie Wei, Hongyan Pan, Cuiping Li, and Hong Chen. 2024b. Codes: Towards building open-source language models for text-to-sql. Proceedings of the ACM on Management of Data, 2(3):1–28. Jinyang Li, Binyuan Hui, Ge Qu, Jiaxi Yang, Binhua Li, Bowen Li, Bailin Wang, Bowen Qin, Ruiying Geng, Nan Huo, Xuanhe Zhou, Chenhao Ma, Guo-liang Li, Kevin C.C. Chang, Fei Huang, Reynold Cheng, and Yongbin Li. 2023. Can llm already 
+
+9serve as a database interface? a big bench for large-scale database grounded text-to-sqls. In Proceedings of the 37th International Conference on Neural Information Processing Systems, NIPS ’23, Red Hook, NY, USA. Curran Associates Inc. Yingru Li. 2025. Mathematical formulations of rollout correction methods in verl. Zhan Ling, Kang Liu, Kai Yan, Yifan Yang, Weijian Lin, Ting-Han Fan, Lingfeng Shen, Zhengyin Du, and Jiecao Chen. 2025. Longreason: A synthetic long-context reasoning benchmark via context expansion. arXiv preprint arXiv:2501.15089. Jiacai Liu, Yingru Li, Yuqian Fu, Jiawei Wang, Qian Liu, and Yu Shen. 2025a. When speed kills stability: De-mystifying RL collapse from the training-inference mismatch. Shu Liu, Alan Zhu, Sumanth Hegde, Shiyi Cao, Shuo Yuan, Samion Suwito, Tyler Griggs, Matei Za-haria, Joseph E Gonzalez, and Ion Stoica. 2025b. Skyrl-sql: Multi-turn sql data agents via rl. In First Workshop on Multi-Turn Interactions in Large Language Models (MTI-LLM @ NeurIPS). Yifu Liu, Yin Zhu, Yingqi Gao, Zhiling Luo, Xiaoxia Li, Xiaorong Shi, Yuntao Hong, Jinyang Gao, Yu Li, Bolin Ding, et al. 2025c. Xiyan-sql: A novel multi-generator framework for text-to-sql. arXiv preprint arXiv:2507.04701. Yuyu Luo, Guoliang Li, Ju Fan, Chengliang Chai, and Nan Tang. 2025. Natural language to sql: State of the art and open problems. Proceedings of the VLDB Endowment, 18(12):5466–5471. Haoyuan Ma, Yongliang Shen, Hengwei Liu, Wenqi Zhang, Haolei Xu, Qiuying Peng, Jun Wang, and Weiming Lu. 2025a. Db-explore: Automated database exploration and instruction synthesis for text-to-sql. arXiv preprint arXiv:2503.04959. Peixian Ma, Xialie Zhuang, Chengjin Xu, Xuhui Jiang, Ran Chen, and Jian Guo. 2025b. Sql-r1: Training natural language to sql reasoning model by reinforce-ment learning. arXiv preprint arXiv:2504.08600. Xuan-Phi Nguyen, Shrey Pandit, Revanth Gangi Reddy, Austin Xu, Silvio Savarese, Caiming Xiong, and Shafiq Joty. 2025. Sfr-deepresearch: Towards effec-tive reinforcement learning for autonomously reason-ing single agents. arXiv preprint arXiv:2509.06283. Mohammadreza Pourreza, Hailong Li, Ruoxi Sun, Yeounoh Chung, Shayan Talaei, Gaurav Tarlok Kakkar, Yu Gan, Amin Saberi, Fatma Ozcan, and Sercan O Arik. 2025a. CHASE-SQL: Multi-path reasoning and preference optimized candidate selec-tion in text-to-SQL. In The Thirteenth International Conference on Learning Representations. Mohammadreza Pourreza and Davood Rafiei. 2023. DIN-SQL: Decomposed in-context learning of text-to-SQL with self-correction. In Thirty-seventh Conference on Neural Information Processing Systems. Mohammadreza Pourreza, Shayan Talaei, Ruoxi Sun, Xingchen Wan, Hailong Li, Azalia Mirhoseini, Amin Saberi, and Sercan O Arik. 2025b. Reasoning-SQL: Reinforcement learning with SQL tailored partial rewards for reasoning-enhanced text-to-SQL. In Second Conference on Language Modeling. Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. 2024. Deepseekmath: Pushing the limits of mathemati-cal reasoning in open language models. Preprint, arXiv:2402.03300. Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu. 2024. Hybridflow: A flexible and efficient rlhf framework. arXiv preprint arXiv: 2409.19256. Vladislav Shkapenyuk, Divesh Srivastava, Theodore Johnson, and Parisa Ghane. 2025. Automatic metadata extraction for text-to-sql. arXiv preprint arXiv:2505.19988. Aofeng Su, Aowen Wang, Chao Ye, Chen Zhou, Ga Zhang, Gang Chen, Guangcheng Zhu, Haobo Wang, Haokai Xu, Hao Chen, et al. 2024. Tablegpt2: A large multimodal model with tabular data integra-tion. arXiv preprint arXiv:2411.02059. Shayan Talaei, Mohammadreza Pourreza, Yu-Chen Chang, Azalia Mirhoseini, and Amin Saberi. 2024. Chess: Contextual harnessing for efficient sql synthe-sis. Preprint, arXiv:2405.16755. Bing Wang, Changyu Ren, Jian Yang, Xinnian Liang, Ji-aqi Bai, LinZheng Chai, Zhao Yan, Qian-Wen Zhang, Di Yin, Xing Sun, and Zhoujun Li. 2025a. MAC-SQL: A multi-agent collaborative framework for text-to-SQL. In Proceedings of the 31st International Conference on Computational Linguistics, pages 540–557, Abu Dhabi, UAE. Association for Com-putational Linguistics. Pengfei Wang, Baolin Sun, Xuemei Dong, Yaxun Dai, Hongwei Yuan, Mengdie Chu, Yingqi Gao, Xiang Qi, Peng Zhang, and Ying Yan. 2025b. Agentar-scale-sql: Advancing text-to-sql through orchestrated test-time scaling. arXiv preprint arXiv:2509.24403. Shenzhi Wang, Le Yu, Chang Gao, Chujie Zheng, Shix-uan Liu, Rui Lu, Kai Dang, Xionghui Chen, Jianxin Yang, Zhenru Zhang, et al. 2025c. Beyond the 80/20 rule: High-entropy minority tokens drive effective reinforcement learning for llm reasoning. arXiv preprint arXiv:2506.01939. Yixuan Even Xu, Yash Savani, Fei Fang, and J Zico Kolter. 2025a. Not all rollouts are useful: Down-sampling rollouts in llm reinforcement learning. arXiv preprint arXiv:2504.13818. 
+
+10 Zekun Xu, Siyu Xia, Chuhuai Yue, Jiajun Chai, Mingxue Tian, Xiaohan Wang, Wei Lin, Haoxuan Li, and Guojun Yin. 2025b. Mtir-sql: Multi-turn tool-integrated reasoning reinforcement learning for text-to-sql. Preprint, arXiv:2510.25510. Zhenghai Xue, Longtao Zheng, Qian Liu, Yingru Li, Xiaosen Zheng, Zejun Ma, and Bo An. 2025. Simpletir: End-to-end reinforcement learning for multi-turn tool-integrated reasoning. arXiv preprint arXiv:2509.02479. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, Chujie Zheng, Dayi-heng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge, Haoran Wei, Huan Lin, Jialong Tang, and 41 oth-ers. 2025a. Qwen3 technical report. arXiv preprint arXiv:2505.09388. Haolin Yang, Jipeng Zhang, Zhitao He, and Yi R. Fung. 2025b. Mars-sql: A multi-agent reinforce-ment learning framework for text-to-sql. Preprint, arXiv:2511.01008. Zhewei Yao, Guoheng Sun, Lukasz Borchmann, Zheyu Shen, Minghang Deng, Bohan Zhai, Hao Zhang, Ang Li, and Yuxiong He. 2025. Arctic-text2sql-r1: Sim-ple rewards, strong reasoning in text-to-sql. Preprint, arXiv:2505.20315. Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian Fan, Gaohong Liu, Lingjun Liu, et al. 2025. DAPO: An open-source LLM reinforcement learning system at scale. In The Thirty-ninth Annual Conference on Neural Information Processing Systems. Tao Yu, Rui Zhang, Kai Yang, Michihiro Yasunaga, Dongxu Wang, Zifan Li, James Ma, Irene Li, Qingn-ing Yao, Shanelle Roman, Zilin Zhang, and Dragomir Radev. 2018. Spider: A large-scale human-labeled dataset for complex and cross-domain semantic pars-ing and text-to-SQL task. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pages 3911–3921, Brussels, Belgium. Association for Computational Linguistics. Jiani Zhang, Hengrui Zhang, Rishav Chakravarti, Yiqun Hu, Patrick Ng, Asterios Katsifodimos, Huzefa Rang-wala, George Karypis, and Alon Halevy. 2025a. Cod-dllm: Empowering large language models for data analytics. arXiv preprint arXiv:2502.00329. Qingjie Zhang, Di Wang, Haoting Qian, Yiming Li, Tianwei Zhang, Minlie Huang, Ke Xu, Hewu Li, Liu Yan, and Han Qiu. 2025b. Understanding the dark side of llms’ intrinsic self-correction. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 27066–27101. Yuxin Zhang, Meihao Fan, Ju Fan, Mingyang Yi, Yuyu Luo, Jian Tan, and Guoliang Li. 2025c. Reward-sql: Boosting text-to-sql via stepwise reasoning and process-supervised rewards. arXiv preprint arXiv:2505.04671. Chujie Zheng, Kai Dang, Bowen Yu, Mingze Li, Huiqiang Jiang, Junrong Lin, Yuqiong Liu, Hao Lin, Chencan Wu, Feng Hu, et al. 2025a. Stabilizing reinforcement learning with llms: Formulation and practices. arXiv preprint arXiv:2512.01374. Tong Zheng, Hongming Zhang, Wenhao Yu, Xiaoyang Wang, Runpeng Dai, Rui Liu, Huiwen Bao, Cheng-song Huang, Heng Huang, and Dong Yu. 2025b. Parallel-r1: Towards parallel thinking via reinforce-ment learning. arXiv preprint arXiv:2509.07980. 
+
+11 A More Tool Implementation Details 
+
+To optimize the model’s consumption of tool re-sults, we serialize all tool results using the JSON for-mat, minimizing the distribution gap between tool results and the model’s pre-training data. We fur-ther host the tools as an independent asynchronous web service, isolating the high latency of database operations from the GPU-intensive LLM inference process so that database access does not bottleneck GPU utilization during rollout. 
+
+SQL Executor. The tool returns query results as row objects. To prevent retrieved data from exceeding context window limits, we implement a content-aware truncation strategy: for regular SQL queries, output is restricted to a maximum of 10 rows and overlong cell values (>150 charac-ters) are truncated; for schema-related queries (e.g., 
+
+sqlite_master or PRAGMA ), the tool preserves the full result set to ensure the agent maintains accurate and complete knowledge of the database structure. 
+
+Full Text Search. Databases may contain hundreds of tables and millions of rows, mak-ing embedding-based semantic matching expen-sive to deploy. We instead leverage the SQLite FTS5 extension to construct inverted indices over schema names and database contents, facilitating low-latency fuzzy matching. The tool returns a structured context containing the matched schema elements and up to five distinct matched values per column. 
+
+Database Profiler. For each table and column, we prompt an LLM offline to generate a description summarizing semantic intent and to infer foreign-key relationships that may not be formally defined in the DDL. The profiler also computes column-level statistics including distinct value counts, data types, and null-value ratios. By precomputing these static features applicable to all queries, the tool offloads complex schema analysis from the runtime reasoning process, so the agent can focus on query logic rather than schema interpretation. 
+
+B More Training Details 
+
+We train DualSQL -4B for 100 steps. The training for DualSQL -8B takes 300 steps, taking about 4.5 days on a 4-node compute cluster, with 8 H100 80GB GPUs per node. We compare the Robust Execution Match dur-ing training for the single-agent DualSQL sql -8B and multi-agent DualSQL -8B in Fig. 3. Although 
+
+DualSQL -8B starts a little worse due to limited ini-tial schema linking accuracy, it catches up and con-sistently outperforms DualSQL sql -8B in the rest of the training process, demonstrating the effective-ness of our multi-agent framework. 
+
+C Performance Breakdown by Difficulty 
+
+We break down the performance of DualSQL by difficulty in Table 7. Compared with DualSQL sql ,which is trained only on the SQL generation task with the same recipe, our multi-agent formulation brings performance improvements at all difficulty levels, with the most significant improvement on challenging questions (3.0% EX for the 8B model). 
+
+D Ablation on Tools 
+
+We conduct an ablation study to evaluate the impact of each tool on the performance of DualSQL -8B on BIRD-Dev. On the BIRD-Dev dataset, we evaluate the DualSQL -8B model, which is trained with all three tools, and disable each tool one at a time. We report the average number of tool calls and overall performance in Table 8. The results demonstrate that each tool con-tributes positively to the overall performance. Al-though DualSQL is able to compensate for the missing tool by increasing the usage of other tools, the removal of any tool results in a performance drop, especially for SQL generation. The SQL exe-cution tool has the most significant impact when re-moved. Without the ability to execute SQL queries and iteratively refine its solutions, the agents suffer a 2.5% drop in EX and a massive 6.8% drop in REX during the SQL generation stage. 12 Train Robust Execution Match (REX) 
+
+Figure 3: Training robust execution match of DualSQL sql -8B (single-agent) and DualSQL -8B (multi-agent).                                                         
+
+> Method Base Model Task Easy Moderate Challenging Overall SQL-R1-7B Qwen2.5-Coder-7B SQL Generation 72.1 60.8 51.0 66.6 SQL-R1-14B Qwen2.5-Coder-14B SQL Generation 72.4 59.7 56.5 67.1 OmniSQL-7B Qwen2.5-Coder-7B SQL Generation ---63.9 Arctic-text2sql-R1 ∗OmniSQL-7B SQL Generation 73.9 62.3 55.9 68.7 Qwen3-4B -SQL Generation 67.5 49.1 42.6 59.6
+> DualSQL -4B (Ours) Qwen3-4B Linking + SQL Generation 73.2 61.9 54.4 68.0 Qwen3-8B -SQL Generation 68.5 51.8 41.1 60.9
+> DualSQL sql -8B (Ours) Qwen3-8B SQL Generation 74.7 63.9 55.7 69.6
+> DualSQL -8B (Ours) Qwen3-8B Linking + SQL Generation 76.1 64.9 58.7 71.1
+
+Table 7: Performance on BIRD-Dev by question difficulty. We report average execution match. ∗We evaluate the released checkpoints of Arctic-text2sql-R1 7B for per-difficulty performance. SQL-R1 and OmniSQL performance are taken from their publications. 
+
+E Robust Execution Match 
+
+This algorithm computes a similarity score be-tween a ground truth dataframe ( G) and a sam-ple dataframe ( S). Equivalence is determined by 
+
+score = 1 .0. The behavior is primarily controlled by a user-defined boolean, strict_row_ordering .If columns do not match by name, then they are matched by content using a standard Linear Sum Assignment Problem solver (LSAP) as a subroutine. If the sample dataframe contains more column-s/rows than the ground truth, then a proportional penalty is applied. Type differences are handled flexibly. 
+
+Complexity Analysis Notes 
+
+Let N be the number of rows and M be the number of columns. 
+
+Strict Row Ordering 
+
+• Element-wise scores: O(N · M ).• Unmatched Column Matching (LSAP): Score matrix O(M 2 · N ), LSAP solution O(M 3).• Total Complexity: O(N · M 2).
+
+Loose Row Ordering 
+
+• Heuristic ( M > 4): – Row alignment on Kkey (LSAP): O(N 2 ·|Kkey | + N 3) ≈ O(N 3).
+
+– Column Matching phase: O(N · M 2).
+
+– Total: O(N 3 + N · M 2).• Exact ( M ≤ 4, With Common Columns): – Row alignment on Kcommon (LSAP): 
+
+O(N 2 · M + N 3).
+
+– Column matching on Ku (LSAP): 
+
+O(M 2 · N ).
+
+– Total: O(N 3 + N 2 · M ).• Exact ( M ≤ 4, No Common Columns): 
+
+13 Algorithm 1 Robust Execution Match 
+
+Require: G, S; parameter strict_row_ordering  
+
+> 1:
+
+if NOT strict_row_ordering AND max( |Gcols |, |Scols |) > 4 then  
+
+> 2:
+
+// Heuristic for wide dataframes  
+
+> 3:
+
+Select Kkey columns from G with highest cardinality (1 or 2 columns depending on |Scols |) 
+
+> 4:
+
+Align G[Kkey ] and S using exact matching (line 14), yielding row map πrows  
+
+> 5:
+
+Reorder G and S based on πrows  
+
+> 6:
+
+strict_row_ordering ← True // proceed to strict row logic  
+
+> 7:
+
+go to line 10  
+
+> 8:
+
+end if  
+
+> 9:
+
+Identify common columns Kcommon and unmatched Kug (in G), Kus (in S) 
+
+> 10:
+
+if strict_row_ordering then  
+
+> 11:
+
+Score similarity of G[Kcommon ] and S[Kcommon ] via element-wise comparison  
+
+> 12:
+
+Match Kug , K us using LSAP to maximize column similarity, yielding πcols  
+
+> 13:
+
+Combine scores from common and best-matched unmatched columns  
+
+> 14:
+
+else  
+
+> 15:
+
+// Loose row ordering, exact matching  
+
+> 16:
+
+if Kcommon ̸ = ∅ then  
+
+> 17:
+
+Match rows of G[Kcommon ] and S[Kcommon ] to find permutation πrows using LSAP  
+
+> 18:
+
+Calculate score for Kcommon based on this alignment  
+
+> 19:
+
+Reorder G[Kug ] and S[Kus ] according to πrows  
+
+> 20:
+
+Match reordered Kug , K us using column LSAP, yielding πcols  
+
+> 21:
+
+Combine scores  
+
+> 22:
+
+else  
+
+> 23:
+
+// No common columns  
+
+> 24:
+
+Fallback: iterate column permutations of S with G 
+
+> 25:
+
+For each permutation, find optimal row alignment πrows using LSAP  
+
+> 26:
+
+Keep permutation yielding maximum total similarity  
+
+> 27:
+
+end if  
+
+> 28:
+
+end if  
+
+> 29:
+
+Calculate final score, normalized by |Gcols | 
+
+> 30:
+
+Apply penalty: score ← score × |Gcols | 
+
+> max( |Gcols |,|Scols |)
+> 31:
+
+Apply penalty: score ← score × |Grows | 
+
+> max( |Grows |,|Srows |)
+> 32:
+
+return score 14 Model Stage SQL Execution Full Text Search Database Profiler Total F1 EX REX                                                                 
+
+> DualSQL -8B Schema Linking 0.25 0.00 1.00 1.26 90.8 --
+> DualSQL -8B SQL Generation 1.22 0.05 0.49 1.76 -71.1 68.6
+> DualSQL -8B Schema Linking ×0.06 1.03 1.09 90.6 --
+> DualSQL -8B SQL Generation ×0.29 1.08 1.37 -68.6 61.8
+> DualSQL -8B Schema Linking 0.34 ×1.02 1.36 90.6 --
+> DualSQL -8B SQL Generation 1.35 ×0.76 2.11 -69.8 66.6
+> DualSQL -8B Schema Linking 1.24 0.15 ×1.39 90.2 --
+> DualSQL -8B SQL Generation 1.43 0.27 ×1.70 -69.9 66.6
+> Table 8: Average number of tools used on BIRD-Dev and overall performance.
+
+– Column Permutations × Row LSAP: 
+
+O(M ! · (N 2 · M + N 3)) .
+
+– Total: O(M ! · (N 3 + N 2 · M )) .
+
+F Prompts 
+
+F.1 Schema Linking Agent Prompt 
+
+Figure 4 and 5 show the system and user prompts for the Schema Linking Agent. 
+
+F.2 SQL Generation Agent Prompt 
+
+Figure 6 and 7 show the system and user prompts for the SQL Generation Agent. 
+
+G Example Agent Trajectories and Reasoning Patterns 
+
+In this section, we showcase the reasoning patterns that emerged through the agents’ RL training. 
+
+G.1 Schema Linking Agent 
+
+As illustrated in Figure 8, the Schema Linking agent learns to actively ground its selection pro-cess through database profiling rather than relying on zero-shot assumptions. When faced with spe-cific formatting requirements or ambiguous column names, the agent utilizes the database_profiler 
+
+tool to inspect actual data samples and column descriptions (e.g., verifying date formats). This en-sures the semantic correctness of the chosen tables before proceeding. Furthermore, Figure 9 demonstrates a more so-phisticated, multi-tool dynamic verification strat-egy. In this trajectory, the agent sequentially chains multiple tools to adaptively prune the schema: it employs full_text_search to locate relevant ta-bles based on keywords, profiles the data to con-firm formats, and executes exploratory queries via 
+
+execute_sql to empirically validate table joins (e.g., checking for overlapping entity IDs between tables). Together, these emergent reasoning pat-terns highlight the agent’s ability to iteratively gather evidence and construct a highly reliable schema for downstream SQL generation. 
+
+G.2 SQL Generation Agent 
+
+For the SQL Generation agent, we observe a strong tendency toward a minimal output strategy, as de-picted in Figure 10. Rather than generating verbose queries that return extraneous columns or interme-diate calculations, the agent carefully aligns its SQL logic with the exact semantic intent of the user’s question. For instance, when asked to iden-tify which of two players is older, the agent ex-plicitly reasons that the final output should only be a single name. It subsequently formulates a query utilizing an ORDER BY clause combined with 
+
+LIMIT 1 to extract precisely the requested entity. This behavior indicates that the agent has learned to synthesize highly targeted queries that directly answer the prompt without requiring further human interpretation of the result set. Furthermore, the agent exhibits advanced itera-tive debugging capabilities and an awareness of database-specific nuances, as illustrated in Fig-ure 11. In this trajectory, the agent’s initial query execution unexpectedly yields NULL values. Instead of halting or blindly guessing a fix, the agent sys-tematically hypothesizes potential mathematical and dialect-specific causes—such as division by zero or SQLite’s default handling of integer divi-sion. By dynamically reasoning about the underly-ing database engine’s mechanics, the agent actively corrects its query by applying the CAST(... AS REAL) function to prevent integer truncation. This demonstrates how the RL training framework en-ables the agent to utilize execution feedback not just to fix syntax errors, but to resolve subtle, data-dependent semantic edge cases. 15 System Prompt for the Schema Linking Agent 
+
+You are a senior data scientist. Below, you are provided with a set of database access tools, a database schema and a question from users. Your task is to understand the schema and identify the tables and columns that are useful for constructing a SQL query to answer the question. Recall your expertise as a data science expert and solve the question professionally. Your reasoning should be creative and rigorous. Be sure to make good use of the available tools. Key Requirements: - Prioritize coverage but also be mindful about precision. Your results will be used by downstream processes. Therefore, be as accurate as possible to avoid cascading failure. - You have access to a few tools that can help you explore the schema and data. Use them wisely to your advantage. Database Engine: SQLite 
+
+> Figure 4: System Prompt for Schema Linking Agent
+
+User Prompt for Schema Linking Agent 
+
+Database Schema: {schema} Question: {question} Hints: {hints} # Instructions: In each assistant turn, follow these steps to ensure effective and accurate problem-solving: ## Step 1: Reasoning In each assistant turn, you should start your reasoning with the <think> tag, carefully reason about the problem, and end your reasoning with the </think> tag. ## Step 2 Action After your reasoning, briefly summarize your thought process. The summary will be visible to the user, therefore, make it concise and clear. Then you should choose to either call tools (2.a) to assist your reasoning, or conclude the conversation with your identified tables and columns (2.b). Show and explain your decision clearly in your response. ## Step 2.a: Call a tool You can choose to call any of the provided tools. The execu-tion result of each tool call will be returned to you in the next user turn, wrapped within 
+
+<tool_response> </tool_response> tags. Use this information to inform your next steps. ## Step 2.b: Submit linked schema When you are confident with your solution, end the conversation with a brief summary of your entire thought process and validation effort, then wrap your solution in a JSON code block. The identified tables should be the key, and the columns should be the values. e.g. 
+
+“‘json {"table1":["column1", "column2"],"table2":["column1"]} “‘ 
+
+Keep in mind that you have up to five turns to figure out the solution. Let’s work this out turn-by-turn and find the correct schema to use. 
+
+> Figure 5: User Prompt Template for Schema Linking Agent
+
+16 System Prompt for the SQL Generation Agent 
+
+You are a senior data scientist. Below, you are provided with a set of database access tools, a database schema and a question from users. Your task is to understand the schema and compose a SQL query to answer the question with the help of the tools. Recall your expertise as a data science expert and solve the question professionally. Your reasoning should be creative and rigorous. Be sure to make good use of the available tools. Key Requirements: - You must validate the correctness of your SQL solution by executing it at least once using the 
+
+‘execute_sql‘ tool and checking whether the execution result matches your expectation. Missing this step renders your solution invalid. - Make sure your SQL solution only returns the information asked in the question. If the question asks for a specific column, make sure to only include that column in the SELECT clause, nothing more. - The final SQL query should return all of the information asked in the question without any missing or extra information. - Before generating the final SQL query, please think through the steps of how to write the query. - The tools are idempotent. You do not need to call the same tool with the same arguments more than once. Repeated calls are not encouraged. Database Engine: SQLite 
+
+> Figure 6: System Prompt for SQL Generation Agent
+
+17 User Prompt for the SQL Generation Agent 
+
+Database Schema: schema Question: question Hints: hints # Instructions: In each assistant turn, follow these steps to ensure effective and accurate problem-solving: ## Step 1: Reasoning In each assistant turn, you should start your reasoning with the <think> tag, carefully reason about the problem, and end your reasoning with the </think> tag. ## Reasoning Guidelines: - Avoid hardcoded values in your SQL query as much as possible. Instead, compose useful auxiliary queries into your final solution. - Be especially careful for absent values (NULLs) in the databases. Its impact can be subtle and indirect. But that does not mean you need to always handle NULLs explicitly in your SQL query. - Importantly, you have the privilege to use tools to your advantage. Think carefully how the available tools can help you in your reasoning. When in doubt, use the tools to verify. ## Step 2 Action After your reasoning, briefly summarize your thought process. The summary will be visible to the user, therefore, make it concise and clear. Then you should choose to either call tools (2.a) to assist your reasoning, or conclude the conversation with your SQL solution (2.b). Show and explain your decision clearly in your response. ## Step 2.a: Call a tool You can choose to call any of the provided tools. The execution result of each tool call will be returned to you in the next user turn, wrapped within <tool_response> </tool_response> tags. Use this information to inform your next steps. ## Step 2.b: Submit SQL solution When you are confident with your solution, end the conversation with a brief summary of your entire thought process and validation effort, then wrap your SQL solution in a code block, e.g. 
+
+“‘sql SELECT * FROM table1; “‘ 
+
+Keep in mind that you have up to ten turns to figure out the solution. Let’s work this out turn-by-turn and find the correct SQL query. Keep in mind that you have up to five turns to figure out the solution. Let’s work this out turn-by-turn and find the correct schema to use. 
+
+> Figure 7: User Prompt for the SQL Generation Agent
+
+18 Schema Linking Trajectory: Grounding via Database Profiling User Prompt: 
+
+Schema: customers, gasstations, products, transactions_1k, yearmonth Question: For all the people who paid more than 29.00 per unit of product id No.5. Give their consumption status in the August of 2012. Hints: Date value = ’201208’; Price per unit = Price / Amount 
+
+# Instructions: Identify relevant tables/columns. Use tools to verify semantics. Max 5 turns. 
+
+Agent Reasoning: 
+
+<think> 
+
+[...] The transactions table probably has the Price and Amount. The consumption status is likely in the 
+
+yearmonth table. [...] Importantly, you have the privilege to use tools to your advantage. Think carefully how the available tools can help you in your reasoning. When in doubt, use the tools to verify. I need to confirm that 
+
+yearmonth.Date follows the ’YYYYMM’ format and check the nature of the Consumption column. 
+
+</think> 
+
+Action: database_profiler(table_and_column_names=[...]) 
+
+Tool Call & Response: 
+
+yearmonth: "Records monthly consumption data ... Date in ’YYYYMM’ format." transactions_1k: "Amount column likely represents quantity (e.g., liters)..." Result: {’yearmonth’: {’Date’: {’samples’: [’201208’, ’201201’]}, ...}} 
+
+Agent Reasoning: 
+
+<think> The profiler confirmed that yearmonth.Date is indeed ’YYYYMM’ and that Consumption is the metric to report. Joining transactions_1k and yearmonth on CustomerID is sufficient. </think> “‘json {"transactions_1k": ["CustomerID", "ProductID", "Price", "Amount"], "yearmonth": ["CustomerID", "Date", "Consumption"] }“‘ 
+
+Figure 8: Trajectory illustrating the agent’s use of database_profiler for schema linking. Instead of guessing column formats, it learns to inspect data samples and descriptions, ensuring the final linked schema is sound for the subsequent SQL generation step. 
+
+19 Schema Linking Trajectory: Multi-Tool Dynamic Verification User Prompt: 
+
+Question: Give the consumption status in August 2012 for people paying > 29.00/unit for product 5. Hint: August 2012 = ’201208’; Price per unit = Price / Amount 
+
+# Instructions: Identify and link relevant tables/columns. Use tools (FTS, Profiler, SQL) to verify. 
+
+Agent Reasoning: 
+
+<think> 
+
+I need to find where "consumption" is stored. I will use full_text_search to scan the database descriptions for this keyword. 
+
+</think> 
+
+Action (FTS): full_text_search(keyword="consumption") 
+
+Result: "Table ’yearmonth’ found: records monthly consumption data..." 
+
+Agent Reasoning: 
+
+<think> 
+
+Now I need to confirm the Date format in ’yearmonth’ and check if ’Amount’ in ’transactions_1k’ means quantity. I’ll use the profiler to get samples. 
+
+</think> 
+
+Action (Profiler): database_profiler(tables=["yearmonth", "transactions_1k"]) 
+
+Result: yearmonth.Date samples: [’201208’, ’201201’]; Amount is described as "quantity (liters)". 
+
+Agent Reasoning: 
+
+<think> 
+
+Final check: verify if ’CustomerID’ exists in both tables to ensure a valid join. I’ll run a small query to check for overlapping IDs. 
+
+</think> 
+
+Action (SQL): execute_sql(query="SELECT count(*) FROM transactions_1k t JOIN yearmonth y ON t.CustomerID = y.CustomerID") 
+
+Result: ["count(*)": 842] 
+
+Final Schema Submission (JSON): 
+
+“‘json {"transactions_1k": ["CustomerID", "ProductID", "Price", "Amount"], "yearmonth": ["CustomerID", "Date", "Consumption"]} “‘ 
+
+Figure 9: Schema Linking trajectory for adaptive schema pruning based on tool calling responses from Full-Text Search , Database Profiler , and Execute SQL .
+
+20 SQL Generation Reasoning Trajectory: Minimal Output Strategy User Prompt: 
+
+Database Schema: CREATE TABLE Player (player_name text, birthday text); Question: Which player is older, Aaron Lennon or Abdelaziz Barrada? Hints: The larger the birthday value, the younger the person is... 
+
+[Agent Instructions for Step 1 (Reasoning) and Step 2 (Action) included in prompt...] 
+
+Agent Reasoning: 
+
+<think> 
+
+[...] The user wants to know which is older. So the SQL should return the name of the older player. Maybe selecting player_name [...] order by birthday asc. Then take the first result. But the user wants to know which is older. So the SQL should return the name of the older player. [...] So the query would be: 
+
+SELECT player_name FROM Player WHERE player_name IN (’Aaron Lennon’, ’Abdelaziz Barrada’) ORDER BY birthday ASC LIMIT 1; 
+
+Wait, but the user’s question is to return which is older. So if the query returns one name, that’s the answer. 
+
+</think> 
+
+Tool Call & Response: 
+
+Query: SELECT player_name FROM Player ... ORDER BY birthday ASC LIMIT 1; Result: [{’player_name’: ’Aaron Lennon’}] 
+
+Figure 10: SQL Generation trajectory showing the agent’s decision-making process to ensure the SQL output is minimal, just answering what the user asked for using LIMIT 1 .
+
+21 SQL Generation Reasoning Trajectory: Cast to avoid Null User Prompt: 
+
+Database Schema: CREATE TABLE frpm ( ‘Educational Option Type‘ text, – [’Continuation School’, ...] ‘Enrollment (Ages 5-17)‘ real, ‘Free Meal Count (Ages 5-17)‘ real ); Question: Please list the lowest three eligible free rates for students aged 5-17 in continuation schools. Hints: Rate = ‘Free Meal Count‘ / ‘Enrollment‘ 
+
+# Instructions: Follow Step 1 (Reasoning in <think> tags) and Step 2 (Action: Tool call or Submit SQL). Max 10 turns. 
+
+Agent Reasoning: 
+
+<think> 
+
+[...] Maybe the problem is that some rows have zero enrollment, leading to division by zero. Let’s check if enrollment is zero. [...] Let me adjust the query to add a WHERE clause for enrollment not being zero. 
+
+</think> 
+
+Tool Call & Response: 
+
+Query: SELECT ‘Free Meal Count‘ / ‘Enrollment‘ AS rate FROM ... Result: [{’eligible_rate’: None}, {’eligible_rate’: None}] 
+
+Agent Reasoning: 
+
+<think> 
+
+Hmm, the result is still all NULLs. That’s not right. [...] Wait, maybe the division is not being computed correctly. Wait, in SQLite, if the division is between integers, it would do integer division. But the schema says they are real. Maybe the data is stored as integers, but the division is not working as expected. So maybe the correct way is to cast them as real. So, perhaps the query should be: SELECT CAST(count AS REAL) / CAST(enrollment AS REAL)... Let me check the actual values for these rows first. 
+
+</think> 
+
+Figure 11: SQL Generation trajectory showing the agent identifying an integer division issue in SQLite through iterative tool use and reasoning. 
+
+22

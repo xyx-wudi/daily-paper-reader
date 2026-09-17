@@ -1,0 +1,287 @@
+Title: Learning Market Competition in Shared Spectrum: A Multi-Agent Reinforcement Learning Approach
+
+URL Source: https://arxiv.org/pdf/2609.17754v1
+
+Published Time: Thu, 17 Sep 2026 00:10:08 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Learning Market Competition in Shared Spectrum: A Multi-Agent Reinforcement Learning Approach 
+
+Qixuan Zai, Randall Berry 
+
+Department of Electrical and Computer Engineering Northwestern University, Evanston, IL 60208, USA Emails: {QixuanZai2028@u., rberry@ } northwestern.edu 
+
+Abstract —This paper investigates market competition among wireless service providers (SPs) that serve customers using shared spectrum. Prior work has analyzed such markets through models of competition with congestible resources, capturing both the congestion-sensitive nature of wireless spectrum and the effects of spectrum sharing on service quality. These models typically assume that the market demand function is known, enabling SPs to optimize pricing or quantity decisions under either Bertrand or Cournot competition. In contrast, we consider a setting in which the demand function is initially unknown and must be learned over time. We model this learning process using multi-agent reinforcement learning (MARL), allowing competing SPs to learn market dynamics while adapting their competitive strategies. Although MARL has shown strong performance in a variety of economic settings, recent work has demonstrated that it can also give rise to tacit collusion among self-interested agents. We therefore examine whether similar collusive behavior emerges in shared-spectrum markets and how its prevalence depends on the mode of competition (price versus quantity) and the choice of MARL algorithm. Our results provide insight into the interaction between learning dynamics, market structure, and spectrum sharing, with implications for both wireless market design and the deployment of learning-enabled decision-making systems. 
+
+Index Terms —multi-agent deep reinforcement learning, con-gestion game, algorithmic collusion 
+
+I. I NTRODUCTION 
+
+The rapid growth of wireless services has intensified de-mand for radio spectrum, motivating spectrum-sharing frame-works that allow multiple service providers (SPs) to operate over common frequency bands. Examples include expanded unlicensed access in the 6 GHz band [1] and the Citizens Broadband Radio Service (CBRS) framework in the 3.5 GHz band [2]. Compared with exclusive licensing, spectrum sharing can improve spectrum utilization and accommodate growing traffic demands [3], [4]. However, because multiple providers compete for access to a common spectrum resource, the ser-vice quality experienced by each provider depends on the spec-trum usage of others, creating strategic interactions that are naturally modeled as non-cooperative congestion games [5]– [7]. A substantial body of work has analyzed competition in shared-spectrum markets using economic models with congestible resources [8]–[10]. In these models, customers choose providers based on a delivered price consisting of the announced service price and a congestion cost determined by spectrum utilization. This framework captures the coupling between wireless interference and market competition and has been applied to a wide range of spectrum-sharing scenar-ios, including intermittent spectrum availability [10], licensed shared access [11], and prioritized spectrum sharing [12]– [14]. These models have provided important insights into equilibrium prices, market shares, profits, consumer surplus, and social welfare under both Bertrand (price) and Cournot (quantity) competition [15], [16]. Despite their broad applicability, existing congestion-based market models generally assume that market demand is known to all competing service providers, enabling analytical char-acterization of equilibrium strategies [6], [9]. In practice, however, providers rarely possess complete knowledge of de-mand, which evolves over time as user preferences, competing technologies, and market conditions change [17]. Instead, providers must repeatedly interact with the market, infer demand from customer responses, and adapt their competitive strategies over time. Reinforcement learning (RL) provides a natural framework for sequential decision-making under such uncertainty [18]. Because multiple providers learn simultane-ously in a shared competitive environment, the problem is more appropriately modeled using multi-agent reinforcement learning (MARL), which enables self-interested agents to learn effective strategies directly from repeated interactions without requiring prior knowledge of demand models or competitors’ actions [19]–[21]. However, while MARL provides a natural framework for learning unknown demand, recent studies have also shown that learning agents may develop tacitly collusive pricing strategies without explicit communication [22]–[25], raising important concerns for competition policy and AI-enabled markets [26]–[28]. To date, however, the MARL collusion literature has fo-cused almost exclusively on conventional oligopoly models in which firms compete through prices or quantities without congestion effects [22]–[25], [29]. Conversely, the wireless spectrum-sharing literature has largely assumed rational firms with complete knowledge of market demand and has ana-lyzed market equilibria under this assumption [6], [9], [12], [30], [31]. As a result, little is known about how learning dynamics interact with congestion externalities in shared-spectrum markets [32]. Congestion fundamentally alters firms’ incentives because each provider’s actions affect not only market prices but also the quality of service experienced by all providers’ customers, creating strategic interactions through a shared resource [5], [6], [33]. Whether these additional arXiv:2609.17754v1 [cs.GT] 15 Sep 2026 congestion-induced strategic interactions amplify or suppress the emergence of tacit collusion, and how they affect market efficiency and consumer welfare, remains largely unexplored. To the best of our knowledge, this is the first work to integrate congestion-based wireless spectrum markets with multi-agent reinforcement learning, enabling service providers to learn unknown demand while quantifying the emergence of tacit collusion under both Bertrand and Cournot competition. Building on the congestion-market framework, we replace the assumption of known demand with adaptive learning. We for-mulate repeated Bertrand and Cournot competition over shared spectrum as MARL problems in which competing service providers adapt their pricing or quantity strategies in the face of unknown demand. While a linear inverse demand function is assumed to derive analytical benchmarks and characterize equilibrium behavior, the learning agents are not given this demand model. Instead, they must learn effective pricing or quantity strategies solely through repeated interactions with the environment, without prior knowledge of the underlying demand model. We investigate whether competing providers converge to competitive or collusive outcomes, how these outcomes depend on the mode of competition (price versus quantity), and how different MARL algorithms influence the resulting market behavior. The main contributions of this paper are summarized as follows.  
+
+> •
+
+We develop a multi-agent reinforcement learning frame-work for congestion-based wireless markets that replaces the classical assumption of known demand with adaptive learning.  
+
+> •
+
+We formulate both Bertrand and Cournot competition over shared spectrum as a Markov game, allowing com-peting service providers to simultaneously learn demand and optimize their competitive strategies.  
+
+> •
+
+We compare multiple MARL algorithms and character-ize how learning algorithms affect convergence, market efficiency, and the emergence of tacit collusion.  
+
+> •
+
+We demonstrate that congestion fundamentally changes the emergence of tacit collusion relative to conventional oligopoly models, providing new insights into the inter-action between learning dynamics and wireless market structure. Our results show that congestion fundamentally changes the learning dynamics and strategic behavior observed in conventional MARL pricing models. The interaction between shared-spectrum congestion, market competition, and adaptive learning can either strengthen or weaken collusive behavior depending on the competition model and learning algorithm. These findings contribute to both the economics of wireless spectrum sharing and the growing literature on learning-enabled strategic decision making, with implications for the design of future autonomous wireless markets. The remainder of this paper is organized as follows. Section 2 establishes the formal system model for both the Cournot and Bertrand congestion frameworks. Section 3 details the multi-agent deep reinforcement learning algorithms deployed to solve these equilibrium under dynamic conditions. Section 4 presents comprehensive experimental results validating the varying degrees of collusion observed across both game struc-tures. Finally, Section 5 concludes the paper and discusses future research directions. II. S YSTEM MODEL 
+
+We consider a shared-spectrum market consisting of one incumbent service provider and N entrant providers. Our model extends the congestion-market framework of [10], [13] by replacing the assumption of complete demand information with repeated learning. While the market follows the same congestion and Wardrop equilibrium structure as prior work, competing providers do not know the underlying demand func-tion and must instead learn effective strategies from observed market outcomes. We assume that the incumbent has its own licensed band of spectrum with bandwidth Be and entrants share access to a common band of bandwidth We.1
+
+The incumbent is denoted as SP 1, while the entrants are indexed from 2 to N + 1 . All SPs compete for a common pool of non-atomic customers. Let xi denote the amount of users served by SP i (1 ≤ i ≤ N + 1) . The quality of service experienced by users is determined by congestion on the spectrum band, modeled through a congestion cost 
+
+g(X/Y ), where X denotes the total amount of users on the band, Y is the bandwidth, and g(·) is a convex increasing function, satisfying g(0) = 0 . We further assume that g(·) is linear, which makes the problem more tractable. The average congestion cost of the incumbent can be expressed as 
+
+ˆgin (x1) ≜ g
+
+ x1
+
+Be
+
+
+
+. (1) The average congestion cost for the entrant service is 
+
+ˆgen (x) ≜ g
+
+ x−1
+
+We
+
+
+
+, (2) where x−1 = x2 + · · · + xN +1 is the total user amount of entrants. Each SP collects a fixed service price pi from each user it serves, so its revenue is xipi. The delivered price of a SP i is the sum of its service price and the congestion of its service, i.e., p1 + ˆ gin (x1) for i = 1 or pi + ˆ gen (x) for 2 ≤ i ≤ N + 1 .Customer demand is characterized by an unknown inverse demand function P (X), where P (X) denotes the maximum delivered price that can be sustained when the total demand is X. Note that the demand function depends on the delivered price, which models customers that care about both the price they pay for service and the quality of service (represented by the congestion cost). The amount of users served by each SP and the announced prices satisfy the Wardrop equilibrium conditions, that is, the delivered prices of all SPs that are serving users are the same and are the maximum price that 
+
+> 1This models a setting in which the shared band enables new entrants to compete against an existing incumbent. We focus on one incumbent for simplicity of the presentation, but this type of model can be readily extended to settings with multiple incumbents as in [12].
+
+can be accepted by all the customers serviced [34]. Assuming all SP’s are serving customers, this can be expressed as 
+
+P (X) = p1 + ˆ gin (x1), and 
+
+P (X) = pi + ˆ gen (x), 2 ≤ i ≤ N + 1 , (3) where X = x1 + x2 + · · · + xN +1 is the total demand. If a SP i is not serving any customers ( xi = 0 ), then its delivered price must be greater than or equal to P (X).The market is characterized by an unknown inverse demand function P (X), which is not revealed to the learning agents. For analytical benchmarking, however, we specialize to a linear inverse demand function when deriving the theoretical equilibria presented below. In each interaction, providers ob-serve the resulting market outcome (i.e., their revenue) but do not observe the underlying demand function or competitors’ private decision process. Within this common market framework, we consider two classical competition models. Under Cournot competition, providers compete by selecting service quantities, whereas under Bertrand competition they compete by selecting prices. These models provide complementary settings for evaluating how learning dynamics interact with congestion. 
+
+A. Cournot Congestion Competition 
+
+Under Cournot competition, each service provider chooses the quantity of users it wishes to serve, while the correspond-ing market prices are determined endogenously through the Wardrop equilibrium conditions in (3). This models providers that compete by controlling market share rather than directly setting prices. The resulting prices depend on the aggregate quantities selected by all providers together with the conges-tion experienced on the licensed and shared spectrum bands. In the classical complete-information setting, providers are assumed to know the market demand function and com-pute a Nash equilibrium analytically. Under the assumptions considered here, the resulting congestion game belongs to the class of potential games, which guarantees the existence of a pure-strategy Nash equilibrium and provides favorable convergence properties under best-response dynamics [33]. In contrast, this paper considers an incomplete-information setting in which providers do not know the underlying demand function. Instead, they repeatedly interact with the market, observe the resulting outcomes, and learn effective quantity strategies through multi-agent reinforcement learning. For a given strategy profile of the competing providers, service provider i solves 
+
+max  
+
+> xi≥0
+
+xipi, (4) where pi is determined implicitly through the Wardrop equilib-rium conditions in (3). Throughout the paper, this complete-information equilibrium serves as the theoretical benchmark against which the learned MARL policies are compared. For analytical benchmarking, we specialize to a linear inverse demand function, 
+
+P (X) = 1 − X, 
+
+together with the linear congestion model introduced above. 
+
+B. Bertrand Competition 
+
+Under Bertrand competition, service providers compete by selecting service prices rather than customer quantities. The resulting customer allocation is determined endogenously through the Wardrop equilibrium conditions in (3), which couple the announced prices, congestion costs, and total mar-ket demand. This model captures markets in which providers compete directly on price while customers choose the provider offering the lowest delivered price. Unlike the Cournot congestion game, Bertrand competition exhibits substantially different strategic behavior. Classical Bertrand theory predicts that firms offering homogeneous products compete prices down to marginal cost, yielding the well-known Bertrand paradox [15], [35]. In contrast, recent work has demonstrated that reinforcement-learning agents may instead converge to tacitly collusive pricing strategies without explicit communication [22]–[24]. A primary objective of this paper is to determine how congestion and spectrum sharing influence this learned pricing behavior. Each provider selects its announced service price to maxi-mize its revenue, while the resulting customer allocation satis-fies the Wardrop equilibrium conditions. Specifically, service provider i solves 
+
+max  
+
+> pi≥0
+
+xipi, (5) where the demand allocated to each provider depends on the prices announced by all competing providers together with the resulting congestion costs. As in the Cournot model, the complete-information equilibrium serves as the analytical benchmark against which the learned MARL policies are evaluated. For analytical benchmarking, we assume the same linear inverse demand function introduced previously, 
+
+P (X) = 1 − X, 
+
+while maintaining the linear congestion model. The theoretical Bertrand equilibrium provides the compet-itive benchmark for the empirical learning results presented in Section IV. Deviations from this benchmark, particularly persistent prices above the competitive equilibrium, indicate the emergence of tacit collusive behavior among the learning agents. Comparing these outcomes with those obtained under Cournot competition allows us to isolate the influence of congestion on algorithmic pricing and market efficiency. 
+
+C. Analytical Benchmarks 
+
+The Nash equilibria of congestion-based Cournot and Bertrand markets under complete information have been ex-tensively studied in the literature [6], [9], [10], [13], we summarize these in Table II assuming a linear inverse demand, 
+
+P (X) = 1 − X and linear congestion costs for the case where all SPs are serving customers. 2
+
+> 2The expressions when some SPs are not serving customer can also be derived, but are omitted to simplify the presentation.
+
+As we have noted MARL frameworks have been observed to result in collusive behavior. As a benchmark for this, we also determine the collusive outcome in which all SPs coor-dinate on prices or quantities to maximize the total revenue (summed across firms). This outcome is also shown in Table I. 3 Unlike the Nash equilibrium, the collusive benchmark is not intended as a prediction of rational strategic behavior. Rather, it represents the market outcome that would arise under perfect coordination. Although such explicit coordination is not permitted, this benchmark provides a useful upper bound for evaluating the extent of tacit collusion learned by MARL agents. To quantify possible deviations from the competitive bench-mark, we introduce the Price of Collusion (PoC), which is analogous to the Price of Anarchy used in algorithmic game theory. 
+
+Definition 1 (Price of Collusion) . We define the Price of Collu-sion (PoC) as the ratio of social welfare under the competitive Nash equilibrium to that under the collusive equilibrium: PoC = SW N E 
+
+SW Collusive . (6) 
+
+A value of PoC > 1 quantifies the proportional welfare degra-dation imposed on consumers due to multi-agent algorithmic collusion. 
+
+The lower bound of PoC is between 0 and 1 under Bertrand congestion model with only entrants, depending on We value. 
+
+D. Revenue Expectations Under Learning 
+
+In the preceding subsections, we summarized the complete-information Nash and collusive benchmarks for static con-gestion markets. Under multi-agent reinforcement learning, however, service providers repeatedly update their strategies, causing both prices and quantities to become stochastic pro-cesses. Consequently, a provider’s revenue is also a random variable, and its expected value cannot generally be written as the product of the expected price and expected quantity because of the correlation induced by the learning dynamics. The following results establish sufficient conditions under which this decomposition is valid for both Cournot and Bertrand competition. These identities provide a useful the-oretical foundation for interpreting the empirical results in Section IV, where market outcomes are obtained by averaging over repeated learning trajectories. 
+
+Theorem 1 (Revenue Identity for Dynamic Cournot Com-petition) . If all active agents, including a market incumbent 
+
+i = 1 and competing entrants 2 ≤ i ≤ N +1 , maintain strictly non-zero prices and quantity allocations, the expected revenue 
+
+E[ri] for each firm satisfies the linear expectation identity: 
+
+E[ri] = E[pi]E[xi], ∀i ∈ { 1, . . . , N + 1 }. (7)          
+
+> 3This theoretical benchmark assumes a continuous action space; slight deviations may occur in discrete settings. Additionally, we assume that the number of entrants 2≤Nand index 1< i ≤N+ 1 .
+
+Specifically, this linear identity is preserved under the follow-ing conditions: 
+
+1) Incumbent Condition: The identity holds for the incum-bent ( i = 1 ) if its market supply variance is zero (i.e., operating at a deterministic, fixed supply baseline such that E[x21] = E[x1]2). 
+
+2) Entrant Condition: The identity holds for the competing entrants ( i > 1) if the incumbent’s strategic supply choices are orthogonal to and statistically independent of the entrant profiles (such that E[x1xi] = E[x1]E[xi])and individual entrant supply variance is zero. Conversely, if any strategic profile results in a zero price or zero quantity, the linear expectation identity breaks down as the Wardrop conditions in (3) no longer hold. 
+
+Theorem 2 (Revenue Identity for Dynamic Bertrand Competi-tion) . In the Bertrand congestion game with total entrants N ,if all competing entrants maintain the minimum market price 
+
+pmin such that the set of active entrants satisfies Mmin = N ,the expected revenue realized by each entrant i ∈ Mmin 
+
+is identically equal to the product of its expected price and expected quantity allocation, given by: 
+
+E[ri] = E[pi]E[xi]. (8) 
+
+Conversely, if an asymmetric market profile emerges where a subset of entrants strategically deviates by announcing nominal prices strictly exceeding pmin , this linear expecta-tion identity breaks down due to some providers serving no customers. 
+
+III. M ULTI -A GENT REINFORCEMENT LEARNING 
+
+The congestion games developed in Section II are repeated over multiple rounds and modeled as a Markov game in which each service provider acts as an independent reinforcement-learning agent. At each round, all providers simultaneously select either a price (Bertrand) or a quantity (Cournot), observe the resulting market outcome, receive their realized revenue as a reward, and update their policies. The agents do not know the underlying demand function and must instead learn effective strategies solely through repeated interaction with the environment. Each agent’s state consists of the joint actions taken during the previous K rounds, providing a finite history of market be-havior. The action space consists of a discrete set of allowable prices or quantities, depending on the competition model. The immediate reward for each agent is its realized market revenue, 
+
+ri = pixi,
+
+where the allocated demand xi is determined by the Wardrop equilibrium described in Section II. We primarily employ independent Deep Q-Network (DQN) agents [36] to learn equilibrium strategies. Each agent main-tains its own value network and replay buffer, while treating the remaining agents as part of the environment. Standard experience replay and target networks are used to stabilize training. To evaluate the robustness of the observed market TABLE I: Summary of Analytical Results Across Different Market Models 
+
+Metric Collusive Model Bertrand Nash Equilibrium Cournot Nash Equilibrium 
+
+x1 Be  
+
+> 2( Be+We+1)
+> Be
+> 2( Be+We+1)
+> Be(( N+1)( We+1) −N W e)2( Be+1)( N+1)( We+1) −BeN W e
+
+xi We   
+
+> 2N(Be+We+1)
+> We(Be+2 We+2) 2N(We+1)( Be+We+1)
+> We(Be+2) 2( Be+1)( N+1)( We+1) −BeN W e
+
+p1 1212( We+1) (Be+1)( N +We+1) 2( Be+1)( We+1)+ N (Be+We+2 Be+2 We+2) 
+
+pi 12 0 (Be+2)( We+1) 2( Be+1)( We+1)+ N (BeWe+2 Be+2 We+2) 
+
+behavior, we additionally compare DQN with an actor–critic method in the experimental section. Algorithm 1 summarizes the overall learning procedure. During each episode, all agents simultaneously select actions according to an ϵ-greedy exploration policy, observe the result-ing revenues after market clearing, store the transition in replay memory, and update their neural-network parameters using mini-batch stochastic gradient descent. Training continues until the learned market behavior converges. 
+
+A. Neural Network Architecture 
+
+Each agent is represented by an independent multilayer perceptron with two hidden layers of 64 neurons. The input dimension depends on the history length K, while the output dimension equals the number of discrete actions. Unless other-wise stated, all experiments use the same network architecture and hyperparameters across both markets. 
+
+B. Learning in Market with congestion 
+
+The algorithm 1 gives detailed market mechanism and training process for multi-agent deep reinforcement learning in market with congestion with DQN. 
+
+Algorithm 1: Multi-Agent DQN in the market with Congestion                                                                                                          
+
+> Require: State Dimension K, Action Set A, Replay Di, Batch B, Discount Factor γ, Learning Rate α.
+> Require: Congestible Resources: Befor Incumbent and Wefor NEntrants. 1: Initialize: Network Qθi, Q ϕi(ϕi←θi), Di←∅,State S=
+> ⟨a(1) , . . . , a(K)⟩
+> 2: for Episode efrom 1to Edo
+> 3: Select aei∈ A via ϵ-greedy based on state s←LKk=1 p(k)
+> 4: Market Execution:
+> 5: Compute realized revenues based on action as current reward: 6: Learning and Updates:
+> 7: Update state S ← S ∪ { a(e)} \ { a(1) }to construct next state s′
+> 8: for each agent i∈ { 1, . . . , N + 1 }do
+> 9: Push transition (s, a i, r i,s′)into Di
+> 10: if |D i| ≥ Bthen
+> 11: Sample mini-batch Bi∼ D i
+> 12: Compute TD target value: y=ri+γmax a′Qϕi(s′, a ′)
+> 13: Update θivia gradient descent: 14: θi←θi−α∇θiL(θi)
+> 15: end if
+> 16: Every Tepisodes, update target network: ϕi←θi
+> 17: end for
+> 18: s←s′,ϵ←max( ϵmin , ϵ ·ϵdecay )
+> 19: end for
+
+IV. E MPIRICAL RESULTS 
+
+A. Benchmark Validation 
+
+We first validate the analytical benchmarks introduced in Section III. Figure 1 illustrates the Price of Collusion (PoC) for the Bertrand congestion model without an incumbent (We = 1 ) as the collusive price varies. The results demon-strate that tacit collusion does not necessarily reduce social welfare. When providers coordinate on relatively low prices, the resulting market allocation remains close to the compet-itive equilibrium while congestion is reduced, leading to a lower PoC. In contrast, collusion at higher prices substantially reduces consumer participation and increases the efficiency loss. As predicted by the analytical benchmark, the number of entrant providers has essentially no effect on the PoC. 
+
+Fig. 1: Impact of colluding price on Price of Collusion (PoC) for Bertrand Congestion Model with only Entrants for We = 1 .These results demonstrate that the proposed PoC metric captures not only the existence of collusion but also its impact on overall market efficiency, providing a useful benchmark for interpreting the learning results that follow. 
+
+B. Impact of State Representation 
+
+We next investigate how the amount of historical informa-tion available to each learning agent influences the learned market behavior. Throughout this subsection we set Be = 2 
+
+and We = 1 . Each agent has ten discrete actions corresponding to uniformly spaced prices or quantities. Unless otherwise stated, all reported results are averaged over six independent Monte Carlo simulations. Figure 2 shows the learned Bertrand prices for different history lengths K. When K = 0, the state contains no historical information and the learning problem effectively reduces to a contextual bandit. In this case, the agents converge to the competitive Nash equilibrium by selecting the lowest feasible price. As the history length increases, however, the agents consistently learn higher prices corresponding to tacit collusion. These results indicate that memory plays a critical role in enabling coordinated pricing behavior. Access to previous market actions allows the agents to condition future decisions on past interactions, thereby facilitating tacit collusion without explicit communication. 
+
+C. Impact of Market Structure 
+
+Figure 3 compares the learning dynamics under Bertrand and Cournot competition. The incumbent consistently con-verges to behavior close to the theoretical Nash equilibrium in both market models. The entrant providers, however, exhibit fundamentally different behavior. Under Cournot competition, the learned strategies remain close to the theoretical equilibrium, consistent with the potential-game structure of the congestion model. In contrast, Bertrand competition produces substantially more collusive pricing behavior. Because Bertrand competition does not pos-sess the same convergence guarantees as Cournot competition, repeated learning allows agents to sustain prices above the competitive equilibrium. These observations demonstrate that congestion interacts strongly with the underlying market structure, leading to qual-itatively different learning dynamics under price and quantity competition. 
+
+D. Impact of Learning Algorithm 
+
+To evaluate the robustness of the observed market behavior, we compare independent DQN with an actor–critic method while fixing the state history length at K = 2 .Figure 4 shows that both algorithms converge to similar market outcomes, indicating that the qualitative behavior is largely independent of the specific MARL architecture. How-ever, the actor–critic method exhibits smoother and more stable learning trajectories than DQN throughout the training process. These results suggest that the emergence of tacit collusion is primarily driven by the market structure rather than by the particular reinforcement-learning algorithm employed. 
+
+E. Impact of the Incumbent 
+
+We next examine the role of the incumbent by removing the licensed provider from the market and allowing only entrant providers to compete over the shared spectrum. We focus on the case of Bertrand competition. Figure 5 compares two methods for computing the av-erage revenue of the entrant providers. The first computes the empirical average of realized revenues directly, while the second computes the product of the empirical average price and average quantity. As predicted by Theorem 2, the two approaches produce identical results under the conditions established by the theorem. Figure 6 further illustrates the learning dynamics after removing the incumbent. In this setting, the learned equilib-rium produces a PoC of approximately 0.886, indicating that the resulting tacit collusion slightly improves social welfare relative to the competitive benchmark. This counterintuitive behavior arises because the learned collusive prices remain relatively low while reducing congestion. These experiments validate the theoretical revenue identities and illustrate how market composition influences the emer-gence of collusive behavior. 
+
+F. Impact of Congestion 
+
+Finally, we investigate how congestion influences the learned market outcomes. Tables II and III compare the learned equilibria with the theoretical Nash and collusive benchmarks in the absence of congestion. The learned Cournot strategies remain close to the Nash equilibrium, whereas the Bertrand strategies lie between the Nash and collusive benchmarks, indicating partial tacit collusion. Figure 7 illustrates the effect of increasing incumbent con-gestion under the Cournot model. As congestion increases, the learned market equilibrium shifts in a predictable manner while remaining close to the theoretical benchmark. Overall, these results demonstrate that congestion funda-mentally alters the strategic incentives of learning agents. Depending on the underlying competition model, congestion can either reinforce competitive behavior or facilitate tacit collusion, highlighting the importance of incorporating con-gestion effects when analyzing autonomous wireless markets. V. C ONCLUSION 
+
+This paper investigated how autonomous service providers learn competitive strategies in congestion-based spectrum mar-kets when market demand is unknown. We introduced amulti-agent reinforcement learning (MARL) framework for this setting. By removing the classical assumption of com-plete demand knowledge, we evaluated how adaptive learn-ing algorithms navigate congestion externalities across both Bertrand and Cournot competition. Our findings demonstrate a fundamental divide: while Cournot competition reliably con-verges toward theoretical Nash equilibria due to its potential game properties, Bertrand competition bypasses the classical zero-price paradox and fosters tacit algorithmic collusion. These insights highlight that physical spectrum congestion fundamentally alters learning dynamics and market outcomes, underscoring the need to account for congestion externalities when designing AI-driven wireless market mechanisms and spectrum policies. Future directions include exploring regula-tory mechanisms to mitigate algorithmic collusion. Fig. 2: Impact of State Design on the Learning Dynamics for Bertrand Congestion Model when Be = 2 , We = 1 , N = 2 .
+
+Fig. 3: Impact of Market Structure on the Learning Dynamics for Cournot Congestion Model when Be = 2 , We = 1 , N = 2 .TABLE II: Empirical Simulation Results for the Bertrand Game without congestion ( N = 2 ) under six Monte Carlo simulations. Bold values indicate the closest alignment of the DQN learning outcomes to either the Nash or Collusive Benchmarks. Learned: DQN Learning Results Mean and Std, NT: Nash Benchmarks, CT: Collusive Benchmarks. 
+
+Metric Learned NT CT 
+
+x1 0.416 (0.063) 0.500 0.250 
+
+xn 0.424 (0.069) 0.500 0.250 
+
+p1 0.233 (0.074) 0.000 0.500 
+
+pn 0.249 (0.123) 0.000 0.500 
+
+r1 0.067 (0.015) 0.000 0.125 
+
+rn 0.063 (0.013) 0.000 0.125 
+
+REFERENCES [1] Federal Communications Commission, “Unlicensed use of the 6 ghz band,” Report and Order, FCC 20-51, ET Docket No. 18-295, 2020, expands unlicensed access to 1200 MHz in the 5.925–7.125 GHz band. [2] ——, “Report and order and second further notice of proposed rule-making,” FCC 15-47, GN Docket No. 12-354, 2015, citizens Broadband Radio Service (3550–3700 MHz). [3] J. M. Peha, “Sharing spectrum through spectrum policy reform and cognitive radio,” Proceedings of the IEEE , vol. 97, no. 4, pp. 708–719, 2009. [4] President’s Council of Advisors on Science and Technology, “Realiz-ing the full potential of government-held spectrum to spur economic growth,” Executive Office of the President, Tech. Rep., 2012. 
+
+TABLE III: Empirical Simulation Results for the Cournot Game without congestion ( N = 2 ) under six Monte Carlo simulations. Bold values indicate the closest alignment of the DQN learning outcomes to either the Nash or Collusive Benchmarks. Learned: DQN Learning Results Mean and Std, NT: Nash Benchmarks, CT: Collusive Benchmarks. 
+
+Metric Learned NT CT 
+
+x1 0.335 (0.040) 0.333 0.250 
+
+xn 0.331 (0.069) 0.333 0.250 
+
+p1 0.334 (0.056) 0.333 0.500 
+
+pn 0.334 (0.056) 0.333 0.500 
+
+r1 0.108 (0.025) 0.111 0.125 
+
+rn 0.103 (0.016) 0.111 0.125 [5] R. W. Rosenthal, “A class of games possessing pure-strategy nash equilibria,” International Journal of Game Theory , vol. 2, no. 1, pp. 65–67, 1973. [6] R. Johari and J. N. Tsitsiklis, “Efficiency loss in a network resource allocation game,” Operations Research , vol. 52, no. 3, pp. 474–485, 2004. [7] D. Niyato and E. Hossain, “Competitive spectrum sharing in cognitive radio networks: A dynamic game approach,” IEEE Transactions on Wireless Communications , vol. 7, no. 7, pp. 2651–2660, 2008. [8] T. Nguyen, H. Zhou, R. A. Berry, M. L. Honig, and R. Vohra, “The cost of free spectrum,” Operations Research , vol. 64, no. 6, pp. 1217–1229, 2016. [9] P. Maill´ e and B. Tuffin, Telecommunication Network Economics: From Fig. 4: Impact of Algorithm on the Learning Dynamics for Bertrand Congestion Model when Be = 2 , We = 1 , N = 2 .
+
+Fig. 5: Impact of Incumbent Removal on the Learning Dynamics for Bertrand Congestion Model with the First and Second Revenue Calculation Method when We = 1 , N = 2 .
+
+Fig. 6: Impact of Incumbent Removal on the Learning Dynamics for Bertrand Congestion Model over episodes when We = 1 ,
+
+N = 2 , K = 2 .Fig. 7: Impact of Incumbent Congestion Level on the Learning Dynamics for Cournot Congestion Model when We = 1 ,
+
+N = 2 , K = 2 .
+
+Theory to Applications . Cambridge University Press, 2014. [10] R. Berry, M. Honig, T. Nguyen, V. Subramanian, and R. Vohra, “The value of sharing intermittent spectrum,” Management Science , vol. 66, no. 11, pp. 5242–5264, 2020. [11] M. N. Tehrani, J. Riihij¨ arvi, and P. M¨ ah¨ onen, “Licensed shared access: Concept, architecture, and spectrum sharing opportunities,” IEEE Com-munications Magazine , vol. 52, no. 6, pp. 131–137, 2014. [12] Y. Liu, Q. Zai, and R. A. Berry, “Wireless market competition with time/frequency prioritized spectrum sharing,” in 23rd International Sym-posium on Modeling and Optimization in Mobile, Ad Hoc, and Wireless Networks (WiOpt) , 2025, pp. 1–8. [13] Q. Zai, Y. Liu, and R. A. Berry, “Comparison of market models for time/frequency prioritized spectrum sharing,” in Proceedings of EAI GameNets , 2026. [14] ——, “Poster: Comparison of market models for time/frequency pri-oritized spectrum sharing,” in Proceedings of the 26th International Symposium on Theory, Algorithmic Foundations, and Protocol Design for Mobile Networks and Mobile Computing , 2025, pp. 409–410. [15] J. Bertrand, “Th´ eorie math´ ematique de la richesse sociale,” Journal des Savants , vol. 67, pp. 499–508, 1883. [16] A. A. Cournot, Recherches sur les Principes Math´ ematiques de la Th´ eorie des Richesses . Hachette, 1838. [17] A. V. den Boer, “Dynamic pricing and learning: Historical origins, current research, and new directions,” Surveys in Operations Research and Management Science , vol. 20, no. 1, pp. 1–18, 2015. [18] R. Sutton and A. Barto, Reinforcement Learning: An Introduction ,2nd ed. MIT Press, 2018. [19] L. Bus ¸oniu, R. Babuˇ ska, and B. D. Schutter, “Multi-agent reinforce-ment learning: An overview,” Innovations in Multi-Agent Systems and Applications , pp. 183–221, 2010. [20] R. Lowe, Y. I. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mordatch, “Multi-agent actor-critic for mixed cooperative-competitive environ-ments,” in Advances in Neural Information Processing Systems , vol. 30, 2017. [21] K. Zhang, Z. Yang, and T. Bas ¸ar, “Multi-agent reinforcement learning: A selective overview of theories and algorithms,” Handbook of Rein-forcement Learning and Control , pp. 321–384, 2021. [22] E. Calvano, V. Denicol` o, M. Vincenzo, and S. Pastorello, “Artificial intelligence, algorithmic pricing, and collusion,” American Economic Review , vol. 110, no. 10, pp. 3267–3300, 2020. [23] T. Klein, “Autonomous algorithmic collusion: Q-learning under sequen-tial pricing,” RAND Journal of Economics , vol. 52, no. 3, pp. 538–558, 2021. [24] V. Denicol` o and E. Calvano, “Artificial intelligence, algorithmic pricing and collusion,” European Economic Review , vol. 153, p. 104386, 2023. [25] H. Zhao and R. Berman, “Algorithmic collusion of pricing and advertis-ing on e-commerce platforms,” arXiv preprint arXiv:2508.08325, 2025. [26] S. Assad, R. Clark, D. Ershov, and L. Xu, “Algorithmic pricing and com-petition: Empirical evidence and policy implications,” Annual Review of Economics , 2024. [27] A. Ezrachi and M. E. Stucke, Virtual Competition: The Promise and Perils of the Algorithm-Driven Economy . Harvard University Press, 2016. [28] J. E. Harrington, “Developing competition law for collusion by au-tonomous agents,” Journal of Competition Law & Economics , vol. 14, no. 3, pp. 331–363, 2018. [29] S. Fish, Y. A. Gonczarowski, and R. I. Shorrer, “Algorithmic collusion by large language models,” arXiv preprint arXiv:2404.00806, 2024. [30] X. Wang and R. A. Berry, “The impact of bundling licensed and unlicensed wireless service,” in Proceedings of the IEEE Conference on Computer Communications (INFOCOM) , 2018, pp. 1394–1402. [31] ——, “Market competition between lte-u and wifi,” IEEE Transactions on Network Science and Engineering , vol. 8, no. 1, pp. 765–779, 2021. [32] Q. Zai and R. Berry, “Multi-agent reinforcement learning in markets with congestion,” https://api.semanticscholar.org/CorpusID:292026388, 2026. [33] D. Monderer and L. S. Shapley, “Potential games,” Games and Economic Behavior , vol. 14, no. 1, pp. 124–143, 1996. [34] J. G. Wardrop, “Some theoretical aspects of road traffic research,” 
+
+Proceedings of the Institution of Civil Engineers , vol. 1, no. 3, pp. 325– 362, 1952. [35] J. Tirole, The Theory of Industrial Organization . MIT Press, 1988. [36] V. M. et al., “Human-level control through deep reinforcement learning,” 
+
+Nature , vol. 518, no. 7540, pp. 529–533, 2015.

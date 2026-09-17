@@ -1,0 +1,1131 @@
+Title: Decentralized Optimal Equilibrium Learning Over Dynamic Networks
+
+URL Source: https://arxiv.org/pdf/2609.17601v1
+
+Published Time: Thu, 17 Sep 2026 00:06:14 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Decentralized Optimal Equilibrium Learning Over Dynamic Networks 
+
+Seref Taha Kiremitci 1 and Muhammed O. Sayin 1
+
+Abstract — This paper studies decentralized learning of so-cially optimal equilibria in finite normal-form games over dynamic communication networks. Each agent observes only its own realized payoffs, does not know the game a priori, and can communicate only with time-varying neighbors using low-bandwidth messages. We propose networked decentral-ized optimal equilibrium learning dynamics in which agents generate randomized semantic content/discontent signals from local payoff comparisons and exchange time-stamped time-stacked tables rather than raw actions, payoff information or local estimates/parameters. The method combines table fusion with temporal majority reconstruction to mitigate dynamic communication while preserving fully decentralized operation. We establish finite-time logarithmic regret guarantees, with an in-phase exploration perturbation, for optimal equilibrium selection under utilitarian and proportional-fair social welfare objectives. Simulation results further show that the proposed approach can effectively select socially desirable equilibria over dynamic communication networks. 
+
+I. INTRODUCTION Decentralized multi-agent systems are increasingly central to modern engineered platforms, including networked control systems and distributed autonomous decision-making [1]– [3]. In such systems, a critical challenge is the balance be-tween stability and efficiency . Equilibrium, providing robust-ness against unilateral deviations, need not be socially desir-able. Welfare-maximization, being socially desirable, need not be stable under strategic behavior. Optimal equilibrium selection can balance stability and efficiency. Nevertheless, it is largely unexplored in the context of decentralized learning. For example, in repeated play of normal-form games, de-centralized payoff-based learning dynamics have been devel-oped to promote Pareto-efficient solutions in interdependent games [4], and have been extended to the selection of Pareto-efficient Nash equilibria in distributed systems [5]. Recently, [6] has addressed decentralized learning of equilibrium maximizing the minimum transformed utility. All [4]–[6] rely on stochastic stability guarantees as certain exploration parameters decay to zero. However, lower exploration levels lead to slower learning rates, limiting the practicality of such dynamics. Decentralized optimal equilibrium learning has also been studied in the context of stochastic games yet only for special classes of games, such as common-interest games and no-conflict games [7]–[9]. All these works do not use any information exchange across agents while communication can play a crucial role in effective coordination [10], [11].            
+
+> 1Seref Taha Kiremitci and Muhammed O. Sayin are with the De-partment of Electrical and Electronics Engineering, Bilkent University, Ankara, T¨ urkiye. Emails:
+
+taha.kiremitci@bilkent.edu.tr ,
+
+sayin@ee.bilkent.edu.tr 
+
+k − 2
+
+k − 1
+
+k
+
+# ...
+
+Fig. 1: An illustration of decentralized learning over dynamic communication networks. Layers depict time-varying topol-ogy at instances k − 2, k − 1, k .Rather recently, [12] showed that single-bit communica-tion can be effective to drive broad classes of general games toward socially optimal outcomes, while [13] extended this idea to decentralized optimal equilibrium learning in stochas-tic games under general social welfare objectives. Both [12] and [13] use probabilistic content/discontent signals 
+
+rather than direct sharing of model parameters or estimates, and they provide explicit logarithmic finite-time guarantees. However, both of these schemes rely on fully connected and reliable communication, which is restrictive, e.g., in geo-graphically distributed networks, and can make the learning mechanism sensitive to temporal link failures. This paper addresses decentralized optimal equilibrium learning in repeated play of normal-form games over dy-namic and unreliable communication links, as illustrated in Fig. 1. Agents observe only their own realized payoffs, do not know the game a priori, and communicate through finite-support semantic messages. Dynamic networks pose challenges that are not a direct extension of [12], [13]: content/discontent bits are phase-specific, so they cannot be averaged across time as in consensus, and neighbor-only failing links make network-wide bits delayed, missing, and statistically dependent across overlapping table windows. Relative to [12], [13], which assume fully connected reliable broadcast of single-bit signals, our contributions are: (i) Networked-DOEL, which reconstructs network-wide content from time-stamped, time-stacked tables, conservative fusion, and temporal majority polling; (ii) a finite-time regret bound of the same form as in those works, but for dynamic neighbor-only graphs, by restoring independence of delayed arXiv:2609.17601v1 [cs.GT] 13 Sep 2026 access events rather than only rescaling success probabili-ties; (iii) experiments on a restricted Erd˝ os–R´ enyi backbone with dropouts, including the complete-graph communication setting of [13]. We examine both utilitarian (sum of local payoffs) and proportional-fair (product of local payoffs) welfare objectives. Our work is related more broadly to the large litera-ture on networked coordination, but differs from it in an essential way. In distributed optimization and consensus over graphs, the network is typically used to aggregate estimates, gradients, or state variables toward a common point. This perspective includes distributed optimization or reinforcement learning over time-varying directed graphs [10], [11], as well as communication-efficient schemes based on sign-based or compressed information exchange [14]– [17]. Such works show that sparse and time-varying network structure can be exploited effectively, but their objectives are fundamentally cooperative and usually rely on structural properties such as convexity and smoothness, specifically for payoff-sum maximization. In contrast, our problem is game-theoretic. Here, the agents are strategically coupled and the target is reaching optimal equilibrium over the highly unstructured equilibrium set with respect to broad welfare objectives beyond payoff-sum maximization even under dynamic communication networks. The rest of the paper is organized as follows. Section II introduces the problem formulation. Section III presents the proposed networked decentralized optimal equilibrium learning dynamics. Section IV and Section V, respectively, provide analytical and numerical results. Finally, Section VI concludes the paper. II. PROBLEM FORMULATION Consider an n-agent normal-form game characterized by the tuple G := ⟨Ai, u i⟩i∈N , where N := {1, . . . , n } is the index set of agents, Ai is the finite action set of agent i,
+
+A := Q 
+
+> j∈N
+
+Aj is the joint action space, and ui : A → R is agent i’s payoff function. Let a = ( ai)i∈N ∈ A be the action profile of all agents and a−i := ( aj )j̸ =i denote actions of agents other than agent 
+
+i. Then, an action profile a ∈ A is a pure-strategy ϵ-Nash equilibrium if, for each agent i,
+
+ui(ai, a −i) ≥ ui(˜ ai, a −i) − ϵi, ∀˜ai ∈ Ai, (1) for some ϵi ≥ 0. Given ϵ = ( ϵi)ni=1 , we define ϵ-equilibrium set as 
+
+Aeq  
+
+> ϵ
+
+:= 
+
+n
+
+a ∈ A : ui(a) ≥ max  
+
+> ˜ai∈Ai
+
+ui(˜ ai, a −i) − ϵi, ∀i
+
+o
+
+. (2) In general, pure-strategy equilibrium may not exist. How-ever, there always exist sufficiently large tolerance levels ϵ
+
+such that a pure-strategy ϵ-equilibrium can exist. Further-more, different tolerance levels can capture heterogenous sensitivities to suboptimal responses, ranging from full non-cooperativeness as ϵi → 0 to full cooperativeness as ϵi → ∞ .Given the payoffs (ui)ni=1 , the social welfare of all agents is given by 
+
+SW( a) := 
+
+> n
+
+X
+
+> i=1
+
+wi · gi ui(a), (3) for positive weights wi > 0 and monotonically increasing transformations gi(·).For example, for wi = 1 and gi(x) = x, the social welfare corresponds to the sum of payoffs P 
+
+> i
+
+ui(a), studied in multi-agent systems for Pareto optimal solutions, e.g., see [4], [5], [10], [11]. On the other hand, for wi = 1 and gi(x) = log( x),the social welfare corresponds to the product of payoffs 
+
+log Q 
+
+> i
+
+ui(a), yielding fair solutions across agents [18]. We say that equilibrium a∗ ∈ Aeq  
+
+> ϵ
+
+is optimal over (non-empty) ϵ-equilibrium set Aeq 
+
+> ϵ
+
+̸ = ∅ provided that 
+
+a∗ ∈ arg max 
+
+> a∈Aeq
+> ϵ
+
+{SW( a)} . (4) We consider that agents repeatedly play the game G
+
+to learn optimal equilibria through decentralized learning dynamics. They do not know the model and do not observe the actions of the others. They only observe their own payoff with perfect recall. We let agents communicate with certain other agents (e.g., the ones in proximity) over a communi-cation network through finite support messages while the communication links can change or fail dynamically, as illustrated in Fig. 1. In this paper, our goal is to design resilient decentralized optimal equilibrium learning algorithms for such dynamic communication networks . To quantify the effectiveness of the proposed solution, we focus on regret-based analysis. Particularly, given a time budget T , we define the cumulative regret of the agents’ joint play at at time t relative to the optimal welfare in (4) as 
+
+RT := T max 
+
+> a∈Aeq
+> ϵ
+
+{SW( a)} − 
+
+> T
+
+X
+
+> t=1
+
+SW( at). (5) III. DECENTRALIZED OPTIMAL EQUILIBRIUM LEARNING OVER NETWORKS In this section, we first describe Decentralized Opti-mal Equilibrium Learning (DOEL) framework, in which each agent can reliably communicate with all other agents [13]. Although agents only exchange single-bit messages, as described in Subsection III-A, full connectivity poses a challenge for practical applications. For example, there may not be a direct (one-hop) communication link in-between all agents. To mitigate these issues, we introduce Networked-DOEL dynamics, in which agents can temporally communicate with only a subset of agents over a dynamic communication network. 
+
+A. DOEL Dynamics 
+
+The DOEL dynamics originally address decentralized equilibrium selection for stochastic games through explore-and-commit and online learning schemes. However, due to the limited space, here, we only focus on the explore-and-commit scheme for the special case of repeated play of normal-form games, in which the underlying environment has a single state and agents have single-stage objectives. During the exploitation stage, agents aim to coordinate in the best ϵ-equilibrium. To this end, they need to identify (i) whether the explored action profile is ϵ-equilibrium and (ii) whether it leads to the highest social welfare compared to other equilibria. To address (i), agents can divide the exploration stage into 
+
+K phases k = 1 , . . . , K with fixed lengths of κ instances. At each phase k, each agent i randomly selects an action a(k).Then, within the phase t = ( k − 1) κ + 1 , . . . , kκ , the agent plays according to the distribution Ei(ai
+
+> (k)
+
+) : Ai → [0 , 1] 
+
+defined by 
+
+Ei(ai
+
+> (k)
+
+)( ai) = 
+
+(
+
+1 − |Ai|− 1 
+
+> |Ai|
+
+· εi if ai = ai 
+
+> (k)1
+> |Ai|
+
+· εi if ai̸ = ai
+
+> (k)
+
+, (6) where εi ∈ (0 , 1) is the in-phase exploration probability. Correspondingly, ait ∼ E i(ai
+
+> (k)
+
+) independently for each t =(k − 1) κ + 1 , . . . , kκ .Each agent can estimate the value of local actions by tak-ing average of the payoffs received whenever the associated action taken. For example, we have 
+
+ˆui
+
+> (k)
+
+(ai) = 
+
+Pkκ t=( k−1) κ+1 uit · I{ai=ait}
+
+Pkκ t=( k−1) κ+1 I{ai=ait}
+
+(7) for all ai. Then, explored ai 
+
+> (k)
+
+is the ϵ-best response with respect to the estimate ˆui 
+
+> (k)
+
+if 
+
+ˆui
+
+> (k)
+
+(ai
+
+> (k)
+
+) ≥ ˆui
+
+> (k)
+
+(ai) − ϵi ∀ai ∈ Ai. (8) Furthermore, the explored action profile a(k) = ( ai
+
+> (k)
+
+)i∈N is 
+
+ϵ-equilibrium if (8) holds for all i ∈ N .Recall that agents only observe local actions and payoffs. Even though they can check whether the action explored tolerable, they are not aware of whether everyone’s explored actions are tolerable. To mitigate this issue, they can broad-cast a single-bit tolerable ′1′ or intolerable ′0′ signal with each other at the end of the phase. If everyone signals 1,then the agents can conclude that the explored action profile is ϵ-equilibrium based on the local value estimates. 
+
+Remark 1. If agents are self-less, i.e., ϵi → ∞ , then the problem reduces to decentralized welfare optimization and they do not need to divide the exploration stage into phases. 
+
+To address (ii), agents need to consider the social welfare (3). However, local payoffs are not necessarily aligned with the social welfare. In the DOEL dynamics, agents broadcast a 
+
+randomized single-bit content ′1′ or discontent ′0′ signal with each other if the local action is tolerable. 1 More explicitly, if ˆui
+
+> (k)
+
+(ai
+
+> (k)
+
+) ≥ max ai ˆui
+
+> (k)
+
+(ai) − ϵi, then agent i broadcasts 
+
+si 
+
+> (k)
+
+=
+
+ 1 with probability ξwi(Ci−gi(ˆ uik (ai
+
+> (k))))
+
+0 otherwise (9)   
+
+> 1In the payoff-based dynamics of [4], [5], agents locally keep and update acontent/discontent state without sharing it with the other agents.
+
+independently with some ξ ∈ (0 , 1) and Ci ≥ gi(ui(a)) 
+
+for all a ∈ A, ensuring that Ci − gi(ˆ uik(ai
+
+> (k)
+
+)) ≥ 0 and 
+
+ξwi(Ci−gi(ˆ uik (ai 
+
+> (k))))
+
+∈ (0 , 1] is a valid probability. Due to the independent randomization, all agents would broadcast content signals for ϵ-equilibrium a(k) based on the local value estimates with the conditional probability 
+
+Pr( si 
+
+> (k)
+
+= 1 ∀i | a(k)) = ξC−SW( a(k)), (10) where C = P 
+
+> i
+
+wiCi and C ≥ SW( a(k)) by its definition. Observe that a(k) maximizing the probability (10) max-imizes SW( ·) since ξ ∈ (0 , 1) . Indeed, the distribution over action profiles conditioned on content-endorsement by all agents corresponds to the entropy-regularized welfare maximization over the equilibrium set [13, Remark 2]. Another key challenge is that agents do not observe the explored action profile. Relying only on local observations and communication, the DOEL dynamics let agents commit to the local action that is the most frequently content-endorsed by all agents. Under mild assumptions, [13] showed that the DOEL dynamics can attain at most logarithmic regret up to an in-phase exploration offset. 
+
+B. Networked-DOEL Dynamics 
+
+In the Networked-DOEL dynamics, agents are not able to reliably broadcast signals to all other agents. The commu-nication network might dynamically change across phases, e.g., see Fig. 1. To resolve this issue, the Networked-DOEL dynamics let agents share time-stamped and time-stacked messages, as illustrated in Fig. 2. 
+
+Time-Stamped Signals: Content/discontent signals are spe-cific to the current actions explored. However, the actions independently got explored according to the uniform distri-bution across phases. Therefore, agents are not able to diffuse the content signals across the underlying communication net-work by aggregating all information shared as in consensus networks. Instead, they can share the content/discontent sig-nals with a timestamp to identify the phases associated with the signals. They not only share their own content/discontent signals but also share the most recent content/discontent signals of all others based on the received signals from the neighboring agents, as commonly used for dynamic environments, e.g., see [19]. 
+
+Time-Stacked Signals: Here all signals matter beyond the most fresh ones. If the signals of agents do not reach to each other, then these agents cannot track the network-wide signals and this can degrade the performance. To mitigate this issue, agents can introduce redundancy by sharing not only the most recent content/discontent signals but also older signals. More explicitly, let ˆsi,j  
+
+> (k),(l)
+
+∈ { 0, 1, ∅} denote agent i’s belief at phase k about agent j’s content/discontent signal at phase l. Here, ∅ refers to missing or inconsistent informa-tion. Then, at phase k, agent i shares an n × m dimensional 0       
+
+> 11
+> 1
+> 1
+> 1
+> ∅
+> 0
+> 0
+> 00∅
+> ∅
+> ∅1
+> ∅
+> 00
+> 0
+> 00
+> 0
+> 1
+> 0
+> 1
+> 1
+> 1
+> ∅
+> ∅
+> ∅
+> 1
+> 1
+> 0
+> 1
+> ∅
+> 0
+> 00∅
+> ∅
+> ∅
+> 0
+> 1
+> 0
+> 1
+> 1
+> 1
+> ∅
+> Temporal d !mens !on
+> Spat !al d!mens !on
+> Spat !al
+> Table Fus !on
+> Table Shar !ng
+> Ne !ghbor 1
+> Ne !ghbor 2
+> Self Table
+> 1
+> 1
+> 0
+> 1
+> 1
+> 1
+> 1
+> 0
+> 0
+> 0
+> 00
+> 0
+> ∅
+> 0
+> 1
+> k
+> Fused New table of Agent i
+> Table k
+> 1
+> 1
+> 0
+> 1
+> 0
+> ∅
+> 1
+> 1
+> 0
+> 1
+> 1
+> 0
+> 0
+> 0
+> 0
+> ∅
+> k-6
+> 1
+> 1
+> 1
+> 1
+> 0
+> ∅
+> 1
+> 1
+> 0
+> ∅
+> 1
+> 0
+> 0
+> ∅
+> 1
+> 0
+> k-5 k-2 k-3 k-4
+> ∅
+> 0
+> 1
+> 00
+> ∅
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 0
+> ∅
+> 1
+> 0
+> k-1
+> !
+> ℓ₂
+> ℓ₁
+> ℓ₃
+> Table k-1 Table k-2 Table k-3
+> Memory of Agent !
+> Memory feedback
+> Temporal
+> Table
+> Process !ng
+> Counter Update
+> Content Endorsement for local act !on
+> Next Phase
+> k-5 k-3 k-4 k-2 k-3 k-4
+> k-1 k-2 k-3
+> kk-1 k-2 k-3
+> kk-1 k-2 k-3
+> kk-1 k-2 k-3
+
+Fig. 2: A figurative illustration of spatial table fusion and temporal table processing procedures for agent i = 1 at phase k
+
+over the four-agent communication network depicted at the top-right corner. The agent construct the table oi 
+
+> (k)
+
+based on the current content/discontent signal si 
+
+> (k)
+
+and the previous beliefs {ˆsi,j 
+
+> (k),(k−l)
+
+} about the content/discontent signals of all agents 
+
+j ∈ N and at previous phases l = k − m + 1 , . . . , k − 1. The agent receives the neighbor tables {oj
+
+> (k)
+
+}j∈N i 
+
+> (k)
+
+and fuse them with the local table oi 
+
+> (k)
+
+to compute oi
+
+> (k)
+
+. Then, the agent uses oi 
+
+> (k)
+
+and {oi
+
+> (k−l)
+
+}n−1 
+
+> l=1
+
+to determine whether all agents were content at phase k − n + 1 through majority polling. matrix 
+
+oi 
+
+> (k)
+
+=
+
+
+
+ˆsi, 1(k),(k−m+1) · · · ˆsi, 1(k),(k)
+
+... . . . ...
+
+ˆsi,n  
+
+> (k),(k−m+1)
+
+· · · ˆsi,n 
+
+> (k),(k)
+
+ ∈ { 0, 1, ∅}n×m.
+
+(11) This only creates an n × m-bit memory burden per agent, which can be further reduced, thereby yielding a scalable memory footprint. If the underlying communication networks consistently have depth more than m, then some agents may not access to the signals of all others. On the other hand, a connected network can have the depth of at most n − 1.Correspondingly, m ≥ n − 1 can ensure that all agents can access to the signals of all others as long as the networks remain connected. 
+
+Spatial Table Fusion: Agents fuse the tables received by the neighboring agents to construct 
+
+oi 
+
+> (k)
+
+= [ si
+
+> (k),(k−l)
+
+]kl=k−m+1 (12a) 
+
+si 
+
+> (k),(l)
+
+= [ si,j 
+
+> (k),(l)
+
+]j∈N , (12b) as depicted in Fig. 2. Formally, we can represent the com-munication network at phase k by an undirected graph 
+
+Gk = (N , E (k)), where N is the set of vertices/nodes corresponding to agents and E(k) ⊂ N × N is the set of edges depicting the communication links. For example, the pair (i, j ), (j, i ) ∈ E(k) if agents i and j can exchange messages at phase k. We denote the neighborhood of agent 
+
+i at phase k by N i 
+
+> (k)
+
+:= {j ∈ N : ( i, j ) ∈ E(k)}. Then, spatial table fusion can accept signals consistent across tables 
+
+{or
+
+> (k)
+
+}r∈N i 
+
+> (k)
+
+and 
+
+si,j  
+
+> (k),(l)
+
+=
+
+
+
+0 if ˆsr,j  
+
+> (k),(l)
+
+= 0 ∀r ∈ N i 
+
+> (k)
+
+: ˆ sr,j 
+
+> (k),(l)
+
+̸ = ∅
+
+1 if ˆsr,j  
+
+> (k),(l)
+
+= 1 ∀r ∈ N i 
+
+> (k)
+
+: ˆ sr,j 
+
+> (k),(l)
+
+̸ = ∅,
+
+∅ otherwise .
+
+(13) Furthermore, at the next phase, the beliefs get updated as 
+
+ˆsi,j  
+
+> (k+1) ,(k−l)
+
+=
+
+
+
+si,j  
+
+> (k),(k−l+1)
+
+if l > 0
+
+si 
+
+> (k+1)
+
+if l = 0 and j = i
+
+∅ otherwise .
+
+(14) to construct the table oi 
+
+> (k+1)
+
+to be shared with the neighbor-ing agents. 
+
+Temporal Processing of Tables: Tables {or
+
+> (k)
+
+}r∈N received at phase k include beliefs ˆsr 
+
+> (k),(k−l)
+
+about older phases k − l.By considering older versions of these beliefs, agents can mitigate the impact of missing links. To this end, agents can store tables fused in memory and memory size is proportional to the table depth m.For example, consider the example depicted in Fig. 2 with four agents. At phase k, table oi 
+
+> (k)
+
+includes the earliest beliefs 
+
+ˆsi 
+
+> (k),(k−3)
+
+while any tables oi 
+
+> (k−l)
+
+for l > 3 only consist of beliefs earlier than that, making these tables redundant to store. Hence, agents can have finite memory in which they store tables {oi
+
+> (k−l)
+
+}m−1 
+
+> l=1
+
+.Given the tables {oi
+
+> (k−l)
+
+}m−1 
+
+> l=1
+
+stored in the memory and the new table oi
+
+> (k)
+
+, agent i can use majority polling over 
+
+{si
+
+> (k−l),(k−m+1)
+
+}m−1 
+
+> l=0
+
+to determine if all were content at phase k − m + 1 . Define bi 
+
+> (l),(k)
+
+= ∅ if {j ∈ N : si,j 
+
+> (l),(k)
+
+̸ =
+
+∅} is an empty set, and otherwise 
+
+bi 
+
+> (l),(k)
+
+:= Y   
+
+> j∈N :si,j
+> (l),(k)̸=∅
+
+si,j 
+
+> (l),(k)
+
+, (15) Algorithm 1 Networked-DOEL Dynamics 
+
+Require: ξ ∈ (0 , 1) , ϵi ≥ 0, εi ∈ (0 , 1) , Ci ≥ max u gi(u)
+
+Initialize: counter ci(ai) = 0 for all ai ∈ Ai
+
+> Exploration
+
+for each phase k = 1 , . . . , K do 
+
+explore local action ai 
+
+> (k)
+
+∼ Uniform( Ai) independently 
+
+for each stage t = ( k − 1) κ + 1 , . . . , kκ do 
+
+play ˜ait ∼ E i(ai
+
+> (k)
+
+) ▷ Simultaneous play receive payoff uit
+
+end for 
+
+compute ˆui
+
+> (k)
+
+(ai) for all ai as in (7) compute ˆui 
+
+> ∗,(k)
+
+= max ai ˆui
+
+> (k)
+
+(ai)
+
+generate content/discontent signal: 
+
+si 
+
+> (k)
+
+=
+
+(
+
+I{ˆui  
+
+> (k)(ai
+> (k))≥ˆui
+> ∗,k −ϵi}
+
+w.p. ξ wi(Ci−gi(ˆ uik (ai
+
+> (k))))
+
+0 o.w. construct the table oi 
+
+> (k)
+
+according to (11) and (14) share oi 
+
+> (k)
+
+and receive {oj
+
+> (k)
+
+}j∈N i
+
+> (k)
+
+construct oi 
+
+> (k)
+
+by fusing oi 
+
+> (k)
+
+and {oj
+
+> (k)
+
+}j∈N i
+
+> (k)
+
+as in (13) 
+
+if k ≥ m and (16) holds then 
+
+increment the counter ci(a(k−m+1) ) by one 
+
+end if end for 
+
+> Exploitation
+
+identify ˆai 
+
+> (K)
+
+∈ arg max ai∈Ai {ci
+
+> (K)
+
+(ai)}
+
+for each stage t > κK do 
+
+play ait = ˆ ai 
+
+> (K)
+
+▷ Simultaneous play receive payoff uit
+
+end for 
+
+which is one if all information signals si,j  
+
+> (l),(k)
+
+are ones. Then, the agent detects network-wide content endorsement for the local explored action ai 
+
+> (k−m+1)
+
+if 
+
+> m−1
+
+X
+
+> l=0
+
+bi 
+
+> (k−l),(k−m+1)
+
+≥ 12
+
+> m−1
+
+X
+
+> l=0
+
+I{bi 
+
+> (k−l),(k−m+1) ̸=∅}
+
+. (16) In other words, the local action gets network-wise content-endorsement if network-wide content endorsement get de-tected at least half of the network-wide signals available. Conservative table fusion accepting only signals consistent across neighboring agents and majority polling over network-wide available signals reduce the sensitivity of the dynamics to erroneous signal transmissions beyond link failures. Algorithm 1 tabulates the Networked-DOEL dynamics for the typical agent i.IV. ANALYTICAL RESULTS In this section, we characterize the expected regret (5) for the Networked-DOEL dynamics over dynamic communica-tion networks. To this end, we consider that the underlying communication network Gk at phase k gets generated exoge-nously according to the Erd˝ os–R´ enyi G(n, p ) model. There can be a direct communication link between any pair of agents with probability p ∈ (0 , 1] independent of other pairs, previous networks, and the Networked-DOEL dynamics. Let qim ∈ [0 , 1] denote the probability that agent i can access to the signals of all others within m consecutive phases. Across m consecutive phases, there may not be any one-length, i.e., direct, paths between agent i and some other agent j with probability (1 − p)m. This yields that 
+
+qim ≥ (1 − (1 − p)m)n−1 =: qm (17) and qm > 0 since p̸ = 0 . Hence, agents can access to network-wide signals {si
+
+> (k)
+
+}i∈N associated with any phase k
+
+with at most m-phase delay with some positive probability. Indeed, information can also reach in multiple hops. How-ever, (17) provides a tractable lower bound, growing with the table width m while decaying with the number of agents and edge probability p.The Networked-DOEL dynamics involve in-phase explo-ration so that agents can identify whether the explored action is tolerable or not. However, since the other agents also con-duct in-phase exploration, agents effectively identify whether the explored action is tolerable against exploration-perturbed actions of others. Therefore, we introduce the effective payoff 
+
+ui(ai, a −i) := ui(ai, E−i(a−i)) for all i and (ai, a −i), where 
+
+E−i(a−i) = ( Ej (aj )) j̸ =i. Given the effective payoffs, we define the effective welfare and the effective ϵ-equilibrium set of the corresponding effective game G = ⟨Ai, u i⟩i∈N ,resp., by 
+
+SW( a) = 
+
+> n
+
+X
+
+> i=1
+
+wi · gi(ui(a)) , (18) 
+
+Aeq  
+
+> ϵ
+
+=
+
+n
+
+a ∈ A : ui(a) ≥ max  
+
+> ˜ai∈Ai
+
+ui(˜ ai, a −i) − ϵi, ∀i
+
+o
+
+. (19) We make the following assumptions: 
+
+Assumption 1. 
+
+(i) The effective ϵ-equilibrium set Aeq  
+
+> ϵ
+
+is non-empty. 
+
+(ii) There exists unique effective equilibrium a∗ ∈ Aeq 
+
+> ϵ
+
+maximizing the effective welfare SW , i.e., 
+
+SW( a∗) > SW( a) ∀a ∈ Aeq  
+
+> ϵ
+
+and a̸ = a∗. (20) (iii) Let Ξo > 0 denote the gap between the best and second best(s) as 
+
+Ξo := SW( a∗) − max  
+
+> a∈Aeq
+> ϵ\a∗
+
+{SW( a)}. (21) 
+
+Then, for some δ > 0, we have 
+
+0 < ξ < (|Aeq  
+
+> ϵ
+
+| + δ)−1/Ξo . (22) This assumption ensures that agents can learn the unique optimal equilibrium in a decentralized way through random-ized content/discontent signals. 
+
+Assumption 2. The phase length κ is sufficiently long such that in-phase estimation errors are negligible, i.e., ˆui
+
+> (k)
+
+(ai
+
+> (k)
+
+) = ui(ai
+
+> (k)
+
+, a −i
+
+> (k)
+
+) and 
+
+ˆui 
+
+> ∗,(k)
+
+= max ai∈Ai ui(ai, a −i
+
+> (k)
+
+).
+
+The estimates ˆui 
+
+> (k)
+
+in (7) use only agent i’s own in-phase payoffs, so they do not depend on Gk. Ordinary concentration therefore applies directly, as analyzed in [13]: Assumption 2 holds whenever κ is large enough for empirical payoffs to concentrate. We use this exact-equality form to isolate communication error in Theorem 1. In real systems, phases must be long enough relative to payoff variability; otherwise content bits can be wrong and the bound does not apply. The following theorem shows that the Networked-DOEL dynamics have logarithmic regret with an in-phase explo-ration perturbation. 
+
+Theorem 1. Consider the repeated play of a normal-form game G = ⟨Ai, u i⟩i∈N . Suppose that each agent follows Algorithm 1 and Assumptions 1 and 2 hold. Furthermore, at each phase, let the communication network be generated according to the Erd˝ os–R´ enyi G(n, p ) model. If the explo-ration length be K ∈ O(log T /q 2
+
+> m
+
+), then the expected regret is bounded by E[ RT ] ∈ O(εT + log T ).
+
+The Networked-DOEL dynamics use in-phase ε-exploration to identify whether the explored actions are tolerable. However, this causes an offset on the regret. Furthermore, the exploration length K ∈ O(log T /q 2
+
+> m
+
+) is reversely proportional to the square of the probability lower bound qm. As described in (17), qm ∈ (0 , 1) increases with larger table size m, larger connectivity probability p and smaller number of agents. 
+
+Proof: We can write the expected regret as 
+
+E[ RT ] = T SW ∗−
+
+
+
+κ
+
+> K
+
+X
+
+> k=1
+
+SW( a(k))+( T −κK )SW(ˆ a(K))
+
+
+
+,
+
+where a(k) = (Ei(ai
+
+> (k)
+
+)) i∈N is the exploration-perturbed action profile. Define Ξ := SW ∗ − min a SW( a) and Ξε := SW ∗ − SW( a∗). Then, we have 
+
+E[ RT ] ≤ κK Ξ + T Ξε + T Ξ Pr(ˆ a(K)̸ = a∗). (23) Since the repeated play of normal-form games is a special case of stochastic games, [13, Lemma 1] yields that 0 <
+
+Ξε ≤ ¯Cε for certain ¯C > 0.Next, we bound the probability Pr(ˆ a(K)̸ = a∗) from above. The challenge is that agents may not access to the network-wide signals. Furthermore, whether agent i can access to network-wide signal at phase k is not independent of having access to network-wide signals at phases {k −m+1, . . . , k + m − 1} since the shared tables consist of signals within a window of m phases. To address this issue, we fix agent i and consider m separate empirical averages: 
+
+ˆθ(i)(ℓ),l (a) := 1
+
+ℓ
+
+> ℓ
+
+X
+
+> k=1
+
+I{amk +l=a} · s(mk +l) · r(i)(mk +l) (24) for l = 0 , 1, . . . , m − 1, where s(mk +l) = Q 
+
+> j
+
+sj 
+
+> (mk +l)
+
+∈{0, 1} is 1 if there is network-wide content endorsement and 
+
+0 otherwise, and r(i)(mk +l) ∼ Bernoulli( qim) is the indicator of whether agent i can get access to the network-wide signal possibly with some delay over the randomly selected com-munication networks according to the Erd˝ os–R´ enyi G(n, p )
+
+model. Due to the in-phase separation, r(i)(mk +l) is indepen-dent of other r(i)(mh +l) for h̸ = k. Additionally having access to network-wide signal is independent of the actions taken and the signals generated. Based on (24) and the randomness on I{amk +l=a}·s(mk +l)·
+
+r(i)(mk +l) ∈ { 0, 1} independent across k, the Hoeffding bound yields that 
+
+Pr( |ˆθ(i)(ℓ),l (a) − θ(a)| ≥ ζ) ≤ 2e−2ℓζ 2
+
+(25) for l = 0 , 1, . . . , m − 1, where 
+
+θ(a) := 
+
+( qim 
+
+> |A|
+
+ξC−SW( a) if a ∈ Aeq 
+
+> ϵ
+
+0 if a / ∈ Aeq 
+
+> ϵ
+
+. (26) Observe that 
+
+arg max 
+
+> a
+
+{θ(a)} = arg max 
+
+> a∈Aeq
+> ϵ
+
+{SW( a)} (27) since ξ ∈ (0 , 1) and C ≥ SW( a) for all a. The following lemma characterizes the separation between θ(a∗) and others 
+
+θ(a) for a̸ = a∗.
+
+Lemma 1. Under Assumption 1, we have 
+
+θ(a∗) − ζ > X 
+
+> a∈Aeq
+> ϵ\a∗
+
+(θ(a) + ζ), (28) 
+
+where 
+
+ζ := qimδ
+
+|A|| Aeq  
+
+> ϵ
+
+| ξC−max a∈Aeq   
+
+> ϵ\a∗{SW( a)}
+
+. (29) 
+
+Proof: The proof follows from [12, Lemma 1] with additional scaling factor qim.The empirical average of joint action a when there is network-wide content endorsement and agent i can access to that network-wide signal is given by 
+
+ˆθ(i)(ℓκ )(a) := 1
+
+m
+
+> m−1
+
+X
+
+> l=0
+
+ˆθ(i)(ℓ),l (a). (30) Correspondingly, the local empirical average is given by 
+
+ˆθi
+
+> (ℓκ )
+
+(ai) = X
+
+> ˜a∈A:˜ ai=ai
+
+ˆθ(i)(ℓκ )(˜ a). (31) The following proposition shows that agent i can locally identify the best action. 
+
+Proposition 1. Under Assumptions 1 and 2, if |ˆθ(i)(k)(a) −
+
+θ(a)| < ζ , where ζ is as described in Lemma 1, then 
+
+ˆθi
+
+> (ℓκ )
+
+(ai, ∗) > ˆθi
+
+> (ℓκ )
+
+(ai) ∀ai̸ = ai, ∗. (32) 
+
+Proof: The proof follows from [12, Proposition 1]. Lastly, by (25), the triangle inequality and the union bound yield that 
+
+Pr( |ˆθ(i)(K)(a) − θ(a)| ≥ ζ) ≤ 2me −2Kζ 2/κ . (33) Correspondingly, we have 
+
+P r (|ˆθ(i)(K)(a) − θ(a)| ≤ ζ, ∀a ∈ A) ≥ 1 − β (34) where β := 2 m|Aeq  
+
+> ϵ
+
+|e−2Kζ 2/κ .By Proposition 1 and (34), we have 
+
+Pr(ˆ a(K)̸ = a∗) ≤ β. (35) Then, choosing K = 12ζ2 log(4 m|Aeq  
+
+> ϵ
+
+|T ζ 2) yields that β = 
+
+> 12T ζ 2
+
+, which completes the proof. (a) Sum of Local Payoffs as Social Welfare (b) Product of Local Payoffs as Social Welfare  
+
+> (c) Sum of Local Payoffs as Social Welfare (d) Product of Local Payoffs as Social Welfare
+
+Fig. 3: Comparison of the proposed networked learning scheme for optimal equilibrium selection and social welfare maximization under three communication scenarios. Panels (a) and (c) use utilitarian welfare (sum of local payoffs), while panels (b) and (d) use proportional-fair welfare (sum of log-payoffs). Scenario 1 is a fully connected baseline (ideal communication), i.e., the same communication setting as the original DOEL dynamics. Scenario 2 and Scenario 3 use the 
+
+restricted Erd˝ os–R´ enyi graph (edge probability p = 0 .2, conditioned on connectivity) with per-phase independent link drops with probability 0.1 for each edge, and differ in the table depth: m = 5 (Scenario 2) versus m = 3 (Scenario 3), so that m
+
+is above versus possibly below the backbone diameter D ∈ { 3, 4}. The dashed horizontal line indicates the target welfare level; curves show averages over 50 runs with shaded ±1 standard deviation. V. NUMERICAL RESULTS We consider the repeated play of a normal-form game with n = 7 agents and |Ai| = 3 actions per agent. The payoffs are generated randomly over [0 , 1] once and fixed throughout all experiments. For the realized game instance, the induced equilibrium landscape contains three distinct pure Nash equilibria, each achieving a different value of the social welfare objective. In addition, the (unconstrained) social maximizer, aSW ∈ arg max a∈A SW( a), is unique and does not coincide with any of the equilibrium action profiles, highlighting a nontrivial gap between stability (equilibrium) and efficiency (social welfare). On this same payoff matrix we evaluate both equilib-rium selection and unconstrained welfare maximization, under two welfare specifications: (i) the utilitarian case 
+
+SW sum (a) = P7 
+
+> i=1
+
+ui(a) and (ii) the proportional-fair case 
+
+SW product (a) = P7 
+
+> i=1
+
+log( ui(a)) (with a small positive floor applied to avoid log(0) ). The same networked learning dynamics is then run in the identical environment under both cases, and performance is reported with respect to (a) the optimal equilibrium under the chosen SW( ·) among the three equilibria, and (b) the unique social maximizer aSW as a separate efficiency benchmark. We remark that the joint action space has the size of |A| =2187 , i.e., there are 2187 possible joint action profiles in the stage game. We consider a two-stage communication model which we called restricted Erd˝ os–R´ enyi . First, a fixed Erd˝ os–R´ enyi backbone graph is generated at initialization of each run and retained throughout that run, so the 50 independent runs use different backbones. Pairs that do not share a backbone edge are never connected. The backbone is sampled so that its diameter is D ∈ {3, 4}. Then, at each phase, each backbone edge is independently dropped with a probability, yielding the active communication graph for that phase. Communication remains neighbor-only; however, links are unreliable over time: at the end of each phase, each edge in the base graph is independently active with a probability. In all simulations, we use restricted Erd˝ os–R´ enyi with edge probability p = 0 .2 (conditioned on connectivity), and keep this base topology fixed throughout learning with each edge drop probability 0.1. Since communication occurs only once per phase (at the phase boundary), the active neighbor set is re-sampled once per phase and remains fixed during the 
+
+κ within-phase interaction rounds. Hence, the set of available communication links varies across phases due to random link drops, even though the underlying base graph is time-invariant. We run the process for K = 10 6 phases. To study equilibrium selection, we set the phase length to 
+
+κ = 250 (so the total number of stage-game rounds is T =
+
+κK = 2 .5×10 8), use ε = 0 .1 exploration (implemented as ε-greedy), and set the near-best-response tolerance to ϵi = ϵ =10 −5 for all agents. The semantic randomization parameter is as ξ = 0 .35 and ξ = 0 .4 for payoff-sum and payoff-product welfares, respectively. To obtain the social-welfare maximizer benchmark, we do not divide the time into phases, i.e., κ = 1 , ε = 0 , and 
+
+ϵi = + ∞ (so every action is tolerable), and choose ξ small so that the induced stationary behavior concentrates on the welfare maximizer. Concretely, we use ξ = 10 −4 for payoff-sum maximization and ξ = 1 .6 × 10 −4 for payoff-product maximization. As above, we keep the same horizon K =10 6.Fig. 3 compares three communication scenarios. The plotted curves show the average achieved welfare over 50 independent runs, and the shaded regions indicate ±1 stan-dard deviation. The dashed horizontal line marks the target welfare level in each panel. Scenario 1 is a fully connected baseline, i.e., the same communication setting as the original DOEL dynamics [13]. A comparison with the no-communication payoff-based dynamics of [4], [5] is not included, because the instance is randomly sampled to represent a general normal-form game, and such a draw need not satisfy the structural assumptions those methods require. Scenarios 2 and 3 operate over the restricted Erd˝ os–R´ enyi network with link drops, and differ only in the table depth: m = 5 for Scenario 2 and m = 3 
+
+for Scenario 3. On a backbone of diameter D, a content bit reaches every agent within m phases if m ≥ D, unless the same agent is dropped for D consecutive phases. Independent drop probability 0.1 makes that event rare, so Scenario 2 (m = 5 ≥ D) recovers network-wide signals with high probability, whereas Scenario 3 ( m = 3, which can be smaller than D) can leave some messages unrecovered. This is the experimental counterpart of qm in Theorem 1. Unlike a fully connected network, some agent pairs are never linked, and independent dropouts can leave an agent disconnected from the rest of the network in a given phase; reconstruction still proceeds through the table window of length m.In the welfare-maximization setting shown in Fig. 3(a) and Fig. 3(b), the achieved welfare increases rapidly in the early phases and stabilizes near the target level. Scenario 1 converges fastest and with the smallest variability. Scenario 2 stays close to Scenario 1: even though some agents are never directly linked and may be disconnected from the network in a given phase, their information is still recovered through the table window. Scenario 3 may not recover all information, since the table depth can be smaller than the backbone diameter, and is slower and more variable, but still reaches the target. A similar trend is observed in the equilibrium-selection setting in Fig. 3(c) and Fig. 3(d), where convergence is slower and the separation between scenarios is more pro-nounced. This is expected since equilibrium selection re-stricts the feasible set to equilibria, unlike unconstrained welfare maximization. Still, both Scenario 2 and Scenario 3 approach the target equilibrium welfare, with Scenario 2 again closer to Scenario 1. VI. CONCLUSION We studied decentralized learning of socially optimal equilibria in repeated normal-form games under dynamic communication networks and proposed Networked-DOEL, which combines low-bandwidth semantic signaling with time-stamped, time-stacked information exchange. We es-tablished logarithmic regret guarantees with an in-phase exploration perturbation and showed that the method remains effective under intermittent connectivity, with temporal re-dundancy improving robustness. Overall, the results highlight that scalable and resilient equilibrium selection is achievable with minimal communication. The dynamics remain resilient to intermittent links in the sense that a dropped or delayed bit can still be reconstructed inside a table window of length 
+
+m. Promising directions for future research include devel-oping more efficient exploration mechanisms, extending the framework to stochastic games, and incorporating function approximation methods to handle large-scale action spaces. REFERENCES [1] S. Y¨ uksel and T. Bas ¸ar, Stochastic Networked Control Systems: Stabilization and Optimization under Information Constraints , ser. Systems & Control: Foundations & Applications. Birkha¨ auser, 2013. [2] X. Cao, T. Bas ¸ar, S. Diggavi, Y. C. Eldar, K. B. Letaief, H. V. Poor, and J. Zhang, “Communication-efficient distributed learning: An overview,” IEEE J. Sel. Areas Commun. , vol. 41, no. 4, pp. 851–873, 2023. [3] T. Bas ¸ar and G. J. Olsder, Dynamic Noncooperative Game Theory ,2nd ed. Society for Industrial and Applied Mathematics, 1998. [4] J. R. Marden, H. P. Young, and L. Y. Pao, “Achieving Pareto optimality through distributed learning,” SIAM J. Control Optim. , vol. 52, no. 5, pp. 2753–2770, 2014. [5] B. S. Pradelski and H. P. Young, “Learning efficient Nash equilibria in distributed systems,” Games Econ. Behav. , vol. 75, no. 2, pp. 882–897, 2012. [6] R. Yang and M. Wu, “Learning with episodic hypothesis testing in general games: A framework for equilibrium selection,” Proc. ACM Meas. Anal. Comput. Syst. , vol. 9, no. 3, Dec. 2025. [7] B. Yongacoglu, G. Arslan, and S. Y¨ uksel, “Decentralized learning for optimality in stochastic dynamic teams and games with local control and global state information,” IEEE Trans. Autom. Control , vol. 67, no. 10, pp. 5230–5245, 2022. [8] A. S. Donmez, O. Unlu, and M. O. Sayin, “Logit-Q dynamics for efficient learning in stochastic teams,” SIAM J. Control Optim. , vol. 63, no. 5, pp. 3219–3243, 2025. [9] F. Christianos, G. Papoudakis, and S. V. Albrecht, “Pareto actor-critic for equilibrium selection in multi-agent reinforcement learning,” Trans. Mach. Learn. Res. , 2023. [10] A. Nedi´ c and A. Olshevsky, “Distributed optimization over time-varying directed graphs,” IEEE Trans. Autom. Control , vol. 60, no. 3, pp. 601–615, 2015. [11] K. Zhang, Z. Yang, H. Liu, T. Zhang, and T. Bas ¸ar, “Fully decen-tralized multi-agent reinforcement learning with networked agents,” in Proc. Int. Conf. Mach. Learn. (ICML) , 2018, pp. 5872–5881. [12] S. T. Kiremitci, A. S. Donmez, and M. O. Sayin, “Achieving Pareto optimality in games via single-bit feedback,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process. (ICASSP) , 2026. [13] ——, “Decentralized optimal equilibrium learning in stochastic games via single-bit feedback,” 2026, arXiv:2602.12830. [14] J. Zhang, K. You, and T. Bas ¸ar, “Distributed discrete-time optimization in multiagent networks using only sign of relative state,” IEEE Trans. Autom. Control , vol. 64, no. 6, pp. 2352–2367, 2019. [15] M. O. Sayin and S. S. Kozat, “Single bit and reduced dimension diffusion strategies over distributed networks,” IEEE Signal Process. Lett. , vol. 20, no. 10, pp. 976–979, 2013. [16] ——, “Compressive diffusion strategies over distributed networks for reduced communication load,” IEEE Trans. Signal Process. , vol. 62, no. 20, pp. 5308–5323, 2014. [17] X. Cao and T. Bas ¸ar, “Decentralized online convex optimization with compressed communications,” Automatica , vol. 156, p. 111186, 2023. [18] F. P. Kelly, A. K. Maulloo, and D. K. H. Tan, “Rate control for communication networks: shadow prices, proportional fairness and stability,” Journal of the Operational Research Society , vol. 49, no. 3, pp. 237–252, 1998. [19] A. Mitra, J. A. Richards, S. Bagchi, and S. Sundaram, “Distributed state estimation over time-varying graphs: Exploiting the age-of-information,” IEEE Trans. Autom. Control , vol. 67, no. 12, pp. 6349– 6365, 2022.
