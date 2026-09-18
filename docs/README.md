@@ -6,43 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-17
-- 运行时间：2026-09-17 22:15:18 UTC
+- 最新运行日期：2026-09-18
+- 运行时间：2026-09-18 21:18:59 UTC
 - 运行状态：成功
-- 本次总论文数：7
-- 精读区：3
-- 速读区：4
+- 本次总论文数：1
+- 精读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-2026-09-17 日报：扫读 7 篇多智能体强化学习论文，精读 3 篇，最高分 9.0 落在共享频谱市场竞争与未知动态下的循环 MARL 协作再分配两个方向。  
-最值得看的是这两篇 9.0 分精读：一篇用多智能体 RL 学习共享频谱中的市场竞标，另一篇用循环 MARL 在未知动态下做合作收益再分配，速读部分还覆盖了无人机蜂群低成本迁移、随机环境社会法则与动态网络均衡学习。  
-普通读者若时间有限，建议先读共享频谱那篇，再顺着“未知动态+协作”主题看循环 MARL，其余速读可按无人机蜂群或网络均衡兴趣挑读。
-- 详情：[/202609/17/README](/202609/17/README)
+今天速读 1 篇、精读挂零，聚焦算法合谋治理新进展。唯一入选的《Mitigating Retaliatory Algorithmic Collusion in Repeated Games》（6.0/10）探讨重复博弈中如何抑制报复性算法合谋。普通读者可先看这篇了解定价算法为何容易“默契”抬价，再留意平台监管与算法审计的落地动向。
+- 详情：[/202609/18/README](/202609/18/README)
 
 ### 精读区论文标签
-1. [Learning Market Competition in Shared Spectrum: A Multi-Agent Reinforcement Learning Approach](/202609/17/2609.17754v1-learning-market-competition-in-shared-spectrum-a-multi-agent-reinforcement-learning-approach)  
-   标签：评分：9.0/10、query:marl
-   evidence：多智能体强化学习用于频谱提供商间的市场竞争
-2. [CoRe-MARL: Cooperative Redistribution Under Unknown Dynamics Using Recurrent Multi-Agent Reinforcement Learning](/202609/17/2609.18639v1-core-marl-cooperative-redistribution-under-unknown-dynamics-using-recurrent-multi-agent-reinforcement-learning)  
-   标签：评分：9.0/10、query:marl
-   evidence：基于Dec-POMDP的协作多智能体强化学习用于去中心化再分配
-3. [AssemblyGrid v1: A Benchmark for Multi-Robot Production with Temporary Coalitions, Local Information, and Geometric Constraints](/202609/17/2609.16075v1-assemblygrid-v1-a-benchmark-for-multi-robot-production-with-temporary-coalitions-local-information-and-geometric-constraints)  
-   标签：评分：8.0/10、query:marl
-   evidence：部分可观测下的分散式合作多机器人决策
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Calibrate Once, Fly Any Team: Residual-Grounded Low-Fidelity Training for Cooperative Drone Swarms](/202609/17/2609.17265v1-calibrate-once-fly-any-team-residual-grounded-low-fidelity-training-for-cooperative-drone-swarms)  
-   标签：评分：7.0/10、query:marl
-   evidence：面向分散式无人机集群的协作多智能体强化学习
-2. [Social Laws for Multi-agent Coordination in Stochastic Environments](/202609/17/2609.18929v1-social-laws-for-multi-agent-coordination-in-stochastic-environments)  
-   标签：评分：7.0/10、query:marl
-   evidence：归约为求解一系列马尔可夫博弈
-3. [Decentralized Optimal Equilibrium Learning Over Dynamic Networks](/202609/17/2609.17601v1-decentralized-optimal-equilibrium-learning-over-dynamic-networks)  
+1. [Mitigating Retaliatory Algorithmic Collusion in Repeated Games](/202609/18/2609.20548v1-mitigating-retaliatory-algorithmic-collusion-in-repeated-games)  
    标签：评分：6.0/10、query:marl
-   evidence：动态网络上的去中心化多智能体均衡学习
-4. [DualSQL: Text-to-SQL with Multi-Agent Reinforcement Learning](/202609/17/2609.18135v1-dualsql-text-to-sql-with-multi-agent-reinforcement-learning)  
-   标签：评分：6.0/10、query:marl
-   evidence：通过多智能体强化学习框架联合优化
+   evidence：多个强化学习智能体在重复博弈中的多智能体学习行为
 
 
 <div class="dpr-home-promo-card">
