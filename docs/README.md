@@ -6,22 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-19
-- 运行时间：2026-09-19 21:08:43 UTC
+- 最新运行日期：2026-09-20
+- 运行时间：2026-09-20 21:29:35 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：2
 - 精读区：0
-- 速读区：0
+- 速读区：2
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202609/19/README](/202609/19/README)
+- 今日共生成 2 篇推荐（精读 0 篇，速读 2 篇）
+- 速读：《Forty Shades of Blue: Quality-Diversity Alignment via Mode-Conditioned Reinforcement Learning》（6.0/10）, 《AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202609/20/README](/202609/20/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Forty Shades of Blue: Quality-Diversity Alignment via Mode-Conditioned Reinforcement Learning](/202609/20/2609.14896v1-forty-shades-of-blue-quality-diversity-alignment-via-mode-conditioned-reinforcement-learning)  
+   标签：评分：6.0/10、query:marl
+   evidence：受多智能体强化学习协调视角启发的模式条件化强化学习
+2. [AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution](/202609/20/2609.18520v1-aeroweaver-an-embodied-agent-harness-for-weaving-aerial-skills-into-distributed-adaptive-swarm-execution)  
+   标签：评分：6.0/10、query:marl
+   evidence：多智能体通过局部感知与协调行动追求共享目标的分布式执行
 
 
 <div class="dpr-home-promo-card">

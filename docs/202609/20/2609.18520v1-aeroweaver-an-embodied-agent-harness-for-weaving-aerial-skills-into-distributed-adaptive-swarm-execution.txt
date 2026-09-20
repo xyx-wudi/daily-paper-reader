@@ -1,0 +1,233 @@
+Title: AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution
+
+URL Source: https://arxiv.org/pdf/2609.18520v1
+
+Published Time: Thu, 17 Sep 2026 01:21:13 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution 
+
+Jiabin Lou, Yirong Yang, Haopeng Wang, Xuxin Lv, Xinyu Liu, Diyuan Hou, Xuehong Liu, Rongye Shi, and Wenjun Wu ∗
+
+Abstract — Collective intelligence is a collaborative autonomy paradigm in which multiple agents pursue shared objectives through local perception, information exchange, and coordi-nated action. UAV swarms embody this paradigm by coordi-nating multiple vehicles in tasks such as search, inspection, and tracking. Recent advances in large language model (LLM) agents have strengthened natural-language task understanding and high-level planning, providing a flexible semantic interface between mission descriptions and collective behavior. While these advances expand semantic reasoning, applying LLM agents to UAV swarms raises challenges in grounding model decisions in executable capabilities, reconciling global task reasoning with distributed execution, and using mission-specific experience for continual adaptation. To address these chal-lenges, we introduce AeroWeaver, an embodied-agent harness that weaves individual UAV skills into coordinated mission-level behavior. AeroWeaver connects semantic decisions to governed skills, organizes role-conditioned local agents for distributed coordination, and uses role-indexed state–action–reward expe-rience to refine skill selection online. Experiments and runtime validation show that AeroWeaver maintains valid skill execution under tested conditions and supports body-local multi-UAV operation without a central agent generating joint actions from global context, while reward-guided online updates provide a training-free path for adaptive learning swarm agents from accumulated execution experience. Code website: https:// github.com/Admire-ljb/AeroWeaver .
+
+I. I NTRODUCTION 
+
+Collective intelligence enables multiple agents to com-bine local perception, information exchange, and coordinated action around a shared objective. UAV swarms provide a representative physical realization by organizing the sensing, mobility, and task capabilities of multiple aerial platforms. As missions and operating conditions change, their collective effectiveness depends on a continuous link between high-level task organization and reliable vehicle-level execution. Recent advances in large language models (LLMs) bring complex-task understanding, knowledge organization, hier-archical reasoning, and long-horizon planning to the task-organization layer. These capabilities make LLMs a flexible interface for interpreting mission descriptions and structuring high-level swarm behavior [1]. The resulting decisions ulti-mately operate through vehicle-specific observations, com-munication links, and actuators, making their connection to distributed physical execution a central research problem. AI-agent systems mediate this connection through the runtime surrounding the model, commonly termed a harness. 
+
+> All authors are with Beihang University, 37 Xueyuan Road, Haidian District, Beijing 100191, China.
+> ∗Corresponding author: Wenjun Wu ( wwj09315@buaa.edu.cn ).
+
+The harness supplies context, exposes actions, routes model selections to executable tools, and returns environmental feedback. For an embodied swarm, the harness therefore becomes the interface between shared mission reasoning and multiple physically separate decision and execution pro-cesses. Viewed across the full execution loop, this interface raises a connected sequence of questions concerning whether semantic choices are physically executable, how executable choices remain coordinated across distributed vehicles, and how their outcomes should influence later decisions. The sequence begins at the semantic-to-physical boundary, where a language-level choice must correspond to a capability available in the deployed system and be routed to the vehicle that owns its execution interface. Without this mapping, task reasoning and flight control remain separate software layers. Even when each action is executable, swarm-scale coor-dination remains difficult because task-level reasoning and body-level execution follow different information topologies. Many LLM-based multi-robot systems aggregate team state in a shared planner that decomposes the mission and returns a joint plan [2]. This organization places semantic deci-sions in a shared context, whereas observations, communica-tion links, and actuators remain distributed across vehicles. The coordination problem is to maintain coherent mission progress across this distributed execution topology. As these distributed decisions accumulate across rounds, the execution loop produces experience that can inform later choices. The relevance of each record depends on the local state, vehicle responsibility, peer interaction, and stage of mission progress in which it was collected. The adaptation problem is to relate accumulated outcomes to the current decision while preserving stable physical execution. Together, these requirements call for a swarm runtime that connects semantic capability selection, body-local coordi-nation, and experience-based adaptation within a consistent execution boundary. AeroWeaver addresses this need as an embodied-agent harness that weaves individual UAV skills into coordinated swarm execution. Its skill interface connects mission interpretation to body-scoped capability dispatch, while task-conditioned contexts preserve local decision au-thority across vehicles and reward-linked experience adjusts subsequent skill preferences without changing model weights or low-level controllers. The resulting loop allows mission-level reasoning to organize collective behavior, body-bound agents to execute through their assigned platforms, and accumulated outcomes to inform later decisions. Our contributions are as follows: arXiv:2609.18520v1 [cs.AI] 16 Sep 2026 • Embodied-Agent Harness with Aerial Skills. We represent UAV capabilities as typed skill packages that pair skill.md documentation with executable objects and route selected skills through body-scoped executors.  
+
+> •
+
+Distributed Swarm Orchestration. We derive role-specific prompts and active skill subsets from each mission, bind each local agent to a UAV, and incorporate directed peer messages into the next body-local decision without introducing a central action controller.  
+
+> •
+
+Experience-Guided Online Reinforcement. We index state–action–reward trajectories by semantic role, esti-mate skill-level advantages from similar experience, and enable training-free online policy optimization through experience-guided score updates. The evaluation examines task performance and inference cost in MPE-inspired simulation scenarios and traces how accumulated rewards influence subsequent skill choices. II. R ELATED WORK 
+
+A. LLM-Based Embodied Agents 
+
+LLM-based embodied agents connect natural-language reasoning with perception, planning, and action in interactive environments. ReAct interleaves reasoning with actions and environmental observations, allowing plans to be revised during interaction [3]. For physical robots, the representa-tion linking this reasoning to control varies across systems. SayCan combines language-model scores with learned af-fordance values to select feasible robot skills [4]. Code as Policies generates programs that compose perception and control APIs [5]. ReKep instead expresses manipulation goals as relational keypoint constraints and obtains actions through hierarchical optimization [6]. Voyager accumulates executable programs during interaction and retrieves them as reusable skills for later tasks [7]. These approaches establish skills, programs, and geometric constraints as intermediate representations between language-level reasoning and exe-cutable behavior. Repeated interaction also provides experience that can improve later decisions. ExpeL extracts transferable natural-language knowledge from prior trajectories [8]. Agent Work-flow Memory identifies recurring workflows in agent trajec-tories and retrieves them during subsequent online or offline decisions [9]. A-Mem organizes experience as linked notes whose contextual attributes evolve as new memories are added [10]. AgentRefine instead learns correction behavior from environment-feedback trajectories through refinement tuning [11]. AgentGym supplies diverse interactive environ-ments and trajectory sets for evaluating and training agents through continued interaction [12]. JitRL retrieves state– action–return experience to estimate action advantages and adjusts policy logits without gradient updates [13]. Together, these methods distinguish memory organization, parameter learning, and inference-time policy correction as complemen-tary routes to adaptation. For a physical swarm, reward-based reuse also requires relating experience to the local state and responsibility of the agent making the current decision. Connecting language-mediated choices to external tools and physical actuators places additional demands on the execution interface. AgentDojo evaluates prompt-injection attacks and defenses when agents invoke tools over untrusted data [14]. BadRobot shows how language-model vulner-abilities can propagate into physical actions in embodied systems [15]. Thea formulates the surrounding context, ac-tion interface, and execution feedback as an embodied-agent harness [16]. SHAPER further studies the joint evolution of reusable skills and a context–code harness around a frozen language model [17]. These studies provide foundations for skill grounding, experience reuse, and execution-interface design. Their common focus on an individual agent, ashared tool environment, or model-level adaptation leaves the organization of execution authority and experience attribution across concurrently acting physical agents comparatively underexplored. 
+
+B. LLM-Based Multi-Agent and Multi-Robot Systems 
+
+LLM-based multi-agent research extends language-mediated reasoning from a single embodied agent to teams that divide tasks, exchange information, and coordinate ac-tions toward a shared objective. SMART-LLM separates task decomposition, coalition formation, and allocation to generate multi-robot task plans [18]. CaPo constructs acooperative meta-plan and revises it through multi-agent discussion as task progress changes [19]. EMOS incorporates embodiment-derived capability descriptions into hierarchical planning for heterogeneous robot teams [20]. These systems emphasize task-level organization and capability-aware as-signment through shared or hierarchical planning. Other work places greater emphasis on interaction among individual decision processes. CoELA combines perception, memory, communication, planning, and execution for co-operation under decentralized control and costly commu-nication [21]. RoCo equips robots with language-model agents that negotiate subtask plans and waypoints through dialogue, using motion-planning feedback to revise their proposals [22]. PARTNR evaluates embodied collaboration under spatial, temporal, and heterogeneous capability con-straints. However, the evaluated agents still struggle to coordinate their actions, track task progress, and recover from errors [23]. These findings highlight a gap between generating cooperative plans and maintaining coordinated execution as a task unfolds. Research on aerial teams has adapted language-model reasoning to UAV-specific capabilities, mission interfaces, and learning processes. FlockGPT maps natural-language descriptions to UAV formation geometry [24]. TALKER activates reusable action primitives and maintains an ex-tensible knowledge library for multi-UAV missions [25]. Agents Trainer uses cooperating language-model agents to automate multi-agent reinforcement-learning configuration, reward design, and policy training for drone swarms [26]. AERIS dynamically rebinds role-specialized language mod-ules across aerial executors at runtime [27]. These systems broaden the role of language models in aerial teams from Fig. 1. Overview of AeroWeaver. The embodied-agent harness (A) maps task context to a subset of Aerial Skills. Distributed swarm orchestration (B)   
+
+> instantiates role-conditioned local agents, binds each agent to one UAV, and supports directed peer coordination during execution. Experience-guided online reinforcement (C) retrieves role-relevant trajectories, estimates skill advantages from rewards, and updates the active skill ranking.
+
+mission interpretation to skill reuse, coordination, interface grounding, and policy development. Across their reported designs, mission reasoning, vehicle execution, and learning are typically implemented as distinct stages or subsystems. Experience reuse has also been studied at the level of multi-  
+
+> Fig. 2. Task-conditioned skill activation. Mission parsing and skill retrieval construct the Commander context for role assignment and activation of agent-specific skill subsets.
+
+agent orchestration. Skill-MAS treats orchestration knowl-edge as a non-parametric object that can be refined from multiple trajectories [28]. Taken together, prior work provides strong foundations for grounded skills, agent adaptation, and language-mediated team coordination. Integrating these capabilities in a phys-ical swarm remains a systems question because semantic decisions, observations, communication, and actuators are distributed across different components. III. M ETHOD 
+
+AeroWeaver is an embodied-agent harness that weaves Aerial Skills into coordinated UAV swarm execution. As shown in Fig. 1, AeroWeaver integrates three components:  
+
+> •
+
+(A) Aerial Skill Harness activates task-relevant Aerial Skills by parsing mission context, retrieving from the skill library, and exposing an active skill subset to each role-conditioned agent (Sec. III-A).  
+
+> •
+
+(B) Distributed Swarm Orchestration maintains dis-tributed execution through role-conditioned local agents that coordinate via directed peer messages (Sec. III-B).  
+
+> •
+
+(C) Experience-Guided Reinforcement enables training-free online adaptation by refining agent policy from exe-cution experience (Sec. III-C). 
+
+A. Embodied-Agent Harness with Aerial Skills 
+
+Within the embodied-agent harness, Aerial Skills con-stitute an executable intermediate layer between high-level Fig. 3. Distributed swarm execution and communication. The Commander supplies mission context to UAV-bound agents that select own-body actions and exchange peer messages; camera views and a four-UAV UE4 scene illustrate the deployment. 
+
+semantic planning and low-level motion control. This layer exposes each downstream UAV agent to a skill subset while retaining typed interfaces, body bindings, and approved executors within the runtime. Fig. 2 illustrates how skill activation instantiates this interface. 
+
+Skill substrate. We define a Skill as a reusable capability unit that couples an executable object with a skill.md 
+
+document describing its semantic purpose, invocation inter-face, and operating conditions. Skills are derived from built-in flight and payload functions, platform adapters, perception modules, or compositions of existing skills. Each skill σi
+
+follows the common representation 
+
+σi = ⟨ni, d i, I i, O i, P i, E i, M i⟩, (1) where ni and di identify and describe the skill, Ii and Oi
+
+specify typed inputs and outputs, Pi states its operating conditions, Ei denotes the associated executor, and Mi stores provenance, dependencies, and effects. 
+
+Mission parsing and retrieval. Given an operator instruc-tion q and swarm state st, the mission parser extracts a struc-tured task record χt containing the task type, participating UAVs, operating region, and mission constraints. This record supplies the semantic and operational context used to retrieve skills from the registered library. For a given task, the harness retrieves a task-level candidate catalog At from the available skills. The retriever then ranks this catalog by comparing the task and role query with the names, descriptions, tags, and aliases stored in each skill.md document. 
+
+Prompt reconstruction and role assignment. The harness combines q, χt, the current swarm state, and the documenta-tion of the task-level candidate catalog to construct the Com-mander context shown in Fig. 2. The Commander assigns a semantic role ρk and local goal gk to each participant, after which the harness forms the role-conditioned query 
+
+qk = Pack( q, ρ k, g k) and activates 
+
+Lk = TopK σi∈A t {rk(qk, σ i)}, (2) where rk is the retrieval score for UAV k. The resulting 
+
+Lk determines the skill names and documentation rendered into agent k’s local context, and different agents may receive different subsets of the same task-level catalog according to their assigned roles and local goals. 
+
+B. Distributed Swarm Orchestration 
+
+Distributed Swarm Orchestration maintains a shared mis-sion through concurrent decision processes bound to indi-vidual UAVs. As shown in Fig. 3, task context establishes their local objectives, directed peer messages support coordi-nation, and local reports provide mission-progress feedback. The figure depicts n body-bound agents alongside a four-UAV UE4 scene, with front, left, right, rear, and downward camera views shown in the lower-left panel. 
+
+Body-bound local decisions. Following role assignment and skill activation in Sec. III-A, agent k is bound to UAV 
+
+uk and receives the active skill subset Lk. Its context ctk
+
+contains the assigned role, local goal, mission constraints, skill documentation, and an isolated interaction history. At round t, the agent selects a parameterized skill invocation 
+
+atk = πsem 
+
+
+
+ctk, o tk, {mt−1
+
+> ℓ→k
+
+}ℓ∈N tk , Lk
+
+
+
+, (3) where otk is the body-local observation and N tk identifies the currently reachable peers. 
+
+Directed peer communication. Communication supple-ments body-local sensing with information from reachable peers. The neighborhood N tk contains other UAVs within the configured communication radius rcomm and changes as the vehicles move. A message mtk→ℓ names its sender and recipient and carries role status, local observations, intended motion, or a request for peer state. Received messages enter the recipient’s next-round decision context without transferring execution authority between agents. 
+
+Execution and progress feedback. Each world round refreshes local observations and communication neighbor-hoods, runs the agents’ decisions concurrently, and applies their selected invocations to the bound UAVs. In the pursuit runtime, each UAV retains its previous velocity until its own agent selects a new direction. The Commander supplies task context and monitors mis-sion progress, with no flight authority. Local role reports follow a single supervisory path through the Commander Fig. 4. Experience-guided online reinforcement. Retrieved reward evidence adjusts skill selection (upper stage), while executed transitions update role-indexed memory (lower stage). 
+
+and Mission Console to the user. The local execution records supply role-indexed experience for the online reinforcement mechanism in Sec. III-C. 
+
+C. Experience-Guided Online Reinforcement 
+
+Execution experience provides reward evidence for adapt-ing the skill preferences of local agents. As shown in Fig. 4, AeroWeaver combines an online update that adjusts current selector scores (upper stage) with a memory update that associates executed skills with their observed returns (lower stage). Dashed connectors denote execution feedback and subsequent experience reuse. The resulting reinforcement operates over the active skill set and accumulates across decision rounds through shared swarm memory. 
+
+Online update. For a local decision, let ρ denote the agent’s role, s its current local state, and L the active skill set supplied by the harness. The state summarizes local observations, received peer messages, execution progress, and relevant mission context. Each callable skill–parameter pair receives a single-token label; its provider-reported first-token log probability defines zi. Parameterizations have separate base scores but share a skill advantage. Up to 20 alternative scores are requested. A corrected choice is used only when omitted candidates cannot exceed it under the returned probability bound; otherwise the highest observed base score is retained. Memory retrieval filters reusable records by exact task and role, then retains up to 32 by Jaccard overlap of tokenized state descriptions, breaking ties by recency. Baseline and per-skill returns are unweighted means; different bodies may contribute under the same role. Let Nρ(s) denote the retrieved neighborhood, ¯Gρ(s) its mean return, and ¯Gi,ρ (s) the mean return of records asso-ciated with skill σi. For the current role, the estimated skill advantage is 
+
+bA(s, σ i) = ¯Gi,ρ (s) − ¯Gρ(s). (4) A positive estimate raises the candidate’s score, while a negative estimate lowers it. When no matching experience is available for a candidate, its correction is set to zero. The additive correction adjusts the scores of active skills: 
+
+z′ 
+
+> i
+
+= zi + β bA(s, σ i), β ≥ 0, (5) where β controls the influence of retrieved reward evi-dence on the selector’s initial preference. The agent selects the highest-scoring skill σt from the updated ranking and dispatches its invocation through the existing body-bound execution interface. The candidate set remains L throughout this update, and β = 0 recovers the base selector. 
+
+Memory update. Executing the selected skill produces a transition summarized by (ρt, s t, σ t, a t, r t) in the lower part of Fig. 4. Here σt identifies the skill, at is its concrete invocation with execution parameters, and rt is the task-environment reward for the executing participant. The re-ward is stored unchanged, with benchmark-specific task and reward definitions given in Sec. IV. Rewards are accumulated along that participant’s trajectory to associate each skill choice with its subsequent outcomes, 
+
+Gt =
+
+> T
+
+X
+
+> u=t
+
+γu−tru, (6) where γ ∈ [0 , 1] is the discount factor and T is the last observed transition in the stored trajectory segment. As additional rewards arrive, the returns of earlier decisions are extended and are finalized when the trajectory ends. Each online selection therefore uses only reward evidence already observed before that decision. Memory stores each outcome as a role-indexed record 
+
+(ρt, s t, σ t, a t, r t, G t). Vehicle and trajectory identifiers retain the provenance of each record, while role and state determine its relevance to later queries. This cycle supports training-free adaptation through accumulated execution experience while keeping model parameters, skill definitions, and flight executors fixed. IV. E XPERIMENTS 
+
+The evaluation covers nine closed-loop tasks, two LLM baselines, and three component controls. The comparison covers 54 task–condition pairs with 10 episode-return ob-servations per pair. 
+
+A. Experimental Setup 
+
+Environment and implementation. We evaluate nine MPE-inspired tasks [29], illustrated in Fig. 5. Coverage and circu-lar/line formation assess spatial coordination, while guided navigation, private communication, and world communica-tion involve role-dependent information exchange. Pursuit-evasion tests coordinated pursuit, collection-delivery requires cooperative collection and delivery, and goal concealment combines target reaching with hiding the goal from an adversary. Task rewards are computed using MPE2 scenario functions evaluated on our simulation runtime states. All methods share an AirSim [30] simulation runtime, task rewards, and fixed opponent policies. The area is 140 ×140 mat fixed altitude; default neighbor-sensing and communica-tion ranges are 45 m and 55 m, with a 100 m sensing range for the world-communication leader. Local observations ex-pose own state, visible entities, received messages, and callable skill–parameter pairs; private information remains role-restricted. Agents select from a frozen round state, then the world advances by 0.5 s. Invalid invocations produce an own-body hold. The evaluation uses 22 task skills; the deployment catalog in Fig. 1 additionally contains platform-specific capabilities. We use DeepSeek V4-flash [31] as the LLM backbone for the main comparisons. Experience correction uses γ = 0 .95 and β = 0 .8, without return or advantage rescaling. Episodes run for at most 24 rounds, with task-specific early termination. Coverage, navigation, and formation episodes end after three rounds within 3 m of all targets; pursuit requires two pursuers within 6 m of the evader. Pri-vate communication ends after three rounds, collection after all deliveries, and world communication and concealment at the horizon. 
+
+Baselines. We compare AeroWeaver with two LLM-based baselines. Centralized is an in-house planner that aggregates permitted team observations and directly selects skill calls for all controlled participants at each step. HMAS-2 , adapted to our tasks from [32], first generates a central plan; local agents review their assigned actions using local observations, and the central planner revises the plan once based on their feedback before execution. Both baselines receive all 22 skills without reward memory, sharing AeroWeaver’s action constraints and skill executors. Component ablations separately disable skill activation, coordination reports, or reward correction. 
+
+Evaluation metrics. Task performance is measured by the undiscounted episode return, R = |C|−1 P
+
+> i∈C
+
+PTt=1 ri,t ,where C is the set of controlled agents and T is the episode length. We report the mean and sample standard deviation of raw returns over 10 episodes per task–condition pair. Inference cost is measured by provider-reported token consumption per episode, including decision calls and, where applicable, one full skill-activation setup. Covering agent       
+
+> (a) Coverage Pursuer Evader (b) Pursuit-evasion Speaker Listener (c) Guided navigation Sender Receiver Eavesdropper
+
+?                                                
+
+> (d) Private communication Formation member (e) Circular formation Formation member (f) Line formation Leader Pursuer Forager
+> (g) World communication Collector Deposit agent (h) Collection-delivery Good agent Adversary
+> ?(i) Goal concealment Motion Message Landmark Slot
+> Fig. 5. MPE-inspired task forms and roles. Nine tasks span spatial coordination, communication, and cooperative–competitive interaction; solid and dashed arrows denote motion and information exchange. TABLE I END -TO -END EPISODE REWARDS (MEAN ±SD; n= 10 ). Task Centralized HMAS-2 AeroWeaver Coverage −14.81 ± 1.02 −14.81 ± 1.00 −14.20 ± 0.95
+> Pursuit-evasion 90.00 ± 5.00 70.00 ± 4.60 130.00 ± 4.80
+> Guided navigation −8.53 ± 0.36 −8.53 ± 0.35 −7.10 ± 0.32
+> Private communication −2.00 ± 0.11 −2.00 ± 0.10 −1.85 ± 0.09
+> Circular formation −8.45 ± 0.12 −8.45 ± 0.11 −8.20 ± 0.10
+> Line formation −13.99 ± 0.27 −7.62 ± 0.23 −7.30 ± 0.22
+> World communication 129.00 ± 5.30 115.00 ± 0.90 135.00 ± 5.20
+> Collection-delivery 33.91 ± 0.85 38.70 ± 0.78 49.50 ± 0.68
+> Goal concealment −1.06 ± 0.14 −0.41 ± 0.10 −0.25 ± 0.11
+
+B. Main Results 
+
+Task performance. AeroWeaver achieves the highest mean episode reward on all nine tasks in Table I, outperforming Centralized and HMAS-2 across spatial coordination, com-munication, and cooperative–competitive interaction. Cen-tralized aggregates permitted team observations and the full skill catalog into a long context, then jointly assigns skills and body-specific parameters in one response, increasing the information and assignment burden of each decision. HMAS-2 adds local review, but its advantage over Centralized varies across tasks; neither baseline uses reward memory. AeroWeaver instead organizes selection around task-relevant skills and each agent’s executable options, reducing the number of capabilities and role-specific assignments con-sidered in each decision. Peer reports inform complemen-tary actions, while retrieved reward evidence updates skill preferences as execution proceeds. The consistently higher returns are compatible with this combination of focused selection, distributed coordination, and experience feedback, which connects mission objectives to local action choices throughout an episode. COV PE GN PC CF LF WC CD GC 0100 200 300 400 Accounted tokens (k)     
+
+> Centralized HMAS-2 AeroWeaver
+> Fig. 6. Token consumption. Per-episode totals for Centralized, HMAS-2, and AeroWeaver include activation setup and decision calls; lower is better.
+
+Token efficiency. As shown in Fig. 6, AeroWeaver consumes 52.0–70.0% fewer tokens than HMAS-2 across the nine tasks and fewer tokens than Centralized on four tasks. Task-conditioned activation limits the skill documentation processed at each decision, while local action selection eliminates the central planning and revision calls required by HMAS-2. Relative to Centralized, the shorter local contexts are offset by separate calls for individual agents, making the overall token advantage task-dependent. The reported totals include activation setup and all decision calls from one episode per condition, with task-dependent termination and episode lengths. 
+
+C. Ablation Studies 
+
+Table II evaluates the removal of skill activation, coordina-tion reports, and reward correction. The controls respectively expose the full catalog, suppress coordination reports while preserving task-required messages, and set β = 0 . For task 
+
+t and variant m, the reported relative mean score is 
+
+Qt,m = 1 + ¯Rt,m − ¯Rt, full 
+
+Kt
+
+, Kt > 0, (7) where ¯R is the mean episode return and Kt is the fixed task-specific scale of the existing affine score transformation, shared by all variants. AeroWeaver therefore scores 1, and lower scores indicate lower returns. Table II lists the scales, so raw means are recovered as ¯Rt,m = ¯Rt, full +Kt(Qt,m −1) .Removing coordination reports produces the largest de-crease in five tasks: guided navigation, private communi-cation, world communication, collection-delivery, and goal concealment. The remaining four tasks show the largest decrease when skill activation is removed. Goal concealment is particularly sensitive to coordination reports, with a score of 0.605 compared with 0.777 without activation and 0.780 without reward correction. Disabling reward correction yields scores of 0.764–0.874 and is the least detrimental ablation in eight tasks; line formation is the exception, where removing coordination reports retains a higher score. These compar-isons indicate task-dependent contributions from activation                                 
+
+> TABLE II COMPONENT ABLATIONS ACROSS NINE TASKS .Task w/o skill activation w/o coordination reports w/o reward correction Coverage 0.650 0.708 0.764 Pursuit-evasion 0.670 0.781 0.823 Guided navigation 0.734 0.632 0.802 Private communication 0.812 0.617 0.874 Circular formation 0.762 0.763 0.825 Line formation 0.722 0.821 0.798 World communication 0.790 0.633 0.854 Collection-delivery 0.632 0.628 0.814 Goal concealment 0.777 0.605 0.780
+> Relative mean scores ( n= 10 per condition), normalized to AeroWeaver within each task; the full model has a reference score of 1. Ktin row order: 17.077, 17.606, 15.029, 15.969, 16.801, 14.280, 35.217, 10.881, and 13.505.
+
+and coordination, with reward correction providing an addi-tional improvement across the suite. 
+
+D. Additional Experiments 
+
+The additional studies address experience reuse, depen-dence on the LLM backbone, and sensitivity to mission wording. Fig. 7(a)–(c) illustrates the measured results. 
+
+(a) Experience-guided adaptation. Fig. 7(a) shows rapid early improvement followed by gradual stabilization across the nine tasks. This trend is consistent with experience-guided online adaptation, as accumulated reward information refines subsequent skill selection without changing model weights or skill executors. 
+
+(b) Backbone sensitivity. In Fig. 7(b), GPT-5.6 Luna and GLM-5.3-Flash remain close to the DeepSeek-V4-Flash reference of 1 across the nine tasks, while qwen3.8-flash exhibits a moderate performance decrease. Overall, AeroWeaver maintains relatively stable performance across different LLM backbones, demonstrating robustness to back-bone choice despite task-dependent variations. 
+
+(c) Prompt perturbation sensitivity. The prompt compari-son varies only the mission text, keeping the activated skill set fixed. Paraphrasing preserves task meaning, reordering reverses sentence order, and distractor insertion appends unrelated report metadata without changing task require-ments. With Original normalized to 1 within each task, Fig. 7(c) depicts smaller score reductions under paraphrasing and reordering than under distractor insertion, illustrating a stronger response to irrelevant context than to changes in wording or order. V. C ONCLUSION 
+
+We introduced AeroWeaver, an embodied-agent harness for UAV swarms that integrates task-conditioned skill acti-vation, distributed body-local coordination, and role-indexed experience reuse within a unified execution framework. Reward-derived evidence is incorporated into subsequent skill selection without modifying the underlying model pa-rameters or low-level flight controllers. Across the nine evaluated tasks, AeroWeaver achieved higher mean episodic returns than Centralized and HMAS-2. It also required fewer 1 10 20 30 40 50 Episode 0.7 0.8 0.9 1.0 Relative score 
+
+> COV PE GN PC CF LF WC CD GC
+
+(a) Experience-guided adaptation COV PE GN PC CF LF WC CD GC     
+
+> Task
+> DeepSeek-V4-Flash GPT-5.6 Luna GLM-5.3-Flash qwen3.8-flash
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.95 1.02 0.95 0.96 0.96 0.95 0.92 1.04 0.94 1.03 0.93 1.04 1.04 0.93 1.02 0.97 0.95 1.04 0.90 0.95 0.89 0.91 0.90 0.91 0.94 0.91 0.92
+> 0.8 0.9 1.0 1.1
+> Relative score
+
+(b) Backbone sensitivity COV PE GN PC CF LF WC CD GC  
+
+> Task 0.0 0.2 0.4 0.6 0.8 1.0 Relative score
+> Original Paraphrased Reordered Distractors
+
+(c) Prompt perturbation sensitivity Fig. 7. Additional experiments. Panels illustrate adaptation trajectories and task-wise comparisons of LLM backbones and prompt perturbations. 
+
+tokens than HMAS-2 in the recorded episodes, while its efficiency relative to Centralized varied across tasks. The ab-lation results further show that skill activation, coordination reports, and reward-based correction contribute to overall performance. The current evaluation is conducted with a predefined skill catalog and simulated execution conditions. Future work will extend AeroWeaver toward longer-term experience reuse, broader task transfer, and validation on physical UAV platforms. REFERENCES [1] A. Iannoli, L. Gigli, L. Sciullo, A. Trotta, and M. Di Felice, “Say the mission, execute the swarm: Agent-enhanced LLM reasoning in the Web-of-Drones,” in Proc. IEEE Int. Symp. World Wireless, Mobile Multimedia Netw. (WoWMoM) , 2026, pp. 139–148. [2] P. Li, Z. An, S. Abrar, and L. Zhou, “Large language models for multi-robot systems: A survey,” Auton. Robots , vol. 50, no. 3, 2026, Art. no. 30. [3] S. Yao et al. , “ReAct: Synergizing reasoning and acting in language models,” in Proc. ICLR , 2023. [4] B. Ichter et al. , “Do as I can, not as I say: Grounding language in robotic affordances,” in Proc. Conf. Robot Learn. (CoRL) , ser. PMLR, vol. 205, 2023, pp. 287–318. [5] J. Liang et al. , “Code as policies: Language model programs for embodied control,” in Proc. IEEE Int. Conf. Robot. Autom. (ICRA) ,2023, pp. 9493–9500. [6] W. Huang, C. Wang, Y. Li, R. Zhang, and L. Fei-Fei, “ReKep: Spatio-temporal reasoning of relational keypoint constraints for robotic manipulation,” in Proc. Conf. Robot Learn. (CoRL) , ser. PMLR, vol. 270, 2025, pp. 4573–4602. [7] G. Wang et al. , “Voyager: An open-ended embodied agent with large language models,” Trans. Mach. Learn. Res. , 2024. [8] A. Zhao, D. Huang, Q. Xu, M. Lin, Y.-J. Liu, and G. Huang, “ExpeL: LLM agents are experiential learners,” in Proc. AAAI Conf. Artif. Intell. , vol. 38, no. 17, 2024, pp. 19 632–19 642. [9] Z. Z. Wang, J. Mao, D. Fried, and G. Neubig, “Agent workflow memory,” in Proc. Int. Conf. Mach. Learn. (ICML) , ser. PMLR, vol. 267, 2025, pp. 63 897–63 911. [10] W. Xu, Z. Liang, K. Mei, H. Gao, J. Tan, and Y. Zhang, “A-Mem: Agentic memory for LLM agents,” in Adv. Neural Inf. Process. Syst. ,vol. 38, 2025, pp. 20 004–20 031. [11] D. Fu et al. , “AgentRefine: Enhancing agent generalization through refinement tuning,” in Proc. ICLR , 2025. [12] Z. Xi et al. , “AgentGym: Evaluating and training large language model-based agents across diverse environments,” in Proc. Annu. Meeting Assoc. Comput. Linguistics (ACL) , vol. 1, 2025, pp. 27 914– 27 961. [13] Y. Li et al. , “Just-in-time reinforcement learning: Continual learning in LLM agents without gradient updates,” 2026, arXiv:2601.18510. [14] E. Debenedetti, J. Zhang, M. Balunovic, L. Beurer-Kellner, M. Fischer, and F. Tram` er, “AgentDojo: A dynamic environment to evaluate prompt injection attacks and defenses for LLM agents,” in Adv. Neural Inf. Process. Syst. , vol. 37, 2024, pp. 82 895–82 920. [15] H. Zhang et al. , “BadRobot: Jailbreaking embodied LLM agents in the physical world,” in Proc. ICLR , 2025. [16] Q. Wang et al. , “Towards the harness of embodied agents,” 2026, arXiv:2608.11246. [17] P. Wang et al. , “Self-evolving embodied agents via skill-harness evolution,” 2026, arXiv:2608.11350. [18] S. S. Kannan, V. L. N. Venkatesh, and B.-C. Min, “SMART-LLM: Smart multi-agent robot task planning using large language models,” in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. (IROS) , 2024, pp. 12 140–12 147. [19] J. Liu et al. , “CaPo: Cooperative plan optimization for efficient embodied multi-agent cooperation,” in Proc. ICLR , 2025. [20] J. Chen et al. , “EMOS: Embodiment-aware heterogeneous multi-robot operating system with LLM agents,” in Proc. ICLR , 2025. [21] H. Zhang et al. , “Building cooperative embodied agents modularly with large language models,” in Proc. ICLR , 2024. [22] Z. Mandi, S. Jain, and S. Song, “RoCo: Dialectic multi-robot collab-oration with large language models,” in Proc. IEEE Int. Conf. Robot. Autom. (ICRA) , 2024, pp. 286–299. [23] M. Chang et al. , “PARTNR: A benchmark for planning and reasoning in embodied multi-agent tasks,” in Proc. ICLR , 2025. [24] A. Lykov et al. , “FlockGPT: Guiding UAV flocking with linguistic orchestration,” in Proc. IEEE Int. Symp. Mixed Augmented Reality Adjunct (ISMAR-Adjunct) , 2024, pp. 485–488. [25] J. Lou, R. Shi, Y. Lin, Q. Wang, and W. Wu, “TALKER: A task-activated language model based knowledge-extension reasoning sys-tem,” IEEE Robot. Autom. Lett. , vol. 10, no. 2, pp. 1026–1033, 2025. [26] J. Lou et al. , “Agents Trainer: Automatically training multi-agent reinforcement learning models for drone swarm using language model-based agents,” IEEE Trans. Autom. Sci. Eng. , vol. 23, pp. 8992–9006, 2026. [27] J. Lou, H. Wang, X. Liu, Y. Zhang, R. Shi, and W. Wu, “AERIS: Aerial-edge role-driven intelligence at runtime via orchestrated language-model swarm,” 2026, arXiv:2606.30151. [28] H. Lin, Q. Yang, and C. Qin, “Skill-MAS: Evolving meta-skill for automatic multi-agent systems,” 2026, arXiv:2606.18837. [29] R. Lowe, Y. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mordatch, “Multi-agent actor-critic for mixed cooperative-competitive environ-ments,” in Adv. Neural Inf. Process. Syst. , vol. 30, 2017. [30] S. Shah, D. Dey, C. Lovett, and A. Kapoor, “Airsim: High-fidelity visual and physical simulation for autonomous vehicles,” in Field and Service Robotics , M. Hutter and R. Siegwart, Eds. Cham: Springer International Publishing, 2018, pp. 621–635. [31] DeepSeek-AI, “DeepSeek-V4: Towards highly efficient million-token context intelligence,” 2026, arXiv:2606.19348. [32] Y. Chen, J. Arkin, Y. Zhang, N. Roy, and C. Fan, “Scalable multi-robot collaboration with large language models: Centralized or decentralized systems?” in Proc. IEEE Int. Conf. Robot. Autom. (ICRA) , 2024, pp. 4311–4317.

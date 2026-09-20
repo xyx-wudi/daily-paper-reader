@@ -1,0 +1,104 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-20T21:27:44.125572+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.14896v1",
+      "source": "arxiv",
+      "title": "Forty Shades of Blue: Quality-Diversity Alignment via Mode-Conditioned Reinforcement Learning",
+      "abstract": "A notable byproduct of LLM alignment training is mode collapse: the progressive loss of output diversity that narrows a model's expressivity at inference time. This degradation is especially limiting for applications requiring open-ended exploration and pluralistic perspectives, such as scientific ideation and creative writing. We present MoDA (Mode-conditioned Diversity Alignment), an online post-training RL algorithm that jointly optimizes generation quality and diversity, inspired by the coordination perspective in multi-agent reinforcement learning (MARL). MoDA trains a single shared LLM policy conditioned on abstract numbered roles, where each role acts as an agent competing to produce outputs distinct from the others. This formulation encourages mode-conditioned agents to explore complementary regions of the high-quality output space without requiring hand-crafted personas or architectural modifications. MoDA employs a prompt-adaptive quality gating mechanism that calibrates a reference quality threshold and grants diversity rewards only to responses that meet the threshold, preventing reward-hacking behaviors that compromise response quality. To study quality-diversity tradeoffs, we evaluate MoDA on a comprehensive suite of benchmarks spanning seven general capability tasks and four domain-specific diversity tasks in scientific ideation and creative writing. MoDA improves SBERT diversity by 265% on the Infinite-Chat held-out prompts, while increasing average general capability pass@1 by 10.3% over the Qwen3-8B baseline. Compared with the strongest DivPO baseline, MoDA improves SBERT diversity from 0.274 to 0.482 (+75.9%) and E-Vendi from 2.86 to 4.4 (+53.8%), while improving average general capability pass@1 by 7.0%. Overall, MoDA provides a drop-in alternative to standard post-training methods that preserves and expands the model's expressive output space while improving quality.",
+      "authors": [
+        "Jiayi Yuan",
+        "Hangoo Kang",
+        "James Jihao Liu",
+        "Yejin Choi",
+        "Vikram Iyer",
+        "Liwei Jiang",
+        "Natasha Jaques"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-09-14T01:30:23+00:00",
+      "link": "https://arxiv.org/pdf/2609.14896v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mode-conditioned RL inspired by coordination perspective of multi-agent RL",
+      "llm_evidence_cn": "受多智能体强化学习协调视角启发的模式条件化强化学习",
+      "llm_evidence": "受多智能体强化学习协调视角启发的模式条件化强化学习",
+      "canonical_evidence": "受多智能体强化学习协调视角启发的模式条件化强化学习",
+      "llm_tldr_en": "LLM alignment training suffers mode collapse, reducing output diversity. MoDA, inspired by the coordination perspective in multi-agent RL, trains a single shared policy conditioned on numbered roles that act as competing agents, jointly optimizing generation quality and diversity in an online post-training algorithm.",
+      "llm_tldr_cn": "大语言模型对齐训练常导致模式坍缩，输出多样性下降，限制了科学构思与创意写作等需要开放探索的应用。本文提出MoDA，借鉴多智能体强化学习中的协调视角，将单个共享LLM策略条件化于抽象编号角色，各角色如同相互竞争的智能体以产出彼此不同的输出，从而在线联合优化生成质量与多样性。该工作显示多智能体协调思想可迁移用于缓解对齐中的多样性退化问题。",
+      "llm_tldr": "大语言模型对齐训练常导致模式坍缩，输出多样性下降，限制了科学构思与创意写作等需要开放探索的应用。本文提出MoDA，借鉴多智能体强化学习中的协调视角，将单个共享LLM策略条件化于抽象编号角色，各角色如同相互竞争的智能体以产出彼此不同的输出，从而在线联合优化生成质量与多样性。该工作显示多智能体协调思想可迁移用于缓解对齐中的多样性退化问题。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.18520v1",
+      "source": "arxiv",
+      "title": "AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution",
+      "abstract": "Collective intelligence is a collaborative autonomy paradigm in which multiple agents pursue shared objectives through local perception, information exchange, and coordinated action. UAV swarms embody this paradigm by coordinating multiple vehicles in tasks such as search, inspection, and tracking. Recent advances in large language model (LLM) agents have strengthened natural-language task understanding and high-level planning, providing a flexible semantic interface between mission descriptions and collective behavior. While these advances expand semantic reasoning, applying LLM agents to UAV swarms raises challenges in grounding model decisions in executable capabilities, reconciling global task reasoning with distributed execution, and using mission-specific experience for continual adaptation. To address these challenges, we introduce AeroWeaver, an embodied-agent harness that weaves individual UAV skills into coordinated mission-level behavior. AeroWeaver connects semantic decisions to governed skills, organizes role-conditioned local agents for distributed coordination, and uses role-indexed state-action-reward experience to refine skill selection online. Experiments and runtime validation show that AeroWeaver maintains valid skill execution under tested conditions and supports body-local multi-UAV operation without a central agent generating joint actions from global context, while reward-guided online updates provide a training-free path for adaptive learning swarm agents from accumulated execution experience. Code: https://github.com/Admire-ljb/AeroWeaver.",
+      "authors": [
+        "Jiabin Lou",
+        "Yirong Yang",
+        "Haopeng Wang",
+        "Xuxin Lv",
+        "Xinyu Liu",
+        "Diyuan Hou",
+        "Xuehong Liu",
+        "Rongye Shi",
+        "Wenjun Wu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-16T11:49:38+00:00",
+      "link": "https://arxiv.org/pdf/2609.18520v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multiple agents pursuing shared objectives through local perception and coordinated distributed action",
+      "llm_evidence_cn": "多智能体通过局部感知与协调行动追求共享目标的分布式执行",
+      "llm_evidence": "多智能体通过局部感知与协调行动追求共享目标的分布式执行",
+      "canonical_evidence": "多智能体通过局部感知与协调行动追求共享目标的分布式执行",
+      "llm_tldr_en": "AeroWeaver is an embodied-agent harness that weaves LLM-based task reasoning into distributed, adaptive swarm execution for cooperative UAV multi-agent systems.",
+      "llm_tldr_cn": "将大语言模型智能体应用于无人机集群时，面临模型决策难以落地、全局任务推理与分布式执行难以协调等挑战。本文提出AeroWeaver具身智能体框架，把自然语言任务理解与高层规划编织为可执行的分布式集群技能，支持多机局部感知、信息交换与协同行动。该框架为集群协同自主中的自适应分布式执行提供了语义接口与可执行能力之间的衔接，推动了多智能体系统的分布式协同。",
+      "llm_tldr": "将大语言模型智能体应用于无人机集群时，面临模型决策难以落地、全局任务推理与分布式执行难以协调等挑战。本文提出AeroWeaver具身智能体框架，把自然语言任务理解与高层规划编织为可执行的分布式集群技能，支持多机局部感知、信息交换与协同行动。该框架为集群协同自主中的自适应分布式执行提供了语义接口与可执行能力之间的衔接，推动了多智能体系统的分布式协同。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
