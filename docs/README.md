@@ -6,29 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-20
-- 运行时间：2026-09-20 21:29:35 UTC
+- 最新运行日期：2026-09-21
+- 运行时间：2026-09-21 22:50:38 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：0
+- 本次总论文数：3
+- 精读区：1
 - 速读区：2
 
 ### 今日简报（AI）
-- 今日共生成 2 篇推荐（精读 0 篇，速读 2 篇）
-- 速读：《Forty Shades of Blue: Quality-Diversity Alignment via Mode-Conditioned Reinforcement Learning》（6.0/10）, 《AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution》（6.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202609/20/README](/202609/20/README)
+今日精读1篇、速读2篇，重点聚焦人机协作安全对齐。最值得看的是《SAGE: Safety-Aligned Gradient Enforcement for Human--Robot Collaboration》（8.0/10），关注人机协作中如何用梯度约束保障安全；速读可顺带了解多智能体语义邻近通信与博弈中的常数遗憾优化。普通读者建议先读 SAGE 的安全对齐思路，再按兴趣浏览两篇速读即可。
+- 详情：[/202609/21/README](/202609/21/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [SAGE: Safety-Aligned Gradient Enforcement for Human--Robot Collaboration](/202609/21/2609.21130v1-sage-safety-aligned-gradient-enforcement-for-human--robot-collaboration)  
+   标签：评分：8.0/10、query:marl
+   evidence：面向人机协作的多智能体强化学习团队级演员更新
 
 ### 速读区论文标签
-1. [Forty Shades of Blue: Quality-Diversity Alignment via Mode-Conditioned Reinforcement Learning](/202609/20/2609.14896v1-forty-shades-of-blue-quality-diversity-alignment-via-mode-conditioned-reinforcement-learning)  
+1. [Proxifield: Decentralized Multi-Agent Communication through Semantic Proximity](/202609/21/2609.20889v1-proxifield-decentralized-multi-agent-communication-through-semantic-proximity)  
    标签：评分：6.0/10、query:marl
-   evidence：受多智能体强化学习协调视角启发的模式条件化强化学习
-2. [AeroWeaver: An Embodied-Agent Harness for Weaving Aerial Skills into Distributed, Adaptive Swarm Execution](/202609/20/2609.18520v1-aeroweaver-an-embodied-agent-harness-for-weaving-aerial-skills-into-distributed-adaptive-swarm-execution)  
+   evidence：无中心规划的去中心化多智能体通信
+2. [Multiplicative Optimism for Constant Regret in Games](/202609/21/2609.21976v1-multiplicative-optimism-for-constant-regret-in-games)  
    标签：评分：6.0/10、query:marl
-   evidence：多智能体通过局部感知与协调行动追求共享目标的分布式执行
+   evidence：多玩家博弈中的非耦合学习与遗憾匹配
 
 
 <div class="dpr-home-promo-card">

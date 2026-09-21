@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-21",
+  "date": "2026-09-21",
+  "generated_at": "2026-09-21T22:50:41",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/21/2609.21130v1-sage-safety-aligned-gradient-enforcement-for-human--robot-collaboration",
+      "section": "deep",
+      "title_en": "SAGE: Safety-Aligned Gradient Enforcement for Human--Robot Collaboration",
+      "authors": "Yisen Li, Hao Zhang, Ruize Geng, Yves Tseng, Ding Zhao, H. Eric Tseng",
+      "date": "2026-09-17",
+      "pdf": "https://arxiv.org/pdf/2609.21130v1",
+      "score": "8.0",
+      "evidence": "面向人机协作的多智能体强化学习团队级演员更新",
+      "tldr": "多主体人机协作要求决策可解释可审计，且物理交互动作满足安全约束。可解释决策树与 CBF 过滤结合虽具前景，却在多智能体强化学习中造成安全投影改变执行动作、独立 actor 更新偏离团队更新两类错配。SAGE 为此提出：SAIL 用可微有限惩罚提议图并保留精确 CBF 二次规划执行，以内部化反复激活约束；TALO 构造团队感知更新参考，并用 Lyapunov 半空间校正独立 actor 更新。九类仿真中 SAGE 成功率 71.0%、每千环境步 0.5 碰撞步，并在双人形机器人与人类伙伴物理实验中验证部署。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-party human-robot collaboration poses a dual challenge: robot decisions should remain interpretable and auditable, while executed actions must satisfy safety constraints during physical interaction. Combining explainable decision-tree policies with control-barrier-function (CBF) filtering provides a promising architecture but creates two learning mismatches in multi-agent reinforcement learning. Safety projection changes the action applied to the environment, while the coupled proposal graph can misalign independently optimized actor updates with a team-level update. We present safety-aligned gradient enforcement (SAGE) to address both mismatches. Its shield-annealed internalization layer (SAIL) uses a differentiable finite-penalty proposal map while retaining the exact CBF quadratic program for execution, preserving constraint-normal sensitivity to internalize repeatedly active safety constraints. Team-averaged Lyapunov policy optimization (TALO) constructs a team-aware update reference and applies a Lyapunov half-space correction to regulate independent actor updates. Physical experiments with two humanoid robots and a human partner demonstrate deployment feasibility. Across nine simulation scenarios, SAGE achieves a 71.0% success rate with 0.5 collision steps per thousand environment steps. Ablations show that direct CBF filtering reduces collision frequency by 98.5% but decreases success from 67.3% to 59.3%. SAIL reduces proposal violation by 48.8% and proposal-execution correction by 85.2%, while TALO reduces the update-consistency gap by 50.8%.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/21/2609.20889v1-proxifield-decentralized-multi-agent-communication-through-semantic-proximity",
+      "section": "quick",
+      "title_en": "Proxifield: Decentralized Multi-Agent Communication through Semantic Proximity",
+      "authors": "Pradyumna Tambwekar, Yenchia Feng, Deep Patel, Karime Maamari",
+      "date": "2026-09-16",
+      "pdf": "https://arxiv.org/pdf/2609.20889v1",
+      "score": "6.0",
+      "evidence": "无中心规划的去中心化多智能体通信",
+      "tldr": "针对LLM多智能体通信中刚性协议易造成协调瓶颈、随智能体数量增加而性能退化的问题，提出Proxifield：一种基于语义邻近度、去中心化决策的轮次自适应通信协议。它无需训练或中心规划器，在推理时利用直接寻址、信息需求、计划对齐与信息互补四类路由信号，动态构建稀疏通信图。在无人机搜救与HiddenBench上，Proxifield随模型规模提升而增强，并在最大规模超越集中式Star与共享上下文基线；团队增至N=50时对Star奖励优势达59.5%。结果表明，语义自适应去中心化路由可提升多智能体系统的可扩展性与容错性。",
+      "tags": "query:marl",
+      "abstract_en": "As LLM capabilities have expanded, multi-agent communication has emerged as an increasingly active area of research. Prevailing protocols often adopt rigid structures that introduce coordination bottlenecks and can degrade as the number of agents increases. We introduce Proxifield, a round-adaptive multi-agent protocol with decentralized agent decision-making that constructs sparse communication graphs from the evolving semantic proximity of agents. Without model training or a centralized planner, Proxifield connects agents using four routing signals derived at inference time: direct address, information needs, plan alignment, and information complementarity. We compare Proxifield with two representative coordination baselines, a centralized Star protocol and a decentralized Shared Context protocol, across two domains: Drone Search and Rescue and the collective-reasoning benchmark HiddenBench. We first ablate base-model capability and find that, in both domains, the performance of Proxifield improves with model size (35B -> 397B parameter model) and Proxifield outperforms all baselines at the largest scale. As team size increases, Proxifield's task-reward advantage over Star widens from 5.4% at (N=5) to 53.0% at (N=25) and 59.5% at (N=50), while Shared Context consistently underperforms both protocols. Proxifield is also substantially more robust to permanent agent failure, retaining 73.6% of its no-failure task reward under the most severe condition, compared with 58.3% for Shared Context and 38.8% for Star. These results demonstrate that decentralized, semantically adaptive routing can improve the scalability and fault tolerance of multi-agent systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/21/2609.21976v1-multiplicative-optimism-for-constant-regret-in-games",
+      "section": "quick",
+      "title_en": "Multiplicative Optimism for Constant Regret in Games",
+      "authors": "Ashkan Soleymani, Georgios Piliouras",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21976v1",
+      "score": "6.0",
+      "evidence": "多玩家博弈中的非耦合学习与遗憾匹配",
+      "tldr": "论文研究有限一般和博弈中的无耦合学习，提出乘法乐观遗憾匹配（MORM）。该方法仅用一步乐观更新，在同步完全信息自博弈下让每位玩家的外部遗憾对所有时间范围一致达到 O(√n log d)，即关于时间范围 T 的常数级遗憾。分析结合势函数式遗憾匹配、乘法稳定性与 Hellinger 策略移动控制；学习率保护机制在对抗效用下仍给出 O(√(T log d)) 遗憾，提升自博弈与鲁棒性保证。",
+      "tags": "query:marl",
+      "abstract_en": "We introduce Multiplicatively Optimistic Regret Matching (MORM), an uncoupled learning rule for finite general-sum games. Under simultaneous full-information self-play, every player achieves external regret $O(\\sqrt n\\log d)$ uniformly over all horizons, using only one-step optimism. The analysis combines a potential-based regret-matching argument with multiplicative stability and Hellinger control of strategy movement. A learning-rate safeguard additionally gives $O(\\sqrt{T\\log d})$ regret in the face of adversarial utilities.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
