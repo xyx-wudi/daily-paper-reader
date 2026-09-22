@@ -6,29 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-21
-- 运行时间：2026-09-21 22:50:38 UTC
+- 最新运行日期：2026-09-22
+- 运行时间：2026-09-22 21:40:00 UTC
 - 运行状态：成功
 - 本次总论文数：3
 - 精读区：1
 - 速读区：2
 
 ### 今日简报（AI）
-今日精读1篇、速读2篇，重点聚焦人机协作安全对齐。最值得看的是《SAGE: Safety-Aligned Gradient Enforcement for Human--Robot Collaboration》（8.0/10），关注人机协作中如何用梯度约束保障安全；速读可顺带了解多智能体语义邻近通信与博弈中的常数遗憾优化。普通读者建议先读 SAGE 的安全对齐思路，再按兴趣浏览两篇速读即可。
-- 详情：[/202609/21/README](/202609/21/README)
+2026-09-22日报：3篇论文中精读《Latent Telepathy》
+- 详情：[/202609/22/README](/202609/22/README)
 
 ### 精读区论文标签
-1. [SAGE: Safety-Aligned Gradient Enforcement for Human--Robot Collaboration](/202609/21/2609.21130v1-sage-safety-aligned-gradient-enforcement-for-human--robot-collaboration)  
-   标签：评分：8.0/10、query:marl
-   evidence：面向人机协作的多智能体强化学习团队级演员更新
+1. [Latent Telepathy: Multi-Robot Communication with Self-Supervised Perceptual Latents](/202609/22/2609.23269v1-latent-telepathy-multi-robot-communication-with-self-supervised-perceptual-latents)  
+   标签：评分：9.0/10、query:marl
+   evidence：部分可观测下的分散式多机器人团队与MARL通信
 
 ### 速读区论文标签
-1. [Proxifield: Decentralized Multi-Agent Communication through Semantic Proximity](/202609/21/2609.20889v1-proxifield-decentralized-multi-agent-communication-through-semantic-proximity)  
+1. [Explanation-Guided Federated Deep Reinforcement Learning for Joint Resource Allocation and Scheduling in 6G in-X Subnetworks](/202609/22/2609.24102v1-explanation-guided-federated-deep-reinforcement-learning-for-joint-resource-allocation-and-scheduling-in-6g-in-x-subnetworks)  
+   标签：评分：7.0/10、query:marl
+   evidence：多智能体强化学习用于6G子网资源分配
+2. [Decentralized Multi-Robot Exploration with Probabilistic Peer Intent and Multi-hop Plan Propagation](/202609/22/2609.22726v1-decentralized-multi-robot-exploration-with-probabilistic-peer-intent-and-multi-hop-plan-propagation)  
    标签：评分：6.0/10、query:marl
-   evidence：无中心规划的去中心化多智能体通信
-2. [Multiplicative Optimism for Constant Regret in Games](/202609/21/2609.21976v1-multiplicative-optimism-for-constant-regret-in-games)  
-   标签：评分：6.0/10、query:marl
-   evidence：多玩家博弈中的非耦合学习与遗憾匹配
+   evidence：去中心化多机器人协调，含同伴意图与计划传播
 
 
 <div class="dpr-home-promo-card">

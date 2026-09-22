@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-22",
+  "date": "2026-09-22",
+  "generated_at": "2026-09-22T21:40:06",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/22/2609.23269v1-latent-telepathy-multi-robot-communication-with-self-supervised-perceptual-latents",
+      "section": "deep",
+      "title_en": "Latent Telepathy: Multi-Robot Communication with Self-Supervised Perceptual Latents",
+      "authors": "Howard Wang, Han Zheng, Cathy Wu",
+      "date": "2026-09-20",
+      "pdf": "https://arxiv.org/pdf/2609.23269v1",
+      "score": "9.0",
+      "evidence": "部分可观测下的分散式多机器人团队与MARL通信",
+      "tldr": "在部分可观测的分布式多机器人团队中，决定动作的关键信息常只有队友能看到。现有方法多传位置或轨迹，无法传达感知内容；学习通信虽能传感知，但任务耦合且不透明。Latent Telepathy 让机器人直接广播自监督联合嵌入预测编码器已计算出的感知潜向量，编码器冻结且全队共享，接收方仅靠任务奖励学习使用。该消息不增加计算，带宽仅一个紧凑向量，使导航员在99.7%回合避开遮挡危险，优于原始图像与位置/轨迹消息，并在真实机器人相机上102/102成功解码危险。",
+      "tags": "query:marl",
+      "abstract_en": "In a decentralized multi-robot team under partial observability, the fact that decides a robot's next action is often visible only to a teammate. Existing decentralized methods communicate kinematic information, such as position or planned trajectory, which cannot convey what the teammate perceives. Learned communication in multi-agent reinforcement learning (MARL) can carry perceptual content, but the resulting messages are task-coupled and opaque. We propose Latent Telepathy. Each robot broadcasts the perceptual latent vector it already computes for its own use, the output of an encoder trained with a self-supervised joint-embedding predictive objective, frozen, and shared across the team. A teammate learns to act on it from task reward alone. Because the encoder already runs for perception, the message costs no additional computation and a single compact vector of bandwidth. Because the encoder is frozen before any policy is trained, the message means the same thing to every robot, and the receiving robot is never told what it means. We evaluate Latent Telepathy with a content-controlled protocol in which bandwidth, latency, topology and receiver are held fixed and only the message content varies. Broadcasting the latent lets a navigator avoid an occluded hazard in 99.7% of episodes, matching a noiseless hand-designed message. Position and trajectory messages remain at chance, and the raw camera image, 186 times wider, is less reliable than the compressed latent. The result holds from a discrete gridworld to rendered pixels under continuous velocity control, and the encoder decodes the hazard from a physical robot's camera in 102 of 102 live decisions. We also identify a requirement for porting MARL communication results to continuous control, that the decision a message informs must remain reachable by exploration, and show how to restore it.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/22/2609.24102v1-explanation-guided-federated-deep-reinforcement-learning-for-joint-resource-allocation-and-scheduling-in-6g-in-x-subnetworks",
+      "section": "quick",
+      "title_en": "Explanation-Guided Federated Deep Reinforcement Learning for Joint Resource Allocation and Scheduling in 6G in-X Subnetworks",
+      "authors": "Ramoni Adeogun",
+      "date": "2026-09-21",
+      "pdf": "https://arxiv.org/pdf/2609.24102v1",
+      "score": "7.0",
+      "evidence": "多智能体强化学习用于6G子网资源分配",
+      "tldr": "面向6G in-X子网中工业机器人与车辆等高密度场景，动态干扰和严格性能要求使传统RRM难以应对。论文提出解释引导的联邦深度强化学习框架，融合多智能体强化学习、联邦学习与可解释AI。各子网智能体无需共享原始数据即可协同优化信道分配与子网内调度，兼顾隐私与公平。基于3GPP的仿真表明，该方法在性能与透明度上显著优于现有方案。",
+      "tags": "query:marl",
+      "abstract_en": "Sixth-generation (6G) wireless systems are envisioned as networks of networks, integrating diverse in-X subnetworks that provide localized, high-performance connectivity. Ensuring reliable communication in dense deployments, such as industrial robots and vehicles, is challenging due to dynamic interference and strict performance requirements. Traditional radio resource management (RRM) methods have limitations, prompting the need for AI-based solutions. In this paper, we address the challenges of dynamic resource allocation and scheduling in 6G in-X subnetworks supporting applications with heterogeneous characteristics by proposing a novel framework that combines Multi-Agent Reinforcement Learning (MARL), Federated Learning (FL), and Explainable AI (XAI). Our solution is designed to improve the reliability, robustness, and transparency of resource management and intra-subnetwork scheduling while ensuring data privacy and fairness across multiple co-existing subnetworks. Unlike existing works, our approach considers a realistic scenario with multiple devices per subnetwork, thereby offering a more comprehensive and scalable solution. The proposed explainable RL framework enables agents to collaboratively optimize channel allocation and scheduling without the need to share raw data, preserving the privacy of each participating subnetwork. Extensive simulations based on 3GPP scenarios demonstrate the effectiveness of our approach, showing significant improvements in performance, and transparency over existing solutions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/22/2609.22726v1-decentralized-multi-robot-exploration-with-probabilistic-peer-intent-and-multi-hop-plan-propagation",
+      "section": "quick",
+      "title_en": "Decentralized Multi-Robot Exploration with Probabilistic Peer Intent and Multi-hop Plan Propagation",
+      "authors": "Saurbh Singh Jamwal, Nived Chebrolu, Shivaram Kalyanakrishnan",
+      "date": "2026-09-19",
+      "pdf": "https://arxiv.org/pdf/2609.22726v1",
+      "score": "6.0",
+      "evidence": "去中心化多机器人协调，含同伴意图与计划传播",
+      "tldr": "在通信受限场景下，去中心化多机器人探索难以高效协调，集中式全局共享往往不现实。已有DMCE等MCTS方法依赖直接通信范围内的同伴路径点序列表达意图。本文提出概率同伴意图PPI，将同伴轨迹转为连续空间预测并融入本地MCTS动作评估，同时研究多跳传播计划以扩展意图共享范围。仿真表明PPI与多跳均能提升探索，收益取决于环境结构与团队规模，并在三台机器人真实环境中验证。",
+      "tags": "query:marl",
+      "abstract_en": "Efficient coordination under limited communication remains a key challenge in decentralized multi-robot exploration. While centralized approaches benefit from global information sharing, they are often impractical in large-scale or communication-constrained environments. Existing Monte Carlo Tree Search (MCTS)-based approaches, such as Decentralized Monte Carlo Exploration (DMCE), enable decentralized planning by taking peer intent into account. This peer intent is obtained by communicating sequences of planned waypoints with robots within direct communication range. In this work, we extend this idea by introducing Probabilistic Peer Intent (PPI), which converts peer trajectories into a continuous spatial representation of predicted intent and incorporates it into local MCTS action evaluation. We additionally study the effects of sharing peer intent beyond direct communication range by propagating plans over multiple hops. Experiments across multiple simulated environments and team sizes show that PPI and Multi-hop propagation can each improve decentralized exploration, with their relative benefits depending on environment structure and team size. We also demonstrate the real-world deployment of our method on three robots operating in different environment types.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
