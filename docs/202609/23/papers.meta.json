@@ -1,0 +1,69 @@
+{
+  "label": "2026-09-23",
+  "date": "2026-09-23",
+  "generated_at": "2026-09-23T22:11:07",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202609/23/2609.25701v1-fully-byzantine-resilient-multi-agent-reinforcement-learning",
+      "section": "deep",
+      "title_en": "Fully Byzantine-Resilient Multi-Agent Reinforcement Learning",
+      "authors": "Haejoon Lee, Dimitra Panagou",
+      "date": "2026-09-22",
+      "pdf": "https://arxiv.org/pdf/2609.25701v1",
+      "score": "10.0",
+      "evidence": "分散式拜占庭鲁棒Actor-Critic多智能体强化学习及收敛保证",
+      "tldr": "拜占庭鲁棒多智能体强化学习常因恶意通信只能收敛到无攻击极限点的邻域，导致策略性能下降。本文提出全鲁棒AC-MARL方法FRAC-MARL，各智能体利用两跳消息冗余识别可靠消息，无需中心节点。在值函数与团队奖励线性参数化、拜占庭边攻击限定于通信层时，证明参数在时变图上几乎必然收敛到与无攻击情形相同的极限点。作者还给出新的拓扑收敛条件、可多项式验证及网络构造方法，并在多机器人编队控制中验证。",
+      "tags": "query:marl",
+      "abstract_en": "We study distributed Byzantine-resilient actor-critic multi-agent reinforcement learning (AC-MARL), where agents collectively learn policies through local interactions. Existing methods guarantee convergence of the agents' parameters only to a neighborhood of the attack-free limit points, resulting in degraded performance. We propose Fully Resilient AC-MARL (FRAC-MARL), a decentralized method in which each agent leverages redundancy in two-hop messages to identify reliable messages. Under linear parameterizations of the value and team-reward functions and Byzantine edge attacks, where adversarial behavior is confined to the communication layer, we prove that agents' parameters converge almost surely to the same limit points as in the attack-free case over time-varying communication graphs. We introduce a novel topological condition for the convergence of our method, present a systematic method to construct such networks, and prove that this condition can be verified in polynomial time. Finally, we demonstrate our method on cooperative multi-robot formation control tasks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.26783v1-a-decentralized-partially-observable-team-decision-methodology-with-delayed-information-sharing",
+      "section": "deep",
+      "title_en": "A Decentralized Partially Observable Team Decision Methodology with Delayed Information Sharing",
+      "authors": "Xiaoxing Ren, Thomas Parisini, Andreas A. Malikopoulos",
+      "date": "2026-09-22",
+      "pdf": "https://arxiv.org/pdf/2609.26783v1",
+      "score": "9.0",
+      "evidence": "部分可观测团队决策中的完全分散式协同学习",
+      "tldr": "该论文研究未知模型、低秩隐动态下的去中心化部分可观测团队决策问题，成员仅依赖本地私有信息与延迟共享的公共信息。方法将团队理论等价性与低秩MDP表示结合，让每个成员学习近似低秩MDP并用最小二乘值迭代自主求解策略，无需中心协调者或集中训练。理论表明各成员解可逼近集中式团队最优策略的对应分量，并给出有限样本性能保证与样本复杂度界。",
+      "tags": "query:marl",
+      "abstract_en": "We study decentralized partially observable team decision problems with low-rank latent dynamics and unknown system models. The proposed framework combines team-theoretic equivalence with low-rank model representations to address cooperative decision-making in partially observable Markov decision processes without prior knowledge of the transition model. Each team member makes decisions based on local private information and delayed common information shared across the team. Using only this available information, each member learns an approximate low-rank Markov decision process and applies least-squares value iteration to compute its policy. This yields a fully decentralized learning and planning algorithm that requires neither a centralized coordinator nor centralized training. We show that the resulting member-side solutions approximate the centralized team solution: despite partial observability, unknown dynamics, and delayed common information, each member recovers the corresponding component of an approximate team-optimal policy. We further establish finite-sample performance guarantees and derive a corresponding sample-complexity bound for the proposed algorithm.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.26010v1-mates-learning-multi-agent-interactions-by-transforming-observations-for-frozen-single-agent-policies",
+      "section": "deep",
+      "title_en": "MATES: Learning Multi-Agent Interactions by Transforming Observations for Frozen Single-Agent Policies",
+      "authors": "Elie Abboud, Oren Gal",
+      "date": "2026-09-22",
+      "pdf": "https://arxiv.org/pdf/2609.26010v1",
+      "score": "8.0",
+      "evidence": "通过观测变换为冻结单智能体策略适配去中心化多智能体策略",
+      "tldr": "多智能体强化学习通常需从零训练去中心化策略，同时学习个体能力与协调。MATES 针对多智能体观测保留单任务信息并暴露邻居信息的场景，学习小型适配器，把观测映射为冻结单智能体策略所需的输入，从而不更新策略本体即可产生协作动作。实验覆盖路径规划、导航与合作发现，仅优化全策略参数3.5-7.3%，却稳定优于从头训练，并接近全微调。这表明在特定观测结构下，无需改动个体能力策略也能学得有效多智能体行为。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent reinforcement learning (MARL) commonly trains decentralized policies from scratch, requiring agents to acquire individual task competence and coordination simultaneously. Yet many multi-agent problems admit a compatible single-agent counterpart in which the underlying task can be learned in isolation. We introduce Multi-Agent Observation Transformation for Existing Single-Agent Policies (MATES), an input-side adaptation framework for tasks whose multi-agent observations preserve the solo-task information while exposing separately identifiable neighbor information. From multi-agent experience, MATES learns a small adapter that maps this observation into the format expected by a frozen single-agent policy, inducing actions suited to the shared environment without updating the single-agent policy itself. MATES leaves the pretrained policy's internal architecture unchanged and retains the objectives and update procedures of the underlying MARL algorithm. We evaluate MATES using both on- and off-policy algorithms on lifelong pathfinding, navigation, and cooperative discovery, spanning discrete and continuous observation and action spaces. Across all evaluated settings, MATES optimizes only 3.5-7.3% as many parameters as full-policy training while consistently outperforming MARL training from scratch. It approaches the performance of full fine-tuning, remains competitive overall with demonstration-based baselines, and retains strong task performance at team sizes not encountered during training. These results provide evidence that, under this observation structure, effective multi-agent behavior can be learned without modifying the policy that encodes individual competence.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.16751v2-constant-swap-regret-in-general-sum-games-via-two-scale-higher-order-optimism",
+      "section": "quick",
+      "title_en": "Constant Swap Regret in General-Sum Games via Two-Scale Higher-Order Optimism",
+      "authors": "Tung Mai",
+      "date": "2026-09-15",
+      "pdf": "https://arxiv.org/pdf/2609.16751v2",
+      "score": "6.0",
+      "evidence": "多人一般和博弈中的非耦合学习动态，与马尔可夫博弈密切相关",
+      "tldr": "本文研究有限多玩家一般和博弈，在全信息反馈下给出确定且非耦合的学习动力学，在自我博弈中实现与时间跨度T无关的常数个体交换遗憾。该动力学无需玩家间耦合，也不依赖预设时间跨度。方法基于Blum-Mansour框架并引入乐观机制：每个玩家预测偏离收益，更新行随机转移矩阵，并按其平稳分布行动。关键创新是定制行归一化映射与双尺度高阶预测器。最终达到O(√n m log m log^{5/2}(nm))的个体交换遗憾，并提供对抗鲁棒变体。",
+      "tags": "query:marl",
+      "abstract_en": "We give deterministic and uncoupled learning dynamics for finite multiplayer general-sum games under full-information feedback that achieve constant individual swap regret in self-play, independent of the horizon $T$. With $n$ players and at most $m$ actions each, every player's individual swap regret is $O(\\sqrt n\\,m\\log m\\log^{5/2}(nm))$ at every finite horizon. The dynamics use the classical Blum-Mansour framework with optimism. Each player predicts the deviation gains, uses these predictions to update a row-stochastic transition matrix, and plays its stationary distribution. Our new ingredients include a tailored row normalization map and a two-scale higher-order predictor. An adversarially robust variant, obtained through a generic common-prefix switching wrapper, preserves the self-play bound up to a universal constant and guarantees individual swap regret at most $7\\sqrt{mT\\log m}$ in the adversarial setting.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
