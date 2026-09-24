@@ -6,32 +6,41 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-23
-- 运行时间：2026-09-23 22:11:03 UTC
+- 最新运行日期：2026-09-24
+- 运行时间：2026-09-24 22:16:41 UTC
 - 运行状态：成功
-- 本次总论文数：4
-- 精读区：3
-- 速读区：1
+- 本次总论文数：6
+- 精读区：2
+- 速读区：4
 
 ### 今日简报（AI）
-今日精读3篇、速读1篇，聚焦拜占庭鲁棒多智能体强化学习与延迟信息共享下的团队决策。最值得看的是满分论文《Fully Byzantine-Resilient Multi-Agent Reinforcement Learning》，以及9分的去中心化部分可观测团队决策方法。普通读者可先读这两篇精读，速读那篇一般和博弈仅6分，按需参考即可。
-- 详情：[/202609/23/README](/202609/23/README)
+- 今日共生成 6 篇推荐（精读 2 篇，速读 4 篇）
+- 精读：《Anchor and Perturb: Lazy Agent Remediation by Exploration Injection》（9.0/10）, 《Evolutionary Stability Does Not Guarantee Learning Accessibility: A Multi-Agent Reinforcement Learning Perspective on Cooperation Emergence》（9.0/10）
+- 速读：《FairTest: Search-Based Fairness Testing for Multi-Agent Reinforcement Learning Systems》（7.0/10）, 《AoI-Driven Hierarchical Learning for Cooperative Resource Sharing in Multi-Operator UAV Networks》（6.0/10）, 《General Collaborative Intelligence: Architecting Cognition for Resilient Multi-Agent Ecosystems》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202609/24/README](/202609/24/README)
 
 ### 精读区论文标签
-1. [Fully Byzantine-Resilient Multi-Agent Reinforcement Learning](/202609/23/2609.25701v1-fully-byzantine-resilient-multi-agent-reinforcement-learning)  
-   标签：评分：10.0/10、query:marl
-   evidence：分散式拜占庭鲁棒Actor-Critic多智能体强化学习及收敛保证
-2. [A Decentralized Partially Observable Team Decision Methodology with Delayed Information Sharing](/202609/23/2609.26783v1-a-decentralized-partially-observable-team-decision-methodology-with-delayed-information-sharing)  
+1. [Anchor and Perturb: Lazy Agent Remediation by Exploration Injection](/202609/24/2609.27365v1-anchor-and-perturb-lazy-agent-remediation-by-exploration-injection)  
    标签：评分：9.0/10、query:marl
-   evidence：部分可观测团队决策中的完全分散式协同学习
-3. [MATES: Learning Multi-Agent Interactions by Transforming Observations for Frozen Single-Agent Policies](/202609/23/2609.26010v1-mates-learning-multi-agent-interactions-by-transforming-observations-for-frozen-single-agent-policies)  
-   标签：评分：8.0/10、query:marl
-   evidence：通过观测变换为冻结单智能体策略适配去中心化多智能体策略
+   evidence：通过探索注入解决多智能体协作失败
+2. [Evolutionary Stability Does Not Guarantee Learning Accessibility: A Multi-Agent Reinforcement Learning Perspective on Cooperation Emergence](/202609/24/2609.27664v1-evolutionary-stability-does-not-guarantee-learning-accessibility-a-multi-agent-reinforcement-learning-perspective-on-cooperation-emergence)  
+   标签：评分：9.0/10、query:marl
+   evidence：明确从多智能体强化学习视角研究去中心化智能体的合作涌现
 
 ### 速读区论文标签
-1. [Constant Swap Regret in General-Sum Games via Two-Scale Higher-Order Optimism](/202609/23/2609.16751v2-constant-swap-regret-in-general-sum-games-via-two-scale-higher-order-optimism)  
+1. [FairTest: Search-Based Fairness Testing for Multi-Agent Reinforcement Learning Systems](/202609/24/2609.27309v1-fairtest-search-based-fairness-testing-for-multi-agent-reinforcement-learning-systems)  
+   标签：评分：7.0/10、query:marl
+   evidence：面向多智能体强化学习系统的搜索式公平性测试
+2. [AoI-Driven Hierarchical Learning for Cooperative Resource Sharing in Multi-Operator UAV Networks](/202609/24/2609.22865v1-aoi-driven-hierarchical-learning-for-cooperative-resource-sharing-in-multi-operator-uav-networks)  
    标签：评分：6.0/10、query:marl
-   evidence：多人一般和博弈中的非耦合学习动态，与马尔可夫博弈密切相关
+   evidence：面向多运营商无人机协作资源共享的合作多智能体深度强化学习
+3. [General Collaborative Intelligence: Architecting Cognition for Resilient Multi-Agent Ecosystems](/202609/24/2609.22967v1-general-collaborative-intelligence-architecting-cognition-for-resilient-multi-agent-ecosystems)  
+   标签：评分：6.0/10、query:marl
+   evidence：协作式多智能体生态系统与分布式智能体
+4. [Turning Safety into Competence: Minimally Exploitable Robot Policies via Safety-Filtered Reinforcement Learning](/202609/24/2609.27312v1-turning-safety-into-competence-minimally-exploitable-robot-policies-via-safety-filtered-reinforcement-learning)  
+   标签：评分：6.0/10、query:marl
+   evidence：将竞争交互建模为安全关键马尔可夫博弈
 
 
 <div class="dpr-home-promo-card">

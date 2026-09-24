@@ -1,0 +1,539 @@
+Title: AoI-Driven Hierarchical Learning for Cooperative Resource Sharing in Multi-Operator UAV Networks
+
+URL Source: https://arxiv.org/pdf/2609.22865v1
+
+Published Time: Tue, 22 Sep 2026 00:43:07 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# AoI-Driven Hierarchical Learning for Cooperative Resource Sharing in Multi-Operator UAV Networks 
+
+Atefeh Hajijamali Arani ∗, Mahyar Shirvanimoghaddam †, Abolfazl Mehbodniya ‡, Halim Yanikomeroglu §, and Fumiyuki Adachi ¶∗Department of Statistics and Actuarial Science, University of Waterloo, ON N2L 3G1, Canada 
+
+> †
+
+School of Electrical and Computer Engineering, The University of Sydney, NSW 2006, Australia  
+
+> ‡
+
+Department of Electronics and Communication Engineering, Kuwait College of Science and Technology (KCST), Doha, Kuwait 
+
+> §
+
+Carleton-NTN Lab, Department of Systems and Computer Engineering, Carleton University, Ottawa, ON K1S 5B6, Canada  
+
+> ¶
+
+International Research Institute of Disaster Science, Tohoku University, Sendai, Miyagi, Japan 
+
+Abstract —Uncrewed aerial vehicle (UAV)-assisted networks provide a versatile paradigm for on-demand connectivity. How-ever, in multi-operator aerial networks (MOANs), the joint optimization of cooperative resource sharing and 3D trajectory control to maintain information freshness is a complex combina-torial problem, which can be shown to be NP-hard. To address this computational complexity, we propose an age of information (AoI)-driven hierarchical deep reinforcement learning (DRL) framework. Specifically, a Dueling Double Deep Q-Network (D3QN) architecture is deployed at both the operator and UAV decision layers to mitigate overestimation bias and enhance stability in high-dimensional state spaces. To improve system resilience, we introduce an AoI- and load-aware outage compen-sation mechanism that prioritizes users based on instantaneous transmission demands and temporal freshness. Furthermore, a normalized load exchange balance metric is incorporated to regulate cooperative behavior and ensure resource fairness across operators. Simulation results demonstrate that the proposed hier-archical D3QN significantly outperforms conventional DRL, non-cooperative, and cooperative benchmarks, reducing the average AoI by up to 56.1% under severe congestion while ensuring superior inter-operator fairness and outage mitigation. 
+
+Index Terms —Age of information, cooperative resource shar-ing, deep reinforcement learning, multi-operator aerial networks. 
+
+I. Introduction 
+
+Uncrewed aerial vehicles (UAVs) have emerged as a flexible platform for enhancing wireless connectivity, owing to their rapid deployment, adaptive three-dimensional (3D) mobility, and on-demand coverage provisioning [1], [2]. In applications such as environmental monitoring, public safety, and industrial Internet of Things (IoT), UAVs can operate as aerial base stations (BSs) to complement terrestrial infrastructure and improve service continuity [3]. Nevertheless, next-generation services such as real-time sensing, mission-critical control, and digital twin operation require not only high data rates but also timely and fresh information at the receiver. In this context, conventional metrics (e.g., throughput) do not explicitly capture information timeliness. Age of information (AoI) has therefore attracted increasing attention as a destination-centric metric quantifying the elapsed time since the generation of the most recently received status update [4]. Although UAV-assisted wireless networks have been widely investigated, their operation in multi-operator environments introduces substantial technical challenges. In multi-operator aerial networks (MOANs), multi-ple service providers manage their own UAVs and coordinate resource sharing to improve coverage and reliability, particularly 
+
+> Accepted for publication in IEEE GLOBECOM 2026.
+
+during user roaming, traffic overload, or emergency deploy-ments. However, inter-operator coordination introduces strategic and operational coupling. User association and load distribution across multiple UAVs directly affect scheduling feasibility and, consequently, AoI performance. Persistent load imbalance may lead to overload conditions, user dropping, and delayed status updates, thereby increasing the AoI experienced by affected users. Furthermore, in the absence of explicit fairness control, resource sharing may result in cross-subsidization , where one operator allocates service capacity to another at the expense of its own users’ information freshness [5]. Despite these challenges, most existing studies on UAV trajectory optimiza-tion and resource allocation primarily consider single-operator settings and optimize sum-rate maximization [6]. Although learning-based methods have been adopted for 3D trajectory optimization and throughput enhancement, they typically do not explicitly integrate AoI considerations into the control framework in multi-operator environments [7]. Furthermore, the joint user association, scheduling, and trajectory design in MOANs is a mixed-integer, non-convex problem where centralized solutions are computationally intractable due to coupled variables and limited scalability with network size [8]. Motivated by these limitations, we propose an AoI-driven hierarchical deep reinforcement learning (DRL) framework for resource sharing and UAV trajectory optimization in MOANs. The proposed architecture operates over two time scales: I) at a coarse time-window level, operators learn long-term resource-sharing policies; II) at a fine time instant level, UAVs learn trajectory actions to serve users. To ensure balanced cooperation, we incorporate a mechanism that controls cross-operator load exchange under limited inter-operator information sharing. The key technical contributions are summarized as follows:  
+
+> •
+
+AoI-aware MOAN framework: We develop a multi-operator UAV model explicitly capturing AoI dynamics under strict load constraints and outage compensation.  
+
+> •
+
+Hierarchical DRL design: We propose a two-tier Dueling Double Deep Q-Network (D3QN) framework to optimize inter-operator resource sharing and UAV 3D trajectories.  
+
+> •
+
+AoI- and load-aware outage compensation: We design a novel dropping policy prioritizing both transmission demand and information staleness to mitigate excessive AoI growth during network overload.  
+
+> •
+
+Load exchange balance (LEB) metric: We introduce a regulatory metric to penalize one-sided load transfer and arXiv:2609.22865v1 [eess.SY] 19 Sep 2026 prevent cross-subsidization between cooperating operators.  
+
+> •
+
+Privacy-preserving coupling: Inter-operator resource shar-ing is executed using only aggregate data to preserve operator-level privacy. The remainder of this paper is organized as follows. Section II presents the system model and outage mechanism. Section III formulates the optimization problem, solved using the D3QN framework developed in Section IV. Section V discusses the simulation results, and Section VI concludes the paper. 
+
+II. System Model 
+
+We consider the downlink transmission phase of a multi-operator aerial network (MOAN). The system comprises two independent operators, indexed by Q = {1, 2}, each deploying a set of UAV-mounted BSs to provide wireless connectivity and timely status updates. Let U𝑞 denote the set of UAVs owned by operator 𝑞 ∈ Q , with the set of total UAV defined as U = ⋃𝑞 ∈ Q U𝑞 . The UAVs fly at a fixed speed 𝑣 𝑢 and dynamically adjust their 3D trajectories to accommodate spatial traffic fluctuations and maintain information freshness. Let K
+
+denote the set of all users and L𝑞 represent the subset of users subscribed to operator 𝑞 ∈ Q , such that K = ⋃𝑞 ∈ Q L𝑞 and 
+
+L𝑞 ∩ L 𝑞 ′ = ∅, ∀𝑞 6 = 𝑞 ′. While each user is subscribed to a single operator, they may be served by any UAV in U depending on the active inter-operator resource sharing policy. We assume that the time horizon is discretized into consecutive windows indexed by 
+
+𝑗 with duration 𝑇 𝑤 , each comprising 𝑁 𝑤 time instants indexed by 𝑡 with duration 𝑇 𝑠 = 𝑇 𝑤 /𝑁 𝑤 . This two-timescale structure accommodates the different dynamics of the network, where inter-operator resource sharing occurs at the coarse window level and UAV mobility is managed at the fine time instant level. 
+
+A. Radio Propagation and Signal Quality 
+
+Let z𝑢 (𝑡 ) = ( 𝑥 𝑢 (𝑡 ), 𝑦 𝑢 (𝑡 ), ℎ 𝑢 (𝑡 )) and z𝑘 (𝑡 ) = ( 𝑥 𝑘 (𝑡 ), 𝑦 𝑘 (𝑡 ), ℎ 𝑘 )denote the 3D coordinates of UAV 𝑢 and user 𝑘 at time 
+
+𝑡 , respectively. The air-to-ground channel is modeled using a probabilistic line-of-sight (LoS)/non-line-of-sight (NLoS) framework to account for environmental blockages. The hor-izontal distance between UAV 𝑢 and user 𝑘 at time 𝑡 is given by 𝑟 𝑢,𝑘 (𝑡 ) = √(𝑥 𝑢 (𝑡 ) − 𝑥 𝑘 (𝑡 )) 2 + ( 𝑦 𝑢 (𝑡 ) − 𝑦 𝑘 (𝑡 )) 2, and the corre-sponding 3D distance is 𝑑 𝑢,𝑘 (𝑡 ) = 
+
+√
+
+𝑟 2 
+
+> 𝑢,𝑘
+
+(𝑡 ) + ( ℎ𝑢 (𝑡 ) − ℎ𝑘 )2. The probability of establishing a LoS link is expressed as [9] pr (LoS)  
+
+> 𝑢,𝑘
+
+(𝑡 ) = 
+
+> 𝐽
+
+∏
+
+> 𝑛 =0
+
+
+
+1 − exp 
+
+©«
+
+−
+
+[
+
+ℎ𝑢 (𝑡 ) − (𝑛 + 12 )( ℎ𝑢 (𝑡 )−ℎ𝑘 )
+
+> 𝐽 +1
+
+]2
+
+2𝜉 2
+
+ª®®®¬
+
+, (1) where 𝐽 =
+
+⌊ 𝑟 𝑢,𝑘 (𝑡 )√𝛼𝛽  
+
+> 1000
+
+− 1
+
+⌋
+
+approximates the expected number of blocking obstacles along the horizontal path between UAV 
+
+𝑢 and user 𝑘 at time 𝑡 . The environmental parameters 𝛼 , 𝛽 ,and 𝜉 characterize the propagation environment, representing the building area fraction, the average building density, and the standard deviation of building heights, respectively. The large-scale channel gain between UAV 𝑢 and user 𝑘 , under propagation condition 𝑧 ∈ { LoS , NLoS }, is modeled in dB as [10] 
+
+𝐿 (𝑧 ) 
+
+> 𝑢,𝑘
+
+(𝑡 ) = 𝛿 (𝑧 ) + 𝜂 (𝑧 ) log 10 𝑑 𝑢,𝑘 (𝑡 ) + 𝜒 (𝑧 ) 
+
+> 𝑢,𝑘
+
+(𝑡 ), (2) where 𝛿 (𝑧 ) and 𝜂 (𝑧 ) denote the path-loss constant and exponent, respectively. The small-scale fading 𝜒 (𝑧 ) 
+
+> 𝑢,𝑘
+
+(𝑡 ) (in dB) assumes a Nakagami-𝑚 fading model, where the fading power follows a Gamma distribution with severity parameter 𝑚 (𝑧 ), and is assumed to be independent and identically distributed (i.i.d.) across consecutive time instants. The corresponding linear channel gain is given by 𝑔 𝑢,𝑘 (𝑡 ) = 10 −𝐿 (𝑧 )
+
+> 𝑢,𝑘 (𝑡 )/10
+
+. Each UAV 𝑢 
+
+is equipped with a single omnidirectional antenna and transmits with a fixed power 𝑝 𝑢 over an allocated bandwidth 𝜔 . To enable structured multi-operator coexistence and eliminate inter-operator interference, orthogonal spectrum allocation across operators is assumed. Consequently, co-channel interference originates only from UAVs belonging to the same operator that reuse the spectrum. Under this assumption, the received signal-to-interference-plus-noise ratio (SINR) at user 𝑘 , when served by UAV 𝑢 ∈ U at time 𝑡 , is expressed as 
+
+𝛾 𝑢,𝑘 (𝑡 ) = 𝑝 𝑢 𝑔 𝑢,𝑘 (𝑡 )
+
+∑ 
+
+> 𝑢 ′∈ U\ 𝑢
+
+𝑝 𝑢 ′ 𝑔 𝑢 ′ ,𝑘 (𝑡 )𝜌 𝑢 ′ (𝑡 ) + 𝜎 2 , (3) where 𝜌 𝑢 ′ (𝑡 ) denotes the load of the interfering UAV 𝑢 ′ at time 𝑡 ,and 𝜎 2 represents the noise power. The achievable rate of user 𝑘 
+
+served by UAV 𝑢 is then given by the Shannon capacity formula 
+
+𝐶 𝑢,𝑘 (𝑡 ) = 𝜔 log 2
+
+(1 + 𝛾 𝑢,𝑘 (𝑡 )) . (4) 
+
+B. Load and User Association Modeling 
+
+Each user 𝑘 is associated with a traffic demand characterized by an average arrival rate 𝜆 𝑘 (packets/s) and mean packet size 
+
+𝐹 𝑘 (bits), The corresponding average data rate requirement is defined as Λ𝑘 = 𝜆 𝑘 𝐹 𝑘 . Given the instantaneous achievable rate 
+
+𝐶 𝑢,𝑘 (𝑡 ), the fraction of transmission time required by UAV 𝑢 to serve user 𝑘 at time 𝑡 is expressed as 
+
+𝛿 𝑢,𝑘 (𝑡 ) = Λ𝑘 
+
+𝐶 𝑢,𝑘 (𝑡 ) . (5) Let K𝑢 (𝑡 ) denote the set of users associated with UAV 𝑢 at time 
+
+𝑡 . Thus, the aggregate load of UAV 𝑢 is given by 
+
+𝜌 𝑢 (𝑡 ) = ∑  
+
+> 𝑘 ∈ K 𝑢 (𝑡 )
+
+𝛿 𝑢,𝑘 (𝑡 ). (6) The load 𝜌 𝑢 (𝑡 ) represents the normalized resource utilization of UAV 𝑢 within the considered time interval. To ensure feasible scheduling, the load must satisfy 0 ≤ 𝜌 𝑢 (𝑡 ) ≤ 1. Since the achievable rate 𝐶 𝑢,𝑘 (𝑡 ) depends on interference from neighbor-ing UAVs, which is itself a function of their respective loads, the network load vector 𝝆 (𝑡 ) = (𝜌 1(𝑡 ), . . . , 𝜌 | U | (𝑡 ))𝑇 is inherently coupled. This non-linear system is solved via a standard fixed-point iteration, 𝝆 (𝜄 ) = min ( 𝒇 (𝝆 (𝜄 −1) ), 1), where 1 denotes the all-ones vector and 𝜄 denotes the iteration index. Under standard interference mapping properties, this guarantees convergence to a unique feasible load satisfying 𝜌 𝑢 (𝑡 ) ≤ 1, ∀𝑢 ∈ U [11]. User association directly affects the load distribution and, consequently, the interference coupling across UAVs. At each time 𝑡 , user 𝑘 selects a serving UAV from the available set U∗,which is determined by the inter-operator sharing policy. Under restricted cross-operator access, U∗ is limited to the UAVs of the operator to which the user belongs; otherwise, U∗ = U. To jointly account for link quality and load conditions, the serving UAV is selected according to [12] 
+
+𝑢 ∗
+
+> 𝑘
+
+(𝑡 ) = arg max 
+
+> 𝑢 ∈ U ∗
+
+{𝑝 𝑢 𝑔 𝑢,𝑘 (𝑡 )(1 − ˆ𝜌 𝑢 (𝑡 ))} , (7) where ˆ 𝜌 𝑢 (𝑡 ) denotes the estimated load of UAV 𝑢 at time 𝑡 . The load estimate is updated recursively as ˆ𝜌 𝑢 (𝑡 ) = ˆ 𝜌 𝑢 (𝑡 − 1) + 𝜈 (𝑡 )(𝜌 𝑢 (𝑡 − 1) − ˆ𝜌 𝑢 (𝑡 − 1) ), (8) where 𝜈 (𝑡 ) is the learning rate for load estimation. When inter-operator resource sharing is enabled, users subscribed to operator 𝑞 may be served by UAVs of another operator 𝑞 ′. To quantify this resulting inter-operator load transfer, we define the load exchanged during window 𝑗 as 
+
+𝜌 𝑞 →𝑞 ′ ( 𝑗 ) = ∑ 
+
+> 𝑡 ∈ T 𝑗
+
+∑ 
+
+> 𝑘 ∈ L 𝑞
+> 𝑢 ∈ U 𝑞 ′
+
+𝛿 𝑢,𝑘 (𝑡 ), (9) where T𝑗 denotes the set of time instants within window 𝑗 .Similarly, the load received by operator 𝑞 from operator 𝑞 ′
+
+during window 𝑗 is denoted by 𝜌 𝑞 ′→𝑞 ( 𝑗 ). To balance the load exchange between the operators, we define the load exchange balance (LEB) metric. The LEB metric for operator 𝑞 in time window 𝑗 can be expressed as LEB 𝑞 ( 𝑗 ) = 𝜌 𝑞 ′→𝑞 ( 𝑗 ) − 𝜌 𝑞 →𝑞 ′ ( 𝑗 ) . (10) A smaller value of LEB reflects more balanced inter-operator cooperation. Nevertheless, the absolute value function is non-differentiable at zero, which may adversely affect gradient-based optimization. To overcome this limitation, a smoothed approximation of the LEB metric is introduced as follows: 
+
+˜LEB 𝑞 ( 𝑗 ) = 
+
+√(𝜌 𝑞 ′→𝑞 ( 𝑗 ) − 𝜌 𝑞 →𝑞 ′ ( 𝑗 ))2 + 𝜖, (11) where 𝜖 > 0 is a small constant ensuring differentiability and numerical stability. Given that the load imbalance is lower bounded by zero and upper bounded by max 𝑞 ∈ Q |U 𝑞 |𝑇 𝑤 ,the metric is normalized to satisfy 0 ≤̂ ˜LEB 𝑞 ( 𝑗 ) ≤ 1 as ̂˜LEB 𝑞 ( 𝑗 ) = ˜LEB 𝑞 ( 𝑗 )−√ 𝜖 
+
+> √
+
+(max 𝑞 ∈Q | U 𝑞 |𝑇 𝑤 )2+𝜖 −√𝜖 
+
+> 1
+
+.
+
+C. Age of Information and Outage Compensation 
+
+To quantify information freshness from the perspective of the users, we utilize the AoI metric. For each user 𝑘 ∈ K , the instantaneous AoI at time 𝑡 , denoted by Δ𝑘 (𝑡 ), is defined as the time elapsed since the generation of the most recently received status update. Let 1 
+
+> 𝑘
+
+(𝑡 ) ∈ {0, 1} be the service indicator, where 1 
+
+> 𝑘
+
+(𝑡 ) = 1 if user 𝑘 is successfully scheduled without experiencing a channel-induced or congestion-based drop, and 0 otherwise. To reflect practical staleness limits and maintain analytical tractability, we impose a maximum threshold Δmax .The discrete-time AoI evolution is thus expressed as 
+
+Δ𝑘 (𝑡 + 1) = 
+
+{
+
+1, if 1 
+
+> 𝑘
+
+(𝑡 ) = 1 ,
+
+min (Δ𝑘 (𝑡 ) + 1 , Δmax ), otherwise . (12)      
+
+> 1Note that while the load exchange metrics and the overall system model are formulated for a two-operator scenario ( Q={1,2}) to maintain notational tractability, the proposed framework can be readily extended to an arbitrary num-ber of operators ( | Q | >2) by aggregating the inter-operator resource exchanges.
+
+While AoI quantifies timeliness, it is fundamentally constrained by network capacity. When a UAV becomes overloaded, i.e., 
+
+𝜌 𝑢 (𝑡 ) > 1, an outage compensation mechanism must be adopted to enforce the feasibility constraint. Conventional schemes typically drop users based solely on their transmission demand in (5), which may lead to excessive AoI growth for time-sensitive users [12], [13]. To overcome this limitation, we adopt an AoI- and load-aware dropping policy that jointly considers the fractional transmission requirement and the AoI of users. For each user 𝑘 ∈ K 𝑢 (𝑡 ), a priority metric is defined as 
+
+𝜋 𝑘 (𝑡 ) = 𝜅 1𝛿 𝑢,𝑘 (𝑡 ) − 𝜅 2
+
+Δ𝑘 (𝑡 )
+
+Δmax 
+
+, (13) where 𝜅 1, 𝜅 2 ∈ [0 , 1] are weighting coefficients such that 
+
+𝜅 1 + 𝜅 2 = 1. Users are ranked according to 𝜋 𝑘 (𝑡 ) and iteratively dropped until the capacity constraint 𝜌 𝑢 (𝑡 ) ≤ 1 is satisfied. By penalizing the dropping metric for users with stale information, this mechanism provides a tunable trade-off between load regulation and AoI preservation. 
+
+III. Problem Formulation 
+
+The proposed MOAN aims to minimize user AoI while maintaining inter-operator fairness. Due to dynamic topolo-gies, interference coupling, and cross-operator load exchange, the resulting optimization problem is highly non-convex and computationally intractable for real-time centralized solvers. Therefore, we cast the problem as a two-timescale hierarchical optimization framework: the upper layer optimizes resource-sharing policies at the coarse window level, while the lower layer performs real-time UAV trajectory and scheduling control at the fine time-instant level. 
+
+A. Operator-Level Optimization 
+
+At the beginning of each time window 𝑗 , operator 𝑞 ∈ Q 
+
+selects its inter-operator access policy. The action space is discrete and defined as A𝑞 = {𝑎 self  
+
+> 𝑞
+
+, 𝑎 cross  
+
+> 𝑞
+
+}, where 𝑎 self  
+
+> 𝑞
+
+restricts users to be served exclusively by UAVs of operator 𝑞 , and 
+
+𝑎 cross  
+
+> 𝑞
+
+allows users to access UAVs of other operators. To ensure fairness among scheduled users, Jain’s Fairness Index is adopted. Let 𝐶 𝑘,𝑞 ( 𝑗 ) = 1
+
+> 𝑁 𝑤
+
+∑𝑡 ∈ T 𝑗 
+
+∑𝑢 ∈ U 𝑞 𝐶 𝑢,𝑘 (𝑡 ) denote the average achievable rate of user 𝑘 served by operator 𝑞 during window 𝑗 . The rate fairness index is given by 
+
+𝐽 𝑞 ( 𝑗 ) = 
+
+(∑𝑘 ∈ K 𝑞 ( 𝑗 ) 𝐶 𝑘,𝑞 ( 𝑗 )
+
+)2
+
+|K 𝑞 ( 𝑗 )|∑𝑘 ∈ K 𝑞 ( 𝑗 )
+
+(
+
+𝐶 𝑘,𝑞 ( 𝑗 )
+
+)2 , (14) where K𝑞 ( 𝑗 ) denotes the set of users served by operator 𝑞 during window 𝑗 . Since rate fairness alone does not capture timeliness requirements, the average AoI is incorporated into the operator objective. Let Δ𝑞 ( 𝑗 ) = 1   
+
+> | K 𝑞 (𝑗 )|𝑁 𝑤
+
+∑𝑡 ∈ T 𝑗 
+
+∑𝑘 ∈ K 𝑞 ( 𝑗 ) Δ𝑘 (𝑡 ) denote the mean AoI of users served by operator 𝑞 over window 𝑗 .Given the bounded AoI model with threshold Δmax , a normalized freshness term is defined as 1 − Δ𝑞 ( 𝑗 ) 
+
+> Δmax
+
+, which maps the AoI metric into the interval [0 , 1]. To jointly capture throughput fairness, AoI, and cooperative balance, the operator utility at window 𝑗 
+
+is formulated as 𝑈 𝑞 ( 𝑗 ) = 𝑤 1 𝐽 𝑞 ( 𝑗 ) + 𝑤 2(1 − Δ𝑞 ( 𝑗 )
+
+Δmax 
+
+) + 𝑤 3(1 −̂ ˜LEB 𝑞 ( 𝑗 )) , (15) where 𝑤 1, 𝑤 2, 𝑤 3 ∈ [0 , 1] are weighting factors balancing fair-ness, AoI, and load exchange, respectively, satisfying ∑3
+
+> 𝑖 =1
+
+𝑤 𝑖 = 1. 
+
+B. UAV-Level Optimization 
+
+At the UAV level, each UAV dynamically adjusts its 3D trajectory to maintain load feasibility and minimize local AoI. For each UAV 𝑢 ∈ U , the discrete action space A𝑢 comprises seven possible motion decisions, defined as 
+
+A𝑢 = {forward , backward , left , right , up , down , hover }. (16) The UAV trajectory directly influences the channel gains and, consequently, both the UAV load and the users’ AoI. To quantify this timeliness, let Δ𝑢 (𝑡 ) = 1 
+
+> | K 𝑢 (𝑡 )|
+
+∑𝑘 ∈ K 𝑢 (𝑡 ) Δ𝑘 (𝑡 ) denote the mean AoI of users associated with UAV 𝑢 at time 𝑡 . To jointly capture the load of the UAV and information freshness, the utility of UAV 𝑢 is formulated as 
+
+𝑈 𝑢 (𝑡 ) = 𝜇 1(1 − 𝜌 𝑢 (𝑡 )) + 𝜇 2(1 − Δ𝑢 (𝑡 )
+
+Δmax 
+
+), (17) where 𝜇 1, 𝜇 2 ∈ [0 , 1] are weighting coefficients satisfying 𝜇 1 +
+
+𝜇 2 = 1. The first term penalizes excessive load to prevent network congestion, while the second term promotes local AoI reduction. 
+
+IV. Deep Learning-Based Hierarchical Optimization 
+
+To realize the hierarchical two-timescale framework de-scribed in Section III, we develop a model-free multi-agent DRL architecture. The proposed framework employs the D3QN algorithm at both the operator and UAV levels to learn optimal control policies over their respective decision horizons. At the upper layer, each operator acts as an independent D3QN agent, selecting its inter-operator access strategy at the beginning of each coarse time window based on the observed network states and performance indicators. At the lower layer, each UAV acts as a local agent, determining its trajectory at each fine time instant to adapt to dynamic channel conditions, load variations, and AoI evolution. Through continuous interaction with the environment, the agents iteratively update their networks to learn policies that jointly optimize resource sharing and trajectory control within the hierarchical structure. 
+
+A. Markov Decision Process Formulation 
+
+To apply DRL, the decision-making processes for both the operators and the UAVs must be formulated as distinct, yet coupled, Markov Decision Processes (MDPs), defined by their respective state spaces, action spaces, and reward functions. 
+
+1) Operator-Level MDP: At the window level, each operator 
+
+𝑞 ∈ Q is modeled as an agent making decisions at discrete time windows indexed by 𝑗 . The operator-level decision process is defined as follows:  
+
+> •
+
+State space S𝑞 : The state at window 𝑗 captures load conditions, inter-operator load exchange, the LEB metric, and information freshness, and is defined as 
+
+𝑠 𝑞 ( 𝑗 ) = 
+
+{
+
+ˆ𝜌 𝑞 ( 𝑗 ), ˆ𝜌 𝑞 →𝑞 ′ ( 𝑗 ), ˆ𝜌 𝑞 ′→𝑞 ( 𝑗 ),̂ ˜LEB 𝑞 ( 𝑗 ), ˆ
+
+Δ𝑞 ( 𝑗 )
+
+}
+
+. (18) Here, ˆ𝜌 𝑞 ( 𝑗 ) denotes the normalized internal load of operator 𝑞 generated by its own users within window 𝑗 .The terms ˆ 𝜌 𝑞 →𝑞 ′ ( 𝑗 ) and ˆ 𝜌 𝑞 ′→𝑞 ( 𝑗 ) represent the normalized transmitted and received inter-operator loads, respectively. The quantity ̂ ˜LEB 𝑞 ( 𝑗 ) denotes the normalized smoothed LEB, and ˆ
+
+Δ𝑞 ( 𝑗 ) = Δ𝑞 ( 𝑗 )/Δmax represents the normalized average AoI of users served by operator 𝑞 . 
+
+> •
+
+Action space A𝑞 : The action 𝑎 𝑞 ( 𝑗 ) ∈ { 𝑎 self  
+
+> 𝑞
+
+, 𝑎 cross  
+
+> 𝑞
+
+} de-termines the association policy for the subsequent window, specifying whether users are restricted to UAVs of operator 
+
+𝑞 (i.e., 𝑎 self  
+
+> 𝑞
+
+) or allowed cross-operator access (i.e., 𝑎 cross  
+
+> 𝑞
+
+).  
+
+> •
+
+Reward function R𝑞 : The immediate reward 𝑟 𝑞 ( 𝑗 ) is defined by the operator utility in (15), yielding a bounded scalar feedback that jointly reflects rate fairness, informa-tion freshness, and cooperative balance. 
+
+2) UAV-Level MDP: At the UAV level, each UAV 𝑢 ∈ U is modeled as an agent operating at discrete time instants indexed by 𝑡 . The UAV-level decision process is defined as follows:  
+
+> •
+
+State space S𝑢 : The state at time 𝑡 captures spatial position, load condition, and AoI, and is defined as 
+
+𝑠 𝑢 (𝑡 ) = 
+
+{
+
+ˆ𝑥 𝑢 (𝑡 ), ˆ𝑦 𝑢 (𝑡 ), ˆℎ𝑢 (𝑡 ), 𝜌 𝑢 (𝑡 ), Δ𝑢 (𝑡 )/Δmax 
+
+}
+
+. (19) Here, ˆ 𝑥 𝑢 (𝑡 ), ˆ 𝑦 𝑢 (𝑡 ), and ˆ ℎ𝑢 (𝑡 ) denote the normalized 3D coordinates of UAV 𝑢 . 
+
+> •
+
+Action space A𝑢 : The action 𝑎 𝑢 (𝑡 ) corresponds to a discrete 3D motion step defined in (16).  
+
+> •
+
+Reward function R𝑢 : The instantaneous reward 𝑟 𝑢 (𝑡 ) is defined by the local utility function in (17), yielding a scalar feedback that jointly evaluates load feasibility and information freshness. 
+
+B. Hierarchical Dueling Double Deep Q-Network Design 
+
+Classical tabular Q-learning becomes computationally in-tractable in the considered MOAN framework due to the continuous high-dimensional state spaces. Standard Deep Q-Networks (DQNs) suffer from severe overestimation bias, creating a divergent feedback loop in highly dynamic aerial environments. To ensure stable convergence, we deploy a hierarchical D3QN architecture for operator and UAV agents, which explicitly decouples state-value and action-advantage estimation to mitigate this bias. Specifically, the state 𝑠 is first processed through shared fully connected feature extraction layers parameterized by 𝜽 . The network is then decomposed into two parallel streams: a state-value stream 𝑉 (𝑠 ; 𝜽 , 𝛽 ) and an advantage stream 𝐴 (𝑠, 𝑎 ; 𝜽 , 𝛼 ), where 𝛽 and 𝛼 represent their respective trainable parameters. The final Q-value is reconstructed using an aggregation layer [14]: 
+
+𝑄 (𝑠,𝑎 ;𝜽 , 𝛼,𝛽 )= 𝑉 (𝑠 ; 𝜽 ,𝛽 )+ 𝐴 (𝑠,𝑎 ;𝜽 , 𝛼 )− 1
+
+|A| 
+
+∑
+
+> 𝑎 ′∈A
+
+𝐴 (𝑠, 𝑎 ′;𝜽 , 𝛼 ). (20) During training, mini-batches of transition tuples 𝑒 = ( 𝑠, 𝑎, 𝑟, 𝑠 ′)are sampled from an experience replay buffer D. To overcome overestimation bias, the double Q-learning mechanism decou-ples action selection from target evaluation. The target 𝑦 is com-puted as 𝑦 = 𝑟 + 𝛾𝑄 (𝑠 ′, arg max 𝑎 ′ 𝑄 (𝑠 ′, 𝑎 ′; 𝜃, 𝛼, 𝛽 ); 𝜃 − , 𝛼 − , 𝛽 − ),
+
+where 𝛾 ∈ (0 , 1) is the discount factor, and 𝜽 − denotes the parameters of the target network. The policy network parameters Table I: Simulation Parameters                                         
+
+> Parameter Value Parameter Value
+> Network area 500 ×500 m 2Path-loss ( 𝛿 NLoS , 𝜂 NLoS )32 .9,37 .5Number of operators 2Nakagami-𝑚 fading ( 𝑚 LoS , 𝑚 NLoS )3,1UAV altitude, speed 22 .5∼121 .9m, 10m/s Maximum AoI ( Δmax ), 𝑁 𝑤 50 ,5Transmission power, bandwidth 24 dBm, 10 MHz 𝜅 1, 𝜅 20.3,0.7Noise power spectral density −174 dBm/Hz 𝑤 1, 𝑤 2, 𝑤 31/3,1/3,1/3Path-loss ( 𝛿 LoS , 𝜂 LoS )41 .1,20 .9D3QN 𝛾 , batch size 0.99, 128
+
+are optimized via gradient descent by minimizing the loss between the predicted Q-values and the target 𝑦 . Rather than executing periodic hard replacements, the target network parameters are continuously updated using Polyak averaging as 
+
+𝜽 − ← 𝜏 𝜽 +(1 −𝜏 )𝜽 − , where 𝜏 ≪ 1. Finally, to balance exploration and exploitation, the agents utilize an 𝜖 -greedy action selection strategy with an exponentially decaying exploration probability. 
+
+C. Hierarchical Coupling of Operator and UAV Layers 
+
+Although operating over different timescales, the operator and UAV decision processes are inherently coupled. At the operator tier, the window-level action 𝑎 𝑞 ( 𝑗 ) dictates the inter-operator association policy, directly conditioning the instantaneous load and local AoI observed by the UAVs. Conversely, the UAVs’ sequential trajectory actions {𝑎 𝑢 (𝑡 )} determine the time-varying channel gains, rates, and load realizations. These frame-level outcomes accumulate to construct the operator-level reward metrics, including fairness, AoI, and load exchange balance. Crucially, resource sharing relies solely on load exchange aggregate data to preserve operator-level privacy. 
+
+V. Performance Evaluation 
+
+We evaluate the proposed AoI-driven hierarchical D3QN framework in a 500 × 500 m 2 MOAN with uniformly distributed users. Unless otherwise specified, the network defaults to 2 UAVs per operator. The simulation parameters and network con-figurations are summarized in Table I. In the proposed approach, a shared 128-neuron fully connected layer branches into paral-lel 64-neuron state-value and advantage streams, using layer normalization, ReLU activation, and a 0.2 dropout rate. The networks are trained via RMSprop (learning rate 0 .001) with a Smooth L1 loss function, while target networks are continuously updated with a soft update coefficient of 𝜏 = 0 .005. Performance is compared against five baselines: 1) DDQN : Utilizes the proposed hierarchical structure and rewards, but employs stan-dard Double Deep Q-Network (DDQN) agents; 2) Load-Aware DQN : Employs standard DQN agents and utilizes an outage compensation mechanism based solely on fractional transmis-sion requirement; 3) AoI-Aware Non-Cooperative 3D-UAV : Re-stricts operators to serving only their subscribed users ( 𝑎 𝑞 ( 𝑗 ) = 
+
+𝑎 self  
+
+> 𝑞
+
+), while UAVs employ DQN agents for 3D trajectory opti-mization alongside the proposed AoI-aware outage compensa-tion policy; 4) Load-Aware Non-Cooperative 3D-UAV : Identical to baseline 3, but employs strictly load-based outage com-pensation; 5) Load-Aware Cooperative 2D-UAV : Enforces full cooperation ( 𝑎 𝑞 ( 𝑗 ) = 𝑎 cross  
+
+> 𝑞
+
+) for global UAV access, combining DQN-optimized 2D fixed-altitude ( ℎmax ) trajectories with load-based outage compensation. Results are averaged over multiple Monte Carlo runs using an Intel Xeon Gold 6230R CPU (512 GB RAM) and an NVIDIA RTX 3090 GPU (24 GB VRAM).       
+
+>     
+
+#   #! !    "                        
+
+>     
+> $   #    #" #!  !      
+> !     %     %    "$    %    "$    %    "$   
+> Fig. 1: Average outage per UAV versus the number of users per operator for a network with 2 UAVs per operator.
+
+       
+
+$!  $"!"  !  !#! 
+
+
+
+> %!      ! $"!
+
+! "    &!   &!   !#%   &!   !#%   &!   !#%  
+
+> Fig. 2: Average AoI per user versus the number of users per operator for a network with 2 UAVs per operator.
+
+A. Results Analysis 
+
+Fig. 1 illustrates the average number of users experiencing outages per UAV as a function of the number of users per operator. Here, the average outage is defined as the mean number of users dropped by UAVs to satisfy the load feasibility constraint 𝜌 𝑢 (𝑡 ) ≤ 1, ∀𝑢 ∈ U . We observe that the outage increases with user density for all schemes due to the limited resources and higher load levels on UAVs. However, the proposed hierarchical D3QN framework consistently achieves the lowest outage across all network scales, demonstrating its superior capability in jointly optimizing resource sharing and UAV trajectory. Specifically, the performance gap becomes more pronounced as the number of users increases, highlighting the scalability of the proposed approach under congested conditions. Compared to DDQN and Load-Aware DQN, the proposed D3QN effectively mitigates overestimation bias and leverages AoI-aware decision-making, resulting in more efficient load dis-tribution and reduced user outages. In contrast, non-cooperative schemes exhibit significantly higher outage levels due to the lack of inter-operator resource sharing. Furthermore, the Load-Aware Cooperative 2D-UAV scheme, while benefiting from cooperation, suffers from limited trajectory flexibility due to its fixed-altitude constraint, resulting in inferior performance compared to the proposed 3D optimization framework. Fig. 2 shows the average per-user AoI versus user density. Although increased user densities raise AoI in all schemes, the proposed D3QN consistently maintains the lowest AoI.        
+
+%"   %#"# !"  !"$ "
+
+                       
+
+> &" "##
+> " !#    '"   '"   !"$&   '"   !"$&   '"  !"$&  
+> Fig. 3: Average fairness versus the number of users per operator for a network with 2 UAVs per operator.
+
+           
+
+ 
+
+                      
+
+> 
+>          "   "   !   "   !   "   !  
+> Fig. 4: CDF of the per-user AoI for a network with 2 UAVs and 70 users per operator.
+
+Specifically, under severe congestion (110 users per operator), D3QN reduces the average AoI by 56.1% and 33.1% compared to the load-aware and AoI-aware non-cooperative baselines, respectively, demonstrating the necessity of inter-operator shar-ing. Furthermore, D3QN outperforms the load-aware DQN by 35%, the load-aware cooperative 2D-UAV by 21%, and the hierarchical DDQN by 4.6%. These significant gains confirm that combining 3D trajectory flexibility, AoI-aware outage compensation, and D3QN’s stable value estimation effectively mitigates service delays. Fig. 3 plots the average fairness versus user density. While resource competition degrades fairness in denser networks, the proposed D3QN consistently maintains the most balanced allocation. Specifically, at 70 users per operator, D3QN improves fairness by 44.9% and 38.0% over the AoI-aware and load-aware non-cooperative schemes, respectively, which exhibit the lowest fairness due to the absence of load sharing. Moreover, it yields gains of 18.5% over the load-aware cooperative 2D-UAV which is limited by reduced trajectory flexibility as well as 11.2% over the load-aware DQN, and 10.3% over the hierarchical DDQN. Fig. 4 presents the CDF of the AoI for all schemes. The proposed D3QN curve is consistently left-shifted compared to all baselines, indicating a higher probability of achieving lower AoI values and thus superior information freshness. The im-provement is particularly evident in the tail region (highlighted in the inset), where the proposed method significantly reduces the occurrence of high AoI values, demonstrating enhanced 
+
+       
+
+  
+
+         
+
+>      
+>    
+
+     
+
+>  
+>    
+>               
+> Fig. 5: Convergence of the average utility per UAV (main) and the average utility per operator (inset) under varying UAV deployment densities for the proposed D3QN approach with 50 users per operator.
+
+reliability and robustness. In contrast, non-cooperative schemes exhibit heavier tails, reflecting a higher likelihood of stale information due to load imbalance and lack of resource sharing. Although DDQN and load-aware DQN improve performance relative to non-cooperative approaches, they remain inferior to the proposed method due to less accurate value estimation and the absence of fully integrated AoI-aware control. Fig. 5 illustrates the convergence behavior of the proposed hierarchical D3QN framework in terms of both UAV-level and operator-level utilities under different network densities (i.e., 1, 2, and 4 UAVs per operator) with 50 users per operator. The main plot shows the average utility per UAV over time instants. It is observed that UAV agents rapidly converge to stable trajectories and scheduling policies within the first 30 time steps across all scenarios. Moreover, the average UAV utility increases with the number of deployed UAVs due to enhanced spatial flexibility and improved load balancing. The inset presents the average utility per operator over time windows, where operator-level agents also exhibit stable convergence. Deployments with 2 or 4 UAVs achieve significantly higher utilities compared to the single-UAV case. 
+
+VI. Conclusion 
+
+This paper proposes an AoI-driven hierarchical D3QN frame-work for cooperative resource sharing and 3D UAV trajectory optimization in MOANs. Furthermore, a novel AoI- and load-aware outage compensation mechanism is developed to maintain information freshness under strict capacity constraints. By integrating AoI-aware control, fairness, and load balancing, the proposed approach effectively addresses the coupled challenges of AoI and resource sharing. Simulation results demonstrate significant improvements over learning-based, non-cooperative, and cooperative baselines in terms of outage, AoI, and fairness, particularly in dense network conditions. 
+
+References   
+
+> [1] H. Pan, B. Lin, J. An, and G. Sun, “Joint deployment, association and power optimization for UAV-mounted STAR-RIS-assisted maritime communications,” IEEE Trans. Veh. Technol. (Early Access) , pp. 1–16, 2026.
+
+[2] Y. Gong, J. Fan, R. Zhang, D. Niyato, Y. Yao, and X. Chang, “Safe and economical UAV trajectory planning in low-altitude airspace: A hybrid DRL-LLM algorithm with compliance awareness,” IEEE Trans. Mob. Comput. (Early Access) , pp. 1–17, 2026. [3] Y. Jiang, N. Deng, H. Wei, N. Zhao, and A. Nallanathan, “A drl approach to multi-UAV deployment for cellular systems with non-ideal backhaul,” 
+
+IEEE Commun. Lett. , vol. 30, pp. 1195–1199, 2026. [4] S. Kaul, R. Yates, and M. Gruteser, “Real-time status: How often should one update?” in Proc. IEEE INFOCOM , 2012, pp. 2731–2735. [5] M. Zhang, H. H. Yang, A. Arafa, and H. V. Poor, “Age of information in mobile networks: Fundamental limits and tradeoffs,” in MobiHoc ’24 ,2024, pp. 321–330. [6] Q. Wu and R. Zhang, “Common throughput maximization in UAV-enabled OFDMA systems with delay consideration,” IEEE Trans. Commun. ,vol. 66, no. 12, pp. 6614–6627, 2018. [7] J. Liu, X. Wang, B. Bai, and H. Dai, “Age-optimal trajectory planning for UAV-assisted data collection,” in IEEE INFOCOM WKSHPS , 2018, pp. 553–558. [8] H. Bayerlein, P. De Kerret, and D. Gesbert, “Trajectory optimization for autonomous flying base station via reinforcement learning,” in IEEE SPAWC , 2018, pp. 1–5. [9] ITU-R P.1410-5, “Propagation data and prediction methods required for the design of terrestrial broadband radio access systems operating in a frequency range from 3 to 60 GHz,” Feb. 2012. [10] M. M. Azari, F. Rosas, and S. Pollin, “Cellular connectivity for UAVs: Network modeling, performance analysis, and design guidelines,” IEEE Trans. Wirel. Commun. , vol. 18, no. 7, pp. 3366–3381, 2019. [11] A. H. Arani, X. Fernando, O. Alhussein, and Y. Zhu, “Deep reinforcement learning for resource sharing and UAV trajectory optimization in multi-operator UAV-assisted wireless networks,” IEEE Trans. Veh. Technol. (Early Access) , pp. 1–16, 2026. [12] S. Samarakoon, M. Bennis, W. Saad, and M. Latva-aho, “Dynamic clustering and on/off strategies for wireless small cell networks,” IEEE Trans. Wirel. Commun. , vol. 15, no. 3, pp. 2164–2178, 2016. [13] A. H. Arani, A. Mehbodniya, M. J. Omidi, and M. F. Flanagan, “Satisfaction based channel allocation scheme for self-organization in heterogeneous networks,” in IEEE GLOBECOM , 2018, pp. 1–6. [14] Y. Deng, S. Zhang, I. A. Meer, M. Ozger, and C. Cavdar, “Joint trajectory and handover management for UAVs co-existing with terrestrial users: A multi-agent DRL approach,” IEEE T. Cogn. Commun. Netw. , vol. 12, pp. 1195–1210, 2026.
