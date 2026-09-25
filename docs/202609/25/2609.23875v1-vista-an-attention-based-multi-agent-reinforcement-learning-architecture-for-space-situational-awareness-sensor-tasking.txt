@@ -1,0 +1,846 @@
+Title: VISTA: An Attention-Based Multi-Agent Reinforcement Learning Architecture for Space Situational Awareness Sensor Tasking
+
+URL Source: https://arxiv.org/pdf/2609.23875v1
+
+Published Time: Tue, 22 Sep 2026 01:52:41 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# VISTA: An Attention-Based Multi-Agent Reinforcement Learning Architecture for Space Situational Awareness Sensor Tasking 
+
+Miguel Leiva-V´ elez 
+
+ETSIAE-School of Aeronautics, Universidad Polit´ ecnica de Madrid, Spain 
+
+Adalberto Claudio Quiros 
+
+Indra Sistemas S.A., Spain 
+
+Nicolas Gaston Rozado 
+
+Indra Sistemas S.A., Spain 
+
+Hodei Urrutxua 
+
+Escuela de Ingenier´ ıa de Fuenlabrada, Universidad Rey Juan Carlos, Spain 
+
+V´ ıctor Rodr´ ıguez-Fern´ andez 
+
+Department of Computer Systems Engineering, Universidad Polit´ ecnica de Madrid, Spain 
+
+Abstract— The rapid growth of resident space objects is increasing the complexity of space situational awareness sensor tasking, challenging classical optimization methods as they allocate finite, heterogeneous, and distributed sensing resources across ever-larger catalogues. Existing deep reinforcement learning approaches show promise in reduced settings, but fixed-dimensional state and action representations limit their ability to scale to large, dynamic catalogues and distributed sensing networks. We introduce VISTA (Variable-Entity Intelligent Sensor Tasking Architecture), a scalable 
+
+This work has been partially supported by the Spanish Agencia Estatal de Investigaci´ on (AEI) under Grants PID2024-161963OB-C22 and PID2024-161963OB-C21 (Coordinated Project ACTIVATION) funded by MICIU/ AEI / 10.13039/501100011033 / FEDER, UE. This work has also been supported by the Madrid Government (Comunidad de Madrid-Spain) under the Multiannual Agreement 2023-2026 with Universidad Polit´ ecnica de Madrid in the Line A, Emerging PhD researchers. 
+
+Corresponding author: Miguel Leiva-V´ elez. 
+
+Miguel Leiva-V´ elez is with ETSIAE-School of Aeronautics, Universi-dad Polit´ ecnica de Madrid, Pl. del Cardenal Cisneros, 3, 28040 Madrid, Spain (e-mail: miguel.leiva.velez@alumnos.upm.es). Adalberto Claudio Quiros and Nicolas Gaston Rozado are with Indra Sistemas S.A., Alcobendas, Spain. Hodei Urrutxua is with Escuela de Ingenier´ ıa de Fuenlabrada, Universidad Rey Juan Carlos, Fuenlabrada, Spain. V´ ıctor Rodr´ ıguez-Fern´ andez is with the Department of Computer Systems Engineering, Universidad Polit´ ecnica de Madrid, Madrid, Spain. Code and frozen experiment configurations are available at https: //github.com/RocketNeurons/VISTA-SSA. 
+
+> This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible.
+
+deep reinforcement learning architecture for persistent uncertainty-driven catalogue maintenance across variable object populations and sensor configurations. VISTA combines physics- and mission-informed top-K retrieval with entity-centric attention, recurrent memory, and pointer-based action decoding, thereby keeping each agent’s observation and action spaces independent of catalogue size. We evaluate VISTA across different scenarios, from fixed-size single-sensor benchmarks to large-scale space-based tasking and heterogeneous cooperative sensing. With 30 orbiting targets, VISTA recovers the catalogue 31.2% faster than the fixed-dimensional recurrent baseline. In the large-scale regime, VISTA reduces five-hour uncertainty by 97.5% relative to the strongest classical reference and by 99.3% relative to the recurrent learner. Zero-shot tests up to 20,000 objects reveal near-linear relations between sensing capacity, catalogue size, and recovery horizon. Learned policies also exhibit sensor modality adaptation and generalization to population and initial-uncertainty shifts. Together, these results demonstrate that VISTA provides a scalable framework for adaptive space situational awareness sensor tasking across large, distributed networks of heterogeneous ground- and space-based sensors. 
+
+Index Terms— Attention mechanisms, multi-agent reinforce-ment learning, pointer networks, resident space objects, sensor tasking, space situational awareness 
+
+I. INTRODUCTION 
+
+The intensifying pace of space activity is driving a significant increase in the number, diversity and de-ployment rate of resident space objects (RSOs). In this incrementally crowded environment, ensuring the long-term sustainability of space operations will require space situational awareness (SSA) systems capable of coordi-nating large-scale, heterogeneous networks of ground-and space-based sensors, efficiently translating catalogue and service requirements into assignments for optical, radio-frequency, radar, and laser-ranging assets. This work focuses on that decision-layer, while abstracting measure-ment acquisition, detection and tracklet formation, data association and precise orbit determination. Sensor tasking determines which RSOs should be ob-served by which sensors at any given time. As the number of sensors and targets grows, this problem becomes a highly complex, time-dependent combinatorial optimiza-tion task, constrained by orbital dynamics, sensor-specific limitations, geometric visibility, and mission-driven objec-tives. Policies driven only by immediate value may favour locally attractive targets while less observable or rapidly diverging objects become poorly maintained [1], [2], [3]. Reliable catalogue maintenance consequently requires balancing physical fidelity, planning horizon, adaptability, and computational cost [4], [5], [6]. Classical SSA tasking has used covariance reduction [7], [8], information gain [9], coordinated assignment [1], [2], dynamic programming [10], stochastic control [11], [12], and receding-horizon planning [13]. Such methods can reach operational scale: Ravago and Jones close the loop for 4,545 LEO objects [14], while Shtofenmakher and Balakrishnan schedule approximately 20,000 resident space objects with 24 sensors by exploiting sparse fea-sibility [15]. Cislunar POMDPs [16], binary programs [17], and Beam A* [18] provide further alternatives. 
+
+1arXiv:2609.23875v1 [cs.LG] 20 Sep 2026 These methods exploit prescribed structure: opportunities are precomputed, variables rebuilt for each scenario, or candidate values and search trees expensively reevaluated online. Their tractable formulations often rely on sim-plified scores or bounded searches that may miss subtle nonlinear dependencies and delayed consequences, while changes in catalogue, geometry, or objective may require new preprocessing or reformulation. Deep reinforcement learning (DRL) offers a com-plementary approach by shifting policy optimization to offline training and reducing online decision-making to neural inference, rather than repeatedly solving or refor-mulating the tasking problem. Additionally, DRL com-bines neural networks’ capacity to learn expressive repre-sentations of high-dimensional inputs with reinforcement learning’s ability to optimize sequential, long-horizon objectives [19]. This shift, however, does not by itself resolve the representational and computational challenges of scaling. Existing SSA sensor tasking policies trained through deep reinforcement learning usually assume fixed sensor and target counts or fixed observation and action dimensions [20], [3], [21], [22], [6], [23], [24], [25]. Ex-tending such representations to larger catalogues creates a fundamental tradeoff. Encoding the full catalogue makes network size and computation scale with population, al-though many objects are inaccessible or irrelevant. It also requires a synchronized global state, which distributed sensors may lack because of communication delays, asyn-chronous updates, and stale remote data. Processing a smaller, locally reachable subset reduces these costs, but its RSO composition changes between decision epochs, continually remapping objects to fixed observation slots and action indices. The network must therefore learn both the tasking rule and the changing mapping between physical targets, inputs, and actions. Recurrent policies face the added difficulty of associating memory from previous slots with different objects at the current epoch. Some scalability-oriented DRL approaches accommo-date larger catalogues by projecting them onto angular grids [26]. This representation merges RSOs that occupy the same cell, processes maps containing mostly empty locations, and assigns actions through grid cells rather than individual objects. Its computational footprint is therefore coupled to the spatial discretization rather than the number of decision-relevant entities. The policy also lacks recurrent memory beyond instantaneous motion features. This design philosophy represents a first step towards a scalable solution, but makes it computationally expensive and harder to preserve object identity, changing action semantics, and temporal context as targets move through the candidate set. Consequently, recent survey work accordingly identifies DRL based large-scale multi-sensor tasking as an open problem in SSA [27]. All these limitations motivated us to draw on more expressive neural architectures from other domains and develop a revised formulation for sensor tasking. Suc-cessful neural designs, including those used in AlphaStar [28] and multi-agent autocurricula [29], provide a clear architectural precedent: attention reasons over changing collections of interacting entities [30], recurrence supports temporal decision making [31], and pointer decoding selects an action within a dynamic feasible set [32]. The same structure transfers naturally to sensor tasking, where sensors and orbiting bodies can be represented as entity tokens, allowing attention to compare their geometric, informational, and cooperative relationships, a recurrent core carries temporal data, and a pointer selects through the current candidate representations rather than fixed output labels. More recently, space-scheduling studies have used pointer decoding for assignment and variable-cardinality schedules [33], [34]. However, the combina-tion studied in our research remains less explored: a flexible policy that decouples neural-network size from catalogue size and sensor count, enabling the same archi-tecture to generalize across changing RSO populations and sensing configurations. To address this gap, we introduce the Variable-Entity Intelligent Sensor Tasking Architecture (VISTA), which combines bounded entity-centric attention, a re-current temporal core, and adaptive pointer selection over changing candidate sets. Each agent controls one sensor while encoding targets and teammates as entities, supporting heterogeneous-network coordination. Shared encoders preserve token-to-object correspondence and ac-commodate changing candidate and teammate counts. All agents jointly optimize the same distributed policy under a catalogue-level objective, then execute it from their own local observations. This follows the parameter-shared decentralized multi-agent paradigm used in large-scale deep reinforcement learning systems such as OpenAI Five [35] and in other sensor tasking approaches [24], [26]. In summary, our contributions are the following: 1) a flexible neural architecture designed for the com-binatorial and non-stationary nature of large-scale distributed sensor tasking, enabling generalization across changing catalogue sizes and uncertainty metrics while exhibiting a near-linear scaling law relating the number of sensors, the number of RSOs, and the tasking horizon; 2) a configurable, physics- and mission-informed top- 
+
+> K
+
+retrieval mechanism that focuses each agent on decision-relevant objects while bounding attention span and action space independently of catalogue size. VISTA is evaluated in fixed-size, large-scale complex-motion, and heterogeneous scenarios against heuristic, model-based, and recurrent baselines. It recovers the 30-RSO catalogue 31.2% faster than the recurrent baseline and reduces five-hour large-scale uncertainty by 97.5% relative to the strongest classical reference. Tests with up to 20,000 objects reveal near-linear relationships among sensing capacity, catalogue size, and recovery horizon. Heterogeneous-sensor and representation analyses further show modality-adaptive tasking and physically structured internal states.  
+
+> 2VISTA: Attention-Based MARL for SSA Sensor Tasking
+
+# VISTA Fig. 1. VISTA data path for each agent in charge of a sensor. Top-K retrieval bounds the candidate set. Type-specific encoders and embeddings construct sensor and RSO tokens, self-attention models their relationships, and the LSTM integrates tasking history. Pointer scores and a hold logit form the masked action distribution, while the value head estimates state value. LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 3II. PROBLEM FORMULATION A. Sensor Tasking Problem 
+
+Consider a discrete-time sensor-tasking problem with decision epochs k = 0 , 1, . . . , H −1, where H is the finite planning horizon. At each epoch, the system maintains a catalogue Ok of resident space objects oi,k ,
+
+Ok = {o1,k , o 2,k , . . . , o Nk ,k }, (1) where Nk is the number of catalogue objects considered at epoch k. Each object is represented by an estimated orbital state, an associated uncertainty description, and additional tasking-relevant attributes. We write the cata-logue state compactly as 
+
+Ck = {(ˆ xi,k , Pi,k , ϕi,k )}Nk 
+
+> i=1
+
+. (2) where ˆxi,k denotes the estimated state of object i, Pi,k 
+
+denotes its estimation uncertainty, and ϕi,k collects addi-tional attributes such as priority, object class, brightness, radar cross section, observation age, or sensor-dependent observability features. The sensing network S at epoch k is 
+
+Sk = {s1,k , s 2,k , . . . , s Mk ,k }, (3) where Mk is the number of available sensing assets. Each sensor is described by a platform state and a set of operational parameters, 
+
+sj,k =  ˆxsj,k , ψj,k 
+
+ , (4) where ˆxsj,k denotes the sensor platform state and ψj,k 
+
+includes properties such as sensing modality, boresight direction, field of view, field of regard, slew-rate limit, range or sensitivity limits, cadence, and availability. This formulation is agnostic to the sensing method and can represent heterogeneous networks of ground-based or space-based sensors using optical, radar, laser-ranging, or other sensing modalities. At each decision epoch, the tasking policy assigns each available sensor either to one catalogue object or to no observation. Let 
+
+aj,k ∈ { 0, 1, . . . , N k} (5) denote the action selected for sensor j, where aj,k = i
+
+means that sensor j is tasked to observe object oi,k , and 
+
+aj,k = 0 denotes an idle or no-observation action. The joint tasking decision is 
+
+ak = ( a1,k , a 2,k , . . . , a Mk ,k ) . (6) It is important to state that not every assignment is realizable: visibility, geometry, sensor constraints, or mission specifications define a binary feasibility mask 
+
+mji,k =
+
+(
+
+1, if sensor j can observe object i,
+
+0, otherwise. (7) The assignment aj,k = i is admissible only if mji,k = 1 .After a joint tasking decision is applied, the catalogue evolves according to the SSA system’s orbital propaga-tion, uncertainty growth, observation outcomes, missed detections, and measurement updates. This transition is written compactly as 
+
+Ck+1 ∼ p (Ck+1 | C k, Sk, ak) . (8) The tasking objective is to maintain catalogue quality over the planning horizon while respecting sensing and operational constraints. Let 
+
+J(Ck) (9) be a scalar catalogue-quality cost derived from the uncer-tainty of the tracked objects, and let 
+
+Uctrl (ak) (10) represent optional control, slew, resource, or coordination costs associated with the joint action. The sensor-tasking problem can then be generally described as 
+
+min  
+
+> π
+
+Eπ
+
+" H−1X
+
+> k=0
+
+
+
+J(Ck+1 ) + λU ctrl (ak)
+
+#
+
+. (11) subject to 
+
+ak = π(Ik), ak ∈ A feas  
+
+> k
+
+(Ck, Sk) , (12) where Ik denotes the information available to the sched-uler or agent policy π at epoch k. In a centralized scheduler, Ik may include the full catalogue and sensing-network state. In a decentralized multi-agent setting, each sensor may instead act from a local observation or compressed candidate set. This formulation highlights the central challenge of SSA sensor tasking: the scheduler must make sequen-tial assignment decisions over a dynamic, constraint-dependent, and potentially large action space, while ac-counting for the long-term effect of present observations on future catalogue uncertainty. 
+
+B. Deep Reinforcement Learning Formulation 
+
+The sensor-tasking process can first be represented in centralized form as a partially observable Markov decision process (POMDP), 
+
+Pcent = ⟨X , A, P, Ω, Z, R, γ ⟩ . (13) The state space X contains the complete catalogue and sensing network, with 
+
+xk = ( Ck, Sk) . (14) The action space A contains the feasible joint assign-ments, P (xk+1 | xk, ak) defines the state transition, and 
+
+Ω and Z define the observation space and observation kernel. The reward R(xk, ak, xk+1 ) expresses the task-dependent catalogue-maintenance objective and may in-clude operational costs or shaping terms, where its con-crete implementation is given later. The factor γ ∈ [0 , 1] 
+
+discounts future rewards. At epoch k, the scheduler receives yk ∼ Z(· | xk). If 
+
+yk = xk, the process is fully observable and reduces to an  
+
+> 4VISTA: Attention-Based MARL for SSA Sensor Tasking
+
+MDP. Otherwise, the information state Ik may comprise the current observation or an observation-action history, 
+
+τ cent  
+
+> k
+
+= ( y0, a0, . . . , yk) ,
+
+ak ∼ πcent  · | τ cent 
+
+> k
+
+ . (15) History dependence allows the policy to use temporal context when the current observation is insufficient for decision-making. Timestamps, availability masks, or other metadata can also form part of Ik.The centralized formulation extends naturally from the single-sensor case, but its complexity grows rapidly with the number of sensors and targets. Before feasibility constraints are applied, coordinating Mk sensors over Nk
+
+RSOs and an idle action yields up to (Nk +1) Mk possible joint assignments. Centralized operation also requires a sufficiently current and consistent view of the complete network, an increasingly restrictive assumption for dis-tributed sensors operating with delayed, intermittent, or asynchronous communication. For the regime in which all sensors share an identical total reward, the cooperative decentralized POMDP (Dec-POMDP) formulation is 
+
+Pdec = ⟨J , X , {A j }j∈J , P, {Ωj }j∈J , Z, R, γ ⟩ , (16) where J indexes the sensing agents. The global state, transition, and reward are unchanged, but the joint action is factorized across the local action spaces and agent j
+
+acts from its own information. Its observation and history are oj,k = hj (xk),
+
+τj,k = ( oj, 0, a j, 0, . . . , oj,k ) , (17) where hj (·) exposes the local sensor state, available coor-dination information, and a bounded candidate subset of the catalogue. VISTA summarizes this history recurrently, although the Dec-POMDP itself is agnostic to the memory architecture. Agents share policy parameters and, in the shared-reward regime, they also receive identical total rewards. The decentralized joint policy factorizes as 
+
+πθ (ak | τk) = 
+
+> Mk
+
+Y
+
+> j=1
+
+πθ (aj,k | τj,k ) , (18) with the feasibility mask restricting each local action. Finally, the shared policy is trained to maximize the expected discounted return, 
+
+θ⋆ = arg max  
+
+> θ
+
+Eπθ
+
+"H−1X
+
+> k=0
+
+γkR(xk, ak, xk+1 )
+
+#
+
+. (19) Policy parameters are optimized with proximal policy optimization (PPO) [36]. We adopt this algorithm because simple PPO-based multi-agent methods have been shown to match or outperform competitive off-policy algorithms in both final return and sample efficiency across several cooperative multi-agent benchmarks without requiring domain-specific modifications [37]. Its clipped actor objective is 
+
+LCLIP (θ) = Ej,k 
+
+h
+
+min  ρj,k (θ) bAj,k ,
+
+clip( ρj,k (θ), 1 − ϵ, 1 + ϵ) bAj,k 
+
+i
+
+,
+
+(20) where ρj,k is the probability ratio between the updated and rollout policies, ϵ is the clipping parameter, and 
+
+bAj,k is estimated using generalized advantage estima-tion (GAE) [38]. The complete PPO loss also includes value-function regression and entropy regularization. The concrete reward, parameter-sharing procedure, candidate construction, and policy architecture are described in the following sections. 
+
+III. LEARNING FRAMEWORK A. Experimental Tasking Environment 
+
+The simulator is implemented in C and integrated with PufferLib for parallel rollout collection, high through-put and large-scale experimentation [39]. It preserves relative orbital motion, pointing history, geometric ac-cess, and observation-driven covariance reduction while abstracting the detection, association, and operational orbit-determination chain. Its uncertainty is a controlled tasking surrogate, not a prediction of realized catalogue accuracy. The principal physical settings are summarized in Table III, while the complete configuration is retained in the project repository. 
+
+a: Orbital and Covariance Propagation. 
+
+Each orbiting sensor and RSO follows an analyti-cal unperturbed two-body trajectory. The implementation advances mean anomaly, solves Kepler’s equation using an eccentricity-dependent iteration rule, and transforms into inertial coordinates. Ground sites remain fixed in the simulated nonrotating frame. Perturbations, terrestrial rotation, and manoeuvres are not modeled in these cam-paigns. The native environment propagates a six-state covari-ance about these known trajectories rather than simulating a complete noisy state-estimation pipeline. Covariance prediction uses a second-order transition approximation and integrated white-acceleration process-noise blocks. Eligible observations produce sensor-quality-dependent position pseudo-measurement updates followed by aJoseph-form covariance update. The state geometry ex-posed to the scheduler follows the propagated trajecto-ries, not independently uncertain estimated positions. The complete covariance and observation models are available in the project repository. 
+
+b: Sensor Geometry and Pointing Dynamics. 
+
+When the agent selects an object to look at, the environment advances time and orbital positions, moves each boresight towards its selected target at bounded rate, tests post-motion observation conditions, updates covari-ance, and computes reward and subsequent observations.  
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 5
+
+A target may require repeated selections over several steps before it enters the field of view, and eligibility at selection does not guarantee a later measurement. Observation quality is configurable to match each experiment’s objective. The fixed-ground-sensor compar-isons include range, off-boresight angle, and object size, weighted by 0.65, 0.25, and 0.10, respectively, to rep-resent unequal sensing opportunities. The large-scale ex-periments instead isolate pointing, scheduling, and scaling under relative motion by disabling the range gate and as-signing unit quality to every admissible observation. Mea-surement availability remains binary, and geometry still governs access and pointing, but measurement strength no longer depends on range or object properties. Finally, the heterogeneous experiments test capability-dependent allocation using complementary range responses: Type A is favoured nearby, Type B farther away, and their qualities coincide at 1900 km. These controlled response models allow different tasking questions to be studied within the same framework. All three phases expose an explicit hold action in addition to the available target-selection actions. Hold preserves the current boresight orientation and commands no new target, while measurement availability remains governed by the phase-specific sensing logic. Learned and classical methods use the same hold convention and action interface within each experiment. 
+
+c: Bounded Candidate Construction. 
+
+As discussed in the introduction, exposing the com-plete catalogue to every sensor couples neural inference cost to population size, including objects irrelevant to the current decision. VISTA instead presents each agent with at most K RSO tokens. This bounded context separates policy size from catalogue size and provides a direct computation-quality tradeoff without restricting the catalogue maintained by the environment. As self-attention cost grows quadratically with the number of tokens, its practical span is limited by the avail-able inference budget. VISTA constructs this bounded context in two stages: feasibility filtering followed by a low-cost physics- and mission-informed ranking. First, the feasible set for sensor i at epoch k is 
+
+Fi,k =
+
+n
+
+j ∈ { 1, . . . , N k} : g(ℓ) 
+
+> ij,k
+
+= 1 , ∀ℓ
+
+o
+
+, (21) where g(ℓ) 
+
+> ij,k
+
+is feasibility test ℓ, such as visibility, range, field of view, Earth occultation, or pointing reachability. Objects outside Fi,k are inadmissible and removed before action selection. Each remaining sensor-RSO pair is then assigned the priority score 
+
+pij,k = αU eUj,k + ατ eτj,k + αq eqij,k + αm emj,k 
+
+− αθ f∆θij,k − αcecij,k , (22) where the terms respectively represent catalogue uncer-tainty, time since the last observation, predicted obser-vation quality, mission priority, retargeting requirement, and coordination or redundancy. The marked quantities may be normalized, clipped, log-scaled, or left unchanged according to the scenario. The candidate set is then defined as 
+
+Ki,k = TopK j∈F i,k (pij,k ) , |K i,k | ≤ K. (23) If fewer than K feasible objects are available, unused slots are padded and masked before attention and action selection. For the reported experiments, the active ranking uses only catalogue uncertainty and time since the last obser-vation, 
+
+pij,k = αU Uj,k + ατ τj,k , αU = 1 , ατ = 0 .5, (24) while the quality, mission-priority, retargeting, and co-ordination coefficients are set to zero. These values act on the configured feature scales and are not intended as universal nondimensional weights. This initial campaign uses uncertainty and age as a simple retrieval prior, leaving feature selection and weight optimization to future studies. The ranking is a retrieval prior, not the tasking policy. The neural policy still compares the retained RSOs with the sensor state and coordination information, and may select any candidate or remain idle. Excluded objects can re-enter the context as feasibility, geometry, age, or uncertainty changes, while the simulator continues to propagate, update, and evaluate the complete catalogue. Thus, K bounds per-agent inference cost without fixing the size of the underlying population. Its effect is evalu-ated empirically in Section VI. 
+
+B. Reward and Parameter-Shared Learning 
+
+a: Cooperative Catalogue-Level Reward. 
+
+For the distributed formulation in Section II, we use parameter-shared PPO with a catalogue-level team reward to support stable, cooperative learning. This approach is competitive in cooperative multi-agent problems [37] and reduces to the single-agent objective for one sensor. Reward development began with approximations from earlier DRL-based SSA tasking studies [20], [3], [6] and successive simulator trials. Purely differential rewards, 
+
+J(Ct) − J(Ct+1 ), measure immediate information gain but yielded weak learning in large-scale scenarios as per-step changes diminished in a well-maintained catalogue. We therefore adopted absolute catalogue-health rewards, retaining an improvement term in the tail-aware variants described below. For RSO j and the complete catalogue, 
+
+Uj,t = σR,j,t + σT,j,t + σN,j,t ,
+
+¯Ut = 1
+
+NRSO 
+
+> NRSO
+
+X
+
+> j=1
+
+Uj,t , (25) where the sigmas are the radial, tangential, and normal marginal position standard deviations, expressed in kilo-metres.  
+
+> 6VISTA: Attention-Based MARL for SSA Sensor Tasking
+
+The large-scale cooperative experiments use the mean-level reward 
+
+rt = max 
+
+
+
+1 − ¯Ut
+
+Uref 
+
+, −1
+
+
+
+, (26) where Uref is the initial catalogue mean uncertainty. Evaluated over the complete catalogue and shared among all agents, this absolute reward encourages uncertainty reduction and maintenance below the initial level, preserv-ing reward contrast after the largest covariance reductions. When applied to small RSO populations with fixed ground sensors, this large-scale formulation produced policies that neglected high-uncertainty tail objects. We added reward-shaping terms to address this neglect, using the tail-aware catalogue-badness function 
+
+Bt = wμψ
+
+ ¯Ut
+
+uμ
+
+
+
++ wτ ψ
+
+ U tail 
+
+> t
+
+uτ
+
+
+
++ wM ψM
+
+ U max 
+
+> t
+
+uM
+
+
+
+,
+
+(27) where U tail  
+
+> t
+
+is the mean of the configured upper catalogue tail, U max  
+
+> t
+
+= max j Uj,t , and ψ and ψM are increasing badness functions. With Bref denoting the configured target badness, the associated reward is 
+
+ri,t = clip λ∆(Bt−1 − Bt) + λL(Bref − Bt) + bfine 
+
+> t
+
++ αlocal gt − αdup dt − αctrl ρ2
+
+> i,t
+
+, −1, 1.
+
+(28) Here, gt is shared local-information credit, dt measures duplicate tasking, and ρi,t is the normalized angular displacement commanded by agent i. All terms are shared except the individual control cost, whose coefficient is zero throughout. The single-sensor experiments include a bounded fine-precision bonus. The heterogeneous team instead empha-sizes the upper tail and adds shared local-information credit and a duplicate-tasking penalty, with the fine bonus disabled. These phase-specific choices align the reward with each experiment’s objective. Table I provides re-producible numerical settings, which can be retuned for other uncertainty scales or operating regimes. Complete functions are available in the project repository. 
+
+b: Shared Multi-Agent Policy. 
+
+All sensors share policy and value parameters but maintain separate recurrent states. Actor and value heads use the same local recurrent representation, without a privileged global critic. A single simulator maintains the catalogue and supplies current shared covariance and age information, with all other sensors represented as team-mate tokens. Decisions and updates are synchronized; communication delays, losses, and bandwidth limits are not modeled. Asynchronous policy execution is possible, but learning and coordination with unequal update times or stale information remain to be evaluated.                                                                 
+
+> TABLE I Reward settings for single-sensor (S), large-scale (L), and heterogeneous (H) experiments. Uncertainty scales are in kilometres. A dash denotes an unused parameter, and zero denotes a disabled term.
+> Parameter SLH
+> (uμ, u τ, u M)(0 .8,2.5,3.5) -(0 .8,2.5,3.5) (wμ, w τ, w M)(.55 , . 30 , . 15) (1 ,0,0) (.50 , . 40 , . 10)
+> Upper-tail fraction 0.10 -0.05
+> (λ∆, λ L)(4 , . 05) -(4 , . 05)
+> Uref -Reset mean -
+> αlocal 000.10
+> αdup --0.05
+> αctrl 000Team-sharing coefficient 111Reward bounds [−1,1] [−1,1] [−1,1]
+> Fine-precision terms
+> Maximum onset / transition 4.5/3.8--Transition width 0.25 --Maximum badness weight 0.05 00Maximum bonus scale 0.80 00Mean onset 1.00 --Mean bonus scale 0.60 00
+
+IV. NEURAL ARCHITECTURE A. Design and Entity Encoding 
+
+As discussed above, a high-value subset of RSOs is selected at each decision epoch to avoid processing the full catalogue. The sensor-tasking policy thus reasons over a changing heterogeneous set of ego, neighbouring-sensor, and candidate-RSO information. This changing compo-sition exposes a key weakness of fixed-vector recurrent baselines: input and output positions change meaning as candidates enter, leave, or are reordered. VISTA therefore uses a set-based policy that accommodates a changing candidate set while preserving the correspondence be-tween observed RSOs and target-selection actions. The architecture follows the data path shown in Fig. 1. Type-specific encoders first map heterogeneous entity features into a common latent space. Self-attention then models the geometric, informational, and cooperative relationships within the current observation, an LSTM retains information from previous decisions, and a pointer head scores the candidate RSOs together with a hold action. Let m ∈ { ego , nbr , rso } denote the entity type and let xm,n,t contain the continuous features of entity n at epoch t. Each type has its own encoder because the cor-responding physical quantities differ, while the encoder parameters are shared among all entities of the same type. The ego and neighbouring-sensor entities correspond to “Self” and “Team” in the diagram, respectively. Each entity is encoded as 
+
+h(0)  
+
+> m,n,t
+
+= GELU ( Wmxm,n,t + bm) + em + emod  
+
+> m,n
+
+. (29) Here, em is the learned entity type embedding and emod  
+
+> m,n
+
+is the sensor type embedding, used in scenarios with hetero-geneous sensor types to identify the sensing modality or  
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 7
+
+capability of a sensor. It is zero for homogeneous sensor teams and for all RSO tokens. The encoded entities form the typed token sequence 
+
+H(0)  
+
+> t
+
+=
+
+
+
+h(0) ego ,t ,
+
+n
+
+h(0) nbr ,j,t 
+
+oNnbr ,t 
+
+> j=1
+
+,
+
+n
+
+h(0) rso ,k,t 
+
+o
+
+> k∈K t
+
+
+
+. (30) No positional encoding is added, since token order car-ries no physical meaning. When batching observations of different cardinalities, unused positions are padded and masked. Table II summarizes the features and their scaling, while Table III gives scenario-specific dimensions and settings. Full implementation details remain in the project repository. 
+
+B. Attention and Recurrent Context 
+
+Self-attention allows every entity to condition its rep-resentation on the other entities currently visible to the policy. For attention head g, the query, key, and value matrices are 
+
+Qg,t = H(0)  
+
+> t
+
+WQg ,
+
+Kg,t = H(0)  
+
+> t
+
+WKg ,
+
+Vg,t = H(0)  
+
+> t
+
+WVg .
+
+(31) The corresponding contextual representation is 
+
+Cg,t = softmax Qg,t KT
+
+> g,t
+
+pdg
+
++ Mt
+
+!
+
+Vg,t , (32) where dg is the key dimension and Mt masks padded to-kens. The heads are concatenated and projected following multihead self-attention, 
+
+MHSA 
+
+
+
+H(0) 
+
+> t
+
+
+
+= Concat ( C1,t , . . . , CG,t ) WO , (33) and a transformer block combines this operation with residual connections, normalization, and a position-wise feed-forward network. As the same operations are applied to every token and no positional encoding is used, reorder-ing the entities produces the corresponding reordering of their contextual representations, forming the contextual-ized token sequence in the diagram. Attention describes the current sensing situation but does not recover information omitted from an instanta-neous snapshot. VISTA therefore extracts the contextual-ized ego token, projects it into the recurrent space, and updates an LSTM state [31]: 
+
+zt = Wrec ehego ,t + brec ,
+
+(hrec  
+
+> t
+
+, crec  
+
+> t
+
+) = LSTM  zt, hrec 
+
+> t−1
+
+, crec 
+
+> t−1
+
+ . (34) The recurrent input projection Wrec is labelled Wx in the diagram. The recurrent state summarizes decision-relevant temporal information, such as recent assignments, pointing evolution, and changes in catalogue condition, while the candidate representations retain their current entity-specific context. 
+
+C. Pointer and Value Heads 
+
+The action decoder treats target selection as a compar-ison between the temporal state of the controlled sensor and the contextual representation of each candidate. The recurrent state produces a query, while the candidate RSO tokens produce keys: 
+
+qt = Wq hrec  
+
+> t
+
++ bq ,
+
+kk,t = Wk ehrso ,k,t + bk,ℓk,t = qT 
+
+> t
+
+kk,t 
+
+pdkey 
+
+,ℓhold ,t = wT
+
+> hold
+
+hrec  
+
+> t
+
++ bhold ,
+
+bVt = wT 
+
+> V
+
+hrec  
+
+> t
+
++ bV .
+
+(35) The shared candidate-key map avoids target-specific out-put parameters, while the hold logit represents the option of retaining the current pointing command. Let At contain the selectable candidate slots and the hold action. The masked policy is a softmax over these valid logits, 
+
+πθ (at = b | τt) = [softmax (( ℓc,t )c∈A t )] b , b ∈ A t,
+
+(36) where infeasible or padded candidates are excluded before normalization. The selected index identifies the RSO represented by the corresponding input token rather than a permanent target label. Reordering the candidate tokens therefore permutes their logits and probabilities, preserving the policy distribution over physical targets. Unlike the origi-nal sequence-generating Pointer Network, this adaptation produces one categorical action per decision epoch, with-out autoregressive decoding within that epoch. Temporal recurrence is instead provided by the LSTM. 
+
+V. EXPERIMENTAL SETUP 
+
+The campaign examines fixed-size catalogue recov-ery, cooperative large-scale sensing, and heterogeneous allocation under overlapping access. Each sensing regime is trained independently, and the selected policy is then held fixed during evaluation. All methods operate within the same covariance, geometry, candidate, and action interfaces so that their tasking decisions can be compared under common conditions. The complete environment and training configuration is summarized in Table III, with the full frozen files and supplementary records retained in the project repository. 
+
+A. Compared Methods and Interface Scope 
+
+The non-learning baselines form a progression of increasing scheduling complexity. Random feasible se-lection provides an uninformed reference and therefore quantifies the value of any task-dependent prioritization. Oldest-first introduces a simple coverage and revisit strat-egy, while maximum uncertainty (Max-U ) greedily directs sensing resources towards the least precisely maintained objects. Expected information gain (EIG) adds a one-step,                                                                                                   
+
+> 8VISTA: Attention-Based MARL for SSA Sensor Tasking TABLE II Entity-level observation layout used by the policy. Here, Kis the configurable top-Kcandidate budget and Nnbr is the number of teammate sensors represented in each local observation. The base normalization constants are d0= 10 ,000 km, v0= 10 km/s, u0= 10 km,
+> uv, 0= 10 −3km/s, and τ0= 3000 s. All transforms are applied componentwise. The global catalogue summary is included in all three phases. H denotes the heterogeneous configuration. Configuration-specific extensions and scaling are retained in the repository.
+> Token Feature group Dim. Scaling and interpretation
+> Ego sensor Position / velocity 3 + 3 tanh( r/d 0)and tanh( v/v 0)
+> Boresight unit vector 3Components in [−1,1] , using the local east-north-up frame in H Previous pointing command 2Normalized previous action slot and an auxiliary component FoV half-angle 1θfov /π
+> Modality (H only) 1Identifier mapped to a learned embedding, not a continuous input Range / slew capability (H only) 1 + 1 Maximum observation range and maximum slew rate Global catalogue summary 3Global mean and maximum uncertainty, and fraction of RSOs above the uncertainty threshold Teammate sensor Relative position 3tanh(( rj−ri)/d 0)
+> Boresight unit vector 3Components already in [−1,1]
+> Previous-step sensing flag 1Binary indicator that the teammate observed an RSO Heterogeneous extension 4Additional sensor descriptors, including modality, in H Candidate RSO Relative position / velocity 3 + 3 tanh(( rk−ri)/d 0)and tanh(( vk−vi)/v 0)
+> RTN position and velocity uncertainty 3 + 1 tanh[log(1 + σ/u 0)] and tanh[log(1 + σv/u v, 0)]
+> Catalogue age 1tanh[log(1 + τk/τ 0)]
+> Object size 1Characteristic size divided by 10
+> Reachability / observation quality 1 + 1 Feasibility flag and a configuration-dependent quality or angular proximity feature, zero outside the current FoV Local tasking history / coordination 2 + 1 Previous-target flag; clipped local revisit counter, with −1for never observed; number of observing agents divided by team size Relative azimuth / elevation 2Offset divided by one-step slew capacity, clipped to [−3,3] , then divided by 3
+> Total One ego sensor, Nnbr teammates, and
+> Kcandidate RSOs
+> dobs Base: 15 + 7 Nnbr + 19 K. H: 18 + 11 Nnbr + 19 K, with modality IDs embedded separately
+
+model-informed estimate of the uncertainty reduction produced by an observation, approximated here by the sum of the predicted reductions in the marginal position standard deviations. Together, these methods distinguish gains due to basic prioritization, catalogue-state aware-ness, and observation-value prediction. To assess whether short-horizon planning improves upon one-step selection, we also include a lightweight receding-horizon beam search, deliberately simplified rel-ative to the Beam A* method of Federici et al. [18] to remain computationally tractable in our large-scale exper-iments. It ranks the current candidates by EIG, expands a width-four and depth-three beam, discourages duplicate assignments, and executes the first action of the highest-scoring branch. Its rollout uses a scalar uncertainty surro-gate rather than repeatedly propagating the complete fu-ture geometry, visibility, pointing dynamics, measurement quality, and covariance update. This bounded surrogate preserves look-ahead planning within the common online interface without the cost of full joint-state search. The principal learned baseline is a fixed-dimensional recurrent policy based on the MLP-LSTM formulation commonly used in earlier SSA tasking studies [20], [3], [6], [21], [24]. It uses fixed categorical target slots, providing a direct comparison with VISTA’s entity-centric encoding and pointer-based selection. Both policies use the same PPO learning framework, task information, reward definition, and environment interactions. However, each architecture receives its own model configuration, hyperparameter optimization, rollout settings, and training budget, allowing them to maximize their individual per-formance without being constrained by settings selected for the other network. 
+
+B. Training and Evaluation Protocol 
+
+Each learned architecture is trained through its own optimization campaign and is evaluated only after its weights have been fixed. Training and evaluation episodes span approximately 5.56 h of simulated operation. Per-formance is measured using catalogue uncertainty, where the uncertainty of each RSO is the sum of its radial, tangential, and normal position standard deviations and the catalogue metric is their mean across all RSOs. Recovery time is the first sampled instant at which this mean reaches the specified precision threshold. The reduced single-sensor reference uses 100 independently reset episodes. Computational cost limits the main large-scale comparisons and context sweeps to 48 episodes per condition, with smaller samples for the capacity grid and dedicated diagnostics. For the one-factor zero-shot sweeps, absolute terminal uncertainty is supplemented with a difficulty-adjusted degradation metric. Let Um,e (x) be the terminal mean  
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 9
+
+TABLE III Experiment reproducibility summary. Distances are in kilometres, angles are in degrees except initial anomaly (radians), and U denotes a uniform distribution. Within neural-network entries, V and F denote VISTA and the flat LSTM, respectively. Detailed configuration files, complete sweep definitions, and additional evaluation records are provided in the project repository. 
+
+Setting Phase I Phase II Phase III Environment configuration 
+
+Scale and timing 
+
+Sensors / RSOs / K 1/30 /30 12 /2000 /60 4/240 /60 
+
+Decision interval 5 s 5 s 5 s Episode length 5.56 h 5.56 h 5.56 h 
+
+RSO orbital elements 
+
+Semimajor axis U[7000 , 7150] U[6800 , 7200] U[7000 , 7150] 
+
+Eccentricity U[0 , 0.005] U[0 , 0.02] U[0 , 0.005] 
+
+Inclination U[35 , 85] U[0 , 100] U[35 , 85] 
+
+RAAN U[−5, 5] U[0 , 360] U[−14 , 14] 
+
+Initial anomaly U[0 , 2π) U[0 , 2π) U[0 , 2π)
+
+Initial catalogue state 
+
+Position σR/σ T /σ N (km) U[1 , 2] /U[3 , 6] /U[1 , 2] U[1 , 5] /U[2 , 20] /U[1 , 5] U[1 , 2] /U[3 , 6] /U[1 , 2] 
+
+Velocity σ (km/s) U[0 .001 , 0.002] U[0 .001 , 0.005] U[0 .001 , 0.002] 
+
+Observation age (s) U[500 , 3000] U[100 , 10000] U[500 , 3000] 
+
+Sensor model 
+
+FoV half-angle 6◦ 4◦ 6◦
+
+Maximum slew rate 0.5◦/s 5◦/s 0.5◦/s Range gate 3000 Disabled 3200 Nominal position noise 0.05 0.05 0.08 Quality model Geometric Geometry-agnostic Complementary 
+
+Neural network 
+
+VISTA 
+
+Encoder input dimensions Ego 15; RSO 19 Ego 15; teammate 7; RSO 19 Ego 18; teammate 11; RSO 19; modality-aware Attention 4 heads; width 32; FF 128 4 heads; width 64; FF 256 4 heads; width 64; FF 256 Recurrent core / output LSTM 64; pointer and value LSTM 64; pointer and value LSTM 64; pointer and value 
+
+Flat LSTM 
+
+Encoder GELU MLP 582 → 512 → 512 GELU MLP 1229 → 512 → 512 -Recurrent core / output LSTM 512; categorical and value LSTM 512; categorical and value -Total trainable parameters V: 52,770; F: 2,678,816 V: 98,625; F: 3,024,957 V: 99,330 
+
+Hyperparameter sweep 
+
+Campaign VISTA and flat LSTM independently; PufferLib Protein VISTA and flat LSTM independently; PufferLib Protein No new sweep; Phase-I settings retained Trial budget / metric 250 million transitions; maximum catalogue uncertainty 250 million transitions; mean catalogue uncertainty -Search ranges Horizon [16 , 256] ; entropy 
+
+[10 −4, 10 −2]; γ[0 .5, 0.99] ; LR 
+
+[3 ×10 −5, 3×10 −2]
+
+Horizon [16 , 256] ; entropy 
+
+[10 −4, 10 −2]; γ[0 .5, 0.999] ; LR 
+
+[3 ×10 −5, 3×10 −2]
+
+-
+
+Optimized training parameters 
+
+Total transitions V: 25 million; F: 700 million V: 100 million; F: 150,183,936 V: 25 million Minibatch / batch V/F: 16,384; automatic V/F: 16,384; automatic V: 16,384; automatic Parallelization 48 ×256 environments; 1 agent 48 ×12 environments; 12 agents 48 ×256 environments; 4 agents Initial LR / schedule V: 1.2×10 −3; F: 
+
+1.368322 ×10 −3; annealed V: 7.019435 ×10 −4; F: 5×10 −3;constant V: 1.2×10 −3; annealed Entropy coefficient V: 4×10 −4; F: 3.235870 ×10 −4 V: 3×10 −4; F: 1.5×10 −4 V: 4×10 −4
+
+Discount / GAE (γ, λ ) V: (0 .67 , 0.99) ; F: 
+
+(0 .5101153 , 0.99) 
+
+V: (0 .67 , 0.99) ; F: (0 .5, 0.999) V: (0 .67 , 0.99) 
+
+Horizon / epochs V/F: 128 / 1 V: 64 / 1; F: 32 / 1 V: 128 / 1 Remaining PPO settings PufferLib default PufferLib default PufferLib default Reward (Table I) Tail-aware catalogue badness with fine-precision terms Shared mean level relative to reset uncertainty Tail-aware catalogue badness with cooperative terms Experiment configurations available at https://github.com/RocketNeurons/VISTA-SSA. Compute server: Intel Xeon Gold 6430 (64 vCPUs, hyperthreading disabled), one NVIDIA L40 GPU (48 GB), and 251 GiB system RAM. 10 VISTA: Attention-Based MARL for SSA Sensor Tasking uncertainty of method m in paired episode e under test condition x, and let xID denote its in-distribution reference. We define 
+
+dm,e (x) = Um,e (x)/U m,e (xID )
+
+UEIG ,e (x)/U EIG ,e (xID ) ,Dm(x) = exp 
+
+"
+
+1
+
+n
+
+> n
+
+X
+
+> e=1
+
+log dm,e (x)
+
+#
+
+.
+
+(37) The first ratio measures each method’s drift from its own in-distribution performance, while the second expresses that drift relative to EIG under the same shift. The geometric mean is used because uncertainty and degra-dation factors span several orders of magnitude, allowing proportional improvements and degradations to be treated symmetrically in log space. Thus, Dm = 1 denotes the same multiplicative degradation as EIG, whereas Dm < 1
+
+indicates greater robustness to the shift. Cooperation is evaluated using pairwise nonduplica-tion and effective catalogue coverage. At each epoch with at least two active assignments, the pairwise nondu-plication rate is the fraction of unordered active-sensor pairs assigned to different RSOs. To quantify how evenly successful observations are distributed, let pr be the fraction assigned to RSO r. The normalized entropy-based effective coverage is 
+
+ηeff = exp  − P 
+
+> r
+
+pr log pr
+
+
+
+NRSO 
+
+, 0 log 0 := 0 . (38) Here, 0 log 0 := 0 is the standard continuous-limit con-vention, since lim p→0+ p log p = 0 . Thus, an RSO with no observations contributes zero to the entropy sum. The metric equals one for uniform allocation and 1/N RSO 
+
+when all observations are concentrated on one object. 
+
+a: Representation diagnostics. 
+
+Contextualized ego representations and recurrent states sampled during evaluation are jointly projected across scenarios into two dimensions using UMAP [40], separately for each phase and state type. Scenario markers and catalogue-uncertainty colours indicate local similar-ities in the encoded states and their evolution during recovery. These visualizations help assess whether the policy organizes its internal states primarily by scenario or by shared stages of catalogue recovery, providing context for the observed transfer behaviour. Projection-induced scenario overlap is assessed using each sample’s 15 nearest neighbours before and after projection. The intrusion rate is the percentage of samples whose neighbours shift from a same-scenario to an other-scenario majority, with the other-scenario fraction increas-ing by more than 0.25. This check helps identify appar-ent cross-scenario mixing introduced by the projection rather than already present in the original representations. It measures a specific distortion, not overall projection fidelity. Attention-feature associations are reported separately for each head using Spearman correlation for continuous features and point-biserial correlation (Pearson correlation with a binary indicator) for features such as visibility. These associations reveal which measured task features covary with attention weights and whether individual heads exhibit distinct patterns, helping interpret how the policy distributes attention across the available context. These diagnostics describe representational organization, not causal feature attribution. 
+
+C. Campaign Phases 
+
+• Phase I: fixed reference and controlled trans-fer. The reference has one sensor, 30 RSOs, and persistent action-slot identities. One-factor transfer changes catalogue size, inclination, eccentricity, ini-tial uncertainty, or measurement noise while re-taining the trained policies. UMAP projections and attention associations supplement the behavioural comparisons with representation diagnostics. 
+
+• Phase II: cooperative LEO-to-LEO scheduling. 
+
+The reference uses 12 sensors, 2000 RSOs, and 
+
+K = 60 . Frozen-policy shifts in catalogue length, candidate context, orbital geometry, and network size test scalability and transfer. An NRSO -to-Nsensor 
+
+grid extending to 20,000 RSOs evaluates how the frozen neural policy scales zero-shot as catalogue and sensing-network sizes change, relating catalogue load and sensing capacity to the resulting uncertainty and recovery time. Same Phase-I internal represen-tation assessments are applied. 
+
+• Phase III: heterogeneous allocation. Two Type-A and two Type-B sensors observe 240 RSOs un-der overlapping access and complementary range-dependent responses. Allocation geometry, duplica-tion, catalogue coverage, and modality interventions test whether the shared policy adapts its decisions to sensors with different capabilities. 
+
+VI. RESULTS AND DISCUSSION 
+
+The following results characterize relative tasking performance within the adopted orbital, sensing, and co-variance models. Their absolute uncertainty values should therefore be interpreted as controlled simulation outcomes rather than predictions of operational catalogue accuracy. The complete sweep ranges, policy dimensions, training hyperparameters, evaluation settings, and supplementary numerical results are reported in Table III and the project repository. 
+
+A. Phase I: Single Sensor with Small RSO Population 
+
+1. In-Distribution Comparison 
+
+Figure 2(a) shows the recovery achieved over the 5.56-h campaign. Across 100 evaluation episodes, VISTA reaches a terminal mean uncertainty of 0.427 km, with a maximum of 1.861 km and a p99 of 1.621 km. These values are 44.6%, 55.6%, and 56.0% below EIG, respec-tively. Its time-averaged mean uncertainty is 5.814 km,       
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 11 Fig. 2. Phase-I recovery with one sensor and 30 RSOs over 5.56 h. (a) Mean catalogue uncertainty; shading shows 95% confidence intervals for the learned-policy mean trajectories across evaluation episodes. (b) Hourly per-RSO uncertainty distributions for VISTA. Each ridge is normalized independently for display.
+
+a 23.4% reduction relative to EIG. The aggregate mean curve reaches 1 km after 13,245 s, compared with 18,745 s for EIG and 19,245 s for the flat LSTM, representing reductions of 29.3% and 31.2% in recovery time. VISTA is also the only method whose aggregate curve reaches 0.5 km within the evaluation horizon. The comparison illustrates the progression among the non-learning schedulers. Oldest-first and Max-U prioritize observation age and uncertainty, EIG adds an estimate of immediate covariance reduction, and the surrogate beam search introduces a short scalar rollout. The latter does not improve upon EIG in this regime, while already requiring nearly 20 times the computation of a VISTA decision. Wider or deeper search with full covariance and geometry propagation would further increase this cost, particularly in the larger experiments. This comparison therefore concerns the bounded surrogate, not look-ahead planning in general. The flat LSTM initially improves but later plateaus, whereas VISTA continues reducing catalogue uncertainty. Despite having 2,678,816 parameters versus VISTA’s 52,770 and undergoing a 500-run architecture and hy-perparameter search, the flat baseline required longer runs and more of its sweep to reach its best result. The 25-million- and 700-million-transition budgets for VISTA and the flat LSTM reflect PufferLib’s throughput-oriented, single-epoch PPO, which favours stable near-on-policy updates over rollout reuse [39]. Raw counts are therefore not comparable with multi-epoch PPO budgets and indicate easier optimization rather than a controlled sample-efficiency advantage. Figure 2(b) shows the complete catalogue distribution rather than only its mean. Each ridge represents the dis-tribution of per-RSO uncertainty at one hourly snapshot. The distribution first broadens as some unobserved objects develop large uncertainty peaks. As tasking progresses, VISTA dynamically revisits these poorly maintained ob-jects, suppresses the upper tail, and moves an increasing fraction of the catalogue towards the low-uncertainty side. This evolution shows how the policy balances peak reduction with broad catalogue recovery. 
+
+2. Controlled Zero-Shot Generalization 
+
+The upper panels in Fig. 3 report zero-shot five-hour mean uncertainty, while the lower panels use the difficulty-adjusted degradation Dm defined in Eq. (37). This second metric distinguishes absolute tasking quality from the proportional drift caused by each distribution shift. Both rows must therefore be assessed together: a method with poor in-distribution performance may appear robust simply because it has little additional performance to lose, whereas a stronger method may degrade more proportionally while still achieving a substantially better absolute outcome. Consequently, a lower Dm alone does not imply a better scheduler. At 120 RSOs with K = 30 , VISTA’s terminal un-certainty is 89.0% below EIG and 95.0% below the flat LSTM, with D = 0 .211 compared with 2.398 for the LSTM. When the initial uncertainty is multiplied by four, VISTA is 88.5% below EIG and 96.9% below the LSTM, with D = 0 .168 compared with 3.606. These results show that the entity-centric policy accommodates substantial changes in catalogue population and initial condition without retraining. Eccentricity transfer is comparatively stable, with an endpoint increase of approximately 11.9% between 
+
+emax = 0 .005 and 0.055. At 200 m measurement noise, VISTA reduces terminal uncertainty by 21.6% relative to EIG and 30.1% relative to the LSTM. Its value D =1.470 nevertheless indicates greater proportional degra-       
+
+> 12 VISTA: Attention-Based MARL for SSA Sensor Tasking Fig. 3. Phase-I one-factor zero-shot transfer using 24 paired episodes per condition. Upper panels show five-hour mean catalogue uncertainty. Lower panels show the paired relative degradation Dmdefined in Eq. (37). Shading denotes 95% confidence intervals across episodes; lower-row intervals are computed from paired log-ratios. Dashed grey vertical lines mark the in-distribution training conditions, while the green horizontal line at Dm= 1 denotes degradation equal to EIG. Both rows should be interpreted jointly.
+
+dation than EIG, illustrating that absolute performance and relative sensitivity describe complementary aspects of transfer. The inclination sweep produces the most revealing transfer result. Each test samples RSO inclinations from a fixed 50 ◦ wide band, and the reported band centre specifies the midpoint of that distribution. Moving the centre to 150 ◦ therefore replaces the nominal orbital population with a strongly different relative-motion and access geometry. Under this shift, VISTA becomes 2.4% worse than the LSTM and 68.8% worse than EIG, with 
+
+D = 3 .523 compared with 1.476 for the LSTM. This sharp and structured response is important: it shows that VISTA is not merely fitting catalogue uncertainty statis-tics, but is organizing its decisions around learned orbital relationships. That geometric representation may be the source of its nominal strength, while also revealing that training on a single inclination regime can limit zero-shot transfer. Broader geometric randomization during training is therefore a direct path towards retaining this relational advantage across more diverse orbital populations. 
+
+3. Representation and Attention Diagnostics 
+
+The in-distribution and larger-catalogue trajectories in the upper row of Fig. 4(a) largely occupy the same manifold in both the encoder and recurrent projections and follow a similar progression as catalogue uncertainty decreases, which is consistent with their strong zero-shot transfer. The inclination samples instead form a distinct branch, matching the performance loss observed when the orbital geometry changes. Projection-intrusion rates of approximately 2.0% to 4.25% for the reference and population-shift samples suggest limited projection-induced scenario mixing, without validating every feature of the visible manifold. The Phase-I heads in Fig. 4(b) show similar patterns, dominated by positive associations with uncertainty and observation age. This is consistent with prioritizing poorly maintained objects among the few available opportunities in a sparse perceptive field. Weaker associations with slew suggest sensitivity to pointing requirements when several targets are available. Together, these patterns are compatible with balancing catalogue priority and econom-ical retargeting, but attention alone does not establish a particular visiting order or shortest-path strategy.  
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 13
+
+Fig. 4. VISTA representation and attention diagnostics, with Phase I above Phase II in both blocks. (a) Joint UMAP projections of the encoder summary entering the LSTM (left) and the recurrent state (right). Marker shapes identify evaluation scenarios, colour denotes mean catalogue uncertainty on a logarithmic scale, and arrows trace the temporal progression of the hourly medians. Each state and phase uses a separate UMAP fit; absolute coordinates are therefore not comparable between panels. (b) Associations between ego-query attention scores and RSO-token features, with one column per attention head. Continuous features use Spearman correlation ρs, whereas visibility uses point-biserial correlation rpb . These associations are exploratory and do not establish causal feature importance. 14 VISTA: Attention-Based MARL for SSA Sensor Tasking B. Phase II: Large-Scale Cooperative LEO-to-LEO Scheduling 
+
+In the large-scale reference scenario with 12 orbital sensors and 2000 RSOs, Fig. 5(a) shows that VISTA reduces mean catalogue uncertainty by 99.1% after one hour and 99.5% after two hours, before approaching a stable low-uncertainty regime. At the five-hour end-point, its mean uncertainty is 0.0846 km, compared with 3.415 km for EIG and 12.567 km for the flat LSTM. This corresponds to reductions of 97.5% and 99.3%, respec-tively. The terminal p99 remains only approximately 29% above the median, indicating that the recovery is broadly distributed across the catalogue rather than concentrated on a small subset of RSOs. The faster reduction observed here than in Phase I should not be attributed to the larger cooperative sensor network alone. Phase II also changes the orbital geometry, increases the slew rate from 0.5◦/s to 5◦/s, disables the range gate, and applies a unit-quality measurement model to every admissible observation. Its recovery rate therefore reflects the combined effect of increased sensing capacity, faster pointing, broader access, and a geometry-agnostic measurement update. 
+
+1. Zero-Shot Catalogue Scaling 
+
+Figure 5(b) evaluates the policies trained at 2000 RSOs without further optimization. VISTA obtains ter-minal uncertainties of 0.0933, 0.1577, and 0.8183 km at 3000, 4000, and 5000 RSOs. The corresponding EIG values are 21.358, 26.055, and 29.873 km, while the flat LSTM reaches 21.807, 21.591, and 27.738 km. Across the complete 2000-5000-RSO sweep, VISTA is therefore 97.3-99.6% below EIG and 97.0-99.6% below the flat LSTM. Although VISTA’s own uncertainty increases as the number of objects per sensor grows, it remains below 1 km at 5000 RSOs and preserves a substantial advantage over both comparators. A fixed network has more objects to maintain as population grows, so recovery takes longer and a common five-hour endpoint samples different stages of that process. The rising endpoints therefore reflect increased catalogue load as well as transfer sensitivity, not an isolated loss of generalization. 
+
+2. Empirical Recovery and Network Scaling 
+
+For this dimensioning study, recovery is the first sampled time at which mean catalogue uncertainty falls to 1 km or below. This common simulation target mea-sures how quickly a network restores catalogue qual-ity, allowing sensor count, catalogue load, and recovery horizon to be related without implying an operational accuracy requirement. Figure 5(c) shows the 13 successful population-network configurations from a grid evaluated with two, four, or six episodes per cell. Unweighted least squares gives 
+
+Trec [h] = −0.483 + 0 .00535 NRSO 
+
+Nsensors 
+
+, R2 = 0 .882 .
+
+(39) Thus, recovery time is strongly related to catalogue load per sensor within the tested regime. The simple fit sup-ports empirical network dimensioning as population and the uncertainty distribution presented to top-K retrieval change, rather than requiring a separate policy for every network size. The minimum tested networks in Fig. 5(d) yield a separate through-origin fit of Nsensors ≃ NRSO /411 .859 .Restricting the fit to populations of at least 5000 RSOs gives one sensor per 416.667 RSOs, showing a consistent near-linear trend over the large-population portion of the grid. For example, the smallest successful tested networks contain 12, 18, 24, 36, and 48 sensors for 5000, 7500, 10,000, 15,000, and 20,000 RSOs, respectively. These relations are empirical scaling summaries rather than universal capacity laws. At 20,000 RSOs, 42 sensors do not reach the threshold while 48 sensors do, and intermediate network sizes were not tested. Moreover, resizing the network changes constellation phasing as well as the per-sensor catalogue load. Further trials and orbital geometries would therefore be required to establish the generality of the fitted relationships. 
+
+3. Candidate-Context Sensitivity 
+
+The candidate budget K is central to VISTA’s scala-bility, but limiting context risks excluding valuable targets or relationships. The sweep in Fig. 5(e), at 5000 RSOs, tests whether a small high-priority subset suffices or whether additional context materially improves tasking. Relative to K = 15 , terminal uncertainty decreases by 73.0%, 84.4%, and 86.7% for K = 30 , 45, and 60, respectively. Increasing the context beyond 60 provides little additional improvement, with terminal means of 0.813 and 0.862 km for K = 75 and 90. Meanwhile, batched policy-call latency increases from 10.98 ms at 
+
+K = 15 to 14.35 ms at K = 90 . These results support a performance-computation tradeoff with diminishing re-turns near K = 45 , rather than unlimited gains from larger context. Retaining more than the first few ranked objects leaves the policy scope to select a lower-ranked candidate when geometry or future value favours it. 
+
+4. Representation and Attention Diagnostics 
+
+Unlike the distinct Phase-I inclination branch, Phase-II scenarios in Fig. 4(a) overlap along catalogue-quality gradients, with recurrent states more continuous than en-coder summaries. Projection-intrusion rates of 6.1-27.6% warrant caution when interpreting local separations. In Fig. 4(b), attention is more strongly associated with slew than in Phase I. This is consistent with greater emphasis on relative geometry and economical retargeting among the more numerous opportunities in a denser perceptive field. Teammate tokens receive 14.3% of attention from the acting sensor’s query and 15.4% from RSO queries, near the 15.3% uniform-attention reference. Attention alone, however, does not establish the performance benefit of teammate information.                    
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 15 Fig. 5. Phase-II cooperative performance and frozen-policy scaling. (a) Five-hour recovery with 12 sensors and 2000 RSOs. Shading shows the central 95% of VISTA’s per-RSO uncertainty distribution, not a confidence interval. (b) Five-hour mean uncertainty for 2000-5000 RSOs with 12 sensors; error bars show 95% confidence intervals over 48 episodes. For panels (c) and (d) , a configuration is successful when at least 80% of its episodes reach a mean catalogue uncertainty of 1 km within five hours. (c) Median first-crossing time for 13 successful configurations, with interquartile bars and a least-squares fit. (d) Smallest successful tested sensor constellation and a through-origin fit over eight catalogue sizes. (e) Five-hour mean uncertainty and policy-call latency for batches of 144 agents as the candidate set size Kvaries. Uncertainty error bars show 95% confidence intervals over 48 episodes, and the filled marker denotes the training value K= 60 . The complete capacity grid and episode counts are provided in the project repository.
+
+C. Phase III: Heterogeneous Cooperation under Overlapping Coverage 
+
+1. Complementary Allocation and Coverage 
+
+Within the four sensors’ highly overlapping percep-tive fields, Fig. 6 shows allocation patterns consistent with their complementary capabilities. Mean successful-observation ranges are 1550.84 and 1636.60 km for the two Type-A sensors and 2312.02 and 2398.87 km for the two Type-B sensors. This separation is consistent with the complementary response functions: Type A is favoured at shorter range and Type B at longer range, with equal quality at 1900 km. The policy is not supplied with the analytic response laws, but it observes geometry, sensor type, angular proximity, and tasking history, allowing it to learn capability-dependent allocation. Across 12 evaluation episodes, the mean pairwise nonduplication rate is 98 .27 ± 0.15% , and all 240 ob-jects are observed at least once in every episode. The episode-averaged effective coverage defined in Eq. (38) is 85 .76 ± 0.95% . Thus, the shared policy distributes sensing effort broadly across the complete catalogue while avoiding unnecessary simultaneous assignments. 
+
+2. Modality Dependence 
+
+To test whether sensor type functionally affects the learned policy, the modality embeddings are evaluated under three inference conditions: the correct labels, a neu-tral label formed from the mean learned embedding, and exchanged Type-A and Type-B labels. Physical response functions, policy weights, and paired environment seeds remain unchanged. The mean endpoint uncertainties are 0.463735, 0.526422, and 0.815580 km for the correct, neutral, and exchanged conditions. Neutralizing the labels degrades the mean by 13.518%, while exchanging them pro- 
+
+> 16 VISTA: Attention-Based MARL for SSA Sensor Tasking
+
+duces a 75.872% degradation. The intervention therefore shows that modality information materially conditions the learned allocation. Together with the range separation, low duplication, and broad coverage, this supports com-plementary capability-aware tasking within the heteroge-neous sensing regime.     
+
+> Fig. 6. Phase-III heterogeneous observation geometry. The figure shows a 50,000-event random subsample of 60,484 successful observations collected over six episodes. (a) Polar map of the four superimposed sensor-local sky domes. Azimuth is angular and elevation increases toward the centre. Colour identifies the individual sensor, while circles and triangles identify Type-A and Type-B sensors, respectively. The labelled S1-S4 symbols show the angular offsets of the ground sites from the network centre; observation coordinates remain expressed in each observing sensor’s local frame.
+> (b) Elevation versus sensor-to-RSO range for the same observations. The dashed line marks the 1900-km crossover between the two sensor response models.
+
+VII. CONCLUSION 
+
+This work introduced VISTA to address a central representational limitation of deep reinforcement learning sensor tasking: fixed observation and action interfaces cannot naturally accommodate changing target identities, catalogue sizes, or sensing networks. VISTA instead re-trieves a bounded, physics- and mission-informed can-didate set and represents sensors and candidate RSOs as typed entities. Attention models their relationships, recurrent memory carries temporal context, and pointer decoding selects through the current candidate representa-tions. This design preserves the correspondence between physical objects and actions while allowing one shared policy to operate across variable catalogue and network dimensions. The three experimental campaigns provide comple-mentary evidence for this formulation. In the fixed 30-RSO benchmark, where variable-cardinality and multi-agent capabilities are not required, VISTA reaches the recovery threshold 31.2% faster than the flat recurrent baseline. In the LEO-to-LEO scenario with 12 orbital sensors and 2000 RSOs, defined by high-dimensionality and complex relative movement, its five-hour mean uncer-tainty is 97.5% below EIG and 99.3% below the recurrent baseline. Frozen-policy experiments extending to 20,000 RSOs reveal an approximately linear relation between catalogue size and the smallest successful tested network for a given temporal horizon. In the heterogeneous cam-paign, the agents allocate observations according to sensor capability while maintaining broad catalogue coverage. These experiments were designed to compare opti-mization methods and neural representations rather than reproduce operational catalogue accuracy. The models were deliberately simplified to enable large-scale scenar-ios, repeated evaluations, broad comparisons, and statis-tically meaningful analysis. Absolute uncertainty values and empirical capacity relations are therefore conditional on these abstractions. Applying the same models and interfaces to every method nevertheless isolates relative scheduling and representational capabilities. The resulting gains, particularly over the fixed-dimensional recurrent architecture traditionally used in SSA-oriented DRL, con-stitute the central evidence of this study. VISTA consequently broadens the architectural basis available for learned SSA tasking by adapting entity attention and pointer selection from other domains while retaining a temporal core. It should be regarded as an initial scalable solution and a reproducible basis for further development. Future work should integrate it into higher-fidelity SSA chains with richer orbital dynamics, sensing and estimation, imperfect information exchange, and broader geometric variation. Controlled ablations can then clarify which components drive the gains and whether they persist as operational fidelity increases.  
+
+> LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 17
+
+Acknowledgment 
+
+The authors used Codex and Claude for language and grammar editing and for code review and improvement. All AI-assisted changes were reviewed and validated by the authors, who take full responsibility for the manuscript and software. 
+
+REFERENCES 
+
+[1] R. S. Erwin, P. Albuquerque, S. K. Jayaweera, and I. Hussein Dynamic sensor tasking for space situational awareness In Proceedings of the 2010 American control conference , IEEE. IEEE, 2010, pp. 1153–1158. [2] P. S. Williams, D. B. Spencer, and R. S. Erwin Coupling of estimation and sensor tasking applied to satellite tracking 
+
+Journal of Guidance, Control, and Dynamics , vol. 36, no. 4, pp. 993–1007, 2013. [3] R. Linares and R. Furfaro An autonomous sensor tasking approach for large scale space object cataloging In Advanced Maui Optical and Space Surveillance Technologies Conference (AMOS) , 2017, pp. 1–17. [4] D. A. Vallado and J. D. Griesbach Simulating space surveillance networks In Paper AAS 11-580 presented at the AAS/AIAA Astrodynamics Specialist Conference. July , 2011. [5] B. D. Little and C. E. Frueh Space situational awareness sensor tasking: comparison of ma-chine learning with classical optimization methods 
+
+Journal of Guidance, Control, and Dynamics , vol. 43, no. 2, pp. 262–273, 2019. [6] P. M. Siew, D. Jang, T. G. Roberts, and R. Linares Space-based sensor tasking using deep reinforcement learning 
+
+The Journal of the Astronautical Sciences , vol. 69, no. 6, pp. 1855–1892, 2022. [7] J. G. G. Miller A new sensor allocation algorithm for the space surveillance network 
+
+Military Operations Research , vol. 12, no. 1, pp. 57–70, 2007. [8] K. Hill et al. 
+
+Covariance-based network tasking of optical sensors 
+
+Advances in the Astronautical Sciences , vol. 136, pp. 769–786, 2010. [9] C. M. Kreucher, K. D. Kastella, and A. O. H. III Information-based sensor management for multitarget tracking In Signal and Data Processing of Small Targets 2003 , O. E. Drummond, Ed., vol. 5204, International Society for Optics and Photonics. SPIE, 2004, pp. 480 – 489. [10] Y. Li, L. Krakow, E. Chong, and K. Groom Approximate stochastic dynamic programming for sensor scheduling to track multiple targets 
+
+Digital Signal Processing , vol. 19, no. 6, pp. 978–989, 2009, dASP’06 - Defense Applications of Signal Processing. [11] L. Gentile, C. Greco, E. Minisci, T. Bartz-Beielstein, and M. Vasile Stochastic satellite tracking with constrained budget via structured-chromosome genetic algorithms 
+
+Optimization and Engineering , vol. 24, no. 1, pp. 257–290, 2023. [12] H. Cai, Y. Yang, S. Gehly, C. He, and M. Jah Sensor tasking for search and catalog maintenance of geosyn-chronous space objects 
+
+Acta Astronautica , vol. 175, pp. 234–248, 2020. [13] Z. Sunberg, S. Chakravorty, and R. S. Erwin Information space receding horizon control for multisensor tasking problems 
+
+IEEE Transactions on Cybernetics , vol. 46, no. 6, pp. 1325– 1336, 2016. [14] N. Ravago and B. A. Jones Risk-aware sensor scheduling and tracking of large constella-tions 
+
+Advances in Space Research , vol. 68, no. 6, pp. 2530–2550, 2021. [15] A. Shtofenmakher and H. Balakrishnan Optimal tasking and scheduling of satellite constellations for space situational awareness In The Advanced Maui Optical and Space Surveillance (AMOS) Technologies Conference , 2025. [16] D. Chaturvedi, G. A. Siciliano, and K. A. LeGrand Information-driven cislunar space object reacquisition 2025. [17] Y. Shimane and K. Ho Multi-sensor tasking for ground-based space situational aware-ness via job-shop scheduling problem 
+
+The Journal of the Astronautical Sciences , vol. 72, no. 6, p. 61, 2025. [18] L. Federici, A. D’Ambrosio, R. Furfaro, and V. Reddy Optimal sensor tasking for space domain awareness via a beam a*-search algorithm 
+
+The Journal of the Astronautical Sciences , vol. 71, no. 4, p. 34, 2024. [19] R. S. Sutton and A. G. Barto 
+
+Reinforcement learning: an introduction , 2nd ed. Cambridge, Massachusetts: The MIT Press, 2018. [20] R. Linares and R. Furfaro Dynamic sensor tasking for space situational awareness via reinforcement learning In Advanced Maui Optical and Space Surveillance Technologies Conference . Maui Economic Development Board Maui, HI, 2016, p. 36. [21] T. G. Roberts, P. M. Siew, D. Jang, and R. Linares A deep reinforcement learning application to space-based sen-sor tasking for space situational awareness In Proceedings of the 2021 Advanced Maui Optical and Space Surveillance Technologies Conference (AMOS), Wailea Beach Resort, Maui, HI, USA , 2021, pp. 14–17. [22] P. M. Siew and R. Linares Optimal tasking of ground-based sensors for space situational awareness using deep reinforcement learning 
+
+Sensors , vol. 22, no. 20, p. 7847, 2022. [23] B. Oakes, D. Richards, J. Barr, and J. Ralph Double deep q networks for sensor management in space situational awareness In 2022 25th International Conference on Information Fusion (FUSION) . IEEE, 2022, pp. 1–6. [24] A. Mignocchi et al. 
+
+Meta-reinforcement learning for conflict-aware sensor schedul-ing in space surveillance and tracking In 5th IAA Conference On Space Situational Awareness (IC-SSA) , 2026. [25] D. Huterer Prats, H. Schaub, and C. Wheeler Reinforcement learning for space-to-space surveillance: Au-tonomous scheduling for resident space object imaging In The Advanced Maui Optical and Space Surveillance (AMOS) Technologies Conference , 2025. [26] P. M. Siew, T. Smith, R. Ponmalai, and R. Linares Scalable multi-agent sensor tasking using deep reinforcement learning In Proceedings of the Advanced Maui Optical and Space Surveillance (AMOS) Technologies Conference , 2023, p. 3. [27] C. Xue, H. Cai, S. Gehly, M. Jah, and J. Zhang Review of sensor tasking methods in space situational aware-ness 
+
+Progress in Aerospace Sciences , vol. 147, p. 101017, 2024. [28] O. Vinyals et al. 
+
+18 VISTA: Attention-Based MARL for SSA Sensor Tasking Grandmaster level in StarCraft II using multi-agent reinforce-ment learning                          
+
+> Nature , vol. 575, no. 7782, pp. 350–354, November 2019. [29] B. Baker et al.
+> Emergent tool use from multi-agent autocurricula In International Conference on Learning Representations , 2020. [30] A. Vaswani et al.
+> Attention is all you need In Advances in Neural Information Processing Systems , vol. 30. Curran Associates, Inc., 2017. [31] S. Hochreiter and J. Schmidhuber Long short-term memory
+> Neural Computation , vol. 9, no. 8, pp. 1735–1780, 1997. [32] O. Vinyals, M. Fortunato, and N. Jaitly Pointer networks In Advances in Neural Information Processing Systems , vol. 28, 2015. [33] D. Liu, Q. Zong, X. Zhang, W. Liu, L. Dou, and B. Tian Enhancing space-based situational awareness: Real-time obser-vation of dynamic targets with meta-cooperative-scheduling net
+> IEEE Transactions on Aerospace and Electronic Systems ,vol. 60, no. 6, pp. 8198–8211, 2024. [34] R. Dobariya and T. Hobiger Automatic scheduling of satellite tracking tasks by means of policy-gradient reinforcement learning and transformer-based pointer networks
+> CEAS Space Journal , pp. 1–17, 2026. [35] C. Berner et al.
+> Dota 2 with large scale deep reinforcement learning
+> arXiv preprint arXiv:1912.06680 , 2019. [36] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov Proximal policy optimization algorithms
+> arXiv preprint arXiv:1707.06347 , 2017. [37] C. Yu et al.
+> The surprising effectiveness of ppo in cooperative multi-agent games
+> Advances in neural information processing systems , 2022. [38] J. Schulman, P. Moritz, S. Levine, M. Jordan, and P. Abbeel High-dimensional continuous control using generalized advan-tage estimation
+> arXiv preprint arXiv:1506.02438 , 2015. [39] J. Suarez Pufferlib: Making reinforcement learning libraries and environ-ments play nice
+> arXiv preprint arXiv:2406.12905 , 2024. [40] L. McInnes, J. Healy, N. Saul, and L. Großberger Umap: Uniform manifold approximation and projection
+> Journal of Open Source Software , vol. 3, no. 29, p. 861, 2018.
+
+Miguel Leiva-V´ elez received the B.S. de-gree in aerospace engineering from Universidad Polit´ ecnica de Madrid, Madrid, Spain, in 2022, and the M.S. degree in space engineering from Universidad Carlos III de Madrid, Madrid, Spain, in 2024. He is currently pursuing the Ph.D. degree in aerospace engineering at Uni-versidad Polit´ ecnica de Madrid. He previously researched deep-learning-based optical navigation for proximity oper-ations around noncooperative spacecraft. He is currently a Senior Researcher in deep reinforcement learning at Indra Sistemas, Madrid, Spain. His research interests include scalable optimization and intel-ligent decision-making for aerospace systems, particularly space sit-uational awareness, planetary landing, and guidance, navigation, and control. 
+
+Adalberto Claudio Quiros received in 2013 the M.S. degree in electrical engineering from the Illinois Institute of Technology, Chicago, IL, USA, and the M.S. and B.S. degrees in telecommunications engineering from the Uni-versidad Polit´ ecnica de Madrid, Madrid, Spain. He received the Ph.D. degree in machine learn-ing and computer science from the University of Glasgow, Glasgow, Scotland, U.K., in 2022. He is a Staff Machine Learning Scientist at Indra Sistemas, Madrid, Spain. Previously, he held Lecturer and Research Associate positions at the University of Glasgow and was a System-on-Chip Design Engineer at Altera Corporation and Intel Corporation. His research interests include multimodal perception, representation learning, interpretable artificial intelligence, and edge-efficient machine-learning systems. 
+
+Nicolas Gaston Rozado received the B.S. degree in psychology from Universidad Com-plutense de Madrid, Madrid, Spain, in 2016, and the M.S. degree in theoretical neuroscience from Universitat Pompeu Fabra, Barcelona, Spain, in 2017. He is Head of Artificial Intelligence for Defense and Safety-Critical Systems at Indra Sistemas, Madrid, Spain. His previous research focused on brain modelling and complex dy-namics. His current research interests include deep reinforcement learn-ing and autonomous decision-making. 
+
+Hodei Urrutxua received the M.S. and Ph.D. degrees in aerospace engineering from Univer-sidad Polit´ ecnica de Madrid, Madrid, Spain, in 2011 and 2015, respectively. He is an Associate Professor of Aerospace Engineering at Universidad Rey Juan Carlos, Madrid, Spain. His research interests include high-performance numerical techniques for or-bit and attitude propagation; space situational awareness, including asteroid-capture dynam-ics, slow-deflection techniques, and active space-debris removal; and spacecraft guidance, navigation, and control, with an emphasis on AI-enhanced methods. 
+
+V´ ıctor Rodr´ ıguez-Fern´ andez received the B.S. degree in mathematics and computer sci-ence in 2013, the M.S. degree in information technology in 2015, and the Ph.D. degree in computer science in 2019, all from Universidad Aut´ onoma de Madrid, Madrid, Spain. He is an Associate Professor of Computer Science at Universidad Polit´ ecnica de Madrid, Madrid, Spain, and a Research Affiliate with the Astrodynamics, Space Robotics and Con-trols Laboratory, MIT AeroAstro, Cambridge, MA, USA. He col-laborates with NASA’s Jet Propulsion Laboratory and the European Space Agency. His research interests include time-series analysis, large language models, and AI agents. LEIVA-V ´ ELEZ ET AL.: VISTA: Attention-Based MARL for SSA Sensor Tasking 19
