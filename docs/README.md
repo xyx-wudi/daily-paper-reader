@@ -6,28 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-26
-- 运行时间：2026-09-26 22:01:24 UTC
+- 最新运行日期：2026-09-27
+- 运行时间：2026-09-27 22:11:30 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今天速读了 1 篇多智能体系统论文，主题是在环境反馈下做主动激励调控，精读为 0，整体以扫读为主。
-
-这篇 6.0 分的《Proactive Incentive Regulation in Multi-Agent Systems with Environmental Feedback》值得关注的方向，是“激励规则如何随环境反馈动态调整”这一思路，而非固定激励。
-
-普通读者若想跟进，建议先看它的激励设计与反馈回路怎么衔接，再判断是否值得投入精读。
-- 详情：[/202609/26/README](/202609/26/README)
+今日仅速读1篇论文，聚焦多车协同推挤式重排。唯一推荐《MultiPush: Learning to Rearrange with Teams of Car-Like Pushers》（6.0/10），关注多智能体协作与类车机器人操控。普通读者可先看其团队协同策略，再留意该方向后续进展。
+- 详情：[/202609/27/README](/202609/27/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Proactive Incentive Regulation in Multi-Agent Systems with Environmental Feedback](/202609/26/2609.24506v1-proactive-incentive-regulation-in-multi-agent-systems-with-environmental-feedback)  
+1. [MultiPush: Learning to Rearrange with Teams of Car-Like Pushers](/202609/27/2609.27005v1-multipush-learning-to-rearrange-with-teams-of-car-like-pushers)  
    标签：评分：6.0/10、query:marl
-   evidence：多智能体合作与激励博弈框架
+   evidence：基于强化学习协调机器人团队完成多物体重排
 
 
 <div class="dpr-home-promo-card">

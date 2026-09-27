@@ -1,0 +1,259 @@
+Title: MultiPush: Learning to Rearrange with Teams of Car-Like Pushers
+
+URL Source: https://arxiv.org/pdf/2609.27005v1
+
+Published Time: Thu, 24 Sep 2026 00:12:01 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# MultiPush: Learning to Rearrange with Teams of Car-Like Pushers 
+
+Jeeho Ahn and Christoforos Mavrogiannis 
+
+Fig. 1: We present MultiPush , a system for completing multi-object rearrangement tasks in constrained workspaces using a team of car-like robot pushers. At the core of MultiPush is a reinforcement learning policy that efficiently assigns robots to pushing tasks. Pictured above are excerpts from hardware experiments using two (a) and three MuSHR robots [37] (b) on the same 12-object scenario. Footage from our experiments is available at https://youtu.be/eq-31schnCk. 
+
+Abstract — We focus on the problem of rearranging multiple objects within a constrained workspace via pushing using a team of car-like robots. While the use of multiple robots offers the potential for more efficient execution, the need for conflict resolution and the kinematic constraints arising from physics, robot design, and the workspace boundary make this problem especially challenging. Our key insight is that by exploiting the structure introduced by the car-like kinematics of the domain, we could relax the problem into an ordered assignment of Dubins curves to robots. To this end, we introduce 
+
+MultiPush , a reinforcement-learning based framework that jointly determines an efficient schedule of pushing tasks and their allocation to available robots by leveraging a constraint-aware traversability graph. Across extensive simulated trials with up to 14 objects and teams of two to four robots, MultiPush reduces the makespan by up to 16% compared to the baselines while requiring up to 2.9 times faster planning time. We demonstrate MultiPush on a real-world scenario involving the rearrangement of 12 objects by two and three robots (1/10-scale racecars) in a constrained space. 
+
+I. I NTRODUCTION 
+
+Teams of autonomous mobile robots are increasingly used for large-scale rearrangement tasks in fulfillment centers, where extensive workspace engineering, including rectilinear rail grids and specialized grippers, makes highly efficient operation possible [8]. Such infrastructure, however, is of-ten impractical in inherently unstructured environments, in-cluding construction sites, waste-management facilities, and small warehouses. In these settings, dense clutter hinders workspace organization, objects vary widely in shape and size, and robots must operate subject to motion constraints. Inspired by these real-world challenges, we study the model problem of rearranging multiple objects in a con-fined workspace using a team of car-like robots that can manipulate objects via pushing rather than grasping. Pushing  
+
+> Authors are with the Robotics Department, University of Michigan, Ann Arbor, USA. Email: {jeeho, cmavro }@umich.edu
+
+is a form of nonprehensile manipulation that exploits con-tact mechanics instead of secure grasps [26, 30], enabling robots with simple contact surfaces to move large, heavy, or irregularly shaped objects. However, purposeful physical interaction imposes further motion constraints on robots. Under the quasistatic regime, a car-like robot must steer within a very limited range to ensure stable contact with a manipulated object. Finally, enabling a team of robots to coordinate on simultaneously rearranging multiple objects in a shared, constrained workspace introduces a multirobot co-ordination challenge: robots must closely follow a carefully designed task schedule, while avoiding conflicts and obeying kinematic constraints. Our key insight is that the structure imposed by car-like robot constraints during transit to objects and transfer of objects allows us to relax the planning problem from a search over the continuum of multirobot paths into an ordered assignment of Dubins curves [14, 26] to robots. To this end, we introduce MultiPush , a planning framework that jointly determines an efficient schedule of pushing tasks and their allocation to available robots via reinforcement learning. MultiPush leverages a traversability graph that captures object connectivity while encoding spatial, kine-matic, and physics constraints. We evaluate MultiPush across extensive scenarios involving the rearrangement of up to 14 objects by 4 robots in simulation and show that MultiPush achieves a higher success rate and a lower makespan than baselines while planning the fastest, while scaling to different robot counts and a workspace unseen in training. We also demonstrate MultiPush in the real world with a team of two and three car-like robots rearranging 12 objects. Our contributions are as follows:  
+
+> •
+
+Multirobot task allocation and scheduling : We formu-late the assignment of the tasks to robots and their execution order as an MDP and train the assignment policy by reinforcement learning on features aggregated arXiv:2609.27005v1 [cs.RO] 22 Sep 2026 over robots and tasks, which can transfer to different number of robots and workspaces.  
+
+> •
+
+Efficient planning : The learned policy assigns the tasks to robots and their execution order without invoking the motion planner, and the policy is trained to minimize the makespan while avoiding infeasibility.  
+
+> •
+
+Empirical validation : We validate our framework in simulation on the rearrangement of up to 14 objects with up to four robots, showing the highest success rate and the lowest makespan among the baselines under an equal evaluation budget. The policy generalizes to robot counts and a workspace unseen in training. II. R ELATED WORK 
+
+Rearranging cluttered workspaces . While much of the work on rearrangement planning assumes prehensile ma-nipulation via grasping [4, 5, 17, 22, 39], nonprehensile manipulation [16, 26, 30] via pushing empowers robots to handle diverse objects without specialized grippers. Single-robot pushing planners began with clutter removal for object retrieval [12] and pushing as a pregrasp or rearrangement primitive [11, 18, 20, 21]. Later work scaled to planar rearrangement of many objects [19] and planned object trajectories before projecting them onto feasible robot mo-tions [32]. The work of Ahn and Mavrogiannis [2, 3] extends nonprehensile rearrangement to a nonholonomic car-like robots, addressing nonmonotone, densely cluttered instances with a push-traversability graph. Fewer works extend these settings to multiple robots but tend to make strong simpli-fying assumptions. PuSHR [40] for example coordinates a team of car-like pushers via multiagent path finding, but is restricted to monotone instances in a discretized workspace. Overall, tackling nonmonotone rearrangement tasks subject to nonholonomic and stability constraints in continuous workspaces is a challenging problem that has been relatively less studied despite its major real-world relevance. 
+
+Planning for Multiple Agents . Multiagent Path Finding (MAPF) seeks collision-free paths for multiple agents on shared graphs [38]. Optimal solvers such as Conflict-Based Search (CBS) [34] provide completeness guarantees but are computationally expensive in large instances. Prioritized planning offers a scalable alternative where agents plan se-quentially, treating higher-priority agents as dynamic obsta-cles [6, 15, 28, 36]. Large Neighborhood Search (LNS) has also been applied to MAPF as an anytime improvement strat-egy, achieving strong practical performance by iteratively destroying and repairing subsets of agent plans [24, 25]. Lifelong MAPF assigns incoming tasks online and replans continually, accounting also for kinematic constraints in multiagent pickup and delivery grid-world problems [27, 29]. More recently, techniques like reinforcement learning and imitation learning have been employed to enable decentral-ized coordination across multiple navigating agents: PRI-MAL [33] and its lifelong extension PRIMAL2 [7] train decentralized MAPF policies by combining imitation and reinforcement learning, and RTAW [1] allocates warehouse tasks to robots with an attention-based policy trained by rein-forcement learning. The path-finding policies move agents on a discrete grid, and the allocation policy scores a candidate by travel delay alone. Less work has studied MAPF problems under kinematic constraints. Wen et al. [41] extend CBS to account for car-like kinematics whereas Davis et al. [9] introduce arbitrary dynamics into an optimization-based framework. Much of this work is emphasizing navigation settings, lacking mechanisms for handling richer domains like physics-based manipulation. 
+
+This work . We address the centralized coordination of multiple robots for nonmonotone rearrangement tasks un-der nonprehensile, nonholonomic, and geometric constraints. Prior work has either considered a single pusher, restricted multirobot pushing to monotone instances in discretized spaces, or assigned tasks single-cell to grid-world agents without nonprehensile or nonholonomic constraints. In con-trast, our proposed framework, MultiPush plans for multiple pushers in a continuous workspace and handles nonmonotone instances. A single-robot plan serves as the seed, fixing how each object is pushed, and a policy trained via reinforcement learning temporally assigns pushing tasks to robots. III. P ROBLEM STATEMENT 
+
+We consider n identical car-like robot pushers and a set of m rigid, polygonal objects in a workspace W ⊂ SE (2) .Each robot i ∈ N = {1, . . . , n } has state pi ∈ W
+
+and follows rear-axle simple-car kinematics ˙pi = f (pi, u i),where ui is a control input (speed and steering angle). Each robot is equipped with a flat bumper for quasistatic pushing. The state of each object j ∈ M = {1, . . . , m } is oj ∈ W .Robots start from initial poses P s = ( ps
+
+> 1
+
+, . . . , p sn), and must rearrange all objects from their initial poses Os =(os
+
+> 1
+
+, . . . , o sm) to goal poses Og = ( og
+
+> 1
+
+, . . . , o gm) by following trajectories Ξ = ( ξ1, . . . , ξ n), where ξi : [0 , 1] → SE (2) 
+
+is the trajectory of robot i. We refer to the rearrangement of a single object j, moving it from osj to ogj , as a task 
+
+τj , and write τ1, . . . , τ m for the resulting m tasks, one for each j ∈ M . We assume an object becomes static once it is rearranged to its goal, and each task can be executed by a single robot acting alone, so that no object requires two robots to move it. A workspace, together with the robots’ initial poses and the objects’ initial and goal poses, defines a planning instance .An assignment pairs a task with the robot that executes it. We refer to the sequence of m assignments, one per task in execution order, as the assignment sequence σ. Our objective is to find an assignment sequence σ, along with a corresponding tuple of collision-free robot trajectories Ξ,that minimizes the makespan Cmax , the completion time of the entire rearrangement. We formalize this problem as: 
+
+(σ, Ξ) ∗ ← arg min   
+
+> σ, Ξ
+
+Cmax [σ, Ξ] (1) IV. M ULTI PUSH : A F RAMEWORK FOR MULTIROBOT 
+
+NONPREHENSILE REARRANGEMENT PLANNING 
+
+We present MultiPush , a framework for tackling the multi-object rearrangement planning problem with a team of car-Fig. 2: Overview of the MultiPush framework. The single-robot task sequence produced by ReloPush-BOSS [3] is expanded into Seed     
+
+> of resting poses, transit times, task durations, and path traces, which parameterizes a pseudo-schedule : a free-space approximation of the multirobot timetable. A learned policy constructs candidate assignment sequences by rolling out against this pseudo-schedule, without invoking the motion planner, and the prioritized multiagent planner verifies them together with the greedy allocation. The best feasible plan is executed. ηdenotes the number of possible actions at each step.
+> (a) (b)
+> Fig. 3: The push-traversability graph. (a) Each vertex represents a start pose or a goal pose at the objects’ initial or goal poses, respectively. Each edge represents a feasible transfer path (or a series of partial transfer paths) between the start/goal poses, which are composed of Dubins curves. (b) Feasible rearrangements can be found over graph search at each assignment of tasks to robots. Our goal is to find a feasible assignment sequence with a low makespan.
+
+like robot pushers described in Sec. III. Our framework comprises a push-traversability graph describing kinemati-cally feasible object transfers and a reinforcement learning policy jointly generating an efficient assignment sequence. An overview of our framework is shown in Fig. 2. 
+
+A. Task Representation 
+
+Executing a task τj involves a sequence of transit and 
+
+transfer paths executed by an assigned robot resulting in the rearrangement of object j from osj to ogj . The former indicate robot motion without object pushing whereas the latter indicate robot motion while an object is being pushed. For both cases, optimal robot paths can be analytically derived using Dubins curves. To plan a set of robot paths resulting in the rearrangement of all objects, we leverage prior work [2, 3] on single-robot nonprehensile rearrange-ment planning. In particular, we design a Push-Traversability graph (PT-graph), comprising pushing poses (i.e., robot poses involving robot-object surface contact for objects lying at their initial and goal poses), and edges representing Dubins curves between pushing poses, as shown in Fig. 3. By directly searching this graph, we can extract a nominal assignment sequence, σ0, comprising a sequence of object transfer paths resulting in the rearrangement of all objects for a single robot pusher [2, 3]. Leveraging the structure induced by this sequence, we want to determine an efficient task schedule that accommodates n robots. 
+
+B. Assignment Sequence as a Markov Decision Process 
+
+We cast the problem of finding an assignment sequence σ
+
+as an episodic Markov Decision Process (MDP) with horizon 
+
+m (the number of tasks to be assigned). Our MDP is a tuple (S, A, T, R ), where the state sh ∈ S contains the sequence of assignments already made before step h. The action ah = ( τj , i ) from the action space A = M×N , taken at step h assigns task τj to robot i. The transition function 
+
+T is deterministic and appends ah to the state, so that the m
+
+actions of a completed episode form the assignment sequence 
+
+σ. The reward function R evaluates the makespan resulting from a completed assignment sequence as: 
+
+R(σ) = 
+
+
+
+− Cmax (σ) if σ is feasible ,R−(σ) otherwise, (2) where Cmax (σ) is the makespan attained by the trajectories computed from collision-free paths generated by a multirobot path planner, normalized per instance by the makespan of the greedy allocation (Sec. V), so that a lower makespan yields a higher reward. The penalty R−(σ) follows two constraint-handling rules [10] where any feasible assignment sequence is preferred to any infeasible one, and infeasible sequences are penalized according to the degree of their violation. We set R−(σ) = Rmin − δ − λ (1 − h/m ), where 
+
+Rmin and δ are the minimum and the standard deviation of the feasible rewards in training, and h is the step at which σ first becomes infeasible. The offset δ places R−(σ)Component Description         
+
+> States from the seed (one set per instance)
+> Resting poses robot initial poses and the pose where each task’s final transfer path ends Transit times free-space Reeds–Shepp [31] time from each resting pose to each task’s pushing pose Task durations each task’s busy time in the seed Path traces sampled waypoints of each task’s paths; used for geometry only Precedence relations task pairs kept in seed order because a start or goal placement blocks a transfer
+> Pseudo-schedule (advanced at each assignment)
+> Robot state resting pose and next availability time of each robot Delivered tasks objects already at their goals Occupancy windows when each assigned task uses its path TABLE I: The geometry, durations, and precedence relations fixed by the seed, and the pseudo-schedule ˆΓhadvanced over them (Sec. IV-B). The upper block is computed once per instance from the seed and the robots’ initial poses, and the lower block is updated at each assignment. Transit times ignore the other robots, which is the surrogate’s central approximation.
+
+strictly below every feasible reward. The term λ (1 − h/m )
+
+ranks the infeasible assignment sequences by how far σ
+
+progresses before failing. Without the term, every infeasible assignment sequence would receive the same penalty, giving the policy no signal toward candidates that fail later. The weight λ bounds the term, keeping the ranking small against the differences among the feasible rewards. Where a single feasible assignment sequence is evaluated with σ, a constant takes the place of δ, and where there is none, of Rmin − δ.
+
+Remark 1: Executing the tasks in an order other than that of σ0 is not guaranteed to preserve feasibility: an object at its start or goal placement can block a transfer path planned for another task. An action is thus admissible in state sh
+
+only when its task is not yet assigned and every conflicting task ordered earlier in σ0 already is. Admissibility does not guarantee feasibility, which the planner evaluates only once 
+
+σ is complete. 
+
+Remark 2: While σ is being filled, the completion time of the task and the next availability of the robot are estimated for each candidate assignment. The estimate accumulates the transit times and task durations of the seed over the tasks already assigned. It plans no paths and therefore accounts for no interaction among the robots. Thus, we refer to this resulting approximate schedule as the pseudo-schedule ˆΓh,which records which objects have been delivered, where each robot rests, when it next becomes available, and when each scheduled motion occupies its path (Table I). Evaluating 
+
+R(σ), by contrast, requires planning the trajectories of all robots. This is handled via prioritized planning and explained in detail in Sec. IV-D. 
+
+C. Learning an Assignment Policy 
+
+Solving the MDP exactly is impractical, since an instance admits up to m! nm assignment sequences and evaluating one requires planning the trajectories of all robots. We therefore assume a stochastic policy πθ and train it via reinforcement                                                     
+
+> Feature Description
+> max(0 ,ˆCa−ˆCmax )extension of the pseudo-schedule
+> max(0 ,ˆCmax −ˆCa)margin ahead of ˆCmax
+> transit free-space time to the pushing pose
+> ˆCi−min i′ˆCi′delay behind the earliest free robot
+> max iˆC+
+> i−min iˆC+
+> ispread of availabilities P
+> jblockage jobjects on the corridor P
+> jcorridor j·overlap joverlap with assigned paths P
+> iblockage i·overlap iidle robots on the corridor
+> max(0 ,1−clearance /r )proximity to the boundary
+> # blocked transits objects obstructing the transit TABLE II: Features of ϕ(sh, a h), evaluated for every candidate assignment from the seed and ˆΓh, without path planning. The availability ˆCiis the time robot icompletes its last assigned task in ˆΓh, and ˆCmax = max iˆCibefore the assignment. The prediction
+> ˆCaadds the candidate’s transit time and task duration from the seed to its robot’s availability, and ˆC+
+> iare the availabilities after the assignment. Clearance is the smallest boundary distance over the candidate’s pushing poses, normalized by the turning radius r
+> (one at the boundary, zero at ror more). The last feature counts earlier-ordered tasks in σ0whose undelivered objects obstruct the non-push segments of the candidate task in the seed.
+
+learning, since no optimal assignment sequences are avail-able to imitate. For each candidate assignment ah, a feature vector 
+
+ϕ(sh, a h) is computed from the seed and the pseudo-schedule ˆΓh. The features measure how much the assignment extends the pseudo-schedule, the balance of the robots’ avail-abilities it leaves, and the geometry and ordering that indicate the risk of leaving the remaining tasks infeasible (Table II). A multilayer perceptron ψθ maps ϕ(sh, a h) to a score, and a softmax over the scores of the admissible candidates gives the policy πθ (ah | sh) ∝ exp ψθ (ϕ(sh, a h)) . The same ψθ
+
+scores every candidate, so the candidate set may change size at every step and across instances. Because the features are aggregates over robots and tasks or properties of the candidate’s own robot, with no entry per robot, the policy applies unchanged to any number of robots. 
+
+Training . The policy is trained via the policy gradient method [42] on the terminal reward. For each instance the policy samples a group of K candidates for σ, each assign-ment drawn from πθ (ah | sh), and the path planner evaluates them. A candidate’s advantage is its reward relative to the group mean, following the shared baseline of POMO [23]. Because all candidates of a group solve the same instance, their mean reward serves as the shared baseline: subtracting it removes the reward offset the instance imposes on every candidate, and no value network has to be trained alongside the policy. 
+
+Inference . At inference time, the policy samples a group of candidates for σ, and the prioritized planner verifies each of them. The feasible plan with the minimum makespan is selected for execution. 
+
+D. Prioritized Multirobot Path Planning 
+
+Once an assignment sequence σ has been determined, robot trajectories are planned one at a time in the order of σ,following the prioritized paradigm in which each plan treats already planned trajectories as dynamic obstacles in space-time [6, 15]. A robot assigned a task receives the highest priority, while idle robots receive the lowest. Individual plans are computed via Hybrid A∗ [13], which respects the car-like kinematics of the robots and routes around obstacles where a path exists. Planned trajectories are recorded in a centralized 
+
+timetable Γ, which holds the pose of every robot and object at each discrete timestep and extends the reservation table of cooperative pathfinding [36] to objects as well as robots. 
+
+Conflict resolution . Prioritized planning is incomplete in general [6]: a robot can be blocked either by a higher-priority robot still moving toward its destination, or by one that has already reached its destination and remains there. Com-pleteness guarantees exist for well-formed infrastructures [6], environments in which every start and goal location can be reached without passing through any other, so that a resting robot never blocks the path of another. Our setting does not meet this condition, since object goals are fixed by the instance and a robot resting where a push ended may block the path of a later task. We therefore resolve the two blocking cases through the following rules: 1) Wait : If the blocking robot or object is in motion and will clear the path within a bounded time window, the planner delays the start time. 2) Safe parking : If the conflict is caused by an idle robot, the planner first computes a collision-free trajectory to move the idle robot to a nearby safe parking location, then replans the original path. The method searches for a safe parking by expanding motion primitives from the pose of the blocking robot. Both apply to every conflict within Γ’s time horizon up to the point of registering the new trajectory, including conflicts that arise after the robot reaches and rests at its goal. If neither resolves the conflict, the task cannot be scheduled for its assigned robot, and the assignment sequence is declared infeasible. V. E VALUATION 
+
+We present an empirical evaluation of MultiPush in sim-ulation, assessing its solution quality, planning efficiency, and generalization to robot counts and a workspace unseen in training. Footage from our experiments can be found at https://youtu.be/eq-31schnCk. 
+
+A. Experiment Design 
+
+Scenarios . We evaluate MultiPush on multiple scenarios involving the rearrangement of 8, 10, 12, and 14 objects using a team of 2-4 MuSHR [37] 1/10-scale car-like robots (see Fig. 4). We consider cubic objects with a side of 
+
+0.15 m. We generate unseen instances across two different workspaces: a 4.5 × 5.5 m2 workspace, in which the policy is trained, and a 5.0 × 5.0 m2 workspace. Following prior work [3], we set the minimum turning radius for stable pushing to 1.43 m, which represents a practical tradeoff between push stability and maneuverability. For training, validation, and testing, we generate nominal instances and derive local variants of each by perturbing the poses of the objects and goals. The assignment policy is trained in the 4.5 × 5.5 m2 workspace only and is used unchanged at inference everywhere else. 
+
+Methods . We compare the following methods, each evalu-ating K′ = 20 candidate assignment sequences per instance:  
+
+> •
+
+GREEDY . A prioritized allocation strategy that pro-cesses the tasks in the order of the seed σ0, assigning each to the earliest available robot and breaking ties by the shortest Reeds–Shepp distance to the task’s pushing pose. The transit path of the selected robot is planned with the prioritized Hybrid A∗ planner (Sec. IV-D), falling back to the next available robot when the plan is infeasible. Each task assignment immediately updates the timetable, so higher-priority assignments constrain subsequent ones. GREEDY is also the reference against which the rewards in training and the relative makespan in evaluation are normalized.  
+
+> •
+
+RANDOM . A policy that fills each assignment with a uniformly random task and robot, evaluated with the same prioritized planner as the other methods. RAN-DOM samples and evaluates K′ candidates per instance, at most four in parallel, and returns the best feasible assignment sequence.  
+
+> •
+
+LNS . A Large Neighborhood Search [35] that takes GREEDY as its initial feasible solution and produces up to K′ candidates, each by removing one or two assignments and reinserting them. The first assignment to remove is selected by one of three heuristics: random, waiting time, or the assignment that finishes last. The waiting-time heuristic also removes the same robot’s assignment with the highest waiting time, if any. Instead of scoring every insertion with a path planner run as in standard LNS, each removed task is reinserted at a position in its neighborhood or at either end of the order, and its robot is chosen at random. The best of three such reinsertions becomes the candidate. The candidates are produced in batches of four evaluated in parallel at each iteration.  
+
+> •
+
+MultiPush . The proposed method, sampling K′ can-didates from the policy and evaluating GREEDY in addition, as for LNS. The evaluations run at most four in parallel as in the other methods. 
+
+Metrics . We report the success rate of each method, the fraction of the test instances it solves; the relative makespan, the makespan divided per instance by that of GREEDY and averaged over the instances solved by every method; and the planning time, averaged over all instances. We also report the fraction of planner evaluations that returned infeasible for each method. 
+
+B. Implementation 
+
+Software. MultiPush is implemented in C++, including the prioritized Hybrid A∗ planner and the Dubins and Reeds– Shepp primitives. The score network ψθ has a single hidden layer of eight units, trained in Python with no learning frame-work beyond the standard library, and loaded by MultiPush at inference. We will release the implementation code upon publication. m = 8 
+
+Scenario n = 1 n = 2 n = 3 n = 4 
+
+> m = 10 m = 12 m = 14
+
+Fig. 4: Qualitative results. The first column shows four scenarios drawn from the test set involving respectively m ∈ { 8}, 10, 12, and 14 objects; objects’ start poses are drawn in yellow, and goal poses in white. The remaining columns show the resulting trajectories planned by MultiPush for n = 1 , 2, 3, and 4 robots, colored by robot.                                                                                                                                     
+
+> 4.5×5.5m2(trained workspace) 5.0×5.0m2(unseen workspace) Rel. Makespan Rel. Makespan
+> nMethod vs. GREEDY vs. BOSS Planning (s) Success (%) vs. GREEDY vs. BOSS Planning (s) Success (%) 1BOSS –1.000 –100.0 –1.000 –100.0 MultiPush+BOSS –0.947 (0.044) 5.1 (4.7) 100.0 –0.945 (0.047) 5.0 (5.2) 100.0 2GREEDY 1.000 0.602 (0.064) –96.0 1.000 0.593 (0.056) –93.0 RANDOM 1.024 (0.133) 0.613 (0.078) 11.9 (8.2) 92.5 1.026 (0.130) 0.606 (0.076) 11.5 (9.5) 92.5 LNS 0.895 (0.077) 0.536 (0.048) 21.9 (22.1) 96.0 0.900 (0.070) 0.532 (0.046) 19.5 (20.5) 93.0 MultiPush 0.872 (0.085) 0.522 (0.047) 8.7 (8.6) 97.5 0.875 (0.075) 0.517 (0.045) 8.6 (9.4) 96.2
+> 3GREEDY 1.000 0.468 (0.061) –95.5 1.000 0.461 (0.062) –92.2 RANDOM 1.071 (0.163) 0.496 (0.071) 17.7 (12.6) 93.8 1.079 (0.154) 0.493 (0.074) 17.5 (15.0) 94.2 LNS 0.879 (0.086) 0.408 (0.046) 32.2 (33.3) 95.5 0.881 (0.082) 0.403 (0.050) 30.6 (31.9) 92.2 MultiPush 0.843 (0.093) 0.391 (0.045) 12.5 (12.3) 98.0 0.847 (0.091) 0.387 (0.049) 13.0 (14.8) 97.0
+> 4GREEDY 1.000 0.407 (0.066) –95.0 1.000 0.399 (0.068) –92.2 RANDOM 1.099 (0.173) 0.441 (0.065) 24.0 (17.2) 94.5 1.109 (0.182) 0.436 (0.069) 24.5 (20.7) 94.5 LNS 0.866 (0.094) 0.349 (0.050) 43.9 (40.5) 95.0 0.869 (0.091) 0.344 (0.053) 41.2 (42.3) 92.2 MultiPush 0.840 (0.103) 0.339 (0.050) 17.1 (16.3) 97.5 0.834 (0.102) 0.331 (0.059) 18.1 (21.8) 97.5
+
+TABLE III: Relative makespan, planning time, and success rate with n robots on the held-out test set for the trained and an unseen workspace. Each workspace column covers 400 test instances, 100 per object count m ∈ { 8, 10 , 12 , 14 }. The test instances appear in neither the training nor the validation set, and ReloPush-BOSS solves every instance. The relative makespan is measured against GREEDY and against the single-robot makespan of BOSS, both averaged over the instances solved by every method. At n = 1 , MultiPush+BOSS verifies the BOSS solution in addition to the K′ candidates in place of the GREEDY allocation. 
+
+Prioritized path planner. The prioritized Hybrid A∗
+
+planner expands motion primitives that include waiting in place, and checks each expansion against the poses recorded in Γ at 0.05 s substeps. It prunes duplicate states on a grid of 0.2 m and π/ 6 rad with a time step of 2.5 s, refined near object contact to 0.08 m and 1.0 s. A search ends when it exhausts its options or reaches its iteration limit, 250 iterations for the main search and 750 for a refinement. The safe parking search expands the same primitives from the pose of the blocking robot, under a limit of 25 iterations. 
+
+Training . The policy is trained across instances involving 
+
+n = 3 agents only, in two stages. In the first stage, behavior cloning attempts to imitate the GREEDY assignment at each step by minimizing the cross-entropy. This stage stops when the validation cross-entropy no longer improves, after 13 epochs. In the second stage, epochs of REINFORCE [42] follow, with rollout groups of K = 16 candidates and a group-mean baseline, path planner evaluations of the 233,640 Fig. 5: Mean makespan, relative to that of GREEDY, on the validation set across training, warm-started with behavior cloning. Each point averages the relative makespan of the best feasible of the K′ sampled candidates over the validation instances the policy solves. The star marks the policy selected for inference. The shaded band is the standard error of the mean. The standard deviation across the solved instances is 0.10 to 0.12 at every epoch. 
+
+unique σ candidates in total, with λ = 0 .2 in R−(σ) (see Eq.(2)). For each object count m ∈ {8, 10 , 12 , 14 }, we randomly generate 100 nominal training instances, all of which ReloPush-BOSS solves. From each nominal instance, we derive 25 local variants by perturbing the position and orientation of every object and goal with noise drawn uni-formly within ±0.05 m and ±0.1 rad, respectively, resulting in a total of 26 instances (including the nominal case). Thus, in total, the training set comprises 100 ×26 = 2600 instances per object count, for a total of 10,400 instances. Out of this set, each epoch draws a unique subsample of 400 instances, comprising 100 instances for each object count. A pass over the training set is thus 26 epochs. Training stops when a pass over the training set improves the relative makespan by less than 0.01 over the validation set. 
+
+Validation . At each epoch, we sample 480 instances, comprising 40 nominal instances and two variants of each from the trained workspace for a total of 120 instances for each of the 4 object counts (all distinct from the training set). At the end of each epoch, the policy is evaluated at inference: it samples K′ candidates, which the prioritized planner evaluates with respect to the GREEDY allocation. The REINFORCE stage stops when a pass over the training set improves the relative makespan by less than 0.01 , after two passes. We select the policy with the lowest relative makespan for inference. Fig. 5 shows the policy performance across the behavior-cloning and REINFORCE epochs. 
+
+Testing . The policy is tested on 400 instances per workspace, 100 per object count m: 20 nominal instances and four variants of each, perturbed as in the training set. The two test sets are generated independently and share no nominal instances. Unlike training, which uses 3 robots only, each instance is evaluated with n ∈ { 2, 3, 4} robots to characterize generalization to unseen robot counts. 
+
+C. Results 
+
+Table III shows the performance of MultiPush against the baselines. 
+
+Learned policy . MultiPush achieves a lower relative makespan than LNS in every workspace and robot count, and LNS requires 2.3 to 2.6 times the planning time of                                    
+
+> Planner evaluations that returned infeasible (%)
+> Trained workspace Unseen workspace Method n= 2 n= 3 n= 4 n= 2 n= 3 n= 4 All RANDOM 40.6 37.7 36.3 37.7 35.3 33.6 36.9 LNS 38.7 42.0 43.4 36.4 40.6 43.2 40.7 MultiPush 31.2 28.3 26.5 29.1 26.7 24.6 27.7
+> TABLE IV: Fraction of planner evaluations that returned infeasible on the test set of Table III.
+
+MultiPush. RANDOM does not improve on GREEDY in any workspace or robot count, so the gains follow from the learned policy rather than from the evaluation budget. 
+
+Generalization . MultiPush maintains its advantage over LNS in the unseen workspace and at the two- and four-robot evaluations. The policy therefore generalizes to the robot counts explored and a workspace of different shape unseen in training. 
+
+Fewer infeasible evaluations . The planner returns infea-sible for a smaller fraction of the evaluations of MultiPush than of LNS and RANDOM (Table IV). An infeasible evaluation ends only after the search exhausts its options or reaches its iteration limit, so it consumes the most planning time while yielding no plan. MultiPush thus spends more of the evaluations on plans the robots can execute, which contributes to its planning-time advantage. VI. H ARDWARE DEMONSTRATIONS 
+
+We demonstrate MultiPush on a real-world scenario in-volving the rearrangement of 12 objects using two and three MuSHR 1/10th-scale racecars [37], fitted with flat bumpers for pushing (see Fig. 1). Each robot tracks its planned trajectory with a model predictive controller, receiving only its own pose from an overhead motion-capture system. The controller performs path tracking only, with no collision avoidance, since the planned trajectories resolve conflicts among robots and objects (Sec. IV-D). The objects are manipulated open loop, with no feedback on their states during execution. Video footage of the demonstrations is provided as a multimedia attachment. VII. L IMITATIONS 
+
+MultiPush is limited to instances that ReloPush-BOSS [3] can solve, since the seed fixes the transfer path of every task. While our implementation is adapted from a recent RL framework [23], MultiPush is not tied to it – other RL frameworks could be swapped out for improved performance. Additionally, the empirical bound of 14 objects also follows from ReloPush-BOSS, whose success rate drops on larger instances. Pushing is modeled as quasistatic, which bounds the robots’ steering by the minimum turning radius for stable pushing and leaves slipping and other dynamic effects un-modeled. The evaluation covers only identical cubic objects, at most 14 per instance, and two rectangular workspaces of similar size. Adding robots yields diminishing returns, with the fourth robot lowering the makespan less than the third does (see Table III), since conflict resolution introduces longer waits as congestion increases. Finally, MultiPush is centralized – robots are assigned specific trajectories which they then execute independently. In future work, we will extend MultiPush to decentralized execution under limited communication. We will consider objects of different shapes, sizes, and physical properties, and account for contact uncer-tainty. REFERENCES [1] A. Agrawal, A. S. Bedi, and D. Manocha. RTAW: An attention inspired reinforcement learning method for multi-robot task allocation in warehouse environments. In IEEE International Conference on Robotics and Automation (ICRA) , pages 1393–1399, 2023. [2] J. Ahn and C. Mavrogiannis. ReloPush: Multi-object rearrangement in confined spaces with a nonholonomic mobile robot pusher. In 
+
+Proceedings of the IEEE International Conference on Robotics and Automation (ICRA) , pages 13196–13203, 2025. [3] J. Ahn and C. Mavrogiannis. ReloPush-BOSS: Optimization-guided nonmonotone rearrangement planning for a car-like robot pusher. 
+
+IEEE Robotics and Automation Letters , 11(4), 2026. [4] J. Ahn, C. Kim, and C. Nam. Coordination of two robotic manipulators for object retrieval in clutter. In Proceedings of the IEEE International Conference on Robotics and Automation (ICRA) , pages 1039–1045, 2022. [5] J. Ahn, S. Lee, and C. Nam. Coordination of multiple mobile ma-nipulators for ordered sorting of cluttered objects. In 2023 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) ,pages 712–718. IEEE, 2023. [6] M. ˇ C´ ap, P. Nov´ ak, A. Kleiner, and M. Seleck` y. Prioritized planning algorithms for trajectory coordination of multiple mobile robots. IEEE transactions on automation science and engineering , 12(3):835–849, 2015. [7] M. Damani, Z. Luo, E. Wenzel, and G. Sartoretti. PRIMAL 2:Pathfinding via reinforcement and imitation multi-agent learning – lifelong. IEEE Robotics and Automation Letters , 6(2):2666–2673, 2021. [8] R. D’Andrea. Guest editorial: A revolution in the warehouse: A retrospective on kiva systems and the grand challenges ahead. IEEE Transactions on Automation Science and Engineering , 9(4):638–639, 2012. [9] B. Davis, I. Karamouzas, and S. Guy. NH-TTC: A gradient-based framework for generalized anticipatory collision avoidance. In Pro-ceedings of Robotics: Science and Systems , Corvalis, Oregon, USA, July 2020. doi: 10.15607/RSS.2020.XVI.078. [10] K. Deb. An efficient constraint handling method for genetic algo-rithms. Computer Methods in Applied Mechanics and Engineering ,186(2-4):311–338, 2000. [11] M. Dogar and S. Srinivasa. A framework for push-grasping in clutter. 
+
+Robotics: Science and systems VII , 1:65–72, 2011. [12] M. R. Dogar and S. S. Srinivasa. A planning framework for non-prehensile manipulation under clutter and uncertainty. Autonomous Robots , 33(3):217–236, 2012. [13] D. Dolgov, S. Thrun, M. Montemerlo, and J. Diebel. Practical search techniques in path planning for autonomous driving. ann arbor , 1001 (48105):18–80, 2008. [14] L. E. Dubins. On curves of minimal length with a constraint on average curvature, and with prescribed initial and terminal positions and tangents. American Journal of mathematics , 79(3):497–516, 1957. [15] M. Erdmann and T. Lozano-Perez. On multiple moving objects. 
+
+Algorithmica , 2(1):477–521, 1987. [16] S. Goyal, A. Ruina, and J. Papadopoulos. Planar sliding with dry friction part 1. limit surface and moment function. Wear , 143(2):307– 330, 1991. [17] S. D. Han, N. M. Stiffler, A. Krontiris, K. E. Bekris, and J. Yu. Com-plexity results and fast methods for optimal tabletop rearrangement with overhand grasps. The International Journal of Robotics Research ,37(13-14):1775–1795, 2018. [18] J. A. Haustein, J. King, S. S. Srinivasa, and T. Asfour. Kinodynamic randomized rearrangement planning via dynamic transitions between statically stable states. In 2015 IEEE International Conference on Robotics and Automation (ICRA) , pages 3075–3082. IEEE, 2015. [19] E. Huang, Z. Jia, and M. T. Mason. Large-scale multi-object rearrange-ment. In 2019 international conference on robotics and automation (ICRA) , pages 211–218. IEEE, 2019. [20] J. E. King, M. Klingensmith, C. M. Dellin, M. R. Dogar, P. Velagapudi, N. S. Pollard, and S. S. Srinivasa. Pregrasp manipulation as trajectory optimization. In Robotics: Science and Systems . Berlin, 2013. [21] J. E. King, M. Cognetti, and S. S. Srinivasa. Rearrangement planning using object-centric and robot-centric action spaces. In 2016 IEEE International Conference on Robotics and Automation (ICRA) , pages 3940–3947. IEEE, 2016. [22] A. Krontiris and K. E. Bekris. Dealing with difficult instances of object rearrangement. In Robotics: Science and Systems , volume 1123, 2015. [23] Y.-D. Kwon, J. Choo, B. Kim, I. Yoon, Y. Gwon, and S. Min. Pomo: Policy optimization with multiple optima for reinforcement learning. 
+
+Advances in neural information processing systems , 33:21188–21198, 2020. [24] J. Li, Z. Chen, D. Harabor, P. J. Stuckey, and S. Koenig. Any-time multi-agent path finding via large neighborhood search. In 
+
+International joint conference on artificial intelligence 2021 , pages 4127–4135. Association for the Advancement of Artificial Intelligence (AAAI), 2021. [25] J. Li, Z. Chen, D. Harabor, P. J. Stuckey, and S. Koenig. Mapf-lns2: Fast repairing for multi-agent path finding via large neighbor-hood search. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 36, pages 10256–10265, 2022. [26] K. M. Lynch and M. T. Mason. Stable pushing: Mechanics, control-lability, and planning. The international journal of robotics research ,15(6):533–556, 1996. [27] H. Ma, J. Li, T. K. S. Kumar, and S. Koenig. Lifelong multi-agent path finding for online pickup and delivery tasks. In Proceedings of the International Joint Conference on Autonomous Agents and Multi-Agent Systems (AAMAS) , pages 837–845, 2017. [28] H. Ma, D. Harabor, P. J. Stuckey, J. Li, and S. Koenig. Searching with consistent prioritization for multi-agent path finding. In Proceedings of the AAAI conference on artificial intelligence , volume 33, pages 7643–7650, 2019. [29] H. Ma, W. H¨ onig, T. S. Kumar, N. Ayanian, and S. Koenig. Life-long path planning with kinematic constraints for multi-agent pickup and delivery. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 33, pages 7651–7658, 2019. [30] M. T. Mason. Mechanics and planning of manipulator pushing operations. The International Journal of Robotics Research , 5(3):53– 71, 1986. [31] J. Reeds and L. Shepp. Optimal paths for a car that goes both forwards and backwards. Pacific journal of mathematics , 145(2):367–393, 1990. [32] K. Ren, G. Wang, A. S. Morgan, L. E. Kavraki, and K. Hang. Object-centric kinodynamic planning for nonprehensile robot rearrangement manipulation. IEEE Transactions on Robotics , 2025. [33] G. Sartoretti, J. Kerr, Y. Shi, G. Wagner, T. S. Kumar, S. Koenig, and H. Choset. Primal: Pathfinding via reinforcement and imitation multi-agent learning. IEEE Robotics and Automation Letters , 4(3): 2378–2385, 2019. [34] G. Sharon, R. Stern, A. Felner, and N. R. Sturtevant. Conflict-based search for optimal multi-agent pathfinding. Artificial intelligence , 219: 40–66, 2015. [35] P. Shaw. Using constraint programming and local search methods to solve vehicle routing problems. In International conference on principles and practice of constraint programming , pages 417–431. Springer, 1998. [36] D. Silver. Cooperative pathfinding. In Proceedings of the aaai con-ference on artificial intelligence and interactive digital entertainment ,volume 1, pages 117–122, 2005. [37] S. S. Srinivasa, P. Lancaster, J. Michalove, M. Schmittle, C. Summers, M. Rockett, R. Scalise, J. R. Smith, S. Choudhury, C. Mavrogiannis, et al. Mushr: A low-cost, open-source robotic racecar for education and research. arXiv preprint arXiv:1908.08031 , 2019. [38] R. Stern, N. Sturtevant, A. Felner, S. Koenig, H. Ma, T. Walker, J. Li, D. Atzmon, L. Cohen, T. K. Kumar, et al. Multi-agent pathfinding: Definitions, variants, and benchmarks. In Proceedings of the international symposium on combinatorial search , volume 10, pages 151–158, 2019. [39] M. Stilman, J.-U. Schamburek, J. Kuffner, and T. Asfour. Manipulation planning among movable obstacles. In Proceedings 2007 IEEE international conference on robotics and automation , pages 3327– 3332. IEEE, 2007. [40] S. Talia, A. Thareja, C. Mavrogiannis, M. Schmittle, and S. S. Srini-vasa. Pushr: A multirobot system for nonprehensile rearrangement. In 2023 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) , pages 5380–5387. IEEE, 2023. [41] L. Wen, Y. Liu, and H. Li. Cl-mapf: Multi-agent path finding for car-like robots with kinematic and spatiotemporal constraints. Robotics and Autonomous Systems , 150:103997, 2022. [42] R. J. Williams. Simple statistical gradient-following algorithms for connectionist reinforcement learning. Machine learning , 8(3):229– 256, 1992.
