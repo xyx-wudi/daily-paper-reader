@@ -6,24 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-27
-- 运行时间：2026-09-27 22:11:30 UTC
+- 最新运行日期：2026-09-28
+- 运行时间：2026-09-28 23:58:55 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
-- 速读区：1
+- 本次总论文数：5
+- 精读区：2
+- 速读区：3
 
 ### 今日简报（AI）
-今日仅速读1篇论文，聚焦多车协同推挤式重排。唯一推荐《MultiPush: Learning to Rearrange with Teams of Car-Like Pushers》（6.0/10），关注多智能体协作与类车机器人操控。普通读者可先看其团队协同策略，再留意该方向后续进展。
-- 详情：[/202609/27/README](/202609/27/README)
+今日精读2篇、速读3篇共5篇多智能体前沿论文，HySTAR以10分满分领跑。最值得关注的是用锚定超图做稳定信用分配，以及用测试时梯度引导多智能体流策略。普通读者可先看这两篇精读，再按需浏览世界模型规划与激励设计等速读方向。
+- 详情：[/202609/28/README](/202609/28/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [HySTAR: Anchored Hypergraphs for Stable Credit Assignment in Cooperative Multi-Agent Reinforcement Learning](/202609/28/2609.31531v1-hystar-anchored-hypergraphs-for-stable-credit-assignment-in-cooperative-multi-agent-reinforcement-learning)  
+   标签：评分：10.0/10、query:marl
+   evidence：合作多智能体强化学习中的价值分解信用分配
+2. [G2MAF: Test-Time Gradient Guidance for Multi-Agent Flow Policies](/202609/28/2609.31286v1-g2maf-test-time-gradient-guidance-for-multi-agent-flow-policies)  
+   标签：评分：9.0/10、query:marl
+   evidence：离线多智能体强化学习、协作策略、联合策略精化
 
 ### 速读区论文标签
-1. [MultiPush: Learning to Rearrange with Teams of Car-Like Pushers](/202609/27/2609.27005v1-multipush-learning-to-rearrange-with-teams-of-car-like-pushers)  
+1. [MA-WAM: Multi-Agent World-Action Model for Test-Time Planning](/202609/28/2609.31281v1-ma-wam-multi-agent-world-action-model-for-test-time-planning)  
+   标签：评分：7.0/10、query:marl
+   evidence：多智能体协作任务、联合动作、团队回报世界模型
+2. [Incentive Design for Multi-Agent Systems: A Bilevel Optimization Framework for Coordinating Independent Agents and Convergence Analysis](/202609/28/2609.26726v1-incentive-design-for-multi-agent-systems-a-bilevel-optimization-framework-for-coordinating-independent-agents-and-convergence-analysis)  
    标签：评分：6.0/10、query:marl
-   evidence：基于强化学习协调机器人团队完成多物体重排
+   evidence：一领导多跟随、各自求解MDP并协调策略的多智能体系统
+3. [AgentWorld: Benchmarking Long-Horizon Collaboration of Multi-agent LLMs](/202609/28/2609.31590v1-agentworld-benchmarking-long-horizon-collaboration-of-multi-agent-llms)  
+   标签：评分：6.0/10、query:marl
+   evidence：各智能体独立行动、无法访问他人内部状态的多智能体协作
 
 
 <div class="dpr-home-promo-card">
