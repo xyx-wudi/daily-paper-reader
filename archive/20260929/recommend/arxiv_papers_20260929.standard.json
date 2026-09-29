@@ -1,0 +1,511 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-29T23:27:01.928600+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 7,
+    "deep_cap": 6,
+    "deep_selected": 7,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2609.32019v1",
+      "source": "arxiv",
+      "title": "Decentralized Master-Mind: Joint Action Refinement through Iterative Intent Denoising in Multi-Agent Pathfinding",
+      "abstract": "Decentralized multi-agent path finding (MAPF) with communication requires agents to reach individual goals without collisions under partial observability. Learnable policies trained on expert data provide an effective approach to this problem. However, when several coordinated joint actions are valid in the same context, independently sampling from per-agent distributions can recombine locally valid choices into incompatible joint actions. This failure can arise from the final sampling mechanism even when the per-agent action distributions are learned correctly. DMM (Decentralized Master-Mind) addresses this by replacing one-shot action sampling with discrete, iterative refinement of action intents across communication rounds, inspired by denoising in diffusion models. Agents initialize random action intents and refine them through local communication, coupling their choices before commitment. DMM is pretrained with imitation learning on expert MAPF solutions and further optimized with MICPO, a critic-free group-relative reinforcement-learning method designed for multi-agent, multi-round action refinement. DMM generally achieves higher success rates and lower solution costs than the evaluated learnable baselines. On 1,600 MovingAI tasks, DMM fine-tuned with MICPO solves 1,598, the highest coverage among the evaluated methods, while achieving solution costs close to those of the strongest baselines. DMM also scales to over one million simultaneously acting agents in obstacle-rich environments. These results show that round-level intent refinement can improve joint-action coordination while preserving decentralized execution.",
+      "authors": [
+        "Valeriy Vyaltsev",
+        "Anton Andreychuk",
+        "Taisia Zlotnikova",
+        "Konstantin Yakovlev",
+        "Aleksandr Panov",
+        "Alexey Skrynnik"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-09-25T21:31:41+00:00",
+      "link": "https://arxiv.org/pdf/2609.32019v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "decentralized multi-agent pathfinding with learnable policies and communication",
+      "llm_evidence_cn": "带通信与可学习策略的去中心化多智能体路径规划",
+      "llm_evidence": "带通信与可学习策略的去中心化多智能体路径规划",
+      "canonical_evidence": "带通信与可学习策略的去中心化多智能体路径规划",
+      "llm_tldr_en": "In decentralized multi-agent pathfinding, independent sampling can recombine locally valid choices into incompatible joint actions. DMM replaces one-shot sampling with discrete iterative refinement of action intents across communication, improving joint-action consistency.",
+      "llm_tldr_cn": "部分可观测下的去中心化多智能体路径规划要求智能体无碰撞到达各自目标，但独立从各智能体分布采样可能把局部有效动作重组为不兼容的联合动作。DMM将一次性动作采样替换为跨通信的离散迭代意图精化，使智能体逐步协调动作意图。该方法在专家数据训练的策略上缓解了采样层面导致的联合动作冲突。其意义在于揭示并修复采样机制本身引发的多智能体协调失败。",
+      "llm_tldr": "部分可观测下的去中心化多智能体路径规划要求智能体无碰撞到达各自目标，但独立从各智能体分布采样可能把局部有效动作重组为不兼容的联合动作。DMM将一次性动作采样替换为跨通信的离散迭代意图精化，使智能体逐步协调动作意图。该方法在专家数据训练的策略上缓解了采样层面导致的联合动作冲突。其意义在于揭示并修复采样机制本身引发的多智能体协调失败。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.32048v1",
+      "source": "arxiv",
+      "title": "Interactive Distributionally Robust Multi-Agent Learning with General Function Approximation",
+      "abstract": "Model misspecification poses a fundamental challenge in multi-agent reinforcement learning, where transition uncertainty can be amplified by strategic interactions among agents. Distributionally robust Markov games (DRMGs) provide a principled framework for addressing such uncertainty, yet existing methods often rely on restrictive assumptions or scale poorly to large state and joint action spaces. We study online learning in general-sum DRMGs with general function approximation and $φ$-divergence uncertainty sets. We propose RoMEX-$φ$, a model-free framework that integrates equilibrium-based exploration with dual fitted learning. Through a functional dual representation of the robust multi-agent Bellman operator, RoMEX-$φ$ enables tractable worst-case value estimation from nominal interaction data using a centered empirical robust discrepancy. We introduce the robust Multi-Agent Decoupling Coefficient (robust MADC) to characterize the intrinsic exploration complexity arising from strategic interactions and adversarial transition uncertainty. We establish sublinear robust regret guarantees governed by the robust MADC rather than explicitly by the state and joint action space sizes, replacing tabular dependence with intrinsic function-class complexity. Numerical experiments on a scalable general-sum DRMG under total variation uncertainty show that RoMEX-$φ$ is substantially more resilient to transition shifts than its non-robust counterpart while remaining competitive with an exact tabular robust baseline. Our results provide a scalable framework for distributionally robust multi-agent reinforcement learning with general function approximation.",
+      "authors": [
+        "Debamita Ghosh",
+        "George K. Atia",
+        "Yue Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-25T22:28:43+00:00",
+      "link": "https://arxiv.org/pdf/2609.32048v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "distributionally robust Markov games, multi-agent RL",
+      "llm_evidence_cn": "分布式鲁棒马尔可夫博弈与多智能体强化学习",
+      "llm_evidence": "分布式鲁棒马尔可夫博弈与多智能体强化学习",
+      "canonical_evidence": "分布式鲁棒马尔可夫博弈与多智能体强化学习",
+      "llm_tldr_en": "Studies online learning in distributionally robust Markov games with general function approximation, proposing RoMEX-phi, a model-free method combining equilibrium exploration and dual fitted learning.",
+      "llm_tldr_cn": "针对多智能体强化学习中模型误配与策略交互放大转移不确定性的难题，本文研究通用函数逼近与φ散度不确定集下的分布式鲁棒马尔可夫博弈。提出无模型框架RoMEX-φ，通过鲁棒多智能体贝尔曼算子的函数对偶表示，将基于均衡的探索与对偶拟合学习相结合。理论分析给出在线学习保证，可扩展至大规模状态与联合动作空间。该工作为不确定环境下的多智能体在线学习提供了统一且可扩展的鲁棒学习框架。",
+      "llm_tldr": "针对多智能体强化学习中模型误配与策略交互放大转移不确定性的难题，本文研究通用函数逼近与φ散度不确定集下的分布式鲁棒马尔可夫博弈。提出无模型框架RoMEX-φ，通过鲁棒多智能体贝尔曼算子的函数对偶表示，将基于均衡的探索与对偶拟合学习相结合。理论分析给出在线学习保证，可扩展至大规模状态与联合动作空间。该工作为不确定环境下的多智能体在线学习提供了统一且可扩展的鲁棒学习框架。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.32129v1",
+      "source": "arxiv",
+      "title": "Residual Denoising Enables Sample-Efficient Multi-Agent Coordination on Demand",
+      "abstract": "Pretrained robot policies offer strong manipulation skills but are typically limited to single-agent settings, where a robot acts in isolation. In this work, we study how to adapt pretrained single-agent diffusion policies to multi-agent settings using minimal collaborative data, co-optimizing for two key objectives: high coordination performance and single-agent skill retention. To this end, we introduce ALTER, an adaptation method for coordination on demand: the adapted policy coordinates with other robots when deployed in a team while remaining capable of acting independently when operating alone. Execution is decentralized: each robot acts only on its own visual observations, without explicit inter-agent communication. Our method trains a coordination head that predicts a residual denoiser to transform single-agent behavior into coordinated multi-agent behavior when necessary while also preserving single-agent capabilities. To preserve single-agent capabilities, we augment a small number of collaborative demonstrations with self-distilled data generated by the base policy during training of the residual denoiser. In simulation,ALTER achieves higher coordination success over our baselines while retaining much higher source-skill retention. In our hardware experiments, we find similar trends where ALTER better co-optimizes for coordination success and single-agent skill retention than the baselines",
+      "authors": [
+        "Dayi Dong",
+        "Maulik Bhatt",
+        "Aayushi Shrivastava",
+        "Lasse Peters",
+        "Negar Mehr"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-09-26T01:09:37+00:00",
+      "link": "https://arxiv.org/pdf/2609.32129v1",
+      "tags": [
+        "keyword:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "decentralized execution, each robot acts on its own observations without communication",
+      "llm_evidence_cn": "去中心化执行，各机器人仅依赖自身观测且无显式通信",
+      "llm_evidence": "去中心化执行，各机器人仅依赖自身观测且无显式通信",
+      "canonical_evidence": "去中心化执行，各机器人仅依赖自身观测且无显式通信",
+      "llm_tldr_en": "Pretrained single-agent diffusion policies are adapted to multi-agent teams with minimal collaborative data via ALTER. Execution is decentralized, requiring no inter-agent communication, while retaining solo skills and enabling coordination on demand.",
+      "llm_tldr_cn": "预训练机器人策略具备强操作能力，但通常局限于单智能体场景，难以直接用于团队协作。ALTER利用少量协作数据，将预训练单智能体扩散策略适配到多智能体环境，同时兼顾协调性能与单智能体技能保持。执行阶段完全去中心化，每个机器人仅依赖自身视觉观测，无需显式通信。该方法实现按需协调，使策略在团队中协作、单独作业时仍保持独立能力。",
+      "llm_tldr": "预训练机器人策略具备强操作能力，但通常局限于单智能体场景，难以直接用于团队协作。ALTER利用少量协作数据，将预训练单智能体扩散策略适配到多智能体环境，同时兼顾协调性能与单智能体技能保持。执行阶段完全去中心化，每个机器人仅依赖自身视觉观测，无需显式通信。该方法实现按需协调，使策略在团队中协作、单独作业时仍保持独立能力。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.32594v1",
+      "source": "arxiv",
+      "title": "MA-FPPO: Multi-Agent Flow-Pretrained Policy Optimization",
+      "abstract": "Multi-agent flow policies learn cooperative behavior from fixed offline datasets, but often struggle to complete tasks in situations not covered by the offline data. In these situations, agents must both adapt to changes in the environment and coordinate with one another, yet action patterns learned offline are often insufficient for effective adaptation and coordination. To address this problem, we propose Multi-Agent Flow-Pretrained Policy Optimization (MA-FPPO), which uses online fine-tuning to improve the cooperative behavior of models pretrained with flow matching through new interactions with the environment. Building on the behavior learned during pretraining, we construct policies with explicit action likelihoods for discrete and continuous action spaces. We then update the pretrained model using shared team advantages to further improve coordination based on team performance. Our method achieves, on average, relative gains of 52.8% over the strongest listed offline baselines across 30 settings and 29.8% over purely online learning across 38 comparisons with matched online budgets and evaluation protocols.",
+      "authors": [
+        "Guowei Zou",
+        "Haonan Chen",
+        "Haitao Wang",
+        "Beiwen Zhang",
+        "Na Yan",
+        "Hejun Wu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-26T13:12:01+00:00",
+      "link": "https://arxiv.org/pdf/2609.32594v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperative multi-agent RL with online fine-tuning",
+      "llm_evidence_cn": "在线微调的协作多智能体强化学习",
+      "llm_evidence": "在线微调的协作多智能体强化学习",
+      "canonical_evidence": "在线微调的协作多智能体强化学习",
+      "llm_tldr_en": "MA-FPPO online fine-tunes flow-matching pretrained multi-agent policies with explicit action likelihoods, improving cooperative adaptation and coordination beyond fixed offline datasets in discrete and continuous action spaces.",
+      "llm_tldr_cn": "多智能体流策略虽能从离线数据学习协作行为，但在离线数据未覆盖的情形下难以适应与协调。本文提出 MA-FPPO，用在线微调改进经流匹配预训练的协作策略，并构建具显式动作似然的多智能体策略以支持离散与连续动作空间。方法在需要适应环境变化并相互协调的任务中提升协作完成能力，为离线预训练与在线微调的协作多智能体学习提供方案。",
+      "llm_tldr": "多智能体流策略虽能从离线数据学习协作行为，但在离线数据未覆盖的情形下难以适应与协调。本文提出 MA-FPPO，用在线微调改进经流匹配预训练的协作策略，并构建具显式动作似然的多智能体策略以支持离散与连续动作空间。方法在需要适应环境变化并相互协调的任务中提升协作完成能力，为离线预训练与在线微调的协作多智能体学习提供方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.33563v1",
+      "source": "arxiv",
+      "title": "MA-JEPA: Joint-Embedding World Models for Multi-Agent Reinforcement Learning",
+      "abstract": "World models improve sample efficiency by training policies on imagined trajectories, but their usefulness depends on learning representations that capture the information needed for future control. We study whether self-supervised joint-embedding prediction (JEPA) can provide this learning signal for multi-agent reinforcement learning. We introduce MA-JEPA, a stochastic world model that replaces observation reconstruction with prediction of target representations, enabling model-based multi-agent reinforcement learning with centralized training and decentralized execution. A categorical latent state and a causal Transformer are trained with posterior and action-conditioned dynamics prediction objectives and are then used for actor-critic learning from latent imagination. A training-only joint predictor conditions on all agents' local states and actions to predict each agent's next local observation embedding. These predictions are passed through the same local posterior used during real interaction with a centralized critic that is used only for value learning, with execution remaining decentralized. Our experiments show that this architecture performs strongly on SMAC, matching or exceeding the strongest reported comparator mean win rate on four of eight evaluated maps.",
+      "authors": [
+        "Brandon Gary Kaplowitz",
+        "Osaze James Obahor",
+        "Christian Schroeder de Witt"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-09-27T13:37:30+00:00",
+      "link": "https://arxiv.org/pdf/2609.33563v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "model-based MARL with centralized training and decentralized execution via JEPA world models",
+      "llm_evidence_cn": "基于JEPA世界模型的模型式多智能体强化学习，采用集中训练分散执行",
+      "llm_evidence": "基于JEPA世界模型的模型式多智能体强化学习，采用集中训练分散执行",
+      "canonical_evidence": "基于JEPA世界模型的模型式多智能体强化学习，采用集中训练分散执行",
+      "llm_tldr_en": "World models need representations useful for control. MA-JEPA replaces observation reconstruction with self-supervised joint-embedding prediction, enabling model-based MARL with centralized training and decentralized execution using a categorical latent and causal Transformer.",
+      "llm_tldr_cn": "针对世界模型效果依赖能否学到有利于未来控制的表征、而观测重建信号可能不足的问题，本文研究自监督联合嵌入预测（JEPA）能否为多智能体强化学习提供有效学习信号，提出MA-JEPA随机世界模型，用目标表征预测替代观测重建。模型以类别潜状态和因果Transformer结合后验与动作条件动力学目标训练，并用于演员-评论家学习，支持集中训练与分散执行，提升了样本效率。",
+      "llm_tldr": "针对世界模型效果依赖能否学到有利于未来控制的表征、而观测重建信号可能不足的问题，本文研究自监督联合嵌入预测（JEPA）能否为多智能体强化学习提供有效学习信号，提出MA-JEPA随机世界模型，用目标表征预测替代观测重建。模型以类别潜状态和因果Transformer结合后验与动作条件动力学目标训练，并用于演员-评论家学习，支持集中训练与分散执行，提升了样本效率。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.33637v1",
+      "source": "arxiv",
+      "title": "Hierarchical Multi-agent Reinforcement Learning for Warehouse Robot Coordination under Communication Loss",
+      "abstract": "In this paper, we propose a hierarchical multi-agent reinforcement learning framework for coordinating robot teams in warehouse environments under communication loss. We partition the robot team into groups, with centralized coordination within each group and distributed coordination across groups. Each group uses a recurrent predictor to estimate unavailable interaction information due to communication loss. A higher-level policy then generates a compact coordination reference that conditions the local control policy within each group. A predictive safety filter evaluates and modifies the proposed controls when they violate safety constraints. Simulation results show improved task completion under communication loss, reduced communication growth as the team size increases, and safe operation in the tested scenarios.",
+      "authors": [
+        "Weihao Sun",
+        "Gehui Xu",
+        "Andreas A. Malikopoulos"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.RO"
+      ],
+      "published": "2026-09-27T14:59:28+00:00",
+      "link": "https://arxiv.org/pdf/2609.33637v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "hierarchical multi-agent RL for robot team coordination",
+      "llm_evidence_cn": "面向机器人团队协调的分层多智能体强化学习",
+      "llm_evidence": "面向机器人团队协调的分层多智能体强化学习",
+      "canonical_evidence": "面向机器人团队协调的分层多智能体强化学习",
+      "llm_tldr_en": "To coordinate warehouse robot teams under communication loss, this paper proposes a hierarchical MARL framework with intra-group centralized and inter-group distributed coordination, a recurrent predictor and a predictive safety filter.",
+      "llm_tldr_cn": "仓库机器人团队在通信丢失时协调困难，集中式方法难以扩展而纯分布式方法缺乏协同。该文提出分层多智能体强化学习框架，将机器人分组实现组内集中、组间分布式协调，并用循环预测器估计缺失的交互信息，高层策略生成协调参考，预测性安全过滤器保障安全。仿真结果显示通信丢失下任务完成率提升。其贡献是为通信受限的多机器人系统提供兼顾安全与协调的分层方案。",
+      "llm_tldr": "仓库机器人团队在通信丢失时协调困难，集中式方法难以扩展而纯分布式方法缺乏协同。该文提出分层多智能体强化学习框架，将机器人分组实现组内集中、组间分布式协调，并用循环预测器估计缺失的交互信息，高层策略生成协调参考，预测性安全过滤器保障安全。仿真结果显示通信丢失下任务完成率提升。其贡献是为通信受限的多机器人系统提供兼顾安全与协调的分层方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.34459v1",
+      "source": "arxiv",
+      "title": "Escaping Local Views: Discovering Latent Concepts for Interpretable Multi-Agent Reinforcement Learning",
+      "abstract": "Efficient cooperation is challenging due to the usual partial observability of each agent in multi-agent reinforcement learning. Recurrent networks encode local interaction histories, but their hidden representations provide limited insight into the information underlying individual decisions. To address these challenges, we propose a novel interpretable framework, called escaping local views (ELV), which introduces semantically structured latent concepts to render policy decisions transparent. Specifically, each agent extracts low-dimensional semantic concepts from its local observation and action-observation trajectory. These concepts are jointly encoded into a contextual latent variable via a variational autoencoder (VAE), which builds a bridge between local views and global semantics. To explicitly model the decision of each agent, we employ a dual-path attention mechanism in which one module estimates the salience of individual concepts relative to the global context, while the other captures higher-order cooperative patterns with pairwise concept interactions. Furthermore, we incorporate a concept prediction module that derives an intrinsic reward from next-concept prediction errors, which incentivizes agents to explore regions of semantic novelty. Experiments in multiple environments verify that ELV not only achieves competitive performance but also explicitly provides how agents reason about their decisions.",
+      "authors": [
+        "Yijie Sun",
+        "Sanquan Sun",
+        "Yanda Zhu",
+        "Yuanyang Zhu",
+        "Yaohua Hu",
+        "Chunlin Chen"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-28T07:17:25+00:00",
+      "link": "https://arxiv.org/pdf/2609.34459v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "interpretable multi-agent reinforcement learning under partial observability for cooperation",
+      "llm_evidence_cn": "部分可观测下可解释的多智能体强化学习协作",
+      "llm_evidence": "部分可观测下可解释的多智能体强化学习协作",
+      "canonical_evidence": "部分可观测下可解释的多智能体强化学习协作",
+      "llm_tldr_en": "Proposes ELV, an interpretable MARL framework that extracts semantically structured latent concepts from each agent's local observations and action-observation trajectories via a variational autoencoder, making cooperative policies transparent under partial observability.",
+      "llm_tldr_cn": "论文针对多智能体强化学习中部分可观测性导致个体决策依据难以理解、循环网络隐表示缺乏可解释性的问题，提出名为ELV的可解释框架。每个智能体从局部观测和动作-观测轨迹中提取低维语义概念，并通过变分自编码器联合编码为上下文潜变量，从而使策略决策更加透明。该工作面向协作式多智能体场景，为理解智能体局部视角下的决策提供了结构化解释途径。",
+      "llm_tldr": "论文针对多智能体强化学习中部分可观测性导致个体决策依据难以理解、循环网络隐表示缺乏可解释性的问题，提出名为ELV的可解释框架。每个智能体从局部观测和动作-观测轨迹中提取低维语义概念，并通过变分自编码器联合编码为上下文潜变量，从而使策略决策更加透明。该工作面向协作式多智能体场景，为理解智能体局部视角下的决策提供了结构化解释途径。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.32827v1",
+      "source": "arxiv",
+      "title": "Improving LLM Collaboration via Multi-Agent Preference Learning",
+      "abstract": "Several works have explored multi-agent reinforcement learning (MARL) in LLM collaboration. However, constructing reliable rewards is difficult in practice, as complete and accurate metrics are often unavailable and hard to aggregate. Preference learning provides an alternative by learning from comparative human or AI feedback. Yet, its extension to multi-agent systems remains underexplored. To address this gap, we formulate preference-based multi-agent systems (MAS) from decentralized and centralized collaboration perspectives. We also introduce a general multi-agent preference learning framework (MAPL) to solve these problems. MAPL allows iterative updates by comparing the current solution with decentralized or centralized solutions generated by various agents. We instantiate MAPL using MARL from human feedback (MARLHF) with a learned reward model and multi-agent direct preference optimization (MADPO). Experiments on collaborative writing, coding, tool use, and travel planning show that MAPL can improve collaboration quality and efficiency while approaching the performance of MARL with fixed, well-defined rewards. Within MAPL, MARLHF generally outperforms MADPO on most tasks but remains sensitive to data coverage, agent and comparator models, and the underlying MARL algorithms.",
+      "authors": [
+        "Shuo Liu",
+        "Xinzichen Li",
+        "Tianle Chen",
+        "Christopher Amato"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-09-26T17:54:03+00:00",
+      "link": "https://arxiv.org/pdf/2609.32827v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent RL for LLM collaboration with preference learning",
+      "llm_evidence_cn": "面向LLM协作的多智能体强化学习与偏好学习",
+      "llm_evidence": "面向LLM协作的多智能体强化学习与偏好学习",
+      "canonical_evidence": "面向LLM协作的多智能体强化学习与偏好学习",
+      "llm_tldr_en": "To avoid hard-to-construct rewards in MARL for LLM collaboration, this paper formulates preference-based multi-agent systems and proposes MAPL, a framework iteratively comparing decentralized and centralized agent solutions.",
+      "llm_tldr_cn": "论文关注多智能体强化学习在大语言模型协作中奖励难以构造的问题，完整准确的度量往往缺失且难以聚合。作者提出通用多智能体偏好学习框架MAPL，从去中心化与中心化协作两种视角定义偏好式多智能体系统，通过比较当前解与多种智能体生成的去中心化或中心化解进行迭代更新。该框架为以偏好替代显式奖励的多智能体协作提供了通用方法，拓展了MARL在LLM场景中的适用性。",
+      "llm_tldr": "论文关注多智能体强化学习在大语言模型协作中奖励难以构造的问题，完整准确的度量往往缺失且难以聚合。作者提出通用多智能体偏好学习框架MAPL，从去中心化与中心化协作两种视角定义偏好式多智能体系统，通过比较当前解与多种智能体生成的去中心化或中心化解进行迭代更新。该框架为以偏好替代显式奖励的多智能体协作提供了通用方法，拓展了MARL在LLM场景中的适用性。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.30578v1",
+      "source": "arxiv",
+      "title": "Reinforcement Learning of Communication in a Mesh of Small Language Models",
+      "abstract": "Language models gain accuracy from more compute at test time, but majority voting over independent samples saturates: as samples grow, the vote converges to the model's most frequent answer. Communication can add what sampling cannot: an agent that solves a problem can pass the key step to the others. We present TalkMesh, a decentralized mesh of small language model agents that learns when and what to communicate. Each agent samples a proposal and scores it with a trained confidence head. The most confident agent broadcasts a hint; agents below a confidence threshold revise, keeping each revision that outscores its proposal. Gossip consensus approximates the vote weighted by confidence without a coordinator. A talk policy, trained with group relative policy optimization on the change in correctness after revision, writes hints and revisions. With three agents, which together generate at most six outputs, the mesh reaches the accuracy of majority voting over 32 samples with each of three models. Trained with at most 8 agents and evaluated with 32, it raises accuracy from 0.568 under self-consistency to 0.705 (Qwen3.5-0.8B, GSM8K) and from 0.492 to 0.722 (SmolLM3-3B, MATH-500). When 4 of 8 agents collude on a wrong answer with fabricated confidence and poisoned hints, majority vote accuracy falls to 0.000 (Qwen3.5-0.8B, GSM8K). A defended mesh, whose agents rescore solutions with their own confidence heads, retains 0.507. Across reasoning, embodied coordination, and traffic signal control, messages improve a decision when the acting agent cannot observe the information it requires and another agent can send it.",
+      "authors": [
+        "Mehmet Kerem Turkcan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-24T21:41:12+00:00",
+      "link": "https://arxiv.org/pdf/2609.30578v1",
+      "tags": [
+        "keyword:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "decentralized multi-agent mesh learning when and what to communicate with RL",
+      "llm_evidence_cn": "去中心化多智能体网格中用强化学习通信",
+      "llm_evidence": "去中心化多智能体网格中用强化学习通信",
+      "canonical_evidence": "去中心化多智能体网格中用强化学习通信",
+      "llm_tldr_en": "Majority voting over independent samples saturates, so this paper presents TalkMesh, a decentralized mesh of small language model agents that learns when and what to communicate via confidence heads and gossip consensus, trained with group-relative RL.",
+      "llm_tldr_cn": "语言模型通过增加测试时采样提升准确率会因投票饱和而失效，独立采样难以传递关键推理步骤。该文提出TalkMesh，一个去中心化的小语言模型智能体网格，每个智能体用置信度头评估提案，最自信者广播提示，低置信度者据此修订，并通过置信度加权的gossip共识近似投票。talk策略以群组相对方式训练，学习何时与如何通信。其贡献是证明学习式通信能为多智能体协作带来采样无法提供的增益。",
+      "llm_tldr": "语言模型通过增加测试时采样提升准确率会因投票饱和而失效，独立采样难以传递关键推理步骤。该文提出TalkMesh，一个去中心化的小语言模型智能体网格，每个智能体用置信度头评估提案，最自信者广播提示，低置信度者据此修订，并通过置信度加权的gossip共识近似投票。talk策略以群组相对方式训练，学习何时与如何通信。其贡献是证明学习式通信能为多智能体协作带来采样无法提供的增益。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.33492v1",
+      "source": "arxiv",
+      "title": "Federated Multi-Modal Human Activity Recognition using Multi-Agent Reinforcement Learning",
+      "abstract": "Human Activity Recognition (HAR) from heterogeneous wearable sensors is fundamental to the Internet of Health Things (IoHT), supporting rehabilitation, elderly care, and smart healthcare. Existing multimodal fusion methods often assign fixed equal weights to sensor streams, overlooking differences in modality importance, acquisition cost, and sensor quality, which can vary due to movement, incorrect placement, or temporary blockage. We propose an adaptive and cost-aware multimodal HAR framework based on multi-agent reinforcement learning for centralized HAR and extend it to federated learning as FedMHAR. In the centralized setting, multimodal fusion is formulated as a cooperative Multi-Agent Reinforcement Learning (MARL) problem, where each sensing modality is assigned a PPO-based agent that learns per-sample fusion weights, enabling the model to emphasize informative modalities while down-weighting costly sensors when cheaper alternatives provide sufficient information. In the federated setting, we introduce BiFL-PPO, a bidirectional federated optimization strategy in which a server-side PPO policy learns client-specific trust weights and feeds them back to adapt local learning rates and proximal regularization. Unlike round-level optimization, BiFL-PPO uses dense batch-level rewards for more frequent feedback and stable training under heterogeneous client data. Evaluation on the MEx Rehabilitation and UTD Multimodal Human Action datasets shows that the centralized framework achieves 87.30% and 94.98% accuracy, respectively, outperforming conventional fusion methods and state-of-the-art HAR models. FedMHAR achieves 79.74% and 77.49% in the federated setting, consistently surpassing FedAvg, FedProx, FedBN, FedNova, and AdaFedProx, while providing more stable performance and reducing sensor acquisition cost.",
+      "authors": [
+        "Debasmita Dey",
+        "Tanmay Sen",
+        "Himel Mallick"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-27T11:59:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.33492v1",
+      "tags": [
+        "keyword:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "cooperative MARL for adaptive multimodal fusion in HAR",
+      "llm_evidence_cn": "将多模态融合建模为合作式多智能体强化学习并应用于人体活动识别",
+      "llm_evidence": "将多模态融合建模为合作式多智能体强化学习并应用于人体活动识别",
+      "canonical_evidence": "将多模态融合建模为合作式多智能体强化学习并应用于人体活动识别",
+      "llm_tldr_en": "Multimodal HAR often uses fixed sensor weights, ignoring modality importance and cost. This work formulates fusion as cooperative MARL for adaptive cost-aware recognition and extends it to federated learning as FedMHAR.",
+      "llm_tldr_cn": "针对现有多模态人体活动识别方法常对传感器流赋予固定等权重、忽视模态重要性与采集成本差异的问题，本文将多模态融合建模为合作式多智能体强化学习问题，实现自适应且成本感知的识别框架，并进一步扩展为联邦学习版本FedMHAR。该工作展示了合作式MARL在可穿戴健康感知中的实际应用价值，为异构传感器融合提供了灵活的动态加权方案。",
+      "llm_tldr": "针对现有多模态人体活动识别方法常对传感器流赋予固定等权重、忽视模态重要性与采集成本差异的问题，本文将多模态融合建模为合作式多智能体强化学习问题，实现自适应且成本感知的识别框架，并进一步扩展为联邦学习版本FedMHAR。该工作展示了合作式MARL在可穿戴健康感知中的实际应用价值，为异构传感器融合提供了灵活的动态加权方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi agent reinforcement learning applications",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.34005v1",
+      "source": "arxiv",
+      "title": "Learning to cooperate in a changing world: How caring about the future promotes cooperation across scales",
+      "abstract": "In social dilemmas, individuals need to forgo short-term temptations to achieve synergistic collective outcomes through cooperation. Previous work has examined mechanisms through which cooperation can evolve, including direct reciprocity, indirect reciprocity, environmental stochasticity, network reciprocity, and demographic stochasticity. These mechanisms have largely been studied under natural selection or social learning. As the other side of the same coin, it is equally important to study cooperation under self-learning, where individuals adapt based on their own experiences. Here, we focus on the dynamics of multi-agent reinforcement learning and derive analytical conditions under which these mechanisms can stabilize cooperation under learning dynamics across scales. We find that reinforcement learning can steer self-interested individuals toward cooperation when agents value the future over short-term temptation. Our work provides a unified approach to identifying the determinants of learning to cooperate in a changing world, thereby paving the way for the advancement of cooperative artificial intelligence.",
+      "authors": [
+        "Yuxin Geng",
+        "Xingru Chen",
+        "Xin Wang",
+        "Hongwei Zheng",
+        "Longzhao Liu",
+        "Shaoting Tang",
+        "Feng Fu"
+      ],
+      "primary_category": "physics.soc-ph",
+      "categories": [
+        "physics.soc-ph"
+      ],
+      "published": "2026-09-27T23:04:14+00:00",
+      "link": "https://arxiv.org/pdf/2609.34005v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "analytical conditions for cooperation in multi-agent reinforcement learning dynamics",
+      "llm_evidence_cn": "分析多智能体强化学习动力学中合作涌现的条件",
+      "llm_evidence": "分析多智能体强化学习动力学中合作涌现的条件",
+      "canonical_evidence": "分析多智能体强化学习动力学中合作涌现的条件",
+      "llm_tldr_en": "Cooperation mechanisms have mainly been studied under natural selection or social learning. This paper analyzes multi-agent reinforcement learning dynamics under self-learning, deriving conditions under which reciprocity mechanisms stabilize cooperation across scales.",
+      "llm_tldr_cn": "针对以往合作演化机制多在社会选择或社会学习框架下研究、而个体基于自身经验自学习的合作动力学尚不清楚的问题，本文聚焦多智能体强化学习动力学，推导出直接互惠、间接互惠等机制在何种分析条件下能够稳定促进跨尺度的合作。研究揭示了关注未来收益如何推动合作形成，为理解自学习型多智能体系统中的合作涌现提供了理论条件与跨尺度解释。",
+      "llm_tldr": "针对以往合作演化机制多在社会选择或社会学习框架下研究、而个体基于自身经验自学习的合作动力学尚不清楚的问题，本文聚焦多智能体强化学习动力学，推导出直接互惠、间接互惠等机制在何种分析条件下能够稳定促进跨尺度的合作。研究揭示了关注未来收益如何推动合作形成，为理解自学习型多智能体系统中的合作涌现提供了理论条件与跨尺度解释。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.33986v1",
+      "source": "arxiv",
+      "title": "ICMAPE: In-Context Multiagent Pure Exploration",
+      "abstract": "In some multi-agent systems, the quantity to be optimized is not an externally specified reward but the information acquired about unknown properties of the environment as done in active sequential hypothesis testing (ASHT) problems. However, the ASHT literature tends to focus on finite single-agent problems with well-specified models, while there is currently a gap for practical multi-agent methods that can perform active sequential testing. We fill this gap with ICMAPE, a Bayesian learning-based framework for decentralized multi-agent pure-exploration driven by inference objectives. ICMAPE converts the fixed-confidence identification objective into a reward derived from inference confidence, so that standard reinforcement learning machinery can be applied to decentralized pure exploration. It jointly learns a centralized neural inference network that estimates a posterior distribution over hypotheses from global trajectory data, and decentralized policies that select actions from local observation histories and learn when to stop collecting data once the target confidence is reached. On two synthetic benchmarks and a Maryland nitrate concentration monitoring task based on real-world data, ICMAPE-TD3 achieves target accuracy with fewer exploration steps.",
+      "authors": [
+        "Xinyi Hu",
+        "Alessio Russo",
+        "Aldo Pacchiano"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-27T22:38:40+00:00",
+      "link": "https://arxiv.org/pdf/2609.33986v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Bayesian decentralized multi-agent pure exploration with RL machinery",
+      "llm_evidence_cn": "基于贝叶斯学习的去中心化多智能体纯探索，套用强化学习机制",
+      "llm_evidence": "基于贝叶斯学习的去中心化多智能体纯探索，套用强化学习机制",
+      "canonical_evidence": "基于贝叶斯学习的去中心化多智能体纯探索，套用强化学习机制",
+      "llm_tldr_en": "Existing active sequential hypothesis testing focuses on finite single-agent problems, leaving a gap for practical multi-agent testing. ICMAPE converts fixed-confidence identification into an inference-confidence reward so decentralized agents can use standard RL machinery.",
+      "llm_tldr_cn": "针对主动序列假设检验文献多局限于有限单智能体且模型已知、缺乏实用多智能体方法的问题，本文提出ICMAPE框架，将固定置信度的识别目标转化为由推理置信度导出的奖励，从而让去中心化的多个智能体能够直接套用标准强化学习机制进行主动序列检验。该方法以贝叶斯学习驱动纯探索，填补了多智能体主动测试的空白，为去中心化多智能体信息获取提供了实用方案。",
+      "llm_tldr": "针对主动序列假设检验文献多局限于有限单智能体且模型已知、缺乏实用多智能体方法的问题，本文提出ICMAPE框架，将固定置信度的识别目标转化为由推理置信度导出的奖励，从而让去中心化的多个智能体能够直接套用标准强化学习机制进行主动序列检验。该方法以贝叶斯学习驱动纯探索，填补了多智能体主动测试的空白，为去中心化多智能体信息获取提供了实用方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.34860v1",
+      "source": "arxiv",
+      "title": "Attention-based Hierarchical Variational Information Bottleneck for Robust Multi-Agent Communication under Variable Bandwidth",
+      "abstract": "Learning-based multi-agent communication under limited bandwidth does not only require deciding what to communicate, but also structuring messages so that partial transmissions remain useful. We study this problem under prefix truncation, where only the first part of each message is received. To address it, we propose \\textbf{AH-VIB}, an attention-based autoregressive variational communication model that combines a variational information bottleneck (VIB) with sequential message generation and a hierarchical robustness loss. We evaluate AH-VIB on a custom cooperative object-inspection and occupancy-mapping task, where agents equipped with a limited field-of-view sensor coordinate to scan inspection objects in an occupancy-grid world, under variable and fixed bandwidth conditions, and compare it against MADDPG, CommNet, a flat VIB baseline, and an autoregressive MLP ablation. AH-VIB achieves competitive mean return while improving performance reliability under the most constrained bandwidth conditions.   These results indicate that AH-VIB improves the reliability and graceful degradation of learned communication under bandwidth constraints.",
+      "authors": [
+        "Lukas Koch Vindbjerg",
+        "Qi Zhang",
+        "Yury Brodskiy",
+        "Lukas Esterle"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-28T10:48:36+00:00",
+      "link": "https://arxiv.org/pdf/2609.34860v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "cooperative multi-agent communication under bandwidth limits",
+      "llm_evidence_cn": "有限带宽下协作多智能体通信",
+      "llm_evidence": "有限带宽下协作多智能体通信",
+      "canonical_evidence": "有限带宽下协作多智能体通信",
+      "llm_tldr_en": "AH-VIB is an attention-based autoregressive variational communication model combining a variational information bottleneck with sequential message generation and a hierarchical robustness loss for cooperative multi-agent communication under prefix truncation.",
+      "llm_tldr_cn": "针对有限带宽下多智能体通信只能收到前缀截断消息的问题，本文提出 AH-VIB 注意力自回归变分通信模型，将变分信息瓶颈与顺序消息生成及分层鲁棒性损失结合。在自建协作式目标巡检与占据栅格建图任务中，智能体在受限视野下协同扫描并保持部分传输仍可用。该工作为带宽可变的多智能体通信提供了鲁棒的消息结构化方法。",
+      "llm_tldr": "针对有限带宽下多智能体通信只能收到前缀截断消息的问题，本文提出 AH-VIB 注意力自回归变分通信模型，将变分信息瓶颈与顺序消息生成及分层鲁棒性损失结合。在自建协作式目标巡检与占据栅格建图任务中，智能体在受限视野下协同扫描并保持部分传输仍可用。该工作为带宽可变的多智能体通信提供了鲁棒的消息结构化方法。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

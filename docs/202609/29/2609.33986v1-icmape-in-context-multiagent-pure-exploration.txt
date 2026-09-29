@@ -1,0 +1,2364 @@
+Title: ICMAPE: In-Context Multiagent Pure Exploration
+
+URL Source: https://arxiv.org/pdf/2609.33986v1
+
+Published Time: Tue, 29 Sep 2026 02:32:28 GMT
+
+Number of Pages: 43
+
+Markdown Content:
+# ICMAPE: In-Context Multiagent Pure Exploration 
+
+Xinyi Hu 
+
+Boston University 
+
+xhu07@bu.edu 
+
+Alessio Russo 
+
+Boston University 
+
+arusso2@bu.edu 
+
+Aldo Pacchiano 
+
+Boston University Broad Institute of MIT and Harvard 
+
+pacchian@bu.edu 
+
+## Abstract 
+
+In some multi-agent systems, the quantity to be optimized is not an externally specified reward but the information acquired about unknown properties of the environment as done in active sequential hypothesis testing (ASHT) problems. However, the ASHT literature tends to focus on finite single-agent problems with well-specified models, while there is currently a gap for practical multi-agent methods that can perform active sequential testing. We fill this gap with ICMAPE, a Bayesian learning-based framework for decentralized multi-agent pure-exploration driven by inference objectives. ICMAPE converts the fixed-confidence identification objective into a reward derived from inference confidence, so that standard reinforcement learning machinery can be applied to decentralized pure exploration. It jointly learns a centralized neural inference network that estimates a posterior distribution over hypotheses from global trajectory data, and decentralized policies that select actions from local observation histories and learn when to stop collecting data once the target confidence is reached. On two synthetic benchmarks and a Maryland nitrate concentration monitoring task based on real-world data, ICMAPE-TD3 achieves target accuracy with fewer exploration steps. Code is available at https://github.com/xinyihu3721/ICMAPE .
+
+## 1 Introduction 
+
+The majority of existing multi-agent reinforcement learning (MARL) algorithms are designed to maximize cumulative reward [1–10]. However, in some multi-agent systems the goal is to collabo-ratively collect informative data in order to identify unknown properties of the environment while minimizing data collection cost. For example, in distributed sensor localization, sensors combine local measurements to infer an unknown target or source location [11–13]. We study an active setting in which agents share a common hypothesis identification objective but, due to practical constraints such as limited bandwidth, organizational boundaries, confidentiality requirements, or reporting delays, must adaptively select what information to collect using only their local observation histories, while a centralized inference module aggregates the collected data to make the final inference. Such a perspective is closely related to active sequential hypothesis testing and pure exploration, where actions are selected adaptively to identify the true hypotheses with minimal sampling cost [14–19]. Even though multi-agent and federated variants exist, they often retain centralized action selection or focus primarily on communication constraints rather than decentralized data collection [20–23]. Decentralized multi-agent pure exploration poses three challenges. First, each agent must make decisions from only its local trajectory, without observing the full joint exploration history. Second, because the hypothesis is identified from the collective data, the decentralized policies must induce coordinated exploration patterns that are informative at the global level rather than redundant. Third, agents must learn when to stop, since sampling past identifiability only adds additional cost. Standard cooperative MARL approaches under centralized training with decentralized execution (CTDE) are typically formulated for maximizing cumulative environment reward [24, 25, 4, 5, 7, 9], 
+
+> Preprint. arXiv:2609.33986v1 [cs.LG] 27 Sep 2026
+
+so the high reward behaviors they learn need not be informative about the underlying hypothesis. Pure exploration methods optimize the right objective, but are tailored to specific bandit models and do not transfer to decentralized multi-agent inference problems [15, 16]. Neither line therefore provides a general learning-based method for decentralized data collection driven by an inference objective. We propose In-Context Multi-Agent Pure Exploration (ICMAPE), a learning-based framework for de-centralized multi-agent exploration. ICMAPE jointly learns a centralized inference network I, which maps global trajectory data to a posterior over hypotheses, and decentralized policies that collect data from local observation histories. Here, a hypothesis denotes a possible answer to the inference task, such as a target location or latent environment parameter. ICMAPE is inspired by In-Context Pure Exploration (ICPE) [26], which learns exploration policies across problem instances in the single-agent setting. Our work contributes to study what changes when the data-collection policy is re-stricted to the decentralized class Πdec =
+
+n
+
+π = ( π1, . . . , π N ) : πt(at | D t) = QNi=1 πit(ait | D it)
+
+o
+
+,
+
+while the hypothesis is still identified from the collective trajectory Dt = {D it}Ni=1 . This creates a coordination problem absent from the single-agent formulation: no agent observes the full evidence, yet the local policies must jointly produce informative and non-redundant data. Concretely, we (i) extend the fixed-confidence pure-exploration formulation from centralized to decentralized policy classes; (ii) show that the posterior over hypotheses admits a policy-independent likelihood kernel even when trajectories are generated by decentralized history-dependent policies (Lemma A.1); (iii) incorporate stopping into the decentralized setting through augmented action spaces under a common stopping time (Lemma A.3 Proposition A.3); and (iv) give a CTDE learning procedure in which decentralized actors are optimized against the global inference objective (Section A.4 and A.5). MATD3 is one realization; other CTDE optimizers can be used with the same inference reward, dual-variable schedule, and stopping mechanism. 
+
+## 2 Related Work 
+
+Active Sequential Testing. Our work builds on active sequential hypothesis testing [14] and fixed-confidence pure exploration [15, 16], which adaptively collect data to identify a target hypothesis while minimizing expected stopping time subject to a correctness constraint. Classical approaches, including Chernoff-style testing, Track-and-Stop, and Top-Two sampling, derive sampling and stopping rules for specific statistical models [14–17, 19, 27–30]. Recent work on In-Context Pure Exploration (ICPE) treats exploration as a learnable object across problem instances [18]. Closest to our setting, Szostak and Cohen [31] study decentralized active hypothesis testing with deep MARL, where agents select sampling and stopping actions and rewards derive from Bayesian risk. Their method requires posterior beliefs computed from known observation models, and neither the stopping action nor the learning objective is theoretically justified. We instead learn the inference rule, and derive both the stopping action and the objective from the fixed-confidence formulation (Proposition A.1, Lemma A.3, Proposition A.3). 
+
+Federated and Distributed Pure Exploration. In federated BAI, multiple agents explore bandit arms and communicate with a central server that aggregates information and identifies the arm with the highest mean reward across agents, while minimizing data exposure [21–23]. Another related line studies multi-agent best arm identification with centralized action selection under structured reward models such as factor graphs [20]. However, these formulations assume centralized action selection and target an optimal joint action. Our setting instead requires decentralized action selection from local histories, with agents jointly collecting data for broader inference tasks. 
+
+Cooperative Multi-Agent Reinforcement Learning. We adopt the CTDE paradigm, where agents are trained in a centralized manner but execute using only local observations. Under CTDE, value factorization methods (VDN [24], QMIX [25], QTRAN [3]) decompose a joint value function into per-agent components, while policy-gradient methods (MADDPG [4], COMA [5], MAAC [6], MATD3 [7]) learn decentralized policies with centralized critics. Both are designed for reward maximization and do not address inference objectives. 23 Background 
+
+Environment Modeling. We consider a system with N agents interacting with a common environ-ment drawn from a model class M, under a distribution P ∈ ∆( M). Each environment is modeled as a tuple M = ( X , A, P, ρ ), where X = SNi=1 X i is the union of agent-specific observation spaces, and A = SNi=1 Ai is the union of agent-specific action sets. The transition function is P = ( Pt)t∈N,where Pt : ( X × A )t → ∆( X ), and ρ ∈ ∆( X ) is the initial observation distribution. 
+
+Agents and Decentralized Policies. Agents act simultaneously at each time step. Each agent i ∈{1, . . . , N } receives a local observation xit ∈ X i, selects an action ait ∈ A i, and then receives the next local observation xit+1 . Denote the joint action by at = ( a1 
+
+> t
+
+, . . . , a Nt ). The local trajectory available to agent i is Dit = ( xi
+
+> 1
+
+, a i
+
+> 1
+
+, . . . , a it−1, x it). We denote the joint observation by xt = ( x1 
+
+> t
+
+, . . . , x Nt ),
+
+and the full joint trajectory by Dt = {D it}Ni=1 . We restrict attention to decentralized policies. Each agent follows a policy πi = ( πit)t∈N satisfying πit : Dit → ∆( Ai). Thus, agent i samples actions according to ait ∼ πit(· | D it), using only its own local trajectory. 
+
+Hypothesis. Within the collective observation space X , we consider a predefined task-specific hypothesis class H and restrict our attention to the finite case (extensions to continuous classes are possible [32]). For any environment M ∈ M , there exists a ground-truth hypothesis H⋆M ∈ H . For example, in a source localization task, H⋆M may be the hidden location of the signal source. We drop the subscript M and write H⋆ when the dependence is clear from context. 
+
+Objective. Given a trajectory of observations collected by the agents, the goal is to accurately identify the ground-truth hypothesis. To formalize this, we introduce an inference function that maps observed data to a distribution over hypotheses. The inference function operates on the full joint trajectory Dt = {D it}Ni=1 and is defined as I : Dt 7 → ∆( H). Given a target error probability 
+
+δ ∈ (0 , 1) , the decentralized data-collection policies π and the inference rule I induce a stopping time τ , which denotes the number of joint interaction rounds before termination. The objective is to minimize the expected stopping time while ensuring that the final prediction is correct with probability at least 1 − δ:
+
+min  
+
+> π,τ, I
+
+Eπ [τ ] s.t. Pπ  I(Dτ ) = H⋆ ≥ 1 − δ, (1) in which Pπ (·) denotes the probability measure over trajectories induced by first sampling an environment M ∼ P from the model class M and then executing policy π.
+
+## 4 Method 
+
+Our method begins by reformulating the constrained identification problem through a Lagrangian relaxation. We then optimize over the inference rule, showing that the optimal rule selects the hypothesis with maximal posterior confidence. This yields a reward-based sequential decision problem with an auxiliary stopping action, which we solve using an actor–critic reinforcement learning framework under a CTDE paradigm. 
+
+4.1 Lagrangian Relaxation and RL Reformulation 
+
+Introducing a multiplier λ ≥ 0, the Lagrangian relaxation of Eq. 1 is given by 
+
+inf  
+
+> λ≥0
+
+sup 
+
+> π, I
+
+h
+
+−Eπ [τ ] + λ
+
+
+
+Pπ
+
+ I(Dτ ) = H⋆ − 1 + δ
+
+i 
+
+. (2) For any fixed policy π, we can optimize over the inference rule. At any time t ∈ N, given the observed trajectory Dt, the optimal inference rule selects the hypothesis with the largest posterior probability (Proposition A.1): 
+
+It(Dt) ∈ arg max  
+
+> H∈H
+
+Pt(H⋆ = H | D t),
+
+where Pt(· | Dt) denotes the posterior distribution over hypotheses. This induces the pos-terior confidence rt(Dt) := max H∈H Pt(H⋆ = H | Dt), which represents the probability 3of correct identification under the optimal inference rule. Substituting it into the Eq. 2 yields 
+
+inf λ≥0 sup π Eπ −τ + λ rτ (Dτ ) − 1 + δ .
+
+To express this objective as a sequential decision problem, we augment each agent’s action space with an auxiliary stopping action astop . At each time step, agents may either continue collecting data or trigger termination. We assume that stopping is shared across agents, meaning if any agent selects the stopping action, the data collection process terminates and the stopping signal is observed by all agents. This induces a common stopping time in Assumption 4.1 concerns the filtration rather than the agents’ information sets, and it can be satisfied with no exchange of observations or histories (Remark A.1). 
+
+Assumption 4.1 [Common stopping time]. There exists a universal stopping time τ such that for every agent i, τ is a stopping time with respect to the local filtration Fit = σ(Dit); i.e., for all t ≥ 1,the event {τ ≤ t} ∈ F it . Equivalently, {τ ≤ t} ∈ TNi=1 Fit .
+
+Under this formulation, continuing exploration incurs a unit cost, while stopping receives a terminal reward based on the posterior confidence of the inferred hypothesis. We define the reward function as 
+
+rt,λ (Dt, a t) = −1{at̸ = astop } + λ rt(Dt) − 1 + δ1{at = astop }.
+
+The corresponding action-value function satisfies a Bellman recursion in which continuing incurs unit cost and stopping terminates with the confidence reward; the dual formulation and the resulting reward-maximization problem are derived in Appendix A.3. 
+
+4.2 Inference Network 
+
+We introduce an inference network that extracts task-relevant information from the global trajectory data collected by all agents. Given the trajectory up to time t, denoted by Dt, the inference network Iψ ,parameterized by ψ, outputs a posterior distribution over hypotheses, pψ (H | D t). We obtain a point estimate via maximum a posteriori (MAP) inference, given by ˆHt = arg max H∈H pψ (H | D t). The inference network is trained using the true hypothesis H⋆ sampled with each environment instance by minimizing the negative log-likelihood loss 
+
+Linf = − log pψ (H⋆ | D t). (3) We define the policy-learning reward as the posterior confidence of the inferred hypothesis, rt =
+
+pψ ( ˆHt | D t).
+
+4.3 Critics 
+
+We build on MATD3 [7], which extends MADDPG [4] with the twin-critic architecture of TD3 [33]. During training, the centralized critic conditions on the global trajectory and joint action, while the actor remains decentralized and depends only on the agent’s local trajectory. The two Q-functions, 
+
+Qϕ1 and Qϕ2 , are used through a minimum operator in the Bellman target to reduce overestimation bias. Since multiplication by the positive constant λ does not change the optimal policy for fixed λ,we parameterize the tradeoff by a learnable per-step cost ζ ≈ 1/λ . Therefore, continuing exploration incurs cost of −ζ, while stopping receives the terminal confidence reward. For each agent i, the critic maps the global trajectory and the other agents’ actions to a vector of values over agent i’s action space, and Qiϕj (Dt, a it, a −it ), j ∈ { 1, 2}, denotes the coordinate selected by ait.We define the immediate cost as 
+
+ct =
+
+(−ζ, if no agent stops at time t, rt(Dt) − 1 + δ, otherwise, (4) where rt(Dt) is the posterior confidence of the inferred hypothesis. Let st = 1{∃ i, a it = astop }
+
+denote whether any agent stops at time t. Then the TD3 target for agent i is 
+
+yit = ct + γ(1 − st) min  
+
+> ℓ∈{ 1,2}
+
+Qiϕtar 
+
+> ℓ
+
+ Dt+1 , ˜ai, tgt 
+
+> t+1
+
+, ˜a−i, tgt 
+
+> t+1
+
+,
+
+4where γ is the discount factor, Qϕtar 1 and Qϕtar 2 are target critics, and ˜atgt  
+
+> t+1
+
+is obtained from the target actor. Given the batch-level posterior confidence brt, we update ζ using the dual-variable rule 
+
+eζ = brt − (1 − δ) and ζ ← max {0, ζ + ηe ζ }, where η is the learning rate. We initialize ζ = 0 , so the exploration cost is initially inactive and increases only when the posterior confidence exceeds the target level 1 − δ.Finally, the critic parameters are updated by minimizing the temporal-difference loss 
+
+Lcritic = E
+
+" NX
+
+> i=1 2
+
+X
+
+> ℓ=1
+
+ Qiϕℓ (Dt, a it, a −it ) − yit
+
+2
+
+#
+
+. (5) 
+
+4.4 Actors 
+
+For each agent i, the actor parameterizes a decentralized policy on the local trajectory Dit. The actor maps a learned representation of Dit to unnormalized action scores git = ( git(a)) a∈A i . At execution time, we use the deterministic policy ait = μθi (Dit) = arg max a∈A i git(a). During actor training, however, we use a Gumbel–Softmax relaxation to obtain differentiable action representations eait,allowing gradients to pass through the discrete action-selection process. The decentralized actors are trained to maximize the centralized critic value under the relaxed joint action eat = ( ea1 
+
+> t
+
+, . . . , eaNt ). We define the actor objective 
+
+J(θ) = E
+
+" NX
+
+> i=1
+
+Qiϕ1
+
+ Dt, eait, ea−it
+
+#
+
+, (6) and optimize the actors by minimizing Lactor (θ) = −J(θ).
+
+Information structure. During training, each actor conditions only on its own local trajectory Dit,the critic on the global trajectory and joint action, and the inference network on the global trajectory, supervised by the true hypothesis H⋆ of the sampled environment. At execution the critic is discarded and H⋆ is not required: agents act from local trajectories, and the inference network aggregates the collected data once, after termination. Pseudocode is in Algorithms 1 and 2; architectures in Appendix B.5. 
+
+## 5 Experiments 
+
+We evaluate ICMAPE-TD3 in two synthetic benchmark environments designed to isolate key chal-lenges in decentralized information acquisition. First, we study bandit capacity identification, where agents must infer how many agents each arm can support before becoming overloaded. This task requires coordinated joint actions to reveal meaningful information about the hypothesis and is motivated by shared resource systems such as communication channels with unknown user capacity. We consider two bandit settings: a 3-arm-5-player setting (A3P5) and a 5-arm-3-player setting (A5P3). Second, we study signal source localization with distractors, motivated by distributed sensor localization applications such as environmental monitoring, bush fire surveillance, and precision agriculture, where agents coordinate exploration to identify the true signal source [12, 11]. Third, we evaluate on a Maryland nitrate monitoring task built from real measurements, which tests transfer to real observation noise. In all experiments, we set the confidence level to δ = 0 .1, corresponding to a target accuracy of 1 − δ = 0 .9.
+
+5.1 Multi-armed Bandits Capacity Identification 
+
+We consider a setting with K arms and N players. Inspired by multiplayer multi-armed bandit models with non-unit arm capacities [34–36], we study the problem of identifying the capacity of all arms k ∈ [K].Each arm k has an unknown capacity C⋆k ∈ { 1, . . . , N }, which is sampled independently from a uniform distribution over {1, . . . , N }, defined as the maximum number of agents that can simultane-ously select arm k without violating its constraint. At each time step t, each agent i chooses either an arm to pull or the stopping action, so that ait ∈ [K] ∪ { astop }. The objective is to identify the true 5capacity vector C⋆ = ( C⋆ 
+
+> 1
+
+, . . . , C ⋆K ) with confidence level 1 − δ. The hypothesis space is defined as 
+
+H = {1, . . . , N }K , where each hypothesis corresponds to a possible capacity configuration over the 
+
+K arms. Let nkt = PNi=1 I{ait = k} denote the number of agents selecting arm k at time t. When nkt > C k,the arm is said to be overloaded, and the resulting observations are zero environment rewards on that arm. Otherwise, each agent i pulling arm k receives an outcome xit ∼ Bernoulli( μk), where 
+
+μk ∈ (0 , 1] . To ensure that the problem remains tractable and avoid an impractically large number of samples would be required to reliably estimate the capacity, we assume the mean reward is sampled as μk ∼ Unif[0 .3, 1] for all arms. 
+
+5.2 Signal Source Localization with Distractors 
+
+In the second environment, we model a cooperative signal-localization problem in which hetero-geneous agents seek to identify an unknown signal source through decentralized exploration. We consider a discrete grid world of size n × n, with N = 3 agents. The objective is to identify the true signal source location s⋆ ∈ [n] × [n] with confidence level 1 − δ, where δ ∈ [0 , 1) .The environment contains one true signal source s⋆ = ( r⋆, c ⋆) ∈ [n] × [n] and one distractor source 
+
+s′ = ( r′, c ′) ∈ [n] × [n]. The hypothesis space is H = [ n] × [n], where each hypothesis corresponds to a possible true source location. Both sources generate higher signal intensity than nearby cells. The true source has peak intensity 1, while the distractor has peak intensity ξ, where ξ ∼ Unif[0 , 0.7] .To ensure that the two sources are spatially distinguishable, we impose dMan (s⋆, s ′) ≥ r.At each time step t, agent i occupies a location pit ∈ [n] × [n] and chooses either a movement action or the stopping action. A movement action displaces the agent by ∆move . Each agent observes only through its own sensing modality, with no access to other agents’ measurements. Agent i observes an 
+
+m × m local window centered at pit, clipped at the grid boundary. For Agents 1 and 2, the observation at a queried cell u in this window follows 
+
+Y (i)(u) = B(i)(u) · I{u = s⋆}, B(i)(u) ∼ Bernoulli( qi),
+
+where s⋆ is the target cell and qi is the probability that agent i registers a detection when it queries the target cell. Agent follows a different observation model, described below. Agent 3 observes a different and noisy version of the latent signal field. For each cell u ∈ [n] × [n],let dmin (u) = min {dMan (u, s ⋆), d Man (u, s ′)} and define s(u) = I(u) exp( −λd min (u)) , where 
+
+I(u) = 1 for cells closer to s⋆ and I(u) = ξ otherwise, and decay rate λ > 0. Agent 3 observes 
+
+Y (3) (u) = clip [0 ,1] 
+
+ s(u) + ϵ(u), where ϵ(u) ∼ N (0 , σ 2).
+
+Examples of noisy observations and environment parameters are in Appendix Figure 5 and Table 2. 
+
+5.3 Maryland Nitrate Concentration Monitoring 
+
+We evaluate ICMAPE-TD3 on a real-world environmental monitoring task using Maryland nitrate concentration data spanning 2001–2023, with training on 2001–2018 and evaluation on 2019–2023. We obtained Maryland nitrate concentration measurements from the Water Quality Portal (WQP) [37], a public database integrating water-quality observations from USGS, EPA, and state/local monitoring agencies. Elevated nitrate levels contaminate drinking water sources and pose direct health risks, particularly for infants [38], while also contributing to nutrient pollution, algal blooms, and oxygen depletion that threaten aquatic ecosystems [39]. Therefore, it is important to develop methods that can quickly identify high-concentration regions and support timely intervention. For each year, a subset of real monitoring measurements is first used to fit a Gaussian process, producing a spatial concentration field f : X → R over a discretized map X of the region. The true hypothesis θ⋆ ∈ H = X is defined as the location of the highest concentration, i.e., θ⋆ =arg max x∈X f (x). Full experimental details and results are provided in Appendix B.4. 
+
+5.4 Baselines 
+
+We compare against three baselines used across all experiments: random exploration, Independent Q-learning, and VDN. These baselines span different coordination assumptions and contrast with 6our policy-gradient actor–critic approach. In addition, we include experiment-specific baselines: environment-reward-guided exploration and centralized coordination for the bandit task, Thompson Sampling for signal-source localization, and GP Prior Map Guided Sampling for the nitrate monitoring task. All baselines are described in Appendix B.2. 
+
+## 6 Results 
+
+6.1 Multi-armed Bandit Capacity Identification Training. In the A3P5 setting, both ICMAPE-TD3 and ICAPE-VDN are able to reach the target accuracy early in training. However, once the reward structure begins to favor shorter trajectories more strongly, ICMAPE-TD3 adapts more effectively by reducing the average stopping time. This suggests that ICMAPE-TD3 learns an effective sampling strategy that reduces stopping time after reaching the target accuracy. In the A5P3 setting, the capacity identification problem becomes more challenging due to the larger hypothesis space, and only ICMAPE-TD3 is able to reliably reach the target accuracy and improve the sampling strategy (Figure 1). 0 100k 200k 300k 400k 500k 600k 700k                         
+
+> Step
+> 010 20 30 40 50
+> Avg. Stop
+> Average Stopping Time (A3P5)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 0.0 0.2 0.4 0.6 0.8
+> Posterior Confidence (A3P5)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 010 20 30 40 50 60
+> Avg. Stop
+> Average Stopping Time (A5P3)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 0.0 0.2 0.4 0.6 0.8
+> Posterior Confidence (A5P3)
+> algo: VDN algo: INDEP algo: ICMAPE-TD3 algo: UNIFORM
+
+Figure 1: Training dynamics in A3P5 and A5P3. Curves are averaged over three random seeds and smoothed with an exponential moving average parameter of 0.2.
+
+Evaluation. We evaluate the final performance of each method in terms of estimation accuracy and average stopping time across 10,000 sampled environments over three seeds. The results are summarized in Figure 2. ICMAPE-TD3 achieves stable accuracy around 1 − δ while maintaining significantly lower stopping times compared to baselines. 
+
+Coordination Strategy. The learned policy follows a highly structured probing pattern. Early joint actions are identical across active environments, first concentrating players on one arm and then reallocating subsets across arms (Appendix Table 6). This suggests that agents learn to test capacity constraints through coordinated joint allocations rather than independent random exploration. Once sufficient evidence is collected, one or more agents select the stop action (Appendix Table 7). 
+
+Robustness Analysis. We evaluate the robustness of ICMAPE-TD3 under different priors over arm means and arm capacities. For the arm-mean prior, we replace the uniform prior with a scaled Beta distribution parameterized by (α, β ), where α, β ∈ { 0.5, 1, 3, 5, 7}. When α > β , the prior places more mass on larger arm means, yielding more informative feedback and average accuracy above 
+
+0.95 ; when α ≤ β, the accuracy ranges from 0.67 to 0.96 . For the arm-capacity prior, we sample capacities from a distribution induced by p ∼ Dir( θ1K ), with θ ∈ { 0.1, 0.5, 1, 5, 10 }. Smaller θ
+
+values produce more sparse capacity distributions, while larger values approach a more balanced distribution. ICMAPE-TD3 remains robust across these capacity priors. Figures 9 and 10 in the appendix report the average inference accuracy under different arm-mean and arm-capacity priors. 
+
+Ablation Studies. Ablations in Table 1 isolate the contributions of the inference-driven reward, the learned stopping mechanism, and the per-step sampling cost. Together, they support the paper’s main claim that ICMAPE achieves the target identification accuracy with fewer samples by jointly learning 
+
+what information to collect and when continued exploration is no longer necessary. Replacing the inference-driven reward with the environment reward substantially reduces identifi-cation accuracy. This result shows that maximizing the environment reward does not necessarily produce trajectories that are informative for identifying the underlying environment hypothesis. 7I-VDN I-INDEP I-TD3 UNIFORM C-DQN C-TD3 TD3-EnvR     
+
+> 0.00 0.20 0.40 0.60 0.80 1.00
+> Accuracy
+> 0.87 0.76 0.91 0.52 0.91 0.22 0.21
+> Accuracy (Correct Identification Rate)
+> I-VDN I-INDEP I-TD3 UNIFORM C-DQN C-TD3 TD3-EnvR
+> 0.0 10.0 20.0 30.0 40.0 50.0
+> Avg Stopping Step  25.4 40.3 13.5 45.1 10.9 49.0 47.0
+> Avg Stopping Step
+> I-VDN I-INDEP I-TD3 UNIFORM
+> 0.00 0.20 0.40 0.60 0.80 1.00
+> Accuracy  0.77 0.61 0.90 0.29
+> Accuracy (Correct Identification Rate)
+> I-VDN I-INDEP I-TD3 UNIFORM
+> 0.0 10.0 20.0 30.0 40.0 50.0 60.0
+> Avg Stopping Step
+> 58.7 59.0 19.8 59.0
+> Avg Stopping Step
+> (a) A3P5 (b) A5P3
+
+Figure 2: Bandit Capacity Accuracy and Average Stopping Step. “I” denotes ICMAPE. “C” denotes centralized baselines. In (a) A3P5, the TD3-EnvR bar represents TD3 trained to maximize the environmental reward Error bars indicate one standard deviation. Table 1: Ablation study on ICMAPE-TD3 in A3P5. 
+
+Variant Inf. Reward Learned Stop Step Cost Accuracy Avg. Stop Time Full ICMAPE-TD3 ✓ ✓ ✓ 0.91 13.5 
+
+Environment-reward TD3 ✗ ✓ ✓ 0.21 47.0 Fixed-threshold stopping ✓ ✗ ✓ 0.70 37.3 No sampling cost ✓ ✓ ✗ 0.90 50.0 
+
+After replacing learned stopping with a fixed threshold also degrades performance and produces a policy that fails to reach the target accuracy, this indicates stopping should be optimized jointly with exploration. The result is consistent with our theoretical formulation, in which the optimal policy compares the Q-value of stopping with those of continued exploration. Finally, without the per-step sampling cost, the policy has no incentive to stop and learns unnecessary exploration. 
+
+Posterior Calibration To assess how well the inference module’s output probabilities align with empirical accuracy, we compute the Expected Calibration Error [40] on A3P5 over 10 ,000 trajectories, pooling the posterior predictions from all time steps, obtaining ECE = 0 .0065 . The gap between mean predicted confidence and empirical accuracy is at most 0.02 in every bin, see Appendix C.1.2 Table 5. 
+
+6.2 Signal Source Localization with Distractors Evaluation. Training dynamics of this settings is in Appendix Figure 11. ICMAPE-TD3 is the only method that reliably reaches the target accuracy while further improving efficiency by reducing the average stopping time. We evaluate the performance of each method across 10,000 sampled environments. The results are summarized in Figure 3. ICMAPE-TD3 achieves accuracy close to the target confidence level 1 − δ while uses fewer samples than the baselines. 
+
+Coordination Strategy. In this task, the learned policy exhibits an implicit division of roles. Agents 1 and 2 follow deterministic trajectories across environments, while Agent 3 adapts its actions based on its local observations of the noisy signal field (Appendix Table 8). Stopping is also role-specific, with more than one agent stopping simultaneously in fewer than 10% of sampled environments (Appendix Table 9). 
+
+Robustness Analysis. We evaluate the robustness of ICMAPE-TD3 under different priors over distractor intensity and different distances between the distractor and target location; see Appendix Figure 13 and 14. For distractor intensity, we replace the uniform prior with a scaled Beta distribution parameterized by (α, β ), using the same set of parameter values as above. When α > β , the prior places more mass on higher distractor intensities, leading to stronger distractions while still achieving an average accuracy between 0.8 and 0.9; when α ≤ β, the accuracy remains around 0.9. Accuracy also improves as the Manhattan distance between the distractor and the true source grows, staying above 0.85 throughout 
+
+6.3 Nitrate Concentration 
+
+We evaluate the proposed method on the Maryland nitrate concentration environment, where annual nitrate fields are generated using Gaussian Process (GP) models fitted to historical nitrate observations. 8Figure 3: Signal Source Localization Accuracy and Average Stopping Step. The TS bar is the Thompson Sampling guiding exploration strategy. Error bars indicate one standard deviation. ICMAPE-VDN ICMAPE-INDEP ICMAPE-TD3 UNIFORM GPPrior 0.00 0.20 0.40 0.60 0.80 1.00     
+
+> Accuracy
+> 0.93 0.91 0.91 0.91 0.98 0.88 0.81 0.89 0.86 0.98
+> Accuracy (Correct Identification Rate)
+> ICMAPE-VDN ICMAPE-INDEP ICMAPE-TD3 UNIFORM GPPrior 0.0 20.0 40.0 60.0 80.0 100.0 120.0 140.0 160.0
+> Avg Samples  81.2 107.9 30.1 120.2 46.6 94.2 132.8 30.2 130.0 51.5
+> Avg Samples
+> Train Year Test Year
+
+Figure 4: Nitrate Concentration Accuracy and Average Samples. Error bars indicate one standard deviation. For each year, we sample 100 GP-generated nitrate maps with 1000 spatial points per map, and report the average performance for identifying the highest-concentration region. Figure 4 reports the correct identification accuracy and the average number of samples. ICMAPE-TD3 achieves accuracy close to the target level on both training and test years, with only a small performance gap between them. This suggests that the learned policy is robust to GP-generated nitrate fields from unseen years. In contrast, the independent, VDN, and uniform baselines show larger drops in test-year performance, indicating weaker generalization. The GP-prior baseline achieves the highest accuracy by directly using spatial prior information. In terms of sample efficiency, ICMAPE-TD3 requires the fewest samples among all compared methods on both training and test years. Although the GP-prior baseline reaches slightly higher accuracy, it uses more samples than ICMAPE-TD3. Overall, ICMAPE-TD3 provides the best trade-off between accuracy and sampling cost, achieving near-target identification performance while maintaining the lowest sample complexity and stable generalization to held-out years. 
+
+## 7 Conclusion 
+
+In this work, we study a decentralized multi-agent pure exploration problem, where the objective is not reward maximization, but efficient information acquisition for identifying unknown properties of the environment. While existing pure exploration methods provide strong foundations, they are often tailored to specific statistical models or assume centralized action selection, leaving a gap in general learning-based methods for decentralized multi-agent data collection. We propose ICMAPE to fill this gap, a method that combines a centralized inference network with decentralized data collection policies. The inference network estimates a posterior distribution over hypotheses from global trajectory data, while each agent selects actions using only its local observation history. We evaluate ICMAPE on two synthetic benchmarks—bandit capacity identification and signal source localization—and on a real-world Maryland nitrate concentration monitoring task, demonstrating its ability to transfer to real-world observation noise and non-stationary dynamics. We reformulate the fixed-confidence optimization problem as a learnable reinforcement learning objective and train the resulting model under the CTDE paradigm. Future research could extend this setting toward more general forms of environment understanding. We discuss limitations and broader impacts in Section D. 9References 
+
+[1] Ming Tan. Multi-agent reinforcement learning: independent versus cooperative agents. In 
+
+Proceedings of the Tenth International Conference on International Conference on Machine Learning , ICML’93, page 330–337, San Francisco, CA, USA, 1993. Morgan Kaufmann Pub-lishers Inc. ISBN 1558603077. [2] Laetitia Matignon, Guillaume J. Laurent, and Nadine Le Fort-Piat. Independent reinforce-ment learners in cooperative markov games: a survey regarding coordination problems. The Knowledge Engineering Review , 27(1):1–31, 2012. doi: 10.1017/S0269888912000057. [3] Kyunghwan Son, Daewoo Kim, Wan Ju Kang, David Earl Hostallero, and Yung Yi. Qtran: Learning to factorize with transformation for cooperative multi-agent reinforcement learning. In International conference on machine learning , pages 5887–5896. PMLR, 2019. [4] Ryan Lowe, Yi I Wu, Aviv Tamar, Jean Harb, OpenAI Pieter Abbeel, and Igor Mordatch. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neural information processing systems , 30, 2017. [5] Jakob Foerster, Gregory Farquhar, Triantafyllos Afouras, Nantas Nardelli, and Shimon Whiteson. Counterfactual multi-agent policy gradients. In Proceedings of the AAAI conference on artificial intelligence , 2018. [6] Shariq Iqbal and Fei Sha. Actor-attention-critic for multi-agent reinforcement learning. In Kamalika Chaudhuri and Ruslan Salakhutdinov, editors, Proceedings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research ,pages 2961–2970. PMLR, 09–15 Jun 2019. [7] Johannes Ackermann, Volker Gabler, Takayuki Osa, and Masashi Sugiyama. Reducing overestimation bias in multi-agent domains using double centralized critics, 2019. URL 
+
+https://arxiv.org/abs/1910.01465 .[8] Hassam Ullah Sheikh and Ladislau Bölöni. Multi-agent reinforcement learning for problems with combined individual and team reward. In 2020 International Joint Conference on Neural Networks (IJCNN) , pages 1–8. IEEE, 2020. [9] Yiming Zhang and Dongning Guo. Multi-agent reinforcement learning for multi-cell spectrum and power allocation. IEEE Transactions on Communications , 73(8):5980–5992, 2025. [10] Yuan Wei, Xiaohan Shan, Ran Miao, and Jianmin Li. Lero: Llm-driven evolutionary framework with hybrid rewards and enhanced observation for multi-agent reinforcement learning. In 
+
+International Conference on Intelligent Computing , pages 15–26. Springer, 2025. [11] N. Patwari, J.N. Ash, S. Kyperountas, A.O. Hero, R.L. Moses, and N.S. Correal. Locating the nodes: cooperative localization in wireless sensor networks. IEEE Signal Processing Magazine ,22(4):54–69, 2005. doi: 10.1109/MSP.2005.1458287. [12] Guoqiang Mao, Barı¸ s Fidan, and Brian D.O. Anderson. Wireless sensor network localization techniques. Computer Networks , 51(10):2529–2553, 2007. ISSN 1389-1286. doi: https:// doi.org/10.1016/j.comnet.2006.11.018. URL https://www.sciencedirect.com/science/ article/pii/S1389128606003227 .[13] Anup Kumar Paul and Takuro Sato. Localization in wireless sensor networks: A survey on algorithms, measurement techniques, applications and challenges. Journal of Sensor and Actuator Networks , 6(4), 2017. ISSN 2224-2708. doi: 10.3390/jsan6040024. URL https: //www.mdpi.com/2224-2708/6/4/24 .[14] Mohammad Naghshvar and Tara Javidi. Active Sequential Hypothesis Testing. The Annals of Statistics , 41(6):2703–2738, 2013. ISSN 0090-5364. URL https://www.jstor.org/ stable/23566746 .[15] Emilie Kaufmann, Olivier Cappé, and Aurélien Garivier. On the complexity of best-arm identification in multi-armed bandit models. The Journal of Machine Learning Research , 17(1): 1–42, 2016. 10 [16] Aurélien Garivier and Emilie Kaufmann. Optimal best arm identification with fixed confidence. In Conference on Learning Theory , pages 998–1027. PMLR, 2016. [17] Daniel Russo. Simple Bayesian Algorithms for Best Arm Identification. In Conference on Learning Theory , pages 1417–1418. PMLR, June 2016. URL https://proceedings.mlr. press/v49/russo16.html .[18] Alessio Russo, Yichen Song, and Aldo Pacchiano. Pure exploration with feedback graphs. In Proceedings of the 28th international conference on artificial intelligence and statistics ,Proceedings of machine learning research. PMLR, 2025. [19] Filippo Vannella, Alexandre Proutiere, Yassir Jedra, and Jaeseong Jeong. Learning optimal antenna tilt control policies: A contextual linear bandits approach. IEEE Transactions on Mobile Computing , 23(12):12666–12679, 2024. doi: 10.1109/TMC.2024.3424192. [20] Filippo Vannella, Alexandre Proutiere, and Jaeseong Jeong. Best arm identification in multi-agent multi-armed bandits. In Proceedings of the 40th International Conference on Machine Learning , ICML’23. JMLR.org, 2023. [21] Aritra Mitra, Hamed Hassani, and George Pappas. Exploiting heterogeneity in robust federated best-arm identification. arXiv preprint arXiv:2109.05700, 2021. URL https: //api.semanticscholar.org/CorpusID:237513934 .[22] Srinivas Reddy Kota, PN Karthik, and Vincent YF Tan. Almost cost-free communication in federated best arm identification. In Proceedings of the AAAI Conference on Artificial Intelligence , pages 8378–8385, 2023. [23] Zhirui Chen, P. N. Karthik, Vincent Y. F. Tan, and Yeow Meng Chee. Federated best arm identification with heterogeneous clients. IEEE Transactions on Information Theory , 70 (6):4258–4279, June 2024. ISSN 1557-9654. doi: 10.1109/tit.2023.3338027. URL http: //dx.doi.org/10.1109/TIT.2023.3338027 .[24] Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vinicius Zambaldi, Max Jaderberg, Marc Lanctot, Nicolas Sonnerat, Joel Z Leibo, Karl Tuyls, et al. Value-decomposition networks for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 ,2017. [25] Tabish Rashid, Mikayel Samvelyan, Christian Schroeder De Witt, Gregory Farquhar, Jakob Foerster, and Shimon Whiteson. Monotonic value function factorisation for deep multi-agent reinforcement learning. Journal of Machine Learning Research , 21(178):1–51, 2020. [26] Alessio Russo, Ryan Welch, and Aldo Pacchiano. In-context learning for pure exploration. In 
+
+The Fourteenth International Conference on Learning Representations , 2026. URL https: //openreview.net/forum?id=NFCNFvDYfE .[27] Rémy Degenne, Wouter M Koolen, and Pierre Ménard. Non-asymptotic pure exploration by solving games. In H. Wallach, H. Larochelle, A. Beygelzimer, F. dAlché Buc, E. Fox, and R. Garnett, editors, Advances in neural information processing systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips.cc/paper_files/paper/ 2019/file/8d1de7457fa769ece8d93a13a59c8552-Paper.pdf .[28] Marc Jourdan, Rémy Degenne, Dorian Baudry, Rianne de Heide, and Emilie Kaufmann. Top two algorithms revisited. Advances in Neural Information Processing Systems , 35:26791–26803, 2022. [29] Po-An Wang, Ruo-Chun Tzeng, and Alexandre Proutiere. Fast Pure Exploration via Frank-Wolfe. In Advances in Neural Information Processing Systems , volume 34, pages 5810–5821. Curran Associates, Inc., 2021. [30] Alessio Russo and Aldo Pacchiano. Adaptive Exploration for Multi-Reward Multi-Policy Evalu-ation. In Proceedings of the 42nd International Conference on Machine Learning , pages 52382– 52421. PMLR, October 2025. URL https://proceedings.mlr.press/v267/russo25a. html .11 [31] Hadar Szostak and Kobi Cohen. Deep multi-agent reinforcement learning for decentralized active hypothesis testing. IEEE Access , 12:130444–130459, 2024. [32] Alessio Russo, Yin-Ching Lee, Ryan Welch, and Aldo Pacchiano. In-context learning for pure exploration in continuous spaces, 2026. URL https://arxiv.org/abs/2602.17976 .[33] Scott Fujimoto, Herke Hoof, and David Meger. Addressing function approximation error in actor-critic methods. In International conference on machine learning , pages 1587–1596. PMLR, 2018. [34] Xuchuang Wang, Hong Xie, and John C. S. Lui. Multiple-Play Stochastic Bandits with Shareable Finite-Capacity Arms. In Proceedings of the 39th International Conference on Machine Learning , pages 23181–23212. PMLR, 2022. [35] Xuchuang Wang, Hong Xie, and John C. S. Lui. Multi-player multi-armed bandits with finite shareable resources arms: Learning algorithms and applications. In Lud De Raedt, editor, 
+
+Proceedings of the Thirty-First International Joint Conference on Artificial Intelligence, IJCAI-22 , pages 3537–3543. International Joint Conferences on Artificial Intelligence Organization, 7 2022. doi: 10.24963/ijcai.2022/491. URL https://doi.org/10.24963/ijcai.2022/491 .[36] Xinyi Hu and Aldo Pacchiano. Meet me at the arm: The cooperative multi armed bandits problem with shareable arms. In The 29th International Conference on Artificial Intelligence and Statistics , 2026. URL https://openreview.net/forum?id=ElXIobrn5n .[37] National Water Quality Monitoring Council. Water quality portal, 2024. URL https://www. waterqualitydata.us/ . Accessed: June 26, 2026. [38] U.S. Environmental Protection Agency. Estimated nitrate concentrations in ground-water used for drinking, 2026. URL https://www.epa.gov/nutrientpollution/ estimated-nitrate-concentrations-groundwater-used-drinking .[39] U.S. Geological Survey. Nutrients and eutrophication, 2026. URL https://www.usgs.gov/ mission-areas/water-resources/science/nutrients-and-eutrophication .[40] Mahdi Pakdaman Naeini, Gregory Cooper, and Milos Hauskrecht. Obtaining well calibrated probabilities using bayesian binning. In Proceedings of the AAAI conference on artificial intelligence , volume 29, 2015. [41] Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, Alban Desmaison, Andreas Kopf, Edward Yang, Zachary DeVito, Martin Raison, Alykhan Tejani, Sasank Chilamkurthy, Benoit Steiner, Lu Fang, Junjie Bai, and Soumith Chintala. Pytorch: An imperative style, high-performance deep learning library. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, Advances in Neural Information Processing Systems , vol-ume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips.cc/paper_ files/paper/2019/file/bdbca288fee7f92f2bfa9f7012727740-Paper.pdf .[42] Mark Towers, Ariel Kwiatkowski, Jordan Terry, John U Balis, Gianluca De Cola, Tristan Deleu, Manuel Goulão, Andreas Kallinteris, Markus Krimmel, Arjun KG, et al. Gymnasium: A standard interface for reinforcement learning environments. arXiv preprint arXiv:2407.17032 ,2024. [43] Omry Yadan. Hydra - a framework for elegantly configuring complex applications. Github, 2019. URL https://github.com/facebookresearch/hydra .[44] Lukas Biewald. Experiment tracking with weights and biases, 2020. URL https://www. wandb.com/ . Software available from wandb.com. [45] Charles R Harris, K Jarrod Millman, Stéfan J Van Der Walt, Ralf Gommers, Pauli Virtanen, David Cournapeau, Eric Wieser, Julian Taylor, Sebastian Berg, Nathaniel J Smith, et al. Array programming with numpy. nature , 585(7825):357–362, 2020. [46] Wes McKinney. Data structures for statistical computing in python. SciPy 2010 , 2010. doi: 10. 25080/Majora-92bf1922-00a. URL https://doi.org/10.25080/Majora-92bf1922-00a .12 [47] John D Hunter. Matplotlib: A 2d graphics environment. Computing in science & engineering ,9(3):90–95, 2007. [48] Michael L Waskom. Seaborn: statistical data visualization. Journal of open source software , 6 (60):3021, 2021. [49] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms, 2017. URL https://arxiv.org/abs/1707.06347 .13 Contents 
+
+1 Introduction 12 Related Work 23 Background 34 Method 3
+
+4.1 Lagrangian Relaxation and RL Reformulation . . . . . . . . . . . . . . . . . . . . 34.2 Inference Network . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44.3 Critics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44.4 Actors . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+
+5 Experiments 5
+
+5.1 Multi-armed Bandits Capacity Identification . . . . . . . . . . . . . . . . . . . . . 55.2 Signal Source Localization with Distractors . . . . . . . . . . . . . . . . . . . . . 65.3 Maryland Nitrate Concentration Monitoring . . . . . . . . . . . . . . . . . . . . . 65.4 Baselines . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+
+6 Results 7
+
+6.1 Multi-armed Bandit Capacity Identification . . . . . . . . . . . . . . . . . . . . . 76.2 Signal Source Localization with Distractors . . . . . . . . . . . . . . . . . . . . . 86.3 Nitrate Concentration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+
+7 Conclusion 9A Theoretical Details 16 
+
+A.1 Preliminaries . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 A.2 Optimization Problem . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 A.3 Dual Problem Formulation and RL Conversion . . . . . . . . . . . . . . . . . . . 18 A.4 Q-Learning Approach . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.5 Policy Learning Approach . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.6 Posterior Confidence Reward for Capacity Identification . . . . . . . . . . . . . . 24 
+
+B Experiment Details 25 
+
+B.1 Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 B.2 Baseline Descriptions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 B.3 Signal Localization Environment Details . . . . . . . . . . . . . . . . . . . . . . . 27 B.4 Maryland Nitrate Concentration Monitoring Details . . . . . . . . . . . . . . . . . 27 B.4.1 Data and Spatial Grid . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 B.4.2 GP-Based Field Generation . . . . . . . . . . . . . . . . . . . . . . . . . 27 B.4.3 Multi-Agent Sampling Dynamics . . . . . . . . . . . . . . . . . . . . . . 28 14 B.4.4 Target Definition and Evaluation . . . . . . . . . . . . . . . . . . . . . . . 30 B.5 Model Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 B.5.1 Capacity Identification Model Architecture . . . . . . . . . . . . . . . . . 30 B.5.2 Signal Localization Model Architecture . . . . . . . . . . . . . . . . . . . 31 B.6 Nitrate Concentration Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . 32 B.6.1 CNN-LSTM Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . 32 B.7 Recurrent Sequence Encoder with Conditioned Pooling . . . . . . . . . . . . . . . 33 B.8 Posterior Thompson Sampling Baseline . . . . . . . . . . . . . . . . . . . . . . . 33 B.8.1 Agent-wise Posterior Construction . . . . . . . . . . . . . . . . . . . . . . 33 B.8.2 Deterministic Movement Rule After Posterior Sampling . . . . . . . . . . 35 B.8.3 Stopping Rule . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35 B.9 Implementation Details . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35 
+
+C Additional Experiment Analysis Detailes 36 
+
+C.1 Capacity Identification. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 C.1.1 Training Dynamics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 C.1.2 Posterior Calibration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 C.1.3 Additional Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 C.1.4 Model Robustness. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 C.1.5 Coordination Strategy . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39 C.2 Signal Source Localization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 C.2.1 Coordination Strategy . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42 
+
+D Limitations and Broader Impact 43 
+
+15 A Theoretical Details 
+
+Our theoretical formulation follows from the In-Context Pure Exploration [26]. 
+
+A.1 Preliminaries Assumption A.1 [Common dominating measures]. There exist reference measures λ0 and λ on 
+
+(X , B(X )) such that, for all (ρ, P ) ∈ M , s ∈ N, and (z, a ) ∈ Z × A ,
+
+ρ(·) ≪ λ0(·) and Ps(· | z, a ) ≪ λ(·).
+
+That is, all initial distributions and transition kernels have densities with respect to common reference measures: 
+
+ρω (dx ) = pω 
+
+> 0
+
+(x)λ0(dx ), P ωs (dx | z, a ) = pωs (x | z, a )λ(dx ).
+
+Lemma A.1 (Posterior kernel under decentralized policies) . Fix a time t ∈ N. Consider a model class M with prior P, and let M ∼ P denote the unknown environment. Under a decentralized joint policy 
+
+π = ( π1, . . . , π N ), πis(· | D is) ∈ ∆( Ai),
+
+each agent i selects action ais using only its local trajectory Dis. Let the global trajectory up to time t
+
+be 
+
+Dt = ( x1, a 1, x 2, a 2, . . . , x t),
+
+where xs = ( x1
+
+> s
+
+, . . . , x Ns ) and as = ( a1
+
+> s
+
+, . . . , a Ns ).Then there exists a probability kernel 
+
+Rt : Dt × B (M) → [0 , 1] ,
+
+independent of the decentralized policy π, such that for every measurable set A ⊆ M and every measurable trajectory event Z,
+
+Pπ (M ∈ A, Dt ∈ Z) = 
+
+Z
+
+> Z
+
+Rt(A | z) Pπ (Dt ∈ dz ).
+
+Consequently, for any hypothesis set B ⊆ H ,
+
+Pπ (H⋆ ∈ B | D t = z) = Rt
+
+ {M ∈ M : h⋆(M ) ∈ B} | z,
+
+for Pπ -almost every trajectory z.Proof. Let z = ( x1, a 1, x 2, . . . , a t−1, x t) ∈ Z t denote a realized global trajectory. Under a decen-tralized policy π, the trajectory law induced by model M factorizes as 
+
+PπM,t (dz ) = ρM (dx 1)
+
+> t−1
+
+Y
+
+> s=1
+
+" NY
+
+> i=1
+
+πis(da is | D is)
+
+#
+
+PM,s (d xs+1 | D s, a s).
+
+The policy-dependent factor t−1Y
+
+> s=1
+> N
+
+Y
+
+> i=1
+
+πis(ais | D is)
+
+depends on the realized trajectory z, but not on the model M . Hence, once we condition on the trajectory, the action-selection probabilities do not provide additional likelihood information about M
+
+We choose reference measures λ0 and λ such that 
+
+ρM (dx 1) = rM (x1)λ0(dx 1), PM,s (dx s+1 | D s, a s) = pM,s (xs+1 | D s, a s)λ(dx s+1 ).
+
+Define a reference measure on the trajectory space by 
+
+νπt (dz ) := λ0(dx 1)
+
+> t−1
+
+Y
+
+> s=1
+
+" NY
+
+> i=1
+
+πis(da is | D is)
+
+#
+
+λ(dx s+1 ).
+
+16 Then PπM,t ≪ νπt by Assumption A.1, and the Radon–Nikodym derivative is 
+
+ℓt(M, z ) := dPπM,t 
+
+dν πt
+
+(z) = rM (x1)
+
+> t−1
+
+Y
+
+> s=1
+
+pM,s (xs+1 | D s, a s).
+
+The policy terms are absorbed into the reference measure νπt , so the likelihood ℓt(M, z ) depends only on the model-dependent initial density, transition densities, and observed trajectory, but not on the decentralized policy. Therefore, for any measurable A ⊆ M and Z ⊆ Z t,
+
+Pπ (M ∈ A, Dt ∈ Z) = 
+
+Z
+
+> A
+
+Z
+
+> Z
+
+ℓt(M, z ) νπt (dz ) P(dM ),
+
+and 
+
+Pπ (Dt ∈ Z) = 
+
+Z
+
+> Z
+
+Z
+
+> M
+
+ℓt(M, z ) P(dM ) νπt (dz ).
+
+Thus the posterior kernel is 
+
+Rt(A | z) := 
+
+R 
+
+> A
+
+ℓt(M, z ) P(dM )
+
+R 
+
+> M
+
+ℓt(M, z ) P(dM ) .
+
+This kernel is independent of π. Equivalently, 
+
+Pπ (M ∈ A | D t = z) = Rt(A | z),
+
+for Pπ -almost every z. The desired conclusion follows by taking 
+
+A = {M ∈ M : h⋆(M ) ∈ B}.
+
+Proposition A.1. Consider a fixed decentralized policy π ∈ Q
+
+> dec
+
+. Let t ∈ N, and z ∼ Pπt . For any t,the optimal inference rule of sup It Pπt (H⋆ = It(Dt)) is given by I∗ 
+
+> t
+
+(z) = arg max H∈H Pπt (H⋆ =
+
+H | D t = z)
+
+The proof of Proposition A.1 follows from Proposition B.2 of Russo et al. [26]. 
+
+A.2 Optimization Problem Fixed Confidence: Given a target error δ ∈ (0 , 1) , the learner chooses: a stopping time τ ∈ N,which is the total number of queries; a data collection policy π; and an inference rule I that minimize the expected total number of queries τ (see Assumption 4.1), while meeting the correctness guarantee. 
+
+τ marks the random moment when the data collection process stops. We define the following optimization problem: 
+
+min  
+
+> {πi},τ, I
+
+Eπ [τ ] s.t. P{πi}(Iτ (Dτ ) = H⋆) ≥ 1 − δ, 
+
+where Pπ (·) is the probability of the underlying data collection process when π gathers data from environment M , and M is sampled from the prior P. In the appendix, we use the notation {πi} to represent policies in the decentralized policy class Πdec .
+
+Decentralized policy class. Since agents operate under decentralized observation, we restrict to decentralized policies Πdec such that for every agent i and time t, ai(t) depends only on its own local observation history Dit−1 and is conditionally independent of all other agents’ histories given its own: 
+
+ai(t) ∼ πi(· | D it−1).
+
+Furthermore, πi is measurable with respect to σ(Dit−1).17 A.3 Dual Problem Formulation and RL Conversion Dual Problem Formulation In the fixed confidence setting, we are solving the following optimiza-tion problem. 
+
+inf  
+
+> π∈Πdec , τ, I
+
+Eπ [τ ]
+
+s.t. Pπ (Iτ (Dτ ) = H⋆) ≥ 1 − δ, 
+
+Eπ [τ ] < ∞,
+
+(7) where we assumed τ to be locally adapted to (σ(Dit)) t according to Assumption 4.1. Here Dit =
+
+{(i, a is, x is)}ts=1 , denotes the local state of player i, i.e., the sequence of tuples containing the player index together with its local observation–action trajectory up to time t.
+
+Lemma A.2. The Lagrangian dual of the problem in Eq. 7 is given by 
+
+sup 
+
+> λ≥0
+
+inf  
+
+> {πi},τ, I
+
+L({πi}, τ, I; λ) = sup 
+
+> λ≥0
+
+inf  
+
+> π,τ, I
+
+λ(1 − δ) + E{πi}h
+
+τ − λP{πi}(H⋆ = Iτ (Dτ ) | D τ
+
+i
+
+,
+
+where λ is the Lagrange multiplier. Proof. Since any feasible solution stops almost surely under assumption, we use {πi} to mean decentralized policies and get 
+
+P{πi}(H⋆ = Iτ (Dτ )) = X
+
+> t≥1
+
+P{πi} 
+
+> t
+
+(It(Dt) = H⋆, τ = t) (law of total probability) (8) 
+
+= X
+
+> t≥1
+
+E{πi}
+
+> t
+
+1{τ =t}1{H⋆=It(Dt)}
+
+ (9) 
+
+= X
+
+> t≥1
+
+E{πi}
+
+> t
+
+Et[1{τ =t}1{H⋆=It(Dt)} Dt] , (tower rule) (10) 
+
+= X
+
+> t≥1
+
+E{πi}
+
+> t
+
+h
+
+1{τ =t}E{πi}
+
+> t
+
+1{H⋆=It(Dt)} | D t
+
+i
+
+({τ = t} ∈ σ(Dit)) 
+
+(11) 
+
+= X
+
+> t≥1
+
+E{πi}
+
+> t
+
+1{τ =t}Pt(H⋆ = It(Dt) | D t) . (12) The last line holds because of Lemma A.1. Then we introduce a Lagrange multiplier λ ≥ 0. The corresponding Lagrangian function is given by 
+
+L({πi}, τ, I ; λ) = E{πi}[τ ] + λ
+
+
+
+(1 − δ) − P{πi}(Iτ (Dτ ) = H⋆)
+
+
+
+.
+
+The dual function g(λ) is defined as 
+
+g(λ) = inf  
+
+> {πi},τ, I
+
+L({πi}, τ, I; λ).
+
+The dual problem is 
+
+sup 
+
+> λ≥0
+
+g(λ) = sup 
+
+> λ≥0
+
+inf  
+
+> {πi},τ, I
+
+L({πi}, τ, I; λ) (13) 18 To simplify the Lagrangian function we get: 
+
+L({πi}, τ, I; λ) = E{πi}[τ ] + λ
+
+
+
+(1 − δ) − P{πi}(Iτ (Dτ ) = H⋆)
+
+
+
+(14) 
+
+= E{πi}[τ ] + λ
+
+
+
+(1 − δ) − X
+
+> t≥1
+
+E{πi}1{τ =t}Pt(H⋆ = It(Dt) | D t) 
+
+(15) 
+
+= λ − λδ + E{πi}
+
+τ − λ X
+
+> t≥1
+
+1{τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ (16) 
+
+= λ − λδ + E{πi}
+
+X
+
+> t≥1
+
+1{t≤τ } − λ X
+
+> t≥1
+
+1{τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ (17) 
+
+= λ − λδ + E{πi} h
+
+τ − λPτ (H⋆ = Iτ (Dτ ) | D τ )
+
+i 
+
+(18) Now we show how to embed the stopping rule into the policy by augmenting the action space as a stopping action. At each time t, the joint action is at = ( a1 
+
+> t
+
+, . . . , a Nt ) ∈ A , where each agent chooses 
+
+ait ∈ A i.For each agent i ∈ [N ], define the augmented local action space 
+
+¯Ai := Ai ∪ { astop },
+
+and the augmented joint action space 
+
+¯A := ¯A1 × · · · × ¯AN .
+
+We also define the induced stopping time under the augmented policy as 
+
+¯τ := inf t ≥ 1 : ∃i ∈ [N ] s.t. ait = astop .
+
+If any agent performed action ait̸ = astop and observed xit+1 after its action decides to stop this is equivalent to choose action astop at round t + 1 leading to ¯τ = t + 1 = τ .Assumption 4.1 is what allows this construction: Lemma A.3 builds an augmented policy {¯πi} whose induced stopping time ¯τ coincides with τ , which requires {τ ≤ t} to be measurable with respect to every local filtration. The following remark records how this condition is met in our implementation. 
+
+Remark A.1. Assumption 4.1 constrains only the measurability of {τ ≤ t}, not the agents’ in-formation sets: it is satisfied whenever the indicator st = I{∃ i, a it = astop } is observed by all agents because each ait is selected from Dit alone. Common stopping therefore requires each agent to transmit at most one bit per round and to learn only whether some agent has stopped; it needs no central coordinator and no sharing of observations or histories. 
+
+Lemma A.3. For every ({πi}, τ, I) with τ ≥ 1 almost surely, there exists a policy {¯πi} on ¯A =S
+
+> i
+
+(Ai ∪ { astop }) with stopping rule 
+
+¯τ := inf t ≥ 1 : ∃i ∈ [N ] s.t. ait = astop .
+
+such that 
+
+L({πi}, τ, I; λ) = L({¯πi}, I; λ).
+
+Proof. With Assumption 4.1 {τ ≤ t} ∈ σ(Dit) ∀i, we can define for each agent for zi ∈ Z it ,and there exists a measurable set Ait ∈ B (Zit ), where {τ = t} = {D it ∈ Ait}
+
+¯πit(astop | zi) = 1{zi ∈ Ait} and ¯πit(a | zi) = πit(a | zi), a ∈ A i.
+
+By the construction of the {¯πi},
+
+astop ⇐⇒ τ = t for all i ∈ [N ].
+
+19 Hence, [
+
+> i
+
+{ait = astop } = {τ = t}
+
+Therefore, we have 
+
+{¯τ = t} = {∃ i : ait = astop } = {τ = t}.
+
+L({¯πi}, I; λ) = λ(1 − δ) + E{¯πi} [¯ τ − λP¯τ (H⋆ = I¯τ (D¯τ ) | D ¯τ )] (19) 
+
+= λ(1 − δ) + E{¯πi}
+
+X
+
+> t≥1
+
+1{t≤¯τ } − λ1{¯τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ (20) 
+
+= λ(1 − δ) + E{¯πi}
+
+
+
+> ¯τ
+
+X
+
+> t≥1
+
+1 − λ1{¯τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ (21) 
+
+= λ(1 − δ) + E{¯πi}
+
+
+
+> ¯τ
+
+X
+
+> t≥1
+
+1 − λ1{∃ i:ait=astop }Pt(H⋆ = It(Dt) | D t)
+
+ (22) 
+
+= λ(1 − δ) + E{πi}
+
+
+
+> τ
+
+X
+
+> t≥1
+
+1 − λ1{τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ (23) Now we will keep working in the extended action space, and define τ := inf t ≥ 1 : ∃i ∈
+
+[N ] s.t. ait = astop to simply notations by avoiding using the bar notation. 
+
+Proposition A.2. For any t ∈ N, the optimal inference rule selects the hypothesis with the largest posterior probability: 
+
+It(Dt) ∈ arg max  
+
+> H∈H
+
+Pt(H⋆ = H | D t),
+
+Moreover, 
+
+sup 
+
+> λ≥0
+
+inf  
+
+> π∈Πdec ,I
+
+Lλ(π, I) = sup 
+
+> λ≥0
+
+inf  
+
+> π
+
+{λ(1 − δ) + Eπ [τ − λr τ (Dτ )] } ,
+
+where 
+
+τ := inf t ≥ 1 : ∃i ∈ [N ] s.t. ait = astop rt(zt) := max  
+
+> H∈H
+
+Pt(H⋆ = H | D t = zt).
+
+Proof. Let’s first optimizing over the inference rules. For t ∈ N, z ∈ Z t. let’s define rt(zt) = max H∈H Pt(H∗ = H | D t = zt). If we fix ({πi}, τ ), we will get 
+
+inf  
+
+> I
+
+L({πi}, I; λ) = λ(1 − δ) + inf  
+
+> I
+
+E{πi}
+
+X
+
+> t≥1
+
+1{t≤τ } − λ1{τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ ,
+
+= λ(1 − δ) + E{πi}
+
+inf 
+
+> I
+
+X
+
+> t≥1
+
+1{t≤τ } − λ1{τ =t}Pt(H⋆ = It(Dt) | D t)
+
+ ,
+
+= λ(1 − δ) + E{πi}
+
+X
+
+> t≥1
+
+1{t≤τ } − λ1{τ =t} sup 
+
+> It
+
+Pt(H⋆ = It(Dt) | D t)
+
+ ,
+
+= λ(1 − δ) + E{πi}
+
+X
+
+> t≥1
+
+1{t≤τ } − λ1{τ =t}rt(Dt)
+
+
+
+= λ(1 − δ) + E{πi} [τ − λr t(Dt)] .
+
+20 The second-to-last equality follows from Proposition A.1. Now we can get 
+
+sup 
+
+> λ≥0
+
+inf  
+
+> {πi},I
+
+L({πi}, I; λ) = sup 
+
+> λ≥0
+
+inf  
+
+> {πi}
+
+λ − λδ + E{πi} [τ − λr τ (Dτ )] 
+
+21 We now optimize over policies. Recall we now defined Ai includes the stopping action, a ∈ A and 
+
+τ = inf {t : at = astop } ⇔ τ = inf t ≥ 1 : ∃i ∈ [N ] s.t. ait = astop . For t ∈ N, z ∈ Z t use π as an simplified notation for any possible decentralized policy, then the optimal value to go satisfies 
+
+Vt(z; λ) := inf   
+
+> π:τ≥t
+
+λ − λδ + Eπ
+
+ (τ − t)
+
+| {z } 
+
+> expected future sample
+
+−λr τ (Dτ ) Dt = z
+
+ .
+
+Also define the following optimal Q-function for z ∈ Z t, a̸ = astop 
+
+Qt(z, a ; λ) := 1 + 
+
+Z
+
+> X
+
+Vt+1 (z, a, x ′
+
+| {z } 
+
+> z′
+
+; λ) ¯Pt(dx ′ | z, a ),
+
+where ¯Pt is the posterior predictive distribution of the next observation. Every additional step will give a cost of 1 in the Q value. We also define stopping action Q value as 
+
+Qt(z, a stop ; λ) := λ 1 − δ − rt(z).
+
+If we define λ-optimal policy π⋆λ = ( π⋆t (z; λ)) t as 
+
+π⋆t (z; λ) ∈ arg min  
+
+> a∈A
+
+Qt(z, a ; λ)
+
+We have then the following result. 
+
+Proposition A.3. π⋆λ is a λ-optimal policy. Furthermore, the optimal value for z ∈ Z t satisfies 
+
+Vt(z; λ) = min  
+
+> a∈A
+
+Qt(z, a ; λ). (21) 
+
+Proof. Fix Dt = z, z ∈ Z t. Assume the optimal stopping action stops at τ = t for such z. Then 
+
+Vt(z; λ) = λ − λδ − λr t(z) = Qt(z, a stop ; λ).
+
+Otherwise, suppose the optimal stopping rule satisfies τ > t , then 
+
+Vt(z; λ) = inf  
+
+> π:τ >t
+
+λ − λδ + Eπ [τ − t − λr τ (Dτ ) | Dt = z]= inf  
+
+> π:τ >t
+
+λ − λδ + 1 + Eπ [τ − (t + 1) − λr τ (Dτ ) | Dt = z]= inf  
+
+> π:τ >t
+
+1 + Eπ [Eπ [λ − λδ + τ − (t + 1) − λr τ (Dτ ) | Dt+1 ] | D t = z]= inf  
+
+> π:τ >t
+
+1 + Eπ [Eπ [Vt+1 (Dt+1 ; λ)] | D t = z]= inf  
+
+> π:τ >t
+
+1 + Eπa
+
+Z 
+
+> X
+
+Vt+1 (z, a, x ′; λ) ¯Pt(dx ′|z, a )
+
+
+
+,
+
+We then clearly obtain the lower bound 
+
+Vt(z; λ) ≥ min 
+
+
+
+λ(1 − δ − rt(z)) , min  
+
+> a∈A
+
+Qt(z, a ; λ)
+
+
+
+.
+
+If τ = t, then λ(1 − δ − rt(z)) ≤ min a̸=stop Qt(z, a ; λ); the value to go for the optimal policy is exactly λ(1 − δ − rt(z)) .If τ̸ = t, then λ(1 − δ − rt(z)) ≥ min a̸=stop Qt(z, a ; λ) , the best policy value should go to 
+
+Qt(z, π t(z); λ) = min a∈A Qt(z, a, λ ) = V (z; λ).
+
+Reward-form dual. Equivalently, the constrained problem can be written in reward-maximization form as 
+
+inf  
+
+> λ≥0
+
+sup 
+
+> π, I
+
+Vλ(π, I),
+
+where 
+
+Vλ(π, I) := −Eπ [τ ] + λ
+
+
+
+Pπ (Iτ (Dτ ) = H⋆) − 1 + δ
+
+
+
+.
+
+22 Optimizing over the inference rule gives 
+
+rt(Dt) := max  
+
+> H∈H
+
+Pt(H⋆ = H | D t),
+
+and therefore 
+
+inf  
+
+> λ≥0
+
+sup 
+
+> π
+
+Eπ −τ + λ rτ (Dτ ) − 1 + δ .
+
+We then define the reward model by 
+
+rt,λ (Dt, a ) = −1{a̸ = astop } + λ 1{a = astop } max  
+
+> H∈H
+
+Pt(H⋆ = H | D t).
+
+Accordingly, the Q-function satisfies 
+
+Qt,λ (Dt, a ) = rt,λ (Dt, a ) + 1{a̸ = astop }Ext+1 |(Dt,a )
+
+h
+
+max  
+
+> a′
+
+Qt+1 ,λ 
+
+ (Dt, a, x t+1 ), a ′i
+
+.
+
+A.4 Q-Learning Approach 
+
+From the dynamic programming formulation above, we obtain the optimal joint action–value function associated with the optimal policy π⋆. We denote this value by Qtot . We next seek a decomposition of Qtot into per-agent utilities Qi. To enable decentralized greedy action selection, we adopt the 
+
+individual–global maximization (IGM) assumption, which ensures that the optimal joint action can be recovered from individual greedy actions. In particular, we assume there exists a mixing function such that Qtot is monotone in each Qi, i.e., 
+
+∂Q tot 
+
+∂Q i ≥ 0, ∀i. 
+
+Under this condition, decentralized greedy selection with respect to the individual utilities is con-sistent with the joint optimum. In practice, we use learned approximations ˆQi to parameterize this decomposition, rather than the true value functions. Since τ is a common stopping time adapted to each local filtration in Assumption 4.1, on the event 
+
+{τ = t} all agents must stop, i.e., ait = astop for all i. Because decentralized execution is greedy with respect to the learned per-agent utilities, we impose the following consistency constraint: on 
+
+{τ = t}, we require 
+
+ ˆQit(zit , a stop ; λ) ≥ ˆQit(zit , a ; λ)
+
+
+
+, ∀a ∈ A i, a ̸ = astop .
+
+Equivalently, 
+
+astop ∈ arg max 
+
+> ai∈A i
+
+ˆQit(zit , a i; λ).
+
+Suppose We adopt a VDN-style factorization, 
+
+ˆQtot ,t (z, a; λ) = 
+
+> N
+
+X
+
+> i=1
+
+ˆQit(zit , a it; λ),
+
+so that joint greedy minimization is consistent with decentralized greedy minimization. 
+
+A.5 Policy Learning Approach 
+
+An alternative to Q-learning is to learn a decentralized policy using an actor–critic formulation, where the critic evaluates the actors’ actions using global information and joint actions. Since execution remains decentralized, each agent i selects its action based only on its local history Dit. During training, however, the critic may use additional global information to improve credit assignment. For each agent i ∈ [N ], let the decentralized actor be 
+
+πiθ (· | D it),
+
+and θ is the collection of actor’s parameter. 23 Critic. For each agent i, we define a centralized training critic 
+
+Qt(Dt, a it, a −it ; λ),
+
+which estimates the future soft cost when agent i takes action ait and the other agents take a−it . If no agent stops at time t, we pay cost 1 and continue. If some agent stops, we terminate with reward 
+
+λ rt(Dt) − 1 + δ.
+
+Thus, the one-step target is 
+
+yit = ct + γ 1{∀ j, a jt̸ = astop }
+
+
+
+Qϕtar (Dt+1 , a it+1 , a −it+1 ; λ)) 
+
+
+
+,
+
+where 
+
+ct =
+
+(−1, if no agent stops at time t, λ rt(Dt) − 1 + δ, otherwise. The critic loss is 
+
+LQi (ϕi) = E
+
+h Qiϕi (Dt, a it, a −it ; λ) − yit
+
+2i
+
+.
+
+Actor. The actor is trained with a deterministic policy-gradient objective using the centralized critics. Given the local history Dit, each actor produces a relaxed action ˜ait = πiθi (Dit), which is used for the actor update. The objective is 
+
+J(θ) = E
+
+" NX
+
+> i=1
+
+min  
+
+> j∈{ 1,2}
+
+Qϕj
+
+ Dt, ˜ait, ˜a−it ; λ#
+
+,
+
+where ˜at = (˜ a1 
+
+> t
+
+, . . . , ˜aNt ) denotes the joint relaxed action generated by the current actors. Since we maximize J(θ), the actor is encouraged to choose decentralized actions that receive high value under the centralized critics. During execution, each agent still selects actions using only its local history 
+
+Dit.
+
+Stopping. Since τ is a common stopping time, when stopping is optimal all agents should prefer the stopping action. Hence, when {t = τ } we want 
+
+astop ∈ arg max  
+
+> ai∈A i
+
+Qt(Dt, a i, a −it ; λ), ∀i ∈ [N ].
+
+In the soft setting, this means that the policy should assign high probability to astop .
+
+A.6 Posterior Confidence Reward for Capacity Identification 
+
+Given a bandit problem with K arms and N players, the objective is identifying the true capacity vector C∗ up to 1 − δ confidence. We define the set of hypothesis H is all the possible capacity configuration for N players and K arms, C∗ = ( ci)i∈[K], c i ∈ { 1, . . . , N }. We further define the reward in terms of the probability of correctly identifying the true capacity vector. Formally, 
+
+max    
+
+> c1,...,c K∈[N]
+
+P C∗ = c1(Dτ ), . . . , c K (Dτ ) ,
+
+where ca is a random variable taking values past global history data and output the capacity estimation of arm a. Essentially we can just write 
+
+max    
+
+> c1,...,c K∈[N]
+
+P C∗ = c1, . . . , c K
+
+ = Y
+
+> a∈[K]
+
+max   
+
+> c∈[N]
+
+P(C⋆a = c),
+
+Since the capacity hypotheses across arms are independent, we can rewrite this as 
+
+max   
+
+> ˆcτ, 1,..., ˆcτ,K ∈[N]
+
+Y
+
+> a∈[K]
+
+P(c∗ 
+
+> a
+
+= ˆ cτ,a ) = Y
+
+> a∈[K]
+
+max   
+
+> ˆcτ,a ∈[N]
+
+P(c∗ 
+
+> a
+
+= ˆ cτ,a ) .
+
+Taking logarithms yields X
+
+> a∈[K]
+
+log 
+
+
+
+max   
+
+> ˆcτ,a ∈[N]
+
+P(c∗ 
+
+> a
+
+= ˆ cτ,a )
+
+
+
+.
+
+Normalizing by K and defining the reward from the inference network as 
+
+1
+
+K
+
+X
+
+> a∈[K]
+
+log 
+
+
+
+max   
+
+> j∈[N]
+
+P(c∗ 
+
+> a
+
+= ˆ cτ,a )
+
+
+
+.
+
+24 B Experiment Details 
+
+B.1 Algorithm 
+
+The pseudocode for ICMAPE is provided in Algorithms 1 and 2. 
+
+Algorithm 1 ICMAPE-TD3 T RAINING 1: Input: prior P, confidence level δ, number of agents N , maximum rollout length T . 
+
+> 2:
+
+Initialize replay buffer B, actors {πiθ }Ni=1 , inference network Iψ , twin critics Qϕ1 , Q ϕ2 , target networks, and multiplier ζ. 
+
+> 3:
+
+while training is not over do  
+
+> 4:
+
+Sample environment M ∼ P with hypothesis H⋆. 
+
+> 5:
+
+Initialize global trajectory D0 and local trajectories {D i
+
+> 0
+
+}Ni=1 . 
+
+> 6:
+
+t ← 0. 
+
+> 7:
+
+repeat  
+
+> 8:
+
+for each agent i = 1 , . . . , N do  
+
+> 9:
+
+Select action ait ∼ πiθ (· | D it) with exploration noise.  
+
+> 10:
+
+end for  
+
+> 11:
+
+Execute joint action at = ( a1 
+
+> t
+
+, . . . , a Nt ) and observe feedback xt+1 . 
+
+> 12:
+
+Update global trajectory Dt+1 and local trajectories {D it+1 }Ni=1 . 
+
+> 13:
+
+Compute posterior pψ (H | D t+1 ) and confidence reward rt+1 = max H pψ (H | D t+1 ). 
+
+> 14:
+
+Set st = 1{∃ i, a it = astop } and define cost ct as in Eq. 4.  
+
+> 15:
+
+Store (Dt, a t, x t+1 , Dt+1 , s t, H ⋆) in B. 
+
+> 16:
+
+t ← t + 1 . 
+
+> 17:
+
+until st−1 = 1 or t = T 
+
+> 18:
+
+Sample minibatch B ∼ B . 
+
+> 19:
+
+Update inference network Iψ using Linf in Eq. 3.  
+
+> 20:
+
+Compute TD3 targets using target actors and min ℓ∈{ 1,2} Qϕ′ 
+
+> ℓ
+
+. 
+
+> 21:
+
+Update critics Qϕ1 , Q ϕ2 using Lcritic in Eq. 5.  
+
+> 22:
+
+if delayed actor update step then  
+
+> 23:
+
+Update actors {πiθ }Ni=1 using Lactor in Eq. 6.  
+
+> 24:
+
+Apply soft updates to the target networks.  
+
+> 25:
+
+end if  
+
+> 26:
+
+Update multiplier ζ using the batch posterior confidence.  
+
+> 27:
+
+end while Algorithm 2 ICMAPE I NFERENCE 1: Input: trained actors {πiθ }Ni=1 , trained inference network Iψ , unknown environment, maximum rollout length T . 
+
+> 2:
+
+Initialize global trajectory D0 and local trajectories {D i
+
+> 0
+
+}Ni=1 . 
+
+> 3:
+
+t ← 0. 
+
+> 4:
+
+repeat  
+
+> 5:
+
+for each agent i = 1 , . . . , N do  
+
+> 6:
+
+Select action ait ∼ πiθ (· | D it). 
+
+> 7:
+
+end for  
+
+> 8:
+
+Execute joint action at = ( a1 
+
+> t
+
+, . . . , a Nt ) and observe feedback xt+1 . 
+
+> 9:
+
+Update global trajectory Dt+1 and local trajectories {D it+1 }Ni=1 . 
+
+> 10:
+
+Set st = 1{∃ i, a it = astop }. 
+
+> 11:
+
+t ← t + 1 . 
+
+> 12:
+
+until st−1 = 1 or t = T 
+
+> 13:
+
+Let τ = t and return bHτ = arg max  
+
+> H∈H
+
+pψ (H | D τ ).
+
+25 B.2 Baseline Descriptions Random Policy. In this baseline, each agent selects actions uniformly at random at every time step. A separate inference module monitors the collected data and terminates the process once the estimated probability of correctly identifying all arm capacities exceeds 1 − δ. This baseline serves as a lower bound on performance without coordinated exploration. 
+
+Independent Q-Learning. In this baseline, each agent learns independently using an independent Q-learning framework [2]. We refer to this baseline as INDEP in the experiments. Specifically, each agent maintains its own Q-network and updates it using a standard temporal-difference objective (Double DQN). As in our method, a separate inference module predicts the hypothesis, while stopping is controlled by the agents’ learned stopping action. 
+
+Value Decomposition Networks. We adapt Value Decomposition Networks (VDN) [24] to our pure exploration setting. The training objective minimizes a temporal-difference loss using the decomposed joint value function Qtot = PNi=1 Qi; details are provided in Section A.4. As above, inference and inference reward is handled by a separate module, while termination is controlled by the learned stopping action. 
+
+Environment Reward Guided Exploration (Bandit Only). For the multi-armed bandit capacity identification task, we additionally include an environment-reward-guided exploration baseline in the A3P5 setting, where agents are trained using observed bandit rewards rather than inference confidence as the training signal. We include this baseline to demonstrate the designated failure of reward-driven exploration in pure-exploration settings, where maximizing environment rewards does not align with the goal of hypothesis identification. 
+
+Centralized Coordination (Bandit Only). To quantify the gap between centralized and decentral-ized action selection, we added a centralized joint-policy baseline in A3P5. The centralized policy observes the full global trajectory and directly selects one of 243 joint arm assignments, plus one stopping action. We evaluated both TD3 and DQN as centralized baselines. 
+
+Thompson Sampling Guided Exploration (Signal Localization Only). Thompson Sampling (TS) is only applicable when the hypothesis space aligns with the action space, as in signal-source localization, where hypotheses correspond to spatial locations that agents can move toward. In the TS baseline, each agent constructs a posterior over hypotheses from its collected data, Dit, and samples a hypothesis from this posterior. The sampled hypothesis, together with a predefined action-priority rule, determines the agent’s next data-collection action. Agents collect observations until the inference network stops the process. See Section B.8.1 for details. 
+
+GP Prior Map Guided Sampling (Nitrate Only). For the nitrate concentration experiment, we include an additional baseline motivated by the availability of historical training data. Similar in spirit to the TS baseline in the signal localization setting, we sample 3,000 points from the training set (2001–2018) to construct a GP prior map of the concentration field. Agents then sample independently from this fixed GP prior map without active coordination or inference-driven stopping. This baseline assesses whether a static prior built from historical data suffices for identifying the highest-concentration region, or whether active multi-agent exploration provides meaningful gains. 26 B.3 Signal Localization Environment Details 
+
+Table 2 are the parameters we used to run the signal localization task and generate example Figure 5. Table 2: Environment parameters for signal source localization. Parameter Value 
+
+qi 0.95 
+
+dmin 10 
+
+λ 0.3
+
+σ 0.07 
+
+n 25 
+
+m 5∆move 5
+
+Figure 5: Example of Agent 3’s signal field Y (3) . Red ×: true source; blue ×: distractor. 
+
+B.4 Maryland Nitrate Concentration Monitoring Details B.4.1 Data and Spatial Grid 
+
+We construct the nitrate monitoring environment from Maryland nitrate concentration measurements obtained from the Water Quality Portal (WQP) [37]. The dataset contains sample-level water-quality observations collected by federal, state, and local monitoring programs, including the sampling location, sampling date, measured characteristic, concentration value, and measurement unit. We use observations from 2001–2023, with years 2001–2018 used for training and years 2019–2023 held out for evaluation. To define a finite sensing domain, we discretize the Maryland region into an 
+
+n × n spatial grid. Let X denote the set of all grid cells, with |X | = n2. Each cell corresponds to a candidate spatial location at which agents may collect nitrate concentration measurements. Since not all grid cells correspond to valid Maryland monitoring locations, we apply a validity mask and retain only cells that lie within the region of interest and have historical monitoring support. We denote the resulting set of valid sensing locations by Xvalid ⊆ X , with |X valid | = Nvalid . Invalid cells are excluded from the agents’ action space and are assigned zero concentration values when constructing spatial fields. For each year, the raw monitoring observations are used to construct an annual nitrate field over the valid grid cells. Specifically, each observation is assigned to its corresponding spatial location, and the resulting irregularly sampled measurements are used as input to the Gaussian-process field-generation procedure described in Appendix B.4.2. This discretized representation allows us to formulate nitrate hotspot identification as a finite pure-exploration and hypothesis testing problem, where the hypothesis set H is the set of valid grid cells, i.e., H = Xvalid .
+
+B.4.2 GP-Based Field Generation 
+
+For each year, we generate spatial nitrate concentration fields using Gaussian process (GP) regression fitted to historical monitoring observations from that year. Since the raw measurements are irregularly distributed across space, the GP provides a smooth spatial interpolation over the discretized Maryland grid. Each generated field defines one latent environment instance for the active-sensing task. 27 At the beginning of each episode, we first sample a year from the training or evaluation split. We then draw a subset of raw nitrate measurements from that year and fit a GP in log-transformed concentration space. Specifically, if y(x) denotes the nitrate concentration observed at location x,we fit the GP to log(1 + y(x)) to reduce the effect of heavy-tailed concentration values and ensure nonnegative predictions after transformation back to the original scale. The GP is fit using a Matérn kernel with fixed hyperparameters. After fitting, we evaluate the GP posterior mean and standard deviation over all grid cells in X .Let μy (x) and σy (x) denote the GP posterior mean and standard deviation in log-concentration space for year y at grid cell x. We construct the latent nitrate field by converting the posterior mean back to the original concentration scale: 
+
+fy (x) = exp(max {μy (x), 0}) − 1.
+
+Invalid grid cells are masked out and assigned zero concentration. The true target location for the episode is then defined as the grid cell with the highest concentration, 
+
+θ⋆y = arg max 
+
+> x∈X valid
+
+fy (x),
+
+where Xvalid ⊆ X denotes the set of valid Maryland sensing locations. To obtain diverse environment instances, we generate multiple GP-derived fields for each year by repeatedly subsampling the raw observations and refitting the GP. This procedure produces different plausible nitrate concentration maps from the same annual monitoring record, allowing us to evaluate whether an active-sensing policy can generalize across both years and spatial field realizations. Figure 6 illustrates how the GP-estimated nitrate concentration fields vary across years, showing the average concentration per site for three representative years spanning the training and evaluation periods.                                                             
+
+> Year Raw Data Points Avg. Var. Avg. Sigma 2000 10,693 0.265 0.515 2001 10,146 0.287 0.536 2002 11,063 0.249 0.499 2003 11,542 0.264 0.514 2004 11,769 0.421 0.649 2005 10,326 0.238 0.488 2006 8,726 0.289 0.538 2007 8,294 0.282 0.531 2008 9,708 0.214 0.462 2009 8,865 0.219 0.468 2010 5,091 0.362 0.602 2011 5,532 0.319 0.565 2012 2,712 0.391 0.626 2013 3,855 0.317 0.563 2014 5,382 0.265 0.515 2015 5,651 0.298 0.546 2016 5,490 0.320 0.566 2017 1,696 0.533 0.730 2018 5,082 0.276 0.525
+
+Table 3: Per-year data statistics for GP field generation. Avg. Var. denotes the mean GP posterior variance over valid Maryland grid cells in log-transformed concentration space, and Avg. Sigma is its square root. 
+
+B.4.3 Multi-Agent Sampling Dynamics 
+
+After a GP-derived nitrate field is generated, agents interact with the field through sequential sampling. We consider a team of M agents operating over a finite horizon T . At each timestep t, each agent selects one valid grid cell from Xvalid to sample. The underlying nitrate field fy is fixed within an episode but is unknown to the agents. Agents can only obtain information about the field through noisy measurements collected at the locations they visit. 28 (a) Year 2003 (training) 
+
+> (b) Year 2018 (training)
+> (c) Year 2019 (evaluation)
+
+Figure 6: GP-estimated nitrate concentration fields across Maryland for three representative years. Each map is constructed from year-round average concentrations at monitoring sites for that year. Spatial patterns shift notably across years, illustrating the inter-year variability that motivates training on multiple years and evaluating generalization on held-out years. When agent i selects location xit, the environment returns noisy nitrate observations generated from the GP posterior at that cell. In our implementation, each query produces multiple noisy readings. Specifically, observations are sampled in log-concentration space as 
+
+˜oit,j ∼ N  μy (xit), min {σy (xit), σ max }2 , j = 1 , . . . , n obs ,
+
+where μy (x) and σy (x) are the GP posterior mean and standard deviation for year y, and σmax is a cap on the observation noise. The observations are then transformed back to the original concentration scale by 
+
+oit,j = exp(˜ oit,j ) − 1.
+
+The noise cap prevents highly uncertain grid cells from producing extremely noisy observations, which stabilizes training while preserving spatial uncertainty from the GP posterior. Each agent maintains its own sampling history, 
+
+Dit = {(xis, o is, 1, . . . , o is,n obs )}ts=1 ,
+
+and the decentralized actor conditions only on this local history when selecting future actions. The episode terminates either when the horizon T is reached or when a stopping action is selected. The stopping action is shared at the team level: once any agent chooses to stop, the episode ends for all agents. The final sampling history is then passed to the inference network, which predicts the most likely high-concentration region. 29 B.4.4 Target Definition and Evaluation 
+
+For each GP-generated nitrate field fy , we define the target as the set of top-k highest-concentration valid grid cells, H⋆y . We use a top-k target rather than only the single maximum cell because several high-concentration locations may have very similar nitrate levels, making the exact top-1 location sensitive to small GP or observation noise. At the end of each episode, the inference network outputs a confidence score bp(x) for each valid cell, and the predicted location is bθ = arg max x∈X valid bp(x).An episode is counted as successful if bθ ∈ H ⋆y . We report top-k identification accuracy averaged over generated fields and evaluation years, together with the average number of samples used before termination to measure sample efficiency. Table 4 summarizes the main variables and parameters used in the nitrate monitoring enviroment.                                           
+
+> Symbol / Parameter Value Description
+> Xn×ngrid Discretized Maryland sensing domain
+> n20 Grid resolution along each spatial dimension
+> Xvalid valid grid cells Cells inside the region of interest with historical monitoring support
+> Nvalid |X valid |Number of valid sensing locations
+> M6Number of agents
+> T40 Maximum episode horizon
+> k5Number of high-concentration target cells
+> nobs 5Number of noisy readings returned per query
+> Ytrain 2001–2018 Training years
+> Ytest 2019–2023 Held-out evaluation years
+> Nfit 100 Number of raw monitoring observations used to fit each training GP field
+> fyGP-derived field Latent nitrate concentration field for year y
+> H⋆ytop-kcells True high-concentration hotspot set for year yσmax 0.5Cap on GP posterior standard deviation in log space
+> NGP 100 Number of GP-generated maps sampled per year for evaluation
+> Npoints 1000 Number of spatial points sampled from each GP-generated map for evaluation
+> Ntrain 400 ,000 Maximum number of training steps
+
+Table 4: Main variables and parameters used in the Maryland nitrate concentration monitoring environment. 
+
+B.5 Model Architecture B.5.1 Capacity Identification Model Architecture 
+
+For the bandit capacity identification task, the model operates on sequential trajectory data collected by the agents.. The architecture is based entirely on sequence encoders that process the history of observed actions and rewards. We use the LSTM-based encoder with conditional pooling described in Section B.7 to summarize the trajectory up to the current timestep. 
+
+Actor Network. The actor network parameterizes the decentralized exploration policy for each agent. Given an agent’s local trajectory Dit, the input sequence is first mapped into an embedding space through a linear layer followed by a GELU activation. The embedded sequence is then passed through the LSTM sequence encoder described in Section B.7. Let ehit denote the pooled trajectory representation for agent i. The actor maps this representation to logits over the action space with a linear layer. where A is the number of bandit arms and the additional action corresponds to the stopping action astop . During training, we use Gumbel–Softmax sampling with temperature τ to obtain differentiable action representations for TD3-style policy optimization. At execution time, each agent acts using only its own local trajectory Dit, preserving decentralized execution. 
+
+Critic Network. The critic is implemented as a twin LSTM-based critic. The global trajectory Dt
+
+is embedded with a linear layer followed by a GELU activation, processed by an LSTM encoder, and pooled using the attention-based pooling layer from Section B.7. The critic also conditions on the joint action through a masked one-hot encoding: for each queried agent i, the agent’s own action is masked 30 out, leaving only the actions of the other agents, denoted by ea−it . The pooled trajectory representation 
+
+eht and the masked action representation are concatenated and passed through a two-layer MLP to produce the Q-value estimate: 
+
+Qiϕℓ (Dt, a −it ) = fϕℓ
+
+ [eht; ea−it ], ℓ ∈ { 1, 2}.
+
+The two critics use separate LSTM encoders and separate output heads, and TD3 targets are computed using the minimum of the two target critic values. 
+
+Inference Network. The inference network predicts the underlying capacity vector from the global trajectory Dt. It uses the same LSTM-based sequence encoder described in Section B.7. The input trajectory is first embedded through a linear layer followed by a GELU activation. The embedded sequence is then processed by the LSTM encoder, and attention-based pooling with a timestep mask is used to obtain a fixed-dimensional trajectory representation eht.The pooled representation is mapped through a linear output layer to produce logits over possible capacities for each arm: 
+
+oψ (Dt) = Wout eht + bout , oψ (Dt) ∈ RA×N ,
+
+where A is the number of arms and N is the number of players. During training, the inference network is supervised using the true capacity vector C⋆.
+
+B.5.2 Signal Localization Model Architecture 
+
+The signal localization model uses a different architecture from the bandit model because the input contains both spatial observations and temporal location histories. Specifically, each agent observes a local belief map on an n × n grid, while the model also receives the location history of all agents over time. We process these two sources of information separately and then fuse them to produce each agent’s action distribution. 
+
+Actor Network. The actor is implemented as a per-agent CNN–LSTM architecture. For each agent i, the local belief map is first processed by a player-specific CNN encoder, producing a spatial embedding zi 
+
+> grid
+
+∈ Rd. In parallel, the full location history of all agents is reshaped into a sequence of joint locations and passed through a player-specific LSTM, producing a temporal location embedding 
+
+zi 
+
+> loc
+
+∈ Rd at the current timestep using LSTM with conditional pooling mentioned in Section B.7. The two embeddings are then concatenated and passed through a player-specific fusion module, implemented as a linear projection followed by a GELU activation. Finally, a player-specific output layer maps zi 
+
+> fuse
+
+to logits over A + 1 actions, where the additional action corresponds to the stopping action. The policy distribution is obtained by applying a softmax to these logits. During TD3 training, we use Gumbel–Softmax samples to obtain differentiable action representations for the actor update. 
+
+Critic Network. The critic for the signal localization environment is implemented as a twin centralized critic. Unlike the actor, which conditions only on each agent’s local trajectory, the critic has access to global trajectory information during training. Specifically, it takes as input the belief maps for all agents, the joint location history, and the joint action. For each critic head, the stacked belief maps are first processed by a CNN encoder. Since the critic observes the belief maps of all agents, the input is represented as a multi-channel grid, where the channels correspond to the agents’ belief maps. The CNN encoder produces a spatial embedding 
+
+zgrid ∈ Rd. In parallel, the location history of all agents is reshaped into a sequence of joint locations and passed through an LSTM, producing a temporal embedding zloc ∈ Rd.To construct an agent-specific critic input, the spatial and temporal embeddings are shared across agents and concatenated with a one-hot encoding of the queried agent identity. The critic also receives an action feature vector encoding the actions of the other agents. Following our bandit critic design, we mask out the queried agent’s own action so that the critic for agent i conditions on a−i rather than directly on ai.The resulting critic representation is 
+
+zi 
+
+> critic
+
+= zgrid ; zloc ; ei; a−i ,
+
+31 where ei is the one-hot encoding of agent i. This representation is passed through a feed-forward fusion layer followed by a ReLU activation, and then through a linear output layer to produce the Q-value estimate for each agent. To reduce overestimation bias, we use two independent critic heads, as in TD3. Each critic head has its own CNN encoder, location LSTM, fusion layer, and output layer. Thus, the critic outputs 
+
+{Qiϕ1 , Q iϕ2 }Ni=1 ,
+
+which are used to compute TD3 targets by taking the minimum over the two critic estimates. 
+
+Inference Network. The inference network for signal localization predicts the hidden source location from the aggregated grid representation. Unlike the actor and critic, which use both spatial observations and location histories, the inference network is implemented as a fully convolutional network over the grid input. Given a multi-channel grid Gt ∈ RC×n×n constructed from the global trajectory Dt, the network outputs logits over all spatial locations: 
+
+ℓψ (Gt) ∈ Rn×n.
+
+The architecture consists of two 3 × 3 convolutional layers with ReLU activations, followed by a 
+
+1 × 1 convolution that maps the hidden feature maps to a single logit per grid cell. The posterior distribution over candidate source locations is obtained by applying a softmax over the flattened grid: 
+
+pψ (H = ( u, v ) | D t) = exp( ℓψ (Gt)u,v )
+
+Pnu′=1 
+
+Pnv′=1 exp( ℓψ (Gt)u′,v ′ ) .
+
+The final estimate is given by the maximum a posteriori prediction: 
+
+bHt = arg max  
+
+> (u,v )
+
+pψ (H = ( u, v ) | D t).
+
+During training, the inference network is supervised using the true source location H⋆, and its posterior confidence is used to define the learning signal for the exploration policy. 
+
+B.6 Nitrate Concentration Architecture 
+
+For the nitrate monitoring task, we use a CNN-LSTM architecture for both the centralized critic and the inference network. The main difficulty is that useful information is naturally organized by spatial cell, while the raw sampling history is organized as a sequence of agent-time observations. For example, observations from the same cell may appear at different timesteps and may be collected by different agents. A standard LSTM or Transformer over the raw sequence must learn to associate these scattered observations with the same spatial cell and aggregate them across both time and agents, which can be inefficient and unstable. The CNN-LSTM architecture addresses this by first constructing cell-level spatial summaries and then using a convolutional encoder to extract spatial features. 
+
+B.6.1 CNN-LSTM Architecture 
+
+To address this, we first convert the joint sampling history into grid-level summary statistics. For each grid cell, we aggregate all observations collected at that location across agents and timesteps, including statistics such as the normalized mean, standard deviation, maximum observed value, sampling count, and whether the cell has been sampled. This produces a structured n × n spatial representation of the team’s collected information. A CNN encoder is then applied to this grid tensor to extract spatial features that capture local concentration patterns and sampling coverage. In parallel, an LSTM encoder processes each agent’s action history to summarize temporal sampling behavior. The CNN-based spatial representation and the LSTM-based history representation are then combined to form a global representation of the current sampling state. In the centralized critic, this representation is used to output action-value estimates for each agent. In the inference network, the same type of CNN-LSTM backbone is used to predict confidence scores over the valid grid cells, indicating which locations are likely to belong to the high-concentration target set. We use the CNN-LSTM architecture for the critic and inference network, where centralized training permits access to the full joint sampling history. During execution, the actor remains decentralized and conditions only on each agent’s local sampling history. 32 B.7 Recurrent Sequence Encoder with Conditioned Pooling 
+
+Each network in our framework takes as input a trajectory x1: t such as observations or state–action sequences. At a given timestep t, the sequence x1: t is first mapped into an embedding space using a linear layer, and then processed by a recurrent encoder: 
+
+h1: t = LSTM (Embed (x1: t)) .
+
+Depending on the environment, this encoder can either be shared across agents when agents are homogeneous; or instantiated separately when agents have different observation spaces. In either case, the overall architecture remains the same. To summarize the sequence of hidden state into a fixed-dimensional representation, we use a conditioned temporal pooling operator, which lets the model adaptively focus on relevant parts of the trajectory. 
+
+Conditioned Temporal Pooling We define the pooled representation at time t as ct = Pts=1 αshs,
+
+where the weights αs are computed using a learned query-key interaction αs ∝ exp   ⟨qin ,W k hs⟩√d
+
+. Here, 
+
+qin is a learned query vector and Wk is a linear projection. In practice, sequences are padded to a fixed horizon, and we apply a mask during pooling so that the representation at time t only uses information from steps 1 through t, ignoring padded entries and preventing leakage from future timesteps. The resulting context vector ct is then passed through a gating mechanism, ˜ht = ct ⊙ σ(Wg qout ), where 
+
+qout is another learned query vector and σ(·) is a nonlinear activation function. This conditioned pooling allows the model to emphasize the most informative parts of the trajectory, rather than relying only on the final hidden state or uniformly averaging over timesteps. Each network (actor, critic, and inference) uses its own instance of the sequence encoder described above, sharing only the same architecture but not parameters. 
+
+B.8 Posterior Thompson Sampling Baseline B.8.1 Agent-wise Posterior Construction 
+
+We describe the posterior used by each agent in the posterior Thompson-sampling baseline. Each agent constructs a belief using its own observations and the observed trajectories of the other agents. Let s⋆ ∈ [n] × [n] denote the true source location, and let d⋆ ∈ [n] × [n] denote the distractor location. For agent i, let uit denote its position at time t, and let Vit = {uiτ : τ ≤ t} denote the cells visited by agent i up to time t.
+
+Coverage likelihood. We first define the negative-evidence contribution induced by an agent’s trajectory. For an agent j ∈ { 1, 2} that can miss the true source with probability δj , observing that agent j visited a cell ujτ without identifying the source downweights the hypothesis that s⋆ = ujτ .We write this coverage likelihood as 
+
+ℓj (s, u jτ ) = 
+
+δj , ujτ = s, 
+
+1, ujτ̸ = s. 
+
+The cumulative coverage likelihood from a set of agents J is 
+
+LJ (s) = Y
+
+> j∈J
+
+Y 
+
+> τ≤t
+
+ℓj (s, u jτ ).
+
+Posteriors for agents 1 and 2. Agents 1 and 2 are binary detectors of the true source. For i ∈ { 1, 2},agent i maintains a posterior over the true source location, 
+
+pit(s) = P(s⋆ = s | D it, V−it ),
+
+where Dit is agent i’s local binary observation history and V−it denotes the observed trajectories of the other agents. The prior is initialized uniformly: 
+
+pi
+
+> 0
+
+(s) = 1
+
+n2 , s ∈ [n] × [n].
+
+33 Let yit ∈ { 0, 1} denote the binary observation of agent i. If agent i visits the true source cell, it misses the target with probability δi. Thus, if uit = s,
+
+P (yit = 1 | s) = 1 − δi, P (yit = 0 | s) = δi.
+
+If uit̸ = s, we assume a small false-positive probability ϵi (where ϵ1,2 = 0 ): 
+
+P (yit = 1 | s) = ϵi, P (yit = 0 | s) = 1 − ϵi.
+
+Agent i also uses the trajectories of the other binary detector and agent 3 as negative evidence. Therefore, for i ∈ { 1, 2}, define 
+
+Ji = {1, 2, 3} \ { i}.
+
+The posterior used by agent i is 
+
+pit(s) = 
+
+pi
+
+> 0
+
+(s)
+
+hQ  
+
+> τ≤t
+
+P (yiτ | s)
+
+i
+
+LJi (s)
+
+P 
+
+> s′
+
+pi
+
+> 0
+
+(s′)
+
+hQ  
+
+> τ≤t
+
+P (yiτ | s′)
+
+i
+
+LJi (s′)
+
+.
+
+Equivalently, the recursive update is 
+
+pit(s) ∝ pit−1(s)P (yit | s) Y
+
+> j∈J i
+
+ℓj (s, u jt ), i ∈ { 1, 2}.
+
+This posterior downweights cells that were visited by other agents without source identification, while still using agent i’s own binary observations as direct evidence. 
+
+Posterior for agent 3. Agent 3 observes a continuous signal field affected by both the true source and an unknown distractor. Therefore, agent 3 maintains a joint posterior over source-distractor pairs: 
+
+p3 
+
+> t
+
+(s, d ) = P(s⋆ = s, d ⋆ = d | D 3 
+
+> t
+
+, V1 
+
+> t
+
+, V2 
+
+> t
+
+).
+
+The prior is initialized uniformly over valid source-distractor pairs: 
+
+p30(s, d ) ∝ 1, s̸ = d, 
+
+and 
+
+p30(s, d ) = 0 if s = d. 
+
+For a candidate pair (s, d ), the expected signal at cell u is 
+
+ms,d (u) = max {exp( −λ dist( u, s )) , 0.7 exp( −λ dist( u, d )) } .
+
+Here, the first term corresponds to the true source and the second term corresponds to the distractor with intensity 0.7. Let W 3 
+
+> t
+
+denote the local observation window of agent 3 at time t. For each cell 
+
+u ∈ W 3 
+
+> t
+
+, agent 3 observes a continuous value y3 
+
+> t
+
+(u), modeled as 
+
+y3 
+
+> t
+
+(u) | s, d ∼ N  ms,d (u), σ 2 .
+
+Assuming conditionally independent observation noise across cells in the local window, the likelihood of agent 3’s observation is 
+
+P (y3 
+
+> t
+
+| s, d ) = Y 
+
+> u∈W3
+> t
+
+1
+
+√2πσ 2 exp −
+
+ y3 
+
+> t
+
+(u) − ms,d (u)2
+
+2σ2
+
+!
+
+.
+
+Agent 3 also uses the observed trajectories of agents 1 and 2 as negative evidence. Since agents 1 and 
+
+2 miss the true source with probabilities δ1 and δ2, respectively, their coverage likelihood is 
+
+L{1,2}(s) = 
+
+> 2
+
+Y
+
+> j=1
+
+Y 
+
+> τ≤t
+
+ℓj (s, u jτ ).
+
+Combining agent 3’s continuous signal likelihood with this coverage information, the posterior for agent 3 is 
+
+p3 
+
+> t
+
+(s, d ) = 
+
+p30(s, d )
+
+hQ  
+
+> τ≤t
+
+P (y3 
+
+> τ
+
+| s, d )
+
+i
+
+L{1,2}(s)
+
+P
+
+> s′
+
+P 
+
+> d′
+
+p30(s′, d ′)
+
+hQ  
+
+> τ≤t
+
+P (y3 
+
+> τ
+
+| s′, d ′)
+
+i
+
+L{1,2}(s′)
+
+.
+
+34 Equivalently, the recursive update is 
+
+p3 
+
+> t
+
+(s, d ) ∝ p3
+
+> t−1
+
+(s, d )P (y3 
+
+> t
+
+| s, d )ℓ1(s, u 1 
+
+> t
+
+)ℓ2(s, u 2 
+
+> t
+
+).
+
+Since the final goal is to identify the true source rather than the distractor, agent 3 marginalizes over the distractor: 
+
+p3 
+
+> t
+
+(s) = X
+
+> d
+
+p3 
+
+> t
+
+(s, d ).
+
+Posterior sampling. After updating its posterior, each agent samples a candidate true source location. For agents 1 and 2,
+
+˜sit ∼ pit(s), i ∈ { 1, 2}.
+
+For agent 3,
+
+˜s3 
+
+> t
+
+∼ p3 
+
+> t
+
+(s), p3 
+
+> t
+
+(s) = X
+
+> d
+
+p3 
+
+> t
+
+(s, d ).
+
+The sampled location ˜sit is then used to determine the next movement action of agent i.
+
+B.8.2 Deterministic Movement Rule After Posterior Sampling 
+
+Because agents cannot directly query arbitrary cells, each agent moves one step toward its sampled source using a fixed priority order. Agent 1 uses the order 
+
+(down , left , up , right) ,
+
+agent 2 uses 
+
+(right , down , up , left) ,
+
+and agent 3 uses 
+
+(right , up , left , down) .
+
+Let Move( p, a ) be the position obtained by taking action a from position p, with boundary clipping. Agent i selects the first action a in its priority list such that 
+
+dist(Move( pit, a ), ˜sit) < dist( pit, ˜sit).
+
+If no action decreases the distance, the agent stays. The different priority orders break symmetry and encourage different movement patterns across agents. 
+
+B.8.3 Stopping Rule 
+
+Action selection is decentralized and posterior-based, but stopping uses the same aggregated inference module as the main method. At each time t, the global trajectory Dt is passed to the inference module, which outputs a posterior qψ (s | D t) over source locations. The inferred source is ˆst =arg max s qψ (s | D t), and the confidence is rt = max s qψ (s | D t).The baseline stops at τ = inf {t : max s qψ (s | D t) ≥ 1 − δ} and outputs ˆsτ = arg max s qψ (s | D τ ).Thus, this baseline differs from the learned policy in the action-selection rule. 
+
+B.9 Implementation Details Seed Option All experiments are conducted using three randomly selected seeds: 215, 219, and 321. 
+
+Software dependencies. All experiments are implemented in Python. We use PyTorch [41] for neural network training, Gymnasium [42] for environment implementation, Hydra [43] for configuration management, and Weights & Biases [44] for experiment tracking and visualization. Data processing and analysis are performed using NumPy [45], Pandas [46], Matplotlib [47], and Seaborn [48]. The main package versions used in our experiments are: 
+
+numpy = 2 .2.6, pandas = 2 .3.1, gymnasium ≥ 1.0.0, torch = 2 .7.1, matplotlib = 3 .10 .
+
+35 Hardware. All experiments are run on NVIDIA L40S GPUs with 48GB of GPU memory. Ca-pacity identification experiments take approximately 60 hours to complete, while signal localization experiments finish within approximately 15 hours. The observed GPU utilization during training is typically around 40–50%. 
+
+## C Additional Experiment Analysis Detailes 
+
+C.1 Capacity Identification. C.1.1 Training Dynamics 
+
+We set the confidence level to δ = 0 .1, corresponding to a target accuracy of 1 − δ = 0 .9. In the A3P5 setting, both TD3 and VDN are able to reach the target accuracy early in training. However, once the reward structure begins to favor shorter trajectories more strongly, TD3 adapts more effectively by reducing the average stopping time. This suggests that TD3 learns an effective sampling strategy that reduces stopping time after reaching the target accuracy. In contrast, VDN does not exhibit a similar stable reduction, resulting in higher stopping times despite achieving comparable accuracy. In the A5P3 setting, the capacity identification problem becomes more challenging due to the larger hypothesis space. In this case, only TD3 is able to reliably reach the target accuracy and improve the sampling strategy. 0 100k 200k 300k 400k 500k 600k 700k                         
+
+> Step
+> 010 20 30 40 50
+> Avg. Stop
+> Average Stopping Time (A3P5)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 0.0 0.2 0.4 0.6 0.8
+> Posterior Confidence (A3P5)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 010 20 30 40 50 60
+> Avg. Stop
+> Average Stopping Time (A5P3)
+> 0100k 200k 300k 400k 500k 600k 700k
+> Step
+> 0.0 0.2 0.4 0.6 0.8
+> Posterior Confidence (A5P3)
+> algo: VDN algo: INDEP algo: ICMAPE-TD3 algo: UNIFORM
+
+Figure 7: Training dynamics in A3P5 and A5P3. For each setting, we report the average stopping time and posterior confidence. Curves are averaged over three random seeds and smoothed with an exponential moving average parameter of 0.2.
+
+C.1.2 Posterior Calibration 
+
+To assess how well the inference module’s output probabilities align with empirical accuracy, we compute the Expected Calibration Error [40] on A3P5 over 10 ,000 trajectories, pooling the posterior predictions from all time steps, obtaining ECE = 0 .0065 . The gap between mean predicted confidence and empirical accuracy is at most 0.02 in every bin, as reported in Table 5. 36 Table 5: Posterior calibration in A3P5. Predicted confidence closely tracks empirical accuracy across all ten bins.                                                       
+
+> Confidence Bin Mean Confidence Empirical Accuracy |∆|Samples ( n)
+> [0 .0,0.1) 0.03 0.03 0.00 69,777
+> [0 .1,0.2) 0.14 0.13 0.01 13,284
+> [0 .2,0.3) 0.23 0.22 0.01 8,793
+> [0 .3,0.4) 0.34 0.33 0.01 6,280
+> [0 .4,0.5) 0.46 0.44 0.02 8,143
+> [0 .5,0.6) 0.53 0.53 0.00 1,127
+> [0 .6,0.7) 0.66 0.68 0.02 2,599
+> [0 .7,0.8) 0.76 0.74 0.02 5,806
+> [0 .8,0.9) 0.85 0.85 0.00 10,361
+> [0 .9,1.0) 0.95 0.95 0.00 8,535
+
+C.1.3 Additional Analysis 
+
+We further analyze the stopping behavior of different methods using survival plots for the bandit environments (Figure 8). In both the 3-arm 5-player (A3P5) and 5-arm 3-player (A5P3) settings, the TD3-based architecture exhibits a clear exponential decay in survival probability, indicating that the model learns to terminate exploration efficiently once sufficient confidence is achieved. The plots report the average survival probability across three random seeds for each method. 
+
+Figure 8: Survival plots for the bandit environments. The survival probability measures the fraction of runs that have not yet selected the stopping action at each timestep. Curves are averaged over three random seeds for each method. 
+
+C.1.4 Model Robustness. 
+
+We evaluate the robustness of our framework under different prior distributions over the environment parameters. In the default setting, both arm capacities and arm means are sampled uniformly. To test robustness with respect to the arm-mean prior, we replace the uniform prior with a scaled Beta distribution parameterized by (α, β ) and supported on [0 .3, 1] . When α > β , the distribution places more mass on larger arm means, resulting in environments with more informative feedback and consequently higher inference accuracy. Figure 9 reports the average inference accuracy and average stopping time under different Beta priors. Row (a) corresponds to the A3P5 setting, while Row (b) corresponds to the A5P3 setting. In each row, the left panel shows inference accuracy and the right panel shows the average stopping time. We additionally study robustness with respect to the arm-capacity prior. Instead of sampling capacities uniformly, we generate a probability vector over capacities using a symmetric Dirichlet distribution, 
+
+p ∼ Dir( θ1K ),
+
+and then sample each arm capacity according to the resulting distribution. We consider θ ∈{0.1, 0.5, 1, 5, 10 }, where smaller values of θ produce more skewed capacity distributions, while larger values approach a uniform distribution. Figure 10 summarizes the resulting inference accuracy under different Dirichlet priors. 37 (a) Inference accuracy in A3P5. (b) Average stopping time in A3P5.  
+
+> (c) Inference accuracy in A5P3. (d) Average stopping time in A5P3.
+
+Figure 9: Robustness analysis under different scaled Beta priors over arm means. Panels (a) and (c) show inference accuracy, while panels (b) and (d) show average stopping time. The top row corresponds to the A3P5 setting and the bottom row corresponds to the A5P3 setting. 
+
+Figure 10: Robustness analysis under different Dirichlet priors over arm capacities. Left: A3P5 setting. Right: A5P3 setting. 38 C.1.5 Coordination Strategy 
+
+Table 6: Most common joint exploration action at each step across 10,000 sampled environments (A3P5) under the greedy ICMAPE-TD3 policy. At step t, only environments still active (stopping time ≥ t) are counted ( nactive ). The joint action (a(1) , a (2) , a (3) , a (4) , a (5) ) lists the arm index (0–2) pulled by each player in the modal joint action. Steps beyond t=15 are omitted as all environments have stopped. 
+
+t Joint action Count nactive %0 (2 , 2, 2, 2, 2) 10,000 10,000 100.0 1 (2 , 2, 2, 2, 2) 10,000 10,000 100.0 2 (2 , 2, 2, 2, 2) 10,000 10,000 100.0 3 (2 , 0, 2, 2, 2) 10,000 10,000 100.0 4 (2 , 0, 0, 2, 2) 10,000 10,000 100.0 5 (0 , 0, 0, 0, 0) 10,000 10,000 100.0 6 (0 , 0, 0, 0, 1) 10,000 10,000 100.0 7 (1 , 0, 0, 0, 1) 10,000 10,000 100.0 8 (1 , 0, 0, 1, 1) 10,000 10,000 100.0 9 (1 , 1, 1, 1, 1) 10,000 10,000 100.0 10 (1 , 2, 1, 1, 1) 9,031 10,000 90.3 11 (1 , 2, 2, 1, 1) 6,279 9,031 69.5 12 (1 , 2, 2, 1, 1) 4,510 6,279 71.8 13 (1 , 2, 2, 2, 1) 4,236 5,752 73.6 14 (0 , 0, 0, 0, 0) 3,872 4,236 91.4 15 (0 , 0, 0, 0, 0) 364 364 100.0 
+
+39 Table 7: Frequency of joint stop-action combinations across 10,000 sampled environments (A3P5). A combination is recorded when one or more players simultaneously select the stop action at the terminal step. % vol. is the fraction of voluntary-stop episodes; % all is the fraction of all 10,000 environments. 
+
+Combination Count % vol. stops % all envs 
+
+1 player stopping simultaneously 
+
+{P5} 1,778 17.8 17.8 
+
+{P4} 1,056 10.6 10.6 
+
+{P1} 947 9.5 9.5 
+
+{P3} 10 0.1 0.1 
+
+2 players stopping simultaneously 
+
+{P1, P 5} 2,723 27.2 27.2 
+
+{P4, P 5} 813 8.1 8.1 
+
+{P1, P 4} 382 3.8 3.8 
+
+{P3, P 5} 18 0.2 0.2 
+
+{P2, P 4} 14 0.1 0.1 
+
+{P1, P 3} 2 0.0 0.0 
+
+{P3, P 4} 1 0.0 0.0 
+
+3 players stopping simultaneously 
+
+{P1, P 4, P 5} 1,806 18.1 18.1 
+
+{P1, P 3, P 5} 125 1.2 1.2 
+
+{P2, P 4, P 5} 25 0.2 0.2 
+
+{P3, P 4, P 5} 3 0.0 0.0 
+
+{P1, P 2, P 4} 1 0.0 0.0 
+
+{P1, P 3, P 4} 1 0.0 0.0 
+
+4 players stopping simultaneously 
+
+{P1, P 3, P 4, P 5} 257 2.6 2.6 
+
+{P1, P 2, P 4, P 5} 5 0.1 0.1 
+
+{P2, P 3, P 4, P 5} 1 0.0 0.0 
+
+{P1, P 2, P 3, P 5} 1 0.0 0.0 
+
+5 players stopping simultaneously 
+
+{P1, P 2, P 3, P 4, P 5} 31 0.3 0.3 
+
+40 C.2 Signal Source Localization 
+
+We provide additional results for the signal source localization environment, complementing the final performance results reported in the main text. 0 50k 100k 150k 200k 250k 300k 350k 
+
+> Step
+> 510 15 20 25 30 35
+> Avg. Stop
+
+Average Stopping Time (signal_loc)        
+
+> 050k 100k 150k 200k 250k 300k 350k
+> Step
+> 0.0 0.2 0.4 0.6 0.8
+
+Posterior Confidence (signal_loc)    
+
+> algo: VDN algo: INDEP algo: ICMAPE-TD3 algo: UNIFORM
+
+Figure 11: Signal Source Localization Training Dynamics. Curves are averaged over three random seeds and smoothed with an exponential moving average parameter of 0.2.We further analyze the stopping behavior of different methods in the signal source localization environment using survival plots (Figure 12). 
+
+Figure 12: Survival plots for the signal source localization environment. The survival probability measures the fraction of runs that have not yet selected the stopping action at each timestep. Curves are averaged over three random seeds for each method. 
+
+Model Robustness. We also evaluate model robustness in the signal source localization environ-ment. In the default setting, the minimum Manhattan distance between the true signal source and the distractor is set to 10, and source distractor pairs are sampled uniformly at random. To study the effect of source distractor separation, we fix the Manhattan distance between the two points to values ranging from 10 to 48. For each distance value, we sample 10,000 instances and report the resulting inference accuracy in Figure 13. Similar to the robustness analysis over arm means in the capacity identification environment, we also test robustness with respect to the distractor intensity distribution. Specifically, we sample the distractor intensity from a scaled Beta distribution supported on [0 , 0.7] with different (α, β )
+
+parameters. Figure 14 reports the inference accuracy under these different distractor-intensity priors. 41 Figure 13: Inference accuracy as a function of the Manhattan distance between the true signal source and the distractor. Larger distances generally make the two sources easier to distinguish. Results are computed over 10,000 sampled instances for each distance value. 
+
+Figure 14: Robustness analysis under different scaled Beta priors over distractor intensity in the signal source localization environment. The heatmap reports inference accuracy for different choices of (α, β ), with distractor intensities scaled to lie in [0 , 0.7] .
+
+C.2.1 Coordination Strategy 
+
+Table 8: Most common action for each agent at each step across active environments under the greedy ICMAPE-TD3 policy in the signal localization (10,000 samples). Each cell in the table reports the agent action and its frequency among the nactive environments still running at that step. Action labels: 
+
+up = up dn = down, lf = left, rt = right; STOP = stop action. Agent 1 and agent 2 maintains a fully deterministic trajectory throughout                                      
+
+> tAgent 1 Agent 2 Agent 3 nactive
+> 0dn (100.0%) dn (100.0%) rt ( 99.9%) 10,000 1dn (100.0%) dn (100.0%) rt ( 94.6%) 9,994 2rt (100.0%) dn (100.0%) rt ( 92.6%) 9,459 3up (100.0%) dn (100.0%) up ( 95.2%) 8,759 4up (100.0%) dn (100.0%) up ( 93.0%) 8,338 5up (100.0%) dn (100.0%) up ( 87.5%) 7,755 6rt (100.0%) dn (100.0%) lf ( 86.0%) 6,783 7rt (100.0%) STOP (100.0%) up ( 87.3%) 5,835
+
+42 Table 9: Frequency of joint stop-action combinations across 10,000 sampled environments in the robot wildfire task (Signal Localization). % vol. is the fraction of voluntary-stop episodes; % all is the fraction of all 10,000 environments.             
+
+> Combination Count % vol. stops % all envs
+> 1 robot stopping simultaneously
+> {P2}5,095 50.9 50.9
+> {P3}4,165 41.6 41.6
+> 2 robots stopping simultaneously
+> {P2, P 3}740 7.4 7.4
+
+## D Limitations and Broader Impact 
+
+Several limitations suggest directions for future work. Our current framework is trained using an off-policy actor–critic method. While this provides sample reuse and stable value learning, future work could explore on-policy alternatives such as PPO [49] to better understand how different reinforcement learning objectives affect decentralized information acquisition and coordination strategy in our setting. Another limitation is that our experiments focus on fixed hypothesis spaces, where the underlying hypothesis remains constant throughout an episode. A possible direction is to study more complex environments in which the hypothesis evolves over time, requiring agents to continually adapt their exploration strategies. More broadly, our work studies hypothesis identification from a prior distribution over environments. Future research could extend this setting toward more general forms of environment understanding, where agents are not restricted to identifying a pre-specified hypothesis, but instead learn richer representations of the sampled environment that support a wider range of downstream inference tasks. 43
