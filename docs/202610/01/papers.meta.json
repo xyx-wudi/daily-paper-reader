@@ -1,0 +1,54 @@
+{
+  "label": "2026-10-01",
+  "date": "2026-10-01",
+  "generated_at": "2026-10-01T23:19:34",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202610/01/2609.33618v1-paraagent-reinforcing-parallel-acting-in-open-world-tool-environments",
+      "section": "quick",
+      "title_en": "ParaAgent: Reinforcing Parallel Acting in Open-World Tool Environments",
+      "authors": "Shengbin Yue, Hongru Wang, Siyuan Wang, Xiaoxin Chen, Wei Chen, Zhongyu Wei",
+      "date": "2026-09-27",
+      "pdf": "https://arxiv.org/pdf/2609.33618v1",
+      "score": "6.0",
+      "evidence": "用多智能体强化学习协调语言模型智能体",
+      "tldr": "开放世界工具环境中，LLM agent 需平衡探索未知工具与利用已知能力，但现有方法要么刚性解耦、要么无协调交错，存在性能与效率权衡。ParaAgent 提出结构化并行动作循环 ParaAct，将阶段级探索⇌执行与动作级并行结合，并用多智能体冷启动与多级优势解耦强化学习训练。基于 50,011 个真实工具接口的 ToolEnv，ParaAgent-4B 在两个基准上平均成功率最优，甚至超过 GPT-4.1 系统，多工具任务提升最大。行为分析表明，收益来自动作组织方式，为开放世界 agent 的协调与效率提供了新思路。",
+      "tags": "query:marl",
+      "abstract_en": "Language model agents are increasingly deployed in open-world tool environments, which require balancing exploring unknown capabilities and exploiting known ones. Existing methods face a performance-efficiency tradeoff: they either rigidly decouple exploration and execution or interleave them without coordination. We argue that the key lies not in whether to decouple or interleave them, but in how to coordinate them across granularities. We introduce ParaAct, a structured parallel-action loop that combines phase-level Exploration $\\rightleftharpoons$ Execution with action-level parallelism. To learn this loop, ParaAgent combines multi-agent cold-start demonstrations with reinforcement learning under multi-level advantage decoupling, making planning structure explicit and supervising it with step-, phase-, and trajectory-level rewards. Learning is supported by our ToolEnv, a scalable simulator grounded in 50,011 realistic tool interfaces. On two open-world tool benchmarks, ParaAgent-4B achieves the best average success among all baselines, including GPT-4.1 systems, with the largest gains on multi-tool tasks. Behavioral analyses show that these gains stem from this action organization, highlighting its importance for capable and efficient open-world agents.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/01/2609.33768v1-deals-decentralized-expertise-aware-load-serving-for-multi-agent-llm-systems",
+      "section": "quick",
+      "title_en": "DEALS: Decentralized Expertise-Aware Load Serving for Multi-Agent LLM Systems",
+      "authors": "Jingjuan Huang, Wenbin Wang, Yanchuan Yin, Alvaro Velasquez, Jia Liu",
+      "date": "2026-09-27",
+      "pdf": "https://arxiv.org/pdf/2609.33768v1",
+      "score": "6.0",
+      "evidence": "无需中心控制器的去中心化多智能体系统协调",
+      "tldr": "多智能体LLM系统处理异构复杂任务时，常受限于中心化控制或固定协作模式，而现有去中心化方法又依赖训练路由器或调用LLM选代理，协调开销高。DEALS提出低复杂度去中心化框架：各代理维护本地任务队列，路由器依据积压与成功率差异决定本地处理或转发邻居，执行器支持跨代理并发与任务续作。实验显示其在同质和异构代理池中提升答案准确率与任务吞吐量，并自组织平衡专长与负载。该工作为任务级自组织与自演化提供了高效协调方案。",
+      "tags": "query:marl",
+      "abstract_en": "Multi-agent systems (MAS) have recently emerged as an effective approach for coordinating large language model (LLM)-based agents to solve complex tasks through structured interactions. In practice, MASs often handle a stream of heterogeneous and complex tasks, requiring agents to decompose each task and then self-organize and self-evolve to adapt to incoming tasks while sharing execution resources. However, most early approaches to MASs rely on centralized controllers or fixed coordination patterns, which can limit scalability or adaptability. In contrast, existing decentralized and dynamic MASs often require training dedicated routers or invoking LLMs for agent selection, resulting in substantial computational costs and coordination overhead. To address these challenges and enable efficient task-level self-organization and self-evolution for task- and workload-level collaboration, we propose Decentralized Expertise-Aware Load Serving (DEALS), a decentralized and low-complexity framework that enables agents to self-organize and dynamically route concurrent tasks for processing. Specifically, each agent maintains local queues of incoming tasks, and its router decides whether to process a task locally or forward it to a neighbor based on differences in backlog and success rate. Meanwhile, executors process independent tasks concurrently within and across agents, and partially solved tasks can be resumed by other agents. Experiments show that DEALS not only improves performance along multiple dimensions (e.g., answer accuracy and task throughput) in both homogeneous and heterogeneous agent pools, but also balances agent expertise and workload in a self-organized manner, enabling effective decentralized coordination.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/01/2609.34136v1-waggle-learning-one-anonymous-local-law-for-self-organizing-llm-swarms",
+      "section": "quick",
+      "title_en": "Waggle: Learning One Anonymous Local Law for Self-Organizing LLM Swarms",
+      "authors": "Mingxi Zou, Wei Zhu, Zhuo Wang, Langzhang Liang, Zhiwen Tang, Yinghui Xu, Zenglin Xu",
+      "date": "2026-09-28",
+      "pdf": "https://arxiv.org/pdf/2609.34136v1",
+      "score": "6.0",
+      "evidence": "通过共享局部策略实现去中心化自组织多智能体协调",
+      "tldr": "现有LLM多智能体协作常依赖显式角色、层级、路由或通信拓扑，难以随群体规模与交互条件变化。Waggle将学习目标改为可复用的匿名局部法则，在有限局部视图上联合选择任务动作、语义通信与承诺更新，并用Swarm-Consistent Distillation训练。同一法则在群体和交互预算变化下仍有效，保留超96%基座oracle质量且免重训迁移，反证后重组更优。这表明LLM智能体组织可通过重复执行学到的局部法则涌现并在线适应。",
+      "tags": "query:marl",
+      "abstract_en": "As LLM agents increasingly collaborate on complex tasks, how to organize their interactions becomes a central design question. Existing multi-agent systems typically learn or adapt explicit roles, hierarchies, routing policies, or communication topologies. We shift the learning target to a reusable local law that can be shared across interchangeable agents and adapt coordination as populations or interaction conditions change, without redefining a global organization. We introduce Waggle, a shared anonymous policy over bounded local views that jointly selects task actions, semantic communication, and local commitment updates. Repeated execution of the same law allows coordination to form, persist, and reorganize online without explicit roles or global topology. To learn this law across interchangeable agents and evolving coordination, we develop Swarm-Consistent Distillation (SCD), combining anonymous-orbit consistency with rollout-grounded prediction of the next local coordination field, with no added inference-time components. Across diverse coordination settings, the same learned law remains effective as populations and interaction budgets change, retains over 96% of substrate-specific oracle quality, and transfers without retraining; SCD further improves reorganization after counterevidence. Together, these results show that LLM-agent organization can emerge and adapt through repeated execution of a learned local law.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
