@@ -1,0 +1,460 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-02T23:22:33.275624+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 8,
+    "deep_cap": 6,
+    "deep_selected": 7,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2609.36292v1",
+      "source": "arxiv",
+      "title": "Fully Decentralized and Safety-Aware Multi-Agent Reinforcement Learning for Control on Networks",
+      "abstract": "This paper develops a safe and fully decentralized multi-agent reinforcement learning (MARL) algorithm to solve a class of discrete-time control problems on networks, including the persistent monitoring problem. Fully decentralized control of agents, while offering numerous benefits, faces issues such as exponentially increasing sample complexity, lack of global information about the system, and challenges in coordinating between agents. To address these issues, this paper introduces a fully decentralized multi-agent reinforcement learning algorithm that integrates deep reinforcement learning with safety considerations. This method feeds a history of local observations of the network's state into two parallel neural-network branches: the graph encoder, which adds structural information and correlations among nodes, and a state estimator, which predicts the uncertainty at each node in the graph. Additionally, the result of feeding that input into an actor-critic network is passed through a discrete-time control barrier heuristic to reduce the likelihood that any node will be neglected. This approach enables teams of fully decentralized agents to solve challenging problems by increasing system awareness and incorporating built-in safety measures to prevent the adoption of potentially harmful control policies. Numerical results from a custom simulation environment demonstrate that the proposed algorithm achieves 26.3 percent lower average uncertainty than a centralized control policy and is within 1 percent of the uncertainty performance of a more computationally complex algorithm with added attention layers.",
+      "authors": [
+        "Theodore Rogalski",
+        "Shirantha Welikala"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.MA"
+      ],
+      "published": "2026-09-28T21:22:54+00:00",
+      "link": "https://arxiv.org/pdf/2609.36292v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "fully decentralized multi-agent reinforcement learning with safety for networked control",
+      "llm_evidence_cn": "面向网络控制的完全去中心化且安全感知的多智能体强化学习",
+      "llm_evidence": "面向网络控制的完全去中心化且安全感知的多智能体强化学习",
+      "canonical_evidence": "面向网络控制的完全去中心化且安全感知的多智能体强化学习",
+      "llm_tldr_en": "Fully decentralized MARL for networked control addresses sample complexity and missing global information, combining deep RL with safety constraints and local observation histories to achieve safe decentralized multi-agent control.",
+      "llm_tldr_cn": "针对网络化多智能体控制在完全去中心化下面临样本复杂度指数增长、缺乏全局信息和协调困难的问题，本文提出一种安全感知的完全去中心化多智能体强化学习算法，将深度强化学习与安全约束结合，用局部观测历史驱动两个并行神经网络分支。在持续监测等离散时间网络控制任务上，该方法实现了安全且无需中心协调的分布式控制。结果表明在缺乏全局信息时仍可兼顾安全性与可扩展性，为网络化多智能体控制提供了可行路径。",
+      "llm_tldr": "针对网络化多智能体控制在完全去中心化下面临样本复杂度指数增长、缺乏全局信息和协调困难的问题，本文提出一种安全感知的完全去中心化多智能体强化学习算法，将深度强化学习与安全约束结合，用局部观测历史驱动两个并行神经网络分支。在持续监测等离散时间网络控制任务上，该方法实现了安全且无需中心协调的分布式控制。结果表明在缺乏全局信息时仍可兼顾安全性与可扩展性，为网络化多智能体控制提供了可行路径。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.36588v1",
+      "source": "arxiv",
+      "title": "Cooperative Multi-Agent Vision-Language-Action Models via Reinforced Fine Tuning",
+      "abstract": "We study reinforcement learning (RL) methods for cooperative multi-agent Vision-Language-Action (VLA) models. This problem is challenging because VLAs are pretrained on large-scale single-agent data and therefore lack the fine-grained coordination skills required for inter-robot collaboration. Supervised fine-tuning (SFT) on multi-robot demonstrations partially bridges this gap, but its performance is bounded by the demonstration data and cannot improve from its own experience. We present a three-stage reinforced fine-tuning (RFT) pipeline for multi-agent VLAs. First, initialization-aware data collection sweeps over initial configurations and invokes human demonstrations only when the pretrained VLA repeatedly fails, yielding robustness to initialization shift with reduced human cost. Second, offline credit-filtered tuning assigns credit to individual agents and fine-tunes on per-agent trajectories with positive advantage rather than on entire joint rollouts. Third, we find existing online RL for VLAs are less effective for hard multi-agent tasks, which we attribute to noisy co-exploration and unstable updates. We instead use online latent-space fine tuning, which freeze the VLA and perform RL in its latent noise space. We evaluate our multi-agent VLA with both $π_0$ and $π_{0.5}$ backbones across 11 tasks in RoboTwin, RoboFactory and real-world manipulation with two Franka robots. Our multi-agent VLA improves the average success rate by $+23.1\\%$, $+16.4\\%$, and $+44\\%$ on RoboTwin, RoboFactory, and real-world tasks, respectively. Code available at https://anonymous.4open.science/r/mavla_rft-2BC0/.",
+      "authors": [
+        "Ruixiao Xu",
+        "Wong Lik Hang Kenny",
+        "Zhiqian Liu",
+        "Jianing Guo",
+        "Hanxiao Li",
+        "Kejian Shi",
+        "Shuning Zhang",
+        "Pu Feng",
+        "Yongjia Ma",
+        "Yuqing Ma",
+        "Kai Chen",
+        "Qi Dou",
+        "Yaodong Yang",
+        "Xianglong Liu",
+        "Simin Li"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-09-29T03:05:50+00:00",
+      "link": "https://arxiv.org/pdf/2609.36588v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Reinforcement learning for cooperative multi-agent VLA models to build inter-robot coordination",
+      "llm_evidence_cn": "面向协作多智能体VLA模型的强化学习，提升机器人间协同",
+      "llm_evidence": "面向协作多智能体VLA模型的强化学习，提升机器人间协同",
+      "canonical_evidence": "面向协作多智能体VLA模型的强化学习，提升机器人间协同",
+      "llm_tldr_en": "Cooperative multi-agent VLA models lack inter-robot coordination because they are pretrained on single-agent data. The paper proposes a three-stage reinforced fine-tuning pipeline with initialization-aware data collection to overcome the limits of supervised fine-tuning.",
+      "llm_tldr_cn": "协作式多智能体视觉-语言-动作模型因仅在单智能体数据上预训练，缺乏机器人间协同所需的细粒度协调能力，而监督微调受示范数据限制无法自我提升。本文提出三阶段强化微调流程，先通过初始化感知的数据采集在预训练模型反复失败时才引入人类示范。该方法使多机器人协作策略能够从自身经验中持续改进，突破了示范数据的性能上限，为多智能体具身协作提供了可扩展的训练范式。",
+      "llm_tldr": "协作式多智能体视觉-语言-动作模型因仅在单智能体数据上预训练，缺乏机器人间协同所需的细粒度协调能力，而监督微调受示范数据限制无法自我提升。本文提出三阶段强化微调流程，先通过初始化感知的数据采集在预训练模型反复失败时才引入人类示范。该方法使多机器人协作策略能够从自身经验中持续改进，突破了示范数据的性能上限，为多智能体具身协作提供了可扩展的训练范式。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.38889v1",
+      "source": "arxiv",
+      "title": "VERA: Verifiable Feasibility Representations with Counterfactual Credit for Constrained Multi-Agent Control",
+      "abstract": "Constrained multi-agent control requires more than predicting rewarding actions: an action can cease to be executable as contact windows, shared capacity, and deadlines change. We introduce VERA, a centralized-training, decentralized-execution framework that separates feasibility estimation from credit assignment. Each actor predicts a five-dimensional verifiable feasibility representation (VFR). After an action is proposed, exact action-conditioned margins available only during training supervise that representation, while a counterfactual group-relative advantage (CGRA) ranks candidate representation-action pairs. Execution uses one actor pass and no privileged state. In a dynamic space-air-ground integrated network (SAGIN), VERA obtains 55.33% +/- 3.60% success with 0.45% +/- 0.81% coverage violation, within 1.33 percentage points of a privileged-mask reference. With rewards matched over ten paired seeds, VERA improves success over the strongest baseline by 8.74 percentage points (p=0.023) and reduces violation by 52.19 percentage points (p=5.7e-8). A ten-seed 4-by-2 factorial attributes a 14.16-16.48 percentage-point gain to CGRA across handcrafted, learned, random, and latent representations; evaluation on seven unseen topologies preserves a 24.33-30.02 percentage-point advantage over multi-agent proximal policy optimization. From 10 to 40 users, success remains 50.1-53.8%, and VFR adds only 0.026 ms to a central processing unit (CPU) actor step. Cross-domain tests further identify the governing condition: counterfactual credit succeeds when candidate scores respect shared constraints and fails under incompatible reward geometries. These results establish action-conditioned feasibility as an auditable training interface and counterfactual credit as a geometry-dependent optimization mechanism.",
+      "authors": [
+        "Bo Yin",
+        "Dongbo Li",
+        "Hongkai Chen",
+        "Jie Liu",
+        "Guoliang Xing"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-30T03:37:29+00:00",
+      "link": "https://arxiv.org/pdf/2609.38889v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "centralized-training decentralized-execution constrained multi-agent control",
+      "llm_evidence_cn": "集中训练-分散执行的受限多智能体控制",
+      "llm_evidence": "集中训练-分散执行的受限多智能体控制",
+      "canonical_evidence": "集中训练-分散执行的受限多智能体控制",
+      "llm_tldr_en": "VERA is a centralized-training decentralized-execution framework that separates feasibility estimation from credit assignment via verifiable feasibility representations and counterfactual group-relative advantages for constrained multi-agent control.",
+      "llm_tldr_cn": "受限多智能体控制中，一个动作会因接触窗口、共享容量和截止期变化而变得不可执行，因此仅预测高回报动作并不足够。本文提出VERA框架，采用集中训练、分散执行，将可行性估计与信用分配解耦：每个演员预测五维可验证可行性表示，训练时用动作条件边距监督，并用反事实群组相对优势对候选动作排序。在动态空天地一体化网络等任务中，执行阶段只需一次演员前向且无需特权状态。该工作为受限多智能体控制提供了可验证且可扩展的CTDE方案。",
+      "llm_tldr": "受限多智能体控制中，一个动作会因接触窗口、共享容量和截止期变化而变得不可执行，因此仅预测高回报动作并不足够。本文提出VERA框架，采用集中训练、分散执行，将可行性估计与信用分配解耦：每个演员预测五维可验证可行性表示，训练时用动作条件边距监督，并用反事实群组相对优势对候选动作排序。在动态空天地一体化网络等任务中，执行阶段只需一次演员前向且无需特权状态。该工作为受限多智能体控制提供了可验证且可扩展的CTDE方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "centralized training for multi-agent reinforcement learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.00705v1",
+      "source": "arxiv",
+      "title": "Meta-Multi-Agent Reinforcement Learning for Fast Adaptation of Interactive Policies with Applications to Autonomous Driving",
+      "abstract": "This paper develops a meta-multi-agent reinforcement learning (meta-MARL) framework to enable fast adaptation of interactive policies in a multi-agent system (MAS). Meta-reinforcement learning (meta-RL) enables agents to rapidly adapt to new tasks/environments using a bi-level optimization mechanism. However, existing meta-RL generally focuses on single-agent systems. Extending these frameworks and algorithms to multi-agent systems poses additional challenges, as tasks are characterized by not only the environment but also agents' strategic interactions. To address these challenges, we model multi-agent reinforcement learning (MARL) problems as Markov games (MGs) and develop a meta-MARL framework for rapid interactive policy adaptation across a distribution of MGs. A new concept, called meta-NE, is defined to describe the desired solution concept in a meta-MARL problem. Sufficient conditions for the equivalence between a meta-NE and a stationary point of the gradient-play-based meta-MARL algorithm are established. Our evaluation on autonomous-driving tasks demonstrates that the proposed meta-MARL method achieves faster adaptation than pretrained MARL baselines, validating the effectiveness of our framework.",
+      "authors": [
+        "Huiwen Yan",
+        "Kyriakos G. Vamvoudakis",
+        "Mushuang Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA",
+        "eess.SY"
+      ],
+      "published": "2026-09-30T20:52:19+00:00",
+      "link": "https://arxiv.org/pdf/2610.00705v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "models MARL problems as Markov games and builds a meta-MARL framework for fast policy adaptation",
+      "llm_evidence_cn": "将多智能体强化学习建模为马尔可夫博弈并提出元多智能体强化学习框架",
+      "llm_evidence": "将多智能体强化学习建模为马尔可夫博弈并提出元多智能体强化学习框架",
+      "canonical_evidence": "将多智能体强化学习建模为马尔可夫博弈并提出元多智能体强化学习框架",
+      "llm_tldr_en": "This paper extends meta-RL to multi-agent systems by modeling MARL as Markov games, proposing a meta-MARL framework that enables fast adaptation of interactive policies, validated on autonomous driving.",
+      "llm_tldr_cn": "元强化学习能让智能体借助双层优化快速适应新任务，但已有工作多局限于单智能体场景，扩展到多智能体系统时还需应对智能体间的策略交互。本文将多智能体强化学习问题建模为马尔可夫博弈，提出元多智能体强化学习框架，使交互策略能够快速适应新环境与新对手。在自动驾驶等交互任务上的实验验证了该框架的适应速度与策略质量。工作为多智能体场景下的快速适应提供了统一建模范式。",
+      "llm_tldr": "元强化学习能让智能体借助双层优化快速适应新任务，但已有工作多局限于单智能体场景，扩展到多智能体系统时还需应对智能体间的策略交互。本文将多智能体强化学习问题建模为马尔可夫博弈，提出元多智能体强化学习框架，使交互策略能够快速适应新环境与新对手。在自动驾驶等交互任务上的实验验证了该框架的适应速度与策略质量。工作为多智能体场景下的快速适应提供了统一建模范式。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.01181v1",
+      "source": "arxiv",
+      "title": "Fully Online Decentralized Learning in Stochastic Games with Unknown Independent Chains",
+      "abstract": "We consider stochastic games with independent controlled chains and unknown transition kernels, where players observe only their local states and realized payoffs. We develop a fully online, decentralized, and uncoordinated mirror-descent algorithm that operates in the dual space of occupancy measures for approximating stationary Nash equilibrium (NE) policies. The algorithm uses a single transition/reward sample at every primitive time step, relies only on local information, and requires neither coverage of the joint state space nor synchronized episodes. Under uniform-ergodicity and finite-coverage assumptions, we show that, with high probability, the time-averaged fixed-comparator regret decays at the canonical $O(T^{-1/2})$ rate, up to logarithmic factors and polynomial dependence on the game parameters. In particular, the complexity depends on the cover times of the individual local state spaces rather than the product state space, avoiding exponential dependence on the number of players and the sizes of the joint state and action spaces. The resulting finite-time regret bound further yields an approximate coarse-correlated-equilibrium guarantee, which is natural for arbitrary reward functions since computing a stationary $ε$-NE is PPAD-hard in this setting. Under an additional global variational-stability condition, we show that the same fully online algorithm converges asymptotically in the last iterate to a stationary $ε$-NE. Our results provide a fully online and scalable learning framework for stochastic games with unknown independent chains. The algorithm can also be viewed as a primal-dual framework for Markov games that exploits the independence and local structure of the players' controlled transition chains.",
+      "authors": [
+        "S. Rasoul Etesami"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.GT",
+        "cs.MA",
+        "eess.SY",
+        "math.OC"
+      ],
+      "published": "2026-10-01T06:56:20+00:00",
+      "link": "https://arxiv.org/pdf/2610.01181v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "fully online decentralized learning in stochastic games",
+      "llm_evidence_cn": "随机博弈中的全在线去中心化学习",
+      "llm_evidence": "随机博弈中的全在线去中心化学习",
+      "canonical_evidence": "随机博弈中的全在线去中心化学习",
+      "llm_tldr_en": "A fully online, decentralized mirror-descent algorithm for stochastic games with unknown independent chains approximates stationary Nash equilibria using only local samples, achieving O(T^-1/2) regret.",
+      "llm_tldr_cn": "随机博弈中玩家通常只能观测自身局部状态与收益，且转移核未知，以往算法往往要求联合状态覆盖或同步回合。本文提出一种完全在线、去中心化且无需玩家协调的镜像下降算法，在对偶占据测度空间逼近平稳纳什均衡策略，每步仅用一个转移与收益样本。在一致遍历与有限覆盖假设下，时间平均固定比较器遗憾以O(T^{-1/2})的最优速率衰减。该结果推进了仅凭局部信息进行去中心化多智能体学习的理论边界。",
+      "llm_tldr": "随机博弈中玩家通常只能观测自身局部状态与收益，且转移核未知，以往算法往往要求联合状态覆盖或同步回合。本文提出一种完全在线、去中心化且无需玩家协调的镜像下降算法，在对偶占据测度空间逼近平稳纳什均衡策略，每步仅用一个转移与收益样本。在一致遍历与有限覆盖假设下，时间平均固定比较器遗憾以O(T^{-1/2})的最优速率衰减。该结果推进了仅凭局部信息进行去中心化多智能体学习的理论边界。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.01630v1",
+      "source": "arxiv",
+      "title": "After Cooperation Is Learned: Gradient Routing and Optimizer-Dependent Maintenance in Multi-Agent Reinforcement Learning",
+      "abstract": "Cooperative MARL is commonly evaluated through cooperation discovery from random initialization, leaving open whether continued optimization can destabilize learned cooperation. Actor-critic comparisons can also conflate critic presence with value gradients entering shared actor representations. We study cooperation maintenance, defined as the survival of a behaviorally verified cooperative policy under continued training. We formulate maintenance as a right-censored event-time problem and compare matched warm starts: X0 allows value loss gradients to update shared actor features, X1 retains the critic while blocking those gradients, and X5 removes the learned critic as a critic-free reference. This isolates direct value-gradient access while controlling initialization, critic computation, and evaluation. Positive reward scaling preserves strategic preferences and equilibria while perturbing learning dynamics. Gradient audits confirm the intended routing pathways, and frozen-policy torso perturbations probe whether route-induced updates align with local cooperation boundaries. In confirmatory MinEx and CleanUp-lite experiments, higher scales selectively increase maintenance sensitivity in X0; X1 remains near the censoring ceiling, and X5 has no confirmed events in the tested settings. In CleanUp-lite, route-by-scale displacement is associated with reduced local cooperation margins; MinEx shows a weaker, optimizer-dependent effect. These results identify a conditional, scale-sensitive maintenance risk associated with direct value-gradient routing rather than a universal failure of critics.",
+      "authors": [
+        "Chaoyuan Hao",
+        "Wentao Yue",
+        "Tianyou Lai",
+        "Hongji Li",
+        "Jiayi Zhou",
+        "Qingyu Mao",
+        "Qilei Li"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA"
+      ],
+      "published": "2026-10-01T13:00:07+00:00",
+      "link": "https://arxiv.org/pdf/2610.01630v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperation maintenance in cooperative MARL with actor-critic comparisons",
+      "llm_evidence_cn": "合作型多智能体强化学习中的合作维持与演员-评论家比较",
+      "llm_evidence": "合作型多智能体强化学习中的合作维持与演员-评论家比较",
+      "canonical_evidence": "合作型多智能体强化学习中的合作维持与演员-评论家比较",
+      "llm_tldr_en": "Framing cooperation maintenance as a right-censored event-time problem, the paper compares matched warm starts in cooperative MARL to show that gradient routing and optimizer choice determine whether learned cooperation survives continued training.",
+      "llm_tldr_cn": "合作型多智能体强化学习通常只考察从随机初始化发现合作，却很少检验持续优化是否会破坏已学得的合作。作者把合作维持定义为行为验证过的合作策略在继续训练下的存活，并将其建模为右删失事件时间问题，比较允许或阻断价值梯度更新共享演员表征的匹配热启动。实验区分了评论家存在与价值梯度进入共享表征的不同作用，发现梯度路由与优化器选择共同决定合作能否维持。该工作提醒合作维持应作为独立指标评估。",
+      "llm_tldr": "合作型多智能体强化学习通常只考察从随机初始化发现合作，却很少检验持续优化是否会破坏已学得的合作。作者把合作维持定义为行为验证过的合作策略在继续训练下的存活，并将其建模为右删失事件时间问题，比较允许或阻断价值梯度更新共享演员表征的匹配热启动。实验区分了评论家存在与价值梯度进入共享表征的不同作用，发现梯度路由与优化器选择共同决定合作能否维持。该工作提醒合作维持应作为独立指标评估。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.01882v1",
+      "source": "arxiv",
+      "title": "Flowing Faster to Coordinate: One-Step Online Multi-Agent Flow Policies",
+      "abstract": "Multi-agent reinforcement learning (MARL) provides a powerful framework for learning coordinated behaviors through interactions with the environment. Developing MARL policies requires balancing expressive modeling of complex and multimodal action distributions with efficient training and execution. Generative policies, particularly diffusionbased policies, can faithfully capture complex and multimodal behaviors, but costly iterative sampling hinders their scalability in online multi-agent settings. We propose an Online MARL framework via one-step Flow model (OMAF) that combines expressive generative policies with efficient one-step action generation. OMAF employs a Transformer-based flow policy to capture complex coordination behaviors, while its approximate path score surrogate provides a principled route to synchronized flow policy optimization. To enable stable and sampleefficient learning, we further develop a joint optimization scheme coupling softmax Q-value estimation with a joint flow policy objective for coordinated policy learning. By eliminating iterative sampling, OMAF dramatically reduces training overhead without sacrificing policy expressiveness. Extensive experiments across 10 standard tasks from MPE and MAMuJoCo show that OMAF consistently achieves superior performance, with up to 3.4x higher returns and 10.5x sample efficiency improvement compared with baseline methods. These results validate the effectiveness of OMAF as an expressive and computationally efficient one-step flow policy paradigm for online MARL.",
+      "authors": [
+        "Zhuoran Li",
+        "Yunzhan Li",
+        "Xun Wang",
+        "Yihan Du",
+        "Longbo Huang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-01T15:36:31+00:00",
+      "link": "https://arxiv.org/pdf/2610.01882v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "online MARL with one-step flow policies",
+      "llm_evidence_cn": "在线多智能体强化学习的一步流策略",
+      "llm_evidence": "在线多智能体强化学习的一步流策略",
+      "canonical_evidence": "在线多智能体强化学习的一步流策略",
+      "llm_tldr_en": "OMAF addresses online MARL where diffusion policies model multimodal coordination well but costly iterative sampling limits scalability, proposing a Transformer-based flow policy that generates actions in one step while retaining expressive coordination.",
+      "llm_tldr_cn": "多智能体强化学习通过与环境交互学习协作行为，但需在复杂多模态动作分布的建模能力与训练执行效率之间权衡，扩散策略采样代价高，难以扩展到在线场景。本文提出OMAF，用基于Transformer的流策略实现一步动作生成，在保持表达力的同时大幅降低采样开销。该框架面向在线多智能体设置，能够高效学习协调行为，为生成式MARL策略的可扩展性提供解决方案。",
+      "llm_tldr": "多智能体强化学习通过与环境交互学习协作行为，但需在复杂多模态动作分布的建模能力与训练执行效率之间权衡，扩散策略采样代价高，难以扩展到在线场景。本文提出OMAF，用基于Transformer的流策略实现一步动作生成，在保持表达力的同时大幅降低采样开销。该框架面向在线多智能体设置，能够高效学习协调行为，为生成式MARL策略的可扩展性提供解决方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2610.01102v1",
+      "source": "arxiv",
+      "title": "MASkillBlender: Decentralized Whole-Body Coordination for Multi-Humanoid Loco-Manipulation via Skill Blending",
+      "abstract": "Coordinated multi-humanoid loco-manipulation is promising yet challenging due to high-dimensional whole-body control, decentralized decision making, and scalability. While recent reinforcement learning methods have improved single-humanoid whole-body control, extending them to the multi-humanoid setting remains nontrivial and often requires substantial reward engineering or task-specific design. We propose MASkillBlender, a general multi-agent reinforcement learning framework to achieve decentralized multi-humanoid whole-body coordination. By learning a shared decentralized high-level policy over reusable pre-trained single-humanoid skills, MASkillBlender enables coordinated behaviors using only task-level rewards, without requiring task-specific motion references. To improve learning efficiency, we further introduce a permutation-based data augmentation strategy for homogeneous multi-humanoid systems, and theoretically show that the permuted samples preserve the policy-gradient direction of the original samples under the homogeneous Markov game formulation. We evaluate MASkillBlender on multiple multi-humanoid coordination tasks across two humanoid embodiments. Simulation results demonstrate that the proposed framework consistently achieves strong task performance and enables coordinated behaviors across different tasks and humanoid embodiments.",
+      "authors": [
+        "Yifan Hu",
+        "Luhang Hong",
+        "Mingkang Long",
+        "Danning Wang",
+        "Chengfeng Jia",
+        "Rong Su",
+        "Junjie Fu",
+        "Guanghui Wen"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-10-01T05:42:42+00:00",
+      "link": "https://arxiv.org/pdf/2610.01102v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "general multi-agent reinforcement learning framework for decentralized multi-humanoid coordination",
+      "llm_evidence_cn": "面向去中心化多机器人协调的通用多智能体强化学习框架",
+      "llm_evidence": "面向去中心化多机器人协调的通用多智能体强化学习框架",
+      "canonical_evidence": "面向去中心化多机器人协调的通用多智能体强化学习框架",
+      "llm_tldr_en": "Multi-humanoid loco-manipulation is hard due to high-dimensional control, decentralized decision making and scalability, with single-humanoid RL not transferring. MASkillBlender learns a shared decentralized high-level policy over pretrained single-humanoid skills, achieving coordination from task-level rewards only.",
+      "llm_tldr_cn": "多机器人全身移动操作面临高维控制、去中心化决策与可扩展性挑战，现有单机器人强化学习难以直接扩展且依赖大量奖励工程。本文提出MASkillBlender，一个通用多智能体强化学习框架，在可复用的预训练单机器人技能之上学习共享的去中心化高层策略。该框架仅依赖任务级奖励即可实现多机器人的协调全身移动操作。工作表明技能复用与去中心化高层策略能有效缓解多智能体协调中的奖励设计负担。",
+      "llm_tldr": "多机器人全身移动操作面临高维控制、去中心化决策与可扩展性挑战，现有单机器人强化学习难以直接扩展且依赖大量奖励工程。本文提出MASkillBlender，一个通用多智能体强化学习框架，在可复用的预训练单机器人技能之上学习共享的去中心化高层策略。该框架仅依赖任务级奖励即可实现多机器人的协调全身移动操作。工作表明技能复用与去中心化高层策略能有效缓解多智能体协调中的奖励设计负担。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2609.32129v2",
+      "source": "arxiv",
+      "title": "Residual Denoising Enables Sample-Efficient Multi-Agent Coordination on Demand",
+      "abstract": "Pretrained robot policies offer strong manipulation skills but are typically limited to single-agent settings, where a robot acts in isolation. In this work, we study how to adapt pretrained single-agent diffusion policies to multi-agent settings using minimal collaborative data, co-optimizing for two key objectives: high coordination performance and single-agent skill retention. To this end, we introduce ALTER, an adaptation method for coordination on demand: the adapted policy coordinates with other robots when deployed in a team while remaining capable of acting independently when operating alone. Execution is decentralized: each robot acts only on its own visual observations, without explicit inter-agent communication. Our method trains a coordination head that predicts a residual denoiser to transform single-agent behavior into coordinated multi-agent behavior when necessary while also preserving single-agent capabilities. To preserve single-agent capabilities, we augment a small number of collaborative demonstrations with self-distilled data generated by the base policy during training of the residual denoiser. In simulation, ALTER achieves higher coordination success over our baselines while retaining much higher source-skill retention. In our hardware experiments, we find similar trends where ALTER better co-optimizes for coordination success and single-agent skill retention than the baselines.",
+      "authors": [
+        "Dayi Dong",
+        "Maulik Bhatt",
+        "Aayushi Shrivastava",
+        "Lasse Peters",
+        "Negar Mehr"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-09-26T01:09:37+00:00",
+      "link": "https://arxiv.org/pdf/2609.32129v2",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "decentralized execution, each robot acts on its own observations without communication",
+      "llm_evidence_cn": "去中心化执行，每个机器人仅凭自身观测行动且无显式通信",
+      "llm_evidence": "去中心化执行，每个机器人仅凭自身观测行动且无显式通信",
+      "canonical_evidence": "去中心化执行，每个机器人仅凭自身观测行动且无显式通信",
+      "llm_tldr_en": "Pretrained single-agent diffusion policies cannot coordinate in teams. ALTER adapts them to multi-agent settings with minimal collaborative data, using decentralized execution and residual denoising, retaining single-agent skill while enabling coordination.",
+      "llm_tldr_cn": "预训练单智能体扩散策略虽具备较强操作能力，却难以在多机器人团队中协同，且协同数据稀缺。本文提出ALTER适配方法，在少量协作数据下联合优化协同性能与单智能体技能保持，并采用残差去噪提升样本效率。部署时每个机器人仅依赖自身视觉观测、无显式通信，实现去中心化执行。该方法使策略在团队中协同、单独行动时仍保持原有能力，为低成本多智能体协调提供了通用方案。",
+      "llm_tldr": "预训练单智能体扩散策略虽具备较强操作能力，却难以在多机器人团队中协同，且协同数据稀缺。本文提出ALTER适配方法，在少量协作数据下联合优化协同性能与单智能体技能保持，并采用残差去噪提升样本效率。部署时每个机器人仅依赖自身视觉观测、无显式通信，实现去中心化执行。该方法使策略在团队中协同、单独行动时仍保持原有能力，为低成本多智能体协调提供了通用方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized execution in multi-agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.34234v1",
+      "source": "arxiv",
+      "title": "MAS-OPD: On-Policy Distillation for Multi-agent Systems",
+      "abstract": "Multi-agent systems (MAS) split a task across specialized roles and are promising on complex tasks, yet a prevailing approach relies on inference-time orchestration alone. General-purpose APIs are costly and hard to customize, while small models with role prompts rarely develop stable role competence or reliable collaboration, so post-training a MAS jointly is central. Most attempts use reinforcement learning, whose team-level reward leaves undetermined which step of which agent brought about the outcome, while local rewards need redesigning per task. On-policy distillation (OPD) gives token-level teacher supervision on trajectories the student samples, a denser signal needing no local reward, yet is underexplored for the interdependent agents of a MAS. Two difficulties arise: building complementary specialization from a judgement of which role a behavior belongs to while preserving the knowledge all roles need, and turning cross-agent collaborative information into supervision OPD can exploit. We present MAS-OPD, where Role-Advantage Specialization defines the role advantage as the difference between the teacher signals under target and non-target role conditions, and Privileged Attribution for Coordination attributes an interaction conflict to its source and supplies it to the teacher alone as privileged information. Extensive experiments on code and mathematics benchmarks show that MAS-OPD attains the highest mean score at both student scales and leads the agents to develop clearer role specialization and more effective collaborative behavior.",
+      "authors": [
+        "Qiyong Zhong",
+        "Mao Zheng",
+        "Mingyang Song",
+        "Houcheng Jiang",
+        "Jiajie Su",
+        "Huwei Ji",
+        "Li Zhang",
+        "Junfeng Fang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-09-28T03:39:32+00:00",
+      "link": "https://arxiv.org/pdf/2609.34234v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent systems post-training with RL and credit assignment",
+      "llm_evidence_cn": "多智能体系统的强化学习后训练与信用分配",
+      "llm_evidence": "多智能体系统的强化学习后训练与信用分配",
+      "canonical_evidence": "多智能体系统的强化学习后训练与信用分配",
+      "llm_tldr_en": "MAS-OPD targets joint post-training of multi-agent systems, where team-level RL rewards fail to reveal which agent step caused outcomes, and proposes on-policy distillation with token-level teacher supervision to build stable role competence without local reward design.",
+      "llm_tldr_cn": "多智能体系统通常只依赖推理时编排，小模型靠角色提示难以形成稳定协作能力，而团队级强化学习奖励又无法定位是哪一步、哪个智能体带来了结果。本文提出MAS-OPD，在学生自身采样的轨迹上提供令牌级教师监督，用同策略蒸馏替代逐任务重新设计的局部奖励。该信号更密集且无需额外奖励工程，为相互依赖的多智能体联合后训练提供了新思路。",
+      "llm_tldr": "多智能体系统通常只依赖推理时编排，小模型靠角色提示难以形成稳定协作能力，而团队级强化学习奖励又无法定位是哪一步、哪个智能体带来了结果。本文提出MAS-OPD，在学生自身采样的轨迹上提供令牌级教师监督，用同策略蒸馏替代逐任务重新设计的局部奖励。该信号更密集且无需额外奖励工程，为相互依赖的多智能体联合后训练提供了新思路。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.37022v1",
+      "source": "arxiv",
+      "title": "Physics-Informed Multi-Agent Coordination for Hospital Patient Flow Optimization",
+      "abstract": "Efficient patient flow coordination across autonomous hospital departments is critical for mitigating overcrowding and balancing resource utilization. While classical queueing theory, specifically open Baskett--Chandy--Muntz--Palacios (BCMP) networks, provides an interpretable mathematical topology for healthcare operations, analytical models rely on stationary assumptions and fixed routing matrices that degrade under state-dependent real-world dynamics. Conversely, centralized reinforcement learning approaches struggle to accommodate the decentralized structure of hospital governance, where individual clinical departments function with localized observations, heterogeneous resources, and divergent operational objectives. In this paper, we present a Multi-Agent Systems (MAS) framework titled \\emph{Physics-Informed Multi-Agent Coordination}, which embeds empirically calibrated BCMP queueing topologies as physical priors within a decentralized multi-agent reinforcement learning architecture. Formulated as a Decentralized Partially Observable Markov Decision Process (Dec-POMDP) under coupled resource constraints, our method enables autonomous departmental agents to cooperatively negotiate patient routing and dynamic service scaling. To mitigate environmental non-stationarity without inducing excessive communication overhead, agents exchange localized action fingerprints along network edges and optimize a spatially decomposed reward structure. Empirical evaluations driven by real-world MIMIC-IV patient trajectories indicate that this cooperative multi-agent approach substantially reduces cumulative system delay compared to static Markovian approximations, heuristic dispatching, and independent multi-agent baselines, while maintaining clinical safety constraints.",
+      "authors": [
+        "Guoqing Zhang",
+        "Rafik Hadfi",
+        "Takayuki Ito"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-09-29T08:38:20+00:00",
+      "link": "https://arxiv.org/pdf/2609.37022v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "decentralized multi-agent coordination with localized observations and RL",
+      "llm_evidence_cn": "去中心化多智能体协同，局部观测与强化学习",
+      "llm_evidence": "去中心化多智能体协同，局部观测与强化学习",
+      "canonical_evidence": "去中心化多智能体协同，局部观测与强化学习",
+      "llm_tldr_en": "Hospital departments are autonomous with localized observations and divergent objectives, so centralized RL cannot fit decentralized governance. This paper combines queueing-network topology with physics-informed constraints to build a decentralized multi-agent coordination framework that mitigates overcrowding and balances resource use in patient flow.",
+      "llm_tldr_cn": "医院各科室自主运行、观测局部且目标各异，集中式强化学习难以适配这种去中心化治理结构，而经典排队论又依赖平稳假设与固定路由。本文结合排队网络拓扑与物理信息约束，构建面向去中心化科室的多智能体协同强化学习框架。该框架在患者流协调中缓解拥堵并平衡资源利用，为去中心化多智能体协同提供了可解释且自适应的方案。",
+      "llm_tldr": "医院各科室自主运行、观测局部且目标各异，集中式强化学习难以适配这种去中心化治理结构，而经典排队论又依赖平稳假设与固定路由。本文结合排队网络拓扑与物理信息约束，构建面向去中心化科室的多智能体协同强化学习框架。该框架在患者流协调中缓解拥堵并平衡资源利用，为去中心化多智能体协同提供了可解释且自适应的方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

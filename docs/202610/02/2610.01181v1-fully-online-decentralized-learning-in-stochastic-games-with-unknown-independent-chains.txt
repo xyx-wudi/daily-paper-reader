@@ -1,0 +1,5142 @@
+Title: Fully Online Decentralized Learning in Stochastic Games with Unknown Independent Chains
+
+URL Source: https://arxiv.org/pdf/2610.01181v1
+
+Published Time: Fri, 02 Oct 2026 01:08:19 GMT
+
+Number of Pages: 44
+
+Markdown Content:
+# Fully Online Decentralized Learning in Stochastic Games with Unknown Independent Chains 
+
+S. Rasoul Etesami ETESAMI 1@ ILLINOIS .EDU 
+
+Department of Industrial and Systems Engineering, Coordinated Science Laboratory University of Illinois Urbana-Champaign, Urbana, IL, USA 61801 
+
+Abstract 
+
+We consider stochastic games with independent controlled chains and unknown transition kernels, in which players observe only their own local states and realized payoffs. We develop a fully online decentralized and uncoordinated mirror-descent algorithm that operates in the dual space of occupancy measures for approximating stationary Nash equilibrium (NE) policies. The algorithm uses a single transition/reward sample at every primitive time step, allows players to update using only local information, and requires neither coverage of the joint state space nor synchronized episodes. Under standard uniform-ergodicity and finite-coverage assumptions, we show that, with high probability, the time-averaged fixed-comparator regret decays at the canonical eO(T −1/2) rate, up to logarithmic factors and polynomial dependence on the game parameters. In particular, the complexity depends on the cover times of the individual local state spaces rather than on that of the product state space, thereby avoiding exponential dependence on the number of players and the sizes of the joint state and action spaces. We further show that the resulting finite-time regret bound provides an approximate coarse-correlated-equilibrium guarantee. Such a guarantee is natural for arbitrary reward functions, since, in this setting, computing a stationary ϵ-Nash equilibrium ( ϵ-NE) is known to be PPAD-hard. Under an additional global variational-stability condition, we show that the same fully online algorithm converges asymptotically in the last iterate to a stationary ϵ-NE. Our results thus provide the first fully online and scalable learning framework for stochastic games with unknown independent chains. Our algorithmic development can also be viewed as a primal-dual framework for Markov games that fully exploits the independence and local structure of the players’ controlled transition chains and may be of independent interest. 
+
+Keywords: Stochastic games; independent chains; stationary Nash equilibrium; online decentral-ized learning; occupancy measures; unknown transition kernels; coarse-correlated equilibrium. 
+
+1 Introduction 
+
+Learning in multi-agent systems becomes particularly challenging when strategic interactions, dy-namic stochastic state evolution, and limited information are present simultaneously (Zhang et al., 2021). Unlike in a single-agent Markov decision process (Altman, 2021), where the environment is typically viewed as exogenous, each agent in a stochastic game faces an environment that is partly shaped by the evolving decisions of other strategic agents (Shapley, 1953; Bas ¸ar and Olsder, 1999). Consequently, even when the underlying transition dynamics are stationary, the effective op-timization problem faced by each player changes as the other players adapt. This coupling raises a fundamental question in decentralized learning: under what structural conditions can self-interested agents, using only locally available observations, learn meaningful equilibrium behavior without coordination or knowledge of the underlying model? For general-sum games (Nash, 1950), one cannot expect an affirmative answer without addi-tional structure. Computing a Nash equilibrium (NE) is PPAD-hard even for finite normal-form games (Daskalakis et al., 2009), and stochastic games contain such static games as special cases. 
+
+1arXiv:2610.01181v1 [cs.LG] 1 Oct 2026 Much of the algorithmic literature has therefore focused on structured settings in which equilib-rium learning becomes tractable (Mertikopoulos and Zhou, 2019). Examples include two-player zero-sum stochastic games, where fictitious-play or independent-learning procedures can achieve asymptotic or finite-sample convergence guarantees (Daskalakis et al., 2020; Sayin et al., 2022; Zhao et al., 2022), and Markov potential games (MPGs), where the potential structure can be ex-ploited to establish global convergence guarantees for policy-gradient-type methods (Fox et al., 2022; Etesami, 2026; Maheshwari et al., 2025; Zhang et al., 2024; Leonardos et al., 2021). These results demonstrate how suitable structure can fundamentally alter the computational and statistical difficulty of multi-agent learning. However, their structural assumptions may exclude systems in which agents have distinct objectives while their state processes evolve largely independently. This paper studies a different source of tractability: independence in the controlled state dynam-ics . We consider n-player stochastic games in which each player controls its own finite-state Markov chain. A player’s local transition kernel depends only on its own state and action, while strategic interactions occur through the reward functions, which may depend on the states and actions of all players. This model is natural in systems where individual agents have local physical dynamics but interact through a common environment, prices, congestion, or shared resources. Examples include wireless communication systems (Altman et al., 2007; Narayanan and Theagarajan, 2017), decentralized energy management (Etesami et al., 2018), and decentralized robotic navigation and coverage (Marden et al., 2009). Importantly, independence of the transition processes does not make the game strategically separable: a player’s payoff can still depend arbitrarily on the behavior of all other players. Our information model is deliberately restrictive. Each player observes only its own local state, chosen action, realized payoff, and subsequent local state; it neither observes the states or actions of the other players nor knows its own transition kernel. Thus, each player must simultaneously learn its local dynamics and adapt strategically to the other players from a single continuing trajectory. Moreover, we seek algorithms whose complexity is governed by the sizes and mixing properties of the local controlled chains rather than those of the product state–action space. This distinction is important because the joint state and action spaces grow exponentially with the number of players, even when each individual controlled chain is small. The independence structure permits a useful reformulation of the game in terms of stationary occupancy measures. Under stationary policies, independence of the local chains implies that the long-run joint state–action distribution factors into the product of local stationary occupancies (Ete-sami, 2024). Consequently, each player’s average reward is linear in its own occupancy measure when the occupancies of the other players are fixed. This converts the original dynamic interaction into a continuous-action static virtual game over local occupancy polytopes. When the transition kernels are unknown, however, these polytopes are themselves unknown and must be learned from data. This creates a coupled learning problem in which players must perform online optimization while simultaneously estimating the feasible regions over which the optimization is carried out. A further difficulty is that a genuinely online implementation cannot rely on the episodic sim-plifications commonly used to separate estimation from optimization. If policies are frozen for suf-ficiently long episodes, transition and payoff-gradient estimates can be formed from approximately stationary data before the next policy update. Along a continuing online trajectory, by contrast, policies change while data are being generated. The state distribution therefore tracks a moving stationary distribution, samples are temporally dependent, and confidence regions for the unknown kernels evolve asynchronously across players. Establishing regret guarantees in this setting requires controlling all of these effects without introducing synchronization among the players. 
+
+> 2
+
+The objective of this paper is to show that the local independence structure is strong enough to overcome these difficulties. We develop a fully online occupancy-based mirror-descent method in which each primitive interaction produces one transition/reward observation and one learning update. Each player maintains a confidence set for its unknown local transition kernel, which is up-dated only when a local state–action count reaches a dyadic threshold. Between such updates, the feasible occupancy region remains unchanged. This lazy confidence-update mechanism is useful both computationally and analytically: each player updates its model independently, its feasible re-gion changes only logarithmically many times, and no global episode boundaries or synchronization signals are required. For arbitrary reward functions, unconditional convergence to a NE cannot in general be ex-pected, given the computational hardness inherited from general-sum static games. We there-fore first analyze the algorithm through fixed-comparator regret and establish a high-probability 
+
+eO(T −1/2) average regret bound against every fixed feasible stationary deviation. This directly yields an approximate coarse-correlated equilibrium guarantee for the empirical distribution of play (Cesa-Bianchi and Lugosi, 2006). Crucially, the resulting complexity depends only on local state and action dimensions, mixing parameters, and cover times, rather than on the cover time or cardi-nality of the exponentially larger joint state–action space. We then identify conditions under which the stronger conclusion of NE convergence can be recovered. Under an additional variational-stability condition (Mertikopoulos and Zhou, 2019) and diminishing step sizes, we show that the same decentralized fully online procedure converges in the last iterate to the unique stationary ϵ-NE with arbitrarily high probability. 
+
+1.1 Related Work 
+
+Our work lies at the intersection of learning in stochastic games, online learning in MDPs, and de-centralized primal-dual methods for stochastic games. For general stochastic games, much of the finite-sample literature has focused on settings with additional game-theoretic structure. Indepen-dent policy-gradient and Q-learning methods have been shown to converge in two-player zero-sum stochastic games under decentralized learning protocols (Daskalakis et al., 2020; Sayin et al., 2021). Another important line of work concerns MPGs, where policy-gradient and gradient-play methods exploit the potential structure to obtain global convergence guarantees for stationary NE policies (Zhang et al., 2022, 2024; Jordan et al., 2024; Leonardos et al., 2021; Ding et al., 2022; Sun et al., 2023). These results leverage restrictions on payoff interactions to make equilibrium computa-tion tractable, whereas our setting allows general reward coupling and derives scalability from the independence of the players’ controlled transition processes. More recently, several works have combined independent transition dynamics with the Markov potential structure. (Nakhleh et al., 2025) studied fictitious play in product Markov games with Kullback–Leibler (KL) control costs and established asymptotic convergence to a NE for the subclass of product MPGs. (Jordan and Kamgarpour, 2026) studied MPGs with independent chains under a more restrictive information structure in which players only partially observe their local states, and established communication-free learning of approximate NE with quasi-polynomial sample and computational complexity. A related recent line of work studies decentralized learning in Markov α-potential games (Guo et al., 2025; Das and Eksin, 2024; Etesami, 2026), which generalize MPGs by allowing violations of the Markov potential property up to an additive error α. (Guo et al., 2025) derived Nash-regret guarantees for projected gradient-ascent and sequential maximum-improvement schemes under ex-
+
+> 3
+
+act Q-function oracle access. (Das and Eksin, 2024) introduced constrained α-Markov potential games, which further accommodate coupled constraints among players, and developed decentral-ized best-response-based algorithms with finite-time guarantees for approximate NE. A fully online decentralized learning framework with finite-time guarantees has only recently been developed for Markov α-potential games, where KL-projected natural policy-gradient algorithms achieve high-probability Nash-regret guarantees under both episodic and fully online learning (Etesami, 2026). Like the algorithm developed here, its fully online method operates along a continuing trajectory us-ing one realized sample per interaction. The two frameworks, however, exploit different sources of tractability: the former relies on an approximate Markov-potential structure in discounted Markov games, whereas our work imposes no potential structure on the rewards and instead exploits inde-pendent controlled chains in an average-reward setting. Our analysis also builds on ideas from online learning in MDPs. Occupancy measures pro-vide a convex representation of stationary policies and have been widely used to develop regret-minimization algorithms for adversarial MDPs (Cardoso et al., 2019). In particular, online mirror-descent methods over occupancy polytopes yield sublinear regret when losses vary across episodes, while confidence-set constructions extend such methods to unknown transition kernels (Rosenberg and Mansour, 2019). Related work has also considered bandit feedback with unknown dynamics in online MDPs (Jin et al., 2020). These single-agent techniques motivate our use of occupancy optimization and confidence regions, but do not directly apply to our setting: each player’s effective reward vector is generated endogenously by the evolving policies and state distributions of the other players, while all players learn simultaneously along their own continuing trajectories. More directly, stochastic games with independent state processes have been studied as a struc-tured class of decentralized dynamic games. (Altman et al., 2007) established equilibrium existence for cost-coupled stochastic games with independent state processes, and subsequent work character-ized stationary equilibria through mathematical programming formulations (Singh and Hemachan-dra, 2014). For learning problems, (Qiu et al., 2021) showed that, in two-player zero-sum stochastic games with independent chains, fictitious-play policy-optimization algorithms can achieve eO(√T )
+
+regret, assuming that each player has knowledge of the opponent’s past strategies. (Etesami, 2024) introduced an occupancy-based dual formulation and developed decentralized dual-averaging pro-cedures for n-player stochastic games with independent chains. That work demonstrated that in-dependence can be leveraged as a source of computational tractability and established finite-time convergence guarantees in terms of the averaged Nikaido–Isoda gap (Nikaidˆ o and Isoda, 1955). Its main algorithms, however, assume known local transition kernels and operate in an episodic fashion, thereby requiring synchronization among players. Unknown transition dynamics were subsequently addressed by (Qin and Etesami, 2024), who combined the occupancy formulation with confidence sets and decentralized online mirror descent. Their algorithm learns the local transition models from observed trajectories and, under a variational-stability assumption, converges asymptotically to a stationary ϵ-NE. The learning protocol, however, remains episodic: policies are held fixed while sufficiently many local observations are collected, and an episode-ending signaling mechanism co-ordinates policy updates across players. Extending this framework to a fully online setting presents significant additional challenges, as continuous policy updates eliminate the stationary sampling environment provided by episodic learning and synchronization. The present paper removes this episodic architecture through delayed conditioning, coupling with frozen-policy dynamics, sensitivity bounds for policy and kernel movement, tracking of time-varying stationary occupancies, and careful treatment of asynchronous confidence-set updates. Play-
+
+> 4
+
+ers learn from every primitive interaction, confidence sets evolve asynchronously using only lo-cal information, and no episode boundaries, dedicated covering phases, or synchronization sig-nals are required. Beyond this algorithmic distinction, we establish a finite-time, high-probability fixed-comparator regret bound for arbitrary reward functions and distinguish the resulting coarse-correlated-equilibrium guarantee from the stronger last-iterate ϵ-NE convergence guarantee, which requires an additional variational-stability assumption. 
+
+1.2 Contributions 
+
+We study stochastic games with independent controlled chains and unknown transition kernels and develop a fully decentralized online algorithm for learning stationary equilibrium policies. Our main contributions are as follows. • We develop a fully online, decentralized, and uncoordinated algorithm that uses one sample per time step. At each primitive time t, every player observes one local transition and realized payoff, updates its local transition counts, forms an importance-weighted payoff-gradient esti-mate, and takes one mirror-descent step. The algorithm requires no covering episodes, burn-in phases, or synchronization signals. Confidence sets are updated asynchronously only when a local state–action count reaches a dyadic threshold, so the feasible occupancy region remains fixed between updates and changes only logarithmically many times over a finite horizon. • For arbitrary reward functions, we establish a high-probability fixed-comparator regret bound of order eO(T −1/2) after a local-cover transient period. The bound depends only on local state and action dimensions, mixing parameters, and cover times, rather than on those of the exponentially larger joint state–action space. Consequently, the empirical distribution of play satisfies an approximate coarse-correlated-equilibrium guarantee. • We further identify a regime in which the stronger NE conclusion can be recovered. Under an additional variational-stability assumption and diminishing step sizes, we prove that the same fully online decentralized algorithm converges asymptotically in the last iterate to the unique stationary ϵ-NE with arbitrarily high probability. Thus, the finite-time no-regret guarantee requires no structural assumptions on the reward functions, while last-iterate NE convergence follows under stability of the induced occupancy game. 
+
+1.3 Organization 
+
+The rest of the paper is organized as follows. In Section 2, we formulate stochastic games with inde-pendent controlled chains and unknown transition kernels and introduce the stationary equilibrium concepts used throughout the paper. Section 3 develops the occupancy-measure representation, the associated virtual game, and the local coverage quantities needed for the analysis. In Section 4, we introduce the fully online decentralized mirror-descent algorithm together with its asynchronous confidence-set updates. Section 5 establishes the finite-time, high-probability fixed-comparator re-gret bound and derives the resulting coarse-correlated-equilibrium guarantee. Section 6 studies the diminishing-step-size regime and establishes last-iterate convergence to an ϵ-NE under variational stability. Section 7 discusses applications and implications of the framework. Finally, Section 8 con-cludes the paper and outlines directions for future research. Omitted proofs and additional technical details are provided in the appendices. 
+
+> 5
+
+Notation. For a positive integer n, we write [n] := {1, . . . , m }. For a finite set X , |X | denotes its cardinality. Vectors are indexed by their corresponding states, actions, or state–action tuples, and ⟨x, y ⟩ denotes the standard Euclidean inner product. We use ∥x∥1, ∥x∥2, and ∥x∥∞ for the ℓ1,Euclidean, and supremum norms, respectively, and 1{·} for the indicator function. For a profile 
+
+x = ( x1, . . . , x n), we write x−i := ( xj )j̸ =i for the profile excluding player i. Lowercase letters such as si and ai denote local states and actions, while s = ( s1, . . . , s n) and a = ( a1, . . . , a n)
+
+denote joint profiles; uppercase letters denote the corresponding random variables. We use P and E
+
+for probability and expectation, respectively, and Ft for the filtration in the probabilistic analysis. For occupancy measures, νi, ρi, and qi denote state, state–action, and state–action–next-state occu-pancies, respectively. Throughout, unhatted quantities (qti , ρ ti, ν ti ) denote the occupancies induced by the current policy πti under the true kernel Pi, whereas hatted quantities (ˆ qti , ˆρti, ˆνti ) denote the confidence-feasible quantities maintained by the algorithm. We write x ≲ y if x ≤ αy for some universal constant α > 0. Throughout, we use c > 0 to denote an adjustable universal positive constant. Finally, O(·) and eO(·) hide universal constants and, in the latter case, logarithmic factors. 
+
+2 Problem Formulation 
+
+We consider an n-player infinite-horizon, time-average stochastic game with independent state tran-sitions, described by the tuple G :=  [n], {S i}ni=1 , {A i}ni=1 , {ri}ni=1 , {Pi}ni=1 
+
+, as follows. • Si is the finite state space of player i, with elements si ∈ S i. We denote the joint state space of all players by S = S1 × · · · × S n, with elements s ∈ S , where s = ( s1, . . . , s n).• Ai is the finite action space of player i, with elements ai ∈ A i. We denote the joint action space of all players by A = A1 × · · · × A n, with elements a ∈ A , where a = ( a1, . . . , a n).• ri : S × A → [0 , 1] is the reward function of player i, where ri(s, a ) is the immediate reward received by player i when the joint state is s = ( s1, . . . , s n) and the players take the joint action a = ( a1, . . . , a n).• Pi is the transition probability kernel of player i, where Pi(s′ 
+
+> i
+
+| si, a i) is the probability that the state of player i transitions from si to s′ 
+
+> i
+
+when the player chooses action ai. Crucially, 
+
+Pi is unknown to player i, and player i’s next-state distribution depends only on (si, a i). The precise factorization of the joint transition kernel is stated in the following assumption. 
+
+Assumption 1 We assume that the joint transition probability kernel P (s′ | s, a ) factors into in-dependent components as P (s′ | s, a ) = Qni=1 Pi(s′ 
+
+> i
+
+| si, a i), where Pi(s′ 
+
+> i
+
+| si, a i) denotes the (unknown) transition probability of player i from state si to state s′ 
+
+> i
+
+under action ai.
+
+At any time t, the information available to player i is given by the history of its realized states, actions, and rewards, i.e., Hti = {sℓi , a ℓi , r i(sℓ, a ℓ) : ℓ = 0 , 1, . . . , t − 1} ∪ { sti}. Given the in-formation set Hti, player i takes an action ati according to her current policy πti (· | H ti), which is a probability measure over Ai, and receives the reward ri(st, a t), which may also depend on the states and actions of the other players. Subsequently, the state of player i transitions from sti to a new state st+1  
+
+> i
+
+according to the transition probability Pi(st+1  
+
+> i
+
+| sti, a ti). A general policy for player 
+
+i is a sequence of decision rules πi = {πti : t = 0 , 1, . . . }, where each πti (· | H ti) is a probability measure over Ai. However, the use of general policies is often computationally expensive, and in practical applications, players are typically interested in easily implementable stationary policies, as defined next, which are also the main focus of this paper. 
+
+> 6
+
+Definition 1 A policy πi for player i is called stationary if the probability πti (ai | H t) of choosing action ai at time t depends only on the current local state sti = si, and is independent of the time t.In the case of the stationary policy, we use πi(ai | si) to denote this time-independent probability. 
+
+Given an initial state s0, the objective of each player i ∈ [n] is to choose a stationary policy πi
+
+that maximizes its long-term expected average reward (payoff), given by 
+
+Vi(πi, π −i) = lim sup  
+
+> T→∞
+
+1
+
+T E
+
+h TX
+
+> t=0
+
+ri(st, a t)
+
+i
+
+, (1) where π−i = ( πj , j ̸ = i), and the expectation is with respect to the randomness introduced by players’ internal kernels (P1, . . . , P n) and their stationary policies π = ( π1, . . . , π n).This fully characterizes the n-player stochastic game considered here, in which each player i
+
+seeks to choose a stationary policy πi to maximize its expected aggregate payoff Vi(πi, π −i). In the remainder of the paper, we refer to the above reward-coupled stochastic game with indepen-dent chains and unknown transition kernels as the original game G. Next, to establish meaningful convergence and learning guarantees, we impose the following assumption throughout this work. 
+
+Assumption 2 For any player i and any stationary policy πi chosen by that player, the induced Markov chain, with transition probabilities 
+
+P πi (s′ 
+
+> i
+
+| si) := X
+
+> ai∈A i
+
+Pi(s′ 
+
+> i
+
+| si, a i)πi(ai | si),
+
+is ergodic and satisfies a uniform contraction condition: there exists a constant κ ∈ (0 , 1] such that 1
+
+∥(ν − ν′)P πi ∥1 ≤ (1 − κ)∥ν − ν′∥1, ∀i, π i, ν, ν ′ ∈ ∆( Si).
+
+Assumption 2 is a uniform-ergodicity condition commonly used in finite-time analyses of average-reward online MDPs (see, e.g., Rivera Cardoso et al., 2019; Neu et al., 2010; Rosenberg and Man-sour, 2019). Its role here is quantitative: the proof uses policy-uniform contraction to control the tracking error of the continuously changing local chains and the bias of the delayed one-sample gra-dient estimator. We do not claim that such a condition is necessary for learning in general MDPs; weaker communicating assumptions may suffice for other objectives and algorithms. Rather, As-sumption 2 delineates the controlled-chain regime covered by our analysis. As shown in the next section, under Assumption 2, for any stationary policy profile π, the limit in (1) exists and admits the closed-form expression. 
+
+Definition 2 For a stationary policy profile π∗ = ( π∗ 
+
+> 1
+
+, . . . , π ∗
+
+> n
+
+), π∗ 
+
+> i
+
+is called a stationary best re-sponse to π∗−i if Vi(π∗ 
+
+> i
+
+, π ∗−i) ≥ Vi(πi, π ∗−i) for every stationary policy πi. Similarly, π∗ 
+
+> i
+
+is called a stationary ϵ-best response to π∗−i if Vi(π∗ 
+
+> i
+
+, π ∗−i) ≥ Vi(πi, π ∗−i)−ϵ for every stationary policy πi. The stationary policy profile π∗ is a stationary Nash equilibrium (NE) if π∗ 
+
+> i
+
+is a stationary best response to π∗−i for every player i, and it is a stationary ϵ-NE if π∗ 
+
+> i
+
+is a stationary ϵ-best response to π∗−i for every player i. All equilibrium statements in this paper concern stationary policies. 
+
+Our main objective is to understand the equilibrium guarantees of a decentralized and fully online learning rule for this class of stochastic games. We establish two types of guarantees: a finite-time fixed-comparator regret bound for the time-averaged iterates and, under stronger conditions, last-iterate convergence to a stationary ϵ-NE.    
+
+> 1. Here, ∆( Si)denotes the probability simplex over the local state space Si.
+> 7
+
+3 Preliminaries on Occupancy Measures, Dual Formulation, and Local Cover Times 
+
+In this section, we provide an alternative dual formulation of the original stochastic game G based on occupancy measures (Altman, 2021). Intuitively, from player i’s perspective, its long-term ex-pected average payoff depends on the proportion of time it spends in each state si and takes each action ai, as captured by its occupancy measure. Thus, the policy optimization problem for player i
+
+can be reformulated as an optimization problem over occupancy measures, where each player seeks to steer its chain toward high-reward states and actions. An advantage of optimizing over occupancy measures is that, due to the independence of the players’ internal chains, the payoff functions admit a simple closed-form that is easier to analyze than the original formulation in terms of policy vari-ables. Moreover, this simplified payoff structure allows us to leverage the rich literature on online learning and primal-dual methods to address the learning problem. We use this dual formulation to develop learning algorithms for finding a stationary ϵ-NE. 
+
+3.1 Occupancy Measures 
+
+For a given single-agent MDP with state space S, action space A, transition probability kernel 
+
+P , and stationary policy π, one can associate with P and π three notions of occupancy measures: 
+
+ν : S → [0 , 1] , ρ : S × A → [0 , 1] , and q : S × A × S → [0 , 1] , defined as follows. 2
+
+ν(s) = lim  
+
+> T→∞
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Pπ(st = s), (2) 
+
+ρ(s, a ) = lim  
+
+> T→∞
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Pπ(st = s, a t = a), (3) 
+
+q(s, a, s ′) = lim  
+
+> T→∞
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Pπ(st = s, a t = a, s t+1 = s′). (4) Intuitively, ν(s), ρ (s, a ) and q(s, a, s ′) are the long-term average proportion of time of encountering the state s, state-action pair (s, a ), and state-action-next-state triple (s, a, s ′), when executing policy 
+
+π in an MDP with transition probability kernel P . It can be readily shown that under Assumption 2, the limits in (2), (3), and (4) indeed exist, and moreover, the following relations always hold: 
+
+ρ(s, a ) = ν(s)π(a | s), q(s, a, s ′) = ρ(s, a )P (s′ | s, a ).
+
+In this work, we are primarily concerned with the occupancy measure q(s, a, s ′) due to players not knowing their independent transition probability kernel Pi in the stochastic game G. In the following, we provide conditions that fully characterize the set of feasible occupancy measures q.
+
+Definition 3 We define the polytope of feasible occupancy measures, denoted by ∆, as 
+
+∆ := 
+
+
+
+q ∈ [0 , 1] |A||S| 2
+
+: X
+
+> s,a,s ′
+
+q(s, a, s ′) = 1 , X
+
+> s′,a
+
+q(s′, a, s ) = X
+
+> a,s ′
+
+q(s, a, s ′) ∀s ∈ S 
+
+
+
+. (5)   
+
+> 2. The first type of occupancy measure νis often referred to as the stationary distribution in the past literature.
+> 8
+
+Moreover, for any q ∈ ∆, we define its induced transition probability matrix P q and its induced stationary policy πq by 
+
+P q(s′ | s, a ) := q(s, a, s ′)
+
+P 
+
+> s′
+
+q(s, a, s ′) ∀s, a, s ′, πq(a | s) := 
+
+P 
+
+> s′
+
+q(s, a, s ′)
+
+P 
+
+> a′,s ′
+
+q(s, a ′, s ′) ∀s, a. 
+
+In addition, for a transition probability matrix P or a set of transition probability matrices P, we denote by ∆( P ) and ∆( P) the sets of occupancy measures in ∆ that are compatible with P and P,respectively; that is, their induced transition matrices equal P or belong to P:
+
+∆( P ) := {q ∈ ∆ : P q = P }, ∆( P) := {q ∈ ∆ : P q ∈ P} .
+
+The reason why (5) provides the set of feasible occupancy measures is because any feasible occupancy measure q should be a valid probability distribution, i.e., P 
+
+> s,a,s ′
+
+q(s, a, s ′) = 1 , and moreover, for any state s ∈ S , the probability of entering it should equal to the probability of leaving it, i.e., P 
+
+> s′,a
+
+q(s′, a, s ) = P 
+
+> a,s ′
+
+q(s, a, s ′) ∀s ∈ S . Given the above definition, we have the following useful lemma from (Altman, 2021). 
+
+Lemma 4 ((Altman, 2021)) If a function q : S × A × S → [0 , 1] belongs to the feasible occupancy polytope ∆ defined in (5) , then it is exactly the occupancy measure associated with its induced transition probability matrix P q and stationary policy πq. Specifically, (4) holds when policy πq is executed in an MDP with transition probability matrix P q.
+
+3.2 A Dual Formulation 
+
+We now provide a dual formulation of the original stochastic game G based on occupancy mea-sures. It is shown in (Etesami, 2024) that, under the ergodicity Assumption 2, the independence of the players’ internal chains allows the payoff functions to admit a simple decomposable form in terms of the occupancy measures ρ. However, since we are interested in stochastic games with unknown transition probabilities, we first extend this formulation to the occupancy measures q.Specifically, suppose that each player i follows a stationary policy πi, and let νi, ρi, and qi denote the corresponding occupancy measures defined in (2), (3), and (4), respectively, induced by kernel 
+
+Pi under policy πi. Then, the expected average payoff of player i, Vi(πi, π −i), can be equivalently expressed as a function of ρi and ρ−i.
+
+Proposition 5 Let Assumptions 1 and 2 hold, and assume that each player i follows a stationary policy πi. Let qi ∈ ∆i(Pi) denote the occupancy induced by πi under the true transition kernel Pi,with corresponding state–action marginal ρi. Then, each player’s payoff can be expressed as 
+
+Vi(πi, π −i) = Vi(qi, q −i) := X
+
+> s,a n
+
+Y
+
+> j=1
+
+X
+
+> s′
+> j
+
+qj (sj , a j , s ′ 
+
+> j
+
+)ri(s, a ) = ⟨qi, g i(q−i)⟩, (6) 
+
+where gi(q−i) is defined to be a vector of dimension |A i||S i|2 whose (si, a i, s ′
+
+> i
+
+)-th component is 
+
+gi(q−i)(si,a i,s ′ 
+
+> i)
+
+: = X
+
+> s−i,a −i
+
+Y 
+
+> j̸=i
+
+X
+
+> s′
+> j
+
+qj (sj , a j , s ′ 
+
+> j
+
+)ri(s, a )= X
+
+> s−i,a −i
+
+Y 
+
+> j̸=i
+
+ρj (sj , a j )ri(s, a ) ∀si, a i, s ′
+
+> i
+
+. (7) 
+
+We note that gi(q−i)(si,a i,s ′ 
+
+> i)
+
+is independent of s′
+
+> i
+
+, with the same value repeated across all s′ 
+
+> i
+
+∈ S i.
+
+9Using Lemma 4 and Proposition 5, the problem of finding optimal stationary policies for the players reduces to that of finding their optimal feasible occupancy measures. In fact, using the dual formulation, we can define an equivalent virtual game associated with the original stochastic game 
+
+G as follows: 
+
+Definition 6 Define the feasible occupancy polytope for player i by 
+
+∆i =
+
+
+
+qi ∈ [0 , 1] |A i||S i|2
+
+: X
+
+> si,a i,s ′
+> i
+
+qi(si, a i, s ′
+
+> i
+
+) = 1 , X
+
+> s′
+> i,a i
+
+qi(s′
+
+> i
+
+, a i, s i) = X
+
+> s′
+> i,a i
+
+qi(si, a i, s ′
+
+> i
+
+) ∀si ∈ S i
+
+
+
+.
+
+Moreover, let ∆i(Pi) ⊂ ∆i be the set of feasible occupancy measures for player i whose induced transition probability matrix P qi is exactly Pi. The virtual game V =  [n], q = ( qi)i, {Vi(q)}i
+
+
+
+associated with the original stochastic game G is an n-player continuous-action static game, where the action of player i is to choose an qi from its action set ∆i(Pi), and its payoff is given by (6) .
+
+Ideally, each player would optimize over the true-kernel feasible set ∆i(Pi), on which the virtual payoff is the linear functional ⟨qi, g i(q−i)⟩ in its own occupancy variable qi. Since Pi is unknown, our proposed algorithm (Algorithm 1) instead maintains an iterate ˆqi that is feasible for some transi-tion probability matrix in a confidence set. In particular, for any profile q = ( qj )j with qj ∈ ∆j (Pj )
+
+for all j, we have Vi(qi, q −i) = ⟨qi, g i(q−i)⟩. For an arbitrary relaxed iterate ˆq = (ˆ qi)i, its payoff is defined as the payoff of its induced policy under the true kernels {Pj }j∈[n], namely, 
+
+Vi(ˆ q) := Vi(πˆqi 
+
+> i
+
+, π ˆq−i 
+
+> −i
+
+).
+
+Thus, ˆqi denotes an algorithmic occupancy variable, whereas qi denotes the true occupancy measure induced by πˆqi 
+
+> i
+
+under the true kernel Pi. By Lemma 4, whenever ˆqi ∈ ∆i(Pi), its induced transition matrix satisfies P ˆqi = Pi, and ˆqi is exactly the occupancy measure induced by πˆqi 
+
+> i
+
+under the true kernel Pi. Hence, in this case, ˆqi = qi. This distinction will be used explicitly throughout the paper. Finally, for the sake of exploration and to obtain high probability regret bounds, we consider the following definition of shrunk feasible occupancy polytope. 
+
+Definition 7 Given 0 < δ i < 1/(|S i||A i|), define the shrunk feasible occupancy polytope 
+
+∆i,δ i := 
+
+n
+
+qi ∈ ∆i : ρi(si, a i) = X
+
+> s′
+> i
+
+qi(si, a i, s ′
+
+> i
+
+) ≥ δi, ∀si, a i
+
+o
+
+.
+
+For a kernel Pi or a set Pi of kernels, ∆i,δ i (Pi) and ∆i,δ i (Pi) denote the corresponding subsets of 
+
+∆i,δ i whose induced kernel equals Pi or belongs to Pi, respectively. 
+
+One advantage of working with the shrunk feasible occupancy sets is that the shrinkage con-straint in Definition 7 ensures persistent exploration while incurring only a small loss in the best-response value. In particular, for every ϵ > 0, δi can be chosen sufficiently small so that optimiza-tion over the shrunk feasible occupancy polytope is within ϵ of optimization over the full occupancy polytope (see Corollary 18). Moreover, as we will see, the rectangular confidence sets maintained by Algorithm 1 over the shrunk occupancy polytope preserve the computational tractability of the occupancy formulation. In particular, for any rectangular confidence set Pi, the shrunk feasible occupancy set ∆i,δ i (Pi) admits an efficient representation, as shown in the following lemma. 
+
+Lemma 8 Suppose a confidence set Pi contains the set of probability transition matrices Pi that satisfy box constraints Li(si, a i, s ′
+
+> i
+
+) ≤ Pi(s′ 
+
+> i
+
+| si, a i) ≤ Ui(si, a i, s ′
+
+> i
+
+). Then ∆i,δ i (Pi) is a closed convex polytope admitting an explicit linear description with O(|A i||S i|2) variables and constraints. 
+
+10 3.3 Local Cover Times 
+
+To provide meaningful convergence-rate guarantees, we work with a local cover-time parameter. Formally, for a fixed stationary policy πi, let 
+
+τ πi 
+
+> cov ,i
+
+:= max  
+
+> s0
+> i∈S i
+
+min t ≥ 0 : {S0 
+
+> i
+
+, . . . , S ti } = Si, S 0 
+
+> i
+
+= s0
+
+> i
+
+be the cover time of the Markov chain with transition matrix P πi 
+
+> i
+
+. Define the expected cover time 
+
+Hi := sup 
+
+> πi∈Πi
+
+E[τ πi
+
+> cov ,i
+
+], H := max  
+
+> i∈[n]
+
+Hi, (8) where Πi is the compact set of stationary policies on Si. Thus, Hi represents the worst-case expected time needed for player i to visit all of its local states under any fixed stationary policy. We note that the local cover time is defined with respect to each player’s local state space, which can be exponentially smaller than the joint state space. In particular, under Assumption 2, it is easy to see that Hi < ∞ for all i, and hence H < ∞.3
+
+4 A Fully Online Decentralized Learning Algorithm 
+
+In this section, we describe our fully online algorithm for stochastic games with unknown indepen-dent chains. Each primitive interaction produces exactly one transition/reward observation and one mirror-descent update. Unlike the episodic setting, which has been a standard approach in the pre-vious literature Etesami (2024); Qin and Etesami (2024), no player waits until all of its state–action pairs have been observed, there are no burn-in episodes, and no episode-end synchronization or co-ordination among the players is required. The transition kernels remain unknown and are estimated from the same single trajectory used for learning. 
+
+4.1 Anytime confidence sets and one-sample updates 
+
+To describe our algorithm, we first introduce the following notation and definitions. Player i main-tains cumulative counters that record, respectively, the numbers of visits to each state–action pair 
+
+(si, a i) and each state–action–next-state triple (si, a i, s ′
+
+> i
+
+) up to time t along the single realized tra-jectory of the game: 
+
+N ti (si, a i) := X
+
+> ℓ<t
+
+1{(Sℓi , A ℓi ) = ( si, a i)},M ti (si, a i, s ′
+
+> i
+
+) := X
+
+> ℓ<t
+
+1{(Sℓi , A ℓi , S ℓ+1  
+
+> i
+
+) = ( si, a i, s ′
+
+> i
+
+)}.
+
+Let ¯P ti denote the empirical transition kernel for player i given by 
+
+¯P ti (s′ 
+
+> i
+
+| si, a i) := M ti (si, a i, s ′
+
+> i
+
+)
+
+N ti (si, a i) ∨ 1 ,             
+
+> 3. For every stationary policy πi, Assumption 2 implies that Pπi
+> iis a finite irreducible Markov chain and hence has finite expected cover time. Since Πiis compact, the mapping πi7→Pπi
+> iis continuous, and expected hitting times are locally continuous over irreducible Markov chains, compactness yields a finite uniform bound over all πi.
+
+11 where ∨ denotes the maximum of the quantities, and define the confidence radius at time t by 
+
+βti (si, a i) = 
+
+s
+
+2Λ t
+
+N ti (si, a i) ∨ 1 ,
+
+where Λt := log   64 nA max S2max (t+2) 2
+
+> γ
+
+, Smax := max j∈[n] |S j |, andA max := max j∈[n] |A j |. For a finite horizon T we write ΛT := max t≤T Λt. Moreover, at time t, we write 
+
+ˆρti(si, a i) = X
+
+> s′
+> i
+
+ˆqti (si, a i, s ′
+
+> i
+
+),
+
+ˆνti (si) = X
+
+> ai
+
+ˆρti(si, a i),πti (ai | si) = ˆρti(si, a i)ˆνti (si) , (9) where we note that if ˆqti ∈ ∆i,δ i (Pti ), then ˆρti(si, a i) ≥ δi and ˆνti (si) ≤ 1, and hence 
+
+πti (ai | si) ≥ δi, ∀si, a i. (10) After observing the single reward rti := ri(St, A t), we define the importance-weighted vector bRti as 
+
+bRti(si, a i, s ′
+
+> i
+
+) = rti 1{(Sti , A ti) = ( si, a i)}
+
+ˆρti(si, a i) ∀si, a i, s ′
+
+> i
+
+, (11) where we note that ∥ bRti∥∞ ≤ 1/δ i. The estimator bRti converts the realized payoff rti into an estimate of the occupancy-payoff gradient gti := gi(qt
+
+> −i
+
+), with the importance-weighted factor 1/ˆρti(si, a i)
+
+correcting for the fact that the payoff is observed only at the realized state–action pair (Sti , A ti).
+
+Remark 9 To see the intuition behind bRti, suppose hypothetically that the joint state–action profile 
+
+(St, A t) were drawn from the product stationary law N 
+
+> j
+
+ρtj . Then, for any fixed (si, a i, s ′
+
+> i
+
+),
+
+EN  
+
+> jρtj
+
+[ bRti(si, a i, s ′
+
+> i
+
+)] = 1ˆρti(si, a i) E[ri(St, A t)1{(Sti , A ti) = ( si, a i)}] = ρti(si, a i)ˆρti(si, a i) gti (si, a i, s ′
+
+> i
+
+).
+
+Thus, if additionally ˆρti = ρti (which holds, in particular, when the transition kernel induced by ˆqti
+
+coincides with the true transition kernel Pi), then E[ bRti] = gti . Hence, bRti can be viewed as using the single realized payoff rti to construct a stochastic estimate of the occupancy-payoff gradient gti .
+
+4.2 Description of the Algorithm 
+
+Using the definitions in the preceding subsection, the proposed online algorithm is summarized in Algorithm 1. To describe the algorithm, it is useful to distinguish between the two learning tasks carried out simultaneously by each player. Player i does not know its local controlled transition kernel Pi and therefore must learn the rows Pi(· | si, a i) from its observed local transitions. At the same time, it must adapt its strategic policy based on its realized payoff samples. Algorithm 1 performs both tasks along the same uninterrupted trajectory. 
+
+12 Algorithm 1 Fully Online One-Sample Occupancy Mirror Descent for Player i 
+
+> 1:
+
+Input: Shrinkage δi, stepsizes {ηt}, regularizer hi(qi) = 12 ∥qi∥22, and confidence level γ. 
+
+> 2:
+
+Player i initializes N 0 
+
+> i
+
+(si, a i) = 0 and M 0 
+
+> i
+
+(si, a i, s ′
+
+> i
+
+) = 0 for all si, a i, s ′
+
+> i
+
+, sets P0 
+
+> i
+
+to the set of all transition kernels on Si, and chooses ˆq0 
+
+> i
+
+∈ ∆i,δ i (P0 
+
+> i
+
+). 
+
+> 3:
+
+for t = 0 , 1, 2, . . . do  
+
+> 4:
+
+Player i observes Sti and samples Ati ∼ πti (· | Sti ), where 
+
+πti (ai | si) = ˆρti(si, a i)ˆνti (si) . 
+
+> 5:
+
+Player i observes rti = ri(St, A t) and forms 
+
+bRti(si, a i, s ′
+
+> i
+
+) = rti 1{(Sti , A ti) = ( si, a i)}
+
+ˆρti(si, a i) , ∀si, a i, s ′
+
+> i
+
+. 
+
+> 6:
+
+Player i also observes its next state St+1  
+
+> i
+
+and updates its local counters: 
+
+N t+1  
+
+> i
+
+(si, a i) = N ti (si, a i) + 1{(Sti , A ti) = ( si, a i)},M t+1  
+
+> i
+
+(si, a i, s ′
+
+> i
+
+) = M ti (si, a i, s ′
+
+> i
+
+) + 1{(Sti , A ti, S t+1  
+
+> i
+
+) = ( si, a i, s ′
+
+> i
+
+)}. 
+
+> 7:
+
+if N t+1  
+
+> i
+
+(Sti , A ti) = 2 k for some integer k ≥ 0, then  
+
+> 8:
+
+Player i computes its empirical transition kernel 
+
+¯P t+1  
+
+> i
+
+(s′ 
+
+> i
+
+| si, a i) = M t+1  
+
+> i
+
+(si, a i, s ′
+
+> i
+
+)
+
+N t+1  
+
+> i
+
+(si, a i) ∨ 1 , ∀si, a i, s ′
+
+> i
+
+. 
+
+> 9:
+
+Player i computes the confidence radii 
+
+βt+1  
+
+> i
+
+(si, a i) = 
+
+r 2Λ t+1    
+
+> Nt+1
+> i(si,a i)∨1
+
+∀si, a i, Λt+1 = log 
+
+ 64 nA max S2max (t+3) 2
+
+> γ
+
+
+
+. 
+
+> 10:
+
+Player i updates its confidence set as 
+
+Pt+1  
+
+> i
+
+= Pti ∩
+
+n
+
+Pi : Pi(s′ 
+
+> i
+
+| si, a i) − ¯P t+1  
+
+> i
+
+(s′ 
+
+> i
+
+| si, a i) ≤ βt+1  
+
+> i
+
+(si, a i), ∀si, a i, s ′
+
+> i
+
+o
+
+. 
+
+> 11:
+
+else  
+
+> 12:
+
+Player i sets Pt+1  
+
+> i
+
+= Pti . 
+
+> 13:
+
+Player i performs the proximal occupancy update 
+
+ˆqt+1  
+
+> i
+
+= argmax   
+
+> qi∈∆i,δ i(Pt+1
+> i)
+
+n
+
+ηt⟨qi, bRti⟩ − Dhi (qi∥ˆqti )
+
+o
+
+.
+
+The variable ˆqti is player i’s current confidence-feasible occupancy iterate, which induces both a transition kernel ˆP ti := P ˆqti ∈ P ti and a policy πti := πˆqti . In particular, its state–action marginal 
+
+ˆρti determines the policy through (9), so the occupancy update implicitly induces the policy used to generate the online trajectory. The shrinkage constraint ˆρti(si, a i) ≥ δi guarantees persistent local exploration through (10) and, at the same time, keeps the importance weights uniformly bounded. At each time t, player i samples Ati from its current policy πti (· | Sti ) and observes only its realized payoff rti := ri(St, A t) and next local state St+1  
+
+> i
+
+. These observations serve two distinct purposes. The transition triple (Sti , A ti, S t+1  
+
+> i
+
+) is used to learn the unknown true kernel Pi and refine the confi-dence set Pti . In contrast, (Sti , A ti, r ti ) is used to construct the importance-weighted vector bRti in (11). The vector bRti, which serves as a stochastic proxy for the gradient gti := gi(qt
+
+> −i
+
+) of the occupancy payoff function, is then used to move the occupancy iterate ˆqti in a payoff-improving direction. The updated iterate is projected onto the shrunk confidence-feasible occupancy polytope ∆i,δ i (Pt+1  
+
+> i
+
+),ensuring that its induced transition kernel remains consistent with the information currently avail-able to player i while preserving the exploration constraint. The new occupancy iterate ˆqt+1  
+
+> i
+
+in turn induces the next policy through its state–action marginal, closing the online learning loop. 
+
+13 The transition-confidence set is deliberately refreshed on a slower, event-driven clock. For each local pair (si, a i), player i continues to collect every transition sample but rebuilds the confi-dence set only when the corresponding visit count first reaches a new dyadic threshold 1, 2, 4, 8, . . . .Equivalently, at time t + 1 , a refresh is triggered if, for some (si, a i) and integer k ≥ 0, we have 
+
+N t+1  
+
+> i
+
+(si, a i) = 2 k. We call such a time a confidence update time ; it does not reset the trajectory, the counters, or the optimization iterate. There are two reasons for this dyadic schedule. First, it incurs only a constant-factor statisti-cal loss. Between two successive thresholds 2k and 2k+1 , a confidence radius based on the last threshold is at most a factor of √2 larger than the radius based on the current count. Thus, the usual N ti (si, a i)−1/2 estimation rate is preserved. Second, and more importantly for the analysis, changing the confidence set changes the feasible occupancy polytope. On intervals where this poly-tope is fixed, the ordinary proximal step gives the small-movement bound (Lemma 14), which is used to couple the time-varying local chain to a frozen-policy chain. Dyadic refreshing ensures that each local counter causes only O(log T ) feasible-set changes by time T . Hence, the exceptional times at which the feasible polytope itself changes can be charged separately without affecting the 
+
+eO(T −1/2) order of our final bound. Crucially, these confidence updates are entirely local and asyn-chronous. Player i determines its confidence update times using only its own counters. Player j
+
+may refresh its confidence set at a completely different primitive time, and neither player needs to know when the other player’s refresh occurs. Thus, the algorithm operates on a fast clock, on which every player updates its occupancy iterate after every interaction, and a slower, local, event-driven clock, on which each player independently refines its transition kernel. At a confidence update time, player i constructs a new rectangular confidence region using all samples accumulated so far and intersects it with its previous confidence set. By Lemma 8, the resulting shrunk occupancy set admits an explicit polynomial-size linear representation. Thus, the online mirror-descent update, which amounts to a Euclidean projection onto ∆i,δ i (Pti ), can be carried out efficiently in polynomial time. As shown in the following lemma, on the anytime confidence event used in the analysis, the true kernel Pi belongs to every such confidence set; hence, the nested confidence sets remain nonempty while progressively refining the uncertainty about Pi.
+
+Lemma 10 Define the anytime confidence event Econf := Pi ∈ P ti , ∀i ∈ [n], ∀t ≥ 0 . Under Algorithm 1, we have P(Econf ) ≥ 1 − γ/ 4. Consequently, on Econf , ∆i,δ i (Pi) ⊆ ∆i,δ i (Pti ) ∀i, t ≥ 0.
+
+Remark 11 Algorithm 1 is fully decentralized in terms of the information used by each player. In particular, player i maintains only its own local counters N ti and M ti and checks for a confidence update only when the count associated with its currently observed local state–action pair (Sti , A ti)
+
+reaches a power of two. Player i neither observes nor keeps track of the counters, states, actions, transition samples, or confidence-update events of any other player. Consequently, confidence up-dates of different players may occur at different primitive times, and no common confidence-update clock, joint-state counter, synchronization signal, or coordination among the players is required. 
+
+We conclude this section by outlining the main ideas behind the finite-time regret analysis in the next section. The regret is decomposed into a mirror-descent optimization error, an occupancy-tracking error, and a one-sample gradient-estimation error. These terms are controlled using the proximal inequality, local coverage and confidence-set concentration, and a delayed coupling argu-ment relating the time-varying trajectory to frozen-policy stationary dynamics, respectively. Finally, confidence-update times are handled separately by exploiting their logarithmic frequency under the dyadic schedule. Together, these ingredients establish the no-regret guarantee in the online setting. 
+
+> 14
+
+5 Finite-Time Regret Guarantee for the Fully Online Decentralized Algorithm 
+
+We begin the analysis of Algorithm 1 by introducing the following terminology and filtration. 
+
+5.1 True and Confidence-Feasible Occupancies 
+
+We distinguish throughout between true-kernel feasible and confidence-feasible occupancy mea-sures. An occupancy measure qi is called true-kernel feasible if qi ∈ ∆i(Pi), i.e., if its induced transition kernel P qi equals the true transition kernel Pi. Its corresponding state–action and state marginal occupancies are denoted by ρi and νi, respectively. In contrast, an occupancy measure ˆqi
+
+is called confidence-feasible if ˆqi ∈ ∆i,δ i (Pi), meaning that its induced transition kernel belongs to the confidence set Pi, i.e., P ˆqi ∈ P i. Its corresponding marginals are denoted by ˆρi and ˆνi.Accordingly, for each time t, let qti , ρ ti, ν ti denote the true-kernel feasible occupancies induced by the current stationary policy πti and the true kernel Pi. Thus, qti is the true-kernel feasible occupancy induced by (πti , P i), whereas ˆqti is the confidence-feasible occupancy that induces (πti , ˆP ti ), where, for simplicity, we write ˆP ti := P ˆqti ∈ P ti . Hence, throughout the analysis, unhatted occupancy quantities refer to the true kernel Pi, while hatted occupancy quantities refer to the confidence-feasible iterates maintained by the algorithm. 
+
+5.2 Filtration and Regret Decomposition 
+
+For the probabilistic arguments, let the filtration Ft contain all the information available strictly before time t, such as S0, A 0, r 0, S 1, A 1, r 1, . . . , A t−1, r t−1, as well as the current state St, but not the fresh randomization used to sample At. Note that this is a global filtration used only for the purpose of analysis and does not enlarge any player’s information set in Algorithm 1. Thus, Ft
+
+represents the information available immediately before the action At is sampled: the current state 
+
+St and all states, actions, rewards, transition observations, counters, confidence sets, and iterates constructed from primitive times strictly before t are Ft-measurable. After conditioning on Ft,the action At is sampled according to the current policy profile, the reward rt is observed, and the next state St+1 is generated; consequently, these variables are measurable with respect to Ft+1 .Throughout the paper, expressions such as P(Sti = · | F t−D) denote the conditional probability distribution of Sti given the information available at the beginning of the delay time t − D.
+
+Definition 12 For player i and a fixed true-kernel comparator q′ 
+
+> i
+
+∈ ∆i,δ i (Pi), define the fixed-comparator regret Reg i(T ; q′
+
+> i
+
+) := PT −1
+
+> t=0
+
+Vi(q′
+
+> i
+
+, q t
+
+> −i
+
+) − Vi(qti , q t
+
+> −i
+
+), where qti ∈ ∆i(Pi) is the true-kernel feasible occupancy induced by the current policy πti := πˆqti 
+
+> i
+
+under the true kernel Pi.
+
+We note that since Vi(qi, q −i) = ⟨qi, g i(q−i)⟩ whenever the displayed occupancies are true-kernel feasible, using Proposition 5, we have 
+
+Reg i(T ; q′
+
+> i
+
+) =  
+
+> T−1
+
+X
+
+> t=0
+
+Vi(q′
+
+> i
+
+, q t
+
+> −i
+
+) − Vi(qti , q t
+
+> −i
+
+) = 
+
+> T−1
+
+X
+
+> t=0
+
+⟨q′ 
+
+> i
+
+− qti , g i(qt
+
+> −i
+
+)⟩. (12) Writing gti := gi(qt
+
+> −i
+
+) and adding and subtracting ˆqti and bRti to (12) gives the basic decomposition 
+
+Reg i(T ; q′
+
+> i
+
+) = X
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , bRti⟩
+
+| {z } 
+
+> Mi(T;q′
+> i)
+
++ X
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , g ti − bRti⟩
+
+| {z } 
+
+> Ei(T;q′
+> i)
+
++ X
+
+> t<T
+
+⟨ˆqti − qti , g ti ⟩
+
+| {z } 
+
+> Qi(T)
+
+. (13) 
+
+15 The decomposition (13) provides the roadmap for the proof. The first term, Mi, is the optimiza-tion error that would remain even if the payoff-gradient samples were unbiased and the transition kernels were known. It is controlled directly by the Euclidean proximal inequality in Lemma 13. The third term, Qi, captures the error from optimizing over the confidence-feasible occupancy 
+
+ˆqti rather than the true-kernel occupancy qti induced by the same policy. To control this term, in Lemma 14, we first show that mirror descent changes the policy slowly whenever the confidence set remains unchanged. We then freeze the policy over deterministic local-cover blocks and couple the actual local chain with the corresponding frozen chain. This yields linear growth of every local state–action counter, which in turn implies shrinking confidence radii for Pi. Uniform contraction then translates the kernel estimation error into the corresponding stationary occupancy error, which controls Qi. The second term, Ei, captures the main difficulty arising from the fully online setting: 
+
+bRti is formed from a single payoff sample generated by an adaptive, nonstationary Markov trajec-tory, whereas gti is the stationary payoff gradient associated with the current true-kernel occupancies 
+
+qt 
+
+> −i
+
+induced by the current policy πt. We control this term using delayed analysis in Lemma 16. 
+
+5.3 Main Regret Bound Analysis 
+
+Here, we provide the main analysis for the finite-time no-regret guarantee. We begin with the following lemma, which bounds the first term Mi(T ; q′
+
+> i
+
+) in the regret decomposition (13). 
+
+Lemma 13 On the anytime confidence event Econf , for every q′ 
+
+> i
+
+∈ ∆i,δ i (Pi) and every constant stepsize η > 0, we have 
+
+X
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , bRti⟩ ≤ ∥q′ 
+
+> i
+
+− ˆq0 
+
+> i
+
+∥22
+
+2η + η
+
+2
+
+X
+
+> t<T
+
+∥ bRti∥22 ≤ 1
+
+η + |S i|ηT 
+
+2δ2
+
+> i
+
+. (14) The following lemma provides a high-probability bound on the policy and occupancy move-ments over the course of the algorithm, which allows us to bound the third term Qi(T ) in (13). 
+
+Lemma 14 Fix T and use the constant stepsize η = T −1/2. Define Li := p|S i|3|A i|. Suppose 
+
+max 
+
+> i
+
+LiH2 
+
+> i
+
+ηδ2
+
+> i
+
+≤ 116 . (15) 
+
+Then, with probability at least 1 − γ/ 2, the following hold simultaneously for every player i:(i) On every step t at which player i does not update its confidence set, 
+
+max 
+
+> si∈S i
+
+∥πt+1  
+
+> i
+
+(· | si) − πti (· | si)∥1 ≤ 2Liηδ2
+
+> i
+
+. (16) 
+
+(ii) Let Ki(T ) := c Hi
+
+> δi
+
+  ΛT 
+
+> δi
+
++ |S i||A i| log 2 T . Then, for every Ki(T ) ≤ t < T ,
+
+∥ˆρti − ρti∥1 ≤ c |S i|
+
+κ max 
+
+> si,a i
+
+βt(si, a i) ≤ c |S i|
+
+κ
+
+r HiΛt
+
+δit . (17) 
+
+(iii) Consequently, 
+
+1
+
+T
+
+X
+
+> t<T
+
+⟨ˆqti − qti , g ti ⟩ ≤ c Ki(T )
+
+T + c |S i|
+
+κ
+
+r HiΛT
+
+δiT . (18) 
+
+> 16
+
+Next, we bound the second term Ei(T ; q′
+
+> i
+
+) = P 
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , g ti − bRti⟩ in the regret decomposition. At time t, the estimator bRti uses the actual observation (St, A t, r ti ),4 whereas gti = gi(qt
+
+> −i
+
+) is defined in terms of the stationary occupancies qtj . In general, there is no reason for the actual state St,conditional on the immediately preceding history, to be distributed according to these stationary occupancies. We therefore look back DT steps and condition on Ft−DT , where the delay DT
+
+is introduced for one fundamental reason: to provide a sufficiently long window over which the actual time-varying process can be approximated by a time-homogeneous process that has enough time to mix, so that the conditional law of the actual online sample can be well approximated by the corresponding stationary-occupancy distribution. Since the policies continue to change during these 
+
+DT steps, the proof couples the actual trajectory with an auxiliary time-homogeneous trajectory whose policies are frozen at time t−DT . This allows us to show that, over a time window [t−DT , t ]
+
+during which no player performs a confidence update, the conditional law of the actual state–action profile at time t is close to the product stationary law corresponding to the policies at time t − DT .
+
+Lemma 15 Let DT ≥ 0 be a nonnegative integer delay, and fix t ≥ DT . Assume that no player updates its confidence set during the time delay window [t − DT , t ], and let Lj = p|A j ||S j |3. Then 
+
+P(( St, A t) ∈ · | F t−DT ) −
+
+> n
+
+O
+
+> j=1
+
+ρt−DT 
+
+> jTV
+
+≤ cD 2 
+
+> T
+
+η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ n(1 − κ)DT . (19) To relate the payoff estimator bRti, which is constructed from the actual nonstationary trajec-tory, to the occupancy-payoff gradient gti , we use a delayed comparison over a mixing window of length DT . In particular, by conditioning on Ft−DT , we leave (St, A t) random over the mixing window. We first use the slow movement of the occupancy iterates in Lemma 14 to replace the current denominator ˆρti in bRti with the delayed denominator ˆρt−DT 
+
+> i
+
+, which is Ft−DT -measurable. Lemma 15 then shows that the conditional law of (St, A t) given Ft−DT is close to the product sta-tionary law N 
+
+> j
+
+ρt−DT 
+
+> j
+
+. Under this product stationary law, the mean of bRti with denominator ˆρt−DT
+
+> i
+
+is gt−DT 
+
+> i
+
+(si, a i, s ′
+
+> i
+
+)ρt−DT 
+
+> i
+
+(si, a i)/ˆρt−DT 
+
+> i
+
+(si, a i). The occupancy-estimation bound controls the dif-ference between this quantity and the delayed occupancy-payoff gradient gt−DT 
+
+> i
+
+, while the slow movement of the policies controls the remaining drift from gt−DT 
+
+> i
+
+to gti . Using these observations, the following lemma bounds the second term Ei(T ; q′
+
+> i
+
+) in (13) as follows: 
+
+Lemma 16 Let gti := gi(qt
+
+> −i
+
+) be the occupancy-payoff gradient (7) and DT := 1 + ⌈ 1 
+
+> κ
+
+log( 8nT 3 
+
+> γ
+
+)⌉.Then, with probability at least 1 − γ, uniformly over q′ 
+
+> i
+
+∈ ∆i,δ i (Pi), we have 
+
+1
+
+T
+
+X
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , bRti − gti ⟩ ≲
+
+√T D T ΛT + DT ΛT
+
+T δ i
+
++ DT ηL i
+
+δ3
+
+> i
+
++ D2 
+
+> T
+
+ηδinX
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ |S i|
+
+κδ i
+
+r HiΛT
+
+δiT + DT η X 
+
+> j̸=i
+
+Lj
+
+κδ 2
+
+> j
+
++ DT
+
+T δ inX
+
+> j=1
+
+Jj (T ) + DT + Ki(T )
+
+T δ i
+
+, (20) 
+
+where Lj = p|S j |3|A j |, Ki(T ) = c Hi
+
+> δi
+
+  ΛT 
+
+> δi
+
++ |S i||A i| log 2 T , and Ji(T ) = |S i||A i|(log 2 T + 1) .                            
+
+> 4. The actual trajectory is generated by the true kernel Piwith the interaction flow Pti→ˆqti→πti→AtiPi
+> −→St+1
+> i.Thus, ˆPti=Pˆqtiis used only for analysis to relate the confidence-feasible occupancy ˆqti, induced by (πti,ˆPti), to the true-kernel occupancy qti, induced by (πti, P i), and does not play a role in generating the actual trajectory.
+
+17 Finally, by combining the preceding lemmas we obtain the main result of this section. 
+
+Theorem 17 Let Assumptions 1 and 2 hold. Fix T ≥ 2 and γ ∈ (0 , 1) , and assume players follow Algorithm 1 with the quadratic regularizer and constant stepsize η = T −1/2. Let 
+
+Smax := max  
+
+> i∈[n]
+
+|S i|, Amax := max  
+
+> i∈[n]
+
+|A i|, H := max  
+
+> i∈[n]
+
+Hi, δ := min  
+
+> i∈[n]
+
+δi,
+
+and suppose T ≥ 256 S3max Amax H4 
+
+> δ4
+
+, so that condition (15) holds. 5 Then, with probability at least 1−γ,
+
+max  
+
+> i∈[n]
+
+max  
+
+> q′
+> i∈∆i,δ i(Pi)
+
+1
+
+T Reg i(T ; q′
+
+> i
+
+) ≤ C1
+
+√T + C2
+
+T , (21) 
+
+where, up to universal constants and logarithmic factors, 
+
+C1 = eO
+
+ Smax 
+
+√Hκδ 3/2
+
+s
+
+log 
+
+ nA max S2max T 2
+
+γ
+
+
+
++ nS 3/2max A1/2max 
+
+κ2δ3 log 2 nT 3
+
+γ
+
+
+
+,
+
+C2 = eO
+
+ Hδ3 log 
+
+ nA max S2max T 2
+
+γ
+
+
+
++ HS max Amax 
+
+δ2 + nS max Amax 
+
+κδ log 
+
+ nT 3
+
+γ
+
+
+
+. (22) 
+
+Proof Fix a player i and an arbitrary comparator q′ 
+
+> i
+
+∈ ∆i,δ i (Pi). By (13), 
+
+1
+
+T Reg i(T ; q′
+
+> i
+
+) = Mi(T ; q′
+
+> i
+
+)
+
+T + Ei(T ; q′
+
+> i
+
+)
+
+T + Qi(T )
+
+T .
+
+We bound the three terms using the preceding lemmas. First, on the anytime confidence event Econf , Lemma 13 with η = T −1/2 gives 
+
+Mi(T ; q′
+
+> i
+
+)
+
+T ≤ 1
+
+√T + |S i|
+
+2δ2
+
+> i
+
+√T . (23) Second, Lemma 16, uniformly over q′ 
+
+> i
+
+∈ ∆i,δ i (Pi), gives 
+
+|E i(T ; q′
+
+> i
+
+)|
+
+T ≲
+
+√T D T ΛT + DT ΛT
+
+T δ i
+
++ DT Li
+
+δ3
+
+> i
+
+√T + D2
+
+> T
+
+δi
+
+√T
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ |S i|
+
+κδ i
+
+r HiΛT
+
+δiT + DT
+
+√T
+
+X 
+
+> j̸=i
+
+Lj
+
+κδ 2
+
+> j
+
++ DT
+
+T δ inX
+
+> j=1
+
+Jj (T ) + DT + Ki(T )
+
+T δ i
+
+. (24) Finally, part (iii) of Lemma 14 yields 
+
+|Q i(T )|
+
+T ≲ Ki(T )
+
+T + |S i|
+
+κ
+
+r HiΛT
+
+δiT . (25) We now simplify these bounds in terms of the maximal individual-chain parameters appearing in the theorem. By definition, |S i| ≤ Smax , |A i| ≤ Amax , Hi ≤ H, δi ≥ δ, and therefore 
+
+Li ≤ S3/2max A1/2max ,
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
+≤ nS 3/2max A1/2max 
+
+δ2 , ΛT ≲ log 
+
+ nA max S2max T 2
+
+γ
+
+
+
+, DT ≲ 1
+
+κ log 
+
+ nT 3
+
+γ
+
+
+
+.
+
+> 5. For smaller horizons the criterion is bounded by its trivial constant upper bound.
+
+18 Substituting these relations into (23)–(25), the dominant terms of order T −1/2 are 
+
+1
+
+√T
+
+eO
+
+ Smax 
+
+√Hκδ 3/2
+
+s
+
+log 
+
+ nA max S2max T 2
+
+γ
+
+
+
++ nS 3/2max A1/2max 
+
+κ2δ3 log 2 nT 3
+
+γ
+
+
+
+. (26) Indeed, the first displayed term contains the occupancy-estimation contributions in (24) and (25), while the second contains the dominant D2
+
+> T
+
+P 
+
+> j
+
+Lj /δ 2 
+
+> j
+
+contribution in (24); the remaining T −1/2
+
+terms are of no larger order and are absorbed into these two terms. For the lower-order terms, using 
+
+Jj (T ) = |S j ||A j |(log 2 T + 1) , Ki(T ) = c Hi
+
+δi
+
+ ΛT
+
+δi
+
++ |S i||A i| log 2 T
+
+
+
+,
+
+we obtain 
+
+1
+
+T eO
+
+ Hδ3 log 
+
+ nA max S2max T 2
+
+γ
+
+
+
++ HS max Amax 
+
+δ2 + nS max Amax 
+
+κδ log 
+
+ nT 3
+
+γ
+
+
+
+. (27) Here, the logarithmic factors in T arising from Jj (T ) and the second term in Ki(T ) are absorbed into the eO notation, while the dependence on the confidence level γ is displayed explicitly. Combining (26) and (27), and then taking the maximum over q′ 
+
+> i
+
+∈ ∆i,δ i (Pi) and i ∈ [n], gives (21) with C1 and C2 as defined in (22). Finally, Lemma 16 holds on an event of probability at least 1 − γ that includes the event of Lemma 14, and the anytime confidence event required by Lemma 13 is also included in that event. Consequently, all the preceding bounds hold simultane-ously with probability at least 1 − γ, which completes the proof. 
+
+Corollary 18 On the event of Theorem 17, for sufficiently small action floor δ = max i δi, the empirical distribution over the policy profiles {πt}T −1 
+
+> t=0
+
+is an (ϵT +ϵδ)-coarse correlated equilibrium of the original stochastic game, where ϵT := C1√T + C2 
+
+> T
+
+, and ϵδ > 0 is the approximation error due to the action-floor constraints, which can be made arbitrarily small as δ → 0.
+
+Proof Let U be uniformly distributed over {0, . . . , T − 1}. For every player i, the definition of 
+
+Reg i(T ; q′
+
+> i
+
+) and Theorem 17 give 
+
+max   
+
+> q′
+> i∈∆i,δ i(Pi)
+
+EVi(q′
+
+> i
+
+, q U
+
+> −i
+
+) − Vi(qUi , q U
+
+> −i
+
+) = max  
+
+> q′
+> i∈∆i,δ i(Pi)
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Vi(q′
+
+> i
+
+, q t
+
+> −i
+
+) − Vi(qti , q t
+
+> −i
+
+) ≤ ϵT .
+
+Moreover, for every ϵδ > 0, the action floor δ can be chosen sufficiently small so that optimization over the shrunk feasible occupancy polytope is within ϵδ of optimization over the full occupancy polytope (Etesami, 2024, Lemma 3.4). Hence, 
+
+max 
+
+> q′
+> i∈∆i(Pi)
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Vi(q′
+
+> i
+
+, q t
+
+> −i
+
+) ≤ max  
+
+> q′
+> i∈∆i,δ i(Pi)
+
+1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+Vi(q′
+
+> i
+
+, q t
+
+> −i
+
+) + ϵδ.
+
+Combining the two bounds yields max q′ 
+
+> i∈∆i(Pi)
+
+EVi(q′
+
+> i
+
+, q U
+
+> −i
+
+) − Vi(qUi , q U
+
+> −i
+
+) ≤ ϵT + ϵδ, ∀i ∈ [n],which is precisely the (ϵT + ϵδ)-coarse correlated equilibrium condition for the virtual occupancy game. By the equivalence between the virtual occupancy game and the original stochastic game, the empirical distribution uniformly supported on the corresponding stationary policy profiles {πt}T −1
+
+> t=0
+
+is therefore an (ϵT + ϵδ)-coarse correlated equilibrium of the original stochastic game. 
+
+19 Remark 19 Theorem 17 uses a horizon-dependent constant stepsize only to make the finite-time regret bound transparent. This dependence on a known horizon can be removed by a standard dou-bling schedule: run the algorithm over epochs of lengths 1, 2, 4, . . . and use ηm ≍ 2−m/ 2 during epoch m, without resetting the trajectory or the confidence counters. Applying the preceding finite-time analysis epochwise after the local-cover threshold and summing the resulting regret bounds yields the same eO(T −1/2) average-regret rate, since the sum of the √Tm contributions over geo-metrically increasing epoch lengths is of order √T , while the lower-order transient contributions remain logarithmic in T . Alternatively, one may use ηt = c/ √t + 1 ; once the stepsize is small enough for (15) to hold, the same block comparison applies, while the finitely many preceding time steps contribute only an additive O(1 /T ) term to the average regret. 
+
+6 Asymptotic Last-Iterate Convergence to an ϵ-Nash Equilibrium 
+
+It is known that, for general reward functions, computing a NE in stochastic games with independent chains is PPAD-hard even when the transition kernels are known (Etesami, 2024, Proposition 3.3). Therefore, under general reward functions, developing a scalable no-regret algorithm for obtaining a coarse correlated equilibrium, as established in the previous section, is perhaps the best one can hope for computationally. In this section, we show that if the reward functions possess additional structure, in the sense that the game admits a stable NE, then the same fully online algorithm converges with arbitrarily high probability to a stationary ϵ-NE of the original stochastic game. This complements the results of the previous section: not only does the algorithm provide a scalable no-regret guarantee for coarse correlated equilibria, but under the additional stability condition, the same algorithm converges to an ϵ-NE of the original stochastic game. To this end, we first introduce the following notion of equilibrium stability, which has been well studied and motivated for static games (Mertikopoulos and Zhou, 2019). 
+
+Assumption 3 The virtual game V admits a unique NE q∗ satisfying 
+
+> n
+
+X
+
+> i=1
+
+⟨gi(q−i), q ∗ 
+
+> i
+
+− qi⟩ ≥ 0, ∀q ∈ ∆δ(P ) := (∆ δ1 (P1), . . . , ∆δn (Pn)) ,
+
+with equality only at q = q∗.
+
+Assumption 3 requires that the joint payoff-gradient field always points toward the unique NE 
+
+q∗. Moreover, the inequality is strict away from q∗, so q∗ is the unique stable point toward which the learning dynamics are driven. We now turn to the convergence analysis of the fully online algorithm under Assumption 3. A key difficulty is that the transition kernels are unknown and the confidence-feasible occupancy sets continue to evolve over time. We first show in Lemma 20 that persistent exploration guarantees a positive asymptotic visitation frequency for every local state–action pair. This implies that the con-fidence radii vanish and, consequently, that the confidence-feasible occupancies ˆqti asymptotically approach their true-kernel counterparts qti . We next show in Lemma 21 that the confidence-feasible occupancy sets converge to their corresponding true-kernel feasible sets and that the occupancy jumps caused by confidence-set updates are summable. Finally, in Theorem 22, we combine these properties with the diminishing stepsizes and the variational-stability condition in Assumption 3 to establish convergence of the occupancy iterates to the unique stable equilibrium q∗, which in turn yields last-iterate convergence of the induced policies to a stationary ϵ-NE of the original game. 
+
+> 20
+
+Lemma 20 Suppose Assumptions 1 and 2 hold, and let ηt = η0(t + 1) −a with a ∈ (1 /2, 1] . On the anytime confidence event Econf , almost surely, for every player i and every local pair (si, a i),
+
+lim inf 
+
+> t→∞
+
+N ti (si, a i)
+
+t ≥ δi
+
+32 Hi
+
+> 0. (28) 
+
+Consequently, almost surely, there exists a finite random time T0 such that, for every t ≥ T0 and i,
+
+max 
+
+> si,a i
+
+βti (si, a i) = O
+
+r log( t + 2) 
+
+t + 1 
+
+
+
+, (29) 
+
+∥ˆqti − qti ∥1 = O
+
+r log( t + 2) 
+
+t + 1 
+
+
+
+→ 0. (30) Next, we use the vanishing confidence radii established in Lemma 20 to control the effect of confidence-set updates. In particular, the following lemma shows that the confidence-feasible occu-pancy sets approach the corresponding true-kernel feasible sets as t → ∞ . As a consequence, the jumps in the occupancy iterates caused by the asynchronous confidence updates decay sufficiently fast to be summable. 
+
+Lemma 21 Let dist 1(x, C) := inf y∈C ∥x − y∥1. On the event of Lemma 20, 
+
+sup   
+
+> x∈∆i,δ i(Pti)
+
+dist 1(x, ∆i,δ i (Pi)) ≤ O |S i| max 
+
+> si,a i
+
+βti (si, a i) = O
+
+
+
+|S i|
+
+r log( t + 2) 
+
+t + 1 
+
+
+
+. (31) 
+
+Consequently, if Ri denotes the confidence-update times for player i, then occupancy jumps satisfy 
+
+X
+
+> t∈R i
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 < ∞. (32) Finally, by combining the above lemmas we can prove the main result of this section. 
+
+Theorem 22 Let Assumptions 1, 2, and 3 hold. Assume players follow Algorithm 1 with ηt =
+
+η0(t + 1) −a, a ∈ (1 /2, 1] . Then, with probability at least 1 − γ, ˆqt → q∗ and qt → q∗, where q∗ is the unique stable NE of the virtual game. Consequently, the induced stationary policies converge to the policy profile represented by q∗. In particular, for sufficiently small action floors δ = max i δi,this policy profile is an ϵδ-NE of the original game, where ϵδ → 0 as the action floors δ tend to zero. 
+
+Proof Work on the anytime confidence event Econf , which, by Lemma 10, has probability at least 
+
+1 − γ/ 4. On this event, the conclusions of Lemmas 20 and 21 hold almost surely. In the argument below, we additionally invoke the concentration events from Lemma 16 on the dyadic epochs, with failure probabilities {γm}m≥0 satisfying P 
+
+> m≥0
+
+γm ≤ γ/ 2. Hence, by a union bound, all the events used in the proof hold simultaneously with probability at least 1 − 3γ/ 4, and therefore at least 1 − γ.By Assumption 3, the unique stable equilibrium q∗ ∈ ∆δ(P ) satisfies 
+
+G(q) := 
+
+> n
+
+X
+
+> i=1
+
+⟨gi(q−i), q ∗ 
+
+> i
+
+− qi⟩ ≥ 0, G(q) = 0 ⇐⇒ q = q∗.
+
+> 21
+
+Define the Lyapunov function 
+
+V (ˆ qt) := 12
+
+> n
+
+X
+
+> i=1
+
+∥q∗ 
+
+> i
+
+− ˆqti ∥22.
+
+We first show that, for every m ≥ 0, over the dyadic interval Im := {2m, . . . , 2m+1 − 1},
+
+V (ˆ q2m+1 
+
+) ≤ V (ˆ q2m
+
+) − X
+
+> t∈Im
+
+ηtG(qt) + em, em ≥ 0,
+
+> ∞
+
+X
+
+> m=0
+
+em < ∞. (33) Since q∗ 
+
+> i
+
+∈ ∆i,δ i (Pti ) on the anytime confidence event Econf , the one-step proximal inequality derived from (41), with q′ 
+
+> i
+
+= q∗ 
+
+> i
+
+and stepsize ηt, gives 
+
+V (ˆ qt+1 ) − V (ˆ qt) ≤ − ηt
+
+X
+
+> i
+
+⟨q∗ 
+
+> i
+
+− ˆqti , bRti⟩ + η2
+
+> t
+
+2
+
+X
+
+> i
+
+∥ bRti∥22
+
+= −ηtG(qt) − ηt
+
+X
+
+> i
+
+⟨q∗ 
+
+> i
+
+− ˆqti , bRti − gti ⟩ − ηt
+
+X
+
+> i
+
+⟨qti − ˆqti , g ti ⟩ + η2
+
+> t
+
+2
+
+X
+
+> i
+
+∥ bRti∥22. (34) Thus, after summing over t ∈ Im, it remains only to show that the last three terms in (34), summed over the dyadic epochs, are absolutely summable. For the last two terms in (34), using ∥gti ∥∞ ≤ 1, ∥ bRti∥2 ≤ p|S i|/δ i, and (30), we obtain 
+
+> ∞
+
+X
+
+> t=0
+
+ηt
+
+X
+
+> i
+
+⟨qti − ˆqti , g ti ⟩ ≤ X
+
+> i
+> ∞
+
+X
+
+> t=0
+
+ηt∥ˆqti − qti ∥1 ≲
+
+> ∞
+
+X
+
+> t=1
+
+t−a
+
+r log( t + 2) 
+
+t < ∞, (35) 
+
+> ∞
+
+X
+
+> t=0
+
+η2
+
+> t
+
+2
+
+X
+
+> i
+
+∥ bRti∥22 ≤ 12
+
+X
+
+> i
+
+|S i|
+
+δ2
+
+> i
+> ∞
+
+X
+
+> t=0
+
+η2 
+
+> t
+
+< ∞. (36) It remains to control the estimator error in (34). For each epoch Im, set Dm = 1+ ⌈ 1 
+
+> κ
+
+log( 16 n 23( m+1)  
+
+> γm
+
+)⌉
+
+and γm := 3γπ2(m+1) 2 . We apply Lemma 16 to each epoch Im, with q′ = q∗, horizon |Im| = 2 m,delay Dm = O(m), failure probability γm, and stepsize upper bound ¯ηm := η2m ≍ 2−am .6 Substi-tuting these quantities into the bound of Lemma 16, yields, up to fixed problem-dependent constants and logarithmic factors, 
+
+> ∞
+
+X
+
+> m=0
+
+X
+
+> t∈Im
+
+ηt
+
+X
+
+> i
+
+⟨q∗ 
+
+> i
+
+− ˆqti , bRti − gti ⟩
+
+≲
+
+> ∞
+
+X
+
+> m=0
+
+h
+
+m 2(1 /2−a)m + m2 2(1 −2a)m + √m 2(1 /2−a)m + m 2−am i
+
+< ∞. (37) Here, the first three summands in (37) dominate the terms obtained from Lemma 16. The additional last term m2−am accounts for the first Dm times of each shifted epoch, whose delay windows 
+
+6. Although Lemma 16 is stated for a constant stepsize and the interval {0, . . . , T − 1}, its proof extends directly to any interval I = {u, . . . , v − 1} and nonincreasing stepsizes {ηt}. Indeed, with ¯ηI := max t∈I ηt = ηu, the weights 
+
+ηt can be carried through the same martingale and bias estimates and bounded by ¯ηI , while the policy-movement estimates are controlled by ¯ηI . Thus, the same cumulative estimate holds with the constant stepsize replaced by ¯ηI .
+
+22 extend before the epoch. Bounding these terms directly gives a total weighted contribution of order 
+
+Dm ¯ηm = O(m2−am ). All the sums in (37) are finite because a > 1/2 and by the choice of 
+
+Dm. Moreover, P 
+
+> m
+
+γm ≤ γ 
+
+> 2
+
+, so a union bound over the dyadic epochs makes these estimates simultaneous on the common event under consideration. Finally, summing (34) over t ∈ Im and defining em as the sum of the absolute values of the three error contributions in (35)–(37) gives (33). We now use (33) to prove convergence. Since G(q) ≥ 0, summing (33) over m and using the summability of its error terms gives 
+
+> ∞
+
+X
+
+> t=1
+
+ηtG(qt) < ∞. (38) Suppose that ˆqt has a limit point ¯q̸ = q∗. By (30), ∥qt − ˆqt∥1 → 0, so ¯q is also a limit point of 
+
+{qt}. By continuity of G(·) and Assumption 3, there exist r > 0 and a constant cU > 0 such that G(q) ≥ cU for every q ∈ ∆δ(P ) satisfying ∥q − ¯q∥1 ≤ 2r. Define the neighborhoods 
+
+U0 := {q : ∥q − ¯q∥1 < r/ 2} and U := {q : ∥q − ¯q∥1 < r }. Since ∥qt − ˆqt∥1 → 0, for all sufficiently large t, ˆqt ∈ U implies ∥qt − ¯q∥1 ≤ 2r, and hence G(qt) ≥ cU .Away from confidence-update times, the occupancy-movement estimate (43) established in the proof of Lemma 14 implies that ∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 = O(ηt). At confidence-update times, (32) and the finiteness of the number of players imply that Pni=1 
+
+P 
+
+> t∈R i
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 < ∞. In particular, the total magnitude of confidence-update jumps after time T converges to zero as T → ∞ . Since 
+
+U0 ⊂ U , moving from U0 to outside U requires a fixed positive amount of total movement. Thus, for every sufficiently late excursion that starts in U0 and ends upon its first exit from U , the confidence-update jumps can account for only an arbitrarily small part of this movement, while the remaining movement is bounded by a constant multiple of the sum of ηt over the excursion. Consequently, there exists a constant c > 0 such that every sufficiently late such excursion satisfies 
+
+X 
+
+> tduring the excursion
+
+ηt ≥ c. 
+
+Since ¯q is a limit point of {ˆqt}, the trajectory visits U0 infinitely often. It must therefore either eventually remain in U , or make infinitely many excursions from U0 to outside U . In the first case, G(qt) ≥ cU eventually; since P 
+
+> t
+
+ηt = ∞, this gives P 
+
+> t
+
+ηtG(qt) = ∞. In the second case, during every sufficiently late excursion, up to its first exit from U , we have ˆqt ∈ U and hence 
+
+G(qt) ≥ cU , while the excursion satisfies P  
+
+> tduring the excursion
+
+ηt ≥ c. Infinitely many disjoint excursions therefore again give P 
+
+> t
+
+ηtG(qt) = ∞. Both cases contradict (38). Thus q∗ is the only limit point of {ˆqt}, and compactness yields ˆqt → q∗. Equation (30) then immediately gives qt → q∗.Finally, the policy map πi(ai | si) = ρi(si,a i)P  
+
+> biρi(si,b i)
+
+is continuous on the shrunk occupancy set, since its state marginals are bounded away from zero. Hence the induced stationary poli-cies converge to the policy profile represented by q∗. Moreover, since q∗ is an NE of the shrunk virtual game, for every player i, Vi(q∗ 
+
+> i
+
+, q ∗−i) ≥ max qi∈∆i,δ i (Pi) Vi(qi, q ∗−i). By the same shrink-age argument used in Corollary 18, for sufficiently small action floors, max qi∈∆i(Pi) Vi(qi, q ∗−i) ≤
+
+max qi∈∆i,δ i (Pi) Vi(qi, q ∗−i) + ϵδ, where ϵδ → 0 as δ = max i δi → 0. Combining the last two dis-plays shows that Vi(q∗ 
+
+> i
+
+, q ∗−i) ≥ max qi∈∆i(Pi) Vi(qi, q ∗−i) − ϵδ, ∀i ∈ [n]. Thus, the stationary policy profile represented by q∗ is an ϵδ-NE of the original game. 
+
+23 7 Real-World Applications 
+
+The stochastic game model studied in this paper is relevant to multi-agent systems in which each player controls the evolution of a local stochastic state while interacting with other players through its payoff. This structure arises when the physical dynamics of individual agents are locally con-trolled, but their objectives are coupled through a shared resource, market, or environment. We illustrate this connection through three representative applications: energy management in smart grids, resource allocation in wireless networks, and decentralized robotic navigation and coverage. For these applications, the framework developed in this paper provides a fully decentralized way for agents to learn from a single continuing trajectory without knowing their local transition kernels or observing the states and actions of other players, thereby respecting users’ privacy and accom-modating communication or information bottlenecks that hinder coordination. Our results provide finite-time no-regret and asymptotic convergence guarantees whose complexity is governed by local state spaces and cover times, making them scalable and practical for large-scale systems. 
+
+7.1 Energy Management in Smart Grids 
+
+Consider a collection of n geographically distributed energy users, indexed by [n] = {1, . . . , n },interacting with a utility company. Each user acts as a prosumer : it can consume electricity from the grid while also producing energy locally through renewable sources such as solar panels or wind turbines. In addition, user i is equipped with a storage device of capacity C, allowing unused energy to be carried from one period to the next. Let sti denote the quantized energy stored by user i at the beginning of day t, and let hti denote the renewable energy harvested during that day. The random variable hti captures uncertainty in local renewable production due, for example, to weather conditions. If ati denotes the amount of energy consumed by user i during day t, its storage level evolves according to st+1  
+
+> i
+
+= min C, h ti +  sti − ati
+
++ , where x+ := max {x, 0}. Thus, the current consumption decision directly influences the distribution of the user’s future storage state. When ati > s ti, the user must obtain  ati − sti
+
++ units of electricity from the grid to meet its consumption requirement. Although the storage dynamics are local, the users interact strategically through the electricity market. In particular, suppose that the utility determines the unit price of grid energy based on the aggregate demand, and denote this price by p(at, s t). If ui(ati) denotes the benefit that user i obtains from consuming ati units of energy, its instantaneous reward can be written as ri(at, s t) = ui(ati) − p(at, s t)  ati − sti
+
++. Hence, while player i controls only its own storage dynamics, its reward depends on the states and consumption decisions of the entire population through the market price (see Figure 1–a). This model fits the independent-chain framework particularly well when the users are suffi-ciently geographically separated that their local renewable-generation processes can be modeled as independent. Conditional on (sti, a ti), the next storage state of player i is then governed by its own renewable-generation process and does not depend on the states or actions of other users. Neverthe-less, the players remain strategically coupled because the price p(at, s t) depends on their collective demand. Consequently, each user seeks to learn a long-run consumption and storage policy from its own observations without knowing the stochastic model governing its renewable generation or observing the states and actions of other users. This provides a decentralized energy-management application of the stochastic game studied in this paper (Etesami et al., 2018). 
+
+> 24
+
+Figure 1: Representative applications of stochastic games with independent controlled chains. (a) Energy management: prosumers with local renewable generation and storage interact through a utility company and an aggregate-demand-dependent price. (b) Wireless communication: users with independent local queues adjust transmission decisions while competing over a shared channel. (c) Robotic navigation and coverage: robots with local controlled dynamics navigate through a shared environment while balancing individual navigation objectives with collective criteria such as congestion avoidance and spatial coverage. 
+
+7.2 Power and Bandwidth Allocation in Wireless Networks 
+
+A second example arises in decentralized wireless communication systems in which several trans-mitters compete for access to a common channel (Altman et al., 2007). Consider n users trans-mitting packets to one or more receivers over a shared wireless medium. For transmitter i, let sti
+
+represent its local queue state at time t, describing, for example, the number of packets waiting to be transmitted. New packets arrive according to a local stochastic arrival process that is independent of the packet-generation processes of the other users. At each time t, transmitter i observes its own queue and selects an action ati, which may specify a transmission-power level, bandwidth allocation, transmission rate, or channel-access decision. Its queue then evolves according to the packets that arrive locally and the packets served as a consequence of its transmission decision. Thus, the action of each transmitter controls the evolution of its own queue state, while the underlying packet-arrival uncertainty is local to that user. The strategic interaction occurs through the shared communication medium. For example, the probability that player i successfully transmits a packet may depend on the transmission powers of all users, since simultaneous transmissions generate interference. More generally, the reward ri(st, a t) may account for successful throughput, transmission energy, queue-ing delay, packet loss, or congestion, and may therefore depend on the joint state–action profile. Channel conditions, such as background noise and available capacity, may further influence the realized payoff (see Figure 1–b). The resulting system separates local dynamics from strategic interaction in precisely the man-ner captured by the independent-chain model: each user’s queue evolves according to its own con-trolled local dynamics, whereas the performance resulting from a transmission decision depends on the simultaneous behavior of the other users. A transmitter can therefore seek to learn a stationary power- or bandwidth-allocation policy using only its local queue, selected transmission action, ob-served next queue state, and realized transmission payoff, without knowing its local transition law or observing the states and actions of the competing transmitters. 
+
+25 7.3 Decentralized Robotic Navigation and Coverage 
+
+A third application arises in decentralized robotic navigation and coverage, where a collection of autonomous agents moves through a common environment while collectively monitoring, explor-ing, or covering a region of interest. Such cooperative-control problems have been studied using potential, state-based potential, and distributed welfare games (Marden et al., 2009; Marden, 2012; Marden and Wierman, 2013). To connect this setting to the independent-chain model, suppose that robot i has a quantized local state sti describing its position, heading, velocity, battery level, sens-ing status, or other locally available information relevant to its motion and operation. At time t,the robot observes its current local state and selects a local control action ati, such as a movement direction, velocity adjustment, or sensing decision. Its next state is then generated according to an unknown controlled transition kernel Pi(st+1  
+
+> i
+
+| sti, a ti), which may capture uncertainty in ac-tuation, localization, terrain conditions, sensor measurements, or other robot-specific disturbances encountered during operation (see Figure 1–c). When these disturbances are independent across robots, each robot’s state evolves according to its own locally controlled stochastic dynamics, and the resulting system has the independent controlled-chain structure considered in this paper. The robots nevertheless interact strategically through their rewards, which may account for travel time, energy consumption, congestion, collision avoidance, or progress toward a destination. The reward may also incorporate a collective coverage objective. For example, the workspace can be partitioned into Voronoi cells, with each robot responsible for monitoring its associated region, and the collective reward can favor configurations that cover a larger fraction of the workspace, reduce the aggregate distance between points and their nearest robots, or place robots near the cen-troids of their Voronoi regions (Marden et al., 2009; Marden and Wierman, 2013). Accordingly, the reward ri(st, a t) can combine individual navigation and energy costs with team-dependent criteria such as coverage, congestion, and collision avoidance. Thus, although each robot controls only its local dynamics, its reward can depend on the configuration and actions of the entire robot popula-tion. The resulting equilibrium policies can therefore represent decentralized motion strategies that balance local navigation costs with collective objectives such as efficient spatial coverage. 
+
+8 Conclusion 
+
+We developed a fully online one-sample occupancy-measure learning algorithm for stochastic games with unknown independent controlled chains. The algorithm operates along a single continuing tra-jectory, using one local transition and realized payoff per time step, while players update their policies and learn their unknown transition kernels asynchronously using only local information. Under uniform ergodicity, each individual controlled chain has a finite worst-case expected cover time Hi, which enters the finite-time complexity as a local problem-dependent parameter. A frozen-policy block comparison, together with the slow movement of mirror descent, transfers fixed-policy coverage and mixing properties to the time-inhomogeneous online trajectory. The resulting high-probability fixed-comparator regret decreases at the rate eO(T −1/2) after a local-cover transient pe-riod. For arbitrary reward functions, this regret guarantee further implies that the empirical distribu-tion of play approaches a coarse-correlated equilibrium. Because transition estimation and delayed moving-chain comparisons are performed separately on each local state space Si, neither the cover time nor the cardinality of the product state space Q 
+
+> i
+
+Si enters the complexity. Under an additional variational-stability condition and diminishing stepsizes, the same fully online scheme further yields asymptotic last-iterate convergence to a stationary ϵ-NE. 
+
+> 26
+
+References 
+
+Eitan Altman. Constrained Markov Decision Processes . Routledge, 2021. Eitan Altman, Konstantin Avratchenkov, Nicolas Bonneau, M´ erouane Debbah, Rachid El-Azouzi, and Daniel Sadoc Menasch´ e. Constrained stochastic games in wireless networks. In IEEE GLOBECOM 2007-IEEE Global Telecommunications Conference , pages 315–320. IEEE, 2007. Tamer Bas ¸ar and Geert Jan Olsder. Dynamic Noncooperative Game Theory . 2nd Ed, SIAM, 1999. Adrian Rivera Cardoso, He Wang, and Huan Xu. Large scale Markov decision processes with changing rewards. In 33rd Conference on Neural Information Processing Systems 32 (NIPS) ,pages 1–11, 2019. Nicolo Cesa-Bianchi and G´ abor Lugosi. Prediction, Learning, and Games . Cambridge University Press, 2006. Soham Das and Ceyhun Eksin. Learning Nash in constrained Markov games with an α-potential. 
+
+IEEE Control Systems Letters , 8:808–813, 2024. Constantinos Daskalakis, Paul W Goldberg, and Christos H Papadimitriou. The complexity of computing a Nash equilibrium. SIAM Journal on Computing , 39(1):195–259, 2009. Constantinos Daskalakis, Dylan J Foster, and Noah Golowich. Independent policy gradient methods for competitive reinforcement learning. Advances in Neural Information Processing Systems , 33: 5527–5540, 2020. Dongsheng Ding, Chen-Yu Wei, Kaiqing Zhang, and Mihailo R. Jovanovic. Independent policy gradient for large-scale Markov potential games: Sharper rates, function approximation, and game-agnostic convergence. In International Conference on Machine Learning , pages 5166– 5220. PMLR, 2022. S. Rasoul Etesami. Learning stationary Nash equilibrium policies in n-player stochastic games with independent chains. SIAM Journal on Control and Optimization , 62(2):799–825, 2024. S. Rasoul Etesami. High-probability Nash regret for decentralized learning in Markov α-potential games: Episodic and fully online asynchronous algorithms with applications to Markov conges-tion games, 2026. S. Rasoul Etesami, Walid Saad, Narayan B Mandayam, and H Vincent Poor. Stochastic games for the smart grid energy management with prospect prosumers. IEEE Transactions on Automatic Control , 63(8):2327–2342, 2018. Roy Fox, Stephen M. McAleer, Will Overman, and Ioannis Panageas. Independent natural pol-icy gradient always converges in Markov potential games. In Proceedings of the 25th Interna-tional Conference on Artificial Intelligence and Statistics , volume 151 of Proceedings of Machine Learning Research , pages 4414–4425, 2022. Xin Guo, Xinyu Li, Chinmay Maheshwari, S. Shankar Sastry, and Manxi Wu. Markov α-potential games. IEEE Transactions on Automatic Control , 71(1):275–290, 2025. 
+
+> 27
+
+Chi Jin, Tiancheng Jin, Haipeng Luo, Suvrit Sra, and Tiancheng Yu. Learning adversarial Markov decision processes with bandit feedback and unknown transition. In International Conference on Machine Learning , pages 4860–4869. PMLR, 2020. Philip Jordan and Maryam Kamgarpour. Independent learning of Nash equilibria in partially ob-servable Markov potential games with decoupled dynamics. arXiv preprint arXiv:2605.06377 ,2026. Philip Jordan, Anas Barakat, and Niao He. Independent learning in constrained Markov poten-tial games. In Proceedings of the 27th International Conference on Artificial Intelligence and Statistics , volume 238 of Proceedings of Machine Learning Research , pages 4024–4032. PMLR, 2024. Stefanos Leonardos, Will Overman, Ioannis Panageas, and Georgios Piliouras. Global convergence of multi-agent policy gradient in Markov potential games. arXiv preprint arXiv:2106.01969 ,2021. Chinmay Maheshwari, Manxi Wu, Druv Pai, and Shankar Sastry. Independent and decentralized learning in Markov potential games. IEEE Transactions on Automatic Control , 70(11):7538– 7553, 2025. Jason R. Marden. State based potential games. Automatica , 48(12):3075–3088, 2012. doi: 10.1016/ j.automatica.2012.08.037. Jason R. Marden and Adam Wierman. Distributed welfare games. Operations Research , 61(1): 155–168, 2013. doi: 10.1287/opre.1120.1137. Jason R. Marden, G¨ urdal Arslan, and Jeff S. Shamma. Cooperative control and potential games. 
+
+IEEE Transactions on Systems, Man, and Cybernetics, Part B: Cybernetics , 39(6):1393–1407, 2009. doi: 10.1109/TSMCB.2009.2017273. Panayotis Mertikopoulos and Zhengyuan Zhou. Learning in games with continuous action sets and unknown payoff functions. Mathematical Programming , 173:465–507, 2019. Khaled Nakhleh, Sarper Aydin, Ceyhun Eksin, and Sabit Ekin. Fictitious play in product Markov games with Kullback–Leibler control cost. In Proceedings of the 59th Asilomar Conference on Signals, Systems, and Computers , pages 1682–1686. IEEE, 2025. Prashant Narayanan and Lakshmi Narasimhan Theagarajan. Large player games on wireless net-works. arXiv preprint arXiv:1710.08800 , 2017. John F Nash. Equilibrium points in n-person games. Proceedings of the National Academy of Sciences , 36(1):48–49, 1950. Gergely Neu, Andr´ as Gy¨ orgy, Csaba Szepesv´ ari, et al. The online loop-free stochastic shortest-path problem. In COLT , volume 2010, pages 231–243. Citeseer, 2010. Hukukane Nikaidˆ o and Kazuo Isoda. Note on non-cooperative convex games. Pacific Journal of Mathematics , 5:807–815, 1955. doi: 10.2140/pjm.1955.5.807. 
+
+> 28
+
+Tiancheng Qin and S. Rasoul Etesami. Learning ϵ-Nash equilibrium stationary policies in stochastic games with unknown independent chains using online mirror descent. In Proceedings of the 6th Annual Learning for Dynamics & Control Conference , volume 242 of Proceedings of Machine Learning Research , pages 784–795. PMLR, 2024. Shuang Qiu, Xiaohan Wei, Jieping Ye, Zhaoran Wang, and Zhuoran Yang. Provably efficient ficti-tious play policy optimization for zero-sum Markov games with structured transitions. In Inter-national Conference on Machine Learning , pages 8715–8725. PMLR, 2021. Adrian Rivera Cardoso, He Wang, and Huan Xu. Large scale Markov decision processes with changing rewards. Advances in Neural Information Processing Systems , 32, 2019. Aviv Rosenberg and Yishay Mansour. Online stochastic shortest path with bandit feedback and unknown transition function. Advances in Neural Information Processing Systems , 32, 2019. Muhammed Sayin, Kaiqing Zhang, David Leslie, Tamer Bas ¸ar, and Asuman Ozdaglar. Decentral-ized Q-learning in zero-sum Markov games. Advances in Neural Information Processing Systems ,34:18320–18334, 2021. Muhammed O Sayin, Francesca Parise, and Asuman Ozdaglar. Fictitious play in zero-sum stochas-tic games. SIAM Journal on Control and Optimization , 60(4):2095–2114, 2022. Lloyd S Shapley. Stochastic games. Proceedings of the National Academy of Sciences , 39(10): 1095–1100, 1953. Vikas Vikram Singh and N Hemachandra. A characterization of stationary Nash equilibria of con-strained stochastic games with independent state processes. Operations Research Letters , 42(1): 48–52, 2014. Y. Sun, T. Liu, R. Zhou, P. R. Kumar, and S. Shahrampour. Provably fast convergence of inde-pendent natural policy gradient for Markov potential games. In Advances in Neural Information Processing Systems , volume 36, 2023. Kaiqing Zhang, Zhuoran Yang, and Tamer Bas ¸ar. Multi-agent reinforcement learning: A selective overview of theories and algorithms. Handbook of Reinforcement Learning and Control , pages 321–384, 2021. Runyu Zhang, Jincheng Mei, Bo Dai, Dale Schuurmans, and Na Li. On the global convergence rates of decentralized softmax gradient play in markov potential games. In Advances in Neural Information Processing Systems , volume 35, 2022. Runyu Zhang, Zhaolin Ren, and Na Li. Gradient play in stochastic games: Stationary points, convergence, and sample complexity. IEEE Transactions on Automatic Control , 69(10):6499– 6514, 2024. Yulai Zhao, Yuandong Tian, Jason Lee, and Simon Du. Provably efficient policy optimization for two-player zero-sum markov games. In International Conference on Artificial Intelligence and Statistics , pages 2736–2761. PMLR, 2022. 
+
+> 29
+
+Acknowledgment. The core ideas and technical contributions of this work originated with the author and were inspired by his earlier collaborative work on episodic learning (Qin and Etesami, 2024), together with his recent work on developing the first fully online algorithm for Markov α-potential games (Etesami, 2026). The author acknowledges the use of generative AI (GPT-5.6 Sol) for brainstorming and for technical and writing assistance, including refining and checking proofs, filling in standard technical gaps, improving exposition and grammar, and preparing figures. All AI-assisted material was independently verified and revised by the author. 
+
+Appendix A. Omitted Proofs for Section 3 
+
+A.1 Proof of Lemma 5 Proof It has been shown in (Etesami, 2024) that, under Assumptions 1 and 2, if each player i follows a stationary policy πi, then 
+
+Vi(πi, π −i) = Vi(ρi, ρ −i) = X
+
+> s,a n
+
+Y
+
+> j=1
+
+ρj (sj , a j )ri(s, a ) = ⟨ρi, v i(ρ−i)⟩, (39) where vi(ρ−i) denotes player i’s payoff-gradient vector with respect to ρi; it is a vector of dimension 
+
+|S i||A i| whose (si, a i)-th coordinate is given by 
+
+vi(ρ−i)(si,a i) = X
+
+> s−i,a −i
+
+Y 
+
+> j̸=i
+
+ρj (sj , a j )ri(s, a ). (40) Since ρj (sj , a j ) = P 
+
+> s′
+> j
+
+qj (sj , a j , s ′ 
+
+> j
+
+) for every player j, substituting this relation into (39) gives 
+
+Vi(ρi, ρ −i) = X
+
+> si,a i,s ′
+> i
+
+qi(si, a i, s ′
+
+> i
+
+) X
+
+> s−i,a −i
+
+Y 
+
+> j̸=i
+
+X
+
+> s′
+> j
+
+qj (sj , a j , s ′ 
+
+> j
+
+)ri(s, a ) = ⟨qi, g i(q−i)⟩,
+
+which establishes (6) and (7). Now, comparing (7) and (40), and using ρj (sj , a j ) = P 
+
+> s′
+> j
+
+qj (sj , a j , s ′ 
+
+> j
+
+)
+
+shows that 
+
+gi(q−i)(si,a i,s ′ 
+
+> i)
+
+= vi(ρ−i)(si,a i), ∀ si, a i, s ′
+
+> i
+
+.
+
+In particular, gi(q−i)(si,a i,s ′ 
+
+> i)
+
+is independent of s′
+
+> i
+
+, with the same value repeated across all s′ 
+
+> i
+
+∈ S i.
+
+A.2 Proof of Lemma 8 Proof For qi ∈ ∆i,δ i , since ρi(si, a i) ≥ δi > 0 where we note that ρi(si, a i) = P 
+
+> yi
+
+qi(si, a i, y i),the transition kernel induced by qi is well defined and satisfies 
+
+P qi 
+
+> i
+
+(s′ 
+
+> i
+
+| si, a i) = qi(si, a i, s ′
+
+> i
+
+)
+
+ρi(si, a i) .
+
+Therefore, the condition P qi ∈ P i is equivalent to imposing the box constraints Li(si, a i, s ′
+
+> i
+
+) ≤
+
+P qi 
+
+> i
+
+(s′ 
+
+> i
+
+| si, a i) ≤ Ui(si, a i, s ′
+
+> i
+
+), which are equivalent to the linear inequalities 
+
+Li(si, a i, s ′
+
+> i
+
+) X
+
+> yi
+
+qi(si, a i, y i) ≤ qi(si, a i, s ′
+
+> i
+
+) ≤ Ui(si, a i, s ′
+
+> i
+
+) X
+
+> yi
+
+qi(si, a i, y i).
+
+30 Consequently, ∆i,δ i (Pi) admits the following explicit representation as the set of all occupancies qi
+
+satisfying the following linear constraints: 
+
+qi(si, a i, s ′
+
+> i
+
+) ≥ 0, ∀si, a i, s ′
+
+> i
+
+,
+
+X
+
+> si,a i,s ′
+> i
+
+qi(si, a i, s ′
+
+> i
+
+) = 1 ,
+
+X
+
+> s′
+> i,a i
+
+qi(s′
+
+> i
+
+, a i, s i) = X
+
+> s′
+> i,a i
+
+qi(si, a i, s ′
+
+> i
+
+), ∀si,
+
+X
+
+> s′
+> i
+
+qi(si, a i, s ′
+
+> i
+
+) ≥ δi, ∀si, a i,Li(si, a i, s ′
+
+> i
+
+) X
+
+> yi
+
+qi(si, a i, y i) ≤ qi(si, a i, s ′
+
+> i
+
+) ≤ Ui(si, a i, s ′
+
+> i
+
+) X
+
+> yi
+
+qi(si, a i, y i), ∀si, a i, s ′
+
+> i
+
+.
+
+All the displayed constraints in ∆i,δ i (Pi) are linear in qi with |S i|2|A i| variables and O(|S i|2|A i|)
+
+constraints. Moreover, the set is closed and bounded by nonnegativity and normalization. Hence 
+
+∆i,δ i (Pi) is a closed convex polytope with an explicit polynomial-size linear description. 
+
+Appendix B. Omitted Proofs for Section 4 
+
+B.1 Proof of Lemma 10 Proof Fix i ∈ [n], (si, a i) ∈ S i × A i, and s′ 
+
+> i
+
+∈ S i. All random variables below are defined on the common probability space supporting the entire game trajectory. For each ℓ ≥ 1, let S+ 
+
+> i,ℓ
+
+denote the next-state observation following the ℓth occurrence of the state–action pair (si, a i). Let Fi, 0 contain the entire game history immediately after the first occurrence of (si, a i) and before observing S+
+
+> i, 1
+
+.More generally, for ℓ ≥ 1, let Fi,ℓ contain the entire game history immediately after the (ℓ + 1) st occurrence of (si, a i) and before observing S+
+
+> i,ℓ +1
+
+. Thus, {F i,ℓ }ℓ≥0 is the filtration obtained by indexing the entire game history by successive occurrences of (si, a i). In particular, Fi,ℓ −1 contains the entire history preceding S+
+
+> i,ℓ
+
+, including the fact that the ℓth occurrence of (si, a i) has taken place, but does not contain S+ 
+
+> i,ℓ
+
+itself. For m ≥ 1, define 
+
+¯Pi,m (s′ 
+
+> i
+
+| si, a i) := 1
+
+m
+
+> m
+
+X
+
+> ℓ=1
+
+1{S+ 
+
+> i,ℓ
+
+= s′
+
+> i
+
+}.
+
+By the controlled Markov property, conditional on Fi,ℓ −1, the next state following the ℓth occurrence of (si, a i) is distributed according to Pi(· | si, a i). Therefore, 
+
+E
+
+h
+
+1{S+ 
+
+> i,ℓ
+
+= s′
+
+> i
+
+} Fi,ℓ −1
+
+i
+
+= Pi(s′ 
+
+> i
+
+| si, a i).
+
+Consequently, 
+
+Xi,ℓ := 1{S+ 
+
+> i,ℓ
+
+= s′
+
+> i
+
+} − Pi(s′ 
+
+> i
+
+| si, a i), ℓ ≥ 1,
+
+is a martingale-difference sequence with respect to {F i,ℓ }ℓ≥0. Moreover, Xi,ℓ takes values in an interval of length one. Hence, by Hoeffding–Azuma, for every m ≥ 1 and x > 0,
+
+P ¯Pi,m (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) >
+
+r 2xm
+
+!
+
+≤ 2e−x.
+
+31 Now consider any time t such that N ti (si, a i) = m ≥ 1. By the definitions of N ti , ¯P ti , and ¯Pi,m ,
+
+¯P ti (s′ 
+
+> i
+
+| si, a i) = ¯Pi,m (s′ 
+
+> i
+
+| si, a i).
+
+Moreover, m ≤ t, and Λt is nondecreasing, so 
+
+Λt ≥ Λm = log 
+
+ 64 nA max S2max (m + 2) 2
+
+γ
+
+
+
+.
+
+Therefore, if for some t with N ti (si, a i) = m ≥ 1,
+
+¯P ti (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) > β ti (si, a i),
+
+then necessarily 
+
+¯Pi,m (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) >
+
+r 2Λ m
+
+m .
+
+Thus, taking a union bound over all possible visit counts m ≥ 1, 7
+
+P  ∃ t ≥ 1 : N ti (si, a i) ≥ 1, ¯P ti (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) > β ti (si, a i)
+
+≤
+
+> ∞
+
+X
+
+> m=1
+
+P ¯Pi,m (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) >
+
+r 2Λ m
+
+m
+
+!
+
+≤ 2
+
+> ∞
+
+X
+
+> m=1
+
+e−Λm
+
+= 2 
+
+> ∞
+
+X
+
+> m=1
+
+ γ
+
+64 nA max S2max (m + 2) 2
+
+
+
+.
+
+By taking a union bound over all i, s i, a i, s ′ 
+
+> i
+
+and using Pni=1 |A i||S i|2 ≤ nA max S2max , we obtain 
+
+P  ∃ i, t, s i, a i, s ′ 
+
+> i
+
+: ¯P ti (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) > β ti (si, a i)
+
+≤ 2nA max S2max 
+
+> ∞
+
+X
+
+> m=1
+
+ γ
+
+64 nA max S2max (m + 2) 2
+
+
+
+< γ
+
+4 .
+
+Thus, with probability at least 1 − γ/ 4, every confidence region constructed by every player at every confidence-update time contains the corresponding true transition kernel Pi. Since P0 
+
+> i
+
+contains all transition kernels and Algorithm 1 updates Pti only by intersecting the previous confidence set with such confidence regions, it follows inductively that 
+
+Pi ∈ P ti , ∀i ∈ [n], ∀t ≥ 0.
+
+Hence, P(Econf ) ≥ 1 − γ/ 4. Finally, on Econf , if qi ∈ ∆i,δ i (Pi), then its induced transition kernel satisfies P qi = Pi ∈ P ti . Therefore, qi ∈ ∆i,δ i (Pti ), and consequently 
+
+∆i,δ i (Pi) ⊆ ∆i,δ i (Pti ), ∀i ∈ [n], ∀t ≥ 0.
+
+7. If N ti (si, a i) = 0 , then ¯P ti (s′ 
+
+> i
+
+| si, a i) = 0 , while Pi(s′ 
+
+> i
+
+| si, a i) ≤ 1. Moreover, βti (si, a i) = √2Λ t ≥ 1. Hence, 
+
+¯P ti (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i) ≤ βti (si, a i), so the confidence bound holds automatically. 
+
+32 Appendix C. Omitted Proofs for Section 5 
+
+C.1 Proof of Lemma 13 Proof On the event Econf , Pi ∈ P ti for every t, hence the fixed comparator q′ 
+
+> i
+
+belongs to every feasible set ∆i,δ i (Pti ). The first-order optimality condition for the proximal occupancy update in Algorithm 1 therefore gives 
+
+D
+
+ˆqt+1  
+
+> i
+
+− ˆqti − η bRti, q ′ 
+
+> i
+
+− ˆqt+1 
+
+> i
+
+E
+
+≥ 0. (41) Now, we can write 
+
+η⟨q′ 
+
+> i
+
+− ˆqti , bRti⟩ = η⟨q′ 
+
+> i
+
+− ˆqt+1  
+
+> i
+
+, bRti⟩ + η⟨ˆqt+1  
+
+> i
+
+− ˆqti , bRti⟩≤ ⟨ ˆqt+1  
+
+> i
+
+− ˆqti , q ′ 
+
+> i
+
+− ˆqt+1  
+
+> i
+
+⟩ + η⟨ˆqt+1  
+
+> i
+
+− ˆqti , bRti⟩
+
+= 12 ∥q′ 
+
+> i
+
+− ˆqti ∥22 − 12 ∥q′ 
+
+> i
+
+− ˆqt+1  
+
+> i
+
+∥22 − 12 ∥ˆqt+1  
+
+> i
+
+− ˆqti ∥22 + η⟨ˆqt+1  
+
+> i
+
+− ˆqti , bRti⟩≤ 12 ∥q′ 
+
+> i
+
+− ˆqti ∥22 − 12 ∥q′ 
+
+> i
+
+− ˆqt+1  
+
+> i
+
+∥22 + η2
+
+2 ∥ bRti∥22, (42) where the first inequality follows from the first-order optimality condition (41), the second equality uses the three-point identity 2⟨x − y, z − x⟩ = ∥z − y∥22 − ∥ z − x∥22 − ∥ x − y∥22, and the last inequality follows from Young’s inequality, which cancels the term − 12 ∥ˆqt+1  
+
+> i
+
+− ˆqti ∥22.Summing the above relation over t telescopes globally. Importantly, a confidence update does not create a restart term in this telescope because the true-kernel comparator remains feasible after every confidence-set intersection. Since both occupancy vectors have unit mass, ∥q′ 
+
+> i
+
+− ˆq0 
+
+> i
+
+∥22 ≤ 2.Moreover, by (11), bRti has exactly |S i| possibly nonzero next-state coordinates, all corresponding to the observed pair (Sti , A ti), and every such coordinate is at most 1/δ i. Hence ∥ bRti∥22 ≤ |S i|
+
+> δ2
+> i
+
+. Substi-tution proves (14). 
+
+C.2 Proof of Lemma 14 Proof We first establish the policy-movement bound. Suppose that player i does not update its con-fidence set at step t. Then the feasible set in the proximal step is the same set that contains ˆqti . Hence the Euclidean update is the projection of ˆqti + η bRti onto this fixed convex set, and nonexpansiveness of projection gives 
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥2 ≤ η∥ bRti∥2 ≤ ηp|S i|
+
+δi
+
+.
+
+Since the occupancy vector has dimension |A i||S i|2,
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 ≤ |S i|p|A i| ∥ ˆqt+1  
+
+> i
+
+− ˆqti ∥2 ≤ Liηδi
+
+. (43) By triangle inequality, marginalization cannot increase the ℓ1 norm, so 
+
+∥ˆρt+1  
+
+> i
+
+− ˆρti∥1 ≤ Liηδi
+
+.
+
+33 For a fixed si, since every state–action marginal is at least δi, ˆνti (si) = P 
+
+> ai
+
+ˆρti(si, a i) ≥ |A i|δi ≥ δi
+
+and similarly ˆνt+1  
+
+> i
+
+(si) ≥ δi. Therefore, 
+
+∥πti (· | si) − πt+1  
+
+> i
+
+(· | si)∥1 = ˆρti(si, ·)ˆνt(si) − ˆρt+1  
+
+> i
+
+(si, ·)ˆνt+1 (si) 1
+
+≤ 2∥ˆρt+1  
+
+> i
+
+− ˆρti∥1
+
+δi
+
+≤ 2Liηδ2
+
+> i
+
+.
+
+This proves (16). In particular, since the controlled kernel is affine in the policy, for every such step, 
+
+∥P πt+1  
+
+> i
+> i
+
+(· | si) − P πti 
+
+> i
+
+(· | si)∥1 = X
+
+> ai
+
+ πt+1  
+
+> i
+
+(ai | si) − πti (ai | si)Pi(· | si, a i) 1
+
+≤ X
+
+> ai
+
+πt+1  
+
+> i
+
+(ai | si) − πti (ai | si)
+
+= ∥πt+1  
+
+> i
+
+(· | si) − πti (· | si)∥1 ≤ 2Liηδ2
+
+> i
+
+∀si ∈ S i. (44) We now prove the occupancy-estimation bound. The argument proceeds in three steps. First, we show that every local state–action pair is visited sufficiently often despite the slowly changing policy. This controls the confidence radii. Second, we use the confidence sets to bound the error between the represented and true transition kernels. Finally, the contraction assumption converts the kernel error into an occupancy error. 
+
+Step 1: Sufficient visitation. We first show that the slowly varying policy does not destroy the local-cover property. Fix player i and an interval [u, v ] containing no confidence update of player 
+
+i. Conditional on Fu, consider two local state processes starting from the same state at time u:
+
+Sui = ¯Sui . The process (Sti )vt=u is the actual local state trajectory and, at time t, uses the current controlled kernel P πti 
+
+> i
+
+. In contrast, ( ¯Sti )vt=u is the frozen trajectory: throughout the entire interval it uses the single kernel P πui 
+
+> i
+
+. Thus, St+1  
+
+> i
+
+∼ P πti 
+
+> i
+
+(· | Sti ) and ¯St+1  
+
+> i
+
+∼ P πui 
+
+> i
+
+(· | ¯Sti ).Couple the two chains maximally at each step as long as they have not separated. Conditional on Sti = ¯Sti = si, by maximal coupling their probability of separating at the next transition is at most 12 P πti 
+
+> i
+
+(· | si) − P πui 
+
+> i
+
+(· | si) 1.
+
+Therefore, by a union bound over the transitions, we obtain 
+
+P
+
+
+
+∃ t ∈ [u, v ] such that Sti̸ = ¯Sti Fu
+
+
+
+≤ 12
+
+> v−1
+
+X
+
+> t=u
+
+max 
+
+> si
+
+P πti 
+
+> i
+
+(· | si) − P πui 
+
+> i
+
+(· | si) 1. (45) As long as no confidence update occurs, (44) holds at every step. Hence, for t ≥ u,
+
+max 
+
+> si
+
+P πti 
+
+> i
+
+(· | si) − P πui 
+
+> i
+
+(· | si) 1 ≤
+
+> t−1
+
+X
+
+> k=u
+
+max 
+
+> si
+
+P πk+1  
+
+> i
+> i
+
+(· | si) − P πki 
+
+> i
+
+(· | si) 1 ≤ 2Li(t − u)ηδ2
+
+> i
+
+.
+
+Substituting into (45) gives 
+
+P
+
+
+
+∃ t ∈ [u, v ] such that Sti̸ = ¯Sti Fu
+
+
+
+≤ Li(v − u)2ηδ2
+
+> i
+
+. (46) 
+
+34 Next, we apply this comparison on blocks of length 2Hi + 1 . Let 
+
+ℓm := m(2 Hi + 1) , Bm := {ℓm, . . . , ℓ m + 2 Hi},
+
+and let τm be the first confidence-update time of player i at or after ℓm. Thus, τm ∈ Bm if and only if a confidence update occurs in Bm. Couple the actual chain with the chain frozen at πℓm 
+
+> i
+
+until the first confidence update or the end of Bm, whichever comes first. On the event {τm /∈ Bm}, this comparison therefore runs throughout the entire block. By the same maximal-coupling argument as in (46) and (15), we obtain 
+
+P
+
+
+
+{τm /∈ Bm} ∩ {∃ t ∈ Bm such that Sti̸ = ¯Sti } Fℓm
+
+
+
+≤ 4LiH2 
+
+> i
+
+ηδ2
+
+> i
+
+≤ 14 . (47) Conditional on Fℓm , the frozen process starts from Sℓm 
+
+> i
+
+and evolves according to the homoge-neous Markov chain P πℓm i 
+
+> i
+
+induced by the fixed policy πℓm 
+
+> i
+
+. Let τ πℓm i 
+
+> cov ,i
+
+denote its cover time starting from Sℓm 
+
+> i
+
+. By the definition of Hi and Markov’s inequality, 
+
+P
+
+
+
+τ πℓm i 
+
+> cov ,i
+
+≤ 2Hi Fℓm
+
+
+
+= 1 − P
+
+
+
+τ πℓm i 
+
+> cov ,i
+
+> 2Hi Fℓm
+
+
+
+≥ 1 − E[τ πℓm i 
+
+> cov ,i
+
+| F ℓm ]2Hi
+
+≥ 12 .
+
+Thus, conditional on Fℓm , the frozen chain visits every local state, and hence any prescribed si,during Bm with probability at least 1/2. Combining this with the coupling bound (47), the event that either a confidence update occurs in Bm or the actual chain visits si has conditional probability at least 1/2 − 1/4 = 1 /4. Therefore, for every si ∈ S i,
+
+P
+
+
+
+{∃ t ∈ Bm : Sti = si} ∪ { τm ∈ Bm} Fℓm
+
+
+
+≥ 14 . (48) We now lower bound the visit count N ti (si, a i). Fix a prescribed (si, a i). For each block, we count it as successful if it either produces an observation of (si, a i) or contains a confidence update; the latter blocks will later be charged to the total number of confidence updates. Accordingly, define 
+
+Y im(si, a i) := 1
+
+n
+
+(si, a i) is observed in Bm, or τm ∈ Bm
+
+o
+
+.
+
+Thus, Y im(si, a i) is a “visit-or-update” indicator: every block with Y im(si, a i) = 1 either contributes at least one visit to (si, a i) or can be charged to a confidence update. More precisely, fix any t ≤ T
+
+and let Mt := ⌊ t 
+
+> 2Hi+1
+
+⌋ be the number of complete blocks before time t, and Ji(t) be the number of confidence updates before time t. Since the blocks are disjoint, for these Mt complete blocks, 
+
+N ti (si, a i) ≥
+
+> Mt−1
+
+X
+
+> m=0
+
+Y im(si, a i) − Ji(t) ≥
+
+> Mt−1
+
+X
+
+> m=0
+
+Y im(si, a i) − |S i||A i| 1 + ⌊log 2 t⌋, (49) where the second inequality follows by the dyadic update rule for confidence updates. It remains to show that sufficiently many blocks have Y im(si, a i) = 1 . By (48) and the fact that the action floor (10) gives conditional probability at least δi of selecting ai, we have 
+
+EY im(si, a i) Fℓm
+
+ ≥ δi
+
+4 .
+
+35 Applying Freedman’s inequality 8 to 
+
+Xm := Y im(si, a i) − E[Y im(si, a i) | F ℓm ],
+
+and observing that P 
+
+> m<M t
+
+E[X2 
+
+> m
+
+| F ℓm ] ≤ Mt, we obtain, for every fixed t ≤ T ,
+
+P
+
+> Mt−1
+
+X
+
+> m=0
+
+Y im(si, a i) < δi
+
+4 Mt − 2pMtx − 2x
+
+3
+
+!
+
+≤ e−x.
+
+Using 2√Mtx ≤ δi 
+
+> 16
+
+Mt + 16 xδi , choosing x = cΛT with a sufficiently large universal constant c > 0,and taking a union bound over all players, state–action pairs, and t ≤ T gives 
+
+P ∃ i, (si, a i), t ≤ T :
+
+> Mt−1
+
+X
+
+> m=0
+
+Y im(si, a i) < 3δi
+
+16 Mt − c ΛT
+
+δi
+
+!
+
+≤ γ
+
+4 .
+
+Hence, with probability at least 1 − γ/ 4, simultaneously for all i, (si, a i), and t ≤ T , combining this bound with (49) gives 
+
+N ti (si, a i) ≥ 3δi
+
+16 Mt − c ΛT
+
+δi
+
+− |S i||A i| 1 + ⌊log 2 t⌋
+
+≥ δi
+
+32 Hi
+
+t − c
+
+ ΛT
+
+δi
+
++ |S i||A i| 1 + ⌊log 2 t⌋ + 1 
+
+
+
+, (50) where the second inequality is obtained using Mt = ⌊ t 
+
+> 2Hi+1
+
+⌋ ≥ t 
+
+> 3Hi
+
+− 1 and by adjusting the universal constant. Therefore, by the definition of Ki(T ), for every t ≥ Ki(T ), the number of visits to (si, a i) grows linearly, 
+
+N ti (si, a i) ≥ c δitHi
+
+, (51) and consequently 
+
+max 
+
+> si,a i
+
+βti (si, a i) ≤ c
+
+r HiΛt
+
+δit . (52) 
+
+Step 2: Kernel approximation error. On the anytime confidence event Econf of Lemma 10, 
+
+Pi ∈ P ti for every i and t. Moreover, by construction, 
+
+ˆP ti := P ˆqti ∈ P ti .
+
+Fix t ≥ Ki(T ) and (si, a i), and let θti (si, a i) ≤ t denote its most recent dyadic confidence-update time. Since no new constraint for (si, a i) is imposed between θti (si, a i) and t,
+
+N ti (si, a i) < 2N θti (si,a i) 
+
+> i
+
+(si, a i) ⇒ βθti (si,a i) 
+
+> i
+
+(si, a i) ≤ √2 βti (si, a i).
+
+8. We use the standard Freedman inequality for martingale differences Xm satisfying |Xm| ≤ 1: if Mk = P 
+
+> m<k
+
+Xm
+
+and Vk = P 
+
+> m<k
+
+E[X2 
+
+> m
+
+| F ℓm ], then P Mk ≤ − 2√Vk x − 2x
+
+> 3
+
+ ≤ e−x for every fixed k.
+
+36 On the anytime confidence event, both Pi and ˆP ti belong to the confidence set Pti centered at the empirical kernel ¯P ti with radius βθti (si,a i)(si, a i). Thus, by the triangle inequality, 
+
+| ˆP ti (s′ 
+
+> i
+
+| si, a i)−Pi(s′ 
+
+> i
+
+| si, a i)| ≤ | ˆP ti (s′ 
+
+> i
+
+| si, a i)− ¯P ti (s′ 
+
+> i
+
+| si, a i)|+| ¯P ti (s′ 
+
+> i
+
+| si, a i)−Pi(s′ 
+
+> i
+
+| si, a i)|≤ 2βθti (si,a i) 
+
+> i
+
+(si, a i) ≤ 2√2 βti (si, a i).
+
+Therefore, 
+
+max 
+
+> si,a i
+
+∥ ˆP ti (· | si, a i) − Pi(· | si, a i)∥1 ≤ 3|S i| max 
+
+> si,a i
+
+βti (si, a i). (53) 
+
+Step 3: Kernel to occupancy error. For an arbitrary time Ki(T ) ≤ t < T , denote the stationary distributions of P πti 
+
+> i
+
+and ( ˆP ti )πti by νti and ˆνti , respectively. By stationarity and Assumption 2, 
+
+∥ˆνti − νti ∥1 = ∥ˆνti ( ˆP ti )πti − νti P πti 
+
+> i
+
+∥1 ≤ max 
+
+> si
+
+∥( ˆP ti )πti (· | si) − P πti 
+
+> i
+
+(· | si)∥1 + (1 − κ)∥ˆνti − νti ∥1.
+
+Therefore, 
+
+∥ˆνti − νti ∥1 ≤ 1
+
+κ max 
+
+> si
+
+∥( ˆP ti )πti (· | si) − P πti 
+
+> i
+
+(· | si)∥1 ≤ 1
+
+κ max 
+
+> si,a i
+
+∥ ˆP ti (· | si, a i) − Pi(· | si, a i)∥1,
+
+where the last inequality follows from the convexity of the ℓ1-norm and because ( ˆP ti )πti and P πti 
+
+> i
+
+are formed using the same policy πti . Because the represented and true occupancies use the same policy 
+
+πti , ∥ˆρti − ρti∥1 = ∥ˆνti − νti ∥1. Combining this identity with (53) and (52), for every Ki(T ) ≤ t < T ,
+
+∥ˆρti − ρti∥1 ≤ 3|S i|
+
+κ max 
+
+> si,a i
+
+βt(si, a i) ≤ c |S i|
+
+κ
+
+r HiΛt
+
+δit ,
+
+which proves (17). Finally, using ∥ˆρti − ρti∥1 ≤ 2 for t < K i(T ) and PTt=1 t−1/2 ≤ 2√T ,
+
+1
+
+T
+
+X
+
+> t<T
+
+∥ˆρti − ρti∥1 ≤ c Ki(T )
+
+T + c |S i|
+
+κ
+
+r HiΛT
+
+δiT . (54) Since gti = gi(qt
+
+> −i
+
+) is independent of s′ 
+
+> i
+
+and ∥gti ∥∞ ≤ 1,
+
+X
+
+> t<T
+
+⟨ˆqti − qti , g ti ⟩ = X
+
+> t<T
+
+X
+
+> si,a i,s ′
+> i
+
+ ˆqti (si, a i, s ′
+
+> i
+
+) − qti (si, a i, s ′
+
+> i
+
+)gti (si, a i)
+
+= X
+
+> t<T
+
+X
+
+> si,a i
+
+ ˆρti(si, a i) − ρti(si, a i)gti (si, a i) ≤ X
+
+> t<T
+
+∥ˆρti − ρti∥1.
+
+Dividing by T and applying (54) proves (18). Finally, the visitation event above has probability at least 1 − γ/ 4, while the anytime transition-confidence event Econf of Lemma 10 has probability at least 1 − γ/ 4. Hence, by a union bound, their intersection has probability at least 1 − γ/ 2, complet-ing the proof. 
+
+37 C.3 Proof of Lemma 15 Proof Fix t ≥ DT and suppose the delay window [t − DT , t ] is clean , meaning that no player updates its confidence set during that window, and condition on Ft−DT . Freeze each player’s policy at πt−DT 
+
+> j
+
+and, as in Step 1 of the proof of Lemma 14, couple its actual local trajectory over the delay window with the corresponding frozen-policy trajectory, evolving under the true transition kernel Pj and starting from the same state at time t − DT .9 More precisely, whenever Sτj = ¯Sτj ,we use a maximal coupling of the one-step transition laws of the actual and frozen processes. Thus, the conditional probability that the two next states differ is bounded by the total variation distance between these one-step transition laws. Iterating this coupling over the delay window gives the path-separation bound in (46). Using this frozen-policy coupling argument, 
+
+P(( St, A t) ∈ · | F t−DT ) − P(( ¯St, ¯At) ∈ · | F t−DT ) TV 
+
+≤
+
+> n
+
+X
+
+> j=1
+
+P ∃ τ ∈ [t − DT , t ] : Sτj̸ = ¯Sτj Ft−DT
+
+ + sup 
+
+> s
+> n
+
+O
+
+> j=1
+
+πtj (· | sj ) −
+
+> n
+
+O
+
+> j=1
+
+πt−DT 
+
+> j
+
+(· | sj ) TV 
+
+,
+
+where in the above inequality the first term bounds the probability that the coupled state trajectories separate at some time during the delay window. On its complement, the two processes have the same terminal state St = ¯St = s. Conditional on this common state, the players choose their actions independently according to {πtj (· | sj )}nj=1 in the actual process and {πt−DT 
+
+> j
+
+(· | sj )}nj=1 
+
+in the frozen process, which gives the second term. By bounding each summand in the above inequality using (46) with D2 
+
+> T
+
+ηL j /δ 2 
+
+> j
+
+while bounding the second term using the product-TV bound 
+
+∥ O
+
+> j
+
+μj − O
+
+> j
+
+νj ∥TV ≤ X
+
+> j
+
+∥μj − νj ∥TV ,
+
+we can write 
+
+P(( St, A t) ∈ · | F t−DT ) − P(( ¯St, ¯At) ∈ · | F t−DT ) TV 
+
+≤ cD 2 
+
+> T
+
+η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ sup 
+
+> sn
+
+X
+
+> j=1
+
+∥πtj (· | sj ) − πt−DT 
+
+> j
+
+(· | sj )∥TV 
+
+≤ cD 2 
+
+> T
+
+η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ cD T η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
+≤ cD 2 
+
+> T
+
+η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
+, (55) where the second inequality follows from (16), and the last inequality is obtained by adjusting the constant c.Since, conditional on Ft−DT , the initial local states and the frozen policies {πt−DT 
+
+> j
+
+}nj=1 are fixed, and the local transition and action randomizations are independent across players, the frozen                
+
+> 9. As in the proof of Lemma 14, we denote the local state trajectories of the actual process and the frozen-policy process for player iby {Sτi}τand {¯Sτi}τ, respectively. Similarly, we denote the corresponding joint state trajectories by
+> {Sτ}τand {¯Sτ}τ, respectively.
+
+38 local processes evolve independently. Therefore, their conditional joint law factorizes and we have 
+
+P(( ¯St, ¯At) ∈ · | F t−DT ) −
+
+> n
+
+O
+
+> j=1
+
+ρt−DT 
+
+> jTV
+
+=
+
+> n
+
+O
+
+> j=1
+
+P(( ¯Stj , ¯Atj ) ∈ · | F t−DT ) −
+
+> n
+
+O
+
+> j=1
+
+ρt−DT 
+
+> jTV
+
+≤
+
+> n
+
+X
+
+> j=1
+
+P(( ¯Stj , ¯Atj ) ∈ · | F t−DT ) − ρt−DT 
+
+> jTV
+
+≤
+
+> n
+
+X
+
+> j=1
+
+P( ¯Stj ∈ · | F t−DT ) − νt−DT 
+
+> jTV
+
+≤ n(1 − κ)DT , (56) where the first inequality follows from the product-TV inequality, the second follows because apply-ing the common frozen action kernel πt−DT 
+
+> j
+
+(· | sj ) cannot increase total variation distance, while the third follows from Assumption 2. Finally, combining (55) and (56) by the triangle inequality gives the desired bound (19). 
+
+C.4 Proof of Lemma 16 Proof We work throughout on the event of Lemma 14, which holds with probability at least 1 −
+
+γ/ 2. Moreover, throughout we assume t ≥ DT as the first DT primitive times can be bounded directly and contribute at most cD T /(T δ i) after normalization. Now, fix t ≥ DT and call a window 
+
+[t − DT , t ] clean if no player updates its confidence set during that window, and contaminated 
+
+otherwise. Since player j has at most Jj (T ) confidence updates up to time T , and each such update can contaminate the delay windows associated with at most DT + 1 primitive times, the number of primitive times t ∈ { DT , . . . , T − 1} whose delay window [t − DT , t ] is contaminated satisfies 
+
+#{primitive times t with contaminated delay windows } ≲ DTnX
+
+> j=1
+
+Jj (T ). (57) For t ≥ DT , we use the direct decomposition 
+
+bRti − gti =
+
+ bRti − E[ bRti | F t−DT ]
+
+
+
++
+
+
+
+E[ bRti | F t−DT ] − gt−DT
+
+> i
+
+
+
++
+
+
+
+gt−DT 
+
+> i
+
+− gti
+
+
+
+. (58) The first term is a delayed sampling martingale fluctuation, the second is the delayed bias, and the last term captures the drift of the stationary payoff gradient over the delay window. 
+
+Step 1: Sampling term. We now control the delayed martingale term bRti − E[ bRti | F t−DT ]. By construction, ∥ bRti∥∞ ≤ 1/δ i, and hence bRti − E[ bRti | F t−DT ] ∞ ≤ 2/δ i. Moreover, 
+
+E
+
+h bRti − E[ bRti | F t−DT ] Ft−DT
+
+i
+
+= 0 .
+
+Because the centering is with respect to Ft−DT rather than Ft, partition DT ≤ t < T into the 
+
+DT + 1 residue classes modulo DT + 1 . Let Nr = {DT ≤ t < T : ( t mod DT + 1) = r}
+
+denote the rth residue class. Within each residue class, successive times are separated by DT + 1 ,
+
+39 so for every coordinate (si, a i, s ′
+
+> i
+
+) the corresponding centered terms form a martingale-difference sequence. Moreover, since ˆqt−DT 
+
+> i
+
+is Ft−DT -measurable and has unit mass, the inner product of 
+
+bRti − E[ bRti | F t−DT ] with ˆqt−DT 
+
+> i
+
+also forms a martingale-difference sequence on the same residue class. Thus, Freedman’s inequality gives, for every x > 0,
+
+P X
+
+> t∈N r
+
+ bRti − E[ bRti | F t−DT ]
+
+
+
+(si, a i, s ′
+
+> i
+
+) ≳
+
+p|N r|x + xδi
+
+!
+
+≤ 2e−x,
+
+P X
+
+> t∈N r
+
+D
+
+ˆqt−DT 
+
+> i
+
+, bRti − E[ bRti | F t−DT ]
+
+E
+
+≳
+
+p|N r|x + xδi
+
+!
+
+≤ 2e−x.
+
+Taking a union bound over all players, coordinates, and residue classes, with x = cΛT for a suffi-ciently large universal constant c, gives an event Egrad satisfying 
+
+P(Egrad ) ≥ 1 − γ
+
+4 .
+
+Since there are DT +1 residue classes and PDT 
+
+> r=0
+
+|N r| ≤ T , Cauchy–Schwarz gives PDT
+
+> r=0
+
+p|N r| ≤ pT (DT + 1) . Thus, summing the residue-class bounds, on Egrad , for any q′ 
+
+> i
+
+∈ ∆i,δ i (Pi), we have 
+
+X 
+
+> DT≤t<T
+
+D
+
+q′ 
+
+> i
+
+− ˆqt−DT 
+
+> i
+
+, bRti − E[ bRti | F t−DT ]
+
+E
+
+≲
+
+√T D T ΛT + DT ΛT
+
+δi
+
+. (59) It remains to replace ˆqt−DT 
+
+> i
+
+by ˆqti in (59). Using the occupancy movement bound (43) estab-lished in the proof of Lemma 14, we have ∥ˆqℓ+1  
+
+> i
+
+− ˆqℓi ∥1 ≤ Liηδi . Hence, on a clean delay window, 
+
+∥ˆqti − ˆqt−DT 
+
+> i
+
+∥1 ≤ DT Liηδi
+
+. (60) Using ∥ bRti − E[ bRti | F t−DT ]∥∞ ≤ 2/δ i and the trivial bound ∥ˆqti − ˆqt−DT 
+
+> i
+
+∥1 ≤ 2 at primitive times t
+
+with contaminated delay windows, whose total number is at most of order DT
+
+Pnj=1 Jj (T ) by (57), 
+
+X 
+
+> DT≤t<T
+
+D
+
+ˆqt−DT 
+
+> i
+
+− ˆqti , bRti − E[ bRti | F t−DT ]
+
+E
+
+≲ DT Liηδ2
+
+> i
+
+T + DT
+
+δinX
+
+> j=1
+
+Jj (T ). (61) Finally, by summing (59) and (61), and normalizing by T , we obtain 
+
+1
+
+T
+
+X 
+
+> DT≤t<T
+
+D
+
+q′ 
+
+> i
+
+− ˆqti , bRti − E[ bRti | F t−DT ]
+
+E
+
+≲
+
+√T D T ΛT + DT ΛT
+
+δiT + DT Liηδ2
+
+> i
+
++ DT
+
+δiT
+
+> n
+
+X
+
+> j=1
+
+Jj (T ).
+
+(62) 
+
+Step 2: Delayed bias. Fix an arbitrary (si, a i, s ′
+
+> i
+
+). Since ri(S, A )1{(Si, A i) = ( si, a i)} is a deterministic function of (S, A ) bounded by one, Lemma 15 implies that, on every clean window, 
+
+E rti 1{(Sti , A ti) = ( si, a i)} Ft−DT
+
+ − ρt−DT 
+
+> i
+
+(si, a i)gt−DT 
+
+> i
+
+(si, a i, s ′
+
+> i
+
+) =
+
+E ri(St, A t)1{(Sti , A ti) = ( si, a i)} Ft−DT
+
+ − E(S,A )∼N ρt−DTj
+
+ri(S, A )1{(Si, A i) = ( si, a i)}
+
+≲ D2 
+
+> T
+
+η
+
+> n
+
+X
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ n(1 − κ)DT . (63) 
+
+40 Since ˆρt−DT 
+
+> i
+
+(si, a i) is Ft−DT -measurable, we may divide (63) by ˆρt−DT 
+
+> i
+
+(si, a i) and bring this factor inside the conditional expectation. Using ˆρt−DT 
+
+> i
+
+(si, a i) ≥ δi, we obtain 
+
+E
+
+ rti 1{(Sti , A ti) = ( si, a i)}
+
+ˆρt−DT 
+
+> i
+
+(si, a i) Ft−DT
+
+
+
+− ρt−DT 
+
+> i
+
+(si, a i)ˆρt−DT 
+
+> i
+
+(si, a i) gt−DT 
+
+> i
+
+(si, a i, s ′
+
+> i
+
+)
+
+≲ D2 
+
+> T
+
+ηδinX
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ nδi
+
+(1 − κ)DT . (64) We now relate the delayed normalization in (64) to the current normalization used in bRti. On a clean delay window, using (60) and the fact that marginalization does not increase the ℓ1-norm, we have 
+
+∥ˆρti − ˆρt−DT 
+
+> i
+
+∥1 ≤ DT Liη/δ i. Since both ˆρti(si, a i) and ˆρt−DT 
+
+> i
+
+(si, a i) are at least δi,
+
+1ˆρti(si, a i) − 1ˆρt−DT 
+
+> i
+
+(si, a i) ≤ DT Liηδ3
+
+> i
+
+.
+
+Consequently, for any (si, a i, s ′
+
+> i
+
+) we have 
+
+E[ bRti(si, a i, s ′
+
+> i
+
+) | F t−DT ] − E
+
+ rti 1{(Sti , A ti) = ( si, a i)}
+
+ˆρt−DT 
+
+> i
+
+(si, a i) Ft−DT
+
+
+
+≤ DT Liηδ3
+
+> i
+
+. (65) Finally, since ∥gt−DT 
+
+> i
+
+∥∞ ≤ 1 and ˆρt−DT 
+
+> i
+
+(si, a i) ≥ δi,
+
+ρt−DT
+
+> i
+
+ˆρt−DT
+
+> i
+
+gt−DT 
+
+> i
+
+− gt−DT 
+
+> i∞
+
+≤ ∥ρt−DT 
+
+> i
+
+− ˆρt−DT 
+
+> i
+
+∥1
+
+δi
+
+≲ |S i|
+
+κδ i
+
+s
+
+HiΛT
+
+δi(t − DT ) . (66) where the second inequality follows by the pointwise occupancy bound (17) of Lemma 14. Com-bining (64), (65), and (66), for every t with a clean delay window and t − DT ≥ Ki(T ), we obtain 
+
+E[ bRti | F t−DT ] − gt−DT  
+
+> i∞
+
+≲ DT Liηδ3
+
+> i
+
++ D2 
+
+> T
+
+ηδinX
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ nδi
+
+(1 − κ)DT + |S i|
+
+κδ i
+
+s
+
+HiΛT
+
+δi(t − DT ) .
+
+For the remaining times, we use the trivial c/δ i bound. In particular, by (57), there are at most of order DT
+
+Pnj=1 Jj (T ) times whose associated delay windows are contaminated, and there are at most Ki(T ) times in the range DT ≤ t < T for which t − DT < K i(T ). Therefore, using PTu=1 u−1/2 ≤ 2√T , we obtain 
+
+1
+
+T
+
+X 
+
+> DT≤t<T
+
+E[ bRti | F t−DT ] − gt−DT  
+
+> i∞
+
+≲ DT Liηδ3
+
+> i
+
++ D2 
+
+> T
+
+ηδinX
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ nδi
+
+(1 − κ)DT
+
++ |S i|
+
+κδ i
+
+r HiΛT
+
+δiT + DT
+
+T δ inX
+
+> j=1
+
+Jj (T ) + Ki(T )
+
+T δ i
+
+. (67) 
+
+41 Step 3: Target drift. We now establish a bound on the target drift ∥gti − gt−DT 
+
+> i
+
+∥∞. Since no confidence update occurs during a clean delay window, (44) gives, for every ℓ ∈ [t − DT , t − 1] ,
+
+max 
+
+> sj
+
+∥P πℓ+1  
+
+> j
+> j
+
+(· | sj ) − P πℓj 
+
+> j
+
+(· | sj )∥1 ≤ 2Lj ηδ2
+
+> j
+
+.
+
+By stationarity and Assumption 2, 
+
+∥νℓ+1  
+
+> j
+
+− νℓj ∥1 = ∥νℓ+1  
+
+> j
+
+P πℓ+1  
+
+> j
+> j
+
+− νℓj P πℓj 
+
+> j
+
+∥1 ≤ max 
+
+> sj
+
+∥P πℓ+1  
+
+> j
+> j
+
+(· | sj ) − P πℓj 
+
+> j
+
+(· | sj )∥1 +(1 −κ)∥νℓ+1  
+
+> j
+
+− νℓj ∥1,
+
+and hence 
+
+∥νℓ+1  
+
+> j
+
+− νℓj ∥1 ≤ 2Lj ηκδ 2
+
+> j
+
+.
+
+Since ρℓj (sj , a j ) = νℓj (sj )πℓj (aj | sj ), using (16) gives 
+
+∥ρℓ+1  
+
+> j
+
+− ρℓj ∥1 ≤ ∥ νℓ+1  
+
+> j
+
+− νℓj ∥1 + max 
+
+> sj
+
+∥πℓ+1  
+
+> j
+
+(· | sj ) − πℓj (· | sj )∥1 ≲ Lj ηκδ 2
+
+> j
+
+. (68) Therefore, telescoping over the clean delay window and using the multilinearity of gi in the oppo-nents’ state–action occupancies, together with the fact that rewards lie in [0 , 1] , gives 
+
+∥gti − gt−DT 
+
+> i
+
+∥∞ ≤ X 
+
+> j̸=i
+
+∥ρtj − ρt−DT 
+
+> j
+
+∥1 ≤ X 
+
+> j̸=it−1
+
+X
+
+> ℓ=t−DT
+
+∥ρℓ+1  
+
+> j
+
+− ρℓj ∥1 ≲ DT η X 
+
+> j̸=i
+
+Lj
+
+κδ 2
+
+> j
+
+. (69) Here, the first inequality follows from the multilinearity of gi in the opponents’ state–action occu-pancies and the fact that rewards lie in [0 , 1] , the second inequality is obtained by telescoping over the clean delay window, while the last follows from (68). Now, using the bound (68) for clean windows and the trivial bound ∥gt−DT 
+
+> i
+
+− gti ∥∞ ≤ 1 on contaminated windows, we obtain 
+
+1
+
+T
+
+X 
+
+> DT≤t<T
+
+∥gt−DT 
+
+> i
+
+− gti ∥∞ ≲ DT η X 
+
+> j̸=i
+
+Lj
+
+κδ 2
+
+> j
+
++ DT
+
+T
+
+> n
+
+X
+
+> j=1
+
+Jj (T ). (70) 
+
+Putting all together: Since ∥q′ 
+
+> i
+
+− ˆqti ∥1 ≤ 2, combining (58), (62), (67), and (70), and absorbing the first DT primitive times and the smaller contaminated-window terms, gives 
+
+1
+
+T
+
+X
+
+> t<T
+
+⟨q′ 
+
+> i
+
+− ˆqti , bRti − gti ⟩ ≲
+
+√T D T ΛT + DT ΛT
+
+T δ i
+
++ DT ηL i
+
+δ3
+
+> i
+
++ D2 
+
+> T
+
+ηδinX
+
+> j=1
+
+Lj
+
+δ2
+
+> j
+
++ |S i|
+
+κδ i
+
+r HiΛT
+
+δiT
+
++ DT η X 
+
+> j̸=i
+
+Lj
+
+κδ 2
+
+> j
+
++ DT
+
+T δ inX
+
+> j=1
+
+Jj (T ) + DT + Ki(T )
+
+T δ i
+
+,
+
+where since (1 − κ)DT ≤ e−κD T ≤ γ  
+
+> 8nT 3
+
+, the exponentially small mixing term in (67) is absorbed into the displayed bound. Since P(Egrad ) ≥ 1 − γ/ 4, the result holds on the event of Lemma 14 and an additional event of probability at least 1−γ/ 4, uniformly over q′ 
+
+> i
+
+∈ ∆i,δ i (Pi). This proves (20). 
+
+42 Appendix D. Omitted Proofs for Section 6 
+
+D.1 Proof of Lemma 20 Proof Partition primitive time into deterministic blocks Bm = {ℓm, . . . , ℓ m + 2 Hi} with ℓm =
+
+m(2 Hi + 1) , as in the proof of Lemma 14. Because ηt → 0, for every sufficiently late block the small-movement condition (15), with η replaced by the stepsize at the beginning of the block, is satisfied. Thus, conditional on the filtration at the deterministic left endpoint, the event that the prescribed pair (si, a i) is observed in the block, or that a confidence update occurs in the block, has probability at least δi/4. We may therefore apply the same Freedman and union-bound argument leading to (51). To extend this finite-horizon bound to all sufficiently large times, we apply it on the nested dyadic horizons [0 , T k], Tk = 2 k, and use Borel–Cantelli to ensure that all sufficiently large such horizons are simultaneously good. More precisely, apply the argument on horizon Tk
+
+with failure probability γk = c0/(k + 1) 2, where c0 > 0 is fixed. Since P 
+
+> k≥0
+
+γk < ∞, the Borel–Cantelli lemma implies that, almost surely, there exists a finite random k0 such that the corresponding finite-horizon event holds for every k ≥ k0, simultaneously over the finitely many players and local pairs. Consequently, almost surely, for all sufficiently large k, the bound (51) holds simultaneously for all Ki(Tk) ≤ t ≤ Tk. For every sufficiently large t, let k = ⌈log 2 t⌉. Then 
+
+t ≤ Tk < 2t and Ki(Tk) = O(log( t + 2)) ≤ t. Hence (51) holds for all sufficiently large t, which gives (28). Thus, almost surely, we may choose a single finite random time T0 large enough that 
+
+k = ⌈log 2 t⌉ ≥ k0 and Ki(Tk) ≤ t for every player i and every t ≥ T0, as claimed. By substituting (28) into the definition of the confidence radius βti (si, a i) we get (29). Moreover, 
+
+qti (si, a i, s ′
+
+> i
+
+) = ρti(si, a i)Pi(s′ 
+
+> i
+
+| si, a i), ˆqti (si, a i, s ′
+
+> i
+
+) = ˆ ρti(si, a i) ˆP ti (s′ 
+
+> i
+
+| si, a i).
+
+Therefore, 
+
+∥ˆqti − qti ∥1 ≤ X
+
+> si,a i
+
+|ˆρti(si, a i) − ρti(si, a i)| X
+
+> s′
+> i
+
+ˆP ti (s′ 
+
+> i
+
+| si, a i)+ X
+
+> si,a i
+
+ρti(si, a i) X
+
+> s′
+> i
+
+| ˆP ti (s′ 
+
+> i
+
+| si, a i) − Pi(s′ 
+
+> i
+
+| si, a i)|≤ ∥ ˆρti − ρti∥1 + max 
+
+> si,a i
+
+∥ ˆP ti (· | si, a i) − Pi(· | si, a i)∥1
+
+≤ c |S i|
+
+κ max 
+
+> si,a i
+
+βti (si, a i) + 3 |S i| max 
+
+> si,a i
+
+βti (si, a i) = O
+
+r log( t + 2) 
+
+t + 1 
+
+
+
+→ 0, (71) where the third inequality uses (17) and (53), and the last equality is obtained by (29). 
+
+D.2 Proof of Lemma 21 Proof Fix x ∈ ∆i,δ i (Pti ) and let P x denote its induced transition kernel. By definition, P x ∈ P ti .On the anytime confidence event Econf , Pi ∈ P ti as well. Therefore, the same dyadic-confidence argument used to establish (53), with ˆP ti replaced by P x, gives 
+
+max 
+
+> si,a i
+
+∥P x(· | si, a i) − Pi(· | si, a i)∥1 ≤ 3|S i| max 
+
+> si,a i
+
+βti (si, a i). (72) Now x satisfies the normalization, flow, nonnegativity, and shrinkage constraints defining ∆i,δ i (Pi).Its only possible violation of this polytope is therefore in the true-kernel constraints 
+
+x(si, a i, s ′
+
+> i
+
+) = ρx(si, a i)Pi(s′ 
+
+> i
+
+| si, a i).
+
+43 Since x(si, a i, s ′
+
+> i
+
+) = ρx(si, a i)P x(s′ 
+
+> i
+
+| si, a i) and ρx(si, a i) ≤ 1, the kernel bound (72) controls the violation of these linear constraints. Hoffman’s error bound 10 for the fixed nonempty polytope 
+
+∆i,δ i (Pi) consequently gives dist 1(x, ∆i,δ i (Pi)) ≤ O |S i| max si,a i βti (si, a i). Taking the supre-mum over x ∈ ∆i,δ i (Pti ) and applying (29) proves (31). We next control the change of the iterate at a confidence update t ∈ R i. Since the confidence sets are nested and contain the true kernel Pi, ∆i,δ i (Pi) ⊆ ∆i,δ i (Pt+1  
+
+> i
+
+) ⊆ ∆i,δ i (Pti ). Thus, 
+
+dist 1
+
+ ˆqti , ∆i,δ i (Pt+1  
+
+> i
+
+) ≤ dist 1
+
+ ˆqti , ∆i,δ i (Pi) ≤ O |S i| max 
+
+> si,a i
+
+βti (si, a i), (73) where the second inequality follows from (31) since ˆqti ∈ ∆i,δ i (Pti ). At a confidence update time t,using the Euclidean proximal update rule in the algorithm, we can write 
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥2 = proj ∆i,δ i (Pt+1  
+
+> i)
+
+
+
+ˆqti +ηt bRti
+
+
+
+− ˆqti 2
+
+≤ proj ∆i,δ i (Pt+1  
+
+> i)
+
+
+
+ˆqti +ηt bRti
+
+
+
+− proj ∆i,δ i (Pt+1  
+
+> i)
+
+ ˆqti
+
+
+
+> 2
+
++ proj ∆i,δ i (Pt+1  
+
+> i)
+
+ ˆqti
+
+ − ˆqti 2
+
+≤ ηt∥ bRti∥2 + dist 2
+
+ ˆqti , ∆i,δ i (Pt+1  
+
+> i
+
+)
+
+≤ ηt
+
+p|S i|
+
+δi
+
++ dist 1
+
+ ˆqti , ∆i,δ i (Pt+1  
+
+> i
+
+)
+
+≤ ηt
+
+p|S i|
+
+δi
+
++ O |S i| max 
+
+> si,a i
+
+βti (si, a i),
+
+where the second inequality uses nonexpansiveness of projection, the third inequality holds because 
+
+dist 2 ≤ dist 1 and ∥ bRti∥2 ≤ p|S i|/δ i, and the last inequality follows from (73). Therefore, using the equivalence of norms in the fixed finite-dimensional occupancy space, 
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 ≤ θi
+
+
+
+max 
+
+> si,a i
+
+βti (si, a i) + ηt
+
+
+
+,
+
+where θi < ∞ depends only on the fixed problem parameters such as δi and |S i|.It remains to sum this bound over the confidence-update times t ∈ R i. Fix a local pair (si, a i)
+
+and let tk be the time at which its counter reaches the kth dyadic threshold, i.e., N tk 
+
+> i
+
+(si, a i) = 2 k.Since the counter can increase by at most one at each primitive time, tk ≥ 2k. Moreover, (28) implies that, for all sufficiently large k, tk ≤ ci2k for some constant ci < ∞, and hence tk ≍ 2k.Thus, by (29) and ηt = η0(t + 1) −a, we obtain max si,a i βtk 
+
+> i
+
+(si, a i) = O(√k 2−k/ 2) and ηtk =
+
+O(2 −ak ), where we note that both these sequences are summable. Since player i has only finitely many local state–action pairs (si, a i), summing over their dyadic confidence updates gives 
+
+X
+
+> t∈R i
+
+∥ˆqt+1  
+
+> i
+
+− ˆqti ∥1 ≤ θi|S i||A i|O
+
+ X 
+
+> k
+
+ √k 2−k/ 2 + 2 −ak 
+
+< ∞,
+
+which proves (32). 
+
+> 10. Hoffman’s error bound states that, for a nonempty polyhedron defined by a fixed finite system of linear equalities and inequalities, the distance of any point to the polyhedron is bounded by a constant times the magnitude of its constraint violations. The constant depends only on the coefficients of the fixed constraint system.
+
+44
