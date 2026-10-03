@@ -1,0 +1,1982 @@
+Title: Learning to Harvest Without Collapse in a Regenerative Commons: A Lagrangian Framework
+
+URL Source: https://arxiv.org/pdf/2609.36478v1
+
+Published Time: Wed, 30 Sep 2026 00:40:20 GMT
+
+Number of Pages: 41
+
+Markdown Content:
+# Learning to Harvest Without Collapse in a Regenerative Commons: A Lagrangian Framework 
+
+Jose Tupayachi 
+
+Oak Ridge National Laboratory Department of Industrial and Systems Engineering, University of Tennessee, Knoxville 
+
+Xueping Li 
+
+Department of Industrial and Systems Engineering, University of Tennessee, Knoxville 
+
+Soham Das 
+
+Department of Industrial and Systems Engineering, University of Tennessee, Knoxville 
+
+Abstract 
+
+The tragedy of the commons poses a multi-agent safety problem: reward-seeking agents can deplete a shared resource, and cooperation among its users does not itself specify how much must be preserved. We make preservation an explicit requirement by formulating a regenerative commons as a constrained Markov game or a constrained multi-agent MDP with a designer-specified depletion budget. We develop a nonstationary Lagrangian framework that constructs a policy sequence from solutions of unconstrained games or cooperative control problems. Extending earlier time-average constructions, we introduce average-epoch solution concepts for reset episodes with discounted rewards and terminal costs. We prove a reward-independent feasibility certificate, cooperative feasibility and approximate optimality against feasible policy mixtures, and an extension to unbiased sampled costs. For self-interested agents, a constrained Nash certificate quantifies the price-dispersion term introduced by deviations that redistribute budget across epochs. Under the stated assumptions on solver accuracy and multiplier updates, these results give constrained policy-sequence guarantees using solutions of unconstrained problems. Experiments with constrained IPPO and MAPPO in a Gordon–Schaefer fishery examine how depletion budgets shape stock retention, harvest rewards, and price adaptation. 
+
+Keywords: Multi-agent reinforcement learning; constrained Markov games; tragedy of the commons; Lagrangian methods; multi-agent AI safety. 
+
+1 Introduction 
+
+Agents can pursue their assigned rewards while collectively degrading the resource on which they depend. The tragedy of the commons (Hardin, 1968) makes this problem concrete for multi-agent AI safety. In a renewable fishery, extraction provides an immediate benefit to the harvester, while depletion changes the opportunities available to every participant. Classical commons models (Gordon, 1954; Levhari and Mirman, 1980), sequential social dilemmas and common-pool MARL (Leibo et al., 2017; Pérolat et al., 2017), and GovSim’s language-agent societies (Piatti et al., 1arXiv:2609.36478v1 [cs.AI] 29 Sep 2026 2024) motivate studying this tension in learning populations. Cooperative AI and multi-agent-risk research motivate examining collective outcomes (Dafoe et al., 2020; Hammond et al., 2025). We ask how to make resource preservation an explicit requirement of multi-agent learning. We begin with a designer-specified depletion budget, which sets how much common stock may be depleted by the end of an episode. We formulate the commons as a constrained Markov game 
+
+(CMG) (Altman and Shwartz, 2000) when harvesters pursue individual rewards and as a constrained multi-agent MDP (CM-MDP) when they optimize a team reward. Both formulations impose the same ecological requirement. Cooperation among harvesters can change how extraction is coordinated, but does not itself specify the stock that must remain. The budget makes that requirement explicit, separating participant reward from protection of the shared resource (Hammond et al., 2025). Changing the budget changes the admissible level of depletion. The constraint creates a learning problem. We want to use unconstrained reward-optimization algorithms to meet a depletion budget while retaining either individual incentives or a team objective. We develop a nonstationary Lagrangian policy-sequence framework . At each epoch, a shared multiplier prices depletion and defines an unconstrained Lagrangian game or control problem. We compute and execute a stationary solution, then update the price from measured budget excess. This separates solving the reward-based problem at a given price from regulating resource use across epochs. Suitable unconstrained solvers can therefore be reused: the theory requires approximate Nash equilibria in the game or approximately optimal joint policies in the team problem, with their solution errors entering the guarantees. The nonstationary policy sequence is the solution produced by this framework. A policy selected at one price need not itself meet the budget, and changing prices may repeatedly select different harvesting policies. Lower-depletion epochs can compensate for higher-depletion epochs, allowing the sequence to meet the resource requirement without converging to a single policy or price. The repeated process of selecting, executing, and updating policies thus provides a policy framework for the constrained problem. We choose an average-epoch solution concept to evaluate it: expected terminal depletion is averaged across reset episodes, while each episode uses one stationary policy on the augmented state, including episode time. Our theory extends the time-average policy-sequence constructions of Das et al. (2025b;a). Rewards are discounted within each episode; episodic rewards and terminal costs are then averaged across epochs. This preserves the nonstationary construction while replacing physical-time averages along continuous play with discounted episodic performance and an average terminal-resource requirement. For every realized sequence of costs, a bound links cumulative budget excess to multiplier growth independently of reward optimization. For the team problem, strict feasibility and approximate Lagrangian optimization yield multiplier control, finite-sequence feasibility and reward bounds against feasible mixtures, and an almost-sure feasibility extension for unbiased sampled costs. For the game, unilateral deviations may redistribute their budget across epochs while opponents’ policies remain fixed. We bound these gains and identify the additional price-dispersion term needed for a constrained Nash certificate. The results distinguish what is needed to satisfy the budget, achieve high team reward, and limit unilateral improvement. In the commons, the budget specifies the stock-preservation requirement, and price feedback guides the choice of harvesting policies that share this budget across episodes. We evaluate this mechanism in a Gordon–Schaefer commons (Gordon, 1954; Schaefer, 1957) using individual-reward IPPO and team-reward MAPPO. Stock, harvest, and multiplier trajectories show how the chosen budget affects resource use, reward, and price adaptation. PPO–PI learners show near-target depletion in 2several regimes. The test-bed illustrates resource regulation through changing policies, while the theory establishes conditions under which unconstrained subproblem solutions yield the required constrained policy sequence. 
+
+1.1 Related work and position 
+
+Commons research studies how individual extraction incentives interact with shared resource dy-namics, from open-access fisheries to strategic harvesting (Gordon, 1954; Levhari and Mirman, 1980). Ostrom’s institutional account emphasizes that resource governance admits diverse ar-rangements (Ostrom, 1990). MARL studies sequential social dilemmas (Leibo et al., 2017) and common-pool appropriation (Pérolat et al., 2017); GovSim examines sustainable cooperation among language agents (Piatti et al., 2024). Cooperation mechanisms include inequity aversion, reciprocity, and learned incentives (Hughes et al., 2018; Eccles et al., 2019; Yang et al., 2020). In renewable fisheries, shared environmental signals support temporal harvesting conventions and sustainable resource use (Danassis et al., 2022). Our formulation specifies a depletion budget and develops guarantees for the policy sequences generated by its Lagrangian updates. Feedback-evolving games study how strategic behavior and a shared environmental resource jointly evolve. Weitz et al. (2016) characterize oscillating tragedies of the commons, while Paarporn et al. (2018) study interventions through incentives and environmental information. Gavin et al. (2026) examine how boundedly rational learning and incentive policies affect resource preservation, and Vahmian and Paarporn (2026) analyze strategic extraction across multiple populations. Our formulation evaluates policy sequences across reset episodes under an explicit average terminal-depletion constraint, with guarantees for cooperative reward and constrained unilateral deviations. Constrained MDPs formalize reward optimization subject to resource requirements (Altman, 1999). Duality results give conditions under which constrained RL can be addressed through Lagrangian optimization (Paternain et al., 2019); obtaining a policy that meets the constraints remains a separate issue. Averaging the solutions obtained during dual-subgradient updates can recover feasible solutions (Larsson et al., 1999; Nedić and Ozdaglar, 2009). Constrained RL already returns mixtures of policies generated by reward-optimization solvers (Le et al., 2019; Miryoosefi et al., 2019); state-augmented RL incorporates evolving multipliers into execution (Calvo-Fullana et al., 2024). Our construction uses a solver to select a stationary policy at each price and evaluates the resulting policy sequence across reset episodes. The closest predecessors are the Lagrangian policy-sequence frameworks for constrained Markov games and cooperative MARL of Das et al. (2025b;a). They execute stationary solutions of uncon-strained Lagrangian problems in sequence and analyze reward and cost averaged over continuous play. We retain that method and develop an average-epoch criterion with discounted episodic rewards and terminal costs. The cooperative analysis compares against feasible policy mixtures and treats unbiased sampled costs. The strategic analysis allows unilateral deviations to redistribute budget across epochs, exposing a price-dispersion term in the Nash certificate. The contribution concerns the sequence criterion and its guarantees, building on established Lagrangian and policy-mixture constructions. Appendix A details this relationship. A different Lagrangian approach by Ding et al. (2023) proves regret and constraint-violation bounds for episodic two-player zero-sum games with independent transitions. Our general-sum result bounds feasibility and unilateral improvement in terms of solver accuracy and the generated prices. Practical constrained-policy methods include CPO (Achiam et al., 2017) and cooperative safe MARL (Gu et al., 2023). ACPO addresses average-reward constrained MDPs (Agnihotri et al., 32024), whose physical-time average differs from our average across reset episodes. Our experiments use PI feedback motivated by Stooke et al. (2020), while the theorems assume the specified projected multiplier update and bounds on the solvers’ solution errors. The experiments illustrate resource regulation with PPO–PI learners. Appendix H expands the governance and constrained-learning context, including comparisons with structured constrained-game methods. 
+
+2 A Regenerative Commons and Its Solution Concepts 
+
+We consider n = 2 harvesters with shared biomass Bt ∈ [0 , K ]. Each episode begins at B0 = K and lasts H decision steps. Agent i chooses effort ei,t ∈ [0 , 1] and receives catch hi,t = qe i,t Bt; if requested aggregate catch exceeds biomass, catches are scaled proportionally. Writing B′ 
+
+> t
+
+= Bt − ∑ 
+
+> i
+
+hi,t , the Gordon–Schaefer transition (Gordon, 1954; Schaefer, 1957) is 
+
+Bt+1 = clip [0 ,K ]
+
+> [
+
+B′ 
+
+> t
+
++ rB ′
+
+> t
+> (
+
+1 − B′
+
+> t
+
+K
+
+> )]
+
+. (1) The stage reward is raw catch Ri,t = hi,t . The experimental protocol specifies K = 1000, r = 0 .3, 
+
+q = 0 .5, H = 60, and γ = 0 .99 (Appendix F). Let Pi be the chosen class of stationary within-episode policies πi : s 7 → ∆( Ai) on the specified augmented observation (including episode time) and P = ∏ 
+
+> i
+
+Pi. For π ∈ P , define discounted episodic reward and terminal depletion 
+
+Jγi (π) = Eπ
+
+> [H−1∑
+> t=0
+
+γtRi,t 
+
+> ]
+
+, C(π) = Eπ
+
+> [
+
+1 − BH
+
+K
+
+> ]
+
+. (2) The requirement C ≤ ε demands an expected terminal stock of at least (1 − ε)K. The two objectives differ: in the constrained Markov game (CMG), agent i maximizes Jγi against the other agent, whereas in the constrained multi-agent MDP (CM-MDP), a designer maximizes Jγ 
+
+> Σ
+
+= ∑ 
+
+> i
+
+Jγi subject to the same global budget. For the commons, average-epoch feasibility expresses a resource requirement across repeated harvesting episodes: expected terminal stock, averaged across episodes, must be at least (1 − ε)K.This permits different harvesting policies to share a depletion budget, rather than requiring each policy selected during price adjustment to meet it separately. The requirement is appropriate when resource use may be balanced across episodes that reset to the same initial stock. We therefore evaluate the entire policy sequence. For M successive episodes, let ΠM = ( π0, . . . , πM −1), where each πk is stationary within episode k but the selected policy may change between episodes. With the episode reset just specified, its average-epoch values are ¯Ji,M (ΠM ) = 1
+
+M 
+
+> M−1∑
+> k=0
+
+Jγi (πk), ¯CM (ΠM ) = 1
+
+M 
+
+> M−1∑
+> k=0
+
+C(πk). (3) For example, with budget ε = 0 .1, two policies with expected depletion 0 .05 and 0 .15, used equally often, meet the average budget and retain 90% of carrying capacity on average at episode end. The second policy exceeds the budget individually. Thus the requirement controls average terminal depletion, not stock loss in every episode or at every physical time step. Without resets, changing a policy alters future starting-state distributions and the right-hand sides of (3) must be conditioned on each realized starting state. The earlier CMG and CM-MDP results instead evaluate continuous-play time averages of the form V si (Π) =4lim inf T →∞ T −1EΠ[∑ 
+
+> t<T
+
+Ri(st, a t) | s0 = s] and analogous average constraints (Das et al., 2025b;a). Our k indexes reset episodes and not physical time in one uninterrupted trajectory. 
+
+Definition 1 (Average-epoch constrained Nash target) . A sequence ΠM is an (α, δ )-average-epoch constrained Nash profile if ¯CM (ΠM ) ≤ ε + α and, for every agent i and every sequence of stationary unilateral deviations Σi = ( σ0 
+
+> i
+
+, . . . , σ M −1 
+
+> i
+
+) satisfying M −1 ∑ 
+
+> k
+
+C(σki , πk
+
+> −i
+
+) ≤ ε,
+
+¯Ji,M (ΠM ) ≥ 1
+
+M 
+
+> M−1∑
+> k=0
+
+Jγi (σki , πk
+
+> −i
+
+) − δ. (4) This is a constrained generalized Nash criterion (Rosen, 1965; Facchinei and Kanzow, 2007) on the product of players’ policy-sequence spaces: each player’s feasible deviations depend on the opponents. The target is episodic and discounted, and an alternative policy sequence can reallocate its constraint budget across episodes. We hold opponents’ policy sequence fixed when testing a deviation. An equilibrium of the adaptive learning algorithm, in which a deviation also changes future prices, would be a different object. Requiring alternative policies to satisfy C(σki , πk
+
+> −i
+
+) ≤ ε
+
+at every epoch gives a weaker test of equilibrium, which can be strictly weaker when deviations redistribute resource use across epochs. With reset episodes, a public uniform draw of one shared policy index reproduces the sequence’s average values. This may improve over requiring every component to be feasible, but need not improve over unrestricted randomized stationary policies. Appendix C gives the precise distinction. For the cooperative arm, the corresponding benchmark is 
+
+J⋆ 
+
+> Σ,M
+
+= sup    
+
+> ΠM: ¯CM(ΠM)≤ε
+
+1
+
+M 
+
+> M−1∑
+> k=0
+
+Jγ
+
+> Σ
+
+(πk). (5) The team formulation asks how effectively coordinated harvesters can use the commons while meeting its preservation requirement. A shared objective allows policies to be evaluated by their total harvest and compared with the best policy sequence satisfying the same depletion budget. Cooperation aligns the harvesters’ objectives, while the explicit constraint specifies how much stock must remain on average at episode end. The game formulation instead retains individual incentives and asks whether any harvester can improve its own reward through an average-feasible deviation. The two formulations therefore address complementary questions: the quality of coordinated resource use and the strategic stability of individually motivated resource use. Writing ¯JΣ,M = ∑ 
+
+> i
+
+¯Ji,M , a feasible sequence is δ-optimal when its average team value is at least J⋆ 
+
+> Σ,M
+
+− δ.
+
+3 Lagrangian Policy Sequences and Guarantees 
+
+The framework constructs policy sequences by adapting the mechanism of the average-reward CMG and cooperative results (Das et al., 2025b;a). For a shared budget and price λ ≥ 0, define the per-agent and team Lagrangians 
+
+Li(π, λ ) = Jγi (π) − λ[C(π) − ε], LΣ(π, λ ) = Jγ
+
+> Σ
+
+(π) − λ[C(π) − ε]. (6) At price λk, an ideal CMG oracle returns a stationary δ-Nash profile of the unconstrained Lagrangian game with payoffs Li(·, λ k); an ideal CM-MDP oracle returns a δ-optimal stationary joint policy for 
+
+LΣ(·, λ k). We execute that profile for episode k, record ̂ Ck = 1 − B(k) 
+
+> H
+
+/K , and update 
+
+λk+1 = [ λk + η(̂ Ck − ε)] +. (7) 5Algorithm 1 Lagrangian policy-sequence framework 
+
+Require: ε ∈ [0 , 1], η > 0, λ0 ≥ 0, δ ≥ 0, M, H ∈ N, P; mode m ∈ { CMG , CM-MDP } 
+
+> 1:
+
+for k = 0 , . . . , M − 1 do  
+
+> 2:
+
+if m = CMG then  
+
+> 3:
+
+πk ← O NE (λk, δ ) satisfying, for every i,sup 
+
+> zi∈P i
+
+Li(( zi, πk
+
+> −i
+
+), λ k) − L i(πk, λ k) ≤ δ 
+
+> 4:
+
+else  
+
+> 5:
+
+πk ← O team (λk, δ ) satisfying sup 
+
+> π∈P
+
+LΣ(π, λ k) − L Σ(πk, λ k) ≤ δ 
+
+> 6:
+
+end if  
+
+> 7:
+
+B(k)0 ← K 
+
+> 8:
+
+for t = 0 , . . . , H − 1 do  
+
+> 9:
+
+ei,t ∼ πki (· | oi,t ) for all i; ( h1: n,t , B (k)
+
+> t+1
+
+) ← Fishery( B(k) 
+
+> t
+
+, e 1: n,t ) via (1)  
+
+> 10:
+
+end for 
+
+> 11:
+
+̂ Ck ← 1 − B(k) 
+
+> H
+
+/K  
+
+> 12:
+
+λk+1 ← [λk + η(̂ Ck − ε)] + 
+
+> 13:
+
+end for  
+
+> 14:
+
+return Π M = ( π0, . . . , πM −1), {̂ Ck, λ k}k<M 
+
+The price sequence selects π0, π1, . . . ; these stationary components constitute the nonstationary 
+
+ΠM in (3). The update uses the global terminal cost and one shared price, even though agents have different objectives. The multiplier update is part of the policy-generating procedure: the results evaluate the sequence it produces, so feasibility does not require extracting a single limiting policy. Different unconstrained solvers can be used when their solution errors satisfy the stated bounds. Our analysis extends the time-average constructions of Das et al. (2025b;a) to discounted reset episodes and terminal costs. Appendix A records the precise average-reward assumptions and guarantees from the two source papers. Algorithm 1 repeatedly chooses a harvesting policy, runs it for an episode, and uses the resulting depletion to adjust the price. At the current price, the solver seeks an approximate Nash equilibrium for individually motivated agents or an approximately optimal policy for the team. Depletion above the budget raises the price; depletion below it lowers the price, subject to remaining nonnegative. The algorithm returns the sequence of policies used, whose combined resource use and rewards are evaluated by our results. The deterministic analysis updates prices using expected depletion 
+
+C(πk). The sampled-cost analysis instead uses episode measurements whose expected value, given the information available before the episode, equals C(πk). This is the conditional-unbiasedness assumption used in the earlier epoch constructions (Das et al., 2025b;a). Appendix D discusses the continuing, time-average interpretation and its evaluation assumptions. 
+
+Proposition 1 (Feasibility certificate) . For any realized costs ̂ Ck ∈ [0 , 1] , recursion (7) implies 
+
+1
+
+M 
+
+> M−1
+
+∑
+
+> k=0
+
+̂
+
+Ck − ε ≤ λM − λ0
+
+ηM . (8) 
+
+Consequently λM = o(M ) implies realized average-epoch feasibility. If, additionally, E[̂ Ck | F k] = 
+
+C(πk) and episodes have bounded costs, the same asymptotic statement holds for M −1 ∑ 
+
+> k
+
+C(πk)
+
+almost surely, provided λM = o(M ) almost surely. 
+
+The full proof is in Appendix B.1. 6Under Proposition 1, sustained budget excess must accumulate in the multiplier. Sublinear price growth then implies average feasibility even when the selected policies keep changing. This reward-independent argument carries the policy-sequence mechanism beyond time-average rewards to our discounted-episode objective and terminal-cost requirement. Unconstrained solvers select policies with different rewards and costs, while controlling multiplier growth ensures feasibility on average. The bound averages cost minus budget, allowing epochs below the budget to compensate for epochs above it; it gives neither a final-policy nor a per-episode guarantee. An upper cap can hide continuing excess and invalidate the inference. The next result supplies cooperative multiplier control. Strategic performance requires its own certificate. 
+
+Proposition 2 (Cooperative feasibility and reward) . Suppose C(π†) ≤ ε − σ for some joint policy and σ > 0, Jγ 
+
+> Σ
+
+has range at most R, and the oracle is δ-optimal for the exact team Lagrangian at each price. Use the expected-cost update λk+1 = [ λk + η(C(πk) − ε)] +. Set G = max {ε, 1 − ε} and 
+
+B = max {λ0, (R + δ)/σ + ηG }. Then, for every M ≥ 1,
+
+0 ≤ λk ≤ B, ¯CM ≤ ε + B − λ0
+
+ηM , (9) ¯JΣ,M ≥ J⋆ 
+
+> Σ,M
+
+− δ − ηG 2
+
+2 − λ20
+
+2ηM . (10) The full proof is in Appendix B.3. Proposition 2 is the framework’s cooperative performance guarantee, built on Proposition 1’s feasibility mechanism. In the cooperative commons, unconstrained team optimization produces a policy sequence meeting the average terminal-stock requirement up to the stated tolerance, with discounted harvest reward within the stated shortfall of the best average-feasible sequence. Abstention establishes that the budget is attainable; the reward bound measures how effectively the framework uses the resource. Neither guarantee requires convergence to one harvesting policy. Proposition 2 supplies the price control left open by Proposition 1. Joint abstention gives C(π†) = 0, hence strict slack σ = ε > 0. At sufficiently high prices, approximate team optimization must select a policy meeting the budget, keeping prices bounded. The feasibility tolerance is O(( ηM )−1); the reward shortfall contains the solver error δ, step-size term ηG 2/2, and initialization term. With 
+
+λ0 = 0 and η = M −1/2, both finite-horizon terms are O(M −1/2). Constants worsen as σ shrinks, and abstention provides no strict slack at ε = 0. This builds on averaging in dual subgradient methods (Larsson et al., 1999; Nedić and Ozdaglar, 2009) and policy mixtures in constrained RL (Le et al., 2019; Miryoosefi et al., 2019), with performance compared against feasible policy sequences. Theorem 2 in Appendix B removes the need to observe exact expected costs in the cooperative update. Under conditional unbiasedness and the same cooperative oracle and strict-feasibility assumptions, λM = O(log M ) almost surely, and both sampled and conditional-expected average depletion are asymptotically feasible. For fixed η and confidence, its finite-sample cost bound includes an O(M −1/2) sampling term. Its reward guarantee holds in expectation, with the same oracle and step-size errors. Theorem 1 provides the framework’s strategic performance guarantee. It bounds an individual harvester’s gain from changing policies under Definition 1, a question distinct from resource protection or team reward. Its full proof is in Appendix B.5. 
+
+Theorem 1 (Finite-sequence constrained Nash certificate) . Suppose every πk is a δ-Nash profile of the game with payoffs Li(·, λ k), and use the expected-cost projected update with constant η > 0. Set 
+
+7G = max {ε, 1 − ε}. Put 
+
+αM = 
+
+> [
+
+λM − λ0
+
+ηM 
+
+> ]
+> +
+
+, ∆M = inf 
+
+> ℓ≥0
+
+1
+
+M
+
+> ∑
+> k<M
+
+|λk − ℓ|.
+
+Then ΠM satisfies Definition 1 with feasibility tolerance αM and deviation tolerance 
+
+δM = δ + ηG 2
+
+2 + λ20
+
+2ηM + G∆M . (11) 
+
+This is an a posteriori certificate. It does not assert that αM or ∆M vanishes. 
+
+For individually motivated harvesters, Theorem 1 connects approximate equilibria of unconstrained Lagrangian games to a constrained policy sequence: αM bounds average budget excess, and δM
+
+bounds each agent’s gain from any average-feasible deviation sequence against the opponents’ fixed sequence. Unlike the team reward comparison in Proposition 2, this tests whether reallocating one’s own depletion budget across epochs can improve individual harvest. The additional G∆M
+
+term accounts for spending more of that budget at high prices and compensating at low prices. For example, excess costs ( −a, +a) at prices (0 , L ) have zero mean but price-weighted mean La/ 2. Thus bounded prices suffice for asymptotic feasibility, while persistent price oscillations can keep the strategic error bound positive. Price convergence to a finite limit gives ∆ M → 0; at fixed η, the remaining bound is δ + ηG 2/2. The cooperative and strategic results thus address both collective reward and individual incentives under the resource budget. The experiments use independent PPO for individual rewards and MAPPO for the team re-ward (Schulman et al., 2017; de Witt et al., 2020; Yu et al., 2022). After each episode, a shared controller adjusts the depletion price using both the current budget excess and an accumulated record of past excesses. This feedback guides subsequent policy updates. Several budget regimes exhibit depletion below or near their targets with approximate PPO updates, dense reward shaping, and capped proportional–integral (PI) feedback, showing useful resource regulation beyond the precise implementation analyzed in the theory. Algorithms A1 and A2 in Appendix D describe the learners; Appendix F gives the controller and training settings. 
+
+4 Experiments 
+
+We evaluate constrained IPPO and MAPPO at depletion budgets ε ∈ { 0.01 , 0.05 , 0.1, 0.3, 0.4, 0.6},with three seeds per method–budget pair. Terminal depletion measures the resource requirement, harvest return measures its reward consequences, and the price records feedback used to regulate depletion. Actors and prices change across training epochs, generating a sequence of harvesting policies. The three experimental figures show depletion, unpenalized return, and the shared price over the final 2,000 epochs. Each curve reports a seed mean and its envelope spans the seed minimum–maximum. These training measurements describe late-window tracking and adaptation, not held-out evaluation of a final policy or the full-sequence quantity ¯CM in our solution concept. Each run comprises 20,000 training epochs. Protocol details are in Appendix F. 
+
+4.1 Constraint tracking is budget- and window-dependent 
+
+Figure 1 examines whether the depletion budget provides practical control over resource use. Smaller budgets demand greater terminal-stock preservation, and the learned depletion trajectories 80 250 500 750 1000 1250 1500 1750 2000 Epoch (last 2000) 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 Depletion  c = 1  BT/K          
+
+> (A) IPPO
+> = 0.01
+> = 0.05
+> = 0.1
+> = 0.3
+> = 0.4
+> = 0.6
+> 0250 500 750 1000 1250 1500 1750 2000 Epoch (last 2000) Depletion  c = 1  BT/K
+> (B) MAPPO
+> = 0.01
+> = 0.05
+> = 0.1
+> = 0.3
+> = 0.4
+> = 0.6
+> Constraint convergence: depletion cover final epochs (mean ± [min, max] across seeds)
+
+Figure 1: Terminal depletion: horizontal axis is the epoch offset within the final 2,000 epochs; vertical axis is c = 1 − BT /K (T = H). Panels (A)/(B) show IPPO/MAPPO. Colors denote budgets 
+
+ε; dotted horizontal lines mark their targets. Curves show seed means. Envelopes span the seed minimum–maximum. See Appendix F.1 for notation. reflect these different requirements in both the individual-reward and team-reward settings. The smallest budget produces strong stock preservation; larger budgets permit greater depletion, with intermediate budgets showing more variation across seeds and epochs. The reference lines mark the allowed depletion ε. Curves below a reference line meet that budget in the displayed measurement, while crossings identify excess depletion. The seed envelopes show that a mean near the target can coexist with individual seeds above it. 
+
+4.2 The reward–sustainability tradeoff 
+
+The resource constraint deliberately changes the optimization problem. Figure 2 shows the harvest return associated with different depletion budgets over the same displayed late-training horizon. The tightest budget is accompanied by low return; larger budgets generally show higher returns, with little separation between MAPPO at budgets .4 and .6. The budget specifies how much terminal stock can be sacrificed in pursuit of harvest. Harvest return and depletion should be read together: each budget defines a different resource requirement. The theoretical reward benchmark compares sequences satisfying the same budget; the experimental curves show the harvest associated with each chosen budget. In Fig. 3, tight budgets sustain positive prices, while MAPPO’s price is near zero at ε = 0 .6, consistent with little sustained price pressure being needed in that displayed loose-budget regime. Price magnitude also depends on reward scale, penalty scale, update interval, and PI gains, so it cannot directly measure reward foregone. The price trajectory records feedback between budget excess and learning. Positive excess depletion increases the integral state until its cap and contributes a positive proportional term; slack has the opposite effect, subject to projection. The total price need not increase after every violating epoch, since the proportional term also changes from the previous epoch. Actors then adapt to the changed penalty, which can alter subsequent depletion. This delayed interaction can generate oscillation even when the budget is fixed (Stooke et al., 2020). 9Figure 2: Harvest return: horizontal axis is the epoch offset within the final 2,000 epochs; vertical axis is undiscounted joint/team return (the trainer logs total harvest divided by K). Panels (A)/(B) show IPPO/MAPPO; colors denote ε. Curves show seed means. Envelopes span their minimum– maximum. This is not the discounted objective Jγ
+
+> Σ
+
+; see Appendix F.1. 
+
+Figure 3: Ecological price: horizontal axis is the epoch offset within the final 2,000 epochs; vertical axis is the shared PI multiplier λ. Panels (A)/(B) show IPPO/MAPPO; colors denote ε. Curves show seed means and envelopes span seed ranges. This λ is distinct from λGAE .Figure 3 shows continued adaptation within the displayed window. IPPO retains its largest price at the tightest budget. MAPPO at budget .3 shows a price that first falls and then rises, while its price at .6 stays near zero. Learned prices need not decrease monotonically with the budget at each epoch because each budget induces a different policy and controller history. Persistent price variation is compatible with changing policies; under the game certificate it also enters the deviation bound through price dispersion. 10 4.3 Empirical scope and implementation limits 
+
+The evaluation examines how the nonstationary Lagrangian framework regulates resource use in the constrained commons. Establishing how frequently unconstrained MARL leads to depletion would require a separate statistical study across learning algorithms, environments, and systematically varied—including adversarially selected—parameters. Here we examine budget tracking, harvest reward, and price adaptation with practical learners that depart from the exact optimization and multiplier updates assumed by the theory. The evaluation uses stochastic policies in one two-agent environment with deterministic stock dynamics. PPO performs updates on shaped rewards, and its dense one-sided reward shaping and capped PI feedback differ from the exact terminal-cost Lagrangian and uncapped projected update analyzed in the theory. Several displayed regimes exhibit near-target depletion with this implementation. Excursions rule out per-epoch feasibility in the displayed window; they neither establish nor refute full-sequence average feasibility. The experiments do not measure oracle error, feasible-deviation gains, or cooperative optimality gaps. Joint abstention verifies cooperative strict feasibility when included in the policy class. The uniform unilateral Slater condition in the prior CMG result fails in this fishery: one agent cannot offset maximal extraction by its opponent (Appendix C). This explains why observed stock regulation is assessed separately from a Nash claim. The ecological measurement is terminal depletion. It does not control within-episode stock minima or ensure safety in every episode. Reset-episode averaging is appropriate when resource requirements may be balanced across episodes; irreversible-collapse applications instead require control of the relevant trajectory event, potentially with a safety filter (Wabersich and Zeilinger, 2021). 
+
+5 Conclusion 
+
+The tragedy of the commons motivates a learning problem in which resource preservation is an explicit requirement. We formulate this requirement through a depletion budget and develop an average-epoch solution concept for nonstationary policy sequences. Our Lagrangian framework connects solutions of unconstrained games and team problems to feasibility, cooperative reward, and constrained Nash guarantees under stated assumptions. The fishery experiments illustrate how the budget shapes terminal stock, harvest return, and price adaptation, through the generated policy sequences. The resulting approach gives resource protection a specified quantitative target and provides a mathematical basis for evaluating the policies generated as agents learn to use the commons. 
+
+Reproducibility statement. Appendix F specifies the model, training protocol, and plot con-ventions; Appendix G discusses the interpretation of the experimental curves. 
+
+AI-use statement. An AI assistant was used to help develop mathematical arguments, interpret experimental results, identify references, and edit the manuscript and LaTeX. The authors are responsible for all scientific statements. 
+
+References 
+
+Joshua Achiam, David Held, Aviv Tamar, and Pieter Abbeel. Constrained policy optimization. In 
+
+Proceedings of the 34th International Conference on Machine Learning (ICML) , volume 70 of 11 Proceedings of Machine Learning Research , pages 22–31, 2017. URL https://proceedings.mlr. press/v70/achiam17a.html .Akhil Agnihotri, Rahul Jain, and Haipeng Luo. ACPO: A policy optimization algorithm for average MDPs with constraints. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pages 397–415, 2024. URL 
+
+https://proceedings.mlr.press/v235/agnihotri24a.html .Pragnya Alatur, Giorgia Ramponi, Niao He, and Andreas Krause. Provably learning nash policies in constrained markov potential games. In Proceedings of the 23rd International Conference on Autonomous Agents and Multiagent Systems (AAMAS) , 2024. URL https://www.ifaamas.org/ Proceedings/aamas2024/pdfs/p31.pdf .Eitan Altman. Constrained Markov Decision Processes . Chapman & Hall/CRC, 1999. Eitan Altman and Adam Shwartz. Constrained Markov games: Nash equilibria. In Advances in Dynamic Games and Applications , volume 5 of Annals of the International Society of Dynamic Games , pages 213–221. Birkhäuser, 2000. doi: 10.1007/978-1-4612-1336-9_11. Vivek S. Borkar. An actor-critic algorithm for constrained markov decision processes. Systems & Control Letters , 54(3):207–213, 2005. doi: 10.1016/j.sysconle.2004.08.007. Stéphane Boucheron, Gábor Lugosi, and Pascal Massart. Concentration Inequalities: A Nonasymp-totic Theory of Independence . Oxford University Press, 2013. URL https://academic.oup.com/ book/26549 .Emilio Calvano, Giacomo Calzolari, Vincenzo Denicolò, and Sergio Pastorello. Artificial intelligence, algorithmic pricing, and collusion. American Economic Review , 110(10):3267–3297, 2020. doi: 10.1257/aer.20190623. Miguel Calvo-Fullana, Santiago Paternain, Luiz F. O. Chamon, and Alejandro Ribeiro. State augmented constrained reinforcement learning: Overcoming the limitations of learning with rewards. IEEE Transactions on Automatic Control , 69(7):4275–4290, 2024. doi: 10.1109/TAC. 2023.3319070. Ziyi Chen, Shaocong Ma, and Yi Zhou. Finding correlated equilibrium of constrained Markov game: A primal-dual approach. In Advances in Neural Information Processing Systems ,volume 35, 2022. URL https://proceedings.neurips.cc/paper_files/paper/2022/hash/ a3f8f584febcc88ed8cdeb30b096db34-Abstract-Conference.html .William L. Cooper, Tito Homem-de Mello, and Anton J. Kleywegt. Learning and pricing with models that do not explicitly incorporate competition. Operations Research , 63(1):86–103, 2015. doi: 10.1287/opre.2014.1341. Allan Dafoe, Edward Hughes, Yoram Bachrach, Tantum Collins, Kevin R. McKee, Joel Z. Leibo, Kate Larson, and Thore Graepel. Open problems in cooperative AI. arXiv preprint arXiv:2012.08630 ,2020. URL https://arxiv.org/abs/2012.08630 .Panayiotis Danassis, Zeki Doruk Erden, and Boi Faltings. Exploiting environmental signals to enable policy correlation in large-scale decentralized systems. Autonomous Agents and Multi-Agent Systems , 36(1):13, 2022. doi: 10.1007/s10458-021-09541-7. URL https://doi.org/10.1007/ s10458-021-09541-7 .12 Soham Das and Ceyhun Eksin. Learning Nash in constrained Markov games with an α-potential. 
+
+IEEE Control Systems Letters , 8:808–813, 2024. doi: 10.1109/LCSYS.2024.3402132. Soham Das, Luiz F. O. Chamon, Santiago Paternain, and Ceyhun Eksin. A Lagrangian framework for safe cooperative reinforcement learning. In Proceedings of the IEEE Conference on Decision and Control (CDC) , pages 5112–5119, 2025a. doi: 10.1109/CDC57313.2025.11312681. Soham Das, Santiago Paternain, Luiz F. O. Chamon, and Ceyhun Eksin. The Lagrangian method for solving constrained Markov games. arXiv preprint arXiv:2503.10561 , 2025b. URL https: //arxiv.org/abs/2503.10561 .Christian Schroeder de Witt, Tarun Gupta, Denys Makoviichuk, Viktor Makoviychuk, Philip H. S. Torr, Mingfei Sun, and Shimon Whiteson. Is independent learning all you need in the StarCraft multi-agent challenge? arXiv preprint arXiv:2011.09533 , 2020. doi: 10.48550/arXiv.2011.09533. Dongsheng Ding, Xiaohan Wei, Zhuoran Yang, Zhaoran Wang, and Mihailo Jovanovic. Provably efficient generalized Lagrangian policy optimization for safe multi-agent reinforcement learning. In Proceedings of the 5th Annual Learning for Dynamics and Control Conference , volume 211 of 
+
+Proceedings of Machine Learning Research , pages 315–332, 2023. URL https://proceedings. mlr.press/v211/ding23a.html .Rick Durrett. Probability: Theory and Examples . Cambridge University Press, 5 edition, 2019. doi: 10.1017/9781108591034. Tom Eccles, Edward Hughes, János Kramár, Steven Wheelwright, and Joel Z. Leibo. Learning reciprocity in complex sequential social dilemmas. arXiv preprint arXiv:1903.08082 , 2019. doi: 10.48550/arXiv.1903.08082. Francisco Facchinei and Christian Kanzow. Generalized Nash equilibrium problems. 4OR , 5(3): 173–210, 2007. doi: 10.1007/s10288-007-0054-4. Francisco Facchinei and Christian Kanzow. Penalty methods for the solution of generalized nash equilibrium problems. SIAM Journal on Optimization , 20(5):2228–2253, 2010. doi: 10.1137/ 090749499. R. C. Gavin, Keith Paarporn, and Ming Cao. Learning to avoid tragedies: Boundedly rational agents in feedback-evolving games. IEEE Transactions on Automatic Control , 2026. doi: 10.1109/ TAC.2026.3685548. Early access. H. Scott Gordon. The economic theory of a common-property resource: The fishery. Journal of Political Economy , 62(2):124–142, 1954. doi: 10.1086/257497. Shangding Gu, Jakub Grudzien Kuba, Yuanpei Chen, Yali Du, Long Yang, Alois Knoll, and Yaodong Yang. Safe multi-agent reinforcement learning for multi-robot control. Artificial Intelligence , 319: 103905, 2023. doi: 10.1016/j.artint.2023.103905. Lewis Hammond, Alan Chan, Jesse Clifton, Jason Hoelscher-Obermaier, Akbir Khan, Euan McLean, Chandler Smith, et al. Multi-agent risks from advanced AI. arXiv preprint arXiv:2502.14143 ,2025. URL https://arxiv.org/abs/2502.14143 .Garrett Hardin. The tragedy of the commons. Science , 162(3859):1243–1248, 1968. doi: 10.1126/ science.162.3859.1243. 13 Edward Hughes, Joel Z. Leibo, Matthew Phillips, Karl Tuyls, Edgar Duéñez-Guzmán, Antonio García Castañeda, Iain Dunning, Tina Zhu, Kevin McKee, Raphael Koster, Heather Roff, and Thore Graepel. Inequity aversion improves cooperation in intertemporal social dilemmas. In Ad-vances in Neural Information Processing Systems , volume 31, 2018. URL https://proceedings. neurips.cc/paper/2018/hash/7fea637fd6d02b8f0adf6f7dc36aed93-Abstract.html .Philip Jordan, Anas Barakat, and Niao He. Independent learning in constrained markov potential games. In Proceedings of the 27th International Conference on Artificial Intelligence and Statistics ,volume 238 of Proceedings of Machine Learning Research , pages 4024–4032, 2024. URL https: //proceedings.mlr.press/v238/jordan24a.html .Torbjörn Larsson, Michael Patriksson, and Ann-Brith Strömberg. Ergodic, primal convergence in dual subgradient schemes for convex programming. Mathematical Programming , 86:283–312, 1999. doi: 10.1007/s101070050090. Hoang Le, Cameron Voloshin, and Yisong Yue. Batch policy learning under constraints. In 
+
+Proceedings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , pages 3703–3712, 2019. URL https://proceedings.mlr.press/ v97/le19a.html .Joel Z. Leibo, Vinicius Zambaldi, Marc Lanctot, Janusz Marecki, and Thore Graepel. Multi-agent reinforcement learning in sequential social dilemmas. In Proceedings of the 16th International Conference on Autonomous Agents and Multiagent Systems (AAMAS) , pages 464–473, 2017. URL 
+
+https://arxiv.org/abs/1702.03037 .Joel Z. Leibo, Edgar A. Duéñez-Guzmán, Alexander Vezhnevets, John P. Agapiou, Peter Sunehag, Raphael Koster, Jayd Matyas, Charlie Beattie, Igor Mordatch, and Thore Graepel. Scalable evaluation of multi-agent reinforcement learning with melting pot. In Proceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Re-search , pages 6187–6199, 2021. URL https://proceedings.mlr.press/v139/leibo21a.html .Alistair Letcher, Jakob Foerster, David Balduzzi, Tim Rocktäschel, and Shimon Whiteson. Stable opponent shaping in differentiable games. In International Conference on Learning Representations (ICLR) , 2019. URL https://openreview.net/forum?id=SyGjjsC5tQ .David Levhari and Leonard J. Mirman. The great fish war: An example using a dynamic cournot-nash solution. The Bell Journal of Economics , 11(1):322–334, 1980. doi: 10.2307/3003416. Mehrdad Mahdavi, Rong Jin, and Tianbao Yang. Trading regret for efficiency: Online convex optimization with long term constraints. Journal of Machine Learning Research , 13:2503–2528, 2012. URL https://jmlr.org/papers/v13/mahdavi12a.html .Sobhan Miryoosefi, Kianté Brantley, Hal Daumé III, Miroslav Dudík, and Robert E. Schapire. Reinforcement learning with convex constraints. In Advances in Neural Information Processing Systems , volume 32, 2019. URL https://arxiv.org/abs/1906.09323 .Angelia Nedić and Asuman Ozdaglar. Approximate primal solutions and rate analysis for dual subgradient methods. SIAM Journal on Optimization , 19(4):1757–1780, 2009. doi: 10.1137/ 070708111. Elinor Ostrom. Governing the Commons: The Evolution of Institutions for Collective Action .Cambridge University Press, 1990. doi: 10.1017/CBO9780511807763. 14 Elinor Ostrom. Beyond markets and states: Polycentric governance of complex economic systems. 
+
+American Economic Review , 100(3):641–672, 2010. doi: 10.1257/aer.100.3.641. Keith Paarporn, Ceyhun Eksin, Joshua S. Weitz, and Yorai Wardi. Optimal control policies for evolutionary dynamics with environmental feedback. In 2018 IEEE Conference on Decision and Control (CDC) , pages 1905–1910, 2018. doi: 10.1109/CDC.2018.8619604. URL https: //arxiv.org/abs/1803.06737 .Santiago Paternain, Luiz F. O. Chamon, Miguel Calvo-Fullana, and Alejandro Ribeiro. Constrained reinforcement learning has zero duality gap. In Advances in Neural Information Processing Systems , volume 32, 2019. URL https://papers.neurips.cc/paper_files/paper/2019/hash/ c1aeb6517a1c7f33514f7ff69047e74e-Abstract.html .Julien Pérolat, Joel Z. Leibo, Vinicius Zambaldi, Charles Beattie, Karl Tuyls, and Thore Graepel. A multi-agent reinforcement learning model of common-pool resource appropriation. In Advances in Neural Information Processing Systems , volume 30, 2017. URL https://arxiv.org/abs/1707. 06600 .Giorgio Piatti, Zhijing Jin, Max Kleiman-Weiner, Bernhard Schölkopf, Mrinmaya Sachan, and Rada Mihalcea. Cooperate or collapse: Emergence of sustainable cooperation in a society of LLM agents. In Advances in Neural Information Processing Systems , volume 37, pages 111715– 111759, 2024. doi: 10.52202/079017-3548. URL https://proceedings.neurips.cc/paper_ files/paper/2024/file/ca9567d8ef6b2ea2da0d7eed57b933ee-Paper-Conference.pdf .J. B. Rosen. Existence and uniqueness of equilibrium points for concave n-person games. Econo-metrica , 33(3):520–534, 1965. doi: 10.2307/1911749. Milner B. Schaefer. Some considerations of population dynamics and economics in relation to the management of the commercial marine fisheries. Journal of the Fisheries Research Board of Canada , 14(5):669–681, 1957. doi: 10.1139/f57-025. John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, and Pieter Abbeel. High-dimensional continuous control using generalized advantage estimation. In International Confer-ence on Learning Representations (ICLR) , 2016. URL https://arxiv.org/abs/1506.02438 .John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. doi: 10.48550/arXiv.1707.06347. Adam Stooke, Joshua Achiam, and Pieter Abbeel. Responsive safety in reinforcement learning by PID Lagrangian methods. In Proceedings of the 37th International Conference on Machine Learning (ICML) , volume 119 of Proceedings of Machine Learning Research , pages 9133–9143. PMLR, 2020. URL https://proceedings.mlr.press/v119/stooke20a.html .Yamin Vahmian and Keith Paarporn. The tragedy of the commons in multi-population resource games. In 2026 American Control Conference (ACC) , 2026. URL https://arxiv.org/abs/ 2602.20603 .Kim Peter Wabersich and Melanie N. Zeilinger. A predictive safety filter for learning-based control of constrained nonlinear dynamical systems. Automatica , 129:109597, 2021. doi: 10.1016/j. automatica.2021.109597. 15 Joshua S. Weitz, Ceyhun Eksin, Keith Paarporn, Sam P. Brown, and William C. Ratcliff. An oscillating tragedy of the commons in replicator dynamics with game-environment feedback. 
+
+Proceedings of the National Academy of Sciences , 113(47):E7518–E7525, 2016. doi: 10.1073/pnas. 1604096113. Jiachen Yang, Ang Li, Mehrdad Farajtabar, Peter Sunehag, Edward Hughes, and Hongyuan Zha. Learning to incentivize other learning agents. In Advances in Neural Information Processing Systems , volume 33, pages 15208–15219, 2020. URL https://proceedings.neurips.cc/paper/ 2020/hash/ad7ed5d47b9baceb12045a929e7e2f66-Abstract.html .Chao Yu, Akash Velu, Eugene Vinitsky, Jiaxuan Gao, Yu Wang, Alexandre Bayen, and Yi Wu. The surprising effectiveness of PPO in cooperative multi-agent games. In Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track , volume 35, pages 24611–24624, 2022. URL https://proceedings.neurips.cc/paper_files/paper/2022/hash/ 9c1535a02f0ce079433344e14d910597-Abstract.html .16 A Relation to the average-reward Lagrangian results 
+
+The epoch-dependent construction in this paper follows the architecture of the constrained-Markov-game result of Das et al. (2025b) and the cooperative CM-MDP result of Das et al. (2025a). Both source results concern a continuously evolving, infinite-horizon system evaluated by long-run time-average reward and constraint values. Our fishery experiment instead resets the stock between finite episodes, optimizes a discounted episodic reward, and measures a terminal cost. These differences leave the algebra of the dual update intact but change how policies are evaluated, which alternatives they are compared with, and which problems the solvers must solve. 
+
+A.1 Original constrained Markov-game result 
+
+In the original CMG formulation, each agent i has a long-run average reward V si (π) from initial state s, and the common or coupled constraint values are U sj (π) ≥ bj . A nonstationary policy changes with physical time; an epoch-dependent policy holds a stationary profile πk for T0 time steps before switching. The Lagrangian game at multiplier vector λk ≥ 0 gives agent i payoff 
+
+Lsi (π, λ k) = V si (π) + λ⊤ 
+
+> k
+
+[U s(π) − b]. (12) The oracle must return a stationary δ-Nash profile of each encountered Lagrangian game. Rollout constraint values then update the multiplier by projected dual descent. The sign in (12) reflects a lower-bound constraint; our upper-bound terminal depletion in (6) uses the equivalent negative sign. The original theorem assumes (i) a stationary approximate-Nash oracle; (ii) a uniform unilateral Slater condition : against any stationary policies of the other players, each player can unilaterally produce strictly feasible constraint values; (iii) bounded reward and constraint functions; and (iv) unbiased epoch rollouts for the associated average-reward values. Under these assumptions it states almost-sure long-run feasibility and an approximate nonstationary Nash guarantee, with a gap of order ηB 2/2 + δ in its notation (Das et al., 2025b). The proof uses player-specific generalized dual functions to control the multiplier sequence, because a general-sum game has no single team dual objective. More explicitly, the average-reward CMG oracle returns πk such that, for every agent i and stationary unilateral alternative zi,
+
+Lsi (πk, λ k) + δ ≥ L si (( zi, π k
+
+> −i
+
+), λ k). (13) The original analysis controls multiplier growth through the family of unilateral generalized duals 
+
+dsi (λ, π −i) = sup 
+
+> zi
+
+Lsi (( zi, π −i), λ ). (14) The arguments of (14) include the opponents’ current policies, so even the dual-control step is not the minimization of one scalar team function. The game formulation evaluates individual incentives, whereas the cooperative formulation evaluates a joint objective. Two restrictions matter here. First, the uniform unilateral Slater condition need not hold for a shared renewable stock: if one harvester extracts maximally, the other cannot restore biomass by abstaining. Second, a result for average time-step reward and feasible deviations cannot, without further argument, establish Definition 1, whose deviations may reallocate a finite constraint budget among reset episodes. The solution concept in Definition 1 is an episodic analogue motivated by the original work, not a restatement of its theorem. 17 A.2 Original safe cooperative-MARL result 
+
+The cooperative CM-MDP of Das et al. (2025a) has one joint average-reward value V s(π) and system constraints U sj (π) ≥ bj . At multiplier λk, a learning oracle returns a stationary δ-optimal policy for the relaxed joint MDP with objective V s(π) + λ⊤ 
+
+> k
+
+[U s(π) − b]. The agents execute this stationary policy over an epoch, update the dual from sampled constraint values, and concatenate the sequence to obtain an epoch-dependent nonstationary policy. The theorem assumes a joint strictly feasible stationary policy, bounded values, an approximately optimal oracle, and unbiased rollouts. Under those assumptions, the executed infinite-horizon sequence is almost surely feasible and its joint average reward is within the reported ηB 2/2 + δ tolerance of the paper’s stationary feasible benchmark. The benchmark is not a Nash condition: cooperative agents maximize one joint value. The cooperative source oracle condition is Ls(πk, λ k) + δ ≥ sup π∈P Ls(π, λ k), where Ls is the joint average-reward Lagrangian. Its performance is compared with the best stationary feasible joint policy, even though the returned policy is epoch-dependent and nonstationary. The cooperative paper’s proof combines multiplier tightness, feasibility, and a reward lower bound; none of these three conclusions alone implies the other two. For reset episodes, Proposition 2 proves feasibility and a reward bound against every feasible mixture; Theorem 2 treats unbiased sampled costs. These are separate results proved here. We do not establish comparable bounds on solution error or optimality for PPO. Compared with the CMG case, joint strict feasibility is plausible in the fishery because both agents can refrain from extraction. The implemented policy update uses a shaped one-sided biomass-loss signal; the dual uses terminal depletion; and its proportional–integral recursion has a capped state. The shaping discrepancy contributes to the oracle error for the terminal-cost objective, as quantified in Appendix B.7. 
+
+B Complete proofs and the average-epoch equilibrium question 
+
+Throughout this appendix, 0 < ε < 1, g(π) = C(π) − ε, and G = max {ε, 1 − ε}. Since costs lie in [0 , 1], both g(π) and ̂ gk := ̂ Ck − ε belong to [ −ε, 1 − ε], and their absolute values are at most G. We write gk = g(πk) and ¯CM = M −1 ∑ 
+
+> k<M
+
+C(πk). The initialization λ0 ≥ 0 is finite, and the step size 
+
+η > 0 is constant throughout each run. Projection is onto [0 , ∞), with no upper cap. For stochastic statements, work on a probability space with an increasing filtration ( Fk)k≥0. The policy πk and price λk are Fk-measurable, while the evaluation cost ̂ Ck is Fk+1 -measurable. Thus 
+
+Fk contains the preceding rollout outcomes and any randomization used to select the current policy, but not its forthcoming evaluation outcome. Conditional unbiasedness means E[̂ Ck | F k] = C(πk); it does not require independence across epochs. Any almost-sure conclusion that assumes λM /M → 0requires that growth condition to hold almost surely. Countably many almost-sure oracle conditions, one for each epoch, can be imposed on a single probability-one event. All policies and comparators belong to the specified policy class P, and the cooperative strictly feasible policy must belong to that same class. Bounded rewards ensure that the value comparisons below are finite. The constant R bounds the range of the relevant reward value, rather than the magnitude of a single sampled reward. The oracle tolerance δ ≥ 0 is a uniform error in the value of the exact Lagrangian; it is not a PPO clipping parameter, gradient norm, or empirical training loss. We retain explicit intermediate inequalities to distinguish the algebraic certificate, multiplier control, reward comparison, and strategic deviation test. 18 B.1 Full proof of Proposition 1 
+
+Proof. We first fix an arbitrary realization of the costs. For every real number x, [ x]+ = max {x, 0} ≥ 
+
+x. Applying this inequality to the multiplier update gives 
+
+λk+1 = [ λk + η̂ gk]+ ≥ λk + η̂ gk, η(̂Ck − ε) ≤ λk+1 − λk.
+
+Summing over k = 0 , . . . , M − 1 cancels every intermediate multiplier: 
+
+η 
+
+> M−1
+
+∑
+
+> k=0
+
+(̂ Ck − ε) ≤ 
+
+> M−1
+
+∑
+
+> k=0
+
+(λk+1 − λk) = λM − λ0.
+
+Division by ηM > 0 proves (8). This calculation is pathwise and uses no reward or oracle assumption. If λM /M → 0 on the chosen realization, then ( λM − λ0)/(ηM ) → 0, because λ0 and η are fixed. Taking a limit superior therefore gives realized average feasibility on that realization. In particular, an almost-sure sublinear-growth assumption yields an almost-sure realized-cost conclusion. We now relate the observed costs to the values of the selected policies. Set 
+
+Dk =̂ Ck − C(πk), SM = 
+
+> M−1
+
+∑
+
+> k=0
+
+Dk, S0 = 0 .
+
+Conditional unbiasedness gives E[Dk | F k] = 0. Moreover, Dk ∈ [−1, 1], since both costs lie in [0 , 1]. The variables Dk are thus bounded martingale differences: they need not be independent, but their conditional means vanish before each evaluation. The conditional form of Hoeffding’s lemma (Lemma 7, Appendix E), applied to a centered variable in an interval of length two, gives 
+
+E[etD k | F k] ≤ et2/2, t ∈ R.
+
+The bound is conservative but sufficient. Since SM −1 is FM −1-measurable, the tower property (Lemma 6, Appendix E) yields 
+
+EetS M = E
+
+[
+
+etS M −1 E[etD M −1 | F M −1]
+
+]
+
+≤ et2/2EetS M −1 ≤ · · · ≤ eM t 2/2.
+
+For a > 0 and t > 0, Markov’s inequality (Lemma 8, Appendix E) consequently gives Pr( SM ≥ M a ) ≤ e−tM a EetS M ≤ exp {− tM a + M t 2/2}.
+
+The exponent is minimized at t = a, so this probability is at most e−M a 2/2. Applying the same calculation to −SM and adding the two tail probabilities proves Pr 
+
+∣∣∣∣∣∣∑
+
+> k<M
+
+Dk
+
+∣∣∣∣∣∣ ≥ M a 
+
+ ≤ 2e−M a 2/2, a > 0. (15) For each fixed positive integer j, the sum over M of the right-hand side with a = 1 /j is finite. The first Borel–Cantelli lemma (Lemma 10, Appendix E) implies that |SM |/M ≥ 1/j occurs only finitely often, almost surely. Taking the intersection of these probability-one events, using Lemma 9 in Appendix E, over the countable set j = 1 , 2, . . . proves SM /M → 0 almost surely. No independence of the tail events is needed. 19 By the definition of SM ,¯CM − ε = 1
+
+M
+
+> ∑
+> k<M ̂
+
+Ck − ε − SM
+
+M .
+
+On the event where both λM /M → 0 and SM /M → 0, the realized-cost certificate therefore implies lim sup M ¯CM ≤ ε. This proves the conditional-expected assertion under almost-sure sublinear multiplier growth. For a fixed horizon M and β ∈ (0 , 1), the lower-tail calculation above gives Pr 
+
+> 
+
+− SM
+
+M >
+
+> √
+
+2 log(1 /β )
+
+M 
+
+> 
+
+≤ β. 
+
+Substituting this bound into the preceding identity and using the pathwise certificate proves, with probability at least 1 − β,¯CM − ε ≤ λM − λ0
+
+ηM +
+
+> √
+
+2 log(1 /β )
+
+M . (16) Unlike the asymptotic conclusion, this fixed-horizon inequality does not assume sublinear multiplier growth. Finally, suppose the evaluations have conditional bias E[̂ Ck | F k] = C(πk) + bk with |bk| ≤ bmax  
+
+> k
+
+.Center instead at the actual conditional mean, setting ˜Dk =̂ Ck − E[̂ Ck | F k]. This variable is still conditionally centered and in [ −1, 1], since a conditional mean of a [0 , 1]-valued variable lies in [0 , 1]. Now ¯CM = 1
+
+M
+
+> ∑
+> k<M ̂
+
+Ck − 1
+
+M
+
+> ∑
+> k<M
+> ˜
+
+Dk − 1
+
+M
+
+> ∑
+> k<M
+
+bk.
+
+The same concentration argument applies to ˜Dk, while − ∑ 
+
+> k
+
+bk ≤ ∑ 
+
+> k
+
+bmax  
+
+> k
+
+. Thus the right-hand side of (16) acquires the additional term M −1 ∑ 
+
+> k<M
+
+bmax  
+
+> k
+
+. Vanishing average bias preserves the asymptotic conclusion; a persistent bias need not. The proposition is an accounting identity plus a sampling argument. It does not show that the price grows sublinearly. For example, ̂ Ck = 1 gives λM = λ0 + ηM (1 − ε), for which the bound is exact and infeasibility persists. This is why Proposition 2 is needed. The full induction argument and its reward and sampling extensions follow here. 
+
+B.2 A dual-energy lemma 
+
+Lemma 1 (Projected-dual energy) . For λk+1 = [ λk + ηv k]+, λk ≥ 0, and |vk| ≤ G,
+
+− 1
+
+M
+
+> ∑
+> k<M
+
+λkvk ≤ λ20 − λ2
+
+> M
+
+2ηM + η
+
+2M
+
+> ∑
+> k<M
+
+v2 
+
+> k
+
+≤ λ20
+
+2ηM + ηG 2
+
+2 . (17) 
+
+Proof. The squared multiplier provides a telescoping quantity that controls the price-weighted violations. For every real x, [ x]2+ ≤ x2: equality holds for x ≥ 0, and the left-hand side is zero for 
+
+x < 0. Therefore 
+
+λ2 
+
+> k+1
+
+≤ (λk + ηv k)2 = λ2 
+
+> k
+
++ 2 ηλ kvk + η2v2
+
+> k
+
+.
+
+Moving the product term to the left and dividing by 2 η > 0 gives 
+
+−λkvk ≤ λ2 
+
+> k
+
+− λ2
+
+> k+1
+
+2η + ηv 2
+
+> k
+
+2 .
+
+20 We now sum over k < M and divide by M . The differences of consecutive squared multipliers telescope, yielding 
+
+− 1
+
+M
+
+> ∑
+> k<M
+
+λkvk ≤ λ20 − λ2
+
+> M
+
+2ηM + η
+
+2M
+
+> ∑
+> k<M
+
+v2
+
+> k
+
+.
+
+Since λ2 
+
+> M
+
+≥ 0, removing its negative contribution can only increase the right-hand side. Since 
+
+|vk| ≤ G, the remaining average of squares is at most G2. These observations give the second inequality in (17). The entire argument is pathwise, so the lemma applies to expected violations or sampled violations, provided they are the quantities actually used in the projected update. 
+
+B.3 Full proof of Proposition 2 
+
+Let J = Jγ
+
+> Σ
+
+. A finite mixture μ selects one entire joint stationary policy at the beginning of an episode and executes it throughout that episode. Define J(μ) = Eπ∼μJ(π) and C(μ) = Eπ∼μC(π), and let 
+
+J⋆ 
+
+> mix
+
+= sup  
+
+> μ:C(μ)≤ε
+
+J(μ), (18) where the supremum is over finite mixtures of policies in P. Every length-M sequence induces an equal-weight mixture, so J⋆ 
+
+> Σ,M
+
+≤ J⋆
+
+> mix
+
+. No existence of a maximizing mixture is needed for the bounds below. 
+
+Proof. We first use strict feasibility to control the multipliers. Let π† ∈ P satisfy g(π†) ≤ − σ. The 
+
+δ-optimality assumption implies comparison with every policy in P, in particular 
+
+J(πk) − λkgk ≥ J(π†) − λkg(π†) − δ ≥ J(π†) + λkσ − δ. 
+
+The second inequality uses both λk ≥ 0 and the strictly negative violation of π†. Rearranging and using J(πk) − J(π†) ≤ R gives 
+
+λkgk ≤ J(πk) − J(π†) + δ − λkσ ≤ R + δ − λkσ. (19) Thus a sufficiently high price makes the strictly feasible comparator competitive with every possible reward advantage of a violating policy. To make this observation quantitative, put L = ( R + δ)/σ and B = max {λ0, L + ηG }. Suppose first that λk ≥ L and λk > 0. The right-hand side of (19) is nonpositive; division by λk gives gk ≤ 0. Hence both zero and λk + ηg k are at most λk, and 
+
+λk+1 = max {0, λ k + ηg k} ≤ λk.
+
+If instead λk < L , then gk ≤ G and λk + ηG ≥ 0, so 
+
+λk+1 ≤ λk + ηG < L + ηG ≤ B. 
+
+The only case not covered by these alternatives is L = λk = 0, for which the same bound gives 
+
+λk+1 ≤ ηG ≤ B. Starting with 0 ≤ λ0 ≤ B, induction now proves 0 ≤ λk ≤ B for every k: above the threshold the multiplier cannot increase, and below it a single update cannot overshoot by more than ηG .We now invoke Proposition 1 with the costs C(πk) actually used in this expected-cost update. Its deterministic telescoping inequality yields ¯CM − ε ≤ λM − λ0
+
+ηM ≤ B − λ0
+
+ηM ,
+
+21 which is the claimed feasibility bound. For the reward comparison, fix any feasible finite mixture μ = ∑mj=1 pj δπj , where pj ≥ 0, ∑ 
+
+> j
+
+pj = 1, 
+
+πj ∈ P , and C(μ) ≤ ε. Here δπj denotes the point mass at πj , not the oracle tolerance. At epoch k,the oracle inequality holds against each support policy: 
+
+J(πk) − λkgk ≥ J(πj ) − λkg(πj ) − δ. 
+
+Multiply by pj and sum over j. Linearity of mixture values, together with ∑ 
+
+> j
+
+pj = 1, gives 
+
+J(πk) − λkgk ≥ ∑
+
+> j
+
+pj J(πj ) − λk
+
+> ∑
+> j
+
+pj g(πj ) − δ
+
+= J(μ) − λk[C(μ) − ε] − δ
+
+≥ J(μ) − δ. 
+
+The last inequality uses feasibility of the mixture and λk ≥ 0. It does not require each support policy to be feasible. Nor must the oracle itself optimize over mixtures: averaging its comparisons with individual policies is enough. Rearranging and averaging over epochs gives ¯JΣ,M ≥ J(μ) − δ + 1
+
+M
+
+> ∑
+> k<M
+
+λkgk.
+
+The update uses gk, so Lemma 1 applies with vk = gk and gives 1
+
+M
+
+> ∑
+> k<M
+
+λkgk ≥ − λ20
+
+2ηM − ηG 2
+
+2 .
+
+Combining these two inequalities bounds reward below by J(μ) minus the stated error, uniformly over every feasible finite mixture. Strict feasibility makes this comparator set nonempty, and bounded rewards make its supremum finite. For any a > 0, the definition of supremum supplies a feasible mixture with reward greater than J⋆ 
+
+> mix
+
+− a. Applying the uniform bound and letting a ↓ 0proves ¯JΣ,M ≥ J⋆ 
+
+> mix
+
+− δ − ηG 2
+
+2 − λ20
+
+2ηM ≥ J⋆ 
+
+> Σ,M
+
+− δ − ηG 2
+
+2 − λ20
+
+2ηM . (20) The final inequality holds because any feasible length-M sequence induces a feasible mixture assigning mass 1 /M to each of its components. This proves the stated comparison without assuming an optimal mixture is attained. The output has a finite-horizon feasibility tolerance, so its reward can exceed the exactly feasible optimum; the conclusion is a lower performance bound together with approximate feasibility. For a prescribed horizon M , using a constant η = M −1/2 throughout that run and λ0 = 0 gives feasibility tolerance at most L/ √M + G/M and reward tolerance δ + G2/(2 √M ). This is a family of finite-horizon guarantees; it is not a proof for replacing η by k−1/2 within a single run. At fixed 
+
+η, average feasibility is asymptotically exact and the reward tolerance retains δ + ηG 2/2. 
+
+B.4 Sampled-cost cooperative guarantee 
+
+The deterministic bound on every multiplier cannot be asserted for random costs, even with an ideal oracle. The following replacement handles the reset-episode sampling used in Proposition 1. 22 Theorem 2 (Cooperative oracle with unbiased sampled costs) . Assume the reward-range, strict-feasibility, and oracle conditions of Proposition 2 hold almost surely. Use λk+1 = [ λk + η(̂Ck − ε)] +
+
+with deterministic λ0 ≥ 0, constant η > 0, and E[̂ Ck | F k] = C(πk). Define 
+
+D = max 
+
+{ 2( R + δ)
+
+σ , ηG 
+
+}
+
+, θ = σ
+
+2ηG 2 , ρ = exp 
+
+(
+
+− σ2
+
+8G2
+
+)
+
+< 1, (21) 
+
+A = eθλ 0 + eθ(D+ηG )
+
+1 − ρ . (22) 
+
+Then sup k Eeθλ k ≤ A, λM = O(log M ) almost surely, and both realized and conditional-expected average costs have limit superior at most ε almost surely. For fixed M , with probability at least 
+
+1 − β,
+
+¯CM − ε ≤ θ−1 log(2 A/β ) − λ0
+
+ηM +
+
+√
+
+2 log(2 /β )
+
+M . (23) 
+
+The reward bound is 
+
+E ¯JΣ,M ≥ J⋆ 
+
+> mix
+
+− δ − ηG 2
+
+2 − λ20
+
+2ηM . (24) 
+
+Proof. The oracle still compares expected Lagrangian values, even though the update uses an observed cost. Consequently the comparison with π† in (19) remains valid almost surely. On the event {λk > D }, division by λk > 0 gives 
+
+gk ≤ R + δλk
+
+− σ ≤ − σ
+
+2 ,
+
+since D ≥ 2( R + δ)/σ . Also λk > D ≥ ηG , and ̂ gk ≥ − G. Therefore λk + η̂ gk > 0 on this event, so the next projection is inactive. Writing Xk = λk+1 − λk, we obtain there 
+
+Xk = η̂ gk, |Xk| ≤ ηG, E[Xk | F k] = ηg k ≤ − ησ/ 2.
+
+This gives negative conditional drift when the multiplier is large, even though any particular sample can still increase it. We next convert this drift into a bound on an exponential moment. Conditional on Fk and on 
+
+λk > D , let mk = E[Xk | F k]. The conditional support of Xk has length at most 2 ηG ; subtracting 
+
+mk does not change that length. Conditional Hoeffding’s lemma (Lemma 7, Appendix E) therefore gives 
+
+E[eθX k | F k] = eθm k E[eθ(Xk −mk ) | F k]
+
+≤ exp {− θησ/ 2 + θ2η2G2/2}
+
+= exp {− σ2/(8 G2)} = ρ < 1.
+
+The last equality follows by substituting θ = σ/ (2 ηG 2): the two exponent terms are −σ2/(4 G2) and 
+
+σ2/(8 G2). We now translate this into a bound on the next multiplier. Since λk is Fk-measurable, the preceding display implies 
+
+E[eθλ k+1 | F k] = eθλ k E[eθX k | F k] ≤ ρe θλ k on {λk > D }.
+
+23 On the complementary event, λk+1 ≤ λk + ηG ≤ D + ηG . Put b = eθ(D+ηG ) and Yk = Eeθλ k .Splitting over these two Fk-measurable events and taking expectations yields 
+
+Yk+1 ≤ ρ E
+
+> [
+
+eθλ k 1{λk >D }
+
+> ]
+
++ b Pr( λk ≤ D)
+
+≤ ρY k + b. 
+
+All these moments are finite at each finite k, since the bounded upward increment gives the deterministic bound λk ≤ λ0 + kηG . Iterating the scalar inequality, starting at Y0 = eθλ 0 , gives 
+
+Yk ≤ ρkeθλ 0 + b
+
+> k−1∑
+> j=0
+
+ρj ≤ eθλ 0 + b
+
+1 − ρ = A. 
+
+This proves the uniform exponential-moment bound. For every x ≥ 0, Markov’s inequality (Lemma 8, Appendix E) now implies Pr( λM > x ) ≤ e−θx Eeθλ M ≤ Ae −θx .
+
+Taking x = θ−1 log( A/ζ ) gives a tail probability at most ζ for any ζ ∈ (0 , 1). In particular, choose 
+
+ζ = M −2 for M ≥ 2. The sum of these failure probabilities is finite, so the first Borel–Cantelli lemma (Lemma 10, Appendix E) implies that, almost surely, there is a finite random index after which 
+
+λM ≤ θ−1{log A + 2 log M }.
+
+Thus λM = O(log M ) almost surely. This is an eventual pathwise growth bound, not a deterministic upper bound on all multipliers. We now invoke Proposition 1 for asymptotic feasibility. Since log M/M → 0, the required sublinear multiplier growth holds almost surely. The proposition’s pathwise certificate proves realized average feasibility; its martingale argument and conditional unbiasedness prove the same limit-superior bound for ¯CM .For the finite-horizon assertion, use the multiplier tail bound with ζ = β/ 2. With probability at least 1 − β/ 2, 
+
+λM ≤ θ−1 log(2 A/β ).
+
+Independently of whether this event occurs, inequality (16), used with failure probability β/ 2, holds on an event of probability at least 1 − β/ 2. The union bound (Lemma 9, Appendix E) ensures that both inequalities hold together with probability at least 1 − β. Substituting the multiplier bound into that inequality gives (23). Here “together” requires no statistical independence: the probability of either failure is at most the sum of its two bounds. It remains to prove the reward assertion. Fix a deterministic feasible finite mixture μ. The same oracle comparison as in Proposition 2 gives, almost surely at each epoch, 
+
+J(πk) ≥ J(μ) − δ + λkgk.
+
+The energy lemma now concerns ̂ gk, because those are the violations used in the update. To connect its conclusion to the preceding inequality, use measurability of λk, conditional unbiasedness, and the tower and pull-out identities in Lemma 6 (Appendix E): 
+
+E[λk̂ gk] = E[E[λk̂ gk | F k]] = E[λkE[̂ gk | F k]] = E[λkgk].
+
+24 These products are integrable because |gk|, |̂gk| ≤ G and λk ≤ λ0 + kηG . Applying Lemma 1 pathwise with vk =̂ gk and then taking expectations gives 1
+
+M
+
+> ∑
+> k<M
+
+E[λkgk] = E 
+
+> 
+
+1
+
+M
+
+> ∑
+> k<M
+
+λk̂ gk 
+
+> 
+
+≥ − λ20
+
+2ηM − ηG 2
+
+2 .
+
+Averaging the oracle reward inequality and using this estimate yields 
+
+E ¯JΣ,M ≥ J(μ) − δ − λ20
+
+2ηM − ηG 2
+
+2 .
+
+The error bound does not depend on μ. Taking its supremum over feasible finite mixtures, or equivalently using arbitrarily near-optimal mixtures and passing to the limit, proves (24). No exchange of a random supremum and expectation is made: each comparator is fixed before the expectation is taken. The conclusion concerns expected reward, whereas the feasibility conclusions above hold almost surely. 
+
+B.5 What a full average-epoch Nash certificate requires 
+
+Definition 1 is a constrained generalized Nash concept: each player’s feasible sequence depends on the opponents’ sequence. It allows a different stationary deviation in every episode. A public, uniformly sampled epoch index implements the same average values, provided every agent uses the 
+
+same index and the deviator is allowed to condition on it. Independently sampling each agent’s policy index gives a different joint distribution and can change both cost and reward. Restricting deviations to one fixed policy instead gives a constrained coarse-correlated type test; it does not establish the stronger definition used here. Neither definition describes strategic manipulation of the learning algorithm’s future updates. 
+
+Proof of Theorem 1. 
+
+Proof. Fix a horizon M ≥ 1, a player i, and any admissible unilateral deviation sequence (σ0 
+
+> i
+
+, . . . , σ M −1 
+
+> i
+
+) in Definition 1. The opponents’ sequence ( πk
+
+> −i
+
+)k<M is held fixed in this comparison. Write 
+
+g′ 
+
+> k
+
+= C(σki , π k
+
+> −i
+
+) − ε, gk = C(πk) − ε. 
+
+Admissibility means M −1 ∑ 
+
+> k<M
+
+g′ 
+
+> k
+
+≤ 0, and bounded costs imply |g′
+
+> k
+
+| ≤ G. Individual g′ 
+
+> k
+
+may nevertheless be positive: the deviation only needs to respect its budget on average. At every epoch, the δ-Nash property for the priced game gives 
+
+Jγi (πk) − λkgk ≥ Jγi (σki , π k
+
+> −i
+
+) − λkg′ 
+
+> k
+
+− δ. 
+
+Rearranging isolates the unpriced reward gain: 
+
+Jγi (σki , π k
+
+> −i
+
+) − Jγi (πk) ≤ δ + λkg′ 
+
+> k
+
+− λkgk.
+
+Denote the average of the left-hand side by Di,M . Averaging therefore gives 
+
+Di,M ≤ δ + 1
+
+M
+
+> ∑
+> k<M
+
+λkg′ 
+
+> k
+
+− 1
+
+M
+
+> ∑
+> k<M
+
+λkgk.
+
+The last term is controlled by dual energy. To bound the comparator term, we must account for changing prices: the sign of ∑ 
+
+> k
+
+g′ 
+
+> k
+
+does not determine the sign of ∑ 
+
+> k
+
+λkg′
+
+> k
+
+.25 Choose any constant reference price ℓ ≥ 0 and add and subtract it inside that sum. The resulting identity is 1
+
+M
+
+> ∑
+> k<M
+
+λkg′ 
+
+> k
+
+= ℓM
+
+> ∑
+> k<M
+
+g′ 
+
+> k
+
++ 1
+
+M
+
+> ∑
+> k<M
+
+(λk − ℓ)g′
+
+> k
+
+.
+
+The first term is nonpositive because the comparator is average-feasible and ℓ ≥ 0. For each summand of the second term, (λk − ℓ)g′ 
+
+> k
+
+≤ | λk − ℓ| | g′
+
+> k
+
+| ≤ G|λk − ℓ|.
+
+Consequently 1
+
+M
+
+> ∑
+> k<M
+
+λkg′ 
+
+> k
+
+≤ GM
+
+> ∑
+> k<M
+
+|λk − ℓ|.
+
+This upper bound depends only on the observed price sequence and the universal cost bound, not on the chosen player or deviation. We now apply Lemma 1 with vk = gk, as required by the expected-cost update in the theorem. It gives 
+
+− 1
+
+M
+
+> ∑
+> k<M
+
+λkgk ≤ λ20
+
+2ηM + ηG 2
+
+2 .
+
+Combining the two bounds, for every ℓ ≥ 0 we have 
+
+Di,M ≤ δ + λ20
+
+2ηM + ηG 2
+
+2 + GM
+
+> ∑
+> k<M
+
+|λk − ℓ|.
+
+Taking the infimum over ℓ ≥ 0 proves Di,M ≤ δM . This passage is valid even without choosing a minimizer, since the left-hand side is bounded by every member of the displayed family of upper bounds. The player and admissible deviation were arbitrary, and the resulting bound is uniform over both. Thus every average-feasible unilateral deviation satisfies the required reward inequality. This is a deterministic argument for the sequence under consideration; no union bound over policy deviations is needed. Finally, we establish the feasibility part of the definition. Proposition 1, applied to the expected costs used in this update, yields ¯CM − ε ≤ λM − λ0
+
+ηM ≤ 
+
+> [
+
+λM − λ0
+
+ηM 
+
+> ]
+> +
+
+= αM .
+
+The positive part ensures a nonnegative reported tolerance, including when the sequence has net slack and the multiplier decreases. Together with the uniform deviation bound, this proves the (αM , δ M )-average-epoch constrained Nash certificate. The proof supplies no convergence claim for 
+
+αM or ∆ M ; such a claim would require additional information about the price sequence and oracle errors. For a comparator feasible at every epoch, g′ 
+
+> k
+
+≤ 0 directly eliminates the dispersion term. For average feasibility alone, it cannot be discarded: violations ( −a, +a) at prices (0 , L ) have zero unweighted mean but price-weighted mean La/ 2 > 0. Bounded multipliers need not have ∆ M → 0; sustained oscillations can leave a positive dispersion term. A family of horizon-M runs with η = M −1/2,bounded prices, vanishing oracle errors, and ∆ M → 0 would give vanishing Nash and feasibility tolerances. These are sufficient conditions, not properties established for the reported learners. 26 An alternative exact certificate is useful when a common price can be found. If every epoch is a Lagrangian Nash profile at the same price ℓ ≥ 0, ¯ gM ≤ 0, and ℓ¯gM = 0, summing the same oracle inequalities gives deviation gain at most ℓ¯g′ 
+
+> M
+
+− ℓ¯gM ≤ 0. Thus the sequence is an exact constrained Nash profile. This proves sufficiency of common-price equilibrium, feasibility, and complementary slackness without asserting their existence or convergence. Different players can also use different constant supporting prices; one shared price selects a more restricted class. 
+
+B.6 Why joint feasibility alone cannot control a game oracle 
+
+Lemma 2 (A jointly feasible game with a permanently unsafe Nash oracle) . An exact Nash oracle and a jointly strictly feasible policy do not, in general, imply feasibility of the projected-dual game method. Proof. Consider a one-state, one-step game with two players and actions S and H. Player i receives 
+
+ri(ai, a −i) = 1{ai = H}. The common cost is zero at ( S, S ) and one at each of the other three action profiles. Set ε = 1 /2. The joint policy ( S, S ) has cost zero, so it satisfies strict feasibility with margin σ = 1 /2. All rewards and costs are bounded. Fix any price λ ≥ 0. At ( H, H ), each player receives Lagrangian payoff 1 − λ(1 − 1/2) = 1 − λ/ 2. If one player alone changes its action to S, the other still chooses H. The common cost therefore remains one, whereas the deviator’s reward falls to zero. Its new Lagrangian payoff is −λ/ 2, exactly one less than before. This comparison holds for every price, however large. To include randomized deviations, let the deviating player choose H with probability p ∈ [0 , 1] against an opponent who chooses H surely. Cost remains one surely and expected reward is p, so the deviating payoff is p − λ/ 2 ≤ 1 − λ/ 2, with equality only at p = 1. Thus ( H, H ) is a strict Nash profile at every price, including against all randomized unilateral alternatives. An exact Nash oracle is consequently permitted to select ( H, H ) at every epoch. For that selection 
+
+gk = 1 /2, and the nonnegative multiplier update has no active projection: 
+
+λk+1 = λk + η/ 2, λk = λ0 + kη/ 2.
+
+The second identity follows by induction from the first. The average cost is exactly one for every horizon, which exceeds the budget 1 /2. Hence bounded rewards, joint strict feasibility, and an exact Nash oracle do not force the method to be feasible. The obstruction is unilateral: one player cannot reduce the common cost while its opponent chooses H, although both can reduce it by changing together. A stronger uniform unilateral Slater condition would restore multiplier control for the scalar game. Suppose there is a common σ > 0 such that, for every player i and opponents’ policy π−i,some admissible zi satisfies g(zi, π −i) ≤ − σ. At epoch k, the Nash oracle’s comparison with that alternative gives 
+
+Jγi (πk) − λkgk ≥ Jγi (zi, π k
+
+> −i
+
+) + λkσ − δ. 
+
+If each player’s reward range is at most R, rearrangement yields λkgk ≤ R + δ − λkσ, exactly the drift inequality used above. For expected-cost updates the same threshold and induction prove bounded multipliers. For conditionally unbiased sampled costs the same negative-drift and exponential-moment argument proves almost-sure sublinear growth. Proposition 1 then proves feasibility in either case. This argument controls cost only: the G∆M term for average-feasible strategic deviations still requires separate control. Appendix C establishes why the unilateral assumption fails in this fishery. 27 B.7 The implemented PI controller and shaping error 
+
+For the capped PI recursion (31), let ̂ Ck = 1 for all k. Eventually Ik = Imax and λk = Imax +KP (1 −ε), yet the average violation remains 1 − ε > 0. Consequently bounded PI multipliers do not provide Proposition 1’s certificate. The second gap is the actor objective. Let S(π) be the expected discounted shaped cost actually penalized by a particular actor. At a fixed λ ≥ 0, define F (π) = J(π) − λC (π) and ˜F (π) = J(π) −
+
+λS (π). Suppose |S(π) − C(π)| ≤ e uniformly over the comparison class. Then |F (π) − ˜F (π)| ≤ λe .If an output π is δ-optimal for ˜F , comparison with any alternative z gives 
+
+F (π) ≥ ˜F (π) − λe ≥ ˜F (z) − δ − λe ≥ F (z) − δ − 2λe. 
+
+Taking a supremum over z proves a ( δ + 2 λe ) oracle tolerance for the terminal-cost objective. The constant λε in the Lagrangian cancels from policy comparisons. The same inequalities apply to unilateral alternatives with the opponents fixed if the discrepancy bound is uniform over those alternatives. With discounted episodic reward, an exact terminal-cost implementation would use the shared terminal penalty −λγ −(H−1) (1 − BH /K ) at transition H − 1 and zero cost penalties earlier. Its discounted sum is exactly −λC in expectation. Each self-interested agent must receive that global penalty to implement (6); catch attribution changes the game. The policy-independent λε term can be omitted from actor updates. 
+
+C Properties of the Gordon–Schaefer environment 
+
+This section connects the fishery model to the assumptions and interpretation of the policy-sequence results. The calculations are elementary consequences of the specified growth and harvesting rules; we use them as supporting analysis, rather than as new ecological results. They answer three questions needed by the paper: whether costs and rewards obey the bounds used in the proofs, whether preserving the stock is attainable jointly and unilaterally, and what the depletion signal measures. The resulting distinctions explain why the cooperative guarantee applies under different conditions from the game guarantee and why the experimental curves report terminal depletion separately from the training penalty. The first lemma supplies concrete model bounds for Propositions 1 and 2 and Theorem 2. Write 
+
+x = B/K and a = min {q ∑ 
+
+> i
+
+ei, 1} for the fraction harvested. The post-harvest stock is y = (1 − a)x
+
+and, for 0 ≤ r ≤ 1, the next normalized stock is 
+
+Fa(x) = (1 − a)x{1 + r − r(1 − a)x}.
+
+This formula incorporates proportional catch scaling when requested catch exhausts the stock. 
+
+Lemma 3 (Invariant stock interval and reward bounds) . For 0 ≤ r ≤ 1, the unclipped map already takes [0 , 1] into [0 , 1] . Zero stock is absorbing. Joint zero effort preserves the initial state 
+
+B0 = K exactly. Per-step total catch lies in [0 , K ], so the range of discounted team return is at most K ∑H−1 
+
+> t=0
+
+γt, with the value KH when γ = 1 .Proof. Normalize biomass by K and let y be the post-harvest stock fraction. Proportional catch scaling ensures that total catch cannot exceed available biomass, so 0 ≤ y ≤ x ≤ 1 whenever the pre-harvest fraction x lies in [0 , 1]. Before clipping, growth maps y to 
+
+f (y) = y + ry (1 − y), f ′(y) = 1 + r − 2ry. 
+
+28 For 0 ≤ r ≤ 1 and y ∈ [0 , 1], f ′(y) ≥ 1 − r ≥ 0. Thus f is nondecreasing on this interval. Since 
+
+f (0) = 0 and f (1) = 1, it follows that 0 ≤ f (y) ≤ 1. The unclipped transition already lies in [0 , 1], so clipping does not change it. Starting in this interval and applying the same argument at each transition proves invariance by induction. At zero stock, requested catches are zero and f (0) = 0. Hence zero is absorbing until the external episode reset. Under joint zero effort, no biomass is removed. In particular, starting at x0 = 1 gives x1 = f (1) = 1, and induction gives xt = 1 throughout the episode. Its terminal depletion is therefore exactly zero. For the reward assertion, let ht = ∑ 
+
+> i
+
+hi,t be total catch. Scaling and nonnegativity give 0 ≤ ht ≤
+
+Bt ≤ K on every trajectory. For 0 ≤ γ ≤ 1, 0 ≤
+
+> H−1∑
+> t=0
+
+γtht ≤ K
+
+> H−1∑
+> t=0
+
+γt.
+
+Taking expectations preserves both inequalities. Thus every team policy value lies in this common interval, and the difference between its supremum and infimum is at most the interval’s length. For 
+
+γ < 1 that length is K(1 − γH )/(1 − γ); for γ = 1 it is KH . This establishes a valid reward-range bound without assuming any optimal policy exists. The invariant interval gives C, ̂ C ∈ [0 , 1], as required by the feasibility and concentration arguments. The return bound provides the concrete choice R = K ∑H−1 
+
+> t=0
+
+γt in the cooperative multiplier and reward bounds. For any positive budget, joint abstention has C = 0 and supplies the strict-feasibility margin σ = ε, when abstention belongs to the chosen policy class. Thus the resource requirement is attainable by coordinated agents; the cooperative theorem then quantifies how much reward can be retained while meeting it. These calculations verify the environmental assumptions, while the theorem separately requires the stated solver accuracy. At budget zero, strict feasibility is impossible because C ≥ 0. The next lemma explains the physical mechanism behind depletion and prepares the distinction between joint and unilateral feasibility. Sustained extraction can exceed regeneration even though the unharvested resource renews itself. The constant-effort threshold quantifies this balance, and the positive fixed point describes the stock sustained below that threshold. A positive stock alone does not specify whether a chosen depletion budget is met; the budget imposes a quantitative preservation requirement. 
+
+Lemma 4 (Collapse threshold under constant total effort) . Let the harvested fraction a ∈ [0 , 1] be fixed. If d = (1 − a)(1 + r) < 1, then xH ≤ dH x0. If d > 1, the map has a positive fixed point 
+
+x∗ = (1 − a)(1 + r) − 1
+
+r(1 − a)2
+
+when r > 0 and a < 1; for 0 ≤ r ≤ 1 this point lies in (0 , 1] and is locally stable. These are properties of constant effort, not a characterization of learned equilibrium policies. Proof. For fixed harvested fraction a, expand the transition as 
+
+Fa(x) = dx − bx 2, d = (1 − a)(1 + r), b = r(1 − a)2 ≥ 0.
+
+On [0 , 1], the quadratic term is nonnegative before subtraction, so 0 ≤ Fa(x) ≤ dx . If d < 1, applying this inequality repeatedly gives x1 ≤ dx 0, x2 ≤ dx 1 ≤ d2x0, and, by induction, xH ≤ dH x0.29 This proves geometric decay in the strict subcritical case. In particular, a = 1 gives d = b = 0 and immediate extinction. Now suppose d > 1. This implies r > 0 and a < 1, hence b > 0. A positive fixed point solves 
+
+x = dx − bx 2. Dividing by x > 0 gives 1 = d − bx , so the unique positive candidate is 
+
+x∗ = ( d − 1) /b = (1 − a)(1 + r) − 1
+
+r(1 − a)2 .
+
+Its numerator and denominator are positive. To verify that the candidate is in the invariant stock interval, use Lemma 3: Fa(1) = f (1 − a) ≤ 1. Since Fa(1) = d − b, this implies d − 1 ≤ b, and hence 
+
+x∗ ≤ 1. For local stability, differentiation gives F ′
+
+> a
+
+(x) = d − 2bx . Substitution of bx ∗ = d − 1 yields 
+
+F ′
+
+> a
+
+(x∗) = d − 2( d − 1) = 2 − d. 
+
+The assumptions imply 1 < d ≤ 1 + r ≤ 2, so |F ′
+
+> a
+
+(x∗)| < 1. More explicitly, continuity of the derivative supplies a neighborhood of x∗ and a number c < 1 on which |F ′
+
+> a
+
+| ≤ c. The mean-value theorem then gives |Fa(x) − x∗| ≤ c|x − x∗| for sufficiently close x ∈ [0 , 1]. This inequality keeps subsequent iterates in that neighborhood and makes their distance to x∗ decrease geometrically. It also covers the endpoint case x∗ = 1 by restricting to the invariant interval. Thus the fixed point is locally asymptotically stable. At the boundary d = 1 with b > 0, the formula ( d − 1) /b gives zero, not a positive fixed point; the strict geometric bound for d < 1 makes no claim there. If also b = 0, then d = 1 forces r = 0 and 
+
+a = 0, and Fa(x) = x: every stock is fixed. These boundary cases are separate from the two strict regimes asserted in the lemma. The strict collapse condition is a > r/ (1 + r). At r = .3, a single agent’s maximal effort with q = .5already gives a ≥ .5 > r/ (1 + r). More generally, if the opponent always exerts unit effort, every possible response of the other agent leaves post-harvest stock at most Bt/2. Thus, directly from 
+
+f (y) ≤ (1 + r)y,
+
+Bt+1 ≤ .65 Bt, C ≥ 1 − .65 60 . (25) This holds pathwise for randomized and history-dependent responses as well. Since .65 60 < 6× 10 −12 ,no unilateral response can satisfy any of the tested budgets against that opponent. The game source’s uniform unilateral Slater condition fails, whereas joint Slater holds. If both agents exert unit effort at the first step, q(e1 + e2) = 1, so all stock is removed and zero remains absorbing until the episode reset. This unilateral bound is the main reason for including the collapse calculation. Coordinated abstention provides a feasible policy, yet an individual harvester cannot preserve the stock against every possible opponent policy. The cooperative strict-feasibility assumption therefore has an explicit witness, while the stronger uniform unilateral assumption of the earlier game result fails in the unrestricted effort class. This motivates treating resource feasibility and the Nash deviation bound separately in the present framework. The calculation identifies a structural possibility in the environment; the experiments examine the behavior of the learned policies. The following identity explains the choice of evaluation metric. A training penalty based on every downward stock movement counts depletion before later regeneration, whereas terminal depletion records the net loss remaining at episode end. The identity gives the exact difference between these two undiscounted quantities, showing why budget satisfaction is evaluated using the endpoint cost that appears in the formulation. 30 Lemma 5 (One-sided loss is not terminal depletion) . For any stock path starting at B0 = K, define 
+
+D = K−1 ∑ 
+
+> t<H
+
+[Bt − Bt+1 ]+ and U = K−1 ∑ 
+
+> t<H
+
+[Bt+1 − Bt]+. Then 
+
+D = 1 − BH /K + U ≥ 1 − BH /K. (26) 
+
+Proof. For a real increment z, its positive and negative parts satisfy [ −z]+ − [z]+ = −z. Indeed, for 
+
+z ≥ 0 the left-hand side is 0 − z, while for z < 0 it is −z − 0. Apply this identity to zt = Bt+1 − Bt
+
+at each transition. The definitions of D and U give 
+
+K(D − U ) = 
+
+> H−1∑
+> t=0
+> (
+
+[Bt − Bt+1 ]+ − [Bt+1 − Bt]+
+
+> )
+
+=
+
+> H−1∑
+> t=0
+
+(Bt − Bt+1 ) = B0 − BH .
+
+The last equality is telescoping. Since B0 = K > 0, division by K yields D − U = 1 − BH /K , or 
+
+D = 1 − BH /K + U . Every summand defining U is nonnegative, so D ≥ 1 − BH /K . Equality holds exactly when there is no positive stock increment along the finite path. This is a pathwise, undiscounted identity and therefore does not require assumptions about how the actions were selected. Undiscounted one-sided loss is therefore an upper bound on terminal depletion, with a gap equal to accumulated positive stock increments. Its discounted , scaled, per-agent attribution is a different quantity and has no corresponding equality with the global endpoint cost. Terminal depletion alone does not record the lowest stock reached during an episode. 
+
+C.1 Why policy sequences can help, and what that does not establish 
+
+The final observation links the environmental analysis back to the nonstationary solution concept. Once policies can have different harvest and depletion values, the average-epoch formulation permits the resource budget to be allocated across them. This is the role of policy mixtures in the cooperative reward comparison of Proposition 2. The example and construction below clarify that role and distinguish it from a claim that changing policies is always better than stationary randomized control. With reset episodes, a mixture of whole joint policies has reward and cost equal to the weighted averages of their individual values. Mixing low-reward, low-cost policies with high-reward, high-cost policies yields intermediate reward and cost values. For example, take a one-step two-action control problem with ( C, J ) = (0 , 0) and (1 , 2) and budget 1 /2. Among deterministic policies only the first is feasible; alternating the two policies yields ( ¯C, ¯J) = (1 /2, 1). This is a strict improvement over the deterministic stationary class, but a stationary policy randomized equally between the actions attains the same pair. Thus executing different policies across episodes expands a restricted policy class and avoids requiring each component to be feasible; it does not imply that nonstationarity always outperforms unrestricted randomized stationary control. In a finite fully observed finite-horizon cooperative MDP, the usual occupancy constraints make this distinction exact. Given an episode mixture, let dt(s, a ) be its joint state–action marginal. These marginals obey the initial-distribution and flow equations because those equations are linear. Define a joint Markov policy by πt(a | s) = dt(s, a )/ ∑ 
+
+> b
+
+dt(s, b ) wherever the denominator is positive, choosing arbitrarily at unvisited states. Induction on t proves that this policy has the same marginals, 31 hence the same additive rewards and terminal-state distribution. The time-dependent Markov policy is stationary on ( s, t ). A joint distribution over actions need not factor into independent local actors; decentralized information or a restricted neural policy class can prevent this construction. We therefore motivate policy sequences as the natural output of the Lagrangian procedure, without asserting an unproved advantage over all stationary randomized policies in this fishery. 
+
+D Lagrangian, IPPO, and MAPPO algorithms 
+
+D.1 The outer primal–dual policy-sequence method 
+
+Algorithm 1 states the oracle method separately from the practical PPO–PI learners. The multiplier update raises the price when depletion exceeds the budget and lowers it when depletion falls below the budget, subject to remaining nonnegative. In the cooperative formulation this has a dual-subgradient interpretation; in the game it generates the prices for successive Lagrangian games. At each price, the solver seeks a team optimum or a Nash equilibrium, respectively. Solving one constrained problem is thereby replaced by a sequence of unconstrained games or control problems indexed by price; this reduction does not make their inner solution computationally trivial. The average-reward version follows the epoch mechanism of Das et al. (2025b;a), with the upper-bound sign convention. Its stage reward is ri(s, a ) − λk(c(s, a ) − ε) and its value is an infinite-horizon time average. A finite block from a general starting state need not be an unbiased estimate of that value. Exact equality is a substantive oracle/evaluation assumption in the source results; choosing a large T0 alone does not prove it. If a uniform bias estimate is available, the bias term in the proof of Proposition 1 quantifies its contribution. Different block lengths require time-weighted averages to describe physical-time performance. For reset episodes, a long-run regenerative interpretation is available: repeat independent episodes of fixed length H. The cycle-average reward is H−1E ∑ 
+
+> t<H
+
+Rt; the endpoint cost averaged over cycles is C. A per-time-step cost which is zero except for H(1 − BH /K ) on the last transition has the same time-average value C. This equivalence relies on fixed cycle length and reset, and uses 
+
+undiscounted reward. It does not convert Jγi with γ = .99 into average physical-time catch, nor does it describe a fishery with no stock reset. A PPO inner learner for a continuing average-reward problem would require a corresponding value estimator. With fixed price, let ˜rt = rt − λk(ct − ε), let ̂ ρ estimate its average reward, and let hϕ
+
+estimate a differential value. A possible differential TD residual is 
+
+dav  
+
+> t
+
+= ˜rt −̂ ρ + hϕ(st+1 ) − hϕ(st).
+
+One can form truncated advantage estimates ∑ 
+
+> l≥0
+
+λl
+
+> GAE
+
+dav  
+
+> t+l
+
+and apply the clipped policy update below. This differential-value estimator is appropriate to the continuing average-reward formulation. The episodic experiments instead use discounted GAE, defined in (28). The differential Bellman equation and stable estimation require appropriate recurrence assumptions. 
+
+D.2 Common discounted PPO computations 
+
+The practical algorithms use PPO (Schulman et al., 2017) with generalized advantage estima-tion (Schulman et al., 2016). On transition t = 0 , . . . , H − 1, write 
+
+gt = [Bt − Bt+1 ]+
+
+K , acost  
+
+> i,t
+
+=
+
+> {
+
+hi,t / ∑ 
+
+> j
+
+hj,t , ∑ 
+
+> j
+
+hj,t > 0,
+
+0, ∑ 
+
+> j
+
+hj,t = 0 .
+
+32 This indexing is equivalent to the one-sided loss defined in Appendix F, where the transition is indexed by its endpoint. The implemented PPO reward divides physical catch by K, while the theoretical reward retains the definition in Section 2. Fixing the epoch price gives 
+
+> ˜
+
+Ri,t = hi,t /K − wλ kgtacost  
+
+> i,t
+
+(IPPO) , ˜RΣ,t = ∑
+
+> i
+
+hi,t /K − wλ kgt (MAPPO) . (27) For an appropriate critic input xt, use the frozen rollout critic to compute 
+
+dt = ˜Rt + γV ϕold (xt+1 ) − Vϕold (xt),̂ At =
+
+> H−1−t∑
+> l=0
+
+(γλ GAE )ldt+l, (28) ̂
+
+Vt =̂ At + Vϕold (xt), ri,t (θi) = πθi (ei,t | oi,t )
+
+πθi, old (ei,t | oi,t ) . (29) At the true episode boundary set V (xH ) = 0 and do not continue the advantage recursion across reset. A rollout truncated before that boundary instead bootstraps the critic. For continuous actions, the ratio uses probability densities , including the squash change-of-variables consistently in both evaluations. PPO maximizes 
+
+Lclip  
+
+> i
+
+(θi) = ̂ Et min {ri,t (θi)̂ At, clip( ri,t (θi), 1 − ϵclip , 1 + ϵclip )̂At} + βent ̂ EtH(πθi ), (30) and fits its critic to the fixed targets ̂ Vt by squared error. If entropy regularization is omitted, set βent = 0. The current implementation uses affine Gaussian means with state-independent log standard deviations, followed by a logistic squash to obtain effort, and affine value functions. Updates use full-rollout gradients with fixed learning rates, not an adaptive-moment optimizer. Each epoch collects one H = 60-step episode and performs five PPO passes. The actor and critic learning rates are 0 .03 and 0 .06, respectively, and the entropy coefficient is zero. In MAPPO, the centralized critic is fitted before the actor passes; IPPO updates its local critics during those passes. The actor score contributions are clipped before averaging. The standard-deviation clamp [0 .06 , 0.8] applies to the latent Gaussian, not to the squashed effort distribution. A positive latent variance does not prevent effort from concentrating near an action boundary when the mean saturates. Before the PPO passes, advantages are centered and divided by the larger of one and their empirical standard deviation. This avoids amplifying a small-variance batch, but it does not guarantee invariance of the response to the multiplier. In particular, scaling a combined reward-and-cost advantage need not remove its dependence on the price. In Algorithms A1–A2, Nep is the number of complete reset episodes per rollout batch and E the number of PPO passes. The operator Opt π takes an ascent step and Opt V a descent step using the supplied optimizer settings; plain gradient updates are θ ← θ + aπ∇L and ϕ ← ϕ − aV ∇LV . The GAE operator is exactly (28), independently applied to each episode with zero terminal bootstrap. The minibatch objective is (30); IPPO uses ̂ Ai,b,t and MAPPO uses the same ̂ Ab,t for every actor. Old densities, advantages, and value targets remain fixed throughout all E passes. The catch shares 
+
+acost  
+
+> i,b,t
+
+are defined above, with zero share when total catch is zero. Set z = 1 for constrained training and z = 0 for the unpriced baseline. Stored rollout records include observations, actions, old log densities, catches, and stock transitions. The implementation logs training metrics, within-episode diagnostics, and mean-effort summaries at a fixed reference state. These summaries describe training behavior rather than storing the complete sequence of actor parameters. 33 Algorithm A1 IPPO with terminal-cost PI feedback 
+
+Require: Initial actor/critic parameters ( θ, ϕ ); M, H, N ep , E ∈ N; ε, w, γ, λ GAE , ϵ clip , β ent , K P , K I , I max ;minibatch partition, optimizers Opt π , Opt V ; flag z ∈ { 0, 1} 
+
+> 1:
+
+(I0, λ 0) ← (0 , 0)  
+
+> 2:
+
+for k = 0 , . . . , M − 1 do  
+
+> 3:
+
+(θold , ϕ old ) ← (θ, ϕ ); πk ← ∏ 
+
+> i
+
+πθold  
+
+> i
+> 4:
+
+for b = 1 , . . . , N ep do  
+
+> 5:
+
+Bb, 0 ← K; hi,b, −1 ← 0 for all i 
+
+> 6:
+
+for t = 0 , . . . , H − 1 do  
+
+> 7:
+
+ei,b,t ∼ πθold  
+
+> i
+
+(· | oi,b,t ) for all i 
+
+> 8:
+
+(h1: n,b,t , B b,t +1 ) ← Fishery( Bb,t , e 1: n,b,t ) 
+
+> 9:
+
+gb,t ← [Bb,t − Bb,t +1 ]+/K ; ˜Ri,b,t ← hi,b,t /K − wλ kgb,t acost  
+
+> i,b,t
+
+for all i 
+
+> 10:
+
+end for  
+
+> 11:
+
+(̂Ai,b,t ,̂ Vi,b,t )H−1 
+
+> t=0
+
+← GAE( ˜Ri,b, 0: H−1, V ϕold  
+
+> i
+
+, o i,b, 0: H ) for all i 
+
+> 12:
+
+end for  
+
+> 13:
+
+for p = 1 , . . . , E do  
+
+> 14:
+
+for each minibatch B of the collected transitions do  
+
+> 15:
+
+θi ← Opt π (θi, ∇θi Lclip  
+
+> i, B
+
+(θi)) for all i 
+
+> 16:
+
+ϕi ← Opt V (ϕi, ∇ϕî EB(Vϕi (oi,b,t ) −̂ Vi,b,t )2) for all i 
+
+> 17:
+
+end for  
+
+> 18:
+
+end for 
+
+> 19:
+
+̂ Ck ← N −1ep 
+
+∑
+
+> b
+
+(1 − Bb,H /K ); uk ←̂ Ck − ε 
+
+> 20:
+
+Ik+1 ← z clip [0 ,I max ](Ik + KI uk) 
+
+> 21:
+
+λk+1 ← z[KP uk + Ik+1 ]+ 
+
+> 22:
+
+end for  
+
+> 23:
+
+return θ, {πk,̂ Ck, λ k}k<M 
+
+D.3 Independent PPO with the shared ecological price 
+
+IPPO (de Witt et al., 2020) has independently trained actors and local critics. Here the individual reward is catch, so the agents are self-interested. Independence of training architecture alone does not imply self-interest; IPPO can also be trained on a shared reward. Our implementation uses actor observation oi,t = ( Bt/K, t/H, h i,t −1/K ), a logistic-squashed Gaussian actor with affine mean, and a local linear critic. A policy stationary in this augmented observation can depend on physical time through t/H ; it need not be stationary in biomass alone. The controller observes one global terminal cost, even though learning uses individual shaped rewards. No opponent policy or opponent critic is supplied to the local PPO update. Shared feedback is therefore an ecological coordination signal, not a centralized optimization of individual rewards. As both agents learn, each agent faces a changing environment; clipping alone does not certify a Nash best response. 
+
+D.4 MAPPO with the cooperative ecological price 
+
+MAPPO (Yu et al., 2022) uses centralized training with decentralized execution. In the manuscript’s cooperative arm, every actor uses the same team advantage, and a centralized critic uses the shared input xt = ( Bt/K, t/H ). The actors execute their own policies. The experiment changes both the critic architecture and the reward objective relative to IPPO, so performance differences cannot be attributed solely to centralizing the critic. 34 Algorithm A2 Cooperative MAPPO with terminal-cost PI feedback 
+
+Require: Initial actor/critic parameters ( θ, ϕ ); M, H, N ep , E ∈ N; ε, w, γ, λ GAE , ϵ clip , β ent , K P , K I , I max ;minibatch partition, optimizers Opt π , Opt V ; flag z ∈ { 0, 1} 
+
+> 1:
+
+(I0, λ 0) ← (0 , 0)  
+
+> 2:
+
+for k = 0 , . . . , M − 1 do  
+
+> 3:
+
+(θold , ϕ old ) ← (θ, ϕ ); πk ← ∏ 
+
+> i
+
+πθold  
+
+> i
+> 4:
+
+for b = 1 , . . . , N ep do  
+
+> 5:
+
+Bb, 0 ← K; hi,b, −1 ← 0 for all i 
+
+> 6:
+
+for t = 0 , . . . , H − 1 do  
+
+> 7:
+
+ei,b,t ∼ πθold  
+
+> i
+
+(· | oi,b,t ) for all i 
+
+> 8:
+
+(h1: n,b,t , B b,t +1 ) ← Fishery( Bb,t , e 1: n,b,t ) 
+
+> 9:
+
+gb,t ← [Bb,t − Bb,t +1 ]+/K ; ˜RΣ,b,t ← ∑ 
+
+> i
+
+hi,b,t /K − wλ kgb,t  
+
+> 10:
+
+end for  
+
+> 11:
+
+(̂Ab,t ,̂ Vb,t )H−1 
+
+> t=0
+
+← GAE( ˜RΣ,b, 0: H−1, V ϕold , x b, 0: H ) 
+
+> 12:
+
+end for  
+
+> 13:
+
+for p = 1 , . . . , E do  
+
+> 14:
+
+for each minibatch B of the collected transitions do  
+
+> 15:
+
+θi ← Opt π (θi, ∇θi Lclip  
+
+> i, B
+
+(θi)) for all i 
+
+> 16:
+
+ϕ ← Opt V (ϕ, ∇ϕ̂ EB(Vϕ(xb,t ) −̂ Vb,t )2) 
+
+> 17:
+
+end for  
+
+> 18:
+
+end for 
+
+> 19:
+
+̂ Ck ← N −1ep 
+
+∑
+
+> b
+
+(1 − Bb,H /K ); uk ←̂ Ck − ε 
+
+> 20:
+
+Ik+1 ← z clip [0 ,I max ](Ik + KI uk) 
+
+> 21:
+
+λk+1 ← z[KP uk + Ik+1 ]+ 
+
+> 22:
+
+end for  
+
+> 23:
+
+return θ, {πk,̂ Ck, λ k}k<M 
+
+Algorithms A1–A2 describe our implementation, with shaped rewards and capped PI feedback. Algorithm 1 instead specifies the terminal-cost oracle and uncapped projected update analyzed in the proofs. 
+
+E Standard probability tools utilized 
+
+We record the precise versions of the standard probability results invoked below. These are textbook tools, not additional contributions of this paper, and their proofs are omitted. Conditional expectation, Markov’s inequality, countable subadditivity, and the first Borel–Cantelli lemma are treated in Durrett (2019); the bounded-variable exponential estimate is Hoeffding’s lemma as treated in Boucheron et al. (2013). Its conditional formulation below uses the same bounded-variable estimate after conditioning. All statements are on a probability space (Ω , A, P); identities and inequalities between conditional expectations are understood almost surely. They require no independence unless explicitly stated. 
+
+Lemma 6 (Conditional expectation: tower, pull-out, and order properties) . Let H ⊆ G ⊆ A be sub-σ-algebras and let X be an integrable real random variable. Then 
+
+E[E[X | G ] | H ] = E[X | H ], E[E[X | G ]] = E[X].
+
+If Z is a bounded G-measurable real random variable, then 
+
+E[ZX | G ] = ZE[X | G ].
+
+35 The pull-out identity also holds for a finite G-measurable Z when X and ZX are integrable. Condi-tional expectation is linear on integrable variables and order preserving: if integrable X ≤ Y almost surely, then E[X | G ] ≤ E[Y | G ] almost surely. In particular, deterministic bounds a ≤ X ≤ b
+
+imply a ≤ E[X | G ] ≤ b almost surely. The tower and pull-out identities also hold, with extended nonnegative conditional expectations, for nonnegative variables and nonnegative measurable factors. See Durrett (2019). 
+
+Lemma 7 (Conditional Hoeffding bound) . Let G ⊆ A be a sub-σ-algebra. Let X be a real random variable with deterministic finite bounds a ≤ X ≤ b almost surely, where a ≤ b, and put m = E[X | G ].For every fixed t ∈ R,
+
+E[exp {t(X − m)} | G ] ≤ exp  
+
+> {
+
+t2(b − a)2
+
+8
+
+> }
+
+almost surely .
+
+Equivalently, 
+
+E[etX | G ] ≤ exp 
+
+> {
+
+tm + t2(b − a)2
+
+8
+
+> }
+
+.
+
+In particular, if m = 0 and |X| ≤ c almost surely for a deterministic c ≥ 0, the bound is exp( t2c2/2) .No independence between X and G is assumed. The unconditional version results from choosing the trivial σ-algebra. See Boucheron et al. (2013) for Hoeffding’s bounded-variable lemma and Durrett (2019) for conditional expectation. 
+
+Lemma 8 (Markov’s inequality and its exponential form) . If Y ≥ 0 almost surely and EY < ∞,then, for every u > 0,
+
+P(Y ≥ u) ≤ EYu .
+
+Consequently, for a real random variable X, any t > 0 such that EetX < ∞, and any x ∈ R,
+
+P(X ≥ x) ≤ e−tx EetX .
+
+The corresponding lower-tail bound follows by applying this statement to −X when its exponential moment is finite. These inequalities also bound events with strict inequalities. See Durrett (2019). 
+
+Lemma 9 (Countable union bound and simultaneous events) . For any sequence (Ej )j≥1 of events in A,
+
+P
+
+>  ⋃
+> j≥1
+
+Ej 
+
+> 
+
+≤ ∑
+
+> j≥1
+
+P(Ej ).
+
+In particular, if A1, . . . , A m satisfy P(Aj ) ≥ 1 − βj with βj ≥ 0, then 
+
+P
+
+> 
+> m⋂
+> j=1
+
+Aj 
+
+> 
+
+≥ 1 −
+
+> m∑
+> j=1
+
+βj .
+
+A countable intersection of probability-one events has probability one. No independence is required. See Durrett (2019). 
+
+Lemma 10 (First Borel–Cantelli lemma) . Let (Em)m≥1 be events in A. If ∑∞ 
+
+> m=1
+
+P(Em) < ∞, then 
+
+P(Em infinitely often ) = P 
+
+> 
+> ∞⋂
+> N=1
+> ⋃
+> m≥N
+
+Em 
+
+> 
+
+= 0 .
+
+Equivalently, with probability one there is a finite, outcome-dependent index N such that none of the events Em occurs for m ≥ N . This direction of Borel–Cantelli requires no independence among the events. See Durrett (2019). 
+
+36 F Experimental system and implementation 
+
+The shared proportional–integral controller combines the current measured budget excess with an accumulated contribution from past excesses. The current term responds to the latest episode, while the accumulated term maintains pressure when depletion repeatedly exceeds the budget. Its update is 
+
+uk =̂ Ck − ε, Ik+1 = clip [0 ,I max ](Ik + KI uk), λk+1 = [ KP uk + Ik+1 ]+, (31) Here uk is the measured budget excess and Ik is its accumulated contribution to the price. The gains 
+
+KI = 0 .03 and KP = 1 set the strengths of the accumulated and current feedback, respectively; 
+
+Imax = 15 caps the accumulated contribution. For actor updates, one-sided within-episode loss 
+
+gt = [ Bt−1 − Bt]+/K is attributed to IPPO agents in proportion to catch, while MAPPO receives the team penalty; the fixed scale is w = 2 .5, and PPO uses harvest divided by K.Each episode evolves according to (1), with initial biomass B0 = K, continuous effort ei ∈ [0 , 1], and raw individual reward Ri = hi. The horizon-H terminal metric is 1 − BH /K . Both actor families use PPO and discounted advantage estimation; IPPO uses local per-agent critics, and MAPPO uses a centralized critic and the joint reward. The experiment compares these learning methods under the same ecological budget. Table A1: Design of the constrained MARL experiments. Each method–budget–seed combination trains a separate controller for 20,000 epochs. The horizon is H = 60 for all experiments. 
+
+Quantity Value Agents; initial stock; carrying capacity n = 2, B0 = K = 1000 Growth; catchability; episode horizon r = 0 .3, q = 0 .5, H = 60 Actions Continuous effort ei ∈ [0 , 1] Actor; critics Squashed Gaussian; local (IPPO), central (MAPPO) Learning objectives Individual reward (IPPO); team reward (MAPPO) Constraint feedback Shared terminal-depletion PI multiplier Discount; GAE parameter γ = 0 .99, λGAE = 0 .95 PPO passes; rollout batch 5; one complete episode (60 steps) Actor learning rate; critic learning rate 0.03; 0 .06 PPO clipping; entropy coefficient 0.2; 0 Latent Gaussian standard deviation [0 .06 , 0.8] Initial actor bias: IPPO; MAPPO −1.5; −2.0PI gains; integral-state cap KP = 1, KI = 0 .03, Imax = 15 Shaping scale w = 2 .5; catch-attributed (IPPO), team (MAPPO) Evaluation reward Unpenalized undiscounted harvest divided by K
+
+Full-run training length 20 ,000 epochs Seeds; constrained training runs 3 per method–budget; 2 × 6 × 3 = 36 Depletion budgets {0.01 , 0.05 , 0.1, 0.3, 0.4, 0.6}
+
+At each training epoch, the learner (1) samples an episode under the current joint actor; (2) records unpenalized returns divided by K, terminal depletion, and intermediate stock; (3) forms shaped PPO advantages, assigning IPPO’s one-sided loss in proportion to catch or MAPPO’s loss to the team; (4) updates the actors and critics; and (5) advances the common PI state by (31). Unpenalized normalized return and terminal cost, rather than shaped training reward, are used for evaluation. An idealized oracle iteration would instead solve (6) at each price and use (7); these are distinct algorithms. 37 The main-text trajectories report the per-epoch mean and minimum–maximum range across three seeds for each method and budget. These displays summarize the realized training measurements. 
+
+F.1 Reading the experimental plots 
+
+An epoch is a training episode/update index, whereas t indexes physical steps within an episode of horizon H = 60. The horizontal label “Epoch (last 2000)” in Figures 1–3 resets the displayed coordinate to the start of the final 2,000-epoch window; zero on that axis is not the beginning of training. Training lasts 20,000 epochs; the displayed axes cover only the final 2,000. In the plot labels, T denotes the episode endpoint, corresponding to H in the manuscript. Thus 
+
+BT /K = BH /K is terminal biomass as a fraction of carrying capacity K, and c = 1 − BT /K is dimensionless terminal depletion. Zero depletion means that the terminal stock equals carrying capacity; depletion one means an empty terminal stock. The budget ε is the allowed depletion, equivalently requiring terminal stock ratio at least 1 − ε. A cost above its reference line is a violation in the displayed measurement. Neither the shaded seed range nor a single cost observation is a probability of collapse. For the three main-text plots, panels (A) and (B) denote IPPO and MAPPO. The six legend entries are the budgets ε = 0 .01 , 0.05 , 0.1, 0.3, 0.4, 0.6, shown respectively in dark blue, blue, cyan, green, orange, and red. At each displayed epoch, the central curve is the mean across the three seeds and the light envelope runs from their minimum to maximum. The title notation “mean ± [min,max]” denotes this range, not a standard deviation or confidence interval. In particular, the plotted ¯ c
+
+is an across-seed epochwise mean, S−1 ∑Ss=1 cs,k with S = 3, whereas ¯CM in the theory averages expected costs across policy epochs. Dotted horizontal lines in the depletion plot are budget targets; the boundaries of the envelopes in the return and price plots are seed extrema. The trainers log undiscounted harvest divided by carrying capacity. An individual return is 
+
+K−1 ∑H−1 
+
+> t=0
+
+hi,t , and both IPPO’s joint return and MAPPO’s team return are K−1 ∑H−1 
+
+> t=0
+> ∑
+> i
+
+hi,t .Their aggregate returns therefore measure the same quantity when the runs share K and H. The label “raw” excludes the ecological penalty; it does not mean unnormalized biomass. The return can exceed one because harvest accumulates over an episode in which stock regenerates. An individual return and a team total are different aggregates. This reporting convention does not redefine the theoretical discounted value Jγi .The vertical price axis is the nonnegative ecological PI multiplier λ in (31), shared by both harvesters. It is unrelated to the advantage-estimation parameter λGAE = 0 .95. Price magnitudes depend on the reward and penalty scales and are not resource fractions. 
+
+G Interpretation of the experimental curves 
+
+The experimental evidence consists of Figures 1–3. Each depicts the final 2,000 training epochs for both methods and all six budgets. Figure 1 shows strong stock preservation at the smallest budget, where the depletion curves lie below the reference line. At intermediate budgets, both the means and seed envelopes vary around the prescribed levels. These movements matter because a constraint is an upper bound: being near its reference line is not equivalent to remaining below it. The envelopes also show that a mean can conceal individual-seed exceedances. The displayed window supports an assessment of late-training regulation, not a full-training feasibility calculation. Conversely, individual exceedances do not disprove average-epoch feasibility, which permits compensation 38 by slack epochs. The three-seed envelope measures observed variation, not uncertainty in an expected-cost estimate. Figure 2 shows low harvest return under the tightest budget and higher returns at larger budgets. The team curves for MAPPO at budgets .4 and .6 are close, indicating similar harvest returns at these two budgets. The return comparison must be read together with depletion: more harvest in a violating epoch does not establish a better feasible solution. Both panels use total unpenalized harvest divided by carrying capacity, making their aggregate rewards comparable in scale; neither panel displays the discounted theoretical objective. Figure 3 records continued feedback. IPPO’s tightest-budget price remains positive while declining, whereas its budget-.05 price rises. MAPPO’s intermediate-budget prices change direction during the window, and its budget-.6 price stays near zero. These are evolving controller outputs, not certified equilibrium multipliers. The different trajectories also prevent a universal monotone ordering of learned prices by budget. For a fixed realized cost and integral state, increasing ε decreases the error u =̂ C − ε, hence weakens the PI update. Across separately trained runs, the policy, realized depletion, and integral history also change. A near-zero price is compatible with little sustained penalty pressure in the displayed regime, but does not certify feasibility over the whole training sequence. Likewise, a bounded price under the capped PI rule is not the multiplier-growth certificate of Proposition 1. A monotone shadow-price interpretation belongs to an ideal cooperative optimum. For example, let μ1, μ 2 be exact Lagrangian maximizers at prices λ1, λ 2 ≥ 0, respectively, each feasible and complementary at budgets ε1 < ε 2. Their two optimality inequalities, added together, give (λ1 − λ2)( C(μ2) − C(μ1)) ≥ 0. If λ2 > 0, complementarity gives C(μ2) = ε2 > ε 1 ≥ C(μ1), so 
+
+λ1 ≥ λ2; if λ2 = 0, the same ordering follows from nonnegativity. This argument assumes exact supporting prices and complementary feasible solutions. The observed PPO–PI trajectories satisfy no such certificate, and game equilibria use unilateral rather than joint optimality comparisons. The experimental price curves therefore diagnose continuing adaptation rather than establish a monotone shadow-price law. 
+
+H Extended literature review 
+
+The economic lineage runs from open-access resource use (Gordon, 1954) to strategic harvesting of a common stock (Levhari and Mirman, 1980). Institutional research shows that communities can develop diverse arrangements for governing commons (Ostrom, 1990; 2010); collapse is not an inevitable consequence of sharing a resource, nor is one centralized intervention a universal remedy. In MARL, sequential social dilemmas treat cooperation as a property of policies rather than single actions (Leibo et al., 2017). Pérolat et al. (2017) directly study common-pool resource appropriation by independently learning agents, relating sustainability to exclusion and inequality. That work provides a close environmental precedent; our emphasis is the explicit resource constraint and its policy-sequence guarantees. Inequity aversion (Hughes et al., 2018), learned reciprocity (Eccles et al., 2019), and incentives supplied by other agents (Yang et al., 2020) provide mechanisms for improving collective outcomes. We instead place the environmental requirement in an explicit constraint and adapt a shared price from measured budget excess. The learning procedure supplies the shared price that regulates depletion. GovSim links AI-agent sustainability to communication, reasoning, and self-government (Piatti et al., 2024). Our PPO agents have a different information and learning architecture, so that work motivates 39 the shared-resource problem rather than serving as a numerical baseline. The broader distinction between agent welfare and external harm is illustrated by algorithmic collusion (Calvano et al., 2020) and organized by the multi-agent-risk taxonomy (Hammond et al., 2025). Learning models that omit explicit competitor behavior can also converge to different economic outcomes depending on assumptions and initial conditions (Cooper et al., 2015); independent learning describes how agents train; it does not establish that their policies form an equilibrium. Finally, Melting Pot demonstrates why performance against familiar partners need not generalize to new populations (Leibo et al., 2021). Our study examines resource regulation in a fixed two-agent population. A close environmental precedent is the renewable-fishery study of Danassis et al. (2022). Decentralized harvesters observe a common periodic signal, enabling temporal conventions such as taking turns or leaving fallow periods. Their experiments connect policy coordination to sustainable harvesting. Our epoch-dependent policies also allocate resource use over time, with the sequence generated by depletion-price feedback and evaluated against an explicit average-epoch budget. The cooperative and strategic results relate solutions of the resulting unconstrained problems to feasibility, reward, and unilateral-deviation bounds. This comparison connects the ecological role of temporal coordination to the constrained solution concept analyzed here. Methods based on state–action frequencies provide classical foundations for constrained MDPs and randomized stationary solutions (Altman, 1999). In convex optimization, averaging solutions of Lagrangian subproblems can recover feasible solutions (Larsson et al., 1999), with finite-iteration feasibility and objective bounds under Slater-type assumptions (Nedić and Ozdaglar, 2009). These results explain the mathematical role of averaging. In constrained RL, Le et al. (2019) use a Lagrangian game and batch policy optimization to return a policy mixture, while Miryoosefi et al. (2019) reduce convex constraints on expected measurements to repeated scalar-reward RL and return a mixture of the resulting policies. Thus both policy mixing and reduction to unconstrained RL have clear precedents. Our cooperative result develops bounds for the specified reset-episode terminal-cost construction; the strategic certificate additionally addresses unilateral deviations against fixed opponents’ policy sequences. Long-term constrained online optimization similarly separates cumulative constraint control from per-round feasibility (Mahdavi et al., 2012). Constrained actor– critic methods couple policy and multiplier learning through stochastic approximation (Borkar, 2005), while modern constrained RL gives strong-duality results under suitable assumptions (Paternain et al., 2019). State-augmented constrained RL treats evolving multipliers as part of policy execution (Calvo-Fullana et al., 2024). Our framework follows the game and cooperative epoch constructions of Das et al. (2025b;a), with a separately specified reset-episode value criterion. Unlike conditioning one learned actor on a multiplier, the ideal construction invokes an unconstrained oracle at each price and retains its returned policy. When a player’s admissible deviations depend on the other players, the relevant concept is generalized Nash equilibrium, with classical foundations in constrained games (Rosen, 1965) and penalty methods for coupled feasible sets (Facchinei and Kanzow, 2010). Classical constrained Markov-game theory gives sufficient conditions for stationary Nash equilibria (Altman and Shwartz, 2000). Chen et al. (2022) instead develop a primal–dual method for a surrogate constrained correlated-equilibrium concept, with duality-gap and violation bounds. Its deviation tests differ from Definition 1: sharing a random policy index reproduces average values but does not by itself establish their equilibrium criterion. In the dynamic setting, constrained Markov potential games can fail strong duality (Alatur et al., 2024); their independent-learning guarantees require additional structure and constraint qualifications (Jordan et al., 2024). We do not assume that the fishery is a potential game. The 
+
+α-potential approach of Das and Eksin (2024) extends the structural perspective to games with 40 bounded departures from the potential property. The present certificates do not assume a bound on departure from a potential; they instead assume that each unconstrained Lagrangian game is solved to within a specified bound on each player’s gain from deviating. Consequently, they do not replace the algorithmic learning guarantees available under potential or approximate-potential structure. Our average-epoch deviation test also allows an agent to redistribute its constraint budget across epochs, a freedom excluded when every alternative policy must satisfy the budget at its own epoch. The resulting price-dispersion term makes explicit why a cooperative reward guarantee or a feasibility certificate alone does not establish strategic stability. CPO studies constrained policy search with near-constraint satisfaction at individual itera-tions (Achiam et al., 2017). Its multi-agent extensions include MACPO and MAPPO-Lagrangian for cooperative robot control (Gu et al., 2023). ACPO studies constrained average-reward MDPs (Agni-hotri et al., 2024), whose physical-time criterion differs from our average of discounted reset episodes. Predictive safety filters instead intervene on proposed actions to maintain state constraints (Waber-sich and Zeilinger, 2021); this addresses a different requirement from an average terminal-stock budget. Our practical actors use PPO, GAE, IPPO, and MAPPO (Schulman et al., 2017; 2016; de Witt et al., 2020; Yu et al., 2022), with PI feedback motivated by oscillation and overshoot in Lagrangian learning (Stooke et al., 2020). Stable opponent shaping separately studies the stability of interacting learning dynamics (Letcher et al., 2019). Neither that result nor PPO clipping certifies the present learners’ oracle accuracy or equilibrium. We assess their measured depletion and reward, and state separately the assumptions under which the ideal policy-sequence method has guarantees. 41
