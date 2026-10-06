@@ -1,0 +1,2987 @@
+Title: Q Can Play That Game: Online Fitted Q-Iteration for Continuous-Action Zero-Sum Markov Games with Convex-Concave Function Approximation
+
+URL Source: https://arxiv.org/pdf/2610.04010v1
+
+Published Time: Tue, 06 Oct 2026 00:16:58 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+Preprint 
+
+# Q CAN PLAY THAT GAME :ONLINE FITTED Q-I TERATION FOR CONTINUOUS -ACTION ZERO -S UM MARKOV GAMES WITH CONVEX -CONCAVE FUNCTION APPROXIMATION 
+
+Kushagra Gupta 1, Jingqi Li 1, Cade Armstrong 1, Lasse Peters 2, Ross E. Allen 3,Ufuk Topcu 1, David Fridovich-Keil 11 The University of Texas at Austin  
+
+> 2
+
+The University of California, Berkeley  
+
+> 3
+
+Massachusetts Institute of Technology (MIT) Lincoln Labs 
+
+{kushagrag, jingqi.li, cadearmstrong, utopcu, dfk }@utexas.edu lasse.peters@berkeley.edu, ross.allen@ll.mit.edu 
+
+## ABSTRACT 
+
+Zero-sum Markov games arise in a wide variety of sequential decision-making problems such as adversarial learning and planning against modeled uncertain-ties. However, prior work on finite-sample guarantees on the learned state-action value function ( Q-function) for zero-sum Markov games is largely restricted to finite-action settings, or to continuous-action games in which agents have linear dynamics and quadratic rewards (i.e. linear-quadratic, or LQ, games). A central challenge in extending such guarantees to more general continuous-action zero-sum Markov games is that the associated Bellman operator involves a minimax problem that need not admit a tractable saddle-point solution. To this end, we first introduce a class of neural network function approximators for the 
+
+Q-function that is convex-concave in the players’ actions, which guarantees that this minimax problem admits a pure-strategy saddle point. We then study an online variant of fitted Q-iteration employing this function class and establish, to the best of our knowledge, the first finite-sample guarantees for non-LQ zero-sum Markov games with continuous states and actions. Our code can be found at 
+
+https://github.com/CLeARoboticsLab/QCanPlayThatGame .
+
+## 1 INTRODUCTION 
+
+We consider the problem of learning state-action value functions ( Q-functions) in discounted, infinite-horizon, two-player zero-sum Markov games with continuous state-action spaces. Such games naturally arise in competitive scenarios and robust decision-making, where environmental uncertainties and disturbances are adversarially modeled (Zhou et al., 1996; Morimoto & Doya, 2000; Pinto et al., 2017). Prior work has established finite-sample guarantees for zero-sum Markov games in the finite-action setting (Lagoudakis & Parr, 2002; Perolat et al., 2015; Zhao et al., 2022; Fan et al., 2020; Zhang et al., 2021a; Jia et al., 2019; Sidford et al., 2020; Xie et al., 2020; Alacaoglu et al., 2022; Chen et al., 2024; Feng et al., 2024). However, extending these results to the continuous state-action setting remains challenging. The difficulty stems from the minimax problem on Q inside the Bellman operator. At every state, each player wishes to play a security strategy, meaning that one player’s policy solves a min max problem and the other’s solves a max min . The solutions to these two distinct problems are mutually consistent at saddle points , where both players have non-exploitable security strategies. Saddle points are guaranteed to exist when policies map from state to mixed strategies over the action space. In finite-action spaces, the resulting saddle-point problem can be solved via a linear program; in continuous action spaces however, it is generally intractable to compute mixed-strategy saddle points as mixed-strategy spaces are infinite-dimensional. Moreover, when policies are restricted to output pure strategies at each state, i.e. raw actions, saddle-point solutions generally do not exist for arbitrary Q.1arXiv:2610.04010v1 [cs.GT] 2 Oct 2026 Preprint In this work, we propose a new class of neural network function approximators of the Q-function which is convex in the minimizing player’s action and concave in the maximizing player’s action. This convex-concave structure addresses the challenge above, as the minimax theorem guarantees that a pure-strategy saddle point exists for the minimax problem inside the Bellman operator. Fur-ther, this pure-strategy saddle point can also be reliably computed up to any desired accuracy using existing minimax optimization methods (Nemirovski, 2004; Lin et al., 2020). We analyze an on-line variant of minimax fitted Q-iteration which employs this convex-concave function class and establish finite-sample bounds between the learned Q-function and the fixed point of the Bellman operator, assuming that the fixed point admits pure-strategy saddle points. The prior work closest to ours establishes finite-sample bounds for online minimax fitted Q-iteration with neural network function approximation, but is restricted to finite-action spaces (Fan et al., 2020). In the continuous-action setting, single-player reinforcement learning literature has devel-oped finite-sample analysis for fitted Q-iteration with function approximation (Antos et al., 2007). However, extending these results to the zero-sum Markov game setting remains underexplored. Within the game setting we consider, theoretical finite-sample results for continuous state-action domains remain largely confined to the linear-quadratic (LQ) setting, where agents have linear tran-sition dynamics and quadratic objectives (Bas ¸ar & Olsder, 1998; Al-Tamimi et al., 2007a;b; Zhang et al., 2019; Bu et al., 2019; Zhang et al., 2021b). These results exploit the fact that in the LQ setting, the optimal Q-function and the resulting policies admit a closed-form solution via the algebraic Ric-cati equations (Bas ¸ar & Olsder, 1998). Unfortunately, this Riccati structure does not extend beyond the LQ setting. In this work we move beyond the LQ setting, and make the following contributions: • Contribution 1. We propose a new class of neural network function approximators for the Q-function of zero-sum Markov games. Building on the partially input convex neural network architecture (Amos et al., 2017), this class is convex in the minimizing player’s ac-tions and concave in the maximizing player’s actions by construction. The convex-concave structure ensures the existence of a saddle-point solution to the minimax problem in the Bellman operator. • Contribution 2. We analyze batched minimax Q-learning employing the above function approximation class, and establish finite-sample bounds comparing the learned Q-function to the fixed point of the Bellman operator, assuming the fixed point admits pure-strategy saddle points. To the best of our knowledge, this is the first such bound for neural network function approximation in zero-sum Markov games with continuous state-action spaces beyond the LQ setting. Additionally, we empirically investigate whether these convex-concave neural networks lead to sta-ble training when used on a practical version of modified fitted Q-iteration. 
+
+## 2 PRELIMINARIES 
+
+Notation. Z≥0 denotes the set of non-negative integers, and for n ∈ Z≥0, [n] denotes the set 
+
+{1, 2, · · · , n }. P(S) denotes the set of all probability measures over a measurable space S. M (S)
+
+denotes the space of bounded measurable functions with domain S. For f ∈ M (X ) and a probability measure σ ∈ P (X ), we denote ∥f ∥2,σ = pEx∼σ [f (x)2]. For a measure μ absolutely continuous with respect to another measure σ, i.e., μ ≪ σ, dμ /dσ denotes the Radon-Nikodym derivative. We denote a sequence of vectors v1, . . . , vj in short as v1: j . We denote the Lebesgue measure by λ, and we denote the Lebesgue measure of an ℓ2-ball in d dimensions with radius η by αdηd.We consider two-player, zero-sum, infinite-horizon discounted Markov games given by the tuple 
+
+(S, U, V, P, r, γ ), where S ⊂ Rds is the continuous state space, and U ⊂ Rdu and V ⊂ Rdv
+
+are the continuous action spaces of the minimizing and maximizing players, respectively. We take 
+
+S, U, V to be convex and compact. P : ( S × U × V ) → P (S) denotes the transition dynamics of the game, r : ( S × U × V ) → R is the immediate reward function, and γ ∈ (0 , 1) is the discounting factor. Let player 1 and player 2 be the minimizing and maximizing players respectively. At each time t ∈ Z≥0, at some game state st ∈ S , players 1 and 2 choose actions ut ∈ U and 
+
+vt ∈ V . This yields an immediate reward of r(st, ut, vt) and the game proceeds to the next state 
+
+st+1 ∼ P (·| st, ut, vt). Player 1 chooses actions to minimize the expected discounted cumulative return R = E [P∞ 
+
+> t=0
+
+γtr(st, ut, vt)] , while player 2 chooses actions to maximize R.2Preprint Each player chooses its actions according to a policy. We consider deterministic Markovian policies induced by a state-action value function ( Q-function), in which players are restricted to pure strategies. For a given continuous function Q : (S × U × V ) → R, at state s,player 1 chooses πQ(s) ∈ arg min u∈U max v∈V Q(s, u, v) and player 2 chooses μQ(s) ∈
+
+arg max v∈V min u∈U Q(s, u, v). These are the players’ security strategies: player 1 is guaran-teed a value no worse than min u∈U max v∈V Q(s, u, v) and player 2 is guaranteed a value no worse than max v∈V min u∈U Q(s, u, v). For such games the minimax Bellman operator T :
+
+M (S × U × V ) → M (S × U × V ) is defined by 
+
+T Q (s, u, v) = r (s, u, v) + γEs′∼P (·| s,u,v)
+
+
+
+inf  
+
+> ˜u∈U
+
+sup 
+
+> ˜v∈V
+
+Q (s′, ˜u, ˜v)
+
+
+
+. (1) It is well known that the minimax Bellman operator is contractive in the L∞-norm and thus a unique fixed point Q∗ exists such that T Q∗ = Q∗ (Shapley, 1953; Perolat et al., 2015). Equation (1) reveals that in order to compute the Bellman operator for continuous functions, one needs to solve a minimax 
+
+problem, in this case corresponding to player 1’s security strategy πQ. One can analogously define the maximin Bellman operator associated with player 2’s security strategy μQ. While both minimax and maximin problems admit solutions for compact U and V and continuous Q, these solutions need not coincide, i.e., (πQ, μ Q) need not be a saddle-point pair for generic Q. We restrict Q to a convex-concave function approximation class, convex in the player 1’s action and concave in player 2’s action so that the minimax theorem guarantees that at every state, (πQ, μ Q) forms a saddle point for every Q in our function class (Sion, 1958). Further, these saddle points can be found up to any desired accuracy using existing minimax optimization methods (Nemirovski, 2004; Lin et al., 2020). 
+
+Remark 1 (Mixed Strategies) . An alternative route to ensure existence of a saddle-point solution is to let players employ mixed strategies, where they randomize over pure strategies. In the finite-action setting, mixing ensures that a saddle point of the minimax problem always exists, and it can be computed by solving a linear program at every state s. In the continuous-action setting, a saddle point over mixed strategies still exists under mild continuity assumptions (Glicksberg, 1952), but computing it is far less straightforward than in the finite-action setting. The iterative double oracle algorithm (Adam et al., 2021) is guaranteed to return a saddle point up to any desired accuracy; however, each iteration requires computing a global best response for each player, which can be intractable under function approximation. Moreover, an explicit bound on the required number of iterations as a function of the saddle-point accuracy remains unknown. These difficulties motivate our focus on pure strategies with convex-concave function approximation instead. 
+
+To represent the return R obtained by policies (π, μ ), it is useful to define the state value func-tion V π,μ : S → R, given by V π,μ (s) = E P ∞ 
+
+> t=0
+
+γtr st, π (st), μ (st)|s0 = s. The state value function V ∗ relates to the fixed point Q∗ of eq. (1) as Q∗(s, u, v) = r(s, u, v) + 
+
+γEs′∼P (·| s,u,v) [V ∗(s′)] . The state value function can be used to determine whether the policies 
+
+π, μ form a saddle-point equilibrium via the Nash gap . Let Π denote the set of pure Markovian strategies, then for an evaluation distribution ρ ∈ P (S), the Nash gap is defined by 
+
+NashGap ρ(π, μ ) = Es∼ρ
+
+
+
+max  
+
+> μ′∈Π
+
+V π,μ ′
+
+(s) − min  
+
+> π′∈Π
+
+V π′,μ (s)
+
+
+
+. (2) The Nash gap is always non-negative, and is zero only when the input policies form a saddle-point Nash equilibrium with respect to ρ. Formally, NashGap ρ(π, μ ) = 0 ⇐⇒ V π,μ ′
+
+(s) ≤ V π,μ (s) ≤
+
+V π′,μ (s) for all π′ ∈ Π, μ′ ∈ Π, and ρ-almost every s ∈ S . In particular, when the fixed point 
+
+Q∗ of the minimax Bellman operator (1) admits pure-strategy saddle points, the induced policies 
+
+(πQ∗ , μ Q∗ ) satisfy NashGap ρ(πQ∗ , μ Q∗ ) = 0 for every evaluation distribution ρ ∈ P (S). The goal of this paper is to obtain bounds on the Q-function learned from a finite number of samples, and in turn bound the Nash gap corresponding to its induced security strategies. 
+
+## 3 CONVEX -C ONCAVE FUNCTION APPROXIMATION 
+
+We now describe the convex-concave neural network architecture used to approximate the Q-function: for every network parameter vector θ ∈ Θ, and every state s ∈ S , the Q-function network 
+
+Qθ : ( S ×U ×V ) → R should be convex-concave, i.e., Qθ (s, u, v) must be convex in u ∈ U for ev-ery fixed (s, v) and concave in v ∈ V for every fixed (s, u). To construct such a network, we build 3Preprint on partially input convex neural networks (PICNNs) (Amos et al., 2017), a network architecture that guarantees convexity in a designated subset of the network’s inputs, while simultaneously leaving the dependence on the other inputs unconstrained. Formally, given two inputs x and y where con-vexity in y is desired, the PICNN architecture constructs a neural network Nθ (x, y), such that for every choice of parameters θ, Nθ (x, y) is convex in y for fixed x, while retaining full expressivity in x. PICNNs achieve this by constraining a subset of weights along the computation graph edges traceable back to y to be non-negative and pairing them with convex, non-decreasing activations, while leaving weights traceable to x unconstrained. We review the PICNN architecture in more detail in Section C. To develop a convex-concave Qθ (s, u, v), we use three neural networks with parameters θ1, θ 2, θ 3,representing the concatenated parameters as θ = ( θ1; θ2; θ3) ∈ Θ. We use two PICNNs N 1 
+
+> θ1
+
+(s, u) : (S × U ) → R (convex in the input u) and N 2 
+
+> θ2
+
+(s, v) : ( S × V ) → R (convex in the input v), as well as a standard feedforward matrix-valued neural network Mθ3 (s) : S → Rdu×dv . We construct a convex-concave Qθ (s, u, v) as 
+
+Qθ (s, u, v) := N 1 
+
+> θ1
+
+(s, u) − N 2 
+
+> θ2
+
+(s, v) + u⊤Mθ3 (s) v. (3) Note that while the first two terms N 1 
+
+> θ1
+
+(s, u)−N 2 
+
+> θ2
+
+(s, v) alone would be convex in u and concave in 
+
+v, they would make Qθ only additively separable in u and v. The third, bilinear term u⊤Mθ3 (s) v
+
+captures interactions between the players’ actions beyond the separable structure, while being simul-taneously convex in u and concave in v. Note that it may be possible to include coupling terms that are more expressive than a bilinear mapping. We do not pursue this direction here, as the bilinear term suffices to guarantee joint convexity-concavity for our theoretical result in Section 4, and we found it to be adequate for our experiments in Section 5 as well. Our theoretical results will need the the Lipschitz constant of Qθ in the joint actions, as well as the covering number. We bound these for a particular architectural choice of N i and M in Theorem 2 of Section C.2, and Theorem 3 of Section C.3 respectively. 
+
+## 4 ONLINE MINIMAX FITTED Q ITERATION 
+
+We now describe our modified minimax fitted Q-iteration procedure, given in Algorithm 1. We re-strict the class of function approximators class to be the convex-concave neural network architecture described in Section 3, which we denote as F. Further, we assume access to a minimax oracle Oϵ :
+
+F → (U ×V ). For a convex-concave objective f (u, v) and any desired ϵ > 0, Oϵ returns an approx-imate saddle point ( ˜ u, ˜v) ∈ (U × V ) such that the gap |max v∈V f ( ˜ u, v) − min u∈U f (u, ˜v)| < ϵ .Several existing minimax optimization methods can be feasibly used as the oracle for Q ∈ F , be-cause F guarantees convexity-concavity. At the kth iteration of Algorithm 1, when the parameter estimate for the Q-function is θk, we denote the corresponding network Qθk as Qk.Algorithm 1 differs from standard fitted Q-iteration in the sense that we use data in an online manner and do not reuse it. Specifically, at iteration k, using a fixed sampling distribution σ ∈ P (S ×U ×V ),we sample n i.i.d. state-action tuples (si, ui, vi) ∼ σ for i ∈ [n]. Using these states and actions, we sample the next states according to the transition dynamics s′ 
+
+> i
+
+∼ P ( · | si, ui, vi) for i ∈ [n].For each i ∈ [n], we invoke the minimax oracle Oϵ on the fitted Q-function Qk ∈ F evaluated at the next state s′ 
+
+> i
+
+to obtain an approximate saddle-point action pair ( ˜ ui, ˜vi) := Oϵ
+
+ Qk(s′
+
+> i
+
+, ·, ·).Since Qk is convex-concave from Equation (3), the minimax theorem guarantees that a saddle point of Qk(s′
+
+> i
+
+, ·, ·) exists, and Oϵ returns an ϵ-accurate approximation to it. We use ( ˜ ui, ˜vi) to form the regression target yi = r(si, ui, vi) + γQ k(s′
+
+> i
+
+, ˜ui, ˜vi), which serves as an empirical estimate of an 
+
+approximate minimax Bellman operator from Equation (1) applied to the sampled tuple (si, ui, vi).This approximation occurs because in practice, one can solve the min max problem up to ϵ-accuracy instead of exactly. Finally, we update the Q-function estimate by solving a least-squares regression problem over F:
+
+Qk+1 := arg min  
+
+> f∈F
+
+bLn(f ; Qk) := arg min  
+
+> f∈F
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(f (si, ui, vi) − yi)2 . (4) Note that in Equation (4), the regression target yi is treated as a constant independent of F. Repeat-ing this procedure for K iterations yields the final estimate QK returned by Algorithm 1. 4Preprint 
+
+Algorithm 1 Online Minimax Fitted Q-Iteration  
+
+> 1:
+
+Hyper-parameters: Number of iterations K, batch size n. 
+
+> 2:
+
+Inputs: Markov game (S, U, V, P, r, γ ), initial Q-function Q0 ∈ F , fixed sampling distribution 
+
+σ ∈ P (S × U × V ), minimax oracle Oϵ. 
+
+> 3:
+
+for k = 0 to K − 1 do  
+
+> 4:
+
+Sample n i.i.d. samples {(si, ui, vi)}ni=1 ∼ σ 
+
+> 5:
+
+Draw s′ 
+
+> i
+
+∼ P (· | si, ui, vi) for each i ∈ [n] 
+
+> 6:
+
+For each i ∈ [n], form the target 
+
+( ˜ ui, ˜vi) = Oϵ
+
+ Qk (s′
+
+> i
+
+, ·, ·) 
+
+yi = r (si, ui, vi) + γQ k (s′
+
+> i
+
+, ˜ui, ˜vi) 
+
+> 7:
+
+Solve the regression problem exactly 
+
+bLn(f ; Qk) := 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ f (si, ui, vi) − yi
+
+2,Qk+1 := arg min  
+
+> f∈F
+
+bLn(f ; Qk) 
+
+> 8:
+
+end for  
+
+> 9:
+
+Output: Learned Q-function QK
+
+Sources of error in Algorithm 1. We now shift our focus to analyzing how the learned QK
+
+compares to the fixed point of the minimax Bellman operator Q∗. It is pertinent to note that Algo-rithm 1 departs from an exact Bellman iteration Qk+1 = T Qk in three ways, which introduce three corresponding sources of error: (i) an optimization error from only being able to solve the minimax problem up to ϵ-accuracy with Oϵ, (ii) an approximation error from restricting to the convex-concave function class F, and (iii) a statistical error from using finitely many samples per iteration. We now describe each in detail. First, because we solve the minimax problem in Equation (1) with ϵ-accuracy and not exactly, Algorithm 1 is better represented by the approximate minimax Bellman operator 
+
+˜T : M (S × U × V ) → M (S × U × V ) defined by 
+
+˜T Q(s, u, v) = r(s, u, v) + γEs′∼P (·| s,u,v)
+
+Q  s′, Oϵ
+
+ Q (s′, ·, ·)  , (5) where use a slight abuse of notation by denoting Q(s′, ˜u, ˜v) where ( ˜ u, ˜v) = Oϵ
+
+ Q(s′, ·, ·) as 
+
+Q s′, Oϵ(Q(s′, ·, ·)) . Secondly, without additional assumptions on the Markov game, the approxi-mate Bellman operator need not satisfy Bellman completeness , i.e., it is possible that for Q ∈ F , we have ˜T Q / ∈ F . This motivates the fundamental approximation error 
+
+δapprox := sup 
+
+> Q∈F
+
+inf   
+
+> f∈F
+
+f − ˜T Q 2,σ 
+
+. (6) The third error is statistical: because we only have n samples at each iteration, we can only perform an empirical approximate Bellman iteration. We will show how these affect the bound on ∥QK −
+
+Q∗∥2,ρ for a distribution ρ ∈ P (S × U × V ), where Q∗ is the fixed point of the exact Bellman operator T given in Equation (1). We now list our assumptions that hold throughout our analysis. 
+
+Assumption 1 (State-Action Spaces) . The continuous state and action spaces S, U and V are compact and convex, with DS := sup s∈S ∥s∥2 < ∞, DU := sup u∈U ∥u∥2 < ∞ and DV := sup v∈V ∥v∥2 < ∞.
+
+Assumption 2 (Reward Function) . The immediate reward function r is continuous and ∥r∥∞ ≤
+
+Rmax < ∞. Further, r is Lr -Lipschitz in its actions, i.e., there exists Lr > 0 such that for all s ∈ S ,
+
+u, u′ ∈ U , and v, v′ ∈ V ,
+
+|r(s, u, v) − r(s, u′, v′)| ≤ Lr (∥u − u′∥2 + ∥v − v′∥2) .
+
+Assumption 3 (Transition Dynamics) . For every bounded continuous function h : S → R, the map 
+
+(s, u, v) 7 → Es′∼P (·| s,u,v)[h(s′)] is continuous. Further, P is also LP -Lipschitz in its actions, i.e.,, there exists LP > 0 such that for all s ∈ S , u, u′ ∈ U , v, v′ ∈ V , and measurable sets S of S,
+
+P (S|s, u, v) − P (S|s, u′, v′) ≤ LP (∥u − u′∥2 + ∥v − v′∥2) .
+
+5Preprint Assumptions 1 to 3 are standard in the literature and ensure that the Bellman operator T preserves continuity, admits a fixed point, and is Lipschitz continuous. 
+
+Assumption 4 (Exploratory Distribution) . There exists c > 0 such that exploratory sampling dis-tribution σ has a conditional density p(u, v|s) satisfying p(u, v|s) ≥ c > 0 for all s ∈ S , u ∈ U ,
+
+v ∈ V .
+
+Assumption 5 (Action Spaces Regularity) . Consider a ball B(a, η ) in the joint action space U × V ⊂ Rdu+dv centered at a ∈ U × V with radius η > 0. We assume there exists α > 0 such that 
+
+λ B(a, η ) ∩ (U × V ) ≥ min  α · αdu+dv ηdu+dv , λ (U × V ) .
+
+Assumption 4 ensures that the action sampling distribution assigns positive mass to all regions of the players’ action spaces, and is satisfied by standard distributions used in reinforcement learning such as Gaussian and uniform distributions. Assumption 5 is a mild geometric condition on the players’ joint action spaces ruling out pathological geometries near the boundary, and is satisfied by convex action spaces. 
+
+Assumption 6 (Convex-Concave Function Approximation) . For the class of function approximators 
+
+F, every Q ∈ F satisfies: 
+
+• Boundedness: ∥Q∥∞ ≤ Qmax , with Qmax ≥ Rmax /1−γ.
+
+• Convex-concavity: Q(s, ·, ·) is convex in u for fixed v and concave in v for fixed u, for every s.
+
+• Joint Lipschitzness: There exists a positive constant LF < ∞ such that for all Q ∈ F ,
+
+|Q(s, u, v)−Q(s, u′, v′)| ≤ LF
+
+ ∥u−u′∥2 +∥v−v′∥2
+
+ ∀ s and all u, u′ ∈ U , v, v′ ∈ V .
+
+Convexity-concavity in Assumption 6 is satisfied by the neural network architecture we introduce in Section 3 through construction. The Lipschitzness can be ensured by standard machine learning practices such as spectral normalization with bounded inputs (Miyato et al., 2018). Note that the same practices also ensure boundedness. We provide a Lipschitz bound for F in Theorem 2 of Section C.2. 
+
+Assumption 7 (Minimax Oracle) . We have access to an oracle Oϵ : S × F → U × V , such that for any desired ϵ > 0, for (πQ, μ Q) := Oϵ(s, Q ) we have 
+
+max  
+
+> v∈V
+
+Q (s, π Q, v) − min  
+
+> u∈U
+
+Q (s, u, μ Q) < ϵ ∀ s ∈ S , Q ∈ F .
+
+Assumption 7 is satisfied for convex-concave, Lipschitz Q-functions by a variety of minimax opti-mization methods introduced in prior literature (Nemirovski, 2004; Lin et al., 2020). 
+
+Assumption 8 (Discounted Concentrability Coefficients) . For the sampling distribution σ ∈ P (S × U × V ) with state marginal σS , let πj denote any Markov policy with πj : S → U × V . Define the 
+
+jth -step concentrability coefficient for a distribution ν ≪ σS
+
+cj (ν) := sup 
+
+> π1,...,π j
+
+d(νP π1
+
+· · · P πj
+
+)
+
+dσ S ∞
+
+, c0(ν) = dν dσ S ∞
+
+, Cν := (1 − γ)
+
+> ∞
+
+X
+
+> j=0
+
+γj cj (ν),
+
+with P πj
+
+(·| s) := P (·| s, π j (s)) . Then, we assume that CσS < ∞.
+
+Assumption 8 quantifies the similarity between the sampling distribution σ and the future state distri-butions of the Markov game, and analogous versions of Assumption 8 are standard in reinforcement learning literature for both Markov decision processes and zero-sum Markov games (Antos et al., 2007; Munos & Szepesv´ ari, 2008; Scherrer et al., 2015; Lazaric et al., 2016; Fan et al., 2020). To analyze the convergence of Algorithm 1, we assume that Q∗ from Section 2 admits a pure-strategy saddle point, so that Algorithm 1 converges towards a meaningful equilibrium. We formally state this as follows. 
+
+Assumption 9 (Saddle-point Existence) . For every s ∈ S, min u∈U max v∈V Q∗(s, u, v) =max v∈V min u∈U Q∗(s, u, v).
+
+6Preprint We are now ready to state our main result. For the sampling distribution σ ∈ P (S × U × V ), σS
+
+denotes the marginal of σ over S.
+
+Theorem 1. Under Assumptions 1 to 9, let an evaluation distribution ρ ∈ P (S) satisfy c0(ρ) = 
+
+∥dρ /dσ S ∥∞ ≤ Cρ,σ < ∞. Then for all δ > 0, the output QK of Algorithm 1 after K iterations satisfies, with probability at least 1 − δ
+
+Es∼ρ
+
+
+
+sup 
+
+> u∈U ,v∈V
+
+|QK − Q∗|
+
+
+
+≤ 2Qmax Cρ,σ · γK +
+
+√6CσS Cρ,σ (LF + Lr + 2 γQ max LP ) η2
+
+1 − γ
+
++ 2CσS Cρ,σ 
+
+(1 − γ)pcV (η2/2)
+
+γϵ +
+
+s
+
+δ2approx + 5∆ n
+
+
+
+η1, δ
+
+3K
+
+
+
++ 4 Q2max 
+
+r log ( 3K/δ)2n + 6 Qmax η1
+
+ ,
+
+where 
+
+∆n (η1, δ/3K) := 4 Q2max 
+
+r 2 log ( 6KN (η1)/δ)
+
+n + 8Q2max log ( 6KN (η1)/δ)3n + 2 Qmax η1,V (η2/2) = inf a∈U×V λ
+
+
+
+B(a, η2/2) ∩ (U × V )
+
+
+
+≥ min 
+
+
+
+αα du+dv (η2/2)du+dv , λ (U × V )
+
+
+
+from Assumption 5, N (η1) := N (F, η 1, ∥ · ∥ ∞) is the covering number for the class of functions F, and 
+
+η1, η 2 > 0 are chosen positive constants, and δapprox is defined in Equation (6) .
+
+The proof of Theorem 1 is in Appendix A. Theorem 1 decomposes the error sup u∈U ,v∈V ∥QK −Q∗∥
+
+for some evaluation distribution ρ into several error sources. The first term is an algorithmic error that decays geometrically. The remaining terms capture the three error sources discussed above, and do not vanish with K, representing the fundamental difficulty of the problem. The ϵ term reflects the cost of using an ϵ-accurate solver as exact minimax solutions cannot be practically computed, and this term linearly vanishes with ϵ at the cost of more costly oracle computation. The presence of δ2approx in the bound represents the cost of working with a restricted, tractable convex-concave function class F. δapprox will be 0 when the underlying game satisfies Bellman completeness. The terms O ∆n(η1, δ/3K) and O p log( 3K/δ)/2n
+
+ correspond to the statistical error and quantify how fast the statistical error decays with the number of samples n and the covering number N (η1) of 
+
+F. Unlike the finite-action setting, continuous action spaces cannot be covered exactly with finitely many samples. The parameters η1, η 2 > 0 correspond to this covering tradeoff. Smaller η1, η 2 lead to better approximation but higher covering number N (η1) and larger inverse volume 1/√V (η2/2),which as mentioned in Theorem 1, depends exponentially on the dimension of the action spaces. The covering number N (η1) depends on the particular architecture used to construct Q ∈ F and depends polynomially on the action space dimensions. We give a bound on N (η1) for a particular architecture in Theorem 3 in Section C.3. To the best of our knowledge, Theorem 1 is the first finite-sample guarantee of this form for zero-sum Markov games with continuous state and action spaces beyond the linear quadratic setting. Theorem 1 also allows us to establish a bound on the Nash gap when players employ their security strategies (πQK , μ QK ) induced by the learned Q-function QK .
+
+Corollary 1. Let ρ ∈ P (S) be an evaluation distribution. Under Assumptions 1 to 9, if Cρ < ∞, the oracle-returned approximate security strategies (πQK (s), μ QK (s)) = Oϵ
+
+ s, Q K
+
+ corresponding to the output QK of Algorithm 1 satisfy 
+
+NashGap ρ(πQK , μ QK ) ≤ 4Cρ
+
+1 − γ Es∼σS
+
+
+
+sup 
+
+> u∈U ,v∈V
+
+|QK − Q∗|
+
+
+
++ 2ϵ
+
+1 − γ .
+
+The proof of Corollary 1 is in Section B. Importantly, Corollary 1 shows how the bounds developed in Theorem 1 can be used to bound the Nash gap itself. 
+
+## 5 SIMULATION EXPERIMENTS 
+
+We now complement our result from Theorem 1 with simulation experiments investigating whether the convex-concave Q-function neural network architecture introduced in Equation (3) leads to sta-ble training in practice. The practical issue arises because one cannot implement Algorithm 1 ex-actly, since each iteration requires solving a non-convex regression problem of optimizing a neural 7Preprint network. We therefore empirically study a practical version of Algorithm 1 in which at each it-eration, we take a gradient step on the empirical loss, mimicking online temporal difference (TD) learning. At iteration k of Algorithm 1, instead of getting Qk+1 from Equation (4), we have for a step-size α > 0
+
+θk+1 = θk − α∇θ ˆLn(Qk; Qk), Qk+1 = Qθk+1 .
+
+We investigate whether this practical modification to Algorithm 1 trains stably with the convex-concave Q-function architecture of Equation (3). 
+
+Markov Game Setup. We consider a planar pursuit-evasion game between two players in a 8-dimensional state space S = [ −2.5, 2.5] 8. At a state s ∈ S , the first 4 components (s1, s 2), (s3, s 4)
+
+denote player 1’s planar position and velocity, and the last 4 components (s5, s 6), (s7, s 8) denote player 2’s planar position and velocity. Both players have 2-dimensional action spaces U, V =[−1, 1] 2, and actions denote the players’ horizontal and vertical planar accelerations. Both players follow noisy double integrator dynamics s′ = As + B1u + B2v + wnξ, where A = diag (Ap, A p),
+
+B1 = [ Bp; 0] , B2 = [0; Bp], ξ ∼ N (0 , I ),
+
+Ap =
+
+
+
+1 0 ∆t 00 1 0 ∆t
+
+0 0 1 00 0 0 1
+
+ , and Bp =
+
+ 
+
+> 12
+
+∆t2 00 12 ∆t2
+
+∆t 00 ∆t
+
+ .
+
+Player 1 wishes to pursue player 2, who evades player 1, while both want the save their control effort and waste the other’s control effort. We encode this behavior with the immediate reward function 
+
+r(s, u, v) = −w exp −
+
+ (s1 − s5)2 + ( s2 − s6)2
+
+2w2
+
+> d
+
+!
+
++ 12 u⊤R1u − 12 v⊤R2v.
+
+Note that this game lies beyond the linear-quadratic setting studied in prior work (Al-Tamimi et al., 2007a;b; Zhang et al., 2019; 2021b; Bu et al., 2019), and the optimal Q-function cannot be found by using Riccati equations. We choose the sampling distribution σ =  Uni  [−2.5, 2.5] 8 ×
+
+Uni  [−1, 1] 2×Uni  [−1, 1] 2  , with independent marginals. The discount factor γ is 0.95 . We set 
+
+w = 0 .01 , w d = 0 .1, w n = 0 .01 , ∆t = 0 .1, R 1 = 0 .01 I and R2 = 0 .02 I. We use SecOND (Gupta et al., 2024), which is a second-order constraint-aware solver, as our minimax oracle Oϵ, as we found it to converge favorably in practice. Instead of setting an ϵ, we terminate the solver once successive candidate solution iterates differ by less than a tolerance of 10 −8. For convex-concave, Lipschitz 
+
+Q-functions, this serves as a practical proxy for ϵ. We use the partially input convex-concave neural network as described in Section 3 for our choice of Q-function, with softplus activations. We empir-ically bound the value that the Q-function neural network outputs by clipping values to lie between 
+
+[rmin /1−γ, rmax /1−γ], and found that while in theory this breaks convexity-concavity, it did not harm performance in practice. Additional implementation details are provided in Section D. Along the iterations k, Figure 1 plots the normalized mean absolute error 
+
+δNMAE := 1/n
+
+Pni=1 |Qk(si, ui, vi) − yi|
+
+> (rmax −rmin )
+
+/1−γ ,
+
+where yi is the regression target formed at iteration k of Algorithm 1 for the ith data sample pair 
+
+(si, ui, vi), i ∈ [n], and the denominator (rmax −rmin )/1−γ is the largest absolute error attainable given the bounded Q-value range derived above. Figure 1 shows that the TD-style modification of Algorithm 1 trains stably with the partially input convex-concave Q-function architecture. The error δNMAE decreases and plateaus within the first 100 
+
+iterations across all sample sizes we test. Across all 20 seeds, there is no divergence observed across the iterations. This empirically suggests that using the partially input convex-concave architecture from Equation (3) for the Q-function allows stable training. Though Theorem 1 does not directly apply to this practical version, we observe that both the error and its spread shrink as n increases from 100 to 500 , which is consistent with the statistical benefit of larger per-iteration sample size n.8Preprint 
+
+0 50 100 150 200 00.05 0.10.15 
+
+Iteration kδNMAE      
+
+> n= 100
+> n= 200
+> n= 300
+> n= 400
+> n= 500
+
+Figure 1: The TD-style modification of Algorithm 1 trains stably with the partially input convex-concave Q-function architecture. Each curve shows the normalized mean absolute train-ing error δNMAE against iteration k, for n samples per iteration. Solid lines are the mean over 20 
+
+random seeds and shaded bands show the min–max spread across seeds. An increase in n yields both lower steady-state error and lower variance. 
+
+## 6 CONCLUSION 
+
+We study the learning of Q-functions in infinite-horizon zero-sum Markov games in continuous state and action spaces. Prior finite-sample guarantees of Q-function learning have largely been confined to either games with finite-actions or to continuous linear-quadratic games, where the agents have linear dynamics and quadratic rewards. A key challenge in extending the guarantees of these prior works to more general continuous-action zero-sum Markov games is that the associated Bellman equation involves a minimax problem that is not guaranteed to admit a tractable saddle-point solu-tion in pure strategies. To address this issue, we introduce a class of neural network function ap-proximation for Q which is convex-concave in the players’ actions, guaranteeing that the minimax problem admits a pure-strategy saddle point that can be computed efficiently by existing solvers. We study an online variant of the fitted Q-iteration algorithm employing this function class and es-tablish, to the best of our knowledge, the first finite-sample guarantees for continuous state-action zero-sum Markov games beyond the linear-quadratic setting. Finally, we empirically validate that these convex-concave neural networks lead to stable training when used on a practical version of modified fitted Q-iteration. The empirical results naturally point to a future work direction of ex-tending the finite-sample analysis for the practical temporal difference-style variant of Theorem 1 studied in Section 5, in which the exact regression step of Algorithm 1 is replaced by a single gradi-ent step, as in Section 5. AI USE STATEMENT 
+
+In this work, we used generative AI tools for the following critical tasks: • Assist in a literature review about zero-sum continuous state-action Markov games. • Help in understanding the proof machinery of related papers, to see how can existing math-ematical techniques be used in our work. These techniques were critical for proving our mathematical claims. • Help in implementing the practical version of Algorithm 1 for experiments in Section 5. We have not used generative AI tools for other tasks with required disclosure mentioned in the AI policy for authors like proof writing and developing conceptual frameworks. The rest of the required disclosure tasks are not applicable to this work. Additionally, we used generative AI tools for checking grammatical correctness of our writing. We have reviewed all AI-assisted work. For the tasks listed above, we took the following measures: • Any relevant paper suggested by an AI tool was manually screened to verify its relevance to our work. 9Preprint • The applicability of proof techniques from prior work that were suggested by AI tools were manually verified, and the proof was then manually done using these suggested techniques. • LLM-generated implementation was manually verified and tested. We take responsibility for the final content of this work, including text, claims or artifacts produced with the aid of generative AI. ETHICS STATEMENT 
+
+Our work deals with zero-sum game theory. Zero-sum games can be used for robust, safety-oriented applications, but the same techniques may be misused adversarially. Our work is mostly theoretical and does not directly enable any specific application that could be exploited in this manner. REPRODUCIBILITY STATEMENT 
+
+This work is mostly theoretical and all assumptions for the main Theorem 1 are listed before the theorem statement. The proofs of Theorem 1 and Corollary 1 are given in Section A and Sec-tion B respectively. Additional bounds and corresponding proofs are presented in Section C.2 and Section C.3. For our experiments, all details are presented in Section 5 and Section D. Code with running instructions can be found in the supplementary material. ACKNOWLEDGMENTS 
+
+DISTRIBUTION STATEMENT A. Approved for public release. Distribution is unlimited. This material is based upon work supported by the Under Secretary of War for Research and Engi-neering under Air Force Contract No. FA8702-15-D-0001 or FA8702-25-D-B002. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Under Secretary of War for Research and Engineering. © 2026 Massachusetts Institute of Technology. Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work. Additionally, this work was also supported by the following: Army Research Office under Grant No. W911NF-23-1-0317, Office of Naval Research under Grant No. N00014-24-1-2797 and a National Science Foundation CAREER award under Grant No. 2336840 
+
+## REFERENCES 
+
+Luk´ aˇ s Adam, Rostislav Horˇ c´ ık, Tom´ aˇ s Kasl, and Tom´ aˇ s Kroupa. Double oracle algorithm for com-puting equilibria in continuous games. In Proceedings of the AAAI Conference on Artificial Intel-ligence , volume 35, pp. 5070–5077, 2021. Asma Al-Tamimi, Murad Abu-Khalaf, and Frank L Lewis. Adaptive critic designs for discrete-time zero-sum games with application to H∞ control. IEEE Transactions on Systems, Man, and Cybernetics, Part B (Cybernetics) , 37(1):240–247, 2007a. Asma Al-Tamimi, Frank L Lewis, and Murad Abu-Khalaf. Model-free q-learning designs for linear discrete-time zero-sum games with application to h-infinity control. Automatica , 43(3):473–481, 2007b. Ahmet Alacaoglu, Luca Viano, Niao He, and Volkan Cevher. A natural actor-critic framework for zero-sum markov games. In International Conference on Machine Learning , pp. 307–366. PMLR, 2022. Brandon Amos, Lei Xu, and J Zico Kolter. Input convex neural networks. In International confer-ence on machine learning , pp. 146–155. PMLR, 2017. 10 Preprint Andr´ as Antos, Csaba Szepesv´ ari, and R´ emi Munos. Fitted q-iteration in continuous action-space mdps. Advances in neural information processing systems , 20, 2007. Tamer Bas ¸ar and Geert Jan Olsder. Dynamic noncooperative game theory . SIAM, 1998. Jingjing Bu, Lillian J Ratliff, and Mehran Mesbahi. Global convergence of policy gradient for sequential zero-sum linear quadratic dynamic games. arXiv preprint arXiv:1911.04672 , 2019. Zaiwei Chen, Kaiqing Zhang, Eric Mazumdar, Asuman Ozdaglar, and Adam Wierman. Two-timescale q-learning with function approximation in zero-sum stochastic games. In Proceedings of the 25th ACM Conference on Economics and Computation , EC ’24, pp. 378, 2024. Jianqing Fan, Zhaoran Wang, Yuchen Xie, and Zhuoran Yang. A theoretical analysis of deep q-learning. In Learning for dynamics and control , pp. 486–489. PMLR, 2020. Songtao Feng, Ming Yin, Yu-Xiang Wang, Jing Yang, and Yingbin Liang. Improving sample efficiency of model-free algorithms for zero-sum markov games. In Forty-first International Conference on Machine Learning , 2024. URL https://openreview.net/forum?id= ZVmMV3AHjC .Irving L Glicksberg. A further generalization of the kakutani fixed theorem, with application to nash equilibrium points. Proceedings of the American Mathematical Society , 3(1):170–174, 1952. Kushagra Gupta, Xinjie Liu, Ross Allen, Ufuk Topcu, and David Fridovich-Keil. Second-order algorithms for finding local nash equilibria in zero-sum games. arXiv preprint arXiv:2406.03565 ,2024. Zeyu Jia, Lin F Yang, and Mengdi Wang. Feature-based q-learning for two-player stochastic games. 
+
+arXiv preprint arXiv:1906.00423 , 2019. Michail G. Lagoudakis and Ronald Parr. Value function approximation in zero-sum markov games. In Proceedings of the Eighteenth Conference on Uncertainty in Artificial Intelligence , UAI’02, pp. 283–292, 2002. Alessandro Lazaric, Mohammad Ghavamzadeh, and R´ emi Munos. Analysis of classification-based policy iteration algorithms. Journal of Machine Learning Research , 17(19):1–30, 2016. Tianyi Lin, Chi Jin, and Michael I Jordan. Near-optimal algorithms for minimax optimization. In 
+
+Conference on learning theory , pp. 2738–2779. PMLR, 2020. Takeru Miyato, Toshiki Kataoka, Masanori Koyama, and Yuichi Yoshida. Spectral normalization for generative adversarial networks. arXiv preprint arXiv:1802.05957 , 2018. Jun Morimoto and Kenji Doya. Robust reinforcement learning. In T. Leen, T. Dietterich, and V. Tresp (eds.), Advances in Neural Information Processing Systems , volume 13. MIT Press, 2000. R´ emi Munos and Csaba Szepesv´ ari. Finite-time bounds for fitted value iteration. Journal of Machine Learning Research , 9(5), 2008. Arkadi Nemirovski. Prox-method with rate of convergence o(1/t) for variational inequalities with lipschitz continuous monotone operators and smooth convex-concave saddle point problems. 
+
+SIAM Journal on Optimization , 15(1):229–251, 2004. Julien Perolat, Bruno Scherrer, Bilal Piot, and Olivier Pietquin. Approximate dynamic programming for two-player zero-sum markov games. In International Conference on Machine Learning , pp. 1321–1329. PMLR, 2015. Lerrel Pinto, James Davidson, Rahul Sukthankar, and Abhinav Gupta. Robust adversarial reinforce-ment learning. In International conference on machine learning , pp. 2817–2826. PMLR, 2017. Bruno Scherrer, Mohammad Ghavamzadeh, Victor Gabillon, Boris Lesner, and Matthieu Geist. Approximate modified policy iteration and its application to the game of tetris. The Journal of Machine Learning Research , 16(1):1629–1676, 2015. 11 Preprint Lloyd S Shapley. Stochastic games. Proceedings of the national academy of sciences , 39(10): 1095–1100, 1953. Aaron Sidford, Mengdi Wang, Lin Yang, and Yinyu Ye. Solving discounted stochastic two-player games with near-optimal time and sample complexity. In International Conference on Artificial Intelligence and Statistics , pp. 2992–3002. PMLR, 2020. Maurice Sion. On general minimax theorems. Pacific Journal of Mathematics , 8(1):171 – 176, 1958. Roman Vershynin. High-Dimensional Probability: An Introduction with Applications in Data Sci-ence . Cambridge Series in Statistical and Probabilistic Mathematics. Cambridge University Press, Cambridge, 2 edition, 2026. Qiaomin Xie, Yudong Chen, Zhaoran Wang, and Zhuoran Yang. Learning zero-sum simultaneous-move markov games using function approximation and correlated equilibrium. In Conference on learning theory , pp. 3674–3682. PMLR, 2020. Kaiqing Zhang, Zhuoran Yang, and Tamer Basar. Policy optimization provably converges to nash equilibria in zero-sum linear quadratic games. Advances in Neural Information Processing Sys-tems , 32, 2019. Kaiqing Zhang, Zhuoran Yang, Han Liu, Tong Zhang, and Tamer Bas ¸ar. Finite-sample analysis for decentralized batch multiagent reinforcement learning with networked agents. IEEE Transactions on Automatic Control , 66(12):5925–5940, 2021a. Yufeng Zhang, Zhuoran Yang, and Zhaoran Wang. Provably efficient actor-critic for risk-sensitive and robust adversarial rl: A linear-quadratic case. In International Conference on Artificial Intel-ligence and Statistics , pp. 2764–2772. PMLR, 2021b. Yulai Zhao, Yuandong Tian, Jason Lee, and Simon Du. Provably efficient policy optimization for two-player zero-sum markov games. In International Conference on Artificial Intelligence and Statistics , pp. 2736–2761. PMLR, 2022. Kemin Zhou, John Comstock Doyle, Keith Glover, et al. Robust and optimal control , volume 40. Prentice hall New Jersey, 1996. 
+
+## A PROOF OF THEOREM 1
+
+We will first list several classical results. Then, to prove Theorem 1, we establish a per-iteration error bound on Qk+1 − T Qk in Appendix A.2, and in Appendix A.3 show how this bound propogates across iterations and leads to the final result of Theorem 1. A.1 USEFUL CONCENTRATION INEQUALITIES 
+
+We list two common concentration inequalities here that we use. A detailed background can be found in standard references, for example, Vershynin (2026). 
+
+Fact 1 (Bernstein) . If Z1, . . . , Z n are i.i.d., E[Zi] = 0 , |Zi| ≤ b a.s., Var( Zi) ≤ τ 2, then for every 
+
+t > 0,
+
+P 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+Zi > t 
+
+!
+
+≤ exp 
+
+
+
+− nt 2/2
+
+τ 2 + bt/ 3
+
+
+
+.
+
+Equivalently, for every δ ∈ (0 , 1) , with probability ≥ 1 − δ, we have 
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+Zi ≤
+
+r 2τ 2 log(1 /δ )
+
+n + 2b log(1 /δ )3n .
+
+12 Preprint 
+
+Fact 2 (Hoeffding) . If Zi, i ∈ [n] are bounded random variables such that ai ≤ Zi ≤ bi almost surely, then ∀ t > 0
+
+P 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+Zi − 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+E [Zi]
+
+!
+
+≤ exp 
+
+
+
+− 2n2t2
+
+Pni=1 (bi − ai)2
+
+
+
+.
+
+Equivalently, for δ > 0, we have with probability ≥ 1 − δ
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+Zi ≤ 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+E [Zi] + 
+
+r P 
+
+> i
+
+(bi − ai)2 log ( 1/δ)2n2 .
+
+A.2 PER -ITERATION ERROR BOUND 
+
+We will first bound the per-iteration error incurred by Algorithm 1. For convenience we restate the minimax Bellman operator T from Equation (1) and approximate minimax Bellman operator ˜T
+
+from Equation (5): 
+
+T Q (s, u, v) = r (s, u, v) + γEs′∼P (·| s,u,v)
+
+
+
+min  
+
+> ˜u∈U
+
+max  
+
+> ˜v∈V
+
+Q (s′, ˜u, ˜v)
+
+
+
+,
+
+˜T Q(s, u, v) = r(s, u, v) + γEs′∼P (·| s,u,v)
+
+h
+
+Q s′, Oϵ(Q(s′, ·, ·)) i
+
+.
+
+Let us define the error at iteration k as εk := Qk+1 − T Qk. As mentioned in Section 4, besides the fact that we can only approximate T Qk, there are additional sources of error: (i) the restriction of 
+
+Qk+1 ∈ F , while T Qk, ˜T Qk need not belong to F, and (ii) a statistical error stemming from the use of finite samples. We decompose the error εk as 
+
+εk =
+
+
+
+Qk+1 − ˜T Qk
+
+| {z }
+
+> statistics + approximation
+
++
+
+ ˜T Qk − T Qk
+
+| {z }
+
+> oracle bias
+
+=⇒ ∥ εk∥2,σ ≤ Qk+1 − ˜T Qk 2,σ 
+
++ ˜T Qk − T Qk 2,σ 
+
+.
+
+From the use of Oϵ and Assumption 7, the oracle bias is uniformly bounded. It is not difficult to see that 
+
+˜T Qk − T Qk 2,σ 
+
+≤ γϵ. (7) We will now analyze the ∥Qk+1 − ˜T Qk∥2,σ term. Let x := ( s, u, v) ∈ X := ( S × U × V ). It is clear from Algorithm 1 that yi is an unbiased conditional estimate of ˜T Qk(si, ui, vi) = ˜T Qk(xi),i.e., yi = ˜T Qk + ξi, where E [ξ | Qk, xi] = 0 . We define 
+
+¯fk ∈ arg min   
+
+> f∈F
+
+f − ˜T Qk 2,σ 
+
+.
+
+It will be useful to quantify how close Qk+1 is to ˜T Qk empirically for the batch of data samples compared to ¯fk. We formalize this in the next lemma. 
+
+Lemma 1. From Algorithm 1, Qk+1 = arg min f ∈F bLn(f ; Qk) yields 
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+
+
+Qk+1 (xi) − ˜T Qk(xi)
+
+2
+
+≤ 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ ¯f (xi) − ˜T Qk(xi)
+
+2
+
++ 2
+
+n
+
+> n
+
+X
+
+> i=1
+
+ξi
+
+ Qk+1 (xi) − ¯f (xi) .
+
+Proof. As Qk+1 is optimal for the regression problem at iteration k, we have 
+
+bLn(Qk+1 ; Qk) ≤ bLn( ¯fk; Qk)=⇒ 1
+
+n
+
+X
+
+> i
+
+(Qk+1 (xi) − yi)2 ≤ 1
+
+n
+
+X
+
+> i
+
+( ¯f (xi) − yi)2
+
+=⇒ 1
+
+n
+
+X
+
+> i
+
+
+
+Qk+1 (xi) − ˜T Qk(xi) − ξi
+
+2
+
+≤ 1
+
+n
+
+X
+
+> i
+
+( ¯f (xi) − ˜T Qk(xi) − ξi)2
+
+Opening squares, canceling the ξi terms and rearranging yields the claim. 13 Preprint The ∥Qk+1 − ˜T Qk∥2,σ term can be bounded by uniformly bounding the two right hand side terms of Lemma 1. We will first bound the term 2
+
+> n
+
+Pni=1 ξi
+
+ Qk+1 (xi) − ¯f (xi).For f ∈ F , let Zi(f ) := ξi
+
+ f (xi) − ˜T Qk(xi). Note that we can apply Bernstein’s inequality on 
+
+Zi. To see this, E [Zi] = Exi [E [Zi|xi]] = 0 , and from Assumptions 2 and 6, we have |yi| ≤ Qmax ,
+
+| ˜T Qk(xi)| ≤ Qmax , which implies |ξi| ≤ 2Qmax . Thus, 
+
+|Zi(f )| ≤ 2Qmax · ∥ f − ˜T ∥ ∞ ≤ 4Q2max =: b
+
+Further, we have 
+
+Var( Zi(f )) ≤ E
+
+h
+
+ξ2 
+
+> i
+
+(f (xi) − ˜T Qk(xi)) 2i
+
+≤ 4Q2max ∥f − ˜T Qk∥22,σ ≤ 16 Q4max =: τ 2
+
+Thus, for f ∈ F , for δ′ ∈ (0 , 1) , we have with probability at least 1 − δ′
+
+1
+
+n
+
+X
+
+> i
+
+Zi(f ) ≤ 4Q2max 
+
+r 2 log(1 /δ ′)
+
+n + 8Q2max log(1 /δ ′)3n
+
+To extend this statement uniformly to the whole family F, for a fixed η1 > 0, let N := N (η1) := 
+
+N (F, η 1, ∥ · ∥ ∞) be the minimal covering number of F in the sup norm with associated cover 
+
+{f (1) , . . . , f (N )}. Note that f 7 → Zi(f ) is 2Qmax -Lipschitz in the sup norm. To see this, for 
+
+f, f ′ ∈ F , we have |Zi(f ) − Zi(f ′)| = |ξ · (f (xi) − f ′(xi)) | ≤ 2Qmax ∥f − f ′∥∞. Now, for each 
+
+f ∈ F , we have from the η1-cover that ∃ j ∈ [N ] such that ∥f − f (j)∥∞ ≤ η1. Thus, 
+
+sup  
+
+> f∈F
+
+1
+
+n
+
+X
+
+> i
+
+Zi(f ) ≤ max 
+
+> 1≤j≤N
+
+1
+
+n
+
+X
+
+> i
+
+Zi(f (j)) + 2 Qmax η1.
+
+We can use the point wise bounds on the cover points f (j) with δ′ = δ/2N (η1), where the factor of 2 comes because we bound the absolute value. Using the union bound yields with probability at least 
+
+1 − δ
+
+sup  
+
+> f∈F
+
+1
+
+n
+
+X
+
+> i
+
+Zi(f ) ≤ 4Q2max 
+
+r 2 log(2 N (η1)/δ )
+
+n + 8Q2max log(2 N (η1)/δ )3n + 2 Qmax η1
+
+=: ∆ n(η1, δ ). (8) Thus, we have 
+
+2
+
+n
+
+X
+
+> i
+
+ξi
+
+ Qk+1 (xi) − ¯fk(xi) = 2
+
+n
+
+X
+
+> i
+
+Zi(Qk+1 ) − 2
+
+n
+
+X
+
+> i
+
+Zi( ¯fk) ≤ 4∆ n(η1, δ ) (9) We need to also connect the empirical LHS term of Lemma 1, 1
+
+> n
+
+Pni=1 
+
+ Qk+1 (xi) − ˜T Qk(xi)2
+
+with the bound ∥Qk+1 − ˜T Qk∥22,σ . For f ∈ F , let us define a centered random variable 
+
+Xi := 
+
+
+
+f (xi) − ˜T Qk(xi)
+
+2
+
+− f − ˜T Qk
+
+> 22,σ
+
+.
+
+To analyze 1
+
+> n
+
+Pni=1 
+
+  ¯f (xi) − ˜T Qk(xi)2, we can again apply Bernstein’s inequality on for Xi. To see this, we have EXi
+
+ = 0 , |Xi| = (f (xi) − ˜T Qk(xi)2 − f − ˜T Qk 
+
+> 22,σ
+
+≤ 4Q2max = b,and Var( Xi) = Var  (f (xi) − ˜T Qk(xi)) 2 ≤ E(f (xi) − ˜T Qk(xi)) 4 ≤ 16 Q4max = τ 2. Also, the function h(f ) := ( f (x) − ˜T Qk(x)) 2 is 4Qmax -Lipschitz in the sup norm as for f, f ′ ∈ F ,
+
+|h(f ) − h(f ′)| = |f (x) − f ′(x)| · | f (x) + f ′(x) − 2 ˜T Qk(x)| ≤ 4Qmax ∥f − f ′∥∞. Analyzing similarly to Zi yields 
+
+1
+
+n
+
+X
+
+> i
+
+
+
+f (xi) − ˜T Qk(xi)
+
+2
+
+− ∥ f − ˜T Qk∥22,σ ≤ ∆n(η1, δ ) + 6 Qmax η1. (10) We now analyze the term 1
+
+> n
+
+Pni=1 
+
+  ¯f (xi) − ˜T Qk(xi)2 from Lemma 1. Note that for each i,
+
+  ¯f (xi) − ˜T Qk(xi)2 is i.i.d. with mean Ex∼σ
+
+  ¯f (x) − ˜T Qk(x)2 =   ¯f − ˜T Qk
+
+ 22,σ ≤ δ2approx 
+
+14 Preprint from the definition of δapprox from Equation (6). Also   ¯f (xi) − ˜T Qk(xi)2 ∈ 0, 4Q2max 
+
+. Thus, we can make use of Hoeffding’s inequality. For δ > 0, we have with probability at least 1 − δ that 
+
+1
+
+n
+
+X
+
+> i
+
+ ¯fk(xi) − ˜T Qk
+
+2
+
+≤
+
+ ¯f − ˜T Qk
+
+ 22,σ + 4 Q2max 
+
+r log ( 1/δ)2n
+
+≤ δ2approx + 4 Q2max 
+
+r log ( 1/δ)2n . (11) We will now combine these inequalities to get a per iteration error bound on εk.
+
+Lemma 2 (Per iteration error bound) . Under Assumptions 1 to 4, 6 and 7, for δ > 0, for εk =
+
+∥Qk+1 − T Qk∥, we have with probability at least ≥ 1 − δ, the error at the kth iteration 
+
+∥εk∥2,σ ≤ γϵ +
+
+s
+
+δ2approx + 5∆ n(η1, δ
+
+3 ) + 4 Q2max 
+
+r log ( 3/δ)2n + 6 Qmax η1 .
+
+Proof. We have 
+
+∥Qk+1 − ˜T Qk∥22,σ Equation (10) 
+
+≤ 1
+
+n
+
+X
+
+> i
+
+
+
+Qk+1 (xi) − ˜T Qk (xi)
+
+2
+
++ ∆ n(η1, δ ) + 6 Qmax η1 
+
+> Lemma 1
+
+≤ 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ ¯f (xi) − ˜T Qk(xi)
+
+2
+
++ 2
+
+n
+
+> n
+
+X
+
+> i=1
+
+ξi
+
+ Qk+1 (xi) − ¯f (xi)
+
++ ∆ n(η1, δ ) + 6 Qmax η1 
+
+> Equation (11)
+
+≤ 2
+
+n
+
+> n
+
+X
+
+> i=1
+
+ξi
+
+ Qk+1 (xi) − ¯f (xi) + δ2approx + 4 Q2max 
+
+r log ( 1/δ)2n
+
++ ∆ n(η1, δ ) + 6 Qmax η1 
+
+> Equation (9)
+
+≤ δ2approx + 5∆ n(η1, δ ) + 4 Q2max 
+
+r log ( 1/δ)2n + 6 Qmax η1.
+
+A.3 ERROR PROPOGATION ACROSS ITERATIONS 
+
+We have so far a bound on ∥εk(s, u, v)∥2,σ . For error propogation across iterations, we shall need a bound on ¯εk := ∥ sup u,v εk(s, u, v)∥2,σ To that end, we have the following result for our setting, analogous to single-agent versions used in prior work (Antos et al., 2007). 
+
+Lemma 3. Let f : S × U × V → R be such that ∀ s ∈ S , f (s, ·, ·) is jointly Lf -Lipschitz and non-negative. Let B(a, η ) denote an ℓ2 ball in U × V centered at a ∈ U × V with radius η. Then for η2 > 0, we have 
+
+Es∼σS
+
+
+
+sup 
+
+> u,v
+
+f (s, u, v)2
+
+
+
+≤ 4
+
+cV (η2/2) ∥f (s, u, v)∥22,σ + 3 L2 
+
+> f
+
+η22 ,
+
+where V (η) is the lebesgue measure V (η) = inf a∈U×V λ
+
+
+
+B(a, η ) ∩ (U × V )
+
+
+
+.Proof. Let {(uj , vj )}j∈[N (η2)] be the minimal cover of U × V associated with η2 > 0 in the ∥ · ∥ 2
+
+norm. Consider (u, v) and let its closest cover point be (uj , vj ). Then we have 
+
+f (s, u, v) − f (s, uj , vj ) ≤ Lf η2
+
+=⇒ | f (s, u, v)| ≤ f (s, uj , vj ) + Lf η2
+
+=⇒ sup 
+
+> u,v
+
+f (s, u, v)2 ≤ 2 max  
+
+> j
+
+f (s, uj , vj )2 + 2 L2 
+
+> f
+
+η22 (12) 15 Preprint Now we bound max j f (s, uj , vj )2. We have for (u, v) in a radius η2/2 around (uj , vj ), i.e., 
+
+(u, v) ∈ B  (uj , vj ), η2/2
+
+, that 
+
+f (s, u, v) − f (s, uj , vj ) ≥ − Lf η2
+
+2=⇒ f (s, u, v)2 ≥
+
+
+
+max 
+
+
+
+f (s, uj , vj ) − Lf η2
+
+2 , 0
+
+ 2
+
+≥ f (s, uj , vj )2
+
+2 − L2 
+
+> f
+
+η22
+
+4 .
+
+Here we used that (max {a − b, 0})2 ≥ a2
+
+/2 − b2 for positive a, b . Now, ∥f (s, u, v)∥22,p (·,·| s) ≥
+
+R   
+
+> B(( uj,vj),η2/2)
+
+f (s, u, v)2p(u, v|s)d(u, v), meaning that ∃ c > 0 such that 
+
+∥f (s, u, v)∥22,p (·,·| s)
+
+≥
+
+Z  
+
+> B(( uj,vj),η2/2)
+
+f (s, u, v)2p(u, v|s)d(u, v) ≥ cV 
+
+ η2
+
+2
+
+ f (s, uj , vj )2
+
+2 − L2 
+
+> f
+
+η22
+
+4
+
+!
+
+(13) 
+
+=⇒ f (s, uj , vj )2 ≤ 2
+
+cV (η2/2) ∥f (s, u, v)∥22,p (·,·| s) + L2 
+
+> f
+
+η22
+
+2 . (14) Combining Equations (12) and (13), we get that 
+
+sup 
+
+> u,v
+
+f (s, u, v)2 ≤ 4
+
+cV (η2/2) ∥f (s, u, v)∥22,p (·,·| s) + 3 L2 
+
+> f
+
+η22
+
+=⇒ Es∼σS
+
+
+
+sup 
+
+> u,v
+
+f (s, u, v)2
+
+
+
+≤ 4
+
+cV (η2/2) ∥f (s, u, v)∥22,σ + 3 L2 
+
+> f
+
+η22 .
+
+This completes the proof. We shall use Lemma 3 to analyze error propagation across iterations. We define Dk := Q∗ − Qk.Note that Dk+1 = Q∗ − Qk+1 = T Q∗ − T Qk+1 − εk. Thus 
+
+Dk+1 (s, u, v) = ( T Q∗ − T Qk) ( s, u, v) − εk(s, u, v).
+
+Let ek(s) := sup u,v |Dk(s, u, v)|. Then, we have 
+
+∀ s ∈ S , e k+1 (s) ≤ γ sup 
+
+> u,v
+
+Es′∼P (·| s,u,v) [ek(s′)] + sup 
+
+> u,v
+
+|εk(s, u, v)| .
+
+16 Preprint At step K, for s(0) ∼ σS , we have 
+
+eK (s(0) ) ≤ γ sup 
+
+u(0) ,v(0) 
+
+Es(1) ∼P (·| s,u(0) ,v(0) )
+
+eK−1(s(1) ) + sup 
+
+u,v
+
+εK−1(s(0) , u, v)
+
+≤ γ sup 
+
+u(0) ,v(0) 
+
+Es(1) 
+
+"
+
+γ sup 
+
+u(1) ,v(1) 
+
+Es(2) ∼P (·| s(1) ,u(1) ,v(1) )
+
+eK−2(s(2) ) + sup 
+
+u,v
+
+εK−2(s(1) , u, v)
+
+#
+
++ sup 
+
+u,v
+
+εK−1(s(0) , u, v)
+
+≤ γ2 sup 
+
+u(0) ,v(0) 
+
+Es(1) 
+
+"
+
+sup 
+
+u(1) ,v(1) 
+
+Es(2) 
+
+eK−2(s(2) )#
+
++ γ sup 
+
+u(0) ,v(0) 
+
+Es(1) 
+
+
+
+sup 
+
+u,v
+
+εK−2(s(1) , u, v)
+
+
+
++ sup 
+
+u,v
+
+εK−1(s(0) , u, v)
+
+...
+
+≤ γK sup 
+
+u(0) ,
+
+v(0) 
+
+Es(1) 
+
+"
+
+sup 
+
+u(1) ,
+
+v(1) 
+
+Es(2) 
+
+h
+
+· · · sup 
+
+u(K−1) ,
+
+v(K−1) 
+
+Es(K)
+
+e0(s(K)) i#
+
++
+
+K−2X
+
+k=0 
+
+γK−1−k sup 
+
+u(0) ,
+
+v(0) 
+
+Es(1) 
+
+· · · sup 
+
+u(K−2−k),
+
+v(K−2−k)
+
+Es(K−1−k)
+
+
+
+sup 
+
+u,v
+
+εk(s(K−1−k), u, v)
+
+
+
++ sup 
+
+u,v
+
+εK−1
+
+ s(0) , u, v
+
+Consider the term e0. We have ∀ s ∈ S , e 0(s) ≤ ∥ Dk∥∞ ≤ 2Qmax . For the second term, we have from Assumption 8 that 
+
+Es(0) ∼σS
+
+ sup 
+
+u(0) ,
+
+v(0) 
+
+Es(1) 
+
+· · · sup 
+
+u(K−2−k),
+
+v(K−2−k)
+
+Es(K−1−k)
+
+
+
+sup 
+
+u,v
+
+εk(s(K−1−k), u, v)
+
+
+
+≤ cK−1−kEs∼σS
+
+
+
+sup 
+
+u,v
+
+|εk(s, u, v)|
+
+
+
+≤ cK−1−k
+
+s
+
+Es∼σS
+
+
+
+sup 
+
+u,v
+
+εk(s, u, v)2
+
+
+
+, = cK−1−k ¯εk (Jensen’s inequality (E[X]) 2 ≤ E[X2])where we write cj := cj (σS ). Thus, we have 
+
+Es∼σ [eK (s)] ≤ γK · 2Qmax +
+
+K−1X
+
+k=0 
+
+γK−1−kcK−1−k ¯εk
+
+Now we have for s ∈ S , u, u′ ∈ U and v, v′ ∈ V |εk(s, u, v) − εk(s, u′, v′)| ≤ | Qk(s, u′, v′) − Qk(s, u, v)| + |T Qk(s, u′, v′) − T Qk(s, u, v)|≤ LF ∥(u, v) − (u′, v′)∥2 + |r(s, u′, v′) − r(s, u, v)|
+
++ γ
+
+Z
+
+min 
+
+˜u∈U max 
+
+˜v∈V Qk(s′, ˜u, ˜v)
+
+
+
+P (ds′|u, v) − P (ds′|u′, v′)
+
+
+
+≤ √2 ( LF + Lr + 2 γQ max LP )
+
+| {z }
+
+:= Lε
+
+∥(u, v) − (u′, v′)∥2,
+
+implying that εk is Lε := √2 ( LF + Lr + 2 γQ max LP )-Lipschitz in the joint actions. Thus from Lemma 3, we have for ¯εk = ∥ sup u,v |εk(s, u, v)|∥ 2,σ for η2 > 0¯ε2
+
+k ≤ 4
+
+cV (η2/2) ∥εk∥22,σ + 3 L2
+
+εη22
+
+=⇒ ¯εk ≤ 2
+
+pcV (η2/2) ∥εk∥2σ + √3Lεη2.
+
+17 Preprint Thus, for δ > 0, from Lemma 2, using the union bound for k iterations, we have with probability at least 1 − δ
+
+∀ k ∈ [K], ¯εk ≤√3Lεη2 + 2
+
+pcV (η2/2)
+
+γϵ +
+
+s
+
+δ2approx + 5∆ n
+
+
+
+η1, δ
+
+3K
+
+
+
++ 4 Q2max 
+
+r log ( 3K/δ)2n + 6 Qmax η1
+
+| {z }
+
+> := b
+
+This yields that with probability at least 1 − δ
+
+Es∼σ [eK (s)] ≤ γK · 2Qmax +
+
+> K−1
+
+X
+
+> k=0
+
+γK−1−kcK−1−k · b
+
+≤ γK · 2Qmax + CσS
+
+1 − γ b
+
+=⇒ Es∼ρ [eK (s)] ≤ γK · 2Qmax Cρ,σ + CσS
+
+Cρ,σ CσS
+
+1 − γ b, (dρ /dσ ≤ Cρ,σ )where in the last step we used Eρ[g] ≤ Cρ,σ Eσ [g] for non-negative g by the definition of Cρ,σ from the statement of Theorem 1. This completes the proof for Theorem 1. 
+
+## B PROOF OF COROLLARY 1
+
+Let us denote the true security strategies corresponding to Q ∈ F as π∗
+
+> Q
+
+(s) ∈
+
+arg min u∈U max v∈V Q(s, u, v) and μ∗
+
+> Q
+
+(s) ∈ arg max v∈V min u∈U Q(s, u, v). We will first bound the entity max μ′ V πQK ,μ ′
+
+− V ∗. Consider any state s and Markov policy μ′. Let eK (s) := sup u∈U ,v∈V |QK (s, u, v) − Q∗(s, u, v)|. Now consider the difference ˜∆( s) := V πQK ,μ ′
+
+(s) −
+
+V ∗(s) = V πQK ,μ ′
+
+(s) − Q∗(s, π QK , μ ′(s)) + Q∗(s, π QK , μ ′(s)) − V ∗(s). From the definition of 
+
+V and Q∗ we have 
+
+V πQK ,μ ′
+
+(s) − Q∗(s, π QK , μ ′(s)) = γEs1∼P (·| s,π QK (s),μ ′(s)) 
+
+h
+
+V πQK ,μ ′
+
+(s1) − V ∗(s1)
+
+i
+
+= γEs1∼P (·| s,π QK (s),μ ′(s)) 
+
+h ˜∆( s1)
+
+i
+
+Thus we have the recursion 
+
+˜∆( s) = Q∗(s, π QK , μ ′(s)) − V ∗(s) + γEs1∼P (·| s,π QK (s),μ ′(s)) 
+
+h ˜∆( s1)
+
+i
+
+.
+
+This yields 
+
+V πQK ,μ ′
+
+(s) − V ∗(s) = 
+
+> ∞
+
+X
+
+> t=0
+
+γtEst|(s0=s,π QK ,μ ′) [Q∗(st, π QK (st), μ ′(st)) − V ∗(st)] , (15) 18 Preprint where we use Est|(s0=s,π QK ,μ ′) as shorthand to denote the iterated expectation over the states from 
+
+s0 to st under player policies πQK and μ′. To bound Q∗(s, π QK (s), μ ′(s)) − V ∗(s). We have that 
+
+Q∗(s, π QK (s), μ ′(s)) ≤ Q∗(s, π QK , ˜v), ˜v ∈ arg max  
+
+> v∈V
+
+Q∗(s, π QK , v)
+
+≤ QK (s, π QK , ˜v) + eK (s)
+
+≤ max  
+
+> v∈V
+
+QK (s, π QK , v) + eK (s)
+
+≤ min  
+
+> u∈U
+
+QK (s, u, μ QK ) + eK (s) + ϵ
+
+≤ QK (s, ˜u, μ QK ) + eK (s) + ϵ, ˜u ∈ arg min  
+
+> u∈U
+
+Q∗(s, u, μ QK )
+
+≤ Q∗(s, ˜u, μ QK ) + 2 eK (s) + ϵ
+
+= min  
+
+> u∈U
+
+Q∗(s, u, μ QK ) + 2 eK (s) + ϵ
+
+≤ max  
+
+> v∈V
+
+min  
+
+> u∈U
+
+Q∗(s, u, v)
+
+| {z } 
+
+> =V∗(s)
+
++2 eK (s) + ϵ
+
+Using this in Equation (15), we get 
+
+V πQK ,μ ′
+
+(s) − V ∗(s) ≤
+
+> ∞
+
+X
+
+> t=0
+
+γtEst|(s0=s,π QK ,μ ′) [2 eK (st) + ϵ] ,
+
+From Assumption 8, we have Es∼ρ [eK (st)] ≤ ct(ρ)Es∼σS [eK (st)] . Thus 
+
+> ∞
+
+X
+
+> t=0
+
+γtEs∼ρ [2 eK (st) + ϵ] ≤
+
+> ∞
+
+X
+
+> t=0
+
+γt (2 ct(ρ)Es∼σS [eK (s)] + ϵ)
+
+≤ 2Cρ
+
+1 − γ Es∼σS [eK (s)] + ϵ
+
+1 − γ .
+
+Thus we have 
+
+Es∼ρ
+
+h
+
+V πQK ,μ ′
+
+(s) − V ∗(s)
+
+i
+
+≤ 2Cρ
+
+1 − γ Es∼σS [eK (s)] + ϵ
+
+1 − γ
+
+=⇒ Es∼ρ
+
+
+
+max  
+
+> μ′
+
+V πQK ,μ ′
+
+(s) − V ∗(s)
+
+
+
+≤ 2Cρ
+
+1 − γ Es∼σS [eK (s)] + ϵ
+
+1 − γ . (16) Similarly, for a policy π′, let us define ˜∆′(s) := V ∗(s)−V π′,μ QK (s) = V ∗(s)−Q∗(s, π ′, μ QK )+ 
+
+Q∗(s, π ′, μ QK ) − V π′,μ QK (s). From the definition of V ∗, Q ∗,
+
+Q∗(s, π ′, μ QK ) − V π′,μ QK (s) = γEs1∼P (·| s,π QK ,μ ′)
+
+h
+
+V ∗(s1) − V π′,μ QK (s1)
+
+i
+
+= γEs1∼P (·| s,π QK ,μ ′)
+
+h ˜∆′(s1)
+
+i
+
+.
+
+This gives the recursion 
+
+˜∆′(s) = V ∗(s) − Q∗(s, π ′, μ QK ) + γEs1∼P (·| s,π QK ,μ ′)
+
+h ˜∆′(s1)
+
+i
+
+,
+
+which yields 
+
+V ∗(s) − V π′,μ QK (s) = 
+
+> ∞
+
+X
+
+> t=0
+
+γtEst|(s0=s,π QK ,μ ′) [V ∗(st) − Q∗(st, π ′(st), μ QK (st))] (17) 19 Preprint To bound V ∗(s) − Q∗(s, π ′(s), μ QK (s)) , similar to before we have 
+
+Q∗(s, π ′(s), μ QK (s)) ≥ Q∗(s, ˜u, μ QK (s)) , ˜u ∈ arg min  
+
+> u
+
+Q∗(s, u, μ QK (s)) 
+
+≥ QK (s, ˜u, μ QK (s)) − eK (s)
+
+≥ min  
+
+> u∈U
+
+QK (s, u, μ QK (s)) − eK (s)
+
+≥ max  
+
+> v∈V
+
+QK (s, π QK , v) − eK (s) − ϵ
+
+≥ QK (s, π QK , ˜v) − eK (s) − ϵ, ˜v ∈ arg max  
+
+> v∈V
+
+Q∗(s, π QK (s), v)
+
+≥ Q∗(s, π QK , ˜v) − 2eK (s) − ϵ
+
+= max  
+
+> v∈V
+
+Q∗(s, π QK , v) − 2eK (s) − ϵ
+
+≥ min  
+
+> u∈U
+
+max  
+
+> v∈V
+
+Q∗(s, u, v)
+
+| {z } 
+
+> := V∗(s)
+
+−2eK (s) − ϵ
+
+=⇒ V ∗(s) ≤ Q∗(s, π ′(s), μ QK (s)) + 2 eK (s) + ϵ. 
+
+Using in Equation (17), we get 
+
+V ∗(s) − V π′,μ QK (s) ≤
+
+> ∞
+
+X
+
+> t=0
+
+γtEst|(s0=s,π QK ,μ ′) [2 eK (st) + ϵ] .
+
+From similar analysis as previously, this yields for s ∼ ρ
+
+Es∼ρ
+
+h
+
+V ∗(s) − min  
+
+> π′
+
+V π′,μ QK (s)
+
+i
+
+≤ 2Cρ
+
+1 − γ Es∼σS [eK (s)] + ϵ
+
+1 − γ (18) Combining Equations (16) and (18), we get for s ∼ ρ
+
+Es∼ρ
+
+
+
+max  
+
+> μ′
+
+V πQK ,μ ′
+
+(s) − min  
+
+> π′
+
+V π′,μ QK (s)
+
+
+
+≤ 4Cρ
+
+1 − γ Es∼σS [eK (s)] + 2ϵ
+
+1 − γ
+
+=⇒ NashGap ρ(πQK , μ QK ) ≤ 4Cρ
+
+1 − γ Es∼σS
+
+
+
+sup 
+
+> u∈U ,v∈U
+
+|QK − Q∗|
+
+
+
++ 2ϵ
+
+1 − γ
+
+## C ON PARTIALLY INPUT CONVEX -C ONCAVE NEURAL NETWORK 
+
+## ARCHITECTURE 
+
+In this section, we describe the architecture underlying the function class F of Section 3. Through-out, we use the softplus action function φ(x) := log(1 + ex) applied entrywise to vectors and matrices. Softplus satisfies the PICNN requirement of being convex and non-decreasing in the input required for guaranteeing desirable convexity in the partial input (Amos et al., 2017). We first review the PICNN architecture. 
+
+Partially Input Convex Neural Networks (Amos et al., 2017) Fix i ∈ { 1, 2} and write (x, y) = (s, u) for i = 1 and (x, y) = ( s, v) for i = 2 . For convenience, we assume both blocks N iθi ,
+
+i ∈ { 1, 2} have hidden width m for the convex path corresponding to y and p for the state path corresponding to x, and depth L. All results presented here follow for different, network specific choices of m, p as well. The architecture involves two recursions, one related with the state path, denoted by hi, and the other related with the convex path, denoted by zi, give by 
+
+hi 
+
+> 0
+
+:= x, hiℓ+1 = φ
+
+fW iℓ hiℓ + ebiℓ
+
+
+
+,zi 
+
+> 0
+
+= 0, ziℓ+1 = φ W (z),i ℓ
+
+
+
+ziℓ⊙φ W (zh ),i ℓ hiℓ + b(z),i ℓ
+
+
+
++
+
+W (y),i ℓ
+
+
+
+y⊙ W (yh ),i ℓ hiℓ + b(y),i ℓ
+
+
+
++ W (h),i ℓ hiℓ + biℓ
+
+!
+
+,N i(x, y) = ( wi)⊤ziL, where ℓ = 0 , . . . , L − 1.
+
+(19) 20 Preprint Convexity of y 7 → N iθi (x, y) requires W (z),i ℓ and wi to have non-negative entries (Amos et al., 2017). This can be done in multiple ways, for example, by projecting the W iℓ and wi parameters to the non-negative set while training. In our work, to ensure smoothness, we enforce non-negativity through unconstrained reparameterization where one can optimize over free parameters ˜W (z),i ℓ ∈
+
+Rm×m and ewi ∈ Rm and set 
+
+W (z),i ℓ = φ  ˜W (zh ),i ℓ
+
+, wi = φ  ewi (20) Equation (19) implies that the network N i has 
+
+|θi| := L(m2 + md y + 2 m + dy ) + m + pd s + ( p2 + 2 mp + pd y )( L − 1) + pL 
+
++ 2 md s + dy ds
+
+(21) parameters, with dy = du for i = 1 and dy = dv for i = 2 . We use this partially input convex N i
+
+to construct our Q-function, as described in Equation (3), which we restate here 
+
+Qθ (s, u, v) = N 1 
+
+> θ1
+
+(s, u) − N 2 
+
+> θ2
+
+(s, v) + u⊤Mθ3 (s) v, θ = ( θ1, θ 2, θ 3) ∈ Θ. (22) Here, Θ is a convex set with ∥θ∥2 ≤ BΘ ∀ θ ∈ Θ. We take M (s) as a standard feedforward network given by 
+
+hM 
+
+> 0
+
+= s, hMℓ+1 = φ(W Mℓ hMℓ + bMℓ ), ℓ = 0 , · · · , L M − 1, vec (M ) := Wout hMLM , (23) where we take the hidden width as pM . For convenience, we take the activation functions for M to be the same as N i, though M can have any 1-Lipschitz activation alternatives such as ReLU. Our construction exploits two elementary properties of the softplus function φ. Equation (23) implies that M has 
+
+|θ3| = pM LM + ( LM − 1) p2 
+
+> M
+
++ pM ds + pM dudv (24) parameters. Thus, Qθ has |θ1| + |θ2| + |θ3| total parameters. 
+
+Lemma 4. Let φ(t) = log(1 + et). Then (i) φ is 1-Lipschitz, strictly increasing and convex; (ii) for every a ∈ Rm, with φ applied entrywise, ∥φ(a)∥2 ≤ ∥ a∥2 + √m log 2 .Proof. (i) is immediate from φ′(t) = et/(1 + et) ∈ (0 , 1) , and convexity follows from φ′′ > 0.For (ii), let 1 ∈ Rm be the all-ones vector and note φ(0) = log 2 . By (i) each coordinate obeys 
+
+|φ(aj ) − log 2 | ≤ | aj |, so ∥φ(a) − (log 2) 1∥22 = P 
+
+> j
+
+(φ(aj ) − φ(0)) 2 ≤ P 
+
+> j
+
+a2 
+
+> j
+
+= ∥a∥22. The triangle inequality gives ∥φ(a)∥2 ≤ ∥ φ(a) − (log 2) 1∥2 + ∥(log 2) 1∥2 ≤ ∥ a∥2 + √m log 2 .The following assumption will be required to establish output and Lipschitz bounds, and is standard in neural network literature. 
+
+Assumption 10 (Bounded inputs and weights) . There exist finite positive constants 
+
+BW , B b, B w, B M and DS such that: 1. For any weight matrix W and bias vector b in Equation (19) , the spectral norm ∥W ∥2 ≤
+
+BW and ℓ2-norm ∥b∥2 ≤ Bb.2. The output weights wi satisfy ∥wi∥2 ≤ Bw.
+
+Assumption 10 allows us to establish the Lipschitzness (with respect to the convex input) of a single PICNN N i as described in Equation (19). C.1 NOTATION FOR LIPSCHITZ AND COVERING NUMBER BOUNDS .Besides the constants in Assumption 10, we use several other notations throught the rest of this Section. For a scalar t ∈ R, let the function G(t, j ) denote the sum G(t, j ) = Pjk=0 tk.From eq. (19), for N i, we refer to the pre-activation layer of the convex path as aiℓ+1 , i.e., 
+
+ziℓ+1 = φ(aiℓ+1 ), and we denote Diℓ+1 := diag  φ′(aiℓ+1 ) for all ℓ ∈ { 0, . . . , L − 1}. Similarly, for 21 Preprint all ℓ ∈ { 0, . . . , L − 1}, we refer to the pre-activation layer of the state path as ˜aiℓ+1 := ˜W iℓ hiℓ + ˜biℓ,and define ˜Diℓ+1 := diag  φ′(˜ aiℓ+1 ). For each layer ℓ of the PICNN N i, we denote the vectors dependent only on x as 
+
+c(z) 
+
+> ℓ
+
+:= φ W (zh ),i ℓ hiℓ + b(z),i ℓ
+
+ ∈ Rm
+
+> ≥0
+
+, c(y) 
+
+> ℓ
+
+:= W (yh ),i ℓ hiℓ + b(y),i ℓ ∈ Rdy ,
+
+with ∥c(z) 
+
+> ℓ
+
+∥∞, ∥c(y) 
+
+> ℓ
+
+∥∞ ≤ BW H + Bb + log 2 =: C, where H is defined in Lemma 5, and BW , B b
+
+defined in Assumption 10. We also denote ρ := BW (C), and CZ = BW H + Bb + √m log 2 .Finally, BΘ is a positive constant such that ∥θ∥2 ≤ BΘ ∀ θ ∈ Θ.C.2 LIPSCHITZ BOUNDS ON PARTIALLY INPUT CONVEX -C ONAVE NEURAL NETWORK 
+
+Lemma 5 (Lipschitzness of PICNN) . Under Assumptions 1 and 10, a single PICNN N iθ (x, y) as described in Equation (19) is LN -Lipschitz in the input y, where 
+
+LN = Bw · ρ · G(ρ, L − 1) 
+
+where ρ = BW (BW H + Bb + log 2) from Section C.1 and H is defined as 
+
+H = max  DS , (BW )LDS + ( Bb + √p log 2) · G(BW , L ) ,
+
+and DS = sup s∈S ∥s∥2 < ∞ from Assumption 1. Proof. We will first show that ∥hiℓ∥2 ≤ H for all ℓ ∈ [L] and s ∈ S . From Equation (19), we have 
+
+∥hi
+
+> 0
+
+∥2 = ∥s∥ ≤ DS , and 
+
+∥hiℓ+1 ∥2 = φ
+
+fW iℓ hiℓ + ebiℓ
+
+
+
+> 2
+
+≤ BW ∥hiℓ∥2 + Bb + √p log 2 .
+
+Unrolling this yields H. For each layer ℓ, considering the vectors dependent only on x, we have 
+
+∥c(z) 
+
+> ℓ
+
+∥∞ ≤ ∥ W (zh ),i ℓ hiℓ + b(z),i ℓ ∥2 ≤ BW H + Bb + log(2) . Similarly, ∥c(y) 
+
+> ℓ
+
+∥∞ ≤ BW H + Bb. For fixed x, the vectors c(z) 
+
+> ℓ
+
+and c(y) 
+
+> ℓ
+
+can be treated as constants independent of y. Then, the forward pass reduces to: 
+
+ziℓ+1 = φ
+
+
+
+W (z),i ℓ diag 
+
+
+
+c(z)
+
+> ℓ
+
+
+
+ziℓ + W (y),i ℓ diag 
+
+
+
+c(y)
+
+> ℓ
+
+
+
+y + constant in y
+
+
+
+.
+
+Let Jℓ := ∥∂z iℓ/∂ y∥2. Differentiating through φ, since φ′ ∈ (0 , 1) :
+
+Jℓ+1 ≤ ∥ W (z),i ℓ ∥2∥c(z) 
+
+> ℓ
+
+∥∞Jℓ + ∥W (y),i ℓ ∥2∥c(y) 
+
+> ℓ
+
+∥∞, J0 = 0 .
+
+Note that both ∥W (z),i ℓ ∥2∥c(z) 
+
+> ℓ
+
+∥∞ and ∥W (y),i ℓ ∥2∥c(y) 
+
+> ℓ
+
+∥∞ are less than ρ := BW (BW H + Bb +log 2) . Then, unrolling Jℓ+1 ≤ ρJ ℓ + ρ from J0 = 0 yields JL ≤ PLk=1 ρk = ρ · G(ρ, L − 1) .Since N i(x, y) = ( wi)⊤ziL and ∥∂N i/∂y ∥2 ≤ ∥ wi∥2JL ≤ BwJL, the mean value theorem gives 
+
+|N i(x, y) − N i(x, y′)| ≤ BwJL∥y − y′∥ = LN ∥y − y′∥.We are now ready to show that the convex-concave neural network function approximation class introduced in Section 3 is Lipschitz in the players’ actions. 
+
+Theorem 2 (Lipschitzness of Q ∈ F ). Under Assumptions 1 and 10, any function belonging to the convex-concave neural network function class introduced in Section 3 with architecture specified in eqs. (19) and (23) is LF -Lipschitz in the players’ joint actions, with 
+
+LF = 2 LN + BM (DU + DV ) ,
+
+where LN is defined in Lemma 5, DU , D V are defined in Assumption 1, and ∥Mθ (s)∥2 ≤ BM for all s ∈ S . Note that a bound for BM will be established later on in Theorem 3. Proof. For fixed s ∈ S , θ ∈ Θ, we have from Lemma 5 that 
+
+Qθ (s, u, v) − Qθ (s, u′, v′) ≤ | N 1(s, u) − N 1(s, u′)|
+
+| {z } 
+
+> ≤LN∥u−u′∥2
+
++ |N 2(s, v) − N 2(s, v′)|
+
+| {z } 
+
+> ≤LN∥v−v′∥2
+
++ |u⊤M (s)v − u′⊤ M (s)v′|≤ LN ∥u − u′∥2 + LN ∥v − v′∥2 + |u⊤M (s)v − u⊤M (s)v′ + u⊤M (s)v′ − u′⊤ M (s)v′|≤ LN ∥u − u′∥2 + LN ∥v − v′∥2 + DV BM ∥u − u′∥2 + DU BM ∥v − v′∥2.
+
+This established the Lipschitz constant LF of Q ∈ F for the architecture specified in eqs. (19) and (23). 22 Preprint C.3 UPPER BOUND ON THE COVERING NUMBER OF CONVEX -CONCAVE Q-FUNCTION 
+
+Theorem 1 depends on the covering number of the convex-concave neural network function class 
+
+F introduced in Section 3 in the sup norm, N (η) := N (F, η, ∥ · ∥ ∞) for the case when Qθ ∈ F 
+
+is constructed according to eqs. (19) and (23). In this section, we provide a bound on this covering number. 
+
+Theorem 3 (Covering number bound) . Under Assumptions 1 and 10, for convex-concave networks 
+
+Qθ ∈ F constructed according to eqs. (19) and (23) with ∥θ∥2 ≤ BΘ ∀ θ ∈ Θ, we have 
+
+N (F, η, ∥ · ∥ ∞) ≤
+
+ 2BΘΓ
+
+η + 1 
+
+|θ1|+|θ2|+|θ3|
+
+with Γ = 
+
+q
+
+2LPICNN  
+
+> θ
+
++ LMθ , where 
+
+LPICNN  
+
+> θ
+
+=  C2Z2 + C2D2 
+
+> y
+
++ H2 +  B2 
+
+> W
+
+Z2 + B2 
+
+> W
+
+D2
+
+> y
+
+   H2 + 1  + 1  Bδ +  H2 + 1  B˜δ + Z2,LMθ = D2 
+
+> U
+
+D2 
+
+> V
+
+(BW )2LM
+
+ HM 2 + 1 
+
+
+
+G
+
+ 1
+
+B2
+
+> W
+
+, L M − 1
+
+
+
++ D2 
+
+> U
+
+D2 
+
+> V
+
+HM 2
+
+Bδ = B2
+
+> w
+
+G  ρ2, L − 1 ,B˜δ =
+
+> L−1
+
+X
+
+> ℓ=0
+
+  B2 
+
+> W
+
+(Z + Dy ) + BW
+
+ BwρL−ℓ−1G (BW/ρ, L − 1 − ℓ)
+
+2
+
+Z = ( Dy ρ + CZ ) G(ρ, L − 1) , Dy = max DU , D V ,C, C Z , ρ are defined in Section C.1, H is the constant defined in Lemma 5, HM is defined in eq. (28) 
+
+and |θ1|, |θ2|, and |θ3| are defined in eqs. (21) and (24) 
+
+Further, for sup s ∥M (s)∥2 ≤ BM used in Theorem 2, we have BM = BW HM .Proof. To bound the covering number, we need a bound on the Lipschitz constant of Qθ ∈ F with respect to the network parameters θ, which can in turn be found by bounding sup su ,v ∥∇ θ Qθ ∥2
+
+uniformly over all θ ∈ Θ. Let δiℓ := ∂N i
+
+/∂z iℓ, a bound on ∥δiℓ∥ will help us bound the gradients with respect to all network parameters. By definition, δiL = wi, and for ℓ = 0 , . . . , L − 1, by the chain rule 
+
+δiℓ = ∂z iℓ+1 
+
+∂z iℓ
+
+!⊤
+
+δiℓ+1 = diag (c(z) 
+
+> ℓ
+
+)
+
+
+
+W (z),i ℓ
+
+⊤
+
+diag (φ′(aiℓ+1 )) δiℓ+1 
+
+=⇒ ∥ δiℓ∥2 ≤ ∥ c(z) 
+
+> ℓ
+
+∥∞BW ∥δiℓ+1 ∥2 = CB W ∥δiℓ+1 ∥2
+
+Starting from ∥δiL∥2 = ∥wi∥2 ≤ Bw, this recursion implies ∥δiℓ∥2 ≤ BwρL−ℓ. Let us define 
+
+> L−1
+
+X
+
+> ℓ=0
+
+B2
+
+> w
+
+ρ2( L−ℓ−1) = B2
+
+> w
+
+G  ρ2, L − 1 := Bδ
+
+We will also use a bound on ∥ziℓ∥2. We have z0 
+
+> ℓ
+
+= 0, and from Equation (19), ∥ziℓ+1 ∥2 ≤ ρ∥ziℓ∥2 +
+
+Dy ρ + CZ =⇒ ∥ziℓ∥2 ≤ (Dy ρ + CZ ) G(ρ, ℓ − 1) implying that for all ℓ ∈ { 0, . . . , L }, ∥ziℓ∥2 ≤∥ziL∥2 ≤ (Dy ρ + CZ ) G(ρ, L − 1) =: Z. We will use this result to bound the gradients with respect to all parameters. Starting with the parameters on the convex path, we have for r(z),i ℓ := 
+
+23 Preprint 
+
+W (zh ),i ℓ hiℓ + b(z),i ℓ :
+
+∇W (z),i ℓ
+
+N i = Diℓ+1 δiℓ+1 (ziℓ ⊙ c(z)
+
+ℓ )⊤ =⇒ ∥∇ W (z),i ℓ
+
+N i∥F ≤ ∥ δiℓ+1 ∥2 · CZ, 
+
+∇W (y),i ℓ
+
+N i = Diℓ+1 δiℓ+1 (y ⊙ c(y)
+
+ℓ )⊤ =⇒ ∥∇ W (y),i ℓ
+
+N i∥F ≤ ∥ δiℓ+1 ∥2 · CD y ,
+
+∇W (h),i ℓ
+
+N i = Diℓ+1 δiℓ+1 (hiℓ)⊤ =⇒ ∥∇ W (h),i ℓ
+
+N i∥F ≤ ∥ δiℓ+1 ∥2 · H, 
+
+∇W (zh ),i ℓ
+
+N i =
+
+
+
+φ′ 
+
+r(z),i ℓ
+
+
+
+⊙ ziℓ ⊙
+
+ 
+
+W (z),i ℓ
+
+ ⊤
+
+Diℓ+1 δiℓ+1 
+
+
+
+(hiℓ)⊤
+
+=⇒ ∥∇ W (zh ),i ℓ
+
+N i∥F ≤ ∥ δiℓ+1 ∥2 · BW ZH, 
+
+∇W (yh ),i ℓ
+
+N i =
+
+ 
+
+W (y),i ℓ
+
+⊤
+
+Diℓ+1 δiℓ+1 
+
+
+
+⊙ y
+
+
+
+(hiℓ)⊤
+
+=⇒ ∥∇ W (yh ),i ℓ
+
+N i∥F ≤ ∥ δiℓ+1 ∥2 · BW Dy H
+
+∇b(z),i ℓ
+
+N i = φ′ 
+
+r(z),i ℓ
+
+
+
+⊙ ziℓ ⊙
+
+
+
+W (z),i ℓ
+
+⊤
+
+Diℓ+1 δiℓ+1 
+
+
+
+=⇒ ∥∇ b(z),i ℓ
+
+N i∥2 ≤ ∥ δiℓ+1 ∥2 · BW Z, 
+
+∇b(y),i ℓ
+
+N i =
+
+
+
+W (y),i ℓ
+
+⊤
+
+Diℓ+1 δiℓ+1 
+
+
+
+⊙ y =⇒ ∥∇ b(y),i ℓ
+
+N i∥2 ≤ ∥ δiℓ+1 ∥2 · BW Dy , and 
+
+∇biℓ N i = Diℓ+1 δiℓ+1 =⇒ ∥∇ biℓ N i∥2 ≤ ∥ δiℓ+1 ∥2,
+
+(25) Similarly, for parameters on the state path, we will need a bound on ˜δiℓ := ∇hiℓ N i. We have 
+
+˜δiℓ =  ∂h iℓ+1 /∂h iℓ
+
+⊤ ˜δiℓ+1 +  ∂a iℓ+1 /∂h iℓ
+
+⊤  ∂N i
+
+/∂a iℓ+1 
+
+. From Section C.1, ˜aiℓ+1 = ˜W iℓ hiℓ + ˜biℓ, and 
+
+˜Diℓ+1 = diag  φ′(˜ aiℓ+1 ). Then the first derivative above ∂h iℓ+1 /∂h iℓ = ˜Diℓ+1 ˜W iℓ , and the second derivative ∂a iℓ+1 /∂h iℓ = W (z),i ℓ diag 
+
+
+
+ziℓ ⊙ φ′
+
+
+
+r(z),i ℓ
+
+ 
+
+W (zh ),i ℓ + W (y),i ℓ diag (y) W (yh ),i ℓ + W (h),i ℓ ,yielding 
+
+˜δiℓ =
+
+
+
+W (z),i ℓ diag 
+
+
+
+ziℓ ⊙ φ′ 
+
+r(z),i ℓ
+
+ 
+
+W (zh ),i ℓ + W (y),i ℓ diag (y) W (yh ),i ℓ + W (h),i ℓ
+
+⊤
+
+Dℓ+1 δiℓ+1 
+
++
+
+ ˜W iℓ
+
+⊤ ˜Diℓ+1 ˜δiℓ+1 
+
+=⇒ ∥ ˜δiℓ∥2 ≤ BW ∥˜δiℓ+1 ∥2 +  B2
+
+W (Z + Dy ) + BW
+
+ BwρL−ℓ−1
+
+Unrolling this recursion with ∥˜δiL−1∥2 ≤  B2
+
+W (Z + Dy ) + BW
+
+ Bw yields ∥˜δiℓ∥2 ≤ B2
+
+W (Z + Dy ) + BW
+
+ BwρL−ℓ−1G (BW/ρ, L − 1 − ℓ). We define 
+
+L−1X
+
+ℓ=0 
+
+   B2
+
+W (Z + Dy ) + BW
+
+ BwρL−ℓ−1G (BW/ρ, L − 1 − ℓ)2 =: B˜δ
+
+Using this, we have 
+
+∇ ˜W iℓ
+
+N i = ( ˜Diℓ+1 ˜δiℓ+1 )( hiℓ)⊤ =⇒ ∥∇ ˜W iℓ
+
+N i∥F ≤ ∥ ˜δiℓ+1 ∥2 · H
+
+∇˜biℓ
+
+N i = ( ˜Diℓ+1 ˜δiℓ+1 ) = ⇒ ∥∇ ˜W iℓ
+
+N i∥F ≤ ∥ ˜δiℓ+1 ∥2
+
+Now for each PICNN N i, we have 
+
+∥∇ θi N i∥22 =
+
+L−1X
+
+ℓ=0 
+
+
+
+∥∇ W (z),i ℓ
+
+N i∥2
+
+F + ∥∇ W (y),i ℓ
+
+N i∥2
+
+F + ∥∇ W (h),i ℓ
+
+N i∥2
+
+F + ∥∇ W (zh ),i ℓ
+
+N i∥2
+
+F
+
++ ∥∇ W (yh ),i ℓ
+
+N i∥2
+
+F + ∥∇ b(z),i ℓ
+
+N i∥22 + ∥∇ b(y),i ℓ
+
+N i∥22 + ∥∇ biℓ N i∥22
+
++ ∥∇ ˜W iℓ
+
+N i∥2
+
+F + ∥∇ ˜biℓ
+
+N i∥22 + ∥∇ wi N i∥22
+
+
+
+.
+
+(26) 24 Preprint Using the bounds for each set of derivatives from Equations (25) and (26), we have 
+
+sup 
+
+> θi
+
+∥∇ θi N i∥22 ≤  C2Z2 + C2D2 
+
+> y
+
++ H2 +  B2 
+
+> W
+
+Z2 + B2 
+
+> W
+
+D2
+
+> y
+
+   H2 + 1  + 1  L−1X
+
+> ℓ=0
+
+∥δiℓ+1 ∥22
+
++  H2 + 1  L−1X
+
+> ℓ=0
+
+∥˜δiℓ+1 ∥22 + Z2
+
+≤  C2Z2 + C2D2 
+
+> y
+
++ H2 +  B2 
+
+> W
+
+Z2 + B2 
+
+> W
+
+D2
+
+> y
+
+   H2 + 1  + 1  Bδ +  H2 + 1  B˜δ + Z2
+
+| {z }
+
+> =: LPICNN
+> θ
+
+(27) For the standard feedforward network M 3 
+
+> θ
+
+(s) defined in eq. (23), we will first bound ∥hMℓ ∥2. We have hMk+1 = φ(WkhMk + bk) =⇒ ∥hMℓ+1 ∥2 ≤ BW ∥hMℓ ∥2 + Bb + √pM log 2 . Unrolling this recursion with ∥hM 
+
+> 0
+
+∥2 = ∥s∥2 ≤ Ds yields ∥hMℓ ∥2 ≤ DS BℓW + ( Bb + √pM log 2) · G(BW , ℓ − 1) 
+
+for ℓ > 0. This gives that 
+
+∥hMℓ ∥ ≤ max 
+
+
+
+DS , D S BLM 
+
+> W
+
++ ( Bb + √pM log 2) · G(BW , L M − 1) 
+
+
+
+=: HM (28) Note that Equation (28) also gives sup s ∥M ∥2 ≤ ∥Wout hMLM ∥F ≤ BW HM =: BM Let 
+
+w = vec (uv ⊤), then note that ∥w∥2 ≤ DU DV . Let f = u⊤M v, then f = u⊤M v =
+
+ vec (uv ⊤)⊤ vec (M ) = w⊤Wout hMLM . We have 
+
+∇Wout f = w(hMLM )⊤ =⇒ ∥∇ Wout f ∥F ≤ DU DV · ∥ hMLM ∥
+
+Let δMℓ := ∇aMℓ f , then δMℓ = diag  φ′(aMℓ ) (W Mℓ )⊤δMℓ+1 . Unrolling this recursion with 
+
+∥δMLM ∥2 ≤ BW DU DV yields ∥δMℓ ∥2 ≤ BLM −ℓ+1  
+
+> W
+
+DU DV . Now we have 
+
+∇W Mℓ f = δMℓ+1 (hMℓ )⊤ =⇒ ∥∇ W Mℓ f ∥F ≤ BLM −ℓW DU DV ∥hMℓ ∥2
+
+∇bMℓ f = δMℓ+1 =⇒ ∥∇ W Mℓ f ∥F ≤ BLM −ℓW DU DV
+
+Thus 
+
+∥∇ θ3 u⊤Mθ3 (s)v∥22 = ∥∇ Wout f ∥2 
+
+> F
+
++ 
+
+> LM−1
+
+X
+
+> ℓ=0
+
+∥∇ W Mℓ f ∥2 
+
+> F
+
++ ∥∇ bMℓ f ∥22
+
+=⇒ sup 
+
+> θ3
+
+∥∇ θ3 u⊤Mθ3 (s)v∥22
+
+≤ D2 
+
+> U
+
+D2 
+
+> V
+
+(BW )2LM
+
+ HM 2 + 1 
+
+
+
+G
+
+ 1
+
+B2
+
+> W
+
+, L M − 1
+
+
+
++ D2 
+
+> U
+
+D2 
+
+> V
+
+HM 2
+
+| {z }
+
+> := LMθ
+
+. (29) Thus, using eqs. (27) and (29), any Qθ ∈ F constructed according to the architecture specified in eqs. (19) and (23) satisfies 
+
+∥ sup 
+
+> θ
+
+∇θ Qθ ∥2 ≤
+
+q
+
+2LPICNN  
+
+> θ
+
++ LMθ = Γ .
+
+Thus, the Qθ network in the function class F with the architecture specified in eqs. (19) and (23) is 
+
+Γ-Lipschitz in the parameters θ. Correspondingly, using the facts that the required covering number 
+
+N (F, η, ∥ · ∥ ∞) ≤ N (Θ , η/Γ, ∥ · ∥ 2), and that for positive BΘ such that ∥θ∥2 ≤ BΘ ∀ θ ∈ Θ,
+
+N (Θ , ˜η, ∥ · ∥ 2) ≤ (2BΘ/˜η + 1) |θ| when Θ is any convex set within the BΘ-bounded ℓ2 ball in R|θ|
+
+(c.f., Chapter 4 of Vershynin (2026)), we have N (F, η, ∥ · ∥ ∞) ≤ (2BΘΓ/η + 1) |θ1|+|θ2|+|θ3|, with 
+
+|θ1|, |θ2|, and |θ3| from eqs. (21) and (24). 
+
+## D EXPERIMENTAL DETAILS 
+
+In this section, we provide additional implementation details for the experiments in Section 5. 25 Preprint 
+
+Convex-Concave Q-function. We used the architecture described in eqs. (19) and (23). Each partially convex input network has 2 hidden layers with hidden depth 32 for both state and convex paths. We used softplus activation for the convex path, and ReLU activation for the state path. For the bilinear network M , we used 1 hidden layer with width 32 , and ReLU activation. 
+
+Hardware. All experiments were carried out on a desktop with an AMD Ryzen 9 7950X 16-Core Processor. 26

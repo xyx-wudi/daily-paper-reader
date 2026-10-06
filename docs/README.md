@@ -7,34 +7,43 @@
 
 ## 每次日报
 - 最新运行日期：2026-10-06
-- 运行时间：2026-10-06 01:07:47 UTC
+- 运行时间：2026-10-06 23:54:10 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：4
-- 速读区：1
+- 本次总论文数：8
+- 精读区：6
+- 速读区：2
 
 ### 今日简报（AI）
-今日精选5篇、精读4篇速读1篇，电力市场多智能体强化学习基准与测试时多智能体协调两篇同获9.0分领跑。最值得看的是多智能体协调的“测试时”新思路（分解价值梯度流）与PowerMarketJax这一JAX基准套件，速读篇7.0分则探讨关注未来如何促进跨尺度合作。普通读者可先从两篇9.0分入手，关注多智能体协作在电力等真实场景的落地，再按兴趣补读合作演化方向。
+今日精选8篇多智能体强化学习论文，6篇精读、2篇速读。最值得关注的是两篇9分工作：分解价值梯度流实现测试时多智能体协调，以及开放团队场景下的轮换正交信用分配。建议读者优先从这两篇入手，理解协调与信用分配如何提升开放环境中的多智能体表现。
 - 详情：[/202610/06/README](/202610/06/README)
 
 ### 精读区论文标签
-1. [PowerMarketJax: A JAX Benchmark Suite for Multi-Agent Reinforcement Learning in Power Markets](/202610/06/2609.37321v1-powermarketjax-a-jax-benchmark-suite-for-multi-agent-reinforcement-learning-in-power-markets)  
+1. [Test-time Multi-agent Coordination by Decomposed Value Gradient Flow](/202610/06/2610.02554v1-test-time-multi-agent-coordination-by-decomposed-value-gradient-flow)  
    标签：评分：9.0/10、query:marl
-   evidence：电力市场的多智能体强化学习基准套件
-2. [Test-time Multi-agent Coordination by Decomposed Value Gradient Flow](/202610/06/2610.02554v1-test-time-multi-agent-coordination-by-decomposed-value-gradient-flow)  
+   evidence：离线多智能体强化学习协调框架
+2. [Turnover-Orthogonal Credit Assignment for Open-Team Multi-Agent Reinforcement Learning](/202610/06/2610.02847v1-turnover-orthogonal-credit-assignment-for-open-team-multi-agent-reinforcement-learning)  
    标签：评分：9.0/10、query:marl
-   evidence：离线多智能体强化学习中的值梯度流与测试时动作精修协同
-3. [Turnover-Orthogonal Credit Assignment for Open-Team Multi-Agent Reinforcement Learning](/202610/06/2610.02847v1-turnover-orthogonal-credit-assignment-for-open-team-multi-agent-reinforcement-learning)  
+   evidence：开放团队协作多智能体强化学习，用值分解做信用分配
+3. [Grounded Joint-Attention Other-Play for Zero-Shot Coordination](/202610/06/2610.06025v1-grounded-joint-attention-other-play-for-zero-shot-coordination)  
    标签：评分：9.0/10、query:marl
-   evidence：合作型开放团队多智能体强化学习，采用价值分解与集中式评论家
+   evidence：面向零样本协调的新型多智能体强化学习方法
 4. [Permutation Robustness Is Not Enough: Action Collapse in Multi-Agent Transformer Policies](/202610/06/2610.02848v1-permutation-robustness-is-not-enough-action-collapse-in-multi-agent-transformer-policies)  
    标签：评分：8.0/10、query:marl
-   evidence：协作多智能体导航策略的置换鲁棒性与动作坍缩评估
+   evidence：多智能体强化学习中协作导航的多智能体Transformer策略
+5. [Network Adaptation in IRS-Aided Hybrid RF/VLC Systems Using Cooperative Multi-Agent DRL](/202610/06/2610.03964v1-network-adaptation-in-irs-aided-hybrid-rfvlc-systems-using-cooperative-multi-agent-drl)  
+   标签：评分：8.0/10、query:marl
+   evidence：合作多智能体深度强化学习用于混合RF/VLC网络自适应
+6. [$Q$ Can Play That Game: Online Fitted $Q$-Iteration for Continuous-Action Zero-Sum Markov Games with Convex-Concave Function Approximation](/202610/06/2610.04010v1-q-can-play-that-game-online-fitted-q-iteration-for-continuous-action-zero-sum-markov-games-with-convex-concave-function-approximation)  
+   标签：评分：8.0/10、query:marl
+   evidence：零和马尔可夫博弈的在线拟合Q迭代与有限样本保证
 
 ### 速读区论文标签
-1. [Learning to cooperate in a changing world: How caring about the future promotes cooperation across scales](/202610/06/2609.34005v2-learning-to-cooperate-in-a-changing-world-how-caring-about-the-future-promotes-cooperation-across-scales)  
+1. [Visual Swarm Navigation via Deep Reinforcement Learning and Evolutionary Hybrid Design](/202610/06/2610.06400v1-visual-swarm-navigation-via-deep-reinforcement-learning-and-evolutionary-hybrid-design)  
+   标签：评分：8.0/10、query:marl
+   evidence：用多智能体强化学习合成去中心化集群导航控制器
+2. [Taylor Representations for Model-Free RL in Networked MDPs](/202610/06/2610.05456v1-taylor-representations-for-model-free-rl-in-networked-mdps)  
    标签：评分：7.0/10、query:marl
-   evidence：用多智能体强化学习研究社会困境中的合作演化
+   evidence：网络化MDP中分散式无模型RL的可扩展局部critic表示
 
 
 <div class="dpr-home-promo-card">

@@ -1,57 +1,17 @@
 {
   "mode": "standard",
-  "generated_at": "2026-10-06T00:59:49.013413+00:00",
+  "generated_at": "2026-10-06T23:47:48.295213+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
-    "deep_divecandidates": 4,
+    "deep_divecandidates": 7,
     "deep_cap": 6,
-    "deep_selected": 4,
-    "quick_candidates": 1,
+    "deep_selected": 6,
+    "quick_candidates": 2,
     "quick_skim_target": 11,
-    "quick_selected": 1
+    "quick_selected": 2
   },
   "deep_dive": [
-    {
-      "id": "2609.37321v1",
-      "source": "arxiv",
-      "title": "PowerMarketJax: A JAX Benchmark Suite for Multi-Agent Reinforcement Learning in Power Markets",
-      "abstract": "Power markets are a natural testbed for multi-agent reinforcement learning (MARL), where multiple self-interested participants repeatedly submit bids. A market-clearing mechanism then determines dispatch and prices subject to power grid constraints and market settlement rules. However, existing MARL environments typically focus on a single market setting, implement simplified clearing mechanisms, or rely on CPU-based optimization solvers that slow large-scale training and limit the systematic study of bidding strategies and market behavior. We introduce PowerMarketJax, a benchmark suite for MARL across five power markets: day-ahead wholesale, real-time balancing, ancillary services, peer-to-peer double auctions, and local flexibility. Each environment implements its own clearing, pricing, and settlement rules while providing a common framework for learning and evaluation. We find that learned bidding behavior depends strongly on the market design: independent learners can miss better strategies when gains require many agents to change together, when more profitable strategies lie beyond a region of lower profit, or when profits disappear as more agents adopt the same strategy. PowerMarketJax implements both market simulation and policy training in JAX, allowing the entire pipeline to run on the GPU with 1,024 X 1,200 parallelisms across both environments and market participants, achieving up to 33X speedup over CPU-based baselines. Our open-source benchmark is available at: https://github.com/powermarketjax/PowerMarketJax.",
-      "authors": [
-        "Zhanhua Pan",
-        "Xin Qin",
-        "Xiao Liu",
-        "Zhilong Cao",
-        "Jianhong Wang",
-        "Dawei Qiu"
-      ],
-      "primary_category": "cs.MA",
-      "categories": [
-        "cs.MA",
-        "cs.AI",
-        "eess.SY"
-      ],
-      "published": "2026-09-29T12:00:09+00:00",
-      "link": "https://arxiv.org/pdf/2609.37321v1",
-      "tags": [
-        "keyword:MARL"
-      ],
-      "llm_score": 9.0,
-      "llm_evidence_en": "MARL benchmark suite for power markets",
-      "llm_evidence_cn": "电力市场的多智能体强化学习基准套件",
-      "llm_evidence": "电力市场的多智能体强化学习基准套件",
-      "canonical_evidence": "电力市场的多智能体强化学习基准套件",
-      "llm_tldr_en": "Existing MARL environments cover single markets with simplified clearing and CPU solvers. PowerMarketJax is a JAX benchmark suite spanning five power markets, enabling GPU-accelerated large-scale study of bidding strategies and market behavior.",
-      "llm_tldr_cn": "现有MARL环境多局限于单一市场设定、清算机制简化或依赖CPU求解器，难以大规模系统研究电力市场竞价策略。本文提出PowerMarketJax，一个基于JAX的MARL基准套件，覆盖日前批发、实时平衡、辅助服务、点对点双边拍卖与本地灵活性等五类电力市场。它统一市场清算机制并利用GPU加速训练，为多主体竞价与市场行为研究提供可扩展、可复现的实验平台。",
-      "llm_tldr": "现有MARL环境多局限于单一市场设定、清算机制简化或依赖CPU求解器，难以大规模系统研究电力市场竞价策略。本文提出PowerMarketJax，一个基于JAX的MARL基准套件，覆盖日前批发、实时平衡、辅助服务、点对点双边拍卖与本地灵活性等五类电力市场。它统一市场清算机制并利用GPU加速训练，为多主体竞价与市场行为研究提供可扩展、可复现的实验平台。",
-      "llm_tags": [
-        "query:marl"
-      ],
-      "matched_query_tag": "query:marl",
-      "matched_query_text": "multi-agent reinforcement learning",
-      "matched_requirement_id": "req-1",
-      "selection_source": "fresh_fetch"
-    },
     {
       "id": "2610.02554v1",
       "source": "arxiv",
@@ -74,13 +34,13 @@
         "query:MARL"
       ],
       "llm_score": 9.0,
-      "llm_evidence_en": "offline multi-agent reinforcement learning coordination via value gradient flow and test-time refinement",
-      "llm_evidence_cn": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
-      "llm_evidence": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
-      "canonical_evidence": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
-      "llm_tldr_en": "Offline MARL trades off generative multi-modal coordination against value exploitation; SCOUT combines a flow-matching behavior model with a learned value function via test-time optimal transport refinement.",
-      "llm_tldr_cn": "离线多智能体强化学习面临两难：生成式策略能表达多模态协同却无法分辨高价值区域，值优化策略能利用Q函数却会坍缩为单一模态并破坏联合协同。作者提出SCOUT框架，用流匹配行为模型结合学到的值函数，在测试时通过最优传输做动作精修，并解耦训练两个组件。实验表明该方法在保持多模态协同的同时提升价值，为离线MARL提供了可扩展的协同方案。",
-      "llm_tldr": "离线多智能体强化学习面临两难：生成式策略能表达多模态协同却无法分辨高价值区域，值优化策略能利用Q函数却会坍缩为单一模态并破坏联合协同。作者提出SCOUT框架，用流匹配行为模型结合学到的值函数，在测试时通过最优传输做动作精修，并解耦训练两个组件。实验表明该方法在保持多模态协同的同时提升价值，为离线MARL提供了可扩展的协同方案。",
+      "llm_evidence_en": "offline multi-agent reinforcement learning coordination framework",
+      "llm_evidence_cn": "离线多智能体强化学习协调框架",
+      "llm_evidence": "离线多智能体强化学习协调框架",
+      "canonical_evidence": "离线多智能体强化学习协调框架",
+      "llm_tldr_en": "SCOUT combines a flow-matching generative model with a learned value function and test-time decomposed value gradient flow refinement, resolving the multi-modality versus value trade-off in offline MARL coordination.",
+      "llm_tldr_cn": "离线多智能体强化学习面临两难：生成式策略能表达数据中的多模态协调，却无法辨别高价值区域；价值优化策略虽能利用Q函数，却会把多模态塌缩成单一主导模式，单智能体模式塌缩即可破坏联合协调。本文提出SCOUT框架，将流匹配生成式基础模型与学习到的价值函数解耦训练，并在测试时通过分解价值梯度流对联合动作进行精修。实验表明该方法既保留多模态协调模式，又提升价值表现，避免同时漂移进入未见过动作区域。该工作首次将生成式基础模型与价值函数结合用于离线MARL的测试时协调。",
+      "llm_tldr": "离线多智能体强化学习面临两难：生成式策略能表达数据中的多模态协调，却无法辨别高价值区域；价值优化策略虽能利用Q函数，却会把多模态塌缩成单一主导模式，单智能体模式塌缩即可破坏联合协调。本文提出SCOUT框架，将流匹配生成式基础模型与学习到的价值函数解耦训练，并在测试时通过分解价值梯度流对联合动作进行精修。实验表明该方法既保留多模态协调模式，又提升价值表现，避免同时漂移进入未见过动作区域。该工作首次将生成式基础模型与价值函数结合用于离线MARL的测试时协调。",
       "llm_tags": [
         "query:marl"
       ],
@@ -110,19 +70,56 @@
         "query:MARL"
       ],
       "llm_score": 9.0,
-      "llm_evidence_en": "cooperative open-team MARL with value decomposition and centralized critics",
-      "llm_evidence_cn": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
-      "llm_evidence": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
-      "canonical_evidence": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
-      "llm_tldr_en": "TOCA is a value decomposition for open-team cooperative MARL that separates action effects, pure turnover effects, and action-turnover interactions to fix biased credit under centralized critics.",
-      "llm_tldr_cn": "开放团队中智能体可随时加入、离开或被替换，团队回报同时受动作与人员变动影响，标准集中式评论家把二者混为单一信用信号。本文提出轮换正交信用分配TOCA，将价值分解为动作效应、纯轮换效应及动作—轮换交互项。在外部轮换下给出事件条件价值的中心化分解，避免幸存智能体为不可控轮换受奖惩。该框架为合作型开放团队多智能体强化学习提供更公平的信用分配。",
-      "llm_tldr": "开放团队中智能体可随时加入、离开或被替换，团队回报同时受动作与人员变动影响，标准集中式评论家把二者混为单一信用信号。本文提出轮换正交信用分配TOCA，将价值分解为动作效应、纯轮换效应及动作—轮换交互项。在外部轮换下给出事件条件价值的中心化分解，避免幸存智能体为不可控轮换受奖惩。该框架为合作型开放团队多智能体强化学习提供更公平的信用分配。",
+      "llm_evidence_en": "open-team cooperative multi-agent RL with value decomposition for credit assignment",
+      "llm_evidence_cn": "开放团队协作多智能体强化学习，用值分解做信用分配",
+      "llm_evidence": "开放团队协作多智能体强化学习，用值分解做信用分配",
+      "canonical_evidence": "开放团队协作多智能体强化学习，用值分解做信用分配",
+      "llm_tldr_en": "Open-team MARL mixes action and turnover effects in credit signals; TOCA introduces a value decomposition separating action, turnover, and interaction effects to assign correct credit.",
+      "llm_tldr_cn": "开放团队多智能体强化学习中智能体可随时加入、离开或被替换，团队回报同时受动作选择与人口变动影响，标准集中式评论家把二者混为单一信用信号，使幸存智能体为不可控事件受赏或受罚。论文提出轮换正交信用分配TOCA，将动作效应、纯轮换效应及二者交互分离，并在外生轮换下给出事件条件价值的中心化形式。该分解让信用分配更精确，为开放团队协作学习提供了新框架。",
+      "llm_tldr": "开放团队多智能体强化学习中智能体可随时加入、离开或被替换，团队回报同时受动作选择与人口变动影响，标准集中式评论家把二者混为单一信用信号，使幸存智能体为不可控事件受赏或受罚。论文提出轮换正交信用分配TOCA，将动作效应、纯轮换效应及二者交互分离，并在外生轮换下给出事件条件价值的中心化形式。该分解让信用分配更精确，为开放团队协作学习提供了新框架。",
       "llm_tags": [
         "query:marl"
       ],
       "matched_query_tag": "query:marl",
-      "matched_query_text": "cooperative multi-agent reinforcement learning",
-      "matched_requirement_id": "req-2",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.06025v1",
+      "source": "arxiv",
+      "title": "Grounded Joint-Attention Other-Play for Zero-Shot Coordination",
+      "abstract": "Joint attention - the human ability to share a common visual or cognitive focus with others - enables a meeting of minds that lets us coordinate even with unfamiliar partners. In this work we investigate whether equipping AI agents with a similar mechanism can enable such zero-shot coordination. We introduce Mutual Attention for zero-shot TEaming (MATE): a novel multi-agent reinforcement learning method inspired by human joint attention. MATE encourages agents to coordinate their actions by aligning their visual attention on scene-salient objects during the interaction rather than relying on arbitrary partner-dependent conventions established during training. Unlike symmetry-breaking approaches that merely prevent brittle conventions from emerging, MATE actively promotes coordination through an environment-grounded signal that is naturally shared across partners. We evaluate MATE on three benchmarks: our Card Alignment Game, designed to isolate brittle convention formation, and the more challenging Level-Based Foraging and OvercookedV2 benchmarks. Our experiments consistently show that a joint-attention-inspired signal improves coordination with unknown partners, underlining MATE's potential as a general coordination mechanism that complements and surpasses symmetry-breaking approaches.",
+      "authors": [
+        "Giulia Benintendi",
+        "Constantin Ruhdorfer",
+        "Fabian Kögel",
+        "Andreas Bulling"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-10-05T09:23:11+00:00",
+      "link": "https://arxiv.org/pdf/2610.06025v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "novel multi-agent reinforcement learning method for zero-shot coordination",
+      "llm_evidence_cn": "面向零样本协调的新型多智能体强化学习方法",
+      "llm_evidence": "面向零样本协调的新型多智能体强化学习方法",
+      "canonical_evidence": "面向零样本协调的新型多智能体强化学习方法",
+      "llm_tldr_en": "MATE is a multi-agent reinforcement learning method inspired by human joint attention that aligns agents' visual attention on salient objects, enabling zero-shot coordination with unfamiliar partners instead of brittle partner-specific conventions.",
+      "llm_tldr_cn": "论文研究零样本协调问题，指出智能体过度依赖训练期形成的伙伴特定约定，难以与陌生伙伴协作。作者提出受人类共同注意启发的多智能体强化学习方法MATE，通过让智能体在交互中对齐视觉注意、聚焦场景显著物体来协调行动，而非依赖任意约定。实验表明该方法能实现更强的零样本协调能力，为多智能体协作中的泛化提供了新机制。",
+      "llm_tldr": "论文研究零样本协调问题，指出智能体过度依赖训练期形成的伙伴特定约定，难以与陌生伙伴协作。作者提出受人类共同注意启发的多智能体强化学习方法MATE，通过让智能体在交互中对齐视觉注意、聚焦场景显著物体来协调行动，而非依赖任意约定。实验表明该方法能实现更强的零样本协调能力，为多智能体协作中的泛化提供了新机制。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
       "selection_source": "fresh_fetch"
     },
     {
@@ -147,61 +144,176 @@
         "query:MARL"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "cooperative multi-agent navigation policies evaluated for permutation robustness and action collapse",
-      "llm_evidence_cn": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
-      "llm_evidence": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
-      "canonical_evidence": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
-      "llm_tldr_en": "Transformer policies treat unordered multi-agent teams as ordered tokens; this work shows low permutation error can mask action collapse in cooperative navigation and proposes diversity-based diagnostics.",
-      "llm_tldr_cn": "Transformer策略因自注意力可建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序token序列处理智能体。作者研究这种错配对协作导航策略在智能体顺序置换下的影响，发现仅凭低置换误差会误判鲁棒性，因为所有智能体可能选择同一动作。为此提出动作多样性、同动作比例等动作坍缩诊断指标，揭示多智能体Transformer策略的隐藏失效模式。",
-      "llm_tldr": "Transformer策略因自注意力可建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序token序列处理智能体。作者研究这种错配对协作导航策略在智能体顺序置换下的影响，发现仅凭低置换误差会误判鲁棒性，因为所有智能体可能选择同一动作。为此提出动作多样性、同动作比例等动作坍缩诊断指标，揭示多智能体Transformer策略的隐藏失效模式。",
-      "llm_tags": [
-        "query:marl"
-      ],
-      "matched_query_tag": "query:marl",
-      "matched_query_text": "cooperative multi-agent reinforcement learning",
-      "matched_requirement_id": "req-2",
-      "selection_source": "fresh_fetch"
-    }
-  ],
-  "quick_skim": [
-    {
-      "id": "2609.34005v2",
-      "source": "arxiv",
-      "title": "Learning to cooperate in a changing world: How caring about the future promotes cooperation across scales",
-      "abstract": "In social dilemmas, individuals need to forgo short-term temptations to achieve synergistic collective outcomes through cooperation. Previous work has examined mechanisms through which cooperation can evolve, including direct reciprocity, indirect reciprocity, environmental stochasticity, network reciprocity, and demographic stochasticity. These mechanisms have largely been studied under natural selection or social learning, where strategies with higher payoffs are more likely to spread. It is equally important to study cooperation under self-learning, where individuals adapt through their own experiences. Here, we focus on multi-agent reinforcement learning and derive analytical conditions under which these mechanisms stabilize cooperation under learning dynamics across scales. We find that reinforcement learning can steer self-interested individuals toward cooperation when they value the future over short-term temptation. Our work provides a unified approach to identifying the determinants of learning to cooperate in a changing world, thereby paving the way for the advancement of cooperative artificial intelligence.",
-      "authors": [
-        "Yuxin Geng",
-        "Xingru Chen",
-        "Xin Wang",
-        "Hongwei Zheng",
-        "Longzhao Liu",
-        "Shaoting Tang",
-        "Feng Fu"
-      ],
-      "primary_category": "physics.soc-ph",
-      "categories": [
-        "physics.soc-ph"
-      ],
-      "published": "2026-09-27T23:04:14+00:00",
-      "link": "https://arxiv.org/pdf/2609.34005v2",
-      "tags": [
-        "keyword:MARL",
-        "query:MARL"
-      ],
-      "llm_score": 7.0,
-      "llm_evidence_en": "uses multi-agent reinforcement learning to study cooperation in social dilemmas",
-      "llm_evidence_cn": "用多智能体强化学习研究社会困境中的合作演化",
-      "llm_evidence": "用多智能体强化学习研究社会困境中的合作演化",
-      "canonical_evidence": "用多智能体强化学习研究社会困境中的合作演化",
-      "llm_tldr_en": "Cooperation mechanisms are mostly studied under natural selection; this work uses multi-agent reinforcement learning to derive analytical conditions on how caring about the future promotes cooperation across scales in a changing world.",
-      "llm_tldr_cn": "社会困境中个体需放弃短期诱惑以实现合作，但既有机制研究多基于自然选择或社会学习，个体自学习情境下的合作条件尚不明确。论文以多智能体强化学习为框架，推导在环境不断变化时关心未来收益如何促进合作的分析性条件，并比较不同机制在不同尺度上的作用。结果给出合作得以维持的参数条件，说明关注长期收益是跨尺度促进合作的关键。该工作把合作演化机制的分析拓展到自学习场景。",
-      "llm_tldr": "社会困境中个体需放弃短期诱惑以实现合作，但既有机制研究多基于自然选择或社会学习，个体自学习情境下的合作条件尚不明确。论文以多智能体强化学习为框架，推导在环境不断变化时关心未来收益如何促进合作的分析性条件，并比较不同机制在不同尺度上的作用。结果给出合作得以维持的参数条件，说明关注长期收益是跨尺度促进合作的关键。该工作把合作演化机制的分析拓展到自学习场景。",
+      "llm_evidence_en": "multi-agent transformer policies for cooperative navigation in MARL",
+      "llm_evidence_cn": "多智能体强化学习中协作导航的多智能体Transformer策略",
+      "llm_evidence": "多智能体强化学习中协作导航的多智能体Transformer策略",
+      "canonical_evidence": "多智能体强化学习中协作导航的多智能体Transformer策略",
+      "llm_tldr_en": "This paper studies how agent-order permutations affect multi-agent transformer policies in cooperative navigation, showing low permutation error can hide action collapse, and proposes permutation-consistency plus action-collapse diagnostics.",
+      "llm_tldr_cn": "Transformer策略因自注意力能建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序令牌序列处理智能体，二者存在错配。本文研究智能体顺序置换对协作导航策略的影响，发现低置换误差可能因所有智能体选择相同动作而具有误导性。为此提出结合置换一致性与动作坍缩诊断（动作多样性、同动作比例、最大动作频率）的评估方法。",
+      "llm_tldr": "Transformer策略因自注意力能建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序令牌序列处理智能体，二者存在错配。本文研究智能体顺序置换对协作导航策略的影响，发现低置换误差可能因所有智能体选择相同动作而具有误导性。为此提出结合置换一致性与动作坍缩诊断（动作多样性、同动作比例、最大动作频率）的评估方法。",
       "llm_tags": [
         "query:marl"
       ],
       "matched_query_tag": "query:marl",
       "matched_query_text": "multi-agent reinforcement learning",
       "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.03964v1",
+      "source": "arxiv",
+      "title": "Network Adaptation in IRS-Aided Hybrid RF/VLC Systems Using Cooperative Multi-Agent DRL",
+      "abstract": "Hybrid radio frequency (RF) and visible light communication (VLC) networks have emerged as a promising solution for high-capacity indoor wireless connectivity in sixth-generation (6G) systems. However, the limited optical coverage and vulnerability of VLC links to line-of-sight (LoS) blockage under user mobility remain fundamental challenges. In this work, a mirror-based intelligent reflecting surface (IRS) is deployed to assist a dynamic indoor hybrid RF/VLC network, where each mobile user is exclusively assigned to either the IRS-enhanced VLC subnetwork or the RF subnetwork through a binary selection decision. A joint optimization problem is then formulated to maximize proportional fairness by jointly optimizing the RF/VLC technology selection, power allocation, and IRS mirror roll and yaw orientation angles. To enable real-time adaptability, the problem is reformulated as a Markov decision process (MDP) and solved using a cooperative multi-agent deep reinforcement learning (DRL) algorithm based on centralized training with decentralized execution. Simulation results demonstrate the superior performance of the optimized hybrid network compared with optimized standalone VLC and RF networks. The results further validate the practicality and effectiveness of the proposed DRL framework compared to widely adopted DRL algorithms as well as conventional model-based optimization approaches.",
+      "authors": [
+        "Ahrar N. Hamad",
+        "Ahmad Adnan Qidan",
+        "Taisir E. H. El-Gorashi",
+        "Jaafar M. H. Elmirghani"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-10-02T19:17:10+00:00",
+      "link": "https://arxiv.org/pdf/2610.03964v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cooperative multi-agent DRL applied to hybrid RF/VLC network adaptation",
+      "llm_evidence_cn": "合作多智能体深度强化学习用于混合RF/VLC网络自适应",
+      "llm_evidence": "合作多智能体深度强化学习用于混合RF/VLC网络自适应",
+      "canonical_evidence": "合作多智能体深度强化学习用于混合RF/VLC网络自适应",
+      "llm_tldr_en": "Applies cooperative multi-agent deep RL to adapt an IRS-aided hybrid RF/VLC indoor network, jointly optimizing user subnetwork selection and resource allocation to maximize proportional fairness under mobility and blockage.",
+      "llm_tldr_cn": "混合射频与可见光通信网络在用户移动和视距阻塞下覆盖受限，难以保障室内高容量连接。本文部署基于镜面的智能反射面辅助室内混合RF/VLC网络，将用户到子网的选择与资源分配建模为比例公平最大化问题，并采用合作多智能体深度强化学习求解。结果表明该方案能在动态环境下提升网络吞吐与公平性，为6G室内高容量连接提供可行路径。",
+      "llm_tldr": "混合射频与可见光通信网络在用户移动和视距阻塞下覆盖受限，难以保障室内高容量连接。本文部署基于镜面的智能反射面辅助室内混合RF/VLC网络，将用户到子网的选择与资源分配建模为比例公平最大化问题，并采用合作多智能体深度强化学习求解。结果表明该方案能在动态环境下提升网络吞吐与公平性，为6G室内高容量连接提供可行路径。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi agent reinforcement learning applications",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.04010v1",
+      "source": "arxiv",
+      "title": "$Q$ Can Play That Game: Online Fitted $Q$-Iteration for Continuous-Action Zero-Sum Markov Games with Convex-Concave Function Approximation",
+      "abstract": "Zero-sum Markov games arise in a wide variety of sequential decision-making problems such as adversarial learning and planning against modeled uncertainties. However, prior work on finite-sample guarantees on the learned state-action value function ($Q$-function) for zero-sum Markov games is largely restricted to finite-action settings, or to continuous-action games in which agents have linear dynamics and quadratic rewards (i.e. linear-quadratic, or LQ, games). A central challenge in extending such guarantees to more general continuous-action zero-sum Markov games is that the associated Bellman operator involves a minimax problem that need not admit a tractable saddle-point solution. To this end, we first introduce a class of neural network function approximators for the $Q$-function that is convex-concave in the players' actions, which guarantees that this minimax problem admits a pure-strategy saddle point. We then study an online variant of fitted $Q$-iteration employing this function class and establish, to the best of our knowledge, the first finite-sample guarantees for non-LQ zero-sum Markov games with continuous states and actions. Our code can be found at https://github.com/CLeARoboticsLab/QCanPlayThatGame.",
+      "authors": [
+        "Kushagra Gupta",
+        "Jingqi Li",
+        "Cade Armstrong",
+        "Lasse Peters",
+        "Ross E. Allen",
+        "Ufuk Topcu",
+        "David Fridovich-Keil"
+      ],
+      "primary_category": "cs.GT",
+      "categories": [
+        "cs.GT",
+        "cs.MA"
+      ],
+      "published": "2026-10-02T20:16:44+00:00",
+      "link": "https://arxiv.org/pdf/2610.04010v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Online fitted Q-iteration with finite-sample guarantees for zero-sum Markov games",
+      "llm_evidence_cn": "零和马尔可夫博弈的在线拟合Q迭代与有限样本保证",
+      "llm_evidence": "零和马尔可夫博弈的在线拟合Q迭代与有限样本保证",
+      "canonical_evidence": "零和马尔可夫博弈的在线拟合Q迭代与有限样本保证",
+      "llm_tldr_en": "The paper studies continuous-action zero-sum Markov games and proposes an online fitted Q-iteration algorithm with convex-concave function approximation, providing finite-sample guarantees on the learned Q-function beyond finite-action or linear-quadratic settings.",
+      "llm_tldr_cn": "零和马尔可夫博弈广泛存在于对抗学习等序列决策问题，但已有Q函数有限样本保证多局限于有限动作或线性二次设定。本文提出面向连续动作零和马尔可夫博弈的在线拟合Q迭代算法，采用凸凹函数逼近处理贝尔曼算子中的极小极大问题。研究给出学习到的状态动作价值函数的有限样本保证，将理论结果推广到更一般的连续动作博弈，为对抗式多智能体决策提供新工具。",
+      "llm_tldr": "零和马尔可夫博弈广泛存在于对抗学习等序列决策问题，但已有Q函数有限样本保证多局限于有限动作或线性二次设定。本文提出面向连续动作零和马尔可夫博弈的在线拟合Q迭代算法，采用凸凹函数逼近处理贝尔曼算子中的极小极大问题。研究给出学习到的状态动作价值函数的有限样本保证，将理论结果推广到更一般的连续动作博弈，为对抗式多智能体决策提供新工具。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "Markov games in multi-agent reinforcement learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2610.06400v1",
+      "source": "arxiv",
+      "title": "Visual Swarm Navigation via Deep Reinforcement Learning and Evolutionary Hybrid Design",
+      "abstract": "Swarm robotics presents a robust and cost-effective paradigm for advanced automation in complex, dynamic environments, such as those encountered in search and rescue or environmental monitoring. A fundamental challenge for this field is the data-driven design of decentralized controllers capable of generating emergent collective behaviors. This paper proposes a novel, AI-driven hybrid methodology for the automatic synthesis of swarm robotic controllers for autonomous visual navigation. This approach synergistically combines multi-agent reinforcement learning with neuro-evolutionary strategies, specifically leveraging implementations of the cross-entropy method and the covariance matrix adaptation evolution strategy to optimize a pre-trained individual navigation policy. The underlying deep architecture is engineered for low-cost, resource-constrained platforms, utilizing a compact neural network that relies exclusively on monocular camera imagery. This vision-based design emphasizes computational and energy efficiency, a critical requirement for practical swarm deployments. Experiments, performed in a high-fidelity physics simulator, demonstrate that the resulting controllers enable robust and scalable collective exploration of diverse indoor environments. The controller trained using our cross-entropy method achieves superior exploration coverage, visiting 36.20% more regions compared to the covariance matrix adaptation evolution strategy. Critically, our best vision-based policy achieves exploration performance statistically comparable to traditional methods relying on more expensive distance sensors, while delivering a significant 31.40% average reduction in energy consumption. These findings validate an effective and economically viable autonomous control system, establishing a path for deploying highly efficient collective intelligence in real-world engineering applications.",
+      "authors": [
+        "Álvaro Díez",
+        "Fidel Aznar"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.MA",
+        "cs.NE"
+      ],
+      "published": "2026-10-05T14:21:11+00:00",
+      "link": "https://arxiv.org/pdf/2610.06400v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "decentralized controllers via multi-agent reinforcement learning for swarm navigation",
+      "llm_evidence_cn": "用多智能体强化学习合成去中心化集群导航控制器",
+      "llm_evidence": "用多智能体强化学习合成去中心化集群导航控制器",
+      "canonical_evidence": "用多智能体强化学习合成去中心化集群导航控制器",
+      "llm_tldr_en": "This work combines multi-agent reinforcement learning with neuro-evolutionary strategies (CEM and CMA-ES) to automatically synthesize decentralized swarm controllers for autonomous visual navigation.",
+      "llm_tldr_cn": "集群机器人需要能产生涌现集体行为的去中心化控制器，但其数据驱动设计十分困难。本文提出一种AI驱动的混合方法，将多智能体强化学习与神经进化策略结合，利用交叉熵方法与协方差矩阵自适应进化策略优化控制器，实现自主视觉导航。该工作展示了进化与多智能体强化学习协同合成去中心化集群控制器的可行路径。",
+      "llm_tldr": "集群机器人需要能产生涌现集体行为的去中心化控制器，但其数据驱动设计十分困难。本文提出一种AI驱动的混合方法，将多智能体强化学习与神经进化策略结合，利用交叉熵方法与协方差矩阵自适应进化策略优化控制器，实现自主视觉导航。该工作展示了进化与多智能体强化学习协同合成去中心化集群控制器的可行路径。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2610.05456v1",
+      "source": "arxiv",
+      "title": "Taylor Representations for Model-Free RL in Networked MDPs",
+      "abstract": "In Networked Markov Decision Processes, transition dynamics are often unknown and the state--action space grows rapidly with the number of agents. In this setting, Taylor representations naturally approximate $Q$-functions, but a naive order-$n$ expansion over $N$ agents requires $Θ(N^n)$ coefficients. We justify these expansions under smooth expected future local rewards with controlled derivatives. Under this condition, finite-speed information propagation and discounting imply that local-critic Taylor coefficients decay exponentially with the graph distance to the farthest agent involved. Discarding distant-agent coefficients and marginalizing then yield scalable local Taylor representations with a bound controlled by graph locality. Building on these representations, we propose a scalable model-free actor--critic algorithm, establishing finite-sample critic and near-stationarity guarantees for a linear LSTD critic. We then introduce a more expressive neural TD parameterization. Unlike prior constructive spectral methods, our approach covers settings without access to a known local dynamics map, such as hidden switched linear--quadratic regulation. Across three control benchmarks, our method matches or outperforms spectral baselines while scaling efficiently to large graphs.",
+      "authors": [
+        "Salah Chikhi",
+        "Abdelhaq Chaoui",
+        "Asuman Ozdaglar",
+        "Saurabh Amin"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "math.OC"
+      ],
+      "published": "2026-10-04T19:03:32+00:00",
+      "link": "https://arxiv.org/pdf/2610.05456v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "scalable local-critic representations for decentralized model-free RL in networked MDPs",
+      "llm_evidence_cn": "网络化MDP中分散式无模型RL的可扩展局部critic表示",
+      "llm_evidence": "网络化MDP中分散式无模型RL的可扩展局部critic表示",
+      "canonical_evidence": "网络化MDP中分散式无模型RL的可扩展局部critic表示",
+      "llm_tldr_en": "Tackles model-free RL in networked MDPs where state-action spaces explode with agent count, proving local-critic Taylor coefficients decay exponentially with graph distance so distant terms can be dropped for scalable local representations.",
+      "llm_tldr_cn": "网络化马尔可夫决策过程中转移动态未知且状态动作空间随智能体数量急剧增长。针对朴素高阶泰勒展开系数爆炸的问题，本文在局部奖励平滑假设下证明局部critic的泰勒系数随图距离指数衰减，从而可丢弃远距离智能体系数并进行边缘化，得到误差受图局部性控制的局部泰勒表示。该结果为多智能体网络化MDP的分散式无模型强化学习提供可扩展的价值表示方法。",
+      "llm_tldr": "网络化马尔可夫决策过程中转移动态未知且状态动作空间随智能体数量急剧增长。针对朴素高阶泰勒展开系数爆炸的问题，本文在局部奖励平滑假设下证明局部critic的泰勒系数随图距离指数衰减，从而可丢弃远距离智能体系数并进行边缘化，得到误差受图局部性控制的局部泰勒表示。该结果为多智能体网络化MDP的分散式无模型强化学习提供可扩展的价值表示方法。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "decentralized multi-agent reinforcement learning",
+      "matched_requirement_id": "req-3",
       "selection_source": "fresh_fetch",
       "quick_tier": "7"
     }

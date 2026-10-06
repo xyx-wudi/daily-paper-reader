@@ -1,0 +1,942 @@
+Title: Network Adaptation in IRS-Aided Hybrid RF/VLC Systems Using Cooperative Multi-Agent DRL
+
+URL Source: https://arxiv.org/pdf/2610.03964v1
+
+Published Time: Tue, 06 Oct 2026 00:13:14 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# Network Adaptation in IRS-Aided Hybrid RF/VLC Systems Using Cooperative Multi-Agent DRL 
+
+Ahrar N. Hamad, Ahmad Adnan Qidan, Taisir E.H. El-Gorashi and Jaafar M. H. Elmirghani, 
+
+Department of Engineering, King’s College London, London, United Kingdom, 
+
+{ahrar.hamad, ahmad.qidan, taisir.elgorashi, jaafar.elmirghani }@kcl.ac.uk 
+
+Abstract —Hybrid radio frequency (RF) and visible light communication (VLC) networks have emerged as a promising solution for high-capacity indoor wireless connectivity in sixth-generation (6G) systems. However, the limited optical coverage and vulnerability of VLC links to line-of-sight (LoS) blockage under user mobility remain fundamental challenges. In this work, a mirror-based intelligent reflecting surface (IRS) is deployed to assist a dynamic indoor hybrid RF/VLC network, where each mobile user is exclusively assigned to either the IRS-enhanced VLC subnetwork or the RF subnetwork through a binary selection decision. A joint optimization problem is then formulated to maximize proportional fairness by jointly optimizing the RF/VLC technology selection, power allocation, and IRS mirror roll and yaw orientation angles. To enable real-time adaptability, the problem is reformulated as a Markov decision process (MDP) and solved using a cooperative multi-agent deep reinforcement learning (DRL) algorithm based on centralized training with decentralized execution. Simulation results demonstrate the superior performance of the optimized hybrid network compared with optimized standalone VLC and RF networks. The results further validate the practicality and effectiveness of the proposed DRL framework compared to widely adopted DRL algorithms as well as conventional model-based optimization approaches. 
+
+Index Terms —6G, visible light communication (VLC), radio frequency (RF), intelligent reflecting surface (IRS), deep rein-forcement learning (DRL). 
+
+I. I NTRODUCTION 
+
+Visible light communication (VLC) is an attractive option for simultaneously delivering high-speed data transmission and illumination through optical access points (APs), while reusing the existing lighting infrastructure to align with the green communication objectives of sixth-generation (6G) networks. It offers access to the unregulated optical spectrum, high spectral efficiency, and complete immunity to radio-frequency (RF) interference. Therefore, VLC can be integrated with conventional RF networks to form hybrid RF/VLC systems, offering higher network capacity, enhanced reliability, and im-proved energy efficiency [1]. However, VLC systems still face fundamental coverage limitations, as the coverage footprint of optical APs is spatially constrained, while line-of-sight (LoS) links are highly susceptible to blockage by physical objects and user mobility [2], [3]. Intelligent reflecting surface (IRS) has emerged as an effective solution for enhancing connectivity in indoor VLC systems without consuming sig-nificant power [4]. Specifically, a steerable IRS mirror array can overcome LoS blockage by dynamically redirecting non-LoS (NLoS) optical signals toward mobile users, effectively extending the optical AP coverage footprint and improving the achievable data rate [5]. Hybrid RF/VLC networks introduce complex optimization challenges involving technology selection and resource al-location. In [6], alternating optimization was employed to jointly optimize user association and power allocation in a hy-brid RF/VLC system using successive convex approximations (SCA). Similarly, in [7], a joint AP assignment and power allocation problem was formulated as a combinatorial opti-mization problem to maximize the sum rate and solved using a matching theory-based distributed algorithm combined with a heuristic power allocation scheme. However, these approaches treat the VLC channel as fixed and uncontrollable, limiting their ability to adapt to dynamic propagation conditions. Building on the controllable NLoS capability enabled by IRSs, the work in [8] employed a sine-cosine algorithm to determine the optimal IRS mirror configuration for establishing reliable NLoS links. Nevertheless, such model-based optimization ap-proaches typically rely on accurate channel knowledge and require repeated optimization whenever channel conditions change, making them less suitable for real-time adaptation in dynamic environments with user mobility. Deep reinforcement learning (DRL) has recently emerged as an effective framework for solving optimization problems including integer variables, coupled continuous actions, and non-convex objectives [9]. Unlike model-based methods, a DRL agent learns an adaptive policy through interaction with the environment, enabling real-time response to mobility and blockage. In [10], a deep Q-network (DQN) algorithm jointly optimized user association, bandwidth, and power in a hybrid RF/VLC network. However, its discrete action space cannot capture continuous control variables. In [11], such challenges were addressed using on-policy algorithms for resource al-location and load balancing in hybrid RF/VLC systems. In [12], a deep deterministic policy gradient (DDPG) algorithm is used to optimize the transmit power among the users in the hybrid RF/VLC system. Despite these advances, existing works do not jointly consider IRS reconfiguration, technology selection, and power allocation, particularly in dynamic IRS-aided hybrid RF/VLC scenarios involving user mobility. Motivated by these gaps, this paper proposes a novel frame-work for jointly optimizing RF/VLC link selection, power allocation, and IRS mirror orientation in a dynamic multi-user indoor environment. The resulting optimization problem is formulated as a Markov decision process (MDP) and addressed arXiv:2610.03964v1 [eess.SY] 2 Oct 2026 Experience Replay Buffer  Mini-Batch       
+
+> Actor Network
+> Optimizer
+> Target Network
+> Update Policy
+> Gr adient
+> Soft Update
+> Critic Network
+> Optimizer
+> Update L oss
+> Function
+> Soft update
+> Actor Critic
+> Target Network
+> gr adient
+> Update
+> RF/VLC Environment
+> User 1
+> )
+> L oS
+> )
+> I R S Specular
+> N L oS
+> )
+> )
+> )
+> User k
+
+Fig. 1. IRS-assisted RF/VLC system model with DRL framework. 
+
+using a multi-agent DRL framework based on centralized training with decentralized execution. This enables the system to continuously adapt to user mobility and blockage while maximizing proportional fairness among users. The proposed framework is designed to operate in real-time and effec-tively handle the hybrid discrete-continuous action space and non-convex nature of the IRS-assisted RF/VLC optimization problem. Simulation results demonstrate that our proposed approach consistently outperforms state-of-the-art benchmark schemes. II. S YSTEM MODEL 
+
+We consider a downlink indoor IRS-assisted hybrid RF/VLC system, as shown in Fig. 1. A number of light-emitting diode (LED) APs l = {1, . . . , N l} are placed on the ceiling for simultaneous communication and illumination, while the RF APs f = {1, . . . , N f } are deployed on the walls to provide complementary wireless coverage. On the communication floor, a set of mobile users k = {1, . . . , K },move at different velocities following random waypoint (RWP) mobility patterns. Each user k is equipped with a multi-branch angle diversity receiver for VLC reception and an RF antenna, enabling dynamic technology selection. Each user connects to either the VLC subnetwork or the RF subnetwork, but not both simultaneously. This selection is determined by a binary variable αk ∈ { 0, 1}, where αk = 1 indicates association with the VLC subnetwork and αk = 0 corresponds to the RF subnetwork. Furthermore, an IRS mirror array is mounted on one of the walls and consists of M = {1, . . . , M } mirrors. The area of each mirror is denoted by dA m = hm × wm,where hm and wm represent the height and width of mirror 
+
+m, respectively. A spacing qm is considered between adjacent mirrors to avoid interference during rotation. In addition, the orientation of each rotational mirror can be controlled by two angles: the roll angle φm and the yaw angle ϑm, using micro-electro-mechanical systems (MEMS) technology [5]. This rotation allows each mirror to steer the reflected VLC beam toward intended users and effectively extends the coverage of the VLC subnetwork. A central controller unit coordinates both the VLC and RF subnetworks by collecting channel state information from all APs and users and determines the optimal technology selection for each user. 
+
+A. VLC Channel Model 
+
+The total VLC channel gain h(v) 
+
+> k,l
+
+from LED AP l to user 
+
+k consists of two components: the direct LoS path hLoS 
+
+> k,l
+
+and the IRS-reflected NLoS path hIRS 
+
+> k,l,m
+
+. In practical indoor environments, the LoS optical link between LED AP l and user 
+
+k is frequently obstructed by physical objects such as furniture, partitions, and the users themselves. To capture this effect, the LoS blockage is modeled as an independent Bernoulli random process. At each transmission time slot, the LoS link between AP l and user k is available with probability 1−pb and blocked with probability pb, where pb denotes the blockage probability. Accordingly, the total VLC channel gain is expressed as 
+
+h(v) 
+
+> k
+
+=
+
+> Nl
+
+X
+
+> l=1
+
+bk,l hLoS  
+
+> k,l
+
++
+
+> M
+
+X
+
+> m=1
+
+hIRS 
+
+> k,m,l
+
+(φm, ϑ m)
+
+!
+
+, (1) 
+
+where bk,l ∈ { 0, 1} is the blockage indicator with Pr( bk,l =0) = pb. Note that the IRS-reflected NLoS component re-mains available even when the direct LoS path is blocked, provided the mirror orientations are appropriately configured. This highlights the critical role of IRS in maintaining VLC connectivity under blockage conditions. In this work, the direct LoS component hLoS  
+
+> k,l
+
+follows the Lambertian radiation model and is given by 
+
+hLoS k,l = (mL + 1) AP D Tf g(ψk,l )2πd 2
+
+> k,l
+
+cos mL (ϖk,l ) cos( ψk,l ),
+
+0 ≤ ψk,l ≤ ψc
+
+(2) 
+
+where mL = − ln 2 ln(cos Φ 1/2) is the Lambertian emission order, with LED half-power radiation angle Φ1/2. APD is the physical area of the photodetector, Tf is the optical filter gain, g(ψk,l )
+
+is the optical concentrator gain, dk,l is the Euclidean distance between AP l and user k, and ϖk,l and ψk,l are the irradiance and incidence angles, respectively. ψc is the photodetector semi-angle field of view. The channel gain hIRS  
+
+> k,m,l
+
+of the indirect signal is reflected by the IRS mirror m with complete specular reflection and orientation angles (φm, ϑ m), is given by [4], [5] 
+
+hIRS  
+
+> k,m,l
+
+= (mL + 1) ρmAP D dA m cos mL (ϖm,l ) cos( βm,l )2π2(dm,l + dk,m )2
+
+× cos( ϖk,m ) cos( βk,m ), 0 ≤ βk,m ≤ ψc
+
+(3) 
+
+where ρm is the mirror reflection coefficient, dm,l and dk,m are the distances from LED AP l to mirror m and from mirror m
+
+to user k, respectively. ϖm,l is the radiation angle from AP l to mirror m, βm,l is the incidence angle from AP l to mirror m.Moreover, ϖk,m is the irradiance angle from mirror m towards user k, and βk,m is the incidence angle of the signal reflected from mirror m to user k, which are explicit functions of the roll angle φm and yaw angle ϑm through the mirror surface normal vector. The total received signal at user k assigned to the VLC subnetwork (i.e., αk = 1 ) is given by 
+
+y(v) 
+
+> k
+
+= ηρ (v)P (v) 
+
+> k
+
+h(v) 
+
+> k
+
+sk
+
+| {z }
+
+> desired
+
++ η
+
+> K
+
+X 
+
+> j=1
+> j̸=k
+
+αj ρ(v)P (v) 
+
+> j
+
+h(v) 
+
+> k
+
+sj
+
+| {z }
+
+> interference
+
++n(v) 
+
+> k
+
+, (4) 
+
+where η is the photodetector responsivity, ρ(v) is the total optical transmit power per LED AP, P (v) 
+
+> j
+
+∈ [0 , 1] is the normalized power fraction allocated to user j, sj is the data symbol intended for user j and n(v) 
+
+> k
+
+∼ N (0 , σ 2 
+
+> o
+
+) is the additive white Gaussian noise (AWGN) at the photodetector. The interference term includes only VLC-assigned users, as enforced by the selection variable αj . For user k assigned to VLC, the signal-to-interference-plus-noise ratio (SINR) γ(v)
+
+> k
+
+is given by 
+
+γ(v) 
+
+> k
+
+=
+
+
+
+ηρ (v)P (v) 
+
+> k
+
+h(v)
+
+> k
+
+2
+
+> K
+
+X 
+
+> j=1
+> j̸=k
+
+αj
+
+
+
+ηρ (v)P (v) 
+
+> j
+
+h(v)
+
+> k
+
+2
+
++ σ2
+
+> o
+
+, (5) 
+
+where the squared terms arise from the intensity modulation and direct detection (IM/DD) [3]. The data rate of user k in the VLC subnetwork is given by 
+
+R(v) 
+
+> k
+
+= B(v) 
+
+> w
+
+log 2
+
+
+
+1 + e
+
+2π γ(v)
+
+> k
+
+
+
+, (6) 
+
+where B(v) 
+
+> w
+
+represents the VLC system modulation bandwidth and e accounts for the Euler number. 
+
+B. RF Channel Model 
+
+The channel from RF AP f to user k follows a Rician fading model as follows 
+
+h(r) 
+
+> k,f
+
+=
+
+q
+
+β(r)
+
+> k,f
+
+r κκ + 1 ejθ k,f +
+
+r 1
+
+κ + 1 gk,f 
+
+!
+
+, (7) 
+
+where β(r) 
+
+> k,f
+
+represents the large-scale fading coefficient be-tween RF AP f and user k at distance dk,f , given by 
+
+β(r) 
+
+> k,f
+
+= β0
+
+ d0
+
+> dk,f
+
+μ
+
+, where β0 is the path loss at reference distance d0, and μ is the path loss exponent. The parameter κ
+
+is the Rician κ-factor representing the ratio of LoS to NLoS power, θk,f is the phase angle of the LoS component, and 
+
+gk,f is the non-LoS component. The received signal at user k
+
+assigned to the RF subnetwork (i.e., αk = 0 ) is given by [1] 
+
+y(r) 
+
+> k
+
+=
+
+> Nf
+
+X 
+
+> f=1
+
+h(r)
+
+> k,f
+
+q
+
+ρ(r)P (r) 
+
+> k
+
+sk
+
+| {z }
+
+> desired
+
++
+
+> K
+
+X 
+
+> j=1
+> j̸=k
+
+W
+
+> Nf
+
+X 
+
+> f=1
+
+h(r)
+
+> k,f
+
+q
+
+ρ(r)P (r) 
+
+> j
+
+sj
+
+| {z }
+
+> interference
+
++n(r) 
+
+> k
+
+,
+
+(8) where W = (1 − αj ), ρ(r) is the total available transmit power at each RF AP f , P (r) 
+
+> k
+
+is the normalized power fraction allocated to user k in the RF subnetwork, sk is the data symbol intended for user k and n(r) 
+
+> k
+
+∼ CN (0 , σ 2 
+
+> r
+
+) is the AWGN at the RF receiver. Moreover, for user k assigned to RF (i.e., 
+
+αk = 0 ), the received SINR γ(r) 
+
+> k
+
+is given by 
+
+γ(r) 
+
+> k
+
+=
+
+ρ(r)P (r) 
+
+> k
+
+h(r)
+
+> k
+> 2
+> K
+
+X 
+
+> j=1
+> j̸=k
+
+(1 − αj )ρ(r)P (r) 
+
+> j
+
+h(r)
+
+> k
+> 2
+
++ σ2
+
+> r
+
+. (9) 
+
+The achievable rate of user k in the RF subnetwork is given by R(r) 
+
+> k
+
+= B(r) log 2
+
+
+
+1 + γ(r)
+
+> k
+
+
+
+, (10) 
+
+where B(r) denotes the RF bandwidth. Finally, since each user is associated with either the VLC subnetwork or the RF subnetwork, the available power and bandwidth resources of each subnetwork are allocated exclusively to its associated users. Therefore, the achievable rate of user k is given by 
+
+Rk = αkR(v) 
+
+> k
+
++ (1 − αk)R(r) 
+
+> k
+
+. (11) III. P ROBLEM FORMULATION 
+
+We now formulate a joint optimization problem to determine the optimal RF/VLC technology selection, power allocation across both subnetworks, and IRS mirror orientations, with the objective of maximizing the proportional fairness utility, which balances aggregate sum rate and inter-user fairness. The optimization problem is formulated as follows 
+
+P1: max     
+
+> α,P(v),P(r),φ,ϑ
+> K
+
+X
+
+> k=1
+
+log( Rk ) (12) s.t. Rk ≥ Rmin ,k , ∀k ∈ K (12a) 
+
+> K
+
+X
+
+> k=1
+
+αk P (v) 
+
+> k
+
+≤ ρ(v), (12b) 
+
+> K
+
+X
+
+> k=1
+
+(1 − αk )P (r) 
+
+> k
+
+≤ ρ(r), (12c) 
+
+0 ≤ P (ξ) 
+
+> k
+
+≤ 1, ∀ξ ∈ { v, r }, ∀k ∈ K 
+
+(12d) 
+
+αk ∈ { 0, 1}, ∀k ∈ K (12e) 
+
+−π
+
+2 ≤ φm ≤ π
+
+2 , ∀m ∈ M (12f) 
+
+−π
+
+2 ≤ ϑm ≤ π
+
+2 , ∀m ∈ M (12g) 
+
+where constraint (12a) ensures the minimum quality-of-service (QoS) requirement. Constraint (12b) limits the total power al-located to VLC-associated users to the available power budget 
+
+ρ(v) at the LED AP, while (12c) similarly limits the total trans-mit power allocated to RF-associated users to the available RF power budget ρ(r). Constraint (12d) bounds the normalized power-allocation coefficients for both subnetworks, and (12e) enforces the binary nature of the technology-selection variable 
+
+αk. Constraints (12f) and (12g) set the physical rotation limits of the IRS mirrors. The resulting problem P1 is a non-convex mixed-integer nonlinear program. The non-convexity arises from the binary technology-selection variables αk, their bilinear coupling with the power-allocation variables in (12b) and (12c), and the nonlinear dependence of the VLC achiev-able rate R(v) 
+
+> k
+
+on the IRS mirror orientations. Conventional methods such as exhaustive search and successive convex approximation (SCA) are unsuitable for real-time environment [3], [13], as they must be re-solved from scratch for every channel realization, which is computationally prohibitive under the user mobility and blockage conditions considered in this work, where the channel varies over time. To enable efficient real-time decision-making, P1 is therefore reformulated as an MDP and solved using our proposed intelligent DRL framework described in the following section. IV. P ROPOSED INTELLIGENT DRL F RAMEWORK 
+
+The optimization problem in (12) is reformulated as an MDP characterized by the tuple (S, A, R, P, γ ), where S is the global state space, A is the joint action space of both agents, R is the shared cooperative reward encoding the objective of P1 , P is the state transition probability under the joint actions of the agents, and γ ∈ (0 , 1) is the discount factor balancing immediate and long-term rewards. The hy-brid discrete-continuous structure of P1 cannot be efficiently accommodated by conventional DRL approaches. Value-based methods such as DQN [10] operate only over discrete action spaces and would require quantizing the continuous power fractions and mirror angles, causing a combinatorial explosion that is intractable for practical system sizes. Policy-gradient methods such as DDPG [12] support continuous actions, but a single agent must learn a policy spanning the binary selection variables α, the power fractions, and the mirror angles within one heterogeneous action space, which couples variables operating on different scales and physical timescales and degrades convergence stability. Motivated by these limi-tations, the proposed framework decomposes the joint action space across cooperative agents: the selection and power agent 
+
+AG SP operates on the scheduling variables {α, P(v), P(r)}
+
+executed by the central controller, while the IRS orientation agent AG IRS operates on the mirror angles {φ, ϑ} executed by the IRS controller. The agents follow a natural two-timescale ordering in which AG IRS acts first to reshape the VLC channel, after which AG SP observes the updated channel and makes an informed selection decision. To preserve coordination, the agents are trained under centralized training with decentralized execution, where each critic accesses the joint state and both agents’ actions during training while each actor relies only on its local observation at execution. The state space S consists of the VLC channel gain vector 
+
+h(v) 
+
+> t
+
+∈ RK , the RF channel gain vector h(r) 
+
+> t
+
+∈ CK , the vector of achievable user rates Rt−1 ∈ RK , the user association vector αt−1 ∈ { 0, 1}K , the spatial coordinates of all users 
+
+ut ∈ RK×2, and the IRS roll and yaw angle vectors φt−1 ∈
+
+RM , ϑt−1 ∈ RM . The action space A contains all the actions, which are the outputs of the actor networks of both agents at each time slot t. Each agent AG i ∈ { AG SP , AG IRS } selects an action at ∈ A based on its local observation oi and must satisfy the constraints in (12). The first agent AG SP selects action aSP,t ∈ A to jointly determine the binary RF/VLC technology assignment αk,t and the power allocation fractions 
+
+P (v) 
+
+> k,t
+
+and P (r) 
+
+> k,t
+
+for each user k ∈ K . The selected action must satisfy the selection constraint (12e) and the power constraints (12b)-(12d), and is given by        
+
+> aSP,t =
+> h
+> αk,t , P (v)
+> k,t , P (r)
+> k,t k∈ K
+> i
+> .(13)
+
+The second agent AG IRS selects action aIRS,t ∈ A to determine the roll angle φm,t and yaw angle ϑm,t of each IRS mirror m ∈ M , allowing the IRS to steer the reflected VLC signals toward the intended users. This action must satisfy the mirror orientation constraints (12f) and (12g), and is given by     
+
+> aIRS,t =
+> h
+> φm,t , ϑ m,t m∈ M
+> i
+> .(14)
+
+The reward function is designed to directly encode the proportional fairness objective of P1 while penalizing vio-lations of the QoS constraint (12a) and the power budget constraints (12b) -(12c). Both agents receive the same shared cooperative reward rt at each time step t, determined by the current state st and the joint action at = {aSP,t , a IRS,t }. The use of a shared reward encourages both agents to coordinate their actions toward the common goal of maximizing propor-tional fairness across all users and is given by             
+
+> rt=
+> KX
+> k=1
+> log( Rk,t )−λ1
+> KX
+> k=1
+> max(0 , R min ,k −Rk,t )
+> −λ2
+> h
+> max
+> 
+> 0,P(v)
+> t−ρ(v)
+> + max
+> 
+> 0,P(r)
+> t−ρ(r)i
+> ,
+> (15)
+
+where P(v) 
+
+> t
+
+= PKk=1 αk,t P (v) 
+
+> k,t
+
+and P(r) 
+
+> t
+
+= PKk=1 (1 −
+
+αk,t )P (r) 
+
+> k,t
+
+are the total allocated VLC and RF power at time slot t, respectively. λ1 > 0 penalizes violations of the mini-mum QoS constraint (12a), while λ2 > 0 penalizes violations of the power budget constraints (12b) and (12c). The max(0 , ·)
+
+ensures that only active constraint violations contribute to the penalty, so that the reward is not unnecessarily reduced when all constraints are satisfied. For better understanding, the proposed algorithm training procedure is provided in Algorithm 1. At each time step t,
+
+AG IRS acts first to reconfigure the IRS mirror orientations, which immediately updates the VLC channel gains for all users. AG SP then observes the updated channel state and determines the technology assignment and power allocation accordingly. The joint action at = {aSP,t , a IRS,t } is executed in the environment, the per-user rates Rk,t are computed, and the shared cooperative reward rt is evaluated via (15), after which the next state st+1 is observed. The transition tuples {st, a t, r t, s t+1 } are stored in the replay buffer D and randomly sampled in mini-batches of size Nb to update each agent’s critic by minimizing the temporal difference loss, the actor using the deterministic policy gradient, and both target networks using the soft update rule. This proposed framework jointly and adaptively optimizes network performance while satisfying constraints (12a)-(12g) at each time slot as user locations and channel conditions change. The computational complexity is analyzed for both training and execution. Let Lμ, nμ and LQ, nQ denote the number of layers and widest-layer neurons of the actor and critic networks, respectively. Per training iteration, each agent re-quires O(Lμn2
+
+> μ
+
+) for the actor update, O(LQn2
+
+> Q
+
+) for the critic, and O(nμ + nQ) for the target networks, plus O(KN lM )
+
+for the VLC channel update following IRS reconfiguration. Over Nep episodes of T steps with mini-batch size Nb, and accounting for all agents, the total training complexity is 
+
+O(Nep T Nb(Lμn2 
+
+> μ
+
++ LQn2
+
+> Q
+
+)) , with space complexity dom-inated by the replay buffer O(|D| (|S| + |A| )) . As training is performed offline, the per-slot execution cost reduces to a single forward pass through each actor, O(Lμn2 
+
+> μ
+
++ KN lM ),which is independent of the channel realization. In contrast, SCA requires O(ISCA (K + M )3) operations per channel real-ization, since each iteration solves a convex subproblem jointly over the selection, power, and mirror orientation variables. V. P ERFORMANCE EVALUATION 
+
+A. Simulation configuration 
+
+We consider the system model described in Section II in a 
+
+5 × 5 × 3 m indoor environment. The LED APs are mounted Algorithm 1 Multi-Agent DRL for Joint RF/VLC Selection, Power Allocation, and IRS Mirror Orientation  
+
+> 1:
+
+Initialization:  
+
+> 2:
+
+Initialize actors μSP , μIRS and critics QμSP , QμIRS with random parameters θμSP , θμIRS , wSP , wIRS  
+
+> 3:
+
+Initialize target networks θμ′ 
+
+> i
+
+← θμi , w′ 
+
+> i
+
+← wi, ∀i ∈ { SP, IRS } 
+
+> 4:
+
+Initialize replay buffer D, mini-batch size Nb 
+
+> 5:
+
+Training:  
+
+> 6:
+
+for episode = 1 to Nep do  
+
+> 7:
+
+Observe initial state s0 
+
+> 8:
+
+for t = 1 to T do  
+
+> 9:
+
+AG IRS selects mirror orientation action: 
+
+aIRS,t =  φm,t , ϑ m,t m ∈ M  
+
+> 10:
+
+Update VLC channel gains ∀k ∈ K :
+
+h(v) 
+
+> k,t
+
+= PNl
+
+> l=1
+
+ bk,l,t hLoS  
+
+> k,l
+
++ PMm=1 hIRS 
+
+> k,m,l
+
+(φm,t , ϑ m,t ) 
+
+> 11:
+
+AG SP selects assignment and power action: 
+
+aSP,t =  αk,t , P (v) 
+
+> k,t
+
+, P (r) 
+
+> k,t
+
+k ∈ K  
+
+> 12:
+
+Execute at = {aSP,t , a IRS,t }, compute Rk,t using (11) and reward rt via (15), observe st+1  
+
+> 13:
+
+Store {st, a t, r t, s t+1 } in D 
+
+> 14:
+
+if |D| ≥ N b then  
+
+> 15:
+
+Sample Nb transitions {sj , a j , r j , s ′j } from D 
+
+> 16:
+
+for each agent i ∈ { SP, IRS } do  
+
+> 17:
+
+Compute target value: 
+
+yi = ri + γQ μ′
+
+> i
+
+ s′, μ ′ 
+
+> SP
+
+(o′ 
+
+> SP
+
+), μ ′ 
+
+> IRS
+
+(o′ 
+
+> IRS
+
+); w′
+
+> i
+
+ 
+
+> 18:
+
+Update critic by minimizing: 
+
+L(wi) = 1
+
+> Nb
+
+PNb
+
+> j=1
+
+ Qμi (sj , a jSP , a jIRS ; wi) − yi
+
+2 
+
+> 19:
+
+Update actor using policy gradient: 
+
+∇θμi J ≈ 1
+
+> Nb
+
+PNb 
+
+> j=1
+
+∇θμi μi(oji ) ∇ai Qi(·) ai=μi(oji )
+
+where Qi(·) = Qi(sj , a jSP , a jIRS ) 
+
+> 20:
+
+Soft update target networks: 
+
+θμ′ 
+
+> i
+
+← τ θ μi +(1 −τ )θμ′ 
+
+> i
+
+, w′ 
+
+> i
+
+← τ w i +(1 −τ )w′ 
+
+> i
+> 21:
+
+end for  
+
+> 22:
+
+end if  
+
+> 23:
+
+st ← st+1  
+
+> 24:
+
+end for  
+
+> 25:
+
+end for  
+
+> 26:
+
+Output: Trained policies μ∗ 
+
+> SP
+
+, μ∗
+
+> IRS
+
+on the ceiling with a half-power semi-angle Φ1/2 = 60 ◦, an optical transmit power of 2 W , and a bandwidth of 30 MHz ,while the RF AP Nf = 1 is deployed on a wall at 1.25 m 
+
+height with a bandwidth of 20 MHz. An IRS array of M = 49 
+
+mirrors is mounted on one wall, with mirror area dA m = 2 ×2cm 2, spacing qm = 1 cm , and reflectivity ρm = 0 .95 . Each receiver has a photodetector responsivity of 0.5 A/W, optical filter gain of 1.0, concentrator refractive index of 1.5, and noise power spectral density of 2 × 10 −14 A2/Hz . K = 6 
+
+mobile users are uniformly distributed on the floor with a minimum QoS rate of Rmin = 1 Mbps . Each user moves at a speed v ∼ U(0 , 2) m/s following the RWP mobility model with zero pause time and a distinct blockage probability 
+
+pb,k ∼ U (0 .1, 0.6) reflecting heterogeneous indoor shadowing. Moreover, the simulation is implemented in Python 3.12 with PyTorch 2.0 and trained over 10000 episodes of 100 time steps each. The hyperparameters are: discount factor γ = 0 .99 ,soft update rate τ = 0.01 , buffer capacity |D| = 10 5,and mini-batch size Nb = 256 . Each actor comprises two fully connected hidden layers of 256 and 128 neurons, while each critic takes the joint state st and both agents’ actions as input through an identical architecture. ReLU activations 0 2000 4000 6000  
+
+> Training episode
+> 060 120 180 240 300 360 420
+> Sum rate (Mbps)
+> Exhaustive search Proposed Algorithm SCA DDPG DQN
+> Fig. 2. Sum rate versus episode during training.
+
+are used in all hidden layers, and Tanh at the actor output. All networks are trained using Adam with learning rates 
+
+lr μ = 10 −4 and lr Q = 3 × 10 −4, with exploration provided by Ornstein-Uhlenbeck noise of standard deviation σ = 0 .15 .The penalty coefficients are chosen with λ1 > λ 2, prioritizing QoS satisfaction. 
+
+B. Simulation Results 
+
+The performance of our proposed algorithm is evaluated in terms of the sum rate over training episodes as shown in Fig. 2 for K = 6 users. The proposed algorithm converges after approximately 2000 episodes to a stable sum rate of 350 Mbps, within 10% of the exhaustive search upper bound of 392 Mbps. This confirms the near-optimal performance of our learned policy. The deterministic SCA method achieves 330 Mbps and must be re-executed at every scheduling slot. Moreover, our algorithm outperforms the DDPG and DQN by 13% and 25%, respectively. This is because DQN converges fastest due to its simpler discrete action space but saturates early at 280 Mbps, as it cannot capture the continuous action space. Additionally, the DDPG algorithm achieves a higher steady-state rate than DQN but oscillates by 25 Mbps around the SCA benchmark due to the instability of handling the hybrid discrete-continuous action space within a single agent, while the proposed multi-agent DRL algorithm remains stable with oscillations below 5 Mbps. Fig. 3 shows the sum rate for different numbers of users. It can be seen that all approaches initially improve with K until reaching a peak at K = 8 , beyond which the growing inter-user interference becomes the limiting factor. The proposed algorithm consistently outperforms all baselines, achieving a peak sum rate of 415 Mbps. This is because the multi-agents jointly adapt the technology selection, power allocation, and mirror orientation to the instantaneous channel conditions of each user. The deterministic SCA approach provides the second-best performance, as it optimizes all variables but converges to local optima rather than the global policy learned by the DRL agents. Moreover, disabling the IRS agent reduces the peak to 380 Mbps, which quantifies the contribution of 2 4 6 8 10 12  
+
+> Number of users K
+> 80 160 240 320 400 480 560
+> Sum rate (Mbps)
+> Proposed Algorithm SCA Proposed + Fixed IRS VLC only RF only
+
+Fig. 3. Sum rates versus different numbers of users. 2 4 6 8 10 12  
+
+> Number of users K
+> 0.6 0.7 0.8 0.9 1.0
+> Jain's fairness index
+> Proposed Algorithm SCA Proposed + Fixed IRS VLC only RF only
+
+Fig. 4. Jain’s fairness index for different numbers of users. 
+
+dynamic mirror reconfiguration. Among the single-subnetwork baselines, VLC only outperforms RF only due to its larger bandwidth. However, both fall below the hybrid schemes. In other words, if a user experiences severe LoS blockage, VLC only cannot recover it without RF, while RF only cannot use the larger optical bandwidth available. To evaluate the system fairness, Jain’s fairness index [5] is adopted as the performance metric. Fig. 4 presents the fairness of the proposed algorithm against the same baselines for different numbers of users K. It can be seen that the fairness of all schemes decreases as K increases, due to growing inter-user interference and the difficulty of meeting the QoS requirement in (12a) for a larger number of users. The proposed algorithm maintains the highest fairness index above 0.93 even at K = 12 . This is due to the use of multi-agents, where the one agent continuously steers the reflected beams toward users, while the other agent optimizes network selection and power allocation, thereby improving the rates of all users, including those in the worst conditions. Furthermore, SCA achieves fairness close to the proposed algorithm, as it also optimizes the mirror orientations alongside selection and power. In contrast, disabling the IRS agent reduces the fairness to 0.81 at K = 12 , since blocked users can no longer be recovered and their rates remain persistently low. Finally, VLC only and RF only result in the poorest fairness, as neither can exploit technology diversity to serve users whose preferred subnetwork is temporarily unavailable. VI. C ONCLUSION 
+
+In this paper, a joint optimization problem was formu-lated for network selection, power allocation, and IRS mirror orientation in dynamic indoor hybrid RF/VLC networks to maximize the proportional fairness utility, which balances aggregate sum rate and inter-user fairness. Due to the non-convex mixed-integer nature of the optimization problem, it was reformulated as an MDP and solved using a multi-agent DRL algorithm operating under centralized training with decentralized execution, where one agent handles technology selection and power allocation while a second agent continu-ously reconfigures the IRS mirror angles in response to user mobility and LoS blockage. Simulation results demonstrated that the proposed algorithm consistently outperforms other baselines in sum rate and maintains a fairness index above 0.93 at high user densities. The results further confirm that the proposed multi-agent decomposition yields more stable convergence than traditional DRL algorithms. REFERENCES [1] A. Adnan-Qidan, M. Morales-C´ espedes, and A. G. Armada, “Load balancing in hybrid VLC and RF networks based on blind interference alignment,” IEEE Access , vol. 8, pp. 72 512–72 527, 2020. [2] Q. Hu and M. Uysal, “A survey on reconfigurable intelligent surface-assisted optical wireless communications,” IEEE Commun. Surveys Tuts. , vol. 28, pp. 5196–5226, 2026. [3] A. A. Qidan, T. E. H. El-Gorashi, M. Safari, H. Haas, R. V. Penty, I. H. White, and J. M. H. Elmirghani, “Dynamic power allocation for NOMA-based transmission in 6G optical wireless networks,” IEEE Trans. Commun. , vol. 74, pp. 1–1, 2026. [4] S. Sun, F. Yang, W. Mei, J. Song, Z. Han, and R. Zhang, “Optical IRS for visible light communication: From optics model to association model,” IEEE Wireless Commun. , vol. 32, no. 4, pp. 162–169, 2025. [5] A. N. Hamad, A. Adnan Qidan, T. E. H. El-Gorashi, and J. M. H. Elmirghani, “Two-agent DRL for power allocation and IRS orientation in dynamic NOMA-based OWC networks,” IEEE Trans. Commun. , vol. 74, pp. 4446–4460, 2026. [6] F. Wang, F. Yang, C. Pan, J. Song, and Z. Han, “Hybrid VLC-RF systems with multi-users for achievable rate and energy efficiency maximization,” 
+
+IEEE Trans. Wireless Commun. , vol. 22, no. 9, pp. 6157–6170, 2023. [7] S. Aboagye, T. M. N. Ngatched, O. A. Dobre, and A. Ibrahim, “Joint access point assignment and power allocation in multi-tier hybrid RF/VLC Hetnets,” IEEE Trans. Wireless Commun. , vol. 20, no. 10, pp. 6329–6342, 2021. [8] S. Aboagye, T. M. N. Ngatched, O. A. Dobre, and A. R. Ndjiongue, “Intelligent reflecting surface-aided indoor visible light communication systems,” IEEE Commun. Lett. , vol. 25, no. 12, pp. 3913–3917, 2021. [9] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction .Cambridge, MA, USA: MIT Press, 2018. [10] S. Shrivastava, B. Chen, C. Chen, H. Wang, and M. Dai, “Deep Q-network learning based downlink resource allocation for hybrid RF/VLC systems,” IEEE Access , vol. 8, pp. 149 412–149 434, 2020. [11] T. Verma, A. Raza, S. Shrivastava, A. Kumar, D. P. Kothari, and U. D. Dwivedi, “A novel on-policy DRL-based approach for resource allocation in hybrid RF/VLC systems,” IEEE Trans. Consum. Electron. ,vol. 71, no. 1, pp. 550–560, 2025. [12] D. A. Saifaldeen, A. M. Al-Baseer, B. S. Ciftler, M. M. Abdallah, and K. A. Qaraqe, “DRL-based IRS-assisted secure hybrid visible light and mmWave communications,” IEEE Open J. Commun. Soc. , vol. 5, pp. 3007–3020, 2024. [13] A. A. Qidan, K. Alazwary, T. E. H. El-Gorashi, M. Safari, H. Haas, R. V. Penty, I. H. White, and J. M. H. Elmirghani, “BIA transmission in rate splitting-based optical wireless networks,” IEEE Trans. Commun. ,vol. 73, no. 12, pp. 14 753–14 768, 2025.
