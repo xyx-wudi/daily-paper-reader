@@ -1,0 +1,209 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-06T00:59:49.013413+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.37321v1",
+      "source": "arxiv",
+      "title": "PowerMarketJax: A JAX Benchmark Suite for Multi-Agent Reinforcement Learning in Power Markets",
+      "abstract": "Power markets are a natural testbed for multi-agent reinforcement learning (MARL), where multiple self-interested participants repeatedly submit bids. A market-clearing mechanism then determines dispatch and prices subject to power grid constraints and market settlement rules. However, existing MARL environments typically focus on a single market setting, implement simplified clearing mechanisms, or rely on CPU-based optimization solvers that slow large-scale training and limit the systematic study of bidding strategies and market behavior. We introduce PowerMarketJax, a benchmark suite for MARL across five power markets: day-ahead wholesale, real-time balancing, ancillary services, peer-to-peer double auctions, and local flexibility. Each environment implements its own clearing, pricing, and settlement rules while providing a common framework for learning and evaluation. We find that learned bidding behavior depends strongly on the market design: independent learners can miss better strategies when gains require many agents to change together, when more profitable strategies lie beyond a region of lower profit, or when profits disappear as more agents adopt the same strategy. PowerMarketJax implements both market simulation and policy training in JAX, allowing the entire pipeline to run on the GPU with 1,024 X 1,200 parallelisms across both environments and market participants, achieving up to 33X speedup over CPU-based baselines. Our open-source benchmark is available at: https://github.com/powermarketjax/PowerMarketJax.",
+      "authors": [
+        "Zhanhua Pan",
+        "Xin Qin",
+        "Xiao Liu",
+        "Zhilong Cao",
+        "Jianhong Wang",
+        "Dawei Qiu"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI",
+        "eess.SY"
+      ],
+      "published": "2026-09-29T12:00:09+00:00",
+      "link": "https://arxiv.org/pdf/2609.37321v1",
+      "tags": [
+        "keyword:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "MARL benchmark suite for power markets",
+      "llm_evidence_cn": "电力市场的多智能体强化学习基准套件",
+      "llm_evidence": "电力市场的多智能体强化学习基准套件",
+      "canonical_evidence": "电力市场的多智能体强化学习基准套件",
+      "llm_tldr_en": "Existing MARL environments cover single markets with simplified clearing and CPU solvers. PowerMarketJax is a JAX benchmark suite spanning five power markets, enabling GPU-accelerated large-scale study of bidding strategies and market behavior.",
+      "llm_tldr_cn": "现有MARL环境多局限于单一市场设定、清算机制简化或依赖CPU求解器，难以大规模系统研究电力市场竞价策略。本文提出PowerMarketJax，一个基于JAX的MARL基准套件，覆盖日前批发、实时平衡、辅助服务、点对点双边拍卖与本地灵活性等五类电力市场。它统一市场清算机制并利用GPU加速训练，为多主体竞价与市场行为研究提供可扩展、可复现的实验平台。",
+      "llm_tldr": "现有MARL环境多局限于单一市场设定、清算机制简化或依赖CPU求解器，难以大规模系统研究电力市场竞价策略。本文提出PowerMarketJax，一个基于JAX的MARL基准套件，覆盖日前批发、实时平衡、辅助服务、点对点双边拍卖与本地灵活性等五类电力市场。它统一市场清算机制并利用GPU加速训练，为多主体竞价与市场行为研究提供可扩展、可复现的实验平台。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.02554v1",
+      "source": "arxiv",
+      "title": "Test-time Multi-agent Coordination by Decomposed Value Gradient Flow",
+      "abstract": "Offline multi-agent reinforcement learning (MARL) faces a persistent trade-off. Expressive generative policies can represent multi-modal coordination in the data, but cannot distinguish high-value regions, while value-optimized policies exploit the learned Q-function but collapse the multi-modal into a single dominant mode. A single agent's mode collapse can break joint coordination, and simultaneous drift across agents can push the joint policy into unseen regions of the action space. We propose scalable coordination via optimal unified transport (SCOUT), the first offline MARL framework to combine a generative foundation model with a learned value function through test-time action refinement. SCOUT trains two decoupled components: a flow-matching behavioral prior and a decomposed value function. At test-time, it transports behavioral samples toward high-value regions via Stein variational gradient descent. The number of transport steps controls adaptive test-time scaling, replacing a fixed regularization coefficient. Under the individual-global-max (IGM) principle, we prove a single-term KL bound on the joint soft-value gap that vanishes as transport converges, with an irreducible additive residual proportional to the IGM violation. Empirically, SCOUT achieves the best average performance across discrete and continuous offline MARL benchmarks and yields performance improvements in all offline-to-online configurations.",
+      "authors": [
+        "Dongsu Lee",
+        "Haoran Xu",
+        "Amy Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.RO"
+      ],
+      "published": "2026-10-01T22:38:27+00:00",
+      "link": "https://arxiv.org/pdf/2610.02554v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "offline multi-agent reinforcement learning coordination via value gradient flow and test-time refinement",
+      "llm_evidence_cn": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
+      "llm_evidence": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
+      "canonical_evidence": "离线多智能体强化学习中的值梯度流与测试时动作精修协同",
+      "llm_tldr_en": "Offline MARL trades off generative multi-modal coordination against value exploitation; SCOUT combines a flow-matching behavior model with a learned value function via test-time optimal transport refinement.",
+      "llm_tldr_cn": "离线多智能体强化学习面临两难：生成式策略能表达多模态协同却无法分辨高价值区域，值优化策略能利用Q函数却会坍缩为单一模态并破坏联合协同。作者提出SCOUT框架，用流匹配行为模型结合学到的值函数，在测试时通过最优传输做动作精修，并解耦训练两个组件。实验表明该方法在保持多模态协同的同时提升价值，为离线MARL提供了可扩展的协同方案。",
+      "llm_tldr": "离线多智能体强化学习面临两难：生成式策略能表达多模态协同却无法分辨高价值区域，值优化策略能利用Q函数却会坍缩为单一模态并破坏联合协同。作者提出SCOUT框架，用流匹配行为模型结合学到的值函数，在测试时通过最优传输做动作精修，并解耦训练两个组件。实验表明该方法在保持多模态协同的同时提升价值，为离线MARL提供了可扩展的协同方案。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.02847v1",
+      "source": "arxiv",
+      "title": "Turnover-Orthogonal Credit Assignment for Open-Team Multi-Agent Reinforcement Learning",
+      "abstract": "Open-team multi-agent reinforcement learning studies cooperative systems in which agents may join, leave, or be replaced during an episode. In such settings, the team return changes both because agents choose useful actions and because the active population itself changes. Standard centralized critics and shared advantages often mix these two effects into one scalar credit signal, allowing surviving agents to be rewarded or penalized for exogenous turnover events outside their control. We introduce turnover-orthogonal credit assignment (TOCA), a value decomposition for open teams that separates action effects, pure turnover effects, and action--turnover interactions. Under exogenous turnover, the event-conditioned value admits a centered decomposition whose event-conditioned baseline removes the pure turnover component while preserving credit for actions that make the team robust to future replacements. We instantiate this idea with a permutation-invariant centralized critic over variable-size agent sets and event tokens, and derive both a counterfactual per-agent credit signal and a softly weighted interaction variant, TOCA-$β$, for high-variance control environments. Controlled diagnostic experiments show that TOCA improves return over event-aware MAPPO-style critics and that removing interaction credit substantially hurts performance. In a replacement-only Dynamic Spread benchmark, TOCA-$β$ achieves the best mean return at high turnover rates and improves over its no-interaction ablation. These results suggest that explicitly separating turnover from action credit is a useful principle for robust learning in dynamic cooperative teams.",
+      "authors": [
+        "Amit Thakur",
+        "Mukesh Singhal"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.LG"
+      ],
+      "published": "2026-10-02T05:35:04+00:00",
+      "link": "https://arxiv.org/pdf/2610.02847v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cooperative open-team MARL with value decomposition and centralized critics",
+      "llm_evidence_cn": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
+      "llm_evidence": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
+      "canonical_evidence": "合作型开放团队多智能体强化学习，采用价值分解与集中式评论家",
+      "llm_tldr_en": "TOCA is a value decomposition for open-team cooperative MARL that separates action effects, pure turnover effects, and action-turnover interactions to fix biased credit under centralized critics.",
+      "llm_tldr_cn": "开放团队中智能体可随时加入、离开或被替换，团队回报同时受动作与人员变动影响，标准集中式评论家把二者混为单一信用信号。本文提出轮换正交信用分配TOCA，将价值分解为动作效应、纯轮换效应及动作—轮换交互项。在外部轮换下给出事件条件价值的中心化分解，避免幸存智能体为不可控轮换受奖惩。该框架为合作型开放团队多智能体强化学习提供更公平的信用分配。",
+      "llm_tldr": "开放团队中智能体可随时加入、离开或被替换，团队回报同时受动作与人员变动影响，标准集中式评论家把二者混为单一信用信号。本文提出轮换正交信用分配TOCA，将价值分解为动作效应、纯轮换效应及动作—轮换交互项。在外部轮换下给出事件条件价值的中心化分解，避免幸存智能体为不可控轮换受奖惩。该框架为合作型开放团队多智能体强化学习提供更公平的信用分配。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.02848v1",
+      "source": "arxiv",
+      "title": "Permutation Robustness Is Not Enough: Action Collapse in Multi-Agent Transformer Policies",
+      "abstract": "Transformer policies are attractive for multi-agent robot learning because self-attention can model interactions among agents. However, multi-agent teams are unordered, while transformers typically process agents as ordered token sequences. We study how this mismatch affects cooperative navigation policies under agent-order permutations. Our results show that low permutation error alone can be misleading: policies may appear robust simply because all agents choose the same action. We therefore evaluate policies using both permutation-consistency metrics and action-collapse diagnostics, including action diversity, same-action fraction, and maximum action frequency. A PPO-ID baseline yields non-collapsed behavior but remains order-sensitive, while strong equivariance regularization can still induce homogeneous behavior. A weak equivariance penalty improves the robustness while preserving more diverse actions for teams with \\(N=3\\) agents, whereas teams with \\(N=4\\) agents require substantially smaller regularization weights. These findings suggest that multi-agent transformer policies should be evaluated not only by return and permutation robustness, but also by whether they maintain non-collapsed, differentiated multi-agent behavior.",
+      "authors": [
+        "Amit Thakur",
+        "Mukesh Singhal"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-10-02T05:35:53+00:00",
+      "link": "https://arxiv.org/pdf/2610.02848v1",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cooperative multi-agent navigation policies evaluated for permutation robustness and action collapse",
+      "llm_evidence_cn": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
+      "llm_evidence": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
+      "canonical_evidence": "协作多智能体导航策略的置换鲁棒性与动作坍缩评估",
+      "llm_tldr_en": "Transformer policies treat unordered multi-agent teams as ordered tokens; this work shows low permutation error can mask action collapse in cooperative navigation and proposes diversity-based diagnostics.",
+      "llm_tldr_cn": "Transformer策略因自注意力可建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序token序列处理智能体。作者研究这种错配对协作导航策略在智能体顺序置换下的影响，发现仅凭低置换误差会误判鲁棒性，因为所有智能体可能选择同一动作。为此提出动作多样性、同动作比例等动作坍缩诊断指标，揭示多智能体Transformer策略的隐藏失效模式。",
+      "llm_tldr": "Transformer策略因自注意力可建模智能体交互而被用于多智能体机器人学习，但多智能体团队是无序的，而Transformer按有序token序列处理智能体。作者研究这种错配对协作导航策略在智能体顺序置换下的影响，发现仅凭低置换误差会误判鲁棒性，因为所有智能体可能选择同一动作。为此提出动作多样性、同动作比例等动作坍缩诊断指标，揭示多智能体Transformer策略的隐藏失效模式。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "cooperative multi-agent reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.34005v2",
+      "source": "arxiv",
+      "title": "Learning to cooperate in a changing world: How caring about the future promotes cooperation across scales",
+      "abstract": "In social dilemmas, individuals need to forgo short-term temptations to achieve synergistic collective outcomes through cooperation. Previous work has examined mechanisms through which cooperation can evolve, including direct reciprocity, indirect reciprocity, environmental stochasticity, network reciprocity, and demographic stochasticity. These mechanisms have largely been studied under natural selection or social learning, where strategies with higher payoffs are more likely to spread. It is equally important to study cooperation under self-learning, where individuals adapt through their own experiences. Here, we focus on multi-agent reinforcement learning and derive analytical conditions under which these mechanisms stabilize cooperation under learning dynamics across scales. We find that reinforcement learning can steer self-interested individuals toward cooperation when they value the future over short-term temptation. Our work provides a unified approach to identifying the determinants of learning to cooperate in a changing world, thereby paving the way for the advancement of cooperative artificial intelligence.",
+      "authors": [
+        "Yuxin Geng",
+        "Xingru Chen",
+        "Xin Wang",
+        "Hongwei Zheng",
+        "Longzhao Liu",
+        "Shaoting Tang",
+        "Feng Fu"
+      ],
+      "primary_category": "physics.soc-ph",
+      "categories": [
+        "physics.soc-ph"
+      ],
+      "published": "2026-09-27T23:04:14+00:00",
+      "link": "https://arxiv.org/pdf/2609.34005v2",
+      "tags": [
+        "keyword:MARL",
+        "query:MARL"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses multi-agent reinforcement learning to study cooperation in social dilemmas",
+      "llm_evidence_cn": "用多智能体强化学习研究社会困境中的合作演化",
+      "llm_evidence": "用多智能体强化学习研究社会困境中的合作演化",
+      "canonical_evidence": "用多智能体强化学习研究社会困境中的合作演化",
+      "llm_tldr_en": "Cooperation mechanisms are mostly studied under natural selection; this work uses multi-agent reinforcement learning to derive analytical conditions on how caring about the future promotes cooperation across scales in a changing world.",
+      "llm_tldr_cn": "社会困境中个体需放弃短期诱惑以实现合作，但既有机制研究多基于自然选择或社会学习，个体自学习情境下的合作条件尚不明确。论文以多智能体强化学习为框架，推导在环境不断变化时关心未来收益如何促进合作的分析性条件，并比较不同机制在不同尺度上的作用。结果给出合作得以维持的参数条件，说明关注长期收益是跨尺度促进合作的关键。该工作把合作演化机制的分析拓展到自学习场景。",
+      "llm_tldr": "社会困境中个体需放弃短期诱惑以实现合作，但既有机制研究多基于自然选择或社会学习，个体自学习情境下的合作条件尚不明确。论文以多智能体强化学习为框架，推导在环境不断变化时关心未来收益如何促进合作的分析性条件，并比较不同机制在不同尺度上的作用。结果给出合作得以维持的参数条件，说明关注长期收益是跨尺度促进合作的关键。该工作把合作演化机制的分析拓展到自学习场景。",
+      "llm_tags": [
+        "query:marl"
+      ],
+      "matched_query_tag": "query:marl",
+      "matched_query_text": "multi-agent reinforcement learning",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
