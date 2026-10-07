@@ -6,44 +6,53 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-10-06
-- 运行时间：2026-10-06 23:54:10 UTC
+- 最新运行日期：2026-10-07
+- 运行时间：2026-10-07 23:47:39 UTC
 - 运行状态：成功
-- 本次总论文数：8
+- 本次总论文数：10
 - 精读区：6
-- 速读区：2
+- 速读区：4
 
 ### 今日简报（AI）
-今日精选8篇多智能体强化学习论文，6篇精读、2篇速读。最值得关注的是两篇9分工作：分解价值梯度流实现测试时多智能体协调，以及开放团队场景下的轮换正交信用分配。建议读者优先从这两篇入手，理解协调与信用分配如何提升开放环境中的多智能体表现。
-- 详情：[/202610/06/README](/202610/06/README)
+- 今日共生成 10 篇推荐（精读 6 篇，速读 4 篇）
+- 精读：《Independent Multi-Agent Reinforcement Learning with Counterfactual Semantic-Social World Models》（10.0/10）, 《Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization》（9.0/10）
+- 速读：《Who Bears the Burden? Learning Responsibility for Shared Constraints in Multi-Agent Reinforcement Learning》（8.0/10）, 《Safety of Latent Communication in Multi-Agent Systems》（6.0/10）, 《Strategic Multi-Agent Learning for Interpretable Action Valuation of All Players in Football》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202610/07/README](/202610/07/README)
 
 ### 精读区论文标签
-1. [Test-time Multi-agent Coordination by Decomposed Value Gradient Flow](/202610/06/2610.02554v1-test-time-multi-agent-coordination-by-decomposed-value-gradient-flow)  
+1. [Independent Multi-Agent Reinforcement Learning with Counterfactual Semantic-Social World Models](/202610/07/2610.07704v1-independent-multi-agent-reinforcement-learning-with-counterfactual-semantic-social-world-models)  
+   标签：评分：10.0/10、query:marl
+   evidence：完全去中心化多智能体强化学习与独立学习
+2. [Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization](/202610/07/2610.07550v1-foundation-model-aided-multi-agent-reinforcement-learning-for-wireless-random-access-network-optimization)  
    标签：评分：9.0/10、query:marl
-   evidence：离线多智能体强化学习协调框架
-2. [Turnover-Orthogonal Credit Assignment for Open-Team Multi-Agent Reinforcement Learning](/202610/06/2610.02847v1-turnover-orthogonal-credit-assignment-for-open-team-multi-agent-reinforcement-learning)  
+   evidence：基于共识去中心化MARL架构的FM辅助actor-critic算法
+3. [Cooperating with Future Collaborators: Multi-Agent RL under Staggered Participation](/202610/07/2610.07578v1-cooperating-with-future-collaborators-multi-agent-rl-under-staggered-participation)  
    标签：评分：9.0/10、query:marl
-   evidence：开放团队协作多智能体强化学习，用值分解做信用分配
-3. [Grounded Joint-Attention Other-Play for Zero-Shot Coordination](/202610/06/2610.06025v1-grounded-joint-attention-other-play-for-zero-shot-coordination)  
+   evidence：交错参与下的合作多智能体强化学习
+4. [Self-Referenced Social Preferences: Cooperation without Observing Others Rewards](/202610/07/2610.07881v1-self-referenced-social-preferences-cooperation-without-observing-others-rewards)  
    标签：评分：9.0/10、query:marl
-   evidence：面向零样本协调的新型多智能体强化学习方法
-4. [Permutation Robustness Is Not Enough: Action Collapse in Multi-Agent Transformer Policies](/202610/06/2610.02848v1-permutation-robustness-is-not-enough-action-collapse-in-multi-agent-transformer-policies)  
+   evidence：自参照社会偏好，在MARL中不观测他人奖励也能促进合作
+5. [Multi-Agent Reinforcement Learning for Movable Antenna-aided Cell-Free Massive MIMO Systems](/202610/07/2610.08387v1-multi-agent-reinforcement-learning-for-movable-antenna-aided-cell-free-massive-mimo-systems)  
+   标签：评分：9.0/10、query:marl
+   evidence：异构多智能体强化学习框架应用于可移动天线无蜂窝MIMO优化
+6. [Fast Last-Iterate Convergence in Zero-Sum Markov Games with Bandit Feedback](/202610/07/2610.05968v1-fast-last-iterate-convergence-in-zero-sum-markov-games-with-bandit-feedback)  
    标签：评分：8.0/10、query:marl
-   evidence：多智能体强化学习中协作导航的多智能体Transformer策略
-5. [Network Adaptation in IRS-Aided Hybrid RF/VLC Systems Using Cooperative Multi-Agent DRL](/202610/06/2610.03964v1-network-adaptation-in-irs-aided-hybrid-rfvlc-systems-using-cooperative-multi-agent-drl)  
-   标签：评分：8.0/10、query:marl
-   evidence：合作多智能体深度强化学习用于混合RF/VLC网络自适应
-6. [$Q$ Can Play That Game: Online Fitted $Q$-Iteration for Continuous-Action Zero-Sum Markov Games with Convex-Concave Function Approximation](/202610/06/2610.04010v1-q-can-play-that-game-online-fitted-q-iteration-for-continuous-action-zero-sum-markov-games-with-convex-concave-function-approximation)  
-   标签：评分：8.0/10、query:marl
-   evidence：零和马尔可夫博弈的在线拟合Q迭代与有限样本保证
+   evidence：带赌博机反馈的零和马尔可夫博弈末迭代收敛
 
 ### 速读区论文标签
-1. [Visual Swarm Navigation via Deep Reinforcement Learning and Evolutionary Hybrid Design](/202610/06/2610.06400v1-visual-swarm-navigation-via-deep-reinforcement-learning-and-evolutionary-hybrid-design)  
+1. [Who Bears the Burden? Learning Responsibility for Shared Constraints in Multi-Agent Reinforcement Learning](/202610/07/2610.07491v1-who-bears-the-burden-learning-responsibility-for-shared-constraints-in-multi-agent-reinforcement-learning)  
    标签：评分：8.0/10、query:marl
-   evidence：用多智能体强化学习合成去中心化集群导航控制器
-2. [Taylor Representations for Model-Free RL in Networked MDPs](/202610/06/2610.05456v1-taylor-representations-for-model-free-rl-in-networked-mdps)  
-   标签：评分：7.0/10、query:marl
-   evidence：网络化MDP中分散式无模型RL的可扩展局部critic表示
+   evidence：协作多智能体强化学习中的共享约束
+2. [Safety of Latent Communication in Multi-Agent Systems](/202610/07/2609.39788v2-safety-of-latent-communication-in-multi-agent-systems)  
+   标签：评分：6.0/10、query:marl
+   evidence：用强化学习攻击研究多智能体系统通信安全
+3. [Strategic Multi-Agent Learning for Interpretable Action Valuation of All Players in Football](/202610/07/2610.05961v1-strategic-multi-agent-learning-for-interpretable-action-valuation-of-all-players-in-football)  
+   标签：评分：6.0/10、query:marl
+   evidence：基于马尔可夫完美均衡的多智能体学习与球员价值评估
+4. [Adapting to Changes in Agent Behavior via Finite-Depth Policy Sensitivity](/202610/07/2610.07475v1-adapting-to-changes-in-agent-behavior-via-finite-depth-policy-sensitivity)  
+   标签：评分：6.0/10、query:marl
+   evidence：通过有限深度策略敏感度适应其他智能体行为变化
 
 
 <div class="dpr-home-promo-card">

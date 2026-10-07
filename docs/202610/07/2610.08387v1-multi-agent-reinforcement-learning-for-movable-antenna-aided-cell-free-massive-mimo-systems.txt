@@ -1,0 +1,2500 @@
+Title: Multi-Agent Reinforcement Learning for Movable Antenna-aided Cell-Free Massive MIMO Systems
+
+URL Source: https://arxiv.org/pdf/2610.08387v1
+
+Published Time: Wed, 07 Oct 2026 01:35:14 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> 1
+
+# Multi-Agent Reinforcement Learning for Movable Antenna-aided Cell-Free Massive MIMO Systems 
+
+Bokai Xu, Jiayi Zhang, Senior Member, IEEE , Shuaifei Chen, Member, IEEE , Ziheng Liu, Huahua Xiao, Derrick Wing Kwan Ng, Fellow, IEEE , and Bo Ai, Fellow, IEEE 
+
+Abstract —The inherent non-convex minimum-separation con-straints introduced by movable antennas present a formidable challenge to the joint optimization of antenna positions and transmission strategies, rendering conventional methods com-putationally infeasible, particularly in large-scale cell-free mas-sive multiple-input multiple-output (MIMO). In this work, we propose the graph-based learning individual intrinsic re-ward heterogeneous-agent proximal policy optimization (GLIIR-HAPPO) algorithm, a novel heterogeneous multi-agent reinforce-ment learning (MARL) framework that fundamentally over-comes this impasse by systematically decomposing the original coupled optimization into coordinated subproblems. To ensure tractability, we embed the non-convex geometric constraints into a penalty-augmented reward structure and develop a specialized geometric solver that enables the positioning agents to effi-ciently navigate the high-dimensional action space. Specifically, we propose an architecture featuring a dynamic-interaction graph critic for adaptive cross-role coordination, together with role-conditioned federated distillation that synchronizes same-role policies through compact actor-output statistics. Beyond architectural design, we establish a rigorous theoretical anal-ysis that derives monotonic performance improvement bounds and establishes convergence guarantees for the proposed bi-level optimization. Numerical simulations demonstrate that our framework yields significant sum-rate improvements over state-of-the-art MARL schemes. Moreover, the performance of our advanced architecture closely approaches its fully centralized counterpart, while drastically reducing communication overhead. 
+
+Index Terms —Movable antenna (MA), cell-free massive MIMO, multi-agent reinforcement learning (MARL). 
+
+I. I NTRODUCTION 
+
+Recently, the proliferation of wireless applications has led to an unprecedented surge in demand for higher through-put, improved spectral efficiency, and enhanced network ca-pacity for future wireless communication systems beyond fifth-generation (5G) [1]–[3]. Various emerging bandwidth-intensive applications such as high-quality video streaming and immersive virtual/augmented reality (VR/AR) have sig-nificantly contributed to this escalating demand. Recognizing this trend, researchers and engineers are directing their efforts towards the development of sixth-generation (6G) wireless communication systems and beyond [4], [5]. In particular, multiple-input multiple-output (MIMO) communications have emerged as a foundational enabling technology for achieving these performance targets. However, in traditional cellular 
+
+B. Xu, J. Zhang, Z. Liu, and B. Ai are with the State Key Laboratory of Advanced Rail Autonomous Operation, and also with School of Electronic and Information Engineering, Beijing Jiaotong University, Beijing 100044, P. R. China; S. Chen is with the School of Communications and Information En-gineering, Xi’an University of Posts and Telecommunications, Xi’an 710121, China. He is also with Purple Mountain Laboratories, Nanjing, 211111 China; Huahua Xiao is with ZTE Corporation, State Key Laboratory of Mobile Network and Mobile Multimedia Technology; D. W. K. Ng is with University of New South Wales, Sydney, NSW 2052, Australia. (Corresponding authors: Jiayi Zhang; Shuaifei Chen.) 
+
+MIMO systems, users located at the cell edge often face severely degraded communication quality due to severe path loss, strong inter-cell interference, and limited spatial diversity. The concept of cell-free (CF) networks, which eliminates the limitations imposed by traditional cell boundaries by coordinating a large number of geographically distributed access points (APs), has gained significant traction as a highly promising solution for improving network-wide throughput and enhancing a more uniform user experience [6]. How-ever, while CF MIMO technology can significantly improve both wireless channel capacity and system spectral efficiency (SE), it often entails non-negligible implementation com-plexity and increased energy consumption due to the need for numerous RF chains, dense AP deployments, and sub-stantial fronthaul signaling/processing overhead. Furthermore, the desirable channel-hardening phenomenon manifests only under specific propagation and deployment regimes, such as scenarios with a relatively small path-loss exponent. It is also worth noting that favorable propagation characteristics are exhibited only among users that are well separated in space [7], which can limit the achievable spatial multiplexing gains in practical networks with heterogeneous and potentially clustered user distributions. To address the limitations in CF massive MIMO systems, researchers have put forth various promising technologies. One such approach is antenna selection (AS), which reduces energy consumption by activating only those antennas that contribute the most to system throughput. However, AS is inherently lim-ited to a finite, discrete set of pre-deployed antenna locations. To unlock the full potential of the spatial domain, the concept of flexible-position antenna systems has emerged. A prominent realization of this concept is the fluid antenna system (FAS), which enables the flexible adjustment of radiating elements. The fluid antenna multiple access (FAMA) framework, for instance, empowers user-equipment devices (UEs) to exploit naturally occurring interference nulls by dynamically varying the antenna position, thereby establishing additional spatial de-grees of freedom. In practice, this capability can be realized via liquid-based reconfigurable radiators or by switching among densely packed antenna ports [8], [9]. Parallel to the advancements in FAS, movable antenna (MA) technology has recently attracted considerable attention as another practical and robust implementation for realizing flexible-position MIMO [10], [11]. While FAS effectively leverages spatial diversity through reconfigurable materials or port switching, MA systems typically utilize localized elec-tromechanical drivers to continuously translate solid radiating elements within a prescribed region. In this work, we adopt the MA architecture for CF APs due to several specific advantages that align with our system design: First, MA can effectively arXiv:2610.08387v1 [cs.IT] 6 Oct 2026 2
+
+leverage the available spatial DoF to its fullest potential by dynamically adjusting antenna positions, thereby improving SE. Second, MA can enhance channel gains by exploiting only a reduced number of repositionable antennas, leading to lower hardware requirements and enhanced energy efficiency (EE). Finally, MA can be relocated to spatial locations where multi-user channels become more orthogonal, facilitating the establishment of favorable propagation conditions. To unlock the full potential of wireless systems, optimizing transmission schemes is of utmost importance. In particular, MA-aided MIMO systems pose a significant challenge due to their highly coupled and geometric-dependent constraints. Such tightly intertwined spatial and signal-domain relation-ships further complicate the underlying optimization task. For instance, in [12], the authors proposed an efficient alternating-optimization algorithm that iteratively optimizes the transmit covariance matrix and the positions of each transmit/receive MA, yielding a locally optimal but computationally intensive solution. Compared to traditional fixed-position antenna (FPA) systems, MA systems achieve significant gains in MIMO channel capacity due to their spatial flexibility. Another study [13] employed a gradient-descent method to jointly optimize the positions of MAs for all users. However, from an optimiza-tion standpoint, MA-aided systems introduce inherently non-convex minimum-distance (collision-avoidance) constraints and may also involve non-convex objective functions. Indeed, these factors present challenges in solving the underlying optimization problems, especially at scale. Existing research addresses these challenges through various approaches, such as successive convex approximation (SCA) [12] or compressed sensing (CS)-based techniques [14]. Nevertheless, these meth-ods typically rely on surrogate convexifications of the objective and/or the non-convex distance constraints, or they introduce additional non-convex constraints (e.g., l0-type sparsity con-straints), which can incur higher computational burden and may lead to performance degradation. Additionally, existing research on optimizing MA designs has primarily focused on centralized optimization algorithms. These approaches require the sharing of CSI and other in-formation among all BSs, typically through a centralized design at the central processing unit (CPU). However, this centralized approach incurs substantial fronthaul signaling and data-exchange overhead [15]. In real-world deployments, BSs cannot engage in frequent message exchanges due to stringent fronthaul bandwidth/latency constraints and limited link capacity, making iterative centralized procedures less fa-vorable. This raises a crucial question: How can we effectively optimize the transmission strategies of multiple BSs with minimal or even no message exchanges [16]? In the realm of distributed optimization, multi-agent reinforcement learning (MARL) has emerged as a highly promising framework with rapidly growing adoption [17]. In practice, MARL naturally complements the distributed nature of cell-free mMIMO sys-tems by enabling multiple agents (e.g., mobile-BSs or UEs) to learn coordinated policies from local observations and optimize their strategies collaboratively. Under centralized training with decentralized execution, agents can use aggre-gated information during training and local observations for online policy execution. However, conventional MARL-based schemes face fundamental challenges, including poor sample efficiency, limited scalability, and unstable learning dynamics, due to non-stationarity and difficult credit assignment when agents are driven solely by a global team reward. Therefore, it is necessary to design a decoupled learning and coordination architecture to improve the robustness and performance of MARL [18]. In addition to these algorithmic challenges, existing literature has yet to adequately resolve several critical implementation difficulties: 1) the computational intractability arising from non-convex, geometry-coupled constraints; 2) the prohibitive communication overhead required for effective coordination in large-scale networks; and 3) the amplified learning instability when heterogeneous agents attempt to collaborate under sparse global rewards. To fill in the above gap, in this paper, we address the fol-lowing fundamental question: How can we design a heteroge-neous multi-agent optimization framework that simultaneously resolves the geometric constraints of antenna positioning and the interference management of power control? 
+
+This work investigates the joint optimization of MA po-sitioning and power allocation under the adopted channel and geometric models. Problem (P) maximizes the nom-inal sum rate subject to power and geometric constraints, whereas the MARL extrinsic team reward combines the nom-inal sum rate with a geometric feasibility penalty. Practical MA non-idealities, including movement delay, actuation en-ergy, positioning uncertainty, finite movement resolution, and CSI/control overhead, are considered through simplified mod-eling and supplementary sensitivity analysis. Our contributions are summarized as follows.  
+
+> •
+
+We introduce a novel heterogeneous multi-agent collab-oration learning framework, powered by a graph-based learning individual intrinsic reward heterogeneous-agent proximal policy optimization (GLIIR-HAPPO) algorithm to overcome the intractability of monolithic central-ized optimizers in MA-aided CF-MIMO networks. This paradigm fundamentally decomposes the joint optimiza-tion of antenna positions and transmission strategies into role-specialized subtasks, handled respectively by MA-positioning agents and power-control agents, enabling role-specialized policy learning with centralized training and decentralized online execution.  
+
+> •
+
+We tackle the intractable non-convex minimum-distance constraints between antennas through a dual strategy. First, a penalty-augmented mechanism is integrated into the reward function to drive the learning process toward constraint satisfaction. Second, a specialized geometric solver empowers positioning agents to efficiently navigate the high-dimensional action space and identify feasible, collision-free locations, transforming an otherwise in-tractable geometric problem into a manageable optimiza-tion task.  
+
+> •
+
+To reduce learning-related coordination overhead, we combine a dynamic-interaction graph critic with role-conditioned federated distillation. The critic coordinates agents across roles, while distillation exchanges com-pact same-role actor-output statistics. We establish a3value gradient                 
+
+> state and action
+> action assignment policy update
+> value gradient state and action
+> action assignment policy update
+> value gradient state and action
+> action assignment policy update
+> 2
+> 1
+> 43
+> 6
+> 5
+> 8
+> 7
+> 1N
+> 1uNuAu
+> Heterogeneous
+> Node-level aggregating
+> ALearnable
+> weights
+> Digital Signal Processor RF Chain
+> RF Chain
+> RF Chain
+> Movable antenna
+> value gradient
+> state and action
+> action assignment policy update
+> value gradient state and action
+> action assignment policy update
+> value gradient state and action
+> action assignment policy update
+> 2
+> 1
+> 43
+> 6
+> 5
+> 8
+> 7
+> 1N
+> 1uNuAu
+> Heterogeneous
+> Node-level aggregating
+> ALearnable
+> weights
+> Digital Signal Processor RF Chain
+> RF Chain
+> RF Chain
+> Movable antenna
+
+Fig. 1. System model and heterogeneous multi-agent architecture for MA-aided cell-free massive MIMO. 
+
+trust-region monotonic-improvement bound and a bi-level intrinsic-reward convergence result under the stated assumptions. Simulations achieve near-centralized perfor-mance with reduced learning-related communication. The remainder of this paper is structured as follows. Section II describes the system model of the MA-aided CF massive MIMO network and formulates the joint optimization problem under non-convex minimum-distance constraints. In Section III, we present the proposed heterogeneous multi-agent col-laboration framework, which integrates a penalty-guided geo-metric solver with the GLIIR-HAPPO algorithm to decouple and solve the resulting sub-tasks. Section IV provides the theoretical analysis of the proposed framework, establishing monotonic performance bounds and convergence guarantees. Numerical simulation results that validate the effectiveness of the proposed approach are presented in Section V. Finally, Section VI concludes the paper. 
+
+Notations : In this paper, scalars are denoted by non-bold italic letters a or A, while vectors and matrices are represented by boldface lowercase a and boldface uppercase letters A, re-spectively. The superscripts (·)T and (·)H denote the transpose and the conjugate transpose operations, respectively. RM ×N
+
+and CM ×N represent the spaces of M × N real-valued and complex-valued matrices, respectively. For a vector x, ∥x∥2
+
+denotes its Euclidean norm (i.e., the ℓ2-norm). Calligraphic letters A represent sets and |A| denotes the cardinality of the set A, or the absolute value if applied to a scalar. E[·]
+
+denotes the statistical expectation operator, and ∇ represents the gradient operator. II. S YSTEM MODEL AND JOINT OPTIMIZATION PROBLEM 
+
+We consider a CF MIMO network consisting of L geograph-ically distributed access points (APs), each equipped with N
+
+MAs. The APs are connected via fronthaul connections to a CPU, as illustrated in Fig. 1. Let N denote the number of movable radiating elements (i.e., MAs) at each AP. The chan-nel vector from AP l to UE k is denoted by hlk (rl) ∈ CN ×1,which contains the channel coefficients of the N elements. There are K single-antenna UEs in the network and the channel between the l-th AP, l ∈ { 1, . . . , L } and the k-th UE, k ∈ { 1, . . . , K } is denoted by hlk (rl) ∈ CN ×1, the position of the n-th MA at the l-th AP by rln . We use rl ≜
+
+[rTl1, . . . , rTlN ]T ∈ R2N ×1 to denote the aggregated position vector of the l-th AP. The significance of MA stems from the spatial channel model. In this paper, we employ a multipath channel model, which enables us to accurately capture the position-dependent structure of MA channels [13], [14]. In particular, the downlink channel vector hlk (rl) ∈ CN ×1
+
+consists of P paths from the l-th AP to the k-th UE and is given by 
+
+hlk (rl) = 
+
+r 1
+
+P
+
+> P
+
+X
+
+> p=1
+
+βlk,p a (θlk,p , ϕ lk,p , rl) , (1) where βlk,p ∈ C is the complex path gain of the p-th path for the link between the l-th AP and the k-th UE, and P is the number of spatial channel paths. In addition, 
+
+a (θlk,p , ϕ lk,p , rl) ∈ CN ×1 represents the transmit array response vector. Variable ϕlk,p ≜ sin ( φlk,p ) sin ( ϑlk,p ), and 
+
+θlk,p ≜ cos ( ϑlk,p ) denote the virtual azimuth and elevation angles of the p-th path for the link between the l-th AP and the k-th UE, respectively. The transmit array response vector [19], [20] is 
+
+a (θlk,p , ϕ lk,p , rl) = 
+
+h
+
+ej 2πλ (ϕlk,p xl, 1+θlk,p zl, 1), · · · 
+
+ej 2πλ (ϕlk,p xl,nx +θlk,p zl,nz ), · · · , e j 2πλ (ϕlk,p xl,Nx +θlk,p zl,Nz )iT
+
+,
+
+(2) where (rln x , rln z ) is the position of the (nx, n z )-th antenna in the x-z plane at the l-th AP. During the downlink data transmission, all antennas of all L APs simultaneously serve all K UEs via the same time-frequency resources, and the received downlink signal yk at the k-th UE is given by 
+
+yk =
+
+> L
+
+X
+
+> l=1
+> K
+
+X
+
+> i=1
+
+√ρli hHlk (rl)wli si + nk, (3) where ρli ⩾ 0 denotes the downlink power allocated to the i-th UE by l-th AP, and wli ∈ CN ×1 represents the normalized precoding vector, satisfying ∥wli ∥2 = 1 and wli = ˜ wli / ∥ ˜wli ∥
+
+with the unnormalized precoding vector ˜wli , and si denotes the symbol intended for the i-th UE with unit average power, i.e., E{| si|2} = 1 . In this work, the precoder is treated as a fixed deterministic module rather than an additional MARL 4
+
+action. For AP l, define Hl(rl) = [ hl1(rl), . . . , hlK (rl)] ∈
+
+CN ×K . The unnormalized RZF precoder is computed as 
+
+fWl = Hl(rl)  HHl (rl)Hl(rl) + δIK
+
+−1 , (4) where δ > 0 is the regularization factor, and wli is ob-tained by normalizing the i-th column of fWl. This design keeps the MARL action space focused on power allocation and MA displacement, avoiding high-dimensional complex-valued beamforming actions. Since Hl(rl) depends on the MA positions, optimizing rl still changes the Gram matrix 
+
+HHl (rl)Hl(rl) and can indirectly improve channel orthogo-nality and RZF interference suppression. nk ∼ CN (0 , σ 2
+
+> k
+
+)
+
+denotes the additive white Gaussian noise (AWGN) at UE k,where σ2 
+
+> k
+
+is the noise power. The SINR for the k-th UE can be expressed as 
+
+SINR k =
+
+PLl=1 
+
+√ρlk hHlk (rl)wlk 
+
+> 2
+
+PKi̸=k
+
+PLl=1 
+
+√ρli hHlk (rl)wli 
+
+> 2
+
++ σ2
+
+> k
+
+. (5) The achievable rate of the k-th UE is given by 
+
+Rk = log 2 (1 + SINR k) . (6) Our primary design objective is to maximize the overall net-work performance by jointly optimizing the downlink power allocation and the physical positions of the movable antennas. This design is formulated as a sum-rate maximization problem, which can be expressed as follows: 
+
+(P) : max  
+
+> ρlk ,rln
+> K
+
+X
+
+> k=1
+
+Rk (7a) s.t. 
+
+> K
+
+X
+
+> k=1
+
+ρlk ≤ P max  
+
+> l
+
+, ρlk ≥ 0, ∀l, k, (7b) 
+
+rln ∈ C , ∀l, n, (7c) 
+
+∥rln − rlm ∥2 ≥ D, ∀l, n, m, (m̸ = n), (7d) where constraint (7b) ensures that the total transmit power from each AP does not exceed its maximum P max  
+
+> l
+
+. In con-straint (7c), the region available for the movement of MAs is represented by C, while constant D in constraint (7d) specifies the minimum inter-antenna separation distance. Problem (P) represents the nominal joint power-allocation and MA-positioning design. The following simplified models support a separate sensitivity analysis and are not calibrated to a specific actuator or measured CSI-acquisition protocol. In practical MA-aided systems, however, antenna repositioning is not instantaneous and the channel must be reacquired after position updates. To capture these effects, we assume that MA positions are updated over a slow window Tupd and denote the movement time by τmov ,t = max l,n ∥∆rln,t ∥2/v max . The resulting effective sum rate is then written as 
+
+Reff sum (t) = 
+
+
+
+1 − τp + τfb + τcsi + τmov ,t
+
+Tupd 
+
++ KX
+
+> k=1
+
+Rk,t . (8) In (8), τp, τfb , and τcsi denote the pilot-training, feed-back/control, and CSI-reacquisition durations, respectively. When EE is considered, the same effective-rate model can be normalized by the total consumed power as EE t =
+
+Reff sum (t)/P tot ,t. Effective rate and EE serve only as supple-mentary evaluation metrics and are not incorporated into the nominal sum-rate objective in (P) or the proposed MARL reward. The total power consumption should include not only the transmit power but also circuit, RF-chain, actuation, and control power terms [21]. Accordingly, we model it as 
+
+Ptot ,t = X
+
+> l,k
+
+ρlk,t + LP c + LN P RF 
+
++ 1
+
+Tupd 
+
+X
+
+> l,n
+
+ c1∥∆rln,t ∥2 + c2∥∆rln,t ∥22
+
+ + Pctrl ,t.
+
+(9) Here, the summation term represents the actuation energy amortized over the MA update window, while Pctrl ,t accounts for the control and feedback signaling power. We further account for positioning uncertainty and finite movement resolution. Specifically, if the actual MA position is 
+
+erln = rln +eln with ∥eln ∥2 ≤ ϵpos , then the robust separation margin is set as Deff = D + 2 ϵpos and the constraint ∥rln −
+
+rlm ∥2 ≥ Deff is imposed. After projection onto the feasible movement region, the finite-resolution MA update is given by 
+
+rln,t +1 = Q∆r
+
+ ΠC
+
+ rln,t + ∆ max arln,t 
+
+ . (10) In the sensitivity evaluation, finite resolution is approx-imated by uniformly distributed coordinate residuals in 
+
+[−∆r /2, ∆r /2] . Finally, the overall overhead can be decom-posed as Ctotal = Cpilot + CCSI + Ccontrol + CMARL . FD reduces only the learning-related term CMARL , whereas MA relocation still requires CSI reacquisition and control signaling [22]. The joint optimization in problem (P) is highly challenging due to the strong coupling among variables and, most no-tably, the non-convex minimum distance constraint (7d) and objective function, which renders conventional optimization methods ineffective. We develop a heterogeneous multi-agent framework with centralized training and decentralized online execution. During training, the graph critic uses aggregated observations across APs, whereas each actor selects actions from its local observation during online execution. To handle the coupled geometric constraints, we reformulate the original design through variable splitting and quadratic-penalty aug-mentation. III. P ROBLEM RECONSTRUCTION AND HETEROGENEOUS 
+
+MULTI -A GENT MODELING 
+
+In this section, we present a heterogeneous multi-agent framework to handle problem (P) with centralized training and decentralized online execution. We first transform problem 
+
+(P) into a MARL-compatible form, after which we detail the agent structure, state representations, action design, and reward formulation. 
+
+A. Problem Reconstruction 
+
+To decouple the non-convex constraint (7d) from the ob-jective function PKk=1 Rk, we utilize variable splitting by 5
+
+introducing auxiliary variables {zln = rln }∀l,n . By substitut-ing {zln }∀l,n for {rln }∀l,n in (7d), and introducing a penalty term ϱ PLl=1 
+
+PNn=1 ∥rln − zln ∥22 into the objective function, the problem (P) can be transformed into 
+
+(P1) : max  
+
+> ρlk ,rln ,zln
+> K
+
+X
+
+> k=1
+
+Rk − ϱ
+
+> L
+
+X
+
+> l=1
+> N
+
+X
+
+> n=1
+
+∥rln − zln ∥22 (11a) s.t. 
+
+> K
+
+X
+
+> k=1
+
+ρlk ≤ P max  
+
+> l
+
+, ρlk ≥ 0, ∀l, k, (11b) 
+
+rln ∈ C , ∀l, n, (11c) 
+
+∥zln − zlm ∥2 ≥ D, ∀l, n, m, m ̸ = n, (11d) where ϱ > 0 denotes the quadratic-penalty coefficient, distinct from the transmit power ρlk . In simulations, we set ϱ0 =0.1 and update it once per episode according to the average minimum-distance violation 
+
+νe = 1
+
+LN (N − 1) 
+
+> L
+
+X
+
+> l=1
+> N
+
+X
+
+> n=1
+
+X
+
+> m̸=n
+
+[D − ∥ rln − rlm ∥2]+ , (12) where [x]+ = max {x, 0}. The adaptive update rule is 
+
+ϱe+1 =
+
+(
+
+min {ηϱϱe, ϱ max }, νe > ϵ feas ,ϱe, νe ≤ ϵfeas , (13) with ηϱ = 1.05 , ϱmax = 20 , and ϵfeas = 10 −3D. The penalty is therefore increased only when the violation exceeds the feasibility threshold, which mitigates early-stage penalty domination. Fix an AP index l and an antenna index n, the subproblem of (P1) can be written as 
+
+(P1-a ) : min  
+
+> zln ∈R2
+
+rln − zln 
+
+> 22
+
+s.t. zln − zlm 2 ≥ D, ∀ l, m, n (m̸ = n),
+
+(14) where rln ∈ R2 is the unconstrained update of the physical MA position at AP l coming from the penalized master problem, while {zlm }m̸=n are the auxiliary variables used to enforce the minimum separation D. Since subproblem (14) involves only variables associated with AP index l, the AP-level subproblems are independent and can be solved in parallel. In the following, we characterize the solution of all AP-level subproblems by exploiting the geometric structure of (14). 
+
+Definition 1 (Candidate points on active boundaries) . Define the index set of currently violated distance constraints 
+
+Dln ≜
+
+n
+
+m ∈ N \ { n} : ∥rln − zlm ∥2 < D 
+
+o
+
+. (15) For every n ∈ N , let 
+
+Circle ln ≜ x ∈ R2 : ∥x − zln ∥2 = D (16) be the circle that bounds the feasible exterior region. Let 
+
+Line l,ℓn denote the line through zlℓ and rln . Define 
+
+Wlℓ ≜
+
+(
+
+w ∈ R2 w ∈ Circle lℓ ∩ Circle lℓ ′ , ∃ ℓ′ ∈ N \ { n, ℓ },
+
+∥w − zlℓ ′ ∥2 ≥ D, ∀ ℓ′ ∈ N \ { n, ℓ }
+
+)
+
+(17) and 
+
+Ulℓ ≜
+
+(
+
+u ∈ R2 u ∈ Circle lℓ ∩ Line l,ℓn ,
+
+∥u − zlℓ ′ ∥2 ≥ D, ∀ ℓ′ ∈ N \ { n, ℓ }
+
+)
+
+.
+
+(18) If the centers of Circle lℓ and Circle lℓ ′ coincide, the intersec-tion Circle lℓ ∩ Circle lℓ ′ is regarded as ∅ in Wlℓ ; if zlℓ = rlℓ ′ ,then Ulℓ is regarded as ∅.
+
+Lemma 1. The feasible set Fln = T
+
+> m̸=n
+
+{z : ∥z − zlm ∥2 ≥
+
+D} is closed and nonempty. The objective f (z) = ∥z − rln ∥22
+
+is coercive. Hence (14) admits at least one global minimizer 
+
+z⋆ln . Moreover: (i) If Dln = ∅ (i.e., rln ∈ F ln ), then z⋆ln = rln .(ii) If Dln ̸ = ∅, then every global minimizer satisfies 
+
+z⋆ln ∈ [
+
+> ℓ∈D ln
+
+(Wlℓ ∪ U lℓ ) . (19) 
+
+Proof: Suppose Dln ̸ = ∅. If a feasible point z lies in the interior of Fln , then there exists δ > 0 such that ∥z −
+
+zlℓ ∥2 ≥ D + δ, ∀ℓ̸ = n. For sufficiently small τ ∈ (0 , 1) , the point zτ = (1 − τ )z + τ rln remains feasible, and f (zτ ) <f (z), a contradiction. Hence any minimizer must lie on at least one active boundary Circle lℓ with ℓ ∈ D ln . Fix such an 
+
+ℓ. The unconstrained minimizer of f on the circle Circle lℓ 
+
+is the radial projection of rln onto the circle, i.e., one of the points in Ulℓ in (18). If this point is feasible with respect to all other constraints, it belongs to Ulℓ and is optimal. Otherwise, the feasible subset of Circle lℓ is a finite union of closed arcs whose endpoints are precisely the circle–circle intersections with Circle lℓ ′ , ∀ℓ′̸ = n, ℓ . Since the closest point on the full circle is infeasible, the minimum of f over each feasible closed arc is attained at an endpoint; hence the minimizer must lie in Wlℓ . Taking the union over all ℓ ∈ D ln yields (19). We next show that it suffices to inspect a finite candidate set on the relevant circles. Intuitively, along any fixed circle 
+
+Circle ln the unconstrained minimizer of f is the orthogonal projection of rln onto that circle in the radial direction; when this point is excluded by the other inequality constraints, the constrained minimum over the remaining arcs occurs at arc endpoints, which correspond to circle–circle intersection points. The following two lemmas describe a more direct way of constructing these sets. 
+
+Lemma 2. Fix ℓ ∈ N \{ n} and minimize f (z) = ∥z − rln ∥22
+
+over Circle lℓ . The stationary points are exactly the two inter-sections of Circle lℓ with Line l,ℓn , given by 
+
+eUlℓ =
+
+
+
+∅, rln = zlℓ ,
+
+zlℓ ± D(rln − zlℓ )
+
+∥rln − zlℓ ∥2
+
+, otherwise . (20) Among these two points, the nearer one to rln is zlℓ +
+
+D rln −zlℓ 
+
+> ∥rln −zlℓ ∥2
+
+.
+
+Proof: Parametrize z = zlℓ + Du with ∥u∥2 = 1 . Then 
+
+∥z − rln ∥22 = zlℓ − rln  
+
+> 22
+
++ D2 + 2 D uT (zlℓ − rln ), (21) which is minimized when u aligns with − zlℓ − rln 
+
+∥zlℓ − rln ∥2
+
+, yield-ing the two radial intersections above, and selecting the branch 6Local    
+
+> Observations
+> Sparse Attention-based Graph
+> ...
+> ...
+> ...
+> ..
+> Message Processor
+> Per-agent Values Reward PPO Objective
+> Environment
+> Policy
+> Value
+> Loss
+> Advantage Estimation
+> .. ..
+> ... .. ...
+> Encoder
+> Actor Update
+> Fig. 2. The heterogeneous MARL architecture, including a sparse attention-based graph for adaptive agent communication and a centralized critic for consistent advantage estimation across different agent roles.
+
+corresponding to the positive sign yields the intersection nearer to rln .
+
+Lemma 3 (Arc removal by a single inequality) . Fix ℓ ∈ N \ {n} and any k ∈ N \ { n, ℓ }, the constraint ∥z − zlk ∥2 ≥ D
+
+removes at most one open arc from Circle lℓ . The endpoints of that arc are exactly the intersections of Circle lℓ and Circle lk .Let d ≜ ∥zlk − zlℓ ∥2. Then, the set of endpoints Wl,ℓk is 
+
+fWl,ℓk =
+
+
+
+∅, d = 0 ,
+
+ zlℓ + zlk 
+
+2 , d = 2 D, 
+
+zlℓ + zlk 
+
+2 ± 12
+
+√4D2 − d2 ˆnℓk , 0 < d < 2D, 
+
+∅, d > 2D, 
+
+(22) where ˆnℓk is any unit vector orthogonal to zlk − zlℓ . For example, writing zlℓ = [ xlℓ , y lℓ ]T and zlk = [ xlk , y lk ]T ,
+
+ˆnℓk = 1
+
+∥zlk − zlℓ ∥2
+
+ ylk − ylℓ 
+
+−(xlk − xlℓ )
+
+
+
+. (23) 
+
+Proof: See Appendix A. The auxiliary variable subproblem (P1-a ) can be solved efficiently by exploiting its geometric structure. The optimal solution of this non-convex problem is guaranteed to lie on the boundary of the feasible region, which is defined by the exteriors of multiple exclusion disks. This observation reduces the continuous optimization to a finite search over candidate points, consisting of radial projections and circle– circle intersection points. Having established this geometric mechanism for enforcing the distance-based constraints, we now shift our focus to the second component of the alternating optimization procedure: updating the original system variables within a heterogeneous multi-agent framework. 
+
+B. Heterogeneous Coordination Network 
+
+The heterogeneous MARL schemes developed in [23]–[25] can solve distributed optimization efficiently. However, they do not explicitly capture inter-AP information exchange and do not scale gracefully with increasing agent population, which can lead to prohibitive interaction overhead in large networks. To address this limitation, we propose a heterogeneous co-ordination architecture that integrates a dynamic-interaction graph critic with a LIIR module that learns a distinct intrinsic reward for each AP agent. Together, these components support coordinated policy learning under centralized training with decentralized online execution. The alternating optimization approach for problem (P1)
+
+involves two main steps. In Section III-A, we developed a geometric method to solve for the auxiliary variables {zln }∀l,n 
+
+while keeping the original variables fixed. We now address the other half of this procedure, which is the optimization of the original variables: the downlink power allocations {ρlk }∀l,k 
+
+and the physical MA positions {rln }∀l,n , while the auxiliary variables {zln }∀l,n are held constant. The formulation is: 
+
+(P1-b ) : max  
+
+> ρlk ,rln
+> K
+
+X
+
+> k=1
+
+Rk − ϱ
+
+> L
+
+X
+
+> l=1
+> N
+
+X
+
+> n=1
+
+∥rln − zln ∥22 (24) s.t. 
+
+> K
+
+X
+
+> k=1
+
+ρlk ≤ P max  
+
+> l
+
+, ρlk ≥ 0, ∀l, k, (25) 
+
+rln ∈ C , ∀l, n. (26) While subproblem (P1-b ) could be addressed leveraging centralized optimization methods at the CPU, such an ap-proach scales poorly with the number of APs and UEs, creating a significant communication bottleneck for acquiring system-wide state information and disseminating control de-cisions. To support decentralized online policy execution after centralized training, we recast this optimization task within a MARL framework. This paradigm naturally matches the distributed structure of CF systems, allowing APs to learn effective local control policies from local observations while collectively optimizing a global objective. Moreover, MARL includes a range of efficient algorithms, such as MAPPO, in which cooperative agents iteratively interact with the environ-ment, receive reward-based feedback, and update their policies to progressively improve performance. In this MARL setting, we model decision making at each AP using two role-specialized agent types: a power-control agent responsible for downlink power allocation and a po-sitioning agent responsible for adjusting MA locations. This heterogeneous structure enables task-specific policy learning for the distinct control dimensions. To facilitate efficient and coordinated learning among the resulting large agent popula-tion, we further introduce a reward-decoupling mechanism that mitigates credit-assignment ambiguity and stabilizes training. Each AP l is assigned two role-specialized agents: (l, ρ )
+
+for AP-level power allocation and (l, r ) for jointly controlling the N MA displacements in R2N . Thus, M = Mρ ∪ M r
+
+with Mρ = {(l, ρ )}Ll=1 and Mr = {(l, r )}Ll=1 , yielding 
+
+M = |M| = 2L. As shown in Fig. 2, we consider a fully cooperative multi-agent MDP with M agents indexed by i ∈ { 1, . . . , M }. An MDP is characterized by a tuple 
+
+< Oi, S, Ai, R, T , γ > , where Oi, S, and Ai represent the observation space, state space, and action space of agent i,respectively. At time t, the environment is in global state 
+
+st ∈ S ; agent i observes oit ∈ O i and takes action ait ∈ A i.The joint action is ut := ( a1 
+
+> t
+
+, . . . , aMt ) and the joint policy factorizes as 
+
+πθ (ut | st) = 
+
+> M
+
+Y
+
+> i=1
+
+πθi (ait | oit), θ = ( θ1, . . . , θ M ), (27) with discount factor γ ∈ (0 , 1) . Agents are updated sequen-tially in a fixed or sampled global order per iteration. 7
+
+For each agent i associated with AP l, the local observation is derived from the instantaneous CSI at AP l. The local CSI matrix is given by 
+
+Hl,t = [ hl1(rl,t ), hl2(rl,t ), . . . , hlK (rl,t )] ∈ CN ×K . (28) The complex-valued CSI is represented by stacking its real and imaginary components and applying feature-wise normal-ization: 
+
+oit = Norm ([vec ( ℜ{ Hl,t }) , vec ( ℑ{ Hl,t })]) ∈ R2N K ,
+
+(29) where Norm( ·) denotes feature-wise normalization. This ob-servation is shared by the power-control and MA-positioning actors of AP l. During training only, the centralized critic may use the aggregated observations st = {oit}Mi=1 , or equivalently the global CSI collection {Hl,t }Ll=1 .Both role-specialized action spaces are continuous. For AP 
+
+l, the power-control actor generates the normalized vector 
+
+a(l,ρ ),t = [aρl1,t , . . . , a ρlK,t ]T ∈ A(l,ρ ) ⊂ (0 , 1) K , subject to PKk=1 aρlk,t ≤ 1. The corresponding transmit powers are obtained by scaling the action as ρlk,t = P max  
+
+> l
+
+aρlk,t , k =1, . . . , K , which ensures ρlk,t ≥ 0 and PKk=1 ρlk,t ≤ P max  
+
+> l
+
+.For the positioning role, AP l outputs a(l,r ),t ∈ [−1, 1] 2N ,where each pair of entries represents the two-dimensional displacement of one MA. The MA positions are updated as 
+
+rln,t +1 = Π C
+
+ rln,t + ∆ max arln,t 
+
+ , n = 1 , . . . , N, (30) where ΠC projects onto the feasible movement region C, and 
+
+∆max denotes the maximum displacement per step. At time t, agent i receives an observation oit ∈ Rdo . A shared encoder ϕenc : Rdo → Rde produces node embeddings 
+
+eit = ϕenc (oit) ∈ Rde . (31) From each eit, we compute queries, keys, and values with shared linear maps 
+
+qit = Wq eit ∈ Rdk , kit = Wkeit ∈ Rdk , vit = Wv eit ∈ Rdv ,
+
+(32) where Wq ∈ Rdk ×de , Wk ∈ Rdk ×de , and Wv ∈ Rdv ×de .Define scaled dot-product compatibility scores with self-edges masked: 
+
+cij,t =
+
+
+
+qitT kjt
+
+√dk
+
+, j̸ = i, 
+
+−∞ , j = i. 
+
+(33) We further introduce a temperature parameter T > 0 and define ˜cij,t = cij,t /T . Let N att  
+
+> i
+
+(t) ⊂ { 1, . . . , M } \ { i} denote the indices of the κ largest entries in {˜cij,t }j̸ =i. Pure top-
+
+κ pruning may disconnect a directed interaction graph when all attention scores associated with an AP/agent are weak. To avoid this issue, we use a connectivity-preserving sparse attention mask. Each node also keeps a fixed low-overhead backbone neighbor set N back  
+
+> i
+
+, constructed from a connected nearest-neighbor or ring-type AP backbone and mapped to the corresponding role-specialized agent nodes. The active neighbor set is 
+
+N act  
+
+> i
+
+(t) = N att  
+
+> i
+
+(t) ∪ N back  
+
+> i
+
+. (34) Since the backbone graph is connected, the union graph 
+
+Gt = ( V, Et) with (i, j ) ∈ E t iff j ∈ N act  
+
+> i
+
+(t) remains weakly connected for every t. Thus, top-κ pruning suppresses redun-dant non-backbone links but cannot isolate an AP/agent dur-ing training. We form a row-stochastic, backbone-augmented sparse adjacency by normalizing over the active neighbor set: 
+
+αij,t = exp(˜ cij,t )
+
+P   
+
+> ℓ∈N act
+> i(t)
+
+exp(˜ ciℓ,t ) 1j ∈ N act  
+
+> i
+
+(t) , (35) where PMj=1 αij,t = 1 . The directed message arriving at node 
+
+i is the convex combination 
+
+mit = X  
+
+> j∈N act
+> i(t)
+
+αij,t vjt ∈ Rdv . (36) The above attention equations implement a single-layer graph-attention critic on a time-varying, connectivity-preserving sparse directed graph Gt = (V, Et) with (i, j ) ∈ Et iff 
+
+j ∈ N act  
+
+> i
+
+(t). A per-node update then fuses local and aggregated features, 
+
+ωit = σ Wm [eit; mit] + bm
+
+ ∈ Rdu , (37) and a scalar value head produces per-agent values and the team value 
+
+Vi(st) = ψ(ωit), Vex (st) = 
+
+> M
+
+X
+
+> i=1
+
+Vi(st). (38) The extrinsic TD advantage used to update the actors is 
+
+Aex (st, ut) = rex ,t + γV ex (st+1 ) − Vex (st). (39) 
+
+Proposition 1 (Permutation invariance) . Let Π be any per-mutation of agent indices with permutation matrix P ∈{0, 1}M ×M . If we relabel agents by Π, equivalently, apply P
+
+to the rows of all per-agent quantities, then the critic’s scalar output is invariant: 
+
+Vex (st) = Vex (Π st), ∀t. (40) 
+
+Proof: See Appendix B. Permutation invariance means the critic treats agents as an unordered set, which is essential in cell-free deployments where agent identities carry no semantics beyond their obser-vations. Let rex (st, ut) denote the per-step extrinsic team reward, and let ri
+
+> in
+
+(oit, ait; ηi) be an intrinsic shaping reward produced by agent i with parameters ηi. Concretely, following the optimization in (P1-b ), we instantiate 
+
+rex (st, ut) ≜
+
+> K
+
+X
+
+> k=1
+
+Rk(st, ut) − ϱ
+
+> L
+
+X
+
+> l=1
+> N
+
+X
+
+> n=1
+
+∥rln,t − zln,t ∥22 ,
+
+(41) where Rk(st, ut) denotes the downlink rate of user k at time 
+
+t and ϱ > 0 is the proximity weight coefficient. The extrinsic team reward consists of the nominal sum rate and a geometric feasibility penalty, while practical factors such as movement delay, actuation energy, and CSI/control overhead are not included in the reward formulation. The proxy reward used 8
+
+when updating agent i mixes extrinsic and its own intrinsic rewards: 
+
+ri
+
+> px
+
+(st, ut) ≜ rex (st, ut) + λ r i
+
+> in
+
+(oit, ait; ηi), (42) where λ > 0 is a hyper-parameter that balances the extrinsic team reward and the distinct intrinsic reward. Then, we define the discounted extrinsic return as 
+
+Rex ,t ≜
+
+> ∞
+
+X
+
+> ℓ=0
+
+γℓrex (st+ℓ, ut+ℓ) , (43) and, accordingly, the associated state-value function under the candidate policy πθ as 
+
+Vex (s) ≜ Eπθ [Rex ,t | st = s] . (44) By the same token, the discounted proxy return is 
+
+Ri 
+
+> px ,t
+
+≜
+
+> ∞
+
+X
+
+> ℓ=0
+
+γℓri 
+
+> px
+
+(st+ℓ, ut+ℓ) , (45) and the corresponding state-value function is 
+
+V i
+
+> px
+
+(s) ≜ Eπθ
+
+Ri 
+
+> px ,t
+
+| st = s . (46) For any subset S ⊆ { 1, . . . , M }, define the i-th agent proxy 
+
+Q marginalized over the complementary agents: 
+
+Q i
+
+> px ,S
+
+(s, aS) = Ea−S∼πθ,−S
+
+X
+
+> t≥0
+
+γtri
+
+> px
+
+(st, ut) s0=saS,0=aS
+
+ ,
+
+(47) where aS stacks the actions of agents in S and −S denotes its complement. During the sequential update at step i, let the prefix set be Pi := {1, . . . , i −1}. We define the HAPPO proxy advantage for agent i by the marginal Q-difference 
+
+Ai
+
+> px
+
+(s, aPi , ai) = Qi
+
+> px ,Pi∪{ i}
+
+(s, aPi , ai) − Qi 
+
+> px ,Pi
+
+(s, aPi ).
+
+(48) 
+
+Ai 
+
+> px
+
+measures the value gain of selecting ai for the current agent i given the already-updated prefix actions aPi , relative to marginalizing ai out. In practice, we estimate (48) with a centralized proxy critic for agent i and GAE( λGAE ), and we stop gradients through critics in all policy updates. When updating agent i in iteration k, keep the prefix policies fixed at their new parameters {θk+1 1 , . . . , θ k+1  
+
+> i−1
+
+} and the rest at their old parameters {θki , . . . , θ kM }. Define the per-step importance ratio 
+
+r it (θi) = πθi (ait | oit)
+
+πθki (ait | oit) . (49) The HAPPO objective for agent i is 
+
+max 
+
+> θi
+
+E
+
+" min  rit(θi) Ai
+
+> px
+
+, clip [1 −ϵ, 1+ ϵ]
+
+ rit(θi)Ai
+
+> px
+
+
+
++ βH πθi (· | oit)#
+
+, (50) where ϵ > 0 is the PPO clipping range, β ≥ 0 an entropy weight, and H the Shannon entropy. We typically perform a few epochs of stochastic gradient ascent on (50) using minibatches from the current rollout, with advantage whitening and per-agent KL monitoring. (50) is the PPO-Clip update used in the implementation and in Algorithm 1. (51) is the KL-constrained trust-region form used to state the monotonic-improvement guarantee in Theorem 2. Thus, Theorem 2 di-rectly justifies the trust-region formulation. It also applies to the implemented PPO-Clip update when the realized clipped step is KL-feasible, i.e., when the monitored average KL of each agent is below the corresponding budget δi. Without this KL-feasibility condition, (50) should be interpreted as a practical surrogate for the trust-region step, rather than as a separate monotonic-improvement theorem. To make the theoretical KL control explicit, one may write the idealized trust-region problem as 
+
+max 
+
+> θi
+
+Er it (θi) A i
+
+> px
+
+
+
+s.t. E
+
+h
+
+DKL 
+
+
+
+πθki (· | oit) πθi (· | oit)
+
+i 
+
+≤ δ, 
+
+(51) solved by a conjugate-gradient step with backtracking. In the numerical implementation, we optimize the clipped objective in (50) and use the KL budget associated with (51) as an acceptance/early-stopping criterion. This makes the imple-mented PPO-Clip step a KL-controlled approximation to the trust-region update analyzed below. Let η := ( η1, . . . , η M ) be the intrinsic-reward parameters and θ′(η) the policy parame-ters after one inner HAPPO pass using proxy advantages. The LIIR outer objective is the extrinsic return under the post-update policies: 
+
+Jex (πθ′(η)) = Eπθ′(η)
+
+h X  
+
+> t≥0
+
+γt rex (st, ut)
+
+i
+
+, (52) leading to the bilevel program 
+
+max  
+
+> η
+
+Jex (πθ⋆(η))
+
+s.t. θ⋆(η) ∈ arg max  
+
+> θ∈U
+
+LHAPPO (θ; η). (53) where U encodes the feasible update steps and LHAPPO 
+
+abbreviates the inner-loop objective (51). For the monotonic-improvement analysis, feasibility means satisfying the per-agent average-KL budgets in (51); a PPO-Clip iterate gen-erated by (50) is included in U only when it passes this KL check. Applying the chain rule for a single inner update yields the LIIR meta-gradient for agent i:
+
+∇ηi Jex (πθ′(η)) = ∇θ′ 
+
+> i
+
+Jex (πθ′ ) · ∇ ηi θ′
+
+> i
+
+. (54) Using a centralized extrinsic critic, we estimate 
+
+∇θ′ 
+
+> i
+
+Jex (πθ′ ) ≈ E∇θ′ 
+
+> i
+
+log πθ′ 
+
+> i
+
+(ai | oi) Aex (s, u) , (55) where Aex (s, u) denotes the extrinsic advantage computed from the centralized value function as 
+
+Aex (s, u) = rex (s, u) + γV ex (s′) − Vex (s). (56) For one PPO step with learning rate αi, and under the standard LIIR approximation that ignores critic dependence on ηi, we have 
+
+∇ηi θ′ 
+
+> i
+
+≈ αi λE∇θi log πθi (ai | oi)∇ηi ri
+
+> in
+
+(oi, ai; ηi) . (57) Combining the outer policy gradient, the inner sensitivity, and the chain rule gives an unbiased on-policy meta-gradient only under ideal conditions: fresh trajectories from πθ′(η),exact value and advantage estimates, fully accounted critic 9
+
+dependence on ηi, and no PPO clipping bias. In GLIIR-HAPPO, these conditions are relaxed due to rollout reuse with clipped ratios, learned centralized/graph critics, and stopped critic-gradient paths through ηi. The implemented estimator is therefore written as 
+
+bgmeta  
+
+> ηi
+
+= ∇θ′ 
+
+> i
+
+Jex (πθ′ ) · ∇ ηi θ′ 
+
+> i
+
++ εmeta ,i , (58) where εmeta ,i aggregates the resulting bias. It vanishes under the ideal conditions above; otherwise, the update is a practical biased meta-gradient estimator. To reduce policy-synchronization overhead, GLIIR-HAPPO can employ role-conditioned federated distillation (FD) [26]– [28]. Instead of exchanging full actor parameters or raw observations, agents transmit only actor-output statistics on a small anchor batch. Since power-control and positioning policies differ in action semantics and dimensions, distillation is performed within each role g ∈ { pow , pos }, with agent set 
+
+Mg and action dimension dg (dpow = K and dpos = 2 N ). The role-specific anchor batch is denoted by DFD  
+
+> g
+
+= { ¯ogb }BFD  
+
+> b=1
+
+.For each anchor observation, agent i ∈ M g uploads the Gaussian actor statistics 
+
+πθi (· | ¯ogb ) = N
+
+
+
+μgi,b , diag(( σgi,b )2)
+
+
+
+, (59) namely μgi,b and log σgi,b . The role teacher is obtained by moment averaging, 
+
+¯μgb = 1
+
+|M g |
+
+X
+
+> i∈M g
+
+μgi,b , log ¯ σgb = 1
+
+|M g |
+
+X
+
+> i∈M g
+
+log σgi,b ,
+
+(60) which defines the softened teacher ¯πτFD  
+
+> g
+
+=
+
+N ( ¯ μgb , τ 2FD diag(( ¯ σgb )2)) , where τFD is the FD temperature. Each student minimizes 
+
+LFD  
+
+> i
+
+= 1
+
+BFD 
+
+> BFD
+
+X
+
+> b=1
+
+DKL 
+
+ πτFD  
+
+> θi
+
+(· | ¯ogb ) ¯πτFD  
+
+> g
+
+(· | ¯ogb ) . (61) The actor update for i ∈ M g becomes 
+
+max 
+
+> θi
+
+J PPO −FD  
+
+> i
+
+= J HAPPO  
+
+> i
+
+− ωFD LFD  
+
+> i
+
+, (62) where ωFD is the FD regularization weight and J HAPPO  
+
+> i
+
+is the clipped objective in (50). Since only (μ, log σ) are exchanged, the round-trip overhead is 
+
+CFD = 4 BFD 
+
+X
+
+> g∈{ pow ,pos }
+
+|M g |dg floats , (63) where the factor four accounts for uploading and broadcasting both statistics. Thus, FD scales with compact action dimen-sions rather than actor parameter counts, while cross-role coordination is retained through the shared extrinsic reward and dynamic graph critic. Correspondingly, the overall process of the proposed frame-work is shown in Algorithm 1. IV. T HEORETICAL ANALYSIS OF THE PROPOSED 
+
+FRAMEWORK 
+
+We derive (i) a HAPPO-specific policy-gradient identity that explicitly accounts for prefix marginalization, (ii) a monotonic improvement bound on the extrinsic objective, enforced via 
+
+Algorithm 1: Proposed Multi-Agent Collaboration GLIIR-HAPPO Algorithm 
+
+Input: Global environment state s0; max episodes 
+
+Emax , max steps T ; penalty schedule 
+
+(ϱ0, η ϱ, ϱ max , ϵ feas ); FD parameters 
+
+(BFD , ω FD , τ FD ).
+
+Output: Optimized actor policies {π⋆θi }; optimal antenna positions r⋆ and power allocation ρ⋆. 
+
+> 1
+
+Initialization: Randomly initialize parameters {θi}, ϕ,and {ηi}. Set ϱ ← ϱ0 and construct role-specific FD anchor batches DFD pow and DFD pos . 
+
+> 2
+
+for k = 1 to Emax do  
+
+> 3
+
+Initialize rollout buffer B ← ∅ . 
+
+> 4
+
+for t = 1 to T do  
+
+> 5
+
+Geometric solver: Update auxiliary variables 
+
+zln,t by solving subproblem (P1-a ). 
+
+> 6
+
+Observe: Each agent i receives observation oit. 
+
+> 7
+
+Act: Execute joint action ut. 
+
+> 8
+
+Reward: Receive extrinsic reward rex ,t . 
+
+> 9
+
+Store transition (st, ot, ut, r ex ,t , zln,t ) into B. 
+
+> 10
+
+Compute intrinsic rewards rin  
+
+> i,t
+
+← rin  
+
+> ηi
+
+(oit, ait) for all 
+
+t ∈ B . 
+
+> 11
+
+Form proxy rewards rproxy  
+
+> i,t
+
+← rex ,t + λr in 
+
+> i,t
+
+. 
+
+> 12
+
+Estimate advantages ˆAex using rex and ˆAi
+
+> px
+
+leveraging rproxy  
+
+> i
+
+via GAE and critic Vϕ. 
+
+> 13
+
+Compute meta-gradient ∇ηi Jex via chain rule (Eq. (57)) adopting ˆAex . 
+
+> 14
+
+Update intrinsic-reward parameters ηi. 
+
+> 15
+
+Generate a random sequential update order P for agents.  
+
+> 16
+
+for each agent i in order P do  
+
+> 17
+
+Compute prefix-marginalized proxy advantage 
+
+Ai
+
+> px
+
+(s, a1: i) (Eq. (48)).  
+
+> 18
+
+Update θi by maximizing the PPO-Clip objective with Ai
+
+> px
+
+. 
+
+> 19
+
+Update importance-sampling weights for subsequent agents.  
+
+> 20
+
+For each role g ∈ { pow , pos }, perform role-conditioned FD using DFD  
+
+> g
+
+, construct the teacher distribution, and update each same-role actor by maximizing J PPO −FD  
+
+> i
+
+. 
+
+> 21
+
+Compute the average violation νk using (12) and update ϱ according to the adaptive rule in (13). per-agent trust regions, and (iii) an analysis of the impact of replacing purely extrinsic advantages with a proxy advantage that blends intrinsic and extrinsic value signals. Additionally, we establish sufficient conditions under which the proposed LIIR procedure admits two-timescale convergence to station-ary points of the bilevel objective. For readability, Table I summarizes the main symbols and policy scopes used in the subsequent theoretical derivations. Recall the extrinsic reward and proxy reward from (41)– (42), and the HAPPO proxy advantage A i 
+
+> px
+
+in (48). Let ρπθ
+
+denote the γ-discounted occupancy measure and dπθ (s) = (1 −γ) P 
+
+> t≥0
+
+γt Pr πθ (st = s) the normalized discounted state visitation. We define the extrinsic multi-agent advantage in the 10    
+
+> TABLE I SUMMARY OF SYMBOLS AND POLICY DEFINITIONS .
+
+Symbols Definitions 
+
+st, oit, ait, ut Global state, local observation, local ac-tion, and joint action. 
+
+πθi , πθ Agent-i actor and factored candidate joint policy. 
+
+πθk , πθki Joint and per-agent rollout/reference policies at iteration k; these replace the ambiguous reference-policy notation π0.
+
+πθ Current candidate joint policy used to define the value, Q, and advantage func-tions before the inner update is applied. 
+
+Pi Prefix set of already-updated agents. 
+
+πθ′ , πθ′(η) Post-update joint policy after one HAPPO pass and its dependence on η.
+
+rex , ri
+
+> in
+
+, ri 
+
+> px
+
+Extrinsic, intrinsic, and proxy rewards. 
+
+V π
+
+> ex
+
+(s), V i,π  
+
+> px
+
+(s) Extrinsic and agent-i proxy value func-tions evaluated under policy π.
+
+Q i,π 
+
+> px ,S
+
+, Aπ
+
+> ex
+
+, Ai,π  
+
+> px
+
+Marginal proxy Q-function and advan-tage terms evaluated under policy π.
+
+η, λ, γ Intrinsic-reward parameters, reward weight, and discount factor. 
+
+same prefix form as (48) but exploiting rex :
+
+A i
+
+> ex
+
+(s, aPi , ai) = Q i
+
+> ex ,Pi∪{ i}
+
+(s, aPi , ai) − Qi 
+
+> ex ,Pi
+
+(s, aPi ),
+
+(64) where Qi 
+
+> ex ,S
+
+is defined as in (47) with rex in place of ri
+
+> px
+
+, i.e., 
+
+Qi
+
+> ex ,S
+
+(s, aS) = Ea−S∼πθ,−S
+
+"X
+
+> t≥0
+
+γt rex (st, ut) s0=saS,0=aS
+
+#
+
+.
+
+(65) For completeness, define the joint extrinsic Q-function 
+
+Qex (s, u) = Eπ
+
+X
+
+> t≥0
+
+γt rex (st, ut) s0 = s, u0 = u
+
+ ,
+
+(66) and the joint extrinsic advantage Aex (s, u) = Qex (s, u) −
+
+Vex (s).
+
+Assumption 1 (Controlled graph-critic and FD perturbations) .
+
+At iteration k, let Gk be the sparse dynamic-interaction graph selected by the graph critic and let bAi 
+
+> px ,G k
+
+denote the proxy advantage estimated from this critic. We assume that the graph-induced approximation and non-stationarity error is uniformly bounded, i.e., 
+
+bAi 
+
+> px ,G k
+
+(s, aPi , ai) − Ai
+
+> px
+
+(s, aPi , ai) ≤ εG,k . (67) Moreover, the graph sequence is slowly varying in the sense that 
+
+∥Vϕk+1 ,G k+1 − Vϕk ,G k ∥∞ ≤ LG
+
+ ∥ϕk+1 − ϕk∥ + ∆ G,k 
+
+, (68) where ∆G,k = M −1∥AGk+1 −AGk ∥1 measures the attention-graph variation. FD changes the actor direction from the pure HAPPO direction to 
+
+gGFD  
+
+> i,k
+
+= bgHAPPO  
+
+> i,k
+
+− ωFD ,k ∇θi LFD  
+
+> i
+
+, (69) with ∥∇ θi LFD  
+
+> i
+
+∥ ≤ GFD . The realized step is accepted only when it satisfies the per-agent average-KL budget. 
+
+Lemma 4 (Prefix-marginalized policy-gradient identity) . For any agent i and parameters θ, define the proxy return Ji
+
+> px
+
+(θ) = 
+
+Eπθ
+
+hP 
+
+> t≥0
+
+γt ri
+
+> px
+
+(st, ut)
+
+i
+
+. Then 
+
+∇θi Ji
+
+> px
+
+(θ) = Es∼dπθ EaPi ∼πθ,Pi
+
+> ai∼πθi
+
+h
+
+∇θi log πθi (ai | oi)
+
+Ai
+
+> px
+
+(s, aPi , ai)
+
+i
+
+.
+
+(70) 
+
+Proof: Express the joint log-likelihood gradient as 
+
+∇θ log πθ (u | s) = PMi=1 ∇θi log πθi (ai | oi). Applying the policy-gradient theorem to Ji 
+
+> px
+
+gives 
+
+∇θi Ji
+
+> px
+
+(θ) = Eπθ
+
+∇θi log πθi (ai | oi) Qi
+
+> px
+
+(s, u) . (71) Taking conditional expectation over a−Pi\{ i} first, and then subtracting the corresponding baseline Qi 
+
+> px ,Pi
+
+(s, aPi ) (which has zero correlation with ∇θi log πθi ) yields (70). The expec-tations reduce exactly to the marginalized Q-difference in (48). 
+
+Lemma 5 (Telescoping decomposition of the joint advantage) .
+
+For every (s, u),
+
+Aex (s, u) = 
+
+> M
+
+X
+
+> i=1
+
+Ai
+
+> ex
+
+(s, aPi , ai). (72) This identity holds under the mild regularity conditions ensur-ing the value functions are well-defined. 
+
+Proof: See Appendix C. 
+
+Theorem 1 (Joint KL decomposition for factorized multi--agent policies) . Fix a state s and consider the joint action 
+
+u = ( a1, . . . , aM ). Let the two joint policies parameterized by θ and θ′ factorize across agents as 
+
+πθ(u | s) = 
+
+> M
+
+Y
+
+> i=1
+
+πθi (ai | oi),π θ′(u | s) = 
+
+> M
+
+Y
+
+> i=1
+
+πθ′ 
+
+> i
+
+(ai | oi), (73) where oi = oi(s) is agent i’s local observation at state s.Assume that for every i, πθi (· | oi) is absolutely continuous with respect to πθ′ 
+
+> i
+
+(· | oi) (equivalently, both admit densities w.r.t. a common base measure on Ai). Then the conditional joint KL divergence decomposes additively: 
+
+DKL 
+
+ MY
+
+> i=1
+
+πθi (· | oi)
+
+> M
+
+Y
+
+> i=1
+
+πθ′ 
+
+> i
+
+(· | oi)
+
+
+
+=
+
+> M
+
+X
+
+> i=1
+
+DKL 
+
+ πθi (· | oi) πθ′ 
+
+> i
+
+(· | oi).
+
+(74) Consequently, for any distribution d(s) over states, linearity of expectation yields 
+
+Es∼d
+
+h
+
+DKL 
+
+ πθ (· | s) πθ′ (· | s)i
+
+=
+
+> M
+
+X
+
+> i=1
+
+Es∼d
+
+h
+
+DKL 
+
+ πθi (· | oi(s)) πθ′ 
+
+> i
+
+(· | oi(s)) i
+
+.
+
+(75) 
+
+Proof: See Appendix D. 11 
+
+Lemma 6 (Proxy–extrinsic advantage gap) . For all 
+
+(s, aPi , ai),
+
+Ai
+
+> px
+
+(s, aPi , ai)−Ai
+
+> ex
+
+(s, aPi , ai) ≤ λ ¯rin 
+
+1 − γ = ∆ max . (76) 
+
+Proof: Both advantages are discounted sums of per-step rewards that differ only in the additive intrinsic term λr i 
+
+> in
+
+used inside the agent-i proxy return. The difference of the corre-sponding Q-functions is bounded by P 
+
+> t≥0
+
+γtλ|ri
+
+> in
+
+| ≤ λ¯rin  
+
+> 1−γ
+
+,and baselines cancel in the difference of Q’s. 
+
+Proposition 2 (Potential-based intrinsic shaping yields no bias) . If ri
+
+> in
+
+(oi, ai; ηi) = γΦi(s′) − Φi(s) for some bounded potential Φi, then, for any fixed prefix aPi ,
+
+Ai
+
+> px
+
+(s, aPi , ai) = Ai
+
+> ex
+
+(s, aPi , ai). (77) Thus, potential-based shaping contributes only an action-independent baseline and does not bias the agent-i policy update. 
+
+Proof: Let S ∈ { Pi ∪ { i}, Pi}. For a trajectory with s0 =
+
+s, the finite-horizon shaping return telescopes as 
+
+Bi,T ≜
+
+> T
+
+X
+
+> t=0
+
+γt γΦi(st+1 ) − Φi(st)
+
+=
+
+> T
+
+X
+
+> t=0
+
+γt+1 Φi(st+1 ) −
+
+> T
+
+X
+
+> t=0
+
+γtΦi(st)= −Φi(s0) + γT +1 Φi(sT +1 ).
+
+(78) Since γ ∈ (0 , 1) and Φi is bounded, the terminal term vanishes as T → ∞ , giving 
+
+> ∞
+
+X
+
+> t=0
+
+γtri
+
+> in
+
+(oit, ait; ηi) = −Φi(s). (79) Hence, for either subset S,
+
+Qi
+
+> px ,S
+
+(s, aS) = Qi
+
+> ex ,S
+
+(s, aS) − λΦi(s). (80) The shift −λΦi(s) is independent of ai and cancels in the prefix-marginalized advantage: 
+
+Ai 
+
+> px
+
+=  Qi 
+
+> ex ,Pi∪{ i}
+
+−λΦi(s)− Qi 
+
+> ex ,Pi
+
+−λΦi(s) = Ai
+
+> ex
+
+. (81) This proves (77). Moreover, any action-independent residual has zero score-function contribution since 
+
+Eai∼πθi [∇θi log πθi (ai | oi)ci] = ci∇θi 1 = 0 .
+
+Theorem 2 (Extrinsic improvement under KL-controlled HAPPO updates) . Let θ → θ′ be one HAPPO pass with proxy advantages. Under Assumption 1, this pass uses the graph-estimated advantage bAi 
+
+> px ,G k
+
+and the FD-regularized direction 
+
+gGFD  
+
+> i,k
+
+. Assume that each accepted per-agent update satisfies the average-KL budget Es∼dπθ [DKL (πθm (· | om)∥πθ′ 
+
+> m
+
+(· | 
+
+om))] ≤ δm. This condition is enforced directly by the trust-region update in (51); for the PPO-Clip update in (50), the theorem applies to the realized update only when the same KL budgets are satisfied through the KL monitoring/early-stopping rule described above. The extrinsic performance obeys: 
+
+Jex (πθ′ ) ≥ bLπθ
+
+> GFD
+
+(πθ′ )−Cex 
+
+vuut 12
+
+> M
+
+X
+
+> m=1
+
+δm− M λ ¯rin 
+
+(1 − γ)2 − M ε G,k 
+
+1 − γ ,
+
+(82) where the graph-estimated surrogate objective using proxy advantages is defined as: 
+
+bLπθ
+
+> GFD
+
+(πθ′ ) = Jex (πθ )+ 11 − γ
+
+> M
+
+X
+
+> i=1
+
+E s∼dπθ 
+
+> aPi∼π′
+> Pi
+> ai∼π′
+> i
+
+h bAi 
+
+> px ,G k
+
+(s, aPi , ai)
+
+i
+
+. (83) 
+
+Proof: Let π = πθ and π′ = πθ′ . The proof only uses the attained policy π′ and the per-agent KL budgets, not the numerical optimizer used to obtain π′. Hence, it directly covers (51) and conditionally covers (50) when the clipped step is accepted under the same KL budgets. Thus the FD gradient alteration in (69) is accounted for through the attained policy 
+
+π′ and the accepted KL budget; the argument does not assume an unregularized HAPPO direction. By the standard TRPO performance bound, there exists a constant Cex > 0 such that: 
+
+Jex (π′) ≥ Lex  
+
+> π
+
+(π′) − Cex max  
+
+> s
+
+DTV (π(·| s)|| π′(·| s)) , (84) where Lex  
+
+> π
+
+(π′) := Jex (π) + 11−γ Es∼dπ Eu∼π′(·| s)[Aex (s, u)] .Using Lemma 5, the joint advantage decomposes as 
+
+Aex (s, u) = PMi=1 Ai
+
+> ex
+
+(s, aPi , ai). We introduce the graph-estimated proxy advantage bAi 
+
+> px ,G k
+
+by adding and subtracting it inside the surrogate expectation: 
+
+Lex  
+
+> π
+
+(π′) ≥ bLπθ
+
+> GFD
+
+(π′)− 11 − γ
+
+> M
+
+X
+
+> i=1
+
+E
+
+h bAi 
+
+> px ,G k
+
+− Ai
+
+> ex
+
+i
+
+. (85) By Lemma 6 and Assumption 1, the graph-estimated advan-tage satisfies 
+
+bAi 
+
+> px ,G k
+
+− Ai 
+
+> ex
+
+≤ λ¯rin 
+
+1 − γ + εG,k . (86) Substituting this into (85): 
+
+Lex  
+
+> π
+
+(π′) ≥ bLπθ
+
+> GFD
+
+(π′) − 11 − γ
+
+> M
+
+X
+
+> i=1
+
+ λ¯rin 
+
+1 − γ +εG,k 
+
+
+
+= bLπθ
+
+> GFD
+
+(π′) − M λ ¯rin 
+
+(1 − γ)2 − M ε G,k 
+
+1 − γ . (87) For the divergence term in (84), applying Pinsker’s inequality and the joint KL decomposition from Theorem 1 yields: 
+
+Es [DTV (π|| π′)] ≤
+
+vuut 12
+
+> M
+
+X
+
+> m=1
+
+δm. (88) Combining these results recovers the bound in (82). Recall the bilevel structure in (53) and the outer objective (52). Let θ′(η) denote the parameters after one inner HAPPO pass with proxy advantages. 
+
+Proposition 3 (Correctness of the LIIR meta-gradient) . If trajectories are generated by πθ′(η) (or reweighted via exact importance sampling), then 
+
+∇ηi Jex (πθ′(η)) = E∇θ′ 
+
+> i
+
+log πθ′ 
+
+> i
+
+(ai | oi) Aex (s, u)
+
+· Eαi λ ∇θi log πθi (ai | oi) ∇ηi r i
+
+> in
+
+(oi, ai; ηi)
+
+(89) matching (55)–(57). 12 
+
+> TABLE II MODEL -PARAMETER SETTINGS USED IN THE SIMULATIONS .
+
+Parameters Value 
+
+Per-agent Actor 
+
+(MAPPO/HAPPO/DG-HAPPO) 64 and 64, Tanh Team Critic (MAPPO/HAPPO) 128 and 128, ReLU Centralized Actor (CPPO) 256 and 256, Tanh Centralized Critic (CPPO) 256 and 256, Tanh Proxy value (per agent) 64 and 64, ReLU Intrinsic reward net (per agent) 64 and 64, Tanh Discount factor γ 0.99 PPO epochs Kepochs 10 Clip parameter ϵclip 0.2 Learning rates 10 −3
+
+Entropy coefficient (CPPO) 0.02 Action log-std (initial) 0.0 LIIR: α, meta-LR, grad clip, scale 0.4, 10 −3, 2.0, 2.0 Penalty schedule: ϱ0, ηϱ, ϱmax , ϵfeas 0.1, 1.05, 20, 10 −3D
+
+Federated distillation (FD): BFD , ωFD , τFD 64, 0.5, 1.0 Training episodes / update interval 15000 / 64 
+
+Proof: Apply the chain rule ∇ηi Jex (πθ′(η)) =(∇θ′ 
+
+> i
+
+Jex )( ∇ηi θ′
+
+> i
+
+). The first factor is the extrinsic policy gra-dient; the second equals the sensitivity of one PPO step w.r.t. 
+
+ηi, which reduces to (57). 
+
+Assumption 2 (Graph-FD stochastic approximation) . The dynamic graph critic and FD-regularized actor losses are Lipschitz in their trainable parameters, with stochastic-gradient noise of bounded second moment. The graph-induced advan-tage error satisfies 
+
+bAex ,k − Aex ,k L2(dπθk ) ≤ εG,k , (90) and varies slowly across consecutive inner iterations: 
+
+bAex ,k +1 − bAex ,k L2(dπθk ) ≤ cGαk + εG,k , (91) for some constant cG > 0.
+
+Theorem 3 (Two-time-scale convergence with graph-FD per-turbations) . Let P 
+
+> k
+
+αk = P 
+
+> k
+
+βk = ∞, P
+
+> k
+
+(α2 
+
+> k
+
++ β2 
+
+> k
+
+) <
+
+∞, and βk/α k → 0. Under Assumption 2 and bounded martingale-difference gradient noise, suppose P 
+
+> k
+
+αkεG,k <
+
+∞ and either (a) P 
+
+> k
+
+αkωFD ,k < ∞ or (b) ωFD ,k ≡ ωFD .Then the iterates converge to stationary points of the corre-sponding limiting bilevel objective: 
+
+lim inf  
+
+> k→∞
+
+E∥∇ θ Llim (θk; ηk)∥2 +∥∇ η Jlim (θk, η k)∥2 = 0 , (92) where (Llim , J lim ) are the original HAPPO-LIIR limits in case (a), and the FD-regularized limits in case (b), with inner objective LHAPPO − ωFD 
+
+P 
+
+> i
+
+LFD  
+
+> i
+
+.
+
+Proof: The graph critic error in (90) is a summable perturbation because P 
+
+> k
+
+αkεG,k < ∞, while (91) rules out non-summable critic drift. FD adds the drift −ωFD ,k ∇θi LFD 
+
+> i
+
+in (69): it is summable in case (a), and becomes part of the fixed FD-regularized limiting ODE in case (b). Since 
+
+βk/α k → 0, the inner recursion evolves on the fast timescale with quasi-static LIIR parameters, whereas the outer recursion 0 5000 10000 15000 Training Episode 40 50 60 70 80 Reward  CPPO MAPPO HAPPO Our proposed GLIIR-HAPPO w/o FD Our proposed GLIIR-HAPPO w/ FD Random Policy         
+
+> (a) Perfect CSI 05000 10000 15000 Training Episode 40 50 60 70 80 Reward  CPPO MAPPO HAPPO Our proposed GLIIR-HAPPO w/o FD Our proposed GLIIR-HAPPO w/ FD Random Policy
+> (b) Imperfect CSI, ε= 0 .05
+> Fig. 3. Convergence performance of the proposed GLIIR-HAPPO algorithm compared with benchmark schemes under (a) perfect CSI and (b) imperfect CSI with channel estimation error ε= 0 .05 .
+
+tracks the resulting stationary set. Standard two-time-scale stochastic-approximation results then imply convergence to the stationary set of the relevant limiting bilevel objective. Theorem 2 quantifies the cost of using proxy advantages; the bound tightens to the extrinsic case under potential-based shaping (Proposition 2). Proposition 3 ensures that the LIIR meta-gradient aligns outer learning with the system objective. The analysis above provides a KL-controlled, sequential stochastic-approximation abstraction of Algorithm 1, rather than a line-by-line proof of all PPO-Clip implementation de-tails. Practical components such as rollout reuse, learned graph critics, FD regularization, and mini-batch updates are covered through KL monitoring, clipped ratios, bounded approxima-tion errors, and standard stochastic-approximation conditions. V. S IMULATION RESULTS 
+
+In this section, simulation results are presented to evaluate the performance of the proposed GLIIR-HAPPO algorithm in MA-aided cell-free massive MIMO systems. We consider a system with L = 6 APs and K = 10 UEs, where all entities are randomly distributed in a square area of 1000 × 1000 m2
+
+[6], [18]. Each AP is equipped with N = 4 MAs, i.e., four movable radiating elements. This moderate-N setting is used for computational tractability and controlled comparison, and it does not assume strong channel hardening. The channel is modeled adopting a geometric approach [12], [14] with 
+
+P = 10 propagation paths at a carrier frequency of 3 GHz. The maximum downlink transmit power is P max  
+
+> l
+
+= 1 W, ∀l, and the normalized noise power is σ2 = 0 .01 . We utilize the reg-ularized zero-forcing (RZF) precoding scheme [29] with δ =10 −2. The same deterministic RZF precoding rule is adopted across all benchmark schemes. Consequently, the performance differences reported in Section V are solely attributable to the optimized power-allocation and MA-positioning strategies, ensuring a fair comparison without any confounding gains from scheme-specific precoder optimization. To evaluate the robustness of the proposed algorithm, we consider the case of imperfect CSI, i.e., the practical channel can be modeled 13 (a)  (b)  (c)  (d) 
+
+Fig. 4. Visualization of the learned sparse attention patterns and AP–AP interaction graph. 
+
+as ehlk = hlk + ∆ hlk and ∆hlk ∼ CN (0, ε I). The model-parameter settings of the proposed GLIIR-HAPPO algorithm are shown in Table II, and the simulations are conducted on an NVIDIA GeForce GTX 4060 GPU. Next, the performance of Algorithm 1 is compared with the following benchmark schemes: (1) Heuristic-based schemes: particle swarm optimization (PSO) [30]. (2) MARL-based schemes: centralized PPO (CPPO) [31], MAPPO [32], and HAPPO [23]. (3) Alternating optimization (AO)-based schemes [33]. (4) Antenna selection (AS) [34]: the AP adopts a larger UPA comprising 2N antennas ( λ/ 2-spaced), selecting the optimal N -antenna subset via exhaustive search. Fig. 3 illustrates the convergence behavior of the proposed GLIIR-HAPPO algorithm under both perfect CSI and imper-fect CSI with an estimation error of ϵ = 0 .05 . We bench-mark our approach against CPPO, MAPPO, standard HAPPO, and a random policy. In the perfect-CSI scenario shown in Fig. 3(a), the proposed framework demonstrates substantially faster convergence and a higher steady-state reward than the MAPPO and HAPPO baselines. In this simulation, the cen-tralized CPPO baseline achieves a slightly higher final reward, while GLIIR-HAPPO achieves comparable performance with decentralized online policy execution. The effectiveness of the proposed architecture is further highlighted in the imperfect-CSI regime depicted in Fig. 3(b). While all algorithms experience performance degradation un-der channel uncertainty, the proposed GLIIR-HAPPO algo-rithm maintains a stable and robust convergence trajectory. Notably, the inclusion of federated distillation (FD) plays a crucial role in improving training stability under noisy observations by aligning policies across homogeneous agent groups, thereby achieving the highest average reward among the distributed schemes. To demonstrate the communication efficiency of the pro-posed architecture, Fig. 4 visualizes the evolution of sparse attention weights learned by the dynamic-interaction graph critic, illustrating how the attention mechanism uncovers a sparse coordination backbone during training. In Fig. 4(a)-(d), the top row shows dense attention matrices, while the bottom row displays the corresponding top-κ sparse graphs 3 5 7 9                                      
+
+> Number of antennas per AP
+> 50
+> 55
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> Sum rate (bits/s/Hz)
+> Heuristic
+> AO
+> CPPO
+> Fixed antenna
+> Antenna selection
+> 3579
+> Number of antennas per AP
+> 50 55 60 65 70 75 80 85 90 95
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> 3579
+> Number of antennas per AP
+> 50 55 60 65 70 75 80 85 90 95
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> 345678
+> Number of APs
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Sum rate (bits/s/Hz)
+> Heuristic
+> AO
+> CPPO
+> Fixed antenna
+> Antenna selection
+> 345678
+> Number of APs
+> 30 40 50 60 70 80 90 100
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> 345678
+> Number of APs
+> 30 40 50 60 70 80 90 100
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> 46810 12 14
+> Number of UEs
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Sum rate (bits/s/Hz)
+> Heuristic
+> AO
+> CPPO
+> Fixed antenna
+> Antenna selection
+> 46810 12 14
+> Number of UEs
+> 30 40 50 60 70 80 90 100
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> 46810 12 14
+> Number of UEs
+> 30 40 50 60 70 80 90 100
+> Sum rate (bits/s/Hz)
+> Heuristic AO CPPO Fixed antenna Antenna selection
+> (a) (b)
+> (c) (d)
+
+Fig. 5. Performance comparison of the system sum rate against noise variance, number of antennas per AP, number of APs, and number of UEs for various benchmark algorithms. 0123Floats per round       
+
+> ×10 5
+> 0.567 MB 0.567 MB 0.952 MB 0.952 MB 0.629 MB 0.111 MB
+> Upload Download Total
+> MAPPO (Actor only) HAPPO (Actor only) MAPPO (+Critic) HAPPO (+Critic) Proposed GLIIR-HAPPO w/o FD Proposed GLIIR-HAPPO w/ FD
+> 0.00 0.25 0.50 0.75 1.00 MB per round (FP32)
+> 0.567 0.567 0.952 0.952 0.629 0.111
+> 0.0 0.2 0.5 0.8 1.0 MB per round (FP32)
+
+Fig. 6. Comparison of communication overhead per training round for different multi-agent learning schemes. 
+
+obtained by retaining, for each AP, only its κ strongest out-going neighbors. At initialization ( Init ), the attention is nearly uniform and the graph is close to fully connected, indicating that the critic does not yet distinguish which AP-AP links are useful. As training progresses to the Early and Mid stages, the temperature T and sparsity level κ are gradually annealed, and the attention patterns become increasingly concentrated on a few APs, while many weak links are either heavily down-weighted or pruned. In the Converged stage, the interaction structure collapses to a small set of high-weight edges forming a clear backbone that connects only a subset of AP pairs, as reflected by the reduced edge count |E| . This figure highlights an important insight of our approach: the proposed dynamic in-teraction critic does not merely fit value estimates, but simulta-neously performs structure learning, automatically eliminating redundant cooperation links and uncovering a communication-efficient, interpretable graph topology that supports the final performance. The sparse graphs in Fig. 4 visualize the learned attention-selected edges. In the actual training graph, these learned edges are augmented by the fixed connected backbone in (34). Therefore, the reduced edge count depicted in Fig. 4 represents the pruning of adaptive non-backbone links, while the retained backbone ensures that no AP becomes isolated, preserving inter-agent connectivity throughout training. Fig. 5 compares the downlink sum-rate performance of the MA-aided cell-free massive MIMO network under different 14                                                    
+
+> TABLE III COMPUTATIONAL COMPLEXITY OF THE CONSIDERED ALGORITHMS .
+> Algorithm Per-iteration / per-solve complexity Overall complexity AO (Penalty-BCD + geometric projection) Power subproblem: O (LK )3;position subproblem: O(LN 3)O IAO
+>  (LK )3+LN 3
+> Heuristic (PSO) One iteration: O Ppop (D+LKN )O IPSO Ppop (D+LKN )
+> RL (CPPO, training) One update step:
+> O PCactor +PCcritic
+> O ET (PCactor +PCcritic )
+> RL (GLIIR-HAPPO, training) One update step:
+> O M2dk+M(Pactor +Pin )O ET (M2dk+M(Pactor +Pin )) 
+> RL (GLIIR-HAPPO, online) Per time slot: O(M P actor )(single-shot inference cost)
+
+system configurations and optimization strategies, including the centralized CPPO baseline, heuristic PSO, AO, and the FPA and AS benchmarks. AO is a centralized per-instance solver, while CPPO is a centralized learning baseline; GLIIR-HAPPO is evaluated for distributed online execution. As shown in Fig. 5(a), all methods exhibit reduced throughput as the noise variance increases; however, CPPO maintains a clear performance margin, indicating that the learned joint power-and-position control is robust across different noise levels. Figs. 5(b) and (c) show that increasing either the number of antennas per AP or the number of APs monotonically improves the sum rate for all schemes. Moreover, the gain achieved by MA is consistently larger than that of FPA and AS, confirming that the proposed framework can more effectively exploit the additional spatial degrees of freedom enabled by movable antennas than conventional designs. Finally, Fig. 5(d) reveals that as the number of UEs increases and the system becomes increasingly interference-limited, the sum rate of all schemes gradually saturates; nonetheless, the MA-based meth-ods (heuristic PSO, AO, and the centralized CPPO baseline) consistently achieve a noticeably higher sum rate than the FPA and AS benchmarks. This highlights that jointly optimizing MA positions and power allocation remains highly beneficial even under dense user deployments. Fig. 6 shows that adding FD to GLIIR-HAPPO reduces per-round communication overhead by more than 80% relative to its non-FD counterpart and remains below MAPPO/HAPPO, because FD exchanges compact policy knowledge instead of raw observations or high-dimensional critic messages. Fig. 7 compares four schemes: Fixed array without MA reconfiguration, Base-aware MA for nominal effective-rate optimization, Robust MA with conservative geometry under position/resolution uncertainty, and EE-aware MA for the rate-power tradeoff. Under the default setting, Base-aware MA and EE-aware MA achieve 78.20 and 77.92 bit/s/Hz, respectively, outperforming the fixed array at 72.16 bit/s/Hz. However, the effective rate decreases when actuator speed is reduced, CSI/control overhead increases, or positioning error is en-larged, as these factors reduce the effective data-transmission fraction and degrade optimized MA positioning accuracy. Fig. 7d further shows that energy efficiency also decreases with CSI/control overhead due to the reduced useful-transmission fraction and added control/feedback cost. Robust MA achieves a lower nominal rate but exhibits the smallest performance loss under pessimistic conditions (16.1%), with zero distance    
+
+> (a) Actuator speed (b) CSI overhead
+> (c) Positioning error (d) EE vs CSI overhead Fig. 7. Practical sensitivity versus actuator speed, CSI overhead, positioning error, and energy efficiency under CSI overhead.
+
+violation, highlighting that practical MA deployment must be hardware- and robustness-aware rather than optimized solely for ideal sum-rate performance. Table III compares algorithmic costs. The AO power-update cost scales as O(( LK )3) per iteration. For fixed actor size 
+
+Pactor , aggregate GLIIR-HAPPO inference costs O(M P actor ),while training retains the O(M 2dk) attention cost. The re-ported inference complexity accounts only for policy execution and excludes the costs associated with channel acquisition, precoding, geometric feasibility processing, signaling, and physical antenna movement. VI. C ONCLUSION 
+
+In this paper, we proposed a novel heterogeneous MARL framework to address the joint optimization of antenna place-ment and transmission in MA-aided cell-free massive MIMO systems. Our approach decomposes the underlying non-convex design into role-specialized subproblems, which are handled by dedicated agents. Specifically, we handle the strict geomet-ric constraints through a combination of variable splitting with quadratic penalties and feasibility-aware reward shaping, en-abling tractable distributed learning under minimum-distance requirements. Scalable and efficient coordination is achieved via a dynamic-interaction graph critic and role-conditioned federated distillation, which together provide coordinated de-cision making with low communication overhead. Numerical results demonstrate that the proposed framework delivers substantial sum-rate gains over conventional FPA systems and achieves near-centralized performance while significantly re-ducing communication overhead. Moreover, the stability of the 15 
+
+proposed approach is supported by trust-region analysis and two-timescale meta-gradient convergence arguments. Future work will integrate movement delay, actuation energy, posi-tioning uncertainty, finite resolution, and CSI/control overhead into a hardware-aware objective and training reward, with model calibration and validation through over-the-air (OTA) or hardware experiments. APPENDIX 
+
+A. Proof of Lemma 3 
+
+Define e ≜ (zlk − zlℓ )/d . Parametrize points on Circle lℓ 
+
+by z = zlℓ + Du with ∥u∥2 = 1 . Then 
+
+∥z −zlk ∥22 = ∥zlℓ +Du−zlk ∥22 = D2 +d2 −2Dd uT e. (93) Hence the points on Circle lℓ that violate the inequality ∥z −
+
+zlk ∥2 ≥ D are those for which 
+
+∥z − zlk ∥22 < D 2 ⇐⇒ uT e > d
+
+2D . (94) For d ≥ 2D, the inequality cannot hold and no arc is removed. For 0 < d < 2D, the set {u ∈ S1 : uT e > d/ (2 D)} is a single open arc on the unit circle, hence its image z =
+
+zlℓ + Du is a single open arc on Circle lℓ . For d = 0 we have 
+
+∥z − zlk ∥2 ≡ D on Circle lℓ , so nothing is removed. The endpoints of the removed arc are exactly where equality holds, i.e., the solutions to the two circle Circle lℓ and Circle lk .Subtracting the squared equations yields (z − m)T (zlk −
+
+zlℓ ) = 0 with m ≜ 12 (zlℓ + zlk ), so any intersection lies on the line through m perpendicular to e. Writing z = m + s
+
+with s ⊥ e and imposing ∥z − zlℓ ∥2 = D results 
+
+∥s∥22 +
+
+ d
+
+> 2
+
+2
+
+= D2 ⇒ ∥s∥2 =
+
+q
+
+D2 − d2 
+
+> 4
+
+. (95) Let ˆnℓk be any unit vector orthogonal to e. Then the intersec-tion points are 
+
+z = m±
+
+q
+
+D2 − d2 
+
+> 4
+
+ˆnℓk = zlℓ +zlk 
+
+2 ± 12
+
+p4D2 − d2 ˆnℓk . (96) When d = 2 D the two points coalesce into the tangent point 
+
+m; when d > 2D there is no solution; and when d = 0 we follow the manuscript’s convention of treating the coincident-center case as yielding no endpoints. Therefore Wl,ℓk is as stated. 
+
+B. Proof of Proposition 1 
+
+At time t, let Et ∈ RM ×de be the row-stacked node embeddings ei, and define shared linear maps Wq ∈ Rdk ×de ,
+
+Wk ∈ Rdk ×de , and Wv ∈ Rdv ×de . Set the query, key, and value matrices as: 
+
+
+
+Qt = EtW Tq ∈ RM ×dk ,
+
+Kt = EtW Tk ∈ RM ×dk ,
+
+Vt = EtW Tv ∈ RM ×dv .
+
+(97) When agents are permuted by P , the embeddings transform as 
+
+E′ 
+
+> t
+
+= P E t. Since the weight matrices are shared and applied to the feature dimension, we have: 
+
+(Q′
+
+> t
+
+, K′
+
+> t
+
+, V ′ 
+
+> t
+
+) = ( P Q t, P K t, P V t). (98) The masked score matrix Ct = 1√dk
+
+QtKTt transforms as: 
+
+C′ 
+
+> t
+
+= 1
+
+√dk
+
+(P Q t)( P K t)T
+
+= P
+
+ 1
+
+√dk
+
+QtKTt
+
+
+
+P T = P C tP T .
+
+(99) Both row-wise TopK κ selection and row-wise softmax are permutation equivariant operations. Specifically, for any row-permutation P , softmax row (P XP T ) = P softmax row (X)P T .Thus, the attention matrix transforms as A′ 
+
+> t
+
+= P A tP T .The aggregated messages Mt = AtVt then transform as: 
+
+M ′ 
+
+> t
+
+= A′
+
+> t
+
+V ′ 
+
+> t
+
+= ( P A tP T )( P V t) = PM t, (100) where we used the property P T P = I. Now, consider the update layer. Let Wm ∈ Rdu×(de+dv ) and bm ∈ Rdu .To ensure correct dimensionality for row-stacked inputs, the weight matrix must be applied to the right (transposed). The update equation is: 
+
+Ut = σ  [Et; Mt]W Tm + 1bTm
+
+ ∈ RM ×du , (101) where 1 ∈ RM is a column vector of ones, effectively broadcasting the bias bm to all M agents. Under permutation, the concatenation becomes [E′
+
+> t
+
+; M ′ 
+
+> t
+
+] = [P E t; P M t] =
+
+P [Et; Mt]. The update transforms as follows: 
+
+U ′ 
+
+> t
+
+= σ  P [Et; Mt]W Tm + 1bTm
+
+
+
+= σ  P  [Et; Mt]W Tm
+
+ + P 1bTm
+
+
+
+= P σ  [Et; Mt]W Tm + 1bTm
+
+
+
+= P U t. (102) Finally, applying the shared scalar value head ψ row-wise to 
+
+Ut gives the vector of per-agent state-values. Let us denote this output vector as vout ∈ RM (where the i-th element cor-responds to Vi(st)). Under permutation, this vector transforms as v′ 
+
+> out
+
+= P v out . The global team value is the sum of individual values: 
+
+V ′ 
+
+> ex
+
+= 1T v′ 
+
+> out
+
+= 1T (P v out ) = ( P T 1)T vout = 1T vout = Vex .
+
+(103) This completes the proof. 
+
+C. Proof of Lemma 5 
+
+Define the partially marginalized functions 
+
+Q(i)(s, a1: i) := Eai+1: M ∼π
+
+ Qex (s, a1: M ) , i = 0 , 1, . . . , M, 
+
+(104) with the conventions Q(0) (s) = Eu∼π [Qex (s, u)] = Vex (s)
+
+and Q(M )(s, a1: M ) = Qex (s, u). Therefore 
+
+Aex (s, u) = Q(M )(s, a1: M ) − Q(0) (s)=
+
+> M
+
+X
+
+> i=1
+
+ Q(i)(s, a1: i) − Q(i−1) (s, a1: i−1) (105) by a telescoping sum. It remains to identify each increment with the i-th prefix-marginalized advantage. By construction, fixing the first i actions at time t = 0 and marginalizing the rest is exactly the definition of the prefix-marginalized Q with subset S = Pi ∪ { i}, while fixing only the first i − 1 actions corresponds to subset S = Pi. Hence, 
+
+Q(i) (s, a1: i) = Qi 
+
+> ex ,Pi∪{ i}
+
+(s, aPi , ai) , (106) and 
+
+Q(i−1) (s, a1: i−1) = Qi 
+
+> ex ,Pi
+
+(s, aPi ) . (107) Taking the difference gives 
+
+Q(i) (s, a1: i) − Q(i−1) (s, a1: i−1) = Ai 
+
+> ex
+
+(s, aPi , ai) , (108) 16 
+
+which proves the claim after summing over i = 1 , . . . , M .The only properties used are linearity property of conditional expectation and the boundedness needed to interchange expec-tations, as codified in the regularity assumptions. 
+
+D. Proof of Theorem 1 
+
+Express p(u | s) = QMi=1 pi(ai | oi) and q(u | s) = 
+
+QMi=1 qi(ai | oi), where pi = πθi and qi = πθ′ 
+
+> i
+
+. By the definition of the KL divergence: 
+
+DKL (p∥q) = Eu∼p
+
+
+
+log p(u | s)
+
+q(u | s)
+
+
+
+= Eu∼p
+
+"
+
+log 
+
+QMi=1 pi(ai | oi)
+
+QMi=1 qi(ai | oi)
+
+#
+
+.
+
+(109) Using log Q 
+
+> i
+
+xi = P 
+
+> i
+
+log xi,
+
+DKL (p∥q) = 
+
+> M
+
+X
+
+> i=1
+
+Eu∼p
+
+
+
+log pi(ai | oi)
+
+qi(ai | oi)
+
+
+
+. (110) Under the product measure p(u | s) = Q 
+
+> i
+
+pi(ai | oi), the i-th summand depends only on ai. Hence the joint expectation reduces to the marginal expectation: 
+
+Eu∼p
+
+
+
+log pi(ai | oi)
+
+qi(ai | oi)
+
+
+
+= Eai∼pi
+
+
+
+log pi(ai | oi)
+
+qi(ai | oi)
+
+
+
+= DKL 
+
+ pi(· | oi) qi(· | oi).
+
+(111) Summing over i establishes (74). Taking expectation in s ∼ d
+
+on both sides and using linearity of expectation gives (75). REFERENCES [1] Z. Chen, E. G. Larsson, C. Fischione, M. Johansson, and Y. Malitsky, “Over-the-air computation for distributed systems: Something old and something new,” IEEE Netw. , vol. 37, no. 5, pp. 240–246, Jun. 2023. [2] E. A. Jorswieck, “Next-generation multiple access: From basic principles to modern architectures,” Proc. IEEE , pp. 1–30, Jul. 2024. [3] Z. Wang, S. Chen, and E. Bj¨ ornson, “Sparse activation for sustainable cell-free massive MIMO networks: Less is more,” arXiv:2606.03912 ,2026. [4] S. Chen, C.-X. Wang, J. Li, C. Huang, H. Chang, Y. Huang, J. Huang, and Y. Chen, “Channel map-based angle domain multiple access for cell-free massive MIMO communications,” IEEE J. Sel. Top. Signal Process. ,vol. 19, no. 2, pp. 366–380, Feb. 2025. [5] B. Xu, J. Zhang, H. Du, Z. Wang, Y. Liu, D. Niyato, B. Ai, and K. B. Letaief, “Resource allocation for near-field communications: Fundamentals, tools, and outlooks,” IEEE Wireless Commun. , vol. 31, no. 5, pp. 42–50, Jul. 2024. [6] E. Bj¨ ornson and L. Sanguinetti, “Making cell-free massive MIMO competitive with MMSE processing and centralized implementation,” 
+
+IEEE Trans. Wireless Commun. , vol. 19, no. 1, pp. 77–90, Jan. 2019. [7] Z. Chen and E. Bj¨ ornson, “Channel hardening and favorable propagation in cell-free massive MIMO with stochastic geometry,” IEEE Trans. Commun. , vol. 66, no. 11, pp. 5205–5219, Jun. 2018. [8] K.-K. Wong, A. Shojaeifard, K.-F. Tong, and Y. Zhang, “Fluid antenna systems,” IEEE Trans. Wirel. Commun. , vol. 20, no. 3, pp. 1950–1962, Nov. 2021. [9] K.-K. Wong, K.-F. Tong, and C.-B. Chae, “Fluid antenna system-part ii: Research opportunities,” IEEE Commun. Lett. , vol. 27, no. 8, pp. 1924–1928, Jun. 2023. [10] L. Zhu, W. Ma, and R. Zhang, “Movable antennas for wireless commu-nication: Opportunities and challenges,” IEEE Commun. Mag. , vol. 62, no. 6, pp. 114–120, Oct. 2024. [11] X. Shao and R. Zhang, “6DMA enhanced wireless network with flexible antenna position and rotation: Opportunities and challenges,” IEEE Commun. Mag. , vol. 63, no. 4, pp. 121–128, Mar. 2025. [12] W. Ma, L. Zhu, and R. Zhang, “MIMO capacity characterization for movable antenna systems,” IEEE Trans. Wirel. Commun. , vol. 23, no. 4, pp. 3392–3407, Sep. 2024. [13] L. Zhu, W. Ma, B. Ning, and R. Zhang, “Movable-antenna enhanced multiuser communication via antenna position optimization,” IEEE Trans. Wirel. Commun. , vol. 23, no. 7, pp. 7214–7229, Dec. 2024. [14] S. Yang, W. Lyu, B. Ning, Z. Zhang, and C. Yuen, “Flexible precoding for multi-user movable antenna communications,” IEEE Wirel. Commun. Lett. , vol. 13, no. 5, pp. 1404–1408, Mar. 2024. [15] B. Peng, B. Guo, K.-L. Besser, L. Kunz, R. Raghunath, A. Schmeink, E. A. Jorswieck, G. Caire, and H. V. Poor, “Distributed combinatorial optimization of downlink user assignment in mmwave cell-free massive MIMO using graph neural networks,” in Proc. IEEE GLOBECOM , 2024, pp. 462–468. [16] Y.-F. Liu, T.-H. Chang, M. Hong, Z. Wu, A. Man-Cho So, E. A. Jorswieck, and W. Yu, “A survey of recent advances in optimization methods for wireless communications,” IEEE J. Sel. Areas Commun. ,vol. 42, no. 11, pp. 2992–3031, Aug. 2024. [17] R. Lowe, Y. I. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mor-datch, “Multi-agent actor-critic for mixed cooperative-competitive en-vironments,” in Advances in Neural Information Processing Systems (NeurIPS) , vol. 30, 2017. [18] Z. Liu, J. Zhang, Z. Liu, D. W. K. Ng, and B. Ai, “Joint cooperative clus-tering and power control for energy-efficient cell-free XL-MIMO with multi-agent reinforcement learning,” IEEE Trans. Commun. , vol. 72, no. 12, pp. 7772–7786, Jun. 2024. [19] B. Xu, J. Zhang, Z. Chen, B. Cheng, Z. Liu, Y.-C. Wu, and B. Ai, “Channel estimation for Rydberg atomic receivers,” IEEE Wirel. Com-mun. Lett. , vol. 14, no. 9, pp. 2957–2961, Jun. 2025. [20] S. Chen, C.-X. Wang, C. Huang, Q. Yang, X. Wu, Y. Chen, and E.-H. M. Aggoune, “Channel map-based channel estimation for near-field UM-MIMO with movable planar arrays,” arXiv:2608.05520 , 2026. [21] H. Q. Ngo, L.-N. Tran, T. Q. Duong, M. Matthaiou, and E. G. Larsson, “On the total energy efficiency of cell-free massive MIMO,” IEEE Trans. Green Commun. Netw. , vol. 2, no. 1, pp. 25–39, Mar. 2018. [22] Z. Xiao, S. Cao, L. Zhu, Y. Liu, B. Ning, X.-G. Xia, and R. Zhang, “Channel estimation for movable antenna communication systems: A framework based on compressed sensing,” IEEE Trans. Wireless Com-mun. , vol. 23, no. 9, pp. 11 814–11 830, 2024. [23] Y. Zhong, J. G. Kuba, X. Feng, S. Hu, J. Ji, and Y. Yang, “Heterogeneous-agent reinforcement learning,” J. Mach. Learn. Res. ,vol. 25, no. 32, pp. 1–67, Jan. 2024. [24] Y. Yu, S. C. Liew, and T. Wang, “Multi-agent deep reinforcement learning multiple access for heterogeneous wireless networks with imperfect channels,” IEEE. Trans. Mob. Comput. , vol. 21, no. 10, pp. 3718–3730, 2022. [25] J. Yu, L. Liang, C. Guo, Z. Guo, S. Jin, and G. Y. Li, “Heterogeneous multi-agent reinforcement learning for distributed channel access in WLANs,” 2025, arXiv:2412.14218 .[26] Z. Zhu, J. Hong, and J. Zhou, “Data-Free Knowledge Distillation for Heterogeneous Federated Learning,” in Proceedings of the 38th International Conference on Machine Learning (ICML) , vol. 139, Jul. 2021, pp. 12 878–12 889. [27] F. Sattler, A. Marban, R. Rischke, and W. Samek, “Communication-efficient federated distillation,” arXiv:2012.00632 , 2020. [28] C. Wu, F. Wu, L. Lyu, Y. Huang, and X. Xie, “Communication-efficient federated learning via knowledge distillation,” Nat. Commun. , vol. 13, no. 1, p. 2032, Apr. 2022. [29] H. Lee, K. Lee, B. M. Hochwald, and I. Lee, “Regularized channel inversion for multiple-antenna users in multiuser MIMO downlink,” in 
+
+Proc. IEEE ICC , 2008, pp. 3501–3505. [30] J. Ding, L. Zhu, Z. Zhou, B. Jiao, and R. Zhang, “Near-field multiuser communications aided by movable antennas,” IEEE Wirel. Commun. Lett. , vol. 14, no. 1, pp. 138–142, Nov. 2025. [31] C. Lu, Q. Bao, S. Xia, and C. Qu, “Centralized reinforcement learning for multi-agent cooperative environments,” Evolutionary Intelligence ,vol. 17, no. 1, pp. 267–273, 2024. [32] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, and Y. WU, “The surprising effectiveness of PPO in cooperative multi-agent games,” in Proc. NeurIPS , 2022, pp. 24 611–24 624. [33] Y. Jin, Q. Lin, Y. Li, and Y.-C. Wu, “Handling distance constraint in movable antenna aided systems: A general optimization framework,” in 
+
+Proc. 2024 IEEE 25th Int. Workshop on Signal Process. Adv. Wireless Commun. (SPAWC) , 2024, pp. 396–400. [34] S. Sanayei and A. Nosratinia, “Capacity maximizing algorithms for joint transmit-receive antenna selection,” in Conference Record of the Thirty-Eighth Asilomar Conference on Signals, Systems and Computers, 2004. ,vol. 2, 2004, pp. 1773–1776 Vol.2.

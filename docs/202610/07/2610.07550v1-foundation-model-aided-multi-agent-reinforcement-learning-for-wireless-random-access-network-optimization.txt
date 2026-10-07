@@ -1,0 +1,838 @@
+Title: Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization
+
+URL Source: https://arxiv.org/pdf/2610.07550v1
+
+Published Time: Wed, 07 Oct 2026 00:36:20 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization 
+
+# Myeung Suk Oh 
+
+oh.746@osu.edu The Ohio State University Columbus, Ohio, USA 
+
+# Zhiyao Zhang 
+
+zhang.15178@osu.edu The Ohio State University Columbus, Ohio, USA 
+
+# Alvaro Velasquez 
+
+alvaro.velasquez@colorado.edu University of Colorado Boulder Boulder, Colorado, USA 
+
+# Nathaniel D. Bastian 
+
+nbastian@pathfinderappliedresearch.com Pathfinder Applied Research, LLC Ashburn, Virginia, USA 
+
+# Jia Liu 
+
+liu@ece.osu.edu The Ohio State University Columbus, Ohio, USA 
+
+## Abstract 
+
+Random access (RA) is one of the most foundational medium access control (MAC) layer scheduling schemes for handling unpredictable data traffic from multiple terminals. While multi-agent reinforce-ment learning (MARL) has been explored to optimize RA-based wireless networks, its reliance on experience-driven, distributed policy learning incurs significant training overhead for each op-timization task, limiting its feasibility in real-world applications. In this work, we propose to leverage a foundation model (FM) to improve MARL efficiency across diverse RA network optimization tasks. Specifically, we design an FM-aided actor-critic algorithm within a consensus-based decentralized MARL architecture and provide its convergence analysis under local reward exchanges and nonlinear value function approximations to show that our algo-rithm achieves the same convergence order as the conventional MARL with critic model exchanges and linear approximations. Our numerical results show that our FM-based approach significantly enhances MARL speed for RA network optimization. 
+
+## CCS Concepts 
+
+• Networks → Network control algorithms .
+
+## Keywords 
+
+Foundation model, multi-agent reinforcement learning (MARL), random access, self-supervised learning, wireless networks 
+
+ACM Reference Format: 
+
+Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu. 2026. Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization. In The Twenty-seventh International Symposium on Theory, Algorithmic Foundations, and Protocol Design for Mobile Networks and Mobile Computing (MobiHoc ’26), November 23–26, 2026, Tokyo, Japan. ACM, New York, NY, USA, 10 pages. https://doi.org/10.1145/3842721.3849640 
+
+> Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for third-party components of this work must be honored. For all other uses, contact the owner/author(s).
+> MobiHoc ’26, Tokyo, Japan
+> © 2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2975-1/2026/11 https://doi.org/10.1145/3842721.3849640 11
+> Access Point (AP)
+> Random Access Network
+> Potential for Collision
+> Local Information Exchange
+> Shared Wireless Channel
+
+Figure 1: An RA-based wireless network, where devices con-tend for channel access. Each device makes its own decision on when to transmit. Communication links are established across the devices for exchanging local information. 
+
+## 1 Introduction 
+
+1) Background and Motivations: Random Access (RA) techniques at the Medium Access Control (MAC) layer are fundamental to mod-ern wireless standards, including Wi-Fi and LTE Licensed Assisted Access [8]. In RA-based networks (Figure 1), multiple devices con-tend for a shared communication channel rather than relying on centralized scheduling. By allowing devices to independently de-termine transmission opportunities, RA eliminates the overhead associated with pre-allocated channel access. This decentralized par-adigm is particularly well suited for the Internet of Things (IoT) [4], machine-type communications (MTC) [26], and smart grids [30], where low-complexity and scalable mechanisms are required to manage highly sporadic and unpredictable traffic. Despite these advantages, the primary challenge in RA is max-imizing network efficiency while mitigating collisions. Excessive contention leads to wasted communication resources, often dimin-ishing the benefits of decentralized access. Although extensive research has sought to improve the performance of RA-based net-works, existing approaches either rely on heuristic methods without performance guarantees or adopt idealized analytical models that struggle to capture the complexities of real-world environments. 
+
+2) Foundation Model-Aided Multi-Agent Reinforcement Learning: Recent advances in machine learning have introduced new opportunities for optimizing RA networks [2, 7, 24]. Due to their distributed nature, RA networks can naturally be modeled as multi-agent reinforcement learning (MARL) systems. Many existing approaches [16, 18, 19, 25, 40, 41, 43] utilize the centralized train-ing and decentralized execution (CTDE) paradigm [3] to maintain arXiv:2610.07550v1 [cs.LG] 6 Oct 2026 MobiHoc ’26, November 23–26, 2026, Tokyo, Japan Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu 
+
+learning stability. However, CTDE-based methods face fundamen-tal limitations. Their reliance on a central training entity restricts deployment in large-scale or infrastructure-constrained settings. Even when such an entity exists, communication overhead on ag-gregating observations and actions scales poorly with the number of devices. Also, centralization can introduce single points of failure and raise concerns regarding privacy and adversarial vulnerability. Furthermore, conventional MARL methods often suffer from task-specific overfitting. Models designed for narrow objectives (e.g., collision minimization) typically require retraining or archi-tectural modifications when adapting to new performance metrics, resulting in poor sample efficiency and limited generalization. These limitations motivate the need for MARL frameworks that are both fully decentralized and adaptable to diverse optimization objectives. Meanwhile, foundation models (FMs) pretrained on large-scale datasets and then finetuned for downstream tasks offer a promising path for reinforcement learning (RL). By modeling system dynamics as sequence processes (e.g., using architectures like MAMBA [15]), self-supervised FMs can learn reward-agnostic representations that allow faster policy adaptation and improved generalization across tasks. While there is growing interest in applying FMs to wireless systems [9, 13, 14, 38], several open challenges remain. Particu-larly, it is unclear how to effectively integrate FMs into established RL frameworks (e.g., actor–critic methods) with theoretical perfor-mance guarantees, and how to design MARL algorithms that exploit the representational power of FMs without introducing centralized dependencies. This motivates us to pursue FM-aided MARL for wireless random access network optimization. 
+
+3) Our Approach and Contributions: In this work, we propose 
+
+an FM-aided MARL framework for optimizing RA-based wireless networks. To ensure practical viability, we adopt a fully decentral-ized paradigm based on decentralized training and decentralized execution (DTDE). To maintain stability and guarantee conver-gence without a central coordinator, we incorporate an average consensus mechanism [6], allowing devices to synchronize via local peer-to-peer communication. Our proposed framework em-ploys a specialized actor-critic (AC) design, where a pretrained FM serves as a reward-agnostic backbone for the critic network. By attaching a task-specific head to this backbone, the critic benefits from expressive latent representations of system dynamics learned through self-supervised pretraining on reward-independent data. This integration accelerates online policy learning while achiev-ing performance comparable to or better than end-to-end MARL training. Our main contributions are summarized as follows. 
+
+• We consider a consensus-driven, fully decentralized MARL that eliminates the need for global controllers. Relying on local ex-changes, the design is well suited for scenarios where centralized control is infeasible or undesirable. Unlike [28], we consider three RA optimization objectives, namely fair age of information (AoI) ,
+
+maximum sum-rate , and fair rate , and formulate unified Markov decision process (MDP) models with shared observation and action spaces, as well as locally computable reward functions. 
+
+• We introduce a new method for integrating FMs into the ac-tor–critic pipeline. Inspired by the SMART architecture [32], we pretrain an FM for forward-dynamics prediction and incorporate it as a reward-agnostic backbone within the critic. The resulting latent representations significantly enhance the critic’s ability to evaluate rewards during online learning. 
+
+• Unlike [32], which is purely empirical, we provide a finite-time convergence analysis of our FM-aided decentralized actor–critic algorithm. Our analysis addresses consensus applied to local re-wards and nonlinear state-value approximation, offering theoret-ical insights that differentiate this work from existing decentral-ized MARL literature. Through extensive numerical simulations, we show that our framework outperforms end-to-end training in learning speed across multiple RA optimization tasks. 
+
+## 2 Related Work 
+
+1) Traditional RA Network Optimization: RA techniques are broadly classified into two types: sensing-free and sensing-based. Sensing-free protocols, like ALOHA [1], are valued for their sim-plicity in satellite and multi-hop networks [5, 39] but suffer from in-herently high collision rates. In contrast, sensing-based RA employs a listen-before-talk (LBT) mechanism. The most prominent exam-ple, CSMA/CA [23], uses random backoff to mitigate contention. However, its heuristic nature often results in excessive delays and suboptimal channel utilization. Moreover, its theoretical perfor-mance guarantees remain unclear. While research into adaptive, queue-length-based CSMA [21] shows that throughput optimality is possible, these findings often rely on idealized models that fail to maintain fairness or low latency as networks scale [20, 22, 27]. 
+
+2) Learning-driven RA Network Optimization: To overcome the limitations of heuristics, recent work has explored RL for RA. Early efforts focused on optimizing CSMA/CA parameters, such as using Q-learning or SAC-LSTM architectures to tune contention windows and waiting times [18, 25]. However, since these methods remain dependent on the probabilistic framework of CSMA, their performance gains are fundamentally limited. To move beyond simply parameter tuning, researchers have turned to MARL to design deterministic transmission policies. In the literature, notable approaches include deep Q-networks for achieving 𝛼 -fairness [41], federated learning-based policy train-ing [43], and value factorization or policy gradient methods such as QMIX [16] and MAPPO [19]. Despite their strong performance, these methods rely on CTDE. The requirement for a central entity introduces significant communication overhead and raises con-cerns regarding scalability, data privacy, and security. Furthermore, these models are often task-specific. As a result, changing the opti-mization objective typically requires extensive architectural mod-ification and retraining, leading to poor sample efficiency. These challenges motivate our development of a fully decentralized FM-aided MARL framework that allows efficient wireless RA network optimization under diverse objectives without central coordination. 
+
+3) Foundation Models for Wireless Networks: FMs have achieved state-of-the-art performance in domains such as natural language processing and computer vision through large-scale rep-resentation learning. In wireless communications, FMs are now being explored for PHY and MAC layer tasks [9, 13, 14, 38], espe-cially within semantic and integrated sensing and communication (ISAC) frameworks. In particular, their ability to generalize across heterogeneous tasks and domains makes them highly suitable for addressing the challenges posed by dynamic and complex wire-less environments. Emerging works such as WirelessGPT [37] and Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization MobiHoc ’26, November 23–26, 2026, Tokyo, Japan 
+
+patch-masked FMs [31] have demonstrated that Transformer-based architectures can effectively handle multi-task predictions, such as channel state estimation and traffic forecasting. Similar to this line of work, we investigate the use of FMs for wireless RA network optimization. Unlike existing RL methods that suffer from task-specific overfitting, we utilize an FM as a 
+
+reward-agnostic backbone within an AC framework. This allows for superior generalization and faster adaptation across diverse net-working objectives without the need for centralized coordination. Our approach aims to overcome the limitations of conventional RL methods that often struggle with their lack of adaptability and dependence on centralized training. 
+
+## 3 System Model and Problem Formulation 3.1 Network System and the RA Protocol 
+
+We consider an RA-based wireless network with 𝐾 single-antenna devices that contend for channel access to transmit data to an 
+
+𝑁 r-antenna access point (AP). Each device 𝑘 ∈ K = {1, 2, . . . , 𝐾 }
+
+maintains a buffer where packets are queued and transmitted in a first-come first-served manner. We consider a saturated traffic condition, i.e., the packet arrival rate at each node is sufficiently high so that all devices consistently have data packets to transmit. The network operates in slotted time over a finite horizon 𝑇 , with time slots indexed by 𝑡 ∈ { 1, 2, . . . ,𝑇 }. Similar to the CSMA/CA pro-tocol, the network adopts the LBT mechanism. Before attempting transmission, each device first performs a clear channel assessment (CCA) to detect whether the channel is idle. If the channel remains idle for a specified duration, the device decides whether to transmit a packet to the AP. A device that chooses not to transmit simply returns to the CCA phase. If the device decides to transmit , it sends a single data packet to the AP over 𝜏 time slots. A transmission is considered successful if the AP correctly re-ceives the packet without collision, in which case the AP sends out an acknowledgment (ACK) for confirmation. This allows the device to proceed with its next packet transmission. In the event of a collision (i.e., multiple devices have simultaneously transmitted), the AP does not return an ACK, and each involved device will wait for the next transmission opportunity to attempt retransmission. To support fully decentralized network operation, we assume there is no global controller responsible for tasks like information aggregation or global message broadcasting. Instead, RA devices can exchange information with their neighbors according to local com-munication links defined by an undirected graph G = (K , E) , where 
+
+E represents the set of device-to-device connectivity links [6]. 
+
+## 3.2 Data Transmission Model 
+
+The single-input multiple-output (SIMO) channel gain between device 𝑘 and the AP at time slot 𝑡 is modeled as 
+
+𝒈 𝑘,𝑡 = √𝜂 𝑘 𝒉 𝑘,𝑡 , (1) where 𝒉 𝑘,𝑡 ∈ C𝑁 r represents the small-scale fading vector whose entries are independent and identically distributed (i.i.d.) complex Gaussian random variables with zero mean and unit variance. The term 𝜂 𝑘 in (1) denotes the large-scale fading factor which depends on the distance between device 𝑘 and the AP. For example, the mag-nitude of small-scale fading could follow a Rayleigh distribution, which is well-suited for modeling dense scattering wireless envi-ronments [34]. Also, our large-scale fading model can be adopted to various realistic propagation scenarios, including the ITU-R in-door [11] and 3GPP urban-micro (UMi) [12] pathloss models. Using (1), the achievable data rate of device 𝑘 at time slot 𝑡 can be obtained by the Shannon capacity formula: 
+
+𝑅 𝑘,𝑡 = 𝐵 log 2 1 + 𝑝 𝑘 ∥𝒈 𝑘,𝑡 ∥22
+
+𝐵𝑁 0
+
+!
+
+, (2) where 𝐵 is the transmission bandwidth, 𝑝 𝑘 is the transmit power of device 𝑘 , and 𝑁 0 is the noise spectral density [34]. Assuming a block-fading channel (i.e., the channel remains static during each packet transmission), we express the amount of data which device 
+
+𝑘 can successfully transmit at time slot 𝑡 as 
+
+𝑚 𝑘,𝑡 = 𝑅 𝑘,𝑡 𝑇 s𝜏, (3) where 𝑇 s denotes the slot duration. Note that (3) plays a crucial role in transmission decision-making. For example, a device with low 
+
+𝑚 𝑘,𝑡 may lead to suboptimal throughput by potentially blocking other devices with more favorable channel conditions (i.e., higher 
+
+𝑚 𝑘,𝑡 ). Since 𝑚 𝑘,𝑡 is directly proportional to 𝑅 𝑘,𝑡 , each RA device needs to carefully consider its channel quality when making trans-mission decisions to maximize the overall network performance. 
+
+## 3.3 RA Network Optimization Tasks 
+
+To illustrate the FM’s capability in supporting multiple performance goals in wireless RA network optimization with MARL, in this work, we consider the following three objectives as downstream tasks: 
+
+1) Fair-AoI (Worst-case AoI Minimization): AoI (age of infor-mation) measures the freshness of information by tracking the time elapsed since the latest data transmission of a device. Let ℓ𝑘,𝑡 denote the number of time slots that have elapsed since device 𝑘 ’s last successful packet transmission by time slot 𝑡 [16]. This quantity can be interpreted as the anticipated AoI if the AP successfully receives a packet from device 𝑘 at time slot 𝑡 . Let T𝑘,𝑡 ⊆ { 1, 2, . . . , 𝑡 }
+
+denote the set of time slot indices at which device 𝑘 has success-fully transmitted a packet during the time horizon 𝑡 ≤ 𝑇 . Then, we minimize the worst-case AoI among all devices using min max   
+
+> 𝑘 ∈ K ,𝑡 ∈ T 𝑘,𝑇
+
+ℓ𝑘,𝑡 . (4) Note that this mini-max formulation solely focuses on fairness in transmit frequency and does not account for channel quality or data rates. This task is particularly useful in applications such as real-time system control in wireless drone networks, where timely information updates are important. 
+
+2) Max-Rate (Sum-rate Maximization with Minimum Rate Guarantees): As a classical network performance metric, sum-rate quantifies the total amount of data successfully received by the AP for a given time window. Here, we let 
+
+𝑥 𝑘,𝑡 = 1
+
+𝑡𝑇 s∑︁ 𝑡 ′ ∈ T 𝑘,𝑡 
+
+𝑚 𝑘,𝑡 ′ (5) denote the throughput of device 𝑘 over the time horizon 𝑡 ≤ 𝑇 . To maximize the sum-rate, i.e., Í𝑘 ∈ K 𝑥 𝑘,𝑇 , it is ideal for a network to prioritize RA devices with higher data rates 𝑚 𝑘,𝑡 . However, such a policy can result in poor fairness as it may allow devices with superior channel quality to dominate transmission resources. To prevent this, we impose a minimum rate requirement 𝑅 min and formulate our objective as max ∑︁  
+
+> 𝑘 ∈ K
+
+𝑥 𝑘,𝑇 (6) MobiHoc ’26, November 23–26, 2026, Tokyo, Japan Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu 
+
+s.t. 𝑥 𝑘,𝑇 ≥ 𝑅 min , ∀𝑘 ∈ K . (7) The problem above seeks to maximize the overall throughput while ensuring that each device’s rate maintains at least 𝑅 min .
+
+3) Fair-Rate (Worst-case Rate Maximization): In certain ap-plications such as collaborative sensing, the system performance can be compromised by the device with the poorest throughput. In such cases, it is crucial to promote throughput fairness to prevent any single device from becoming a bottleneck. To ensure balanced per-device rate, we maximize the minimum throughput across all devices over the time horizon 𝑇 , which can be expressed as max min   
+
+> 𝑘 ∈ K
+
+𝑥 𝑘,𝑇 . (8) This formulation ensures that no device is significantly disadvan-taged in terms of data rate, thus supporting balanced and reliable system performance. 
+
+## 4 Foundation Model-Aided Decentralized MARL for Wireless RA Network Optimization 
+
+In this section, we first review the AC framework for MARL. We then formulate the MDP tailored to our wireless RA network op-timization. Next, we describe the architecture of our FM, which serves as a reward-agnostic backbone within the AC framework. Finally, we present the proposed FM-aided decentralized MARL algorithm and analyze its convergence properties. 
+
+## 4.1 Actor-Critic Framework for MARL Problem 
+
+We model the wireless RA network optimization problem as an MARL task defined by the MDP tuple {S , {A 𝑘 }𝑘 ∈ K , 𝑃, {𝜚 𝑘 }𝑘 ∈ K },where S is the global state space and A𝑘 is the action set for device 
+
+𝑘 . The term 𝑃 : S × A × S → [ 0, 1] denotes the state transition probability, where A = Î𝑘 ∈ K A𝑘 is the joint action set of all agents. Lastly, 𝜚 𝑘 : S × A → R is the local reward function for device 𝑘 .Since most of time slots {1, . . . ,𝑇 } are occupied by the RA pro-tocol steps, such as CCA, packet transmission, and waiting upon ACK, the actual time slots related to MARL procedure are confined. Hence, we consider our MDP to only progress over time slots, where an action is taken by the devices, which we denote using 𝑛 .At an MDP step 𝑛 , each device 𝑘 at a global state 𝑠 𝑛 ∈ S se-lects an action 𝑎 𝑘,𝑛 ∈ A 𝑘 according to its local policy 𝜋 𝑘 , i.e., 
+
+𝑎 𝑘,𝑛 ∼ 𝜋 𝑘 (·| 𝑠 𝑛 ). Due to the coupled nature of the devices’ ac-tions, the state transitions from 𝑠 𝑛 to 𝑠 𝑛 +1 via 𝑃 (𝑠 𝑛 +1 |𝑠 𝑛 , 𝒂 𝑛 ), where 
+
+𝒂 𝑛 = [𝑎 1,𝑛 , 𝑎 2,𝑛 , . . . , 𝑎 𝐾,𝑛 ] is the joint action vector. Each device 𝑘 
+
+then receives a reward 𝑟 𝑘,𝑛 = 𝜚 𝑘 (𝑠 𝑛 , 𝒂 𝑛 ).The AC framework employs two sets of function approxima-tors: actors and critics . Each device 𝑘 is equipped with an actor network parameterized by weights 𝜃 𝑘 , which defines its local pol-icy 𝜋 𝜃 𝑘 . Let 𝜃 = [𝜃 ⊤ 
+
+> 1
+
+, 𝜃 ⊤ 
+
+> 2
+
+, . . . , 𝜃 ⊤ 
+
+> 𝐾
+
+]⊤ denote the joint weight vector of all 𝐾 actors. The goal of MARL is to optimize 𝜃 to maximize the expected long-term discounted cumulative reward defined as 
+
+𝐽 (𝜃 ) = E𝜋 𝜃 
+
+Í ∞ 
+
+> 𝑛 =0
+
+𝛾 𝑛 ¯𝑟 𝑛 
+
+, where 𝑟 𝑛 = 1
+
+> 𝐾
+
+Í𝐾 𝑘 =1 𝑟 𝑘,𝑛 is the global aver-age reward, and 𝛾 ∈ [ 0, 1] is the discount factor. For each device 
+
+𝑘 , the state-value function 𝑉 𝜃 (𝑠 ) = E𝜋 𝜃 
+
+hÍ∞ 
+
+> 𝑛 =0
+
+𝛾 𝑛 𝑟 𝑛 𝑠 0 = 𝑠 
+
+i
+
+is es-timated using a critic network of parameters 𝑤 𝑘 . Applying the Bellman equation [33], the estimated function can be expressed as 
+
+𝑉 𝑤 𝑘 (𝑠 ) = E𝜋 𝜃 
+
+𝑟 + 𝛾𝑉 𝑤 𝑘 (𝑠 ′). During training, each actor selects an action based on its current policy, and the corresponding critic evaluates the resulting reward. The actor policy is then updated us-ing the policy gradient E𝑠,𝑎 [∇ 𝜃 𝑘 log 𝜋 𝜃 𝑘 (𝑎 𝑘 |𝑠 ) · Adv 𝜃 (𝑠, 𝒂 )] , where Adv 𝜃 (𝑠, 𝒂 ) = ¯𝑟 + 𝛾𝑉 𝜃 (𝑠 ′) − 𝑉 𝜃 (𝑠 ) is the advantage function. This update encourages the actor to select actions that yield higher expected future rewards relative to the baseline value. 
+
+## 4.2 MDP Formulation for MARL-based Wireless RA Network Optimization 
+
+We now design the MDP components for our RA network optimiza-tion. First, the state at network time slot 𝑡 is defined as 
+
+𝑠 𝑡 =
+
+
+
+{b𝜉 𝑘 }𝑘 ∈ K , {bℓ𝑘,𝑡 }𝑘 ∈ K , 𝑞 𝑡 
+
+
+
+, (9) where b𝜉 𝑘 = 𝜉 𝑘 −min 𝑘 𝜉 𝑘     
+
+> max 𝑘 𝜉 𝑘 −min 𝑘 𝜉 𝑘
+
+is the min-max normalized long-term signal-to-noise ratio (SNR) for device 𝑘 , bℓ𝑘,𝑡 = ℓ𝑘,𝑡 /𝜆 is the nor-malized AoI with 𝜆 as a scaling factor, and 𝑞 𝑡 ∈ { 0, 1} is the bi-nary channel occupancy indicator. We use dB scale for SNR, i.e., 
+
+𝜉 𝑘 = E𝑡 
+
+
+
+10 log 10   
+
+> 𝑝 𝑘 ∥𝒈 𝑘,𝑡 ∥22
+> 𝐵𝑁 0
+
+
+
+= 10 log 10   
+
+> 𝑝 𝑘 𝜂 𝑘
+> 𝐵𝑁 0
+
+. For each device 𝑘 , b𝜉 𝑘 
+
+and bℓ𝑘,𝑡 are local information. We assume that long-term SNRs of other devices {b𝜉 𝑘 ′ }𝑘 ′ ∈ K\ 𝑘 are available via local information exchanges or broadcast that take place at a much slower rate. Fol-lowing the assumptions in [16, 19, 41], we consider AoIs of other devices {bℓ𝑘 ′,𝑡 }𝑘 ′ ∈ K\ 𝑘 to be observable from the broadcast ACK pack-ets. Note that 𝑞 𝑡 is also observable during the CCA phase. Each device operates in a discrete action space A𝑘 = {0, 1},where 0 indicates the decision to wait and 1 represents the decision to transmit . Hence, at each given time slot 𝑡 , device 𝑘 relies on its policy 𝜋 𝑘 and selects its action 𝑎 𝑘,𝑡 ∈ { 0, 1}.We now define local reward functions corresponding to each downstream task. First, for device 𝑘 at time slot 𝑡 , the local reward for fair-AoI task is defined as 
+
+𝑟 FA  
+
+> 𝑘,𝑡
+
+= − ℓ𝑘,𝑡 
+
+𝜔 FA 𝐾 , (10) where 𝜔 FA 𝐾 is a scaling factor to prevent the reward from increas-ing with the network size. Since the value of ℓ𝑘,𝑡 becomes zero only upon successful transmission, this reward encourages devices to avoid collisions. Moreover, with (10), prioritizing devices with higher AoI values leads to greater marginal reward gains. Hence, maximizing (10) promotes AoI fairness across the network. Next, the local reward of device 𝑘 at time slot 𝑡 for max-rate task is given by 
+
+𝑟 MR  
+
+> 𝑘,𝑡
+
+= 𝑥 𝑘,𝑡 
+
+𝜔 MR 
+
++ 𝐷 (𝑥 𝑘,𝑡 ), (11) where 𝜔 MR is a scaling parameter, and 𝐷 (𝑥 𝑘,𝑡 ) is a penalty function: 
+
+𝐷 (𝑥 𝑘,𝑡 ) =
+
+
+
+log 
+
+ 𝑥 𝑘,𝑡 +𝜔 P1 𝑅 min  
+
+> (1+𝜔 P1 )𝑅 min
+
+𝜔 P2 /𝐾 
+
+, if 𝑥 𝑘,𝑡 ≤ 𝑅 min ,
+
+0, otherwise ,
+
+(12) with scaling factors 𝜔 P1 and 𝜔 P2 . Note that (12) is bounded in the interval [log (𝜔 P1 /( 1+𝜔 P1 ), 0] and designed to only penalize devices that fail to meet the threshold 𝑅 min . In other words, this reward drives each device to maintain the minimum rate requirement while maximizing the sum-rate. Lastly, we adopt the 𝛼 -fairness utility function [41] and define the local reward of device 𝑘 at time slot 𝑡 for fair-rate task as 
+
+𝑟 FR  
+
+> 𝑘,𝑡
+
+= 11 − 𝛼 FR 
+
+ 𝑥 𝑘,𝑡 
+
+𝜔 FR1 /𝐾 + 𝜔 FR2 
+
+1−𝛼 FR 
+
+, (13) Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization MobiHoc ’26, November 23–26, 2026, Tokyo, Japan 8        
+
+> Input
+> Embedding
+> Embedding
+> Target
+> Encoder
+> MSE Loss
+> Prediction Head
+> Time Flow
+> Encoder
+> Only during Training
+> Training & Testing
+> Transformer
+> Transformer
+> Loss-based Update
+> Input Embeddings
+> State Encoder
+> Token Embeddings Position Embeddings
+> HH00
+> Time slot 𝑡 Block Index
+> Trajectory Action Encoder
+> Key Query Value
+> Transpose
+> Masked Fill
+> Softmax
+> Project
+> Scaling
+> Normalize
+> Attention
+> Normalize
+> MLP
+> Linear
+> GELU
+> Linear
+
+Figure 2: The architecture of FM as a reward-agnostic critic backbone. The model takes a state-action history and ex-tracts embeddings via state and action encoders. Transformer blocks are used to process the embeddings. The output of a prediction head is sent to the reward-specific critic head. 
+
+where 𝛼 FR ∈ ( 1, ∞) controls the fairness, and 𝜔 FR1 and 𝜔 FR2 are scaling factors. Larger values of 𝛼 FR impose stricter fairness. To reflect the condition of fully decentralized MARL, we strictly define our reward functions to be locally computable. For the con-sensus step, we let 𝑟 𝑘,𝑡 ∈ { 𝑟 FA  
+
+> 𝑘,𝑡
+
+, 𝑟 MR  
+
+> 𝑘,𝑡
+
+, 𝑟 FR  
+
+> 𝑘,𝑡
+
+} to be exchanged across the devices through local communication links defined by G.
+
+## 4.3 Foundation Model Architecture Design 
+
+We present the detailed design of our FM, which supports the AC framework described in Section 4.1 as a reward-agnostic critic back-bone. Typical RL models rely on reward signals as supervision, i.e., rewards serve as targets that guide an agent to train and learn desir-able behaviors. In contrast, our FM is pretrained in a self-supervised 
+
+manner and thus does not require reward labels. This allows our FM to be reward-agnostic and transferable across different RL tasks. In this work, we leverage the FM to enhance our MARL-based op-timization for wireless RA-based networks. During pretraining, the FM captures useful feature representations that effectively model the underlying environment dynamics, which can improve learning efficiency over multiple downstream tasks (e.g., three wireless RA objectives defined in Section 3.3). Our FM pretraining is inspired by the SMART framework [32], which uses a control transformer architecture to facilitate self-supervised learning across different pretraining goals. Similar to SMART, we employ encoders to extract meaningful embeddings from the inputs and utilize the attention mechanism within transformers to perform a prediction task. In this paper, we specifically adopt the forward dynamics prediction 
+
+task for self-supervised pretraining, which aligns naturally with the core principle of RL to optimize future outcome predictions. The architecture of our FM is shown in Figure 2, which consists of three main components: i) encoders, ii) transformers, and iii) a prediction head. The encoders first map the input into a sequence of token embeddings, which are augmented with position embeddings to convey temporal information. The position embeddings are de-signed to capture both the relative order within the history window and the absolute position within the global time trajectory, allowing the model to effectively understand the environment dynamics. The combined embeddings are then passed through a multi-transformer module, where each block consists of a self-attention layer and a multi-layer perceptron (MLP). The MLP uses the Gaussian error linear unit (GELU) as its activation function. The output from the transformer module is fed into the prediction head, which generates an embedding that represents next-step state. During the pretraining, the FM is optimized such that the loss between the predicted and actual next-state embeddings is minimized. By integrating the self-supervised FM, we allow our MARL agents to utilize effective representations of the environment dynamics during their online learning. Note that the pretraining of FM does not require explicit reward signals, making the model generalizable to different downstream RL tasks. Similar to [16, 19, 41], we assume that each device can store the 
+
+𝐻 latest states and actions. Let ˜ 𝑡 [ℎ] 
+
+> 𝑘
+
+denote the time slot when the 
+
+ℎ-th latest action was taken by device 𝑘 . Then, the state-action history at time slot 𝑡 can be written as 
+
+Ψ[𝐻 :1 ] 
+
+> 𝑘,𝑡
+
+=
+
+
+
+𝑠 ˜𝑡 [𝐻 ]
+
+> 𝑘
+
+, 𝑎 𝑘, ˜𝑡 [𝐻 ]
+
+> 𝑘
+
+, . . . , 𝑠 ˜𝑡 [1]
+
+> 𝑘
+
+, 𝑎 𝑘, ˜𝑡 [1]
+
+> 𝑘
+
+, 𝑠 𝑡 
+
+
+
+. (14) We integrate (14) as an input to both actor and critic. This enables the model to better reflect the temporal dynamics of the wireless RA environment and improve its learning stability and performance. 
+
+## 4.4 Foundation Model-Aided Decentralized MARL Algorithm Design 
+
+We now describe the proposed FM-aided decentralized MARL algo-rithm for RA network optimization. Figure 3 illustrates the overall architecture of our decentralized AC framework. Each device 𝑘 ∈ K 
+
+updates its local actor and critic networks using its own experience. To capture temporal dependencies, each device maintains a history buffer that stores past observation–action pairs and uses this history as input during learning. As described in Section 3, neighboring de-vices can exchange limited information. In our design, each device shares only scalar local rewards with its neighbors, which incurs sig-nificantly lower communication costs compared to exchanging full critic parameters, as in [10, 17, 42]. Specifically, the critic network consists of two parts: a reward-agnostic FM and a reward-specific head. The FM is pretrained using observation–action sequences and remains fixed during the RL phase. This design eliminates the need for online updates of the high-capacity backbone, reducing computational and communication overhead while leveraging rich representations of system dynamics. The overall procedure of the proposed algorithm for a 𝐾 -device RA-based MAC layer is summarized in Algorithm 1. Each device operates under the LBT protocol and continuously monitors the channel state. Meanwhile, each device updates its local status based on transmission outcomes (e.g., successful transmission or colli-sion) (Lines 6 - 10) . When the channel is sensed to be idle, the device observes the current state 𝑠 𝑡 and makes a transmission decision 𝑎 𝑘,𝑡 
+
+using its local policy conditioned on the past action-observation history and current observation (i.e., Ψ[𝐻 :1 ] 
+
+> 𝑘,𝑡
+
+). After executing the action, the tuple {𝑠 𝑡 , 𝑎 𝑘,𝑡 , 𝑟 𝑘,𝑡 } is stored in the history buffer (Lines 11 - 17) . This interaction process is repeated over 𝑇 time slots. Each time the devices are ready to update their model weights, the consensus (Line 21) first takes place for reward exchange. Each consensus step consists of 𝐺 rounds of communication, where weight-based averaging is performed in each round. Then, each device updates its actor and critic parameters after computing the temporal-difference (TD) error (Lines 23 - 29) . While the actor MobiHoc ’26, November 23–26, 2026, Tokyo, Japan Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu Access Point (AP) 
+
+> Network Devices
+> Potential for Collision
+> Local Information
+> Exchange
+> Wireless
+> Channel
+> 11
+> Actor
+> Reward
+> 𝑠 𝑡
+> 𝑟 𝑘,𝑡
+> 𝑎 𝑘,𝑡
+> History Buffer
+> Ψ𝑘,𝑡 𝐻:1
+> TD Error
+> Head FM
+> Critic
+
+Figure 3: A visual representation of our fully decentralized MARL framework. Both the actor and critic are trained in a decentralized manner. The critic contains two distinct parts: a reward-agnostic backbone for forward dynamics prediction and a reward-specific head for task-specific finetuning. 
+
+takes the input directly from the observation-action history, the critic processes it via the FM backbone to obtain a latent representa-tion 𝜙 Ξ𝑘 (Ψ𝑘,𝑡 ), which is then fed into the reward-specific head for value estimation. Extending our prior work [28] to FM-aided MARL, we adopt a batch-based update scheme to facilitate the theoretical analysis in Section 4.5. In particular, the critic update incorporates projection onto a bounded parameter set and an averaging step 
+
+(Lines 27 - 28) to ensure that each update remains within a con-trolled region and allow convergence guarantees [36, 45]. 
+
+## 4.5 Theoretical Performance Analysis 
+
+Our prior work on RA network optimization via decentralized MARL [28] establishes convergence guarantees under linear value function approximation, which has been the dominant analytical framework for studying MARL convergence [10, 17, 44]. However, linear approximations are insufficient to capture the expressive behavior of deep neural networks (DNNs), which are widely used in modern RL applications. To address this gap, we build upon our previous analytical framework in [45] and extend our results to the FM-aided setting where value functions are approximated using DNNs . A key distinction of this work from [45] is that their analysis assumes consensus over the entire critic model, whereas our approach requires only local reward exchange among neigh-boring agents. By restricting consensus to scalar rewards rather than high-dimensional model parameters, our framework signifi-cantly improves practical deployability and reduces communication overhead. Also, we address the impact of integrating pretrained FMs in the actor-critic pipeline, where we perceive the power of self-supervised learning as the prediction capability on next states. We now formally describe the DNN architecture used in our analysis. For each device 𝑘 , the critic maintains a DNN-based ap-proximation 𝑉 𝑤 𝑘 of the true value function 𝑉 𝜃 . We assume the network has width 𝑀 𝑤 and depth 𝑀 𝑑 . Let 𝑥 in ∈ R𝑑 denote the input features vector. The forward pass is defined as: 
+
+𝑥 (0) = 𝑊 (0) 𝑥 in , (15) 
+
+𝑥 (ℎ) = 1
+
+√𝑀 𝑤 
+
+ReLU (𝑊 (ℎ) 𝑥 (ℎ−1) ) for ℎ = 1, 2, . . . , 𝑀 𝑑 (16) 
+
+𝑦 = 𝑏 ⊤𝑥 (𝑀 𝑑 ) , (17) where 𝑊 (0) ∈ R𝑚 ×𝑑 , 𝑊 (ℎ) ∈ R𝑚 ×𝑚 , and 𝑏 ∈ R𝑚 are the network parameters, and ReLU (𝑥 ) := max {0, 𝑥 } is the ReLU activation func-tion. The actors share the same architecture; however, a softmax layer is appended to yield a probability distribution over actions. 
+
+Algorithm 1: FM-aided Decentralized MARL for RA Net-work Optimization.  
+
+> 1
+
+Input: device set K, pretrained FM weights {Ξ𝑘 }𝑘 ∈ K , time horizon length 𝑇 , history length 𝐻 , consensus weight matrix C, consensus iteration count 𝐺 , number of samples to collect 𝑁 𝐵 , actor rate 𝛼 , critic rate 𝛽  
+
+> 2
+
+Initialize: For all 𝑘 ∈ K , actor weights 𝜃 𝑘 , critic weights 𝑤 𝑘 ,ready-for-update status 𝑢 𝑘 = False, sample count 𝑏 𝑘 = 0 
+
+> 3
+
+Load: FM weights Ξ𝑘 for all 𝑘 ∈ K  
+
+> 4
+
+for 𝑡 = 1, 2 . . . ,𝑇 do  
+
+> 5
+
+for 𝑘 ∈ K do  
+
+> 6
+
+Observe 𝑞 𝑡 via clear channel assessment (CCA)  
+
+> 7
+
+if ACK received then  
+
+> 8
+
+ℓ𝑘,𝑡 ← 0 
+
+> 9
+
+else  
+
+> 10
+
+ℓ𝑘,𝑡 ← ℓ𝑘,𝑡 + 1 
+
+> 11
+
+if 𝑞 𝑡 = 0 then  
+
+> 12
+
+Acquire state 𝑠 𝑡 and reward 𝑟 𝑘,𝑡  
+
+> 13
+
+Select 𝑎 𝑘,𝑡 ∼ 𝜋 𝜃 𝑘 ( · | Ψ[𝐻 :1 ] 
+
+> 𝑘,𝑡
+
+) 
+
+> 14
+
+if 𝑎 𝑘,𝑡 = 1 then  
+
+> 15
+
+Initiate a packet transmission  
+
+> 16
+
+Store 𝑠 𝑡 , 𝑎 𝑘,𝑡 , and 𝑟 𝑘,𝑡 in the history buffer  
+
+> 17
+
+𝑏 𝑘 ← 𝑏 𝑘 + 1 
+
+> 18
+
+if 𝑏 𝑘 = 𝑁 𝑏 then  
+
+> 19
+
+𝑢 𝑘 ← True  
+
+> 20
+
+if 𝑢 𝑘 = True , ∀𝑘 ∈ K then  
+
+> 21
+
+R(𝑡 ) = C𝐺 R(𝑡 ) 
+
+> 22
+
+for 𝑘 ∈ K do  
+
+> 23
+
+¯𝑤 𝑘, 0 ← 𝑤 𝑘  
+
+> 24
+
+for 𝑏 = 1, 2, . . . , 𝑁 𝐵 do  
+
+> 25
+
+𝛿 𝑘,𝑏 ← R(𝑡 )[𝑘,𝑏 ] + 𝛾𝑉 ¯𝑤 𝑘,𝑏 −1 (𝜙 Ξ𝑘 (Ψ[𝐻 +𝑏 −1: 𝑏 ]   
+
+> 𝑘, ˜𝑡 [𝑏 −1]
+> 𝑘
+
+)) − 
+
+𝑉 ¯𝑤 𝑘,𝑏 −1 (𝜙 Ξ𝑘 (Ψ[𝐻 +𝑏 :𝑏 +1]   
+
+> 𝑘, ˜𝑡 [𝑏 ]
+> 𝑘
+
+))  
+
+> 26
+
+˜𝑤 𝑘,𝑏 ←
+
+¯𝑤 𝑘,𝑏 −1 − 𝛽𝛿 𝑘,𝑏 · ∇ 𝑉 ¯𝑤 𝑘,𝑏 −1 (𝜙 Ξ𝑘 (Ψ[𝐻 +𝑏 :𝑏 +1]   
+
+> 𝑘, ˜𝑡 [𝑏 ]
+> 𝑘
+
+))  
+
+> 27
+
+¯𝑤 𝑘,𝑏 ← arg min 𝑤 ∈ B ( 𝐵 ) ∥𝑤 − ˜𝑤 𝑘,𝑏 ∥2 
+
+> 28
+
+𝑤 𝑘 ← 𝑏 𝑏 +1 𝑤 𝑘 + 1 
+
+> 𝑏 +1
+
+¯𝑤 𝑘,𝑏  
+
+> 29
+
+𝜃 𝑘 ←𝜃 𝑘 + 𝛼 𝑁 𝐵 
+
+Í𝑁 𝐵  
+
+> 𝑏 =1
+
+𝛿 𝑘,𝑏 ·∇ log 𝜋 𝜃 𝑘 (𝑎 𝑘, ˜𝑡 [𝑏 ]
+
+> 𝑘
+
+|Ψ[𝐻 +𝑏 :𝑏 +1]   
+
+> 𝑘, ˜𝑡 [𝑏 ]
+> 𝑘
+
+) 
+
+> 30
+
+𝑢 𝑘 ← False  
+
+> 31
+
+Output: 𝜃 𝑘 for all 𝑘 ∈ K 
+
+With 𝑛 denoting the MDP iteration index, we establish the theo-retical convergence guarantee of Algorithm 1. First, we provide the required assumptions in the following. Assumption 1 (Bounded Reward). For each downstream task, there exists a constant 𝑟 max > 0 such that |𝑟 𝑘,𝑛 | ≤ 𝑟 max , ∀𝑛 ≥ 0, 𝑘 ∈ K .
+
+Assumption 2 (Mixing Time). There exists a stationary distri-bution 𝜁 for (𝑠, 𝑎 ), and positive constants 𝜅 and 𝜌 ∈ ( 0, 1), such that 
+
+sup 𝑠 ∈ S ∥𝑃 (𝑠 𝑛 , 𝑎 𝑛 |𝑠 0 = 𝑠 ) − 𝜁 𝜃 ∥𝑇𝑉 ≤ 𝜅𝜌 𝑛 , ∀𝑛 ≥ 0.Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization MobiHoc ’26, November 23–26, 2026, Tokyo, Japan 
+
+Assumption 3 (Lipschitz Continuity). There exist some pos-itive constants 𝐿 𝐽 , 𝐿 𝑊 , 𝐿 𝑉 , and 𝑀 𝑔 such that, for any 𝜃 and 𝜃 ′, any 
+
+𝑤 and 𝑤 ′, any 𝑥 and 𝑥 ′, and any 𝑠 and 𝑎 , we have |𝐽 (𝜃 ) − 𝐽 (𝜃 ′)| ≤ 
+
+𝐿 𝐽 ∥𝜃 − 𝜃 ′ ∥2, |𝑉 𝑤 (𝑥 ) − 𝑉 𝑤 ′ (𝑥 )| ≤ 𝐿 𝑊 ∥𝑤 − 𝑤 ′ ∥2, |𝑉 𝑤 (𝑥 ) − 𝑉 𝑤 (𝑥 ′)∥ ≤ 
+
+𝐿 𝑉 ∥𝑥 − 𝑥 ′ ∥2, and ∥∇ 𝜃 log 𝜋 𝜃 (𝑎 |𝑠 )∥ 2 ≤ 𝑀 𝑔 .
+
+Assumption 4 (Consensus Matrix). The consensus weight ma-trix C is doubly stochastic. Additionally, for all 𝑘, 𝑘 ′ ∈ K , there exists a positive constant 𝜈 > 0 such that (i) 𝑐 𝑘𝑘 ≥ 𝜈 and (ii) 𝑐 𝑘𝑘 ′ ≥ 𝜈 
+
+whenever devices 𝑘 and 𝑘 ′ are connected. 
+
+Assumption 4 ensures that information is exchanged with uni-formly positive weights among connected agents, facilitating con-vergence of the local consensus estimates toward the globally aver-aged information. Assumption 5. For any policy 𝜃 , there exist positive constants 
+
+𝜎 and 𝜖 bias such that EAdv 𝜃 (Ψ, 𝑎 ) − ( 1 − 𝛾 )( F(𝜃 )−1∇𝜃 𝐽 (𝜃 )) ⊤
+
+∇𝜃 log 𝜋 𝜃 (𝑎 |Ψ)2 ≤ 𝜖 bias , where (Ψ, 𝑎 ) follows 𝜈 (𝜋 ∗), which is a stationary distribution under the optimal policy 𝜋 ∗, and F(𝜃 ) =
+
+E𝜈 (𝜃 ) [∇ 𝜃 log 𝜋 𝜃 (𝑎 |Ψ) ∇ 𝜃 log 𝜋 𝜃 (𝑎 |Ψ)⊤] + 𝜎 I.
+
+Assumption 6 (Universal Approximation). Suppose for any policy 𝜃 , the critic estimation 𝑉 (· ; 𝑤 ∗), where 𝑤 ∗ is a stationary point, can be close enough to the ground truth 𝑉 𝜃 (·) , i.e., there exists a positive constant 𝜖 critic such that max 𝜃,𝑥 |𝑉 (𝑥 ; 𝑤 ∗) − 𝑉 𝜃 (𝑥 )| ≤ 𝜖 critic .
+
+We state the main theoretical result as below. Theorem 1. With a pretrained FM of estimation error 𝜖 FM est and approximation error 𝜖 FM approx fixed and integrated as a reward-agnostic critic backbone, by choosing step-size parameters 𝛼 = 72√𝜇 , 𝛼 𝑛 = 
+
+> 𝛼 𝑛
+
+, 𝛽 = 1/√𝑁 𝐵 , and network/algorithm parameters satisfying 𝑚 =
+
+Ω(𝑑 3𝑀 − 11 2 
+
+> 𝑑
+
+), 𝐵 = Θ(𝑀 132  
+
+> 𝑤
+
+𝑀 −6 
+
+> 𝑑
+
+), and 𝑁 𝐵 = Ω(𝑀 4 
+
+> 𝑑
+
+), it holds with probability at least 1 − exp (− Ω(log 2 𝑀 𝑤 )) that Algorithm 1 achieves: 
+
+E 𝐽 (𝜃 ∗) − 𝐽 (𝜃 𝑁 𝑇 ) = O  𝑁 −1
+
+> 𝑇
+
+| {z }
+
+> (𝑎 )
+
++ O( 𝐾 32 (1 − 𝜈 𝐾 −1)𝐺 )
+
+| {z } 
+
+> (𝑏 )
+
++ O  𝐾 12 (𝐵𝑀 52 
+
+> 𝑑
+
+𝑁 − 14 
+
+> 𝐵
+
++ 𝐵 43 𝑀 − 112  
+
+> 𝑤
+
+𝑀 4 
+
+> 𝑑
+
+) log 32 𝑀 𝑤 log 12 𝑁 𝐵 
+
+| {z } 
+
+> (𝑐 )
+
++ O  √𝜖 bias 
+
+| {z } 
+
+> (𝑑 )
+
++ O( 𝐾 12 𝜖 FM est )
+
+| {z } 
+
+> (𝑒 )
+
++ O( 𝐾 12 𝜖 FM approx )
+
+| {z } 
+
+> (𝑓 )
+
++ O  𝐾 1/2𝜖 critic /𝑁 1/2
+
+> 𝐵
+
+| {z }
+
+> (𝑔 )
+
+. (18) 
+
+Proof Sketch . To bound the suboptimality gap 𝐽 (𝜃 ∗) − 𝐽 (𝜃 𝑁 𝑇 ), we focus on analyzing the discrepancy between the update direction 
+
+𝑑 𝑛 and the true policy gradient ∇𝐽 (𝜃 𝑛 ) at each iteration. We de-compose this discrepancy into four components: (i) value function approximation error, (ii) actor update error induced by imperfect reward consensus, (iii) the mismatch between TD error and the advantage function, and (iv) intrinsic representation error of the function approximators. Each component is bounded individually to obtain the terms in (18). In particular, the value function ap-proximation error is further decomposed into contributions from imperfect critic updates, consensus inaccuracies, and limitations of the pretrained FM representations. These terms are controlled using the stated assumptions and standard properties of overpa-rameterized DNNs. Due to space limitation, we relegate the full proof to our online technical report [29] ■
+
+Theorem 1 provides several key insights. First , term (𝑏 ) shows that imperfect reward consensus induces an optimality gap of the same order as approaches that exchange full critic parameters and TD errors [45]. This indicates that restricting communication to scalar reward exchange preserves performance while significantly improving practicality and reducing communication overhead. Sec-ond , term (𝑐 ) highlights the role of network architecture. The convergence bound exhibits stronger sensitivity to the network depth than to its width, suggesting that increasing depth is more effective for improving performance, whereas overparameteriza-tion in width yields diminishing returns. Third , terms (𝑒 ) − ( 𝑔 )
+
+characterize the impact of critic approximation errors, which scale with the number of agents 𝐾 . In particular, terms (𝑒 ) and (𝑓 ) cor-respond to estimation and approximation errors arising from the self-supervised pretraining of the FM, where the learning objec-tive is forward dynamics prediction. These error components are unique to our framework and reflect the quality of the pretrained, reward-agnostic representations used by the critic. Theorem 1 shows that Algorithm 1 converges to a neighborhood of the global optimum at a rate of O( 1/𝑁 𝑇 ). This indicates that op-erating under nonlinear function approximation and decentralized reward consensus matches the convergence rate of state-of-the-art actor–critic methods with linear function approximation and full critic exchange [17]. Note that our result generalizes [28], which only considered linear approximation, to a more realistic deep learn-ing setting. Moreover, unlike prior work that guarantees conver-gence only to stationary points (e.g., in terms of ∥∇ 𝐽 (𝜃 )∥ 2) [17, 28], our analysis characterizes convergence toward global optimality .
+
+## 5 Numerical Evaluation 5.1 Experimental Settings 
+
+We consider operating a wireless RA-based network over 𝑇 = 600 time slots. As described in Section 3, all devices operate under the LBT mechanism. Following the IEEE 802.11 protocol, the SIFS and DIFS durations are set to 2 and 4 time slots, respectively, with each slot lasting 𝑇 s = 9 𝜇𝑠 . Each data packet transmission requires 𝜏 = 10 time slots, while ACK signals occupy 4 time slots. We set the number of AP antennas to 𝑁 r = 2, the bandwidth to 
+
+𝐵 = 10 MHz, and the transmit power to 𝑝 𝑘 = 0 dBm, with the noise spectral density at −174 dBm/Hz. For a given number of devices 𝐾 ,device-to-AP distances are uniformly distributed between 2 m and 14 m. For example, with 𝐾 = 4, the device distances are {𝑑 𝑘 }𝐾 =4 
+
+> 𝑘 =1
+
+=
+
+{2, 6, 10 , 14 }. The large-scale fading factor 𝜂 𝑘 is modeled as 𝜂 𝑘 =
+
+𝐿 o
+
+ 𝑑 𝑘 
+
+> 𝑑 o
+
+𝑧 
+
+, where 𝐿 o = −40 dB is the reference pathloss, 𝑑 o = 1 m is the reference distance, and 𝑧 = 4 is the pathloss exponent. The network graph G is generated using the Watts-Strogatz model [35], where each device connects to one neighboring device with zero rewiring probability. To generate the consensus weight matrix C, we assign equal weights are assigned to each device’s established links, i.e., for each device 𝑘 ∈ K , 𝑐 𝑘𝑘 ′ = 1  
+
+> | N 𝑘 |+ 1
+
+, ∀𝑘 ′ ∈N𝑘 , where N𝑘 denotes the neighbor set of device 𝑘 . Each consensus step consists of 𝐺 = 3 communication rounds. For the critic-backbone FM, we set the embedding size to 𝑁 e = 64 such that the encoders, transformer blocks, and prediction head all generate embeddings of dimension 64. Both the state and action en-coders are implemented as two-layer MLPs with width 64. The FM MobiHoc ’26, November 23–26, 2026, Tokyo, Japan Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu 0 50 100 Learning Phase (%) 010 20 30 40 50 60 70 Throughput (Mbps) 0 50 100 Learning Phase (%) 0.20.40.60.81.01.2AoI (ms) Device 0 Device 1 
+
+(a) Fair-AoI task. 0 50 100 Learning Phase (%) 010 20 30 40 50 60 70 Throughput (Mbps)    
+
+> Rmin
+> 050 100 Learning Phase (%) 0.20.40.60.81.01.2AoI (ms) Device 0 Device 1
+
+(b) Max-rate task. 0 50 100 Learning Phase (%) 010 20 30 40 50 60 70 Throughput (Mbps) 0 50 100 Learning Phase (%) 0.20.40.60.81.01.2AoI (ms) Device 0 Device 1 (c) Fair-rate task. 
+
+Figure 4: Throughput and AoI under end-to-end learning with 𝐾 = 2 devices across different RA optimization tasks. 0 20 40 60 80 100 Learning Phase (%) 0246810 12 Number of Collisions Fair Rate Max Rate Fair AoI 
+
+(a) Number of Collisions. 0 20 40 60 80 100 Learning Phase (%) 0.40.50.60.70.80.91.0Normalized Reward Sum Fair Rate Max Rate Fair AoI (b) Normalized reward sum. 
+
+Figure 5: Collision and reward performance under end-to-end learning with 𝐾 = 2 devices across RA optimization tasks. 
+
+consists of two transformer blocks, each containing a self-attention layer with 8 heads and an MLP of width 4 𝑁 e and depth 1. The prediction head is a linear transformation of size 2 𝑁 e × 𝑁 e with bias. No dropout is applied in the FM design. Each device’s FM is pretrained using more than 100 , 000 reward-independent RA-based wireless network samples, each consisting of a tuple {𝑡, 𝑠 𝑡 , 𝑎 𝑘,𝑡 }. We employ stochastic gradient descent (SGD) with a rate of 0 .005, applying 500 updates with a batch size 256. The target encoder is updated using a soft update with a rate of 0 .005. For both actor and reward-specific critic head, we adopt an MLP block of width 𝑀 𝑤 = 128 and depth 𝑀 𝑑 = 3. The actor and critic weights are updated using the SGD optimizer, with learning rates 
+
+𝛼 = 0.001 and 𝛽 = 0.002. Discount factor is set to 𝛾 = 0.9. For the end-to-end training baseline, we employ an MLP block of width 
+
+𝑀 𝑤 = 128 and depth 𝑀 𝑑 = 7 for both actor and critic to ensure a comparable number of parameters for fair evaluation. Since the state dimension grows proportionally with 𝐾 , we adjust the history length 𝐻 for different values 𝐾 to stabilize the input dimension 𝑑 
+
+of the actor–critic network against the FM embedding size 𝑁 𝑒 .For the MDP parameters, we set 𝜆 = 60, 𝜔 FA = 15, 𝜔 MR = 24 ×10 6,
+
+𝜔 P1 = 0.5, 𝜔 P2 = 8, 𝜔 FR1 = 256 × 10 6, 𝜔 FR2 = 0.7, and 𝛼 FR = 12 for parameter scaling. These values are heuristically selected to bound the reward to a reasonable range. All results are averaged over at least 20 independent runs. As performance metrics on RA-based wireless networks, we evaluate throughput (in Mbps) and AoI (in ms). In addition, we assess fairness across devices using the normalized gap (N-Gap) defined as N-Gap of {𝑥 } = (max {𝑥 } − min {𝑥 })/ max {𝑥 }.
+
+## 5.2 Experimental Results and Discussion 
+
+1) Performance Analysis of the Proposed Decentralized MARL Algorithm on Wireless RA Network Optimization Tasks: We first validate Algorithm 1 and the MDP formulation introduced in Section 4.2 by evaluating end-to-end learning performance [28]. In Figure 4, we present the throughput and AoI achieved during the learning phase for three downstream tasks. For ease of illustra-tion, we consider 𝐾 = 2 devices. The results demonstrate strong learning performance across all tasks. As expected, the fair-AoI task (Figure 4a) successfully balances AoI across devices. The max-rate task (Figure 4b) effectively maximizes the throughput of one device while maintaining the other near the minimum rate con-straint 𝑅 min . The fair-rate task (Figure 4c) is able to jointly improve throughput of both devices while preserving the fairness. These observations confirm that the proposed MDP formulation is capable of supporting diverse RA network optimization objectives. As additional performance metrics, Figures 5a and 5b show the number of collisions and the normalized reward sum, respectively. For improved readability, all results are smoothed using a moving average over 5 samples. The results in Figure 5a show that the fair-AoI task achieves the fastest reduction in collisions, indicating that balancing AoI is the least complex among the three objectives. This is intuitive, as the fair-AoI objective does not require consideration of channel conditions, which directly influence device data rates. By contrast, the fair-rate task exhibits the highest collision counts even after many episodes. This is because its reward function imposes stronger penalties for rate unfairness across devices. Consequently, the policy that reduces collisions emerges later in training, consis-tent with Figure 4c where device rates increase gradually while maintaining fairness gaps. In Figure 5b, we observe a steady in-crease in the normalized reward sum over the learning process. This trend validates the effectiveness of our reward functions and confirms that the algorithm successfully optimizes the objectives. 
+
+2) Performance Comparison of FM-Aided MARL and Base-lines: With the end-to-end (E-E) MARL results as a proof of con-cepts, we are now ready to assess the effectiveness of our FM-aided MARL algorithm by comparing it with E-E MARL and conventional decentralized MARL (conventional MARL), which performs full critic exchanges [45]. Figure 6 presents the AoI and throughput over runtime for each downstream task with 𝐾 = 4. For all tasks, FM-aided learning shows superior learning speed against both base-lines, approximately improving the convergence speed by at least 55%. Note that the performance gap with E-E MARL is attributed to the integration of the FM as a reward-agnostic critic backbone. In Figure 7, we compare our algorithm with several baselines, which include 1 /𝐾 -persistent CSMA (1 /𝐾 -CSMA) and CSMA/CA Foundation Model-Aided Multi-Agent Reinforcement Learning for Wireless Random Access Network Optimization MobiHoc ’26, November 23–26, 2026, Tokyo, Japan 0 200 400 600 Runtime (s) 0.70.80.91.01.1Worst-case AoI (ms) 90% 95% 100% Conventional MARL E-E MARL FM-aided MARL 
+
+(a) Fair-AoI task. 0 250 500 Runtime (s) 40 45 50 55 60 65 70 Sum Rate (Mbps) 100% 95% 0 250 500 Runtime (s) 23456789Minimum Rate (Mbps)  
+
+> Conventional MARL E-E MARL FM-aided MARL
+
+(b) Max-rate task. 0 200 400 600 800 Runtime (s) 5678910 11 Worst-case Throughput (Mbps)  100% 95% FM-aided MARL E-E MARL Conventional MARL (c) Fair-rate task. 
+
+Figure 6: Performance comparison of conventional, end-to-end (E-E), and FM-aided MARL across different RA optimization tasks with 𝐾 = 4. The FM-aided MARL achieves faster convergence than the end-to-end baseline. 5 10 Number of Devices 012345Worst-case AoI (ms) 
+
+Fair-AoI 
+
+> BEB-CSMA 1/ K-CSMA E-E MARL FM-MARL Round-Robin Optimal
+
+5 10 Number of Devices 30 40 50 60 70 80 Sum Throughput (Mbps) 
+
+Max-Rate 
+
+Figure 7: Fair-AoI and Max-rate performance comparison with non-MARL baselines across the number of devices 𝐾 .
+
+with binary exponential backoff (BEB-CSMA), under the Fair-AoI and Max-rate objectives for different numbers of devices. We ob-serve that both E-E MARL and FM-MARL consistently outperform the CSMA-based baselines, which rely on stochastic channel-access mechanisms. Round-robin, where devices are scheduled in turn through centralized control, achieves near-optimal performance for the Fair-AoI objective because it provides balanced access opportu-nities across devices. However, its performance degrades under the Max-rate objective, since equal transmission allocation does not account for differences in the achievable data rates of individual devices. In contrast, our proposed method, along with end-to-end training, learns to prioritize devices with more favorable channel conditions, resulting in performance closer to the optimal. Lastly, we provide a summary of performance comparison in Table 1. We observe that the algorithms achieve comparable final rate and AoI performance. However, the proposed FM-aided MARL approach arrives at its 95%-optimal performance level substantially faster than the end-to-end training approach. 
+
+## 6 Conclusion 
+
+In this work, we proposed an FM-aided decentralized MARL frame-work for RA network optimization. By employing an FM as a 
+
+Table 1: Performance Comparison of End-to-End (E-E) and FM-aided MARL for 𝐾 = 4 (top) and 𝐾 = 8 (bottom). AoI is measured for the fair-AoI task, and rate is measured for both max-rate and fair-rate tasks. 
+
+Task Alg. Mean Min. Max. N-Gap 95%-T (s) Fair-AoI E-E 0.731 ± 0.010 0.726 0.734 0.011 335 (ms) FM 0.769 ± 0.032 0.757 0.772 0.019 108 Max-rate E-E 17.044 ± 0.266 4.092 41.225 0.901 380 (Mbps) FM 17.924 ± 0.345 3.918 43.865 0.911 159 Fair-rate E-E 9.049 ± 0.186 6.903 11.956 0.423 373 (Mbps) FM 8.083 ± 0.131 6.143 11.590 0.463 104 Task Alg. Mean Min. Max. N-Gap 95%-T (s) Fair AoI E-E 0.366 ± 0.014 0.364 0.368 0.003 723 (ms) FM 0.368 ± 0.025 0.365 0.370 0.013 231 Max Rate E-E 7.235 ± 0.375 3.895 30.175 0.871 812 (Mbps) FM 7.152 ± 0.236 4.100 29.685 0.862 345 Fair Rate E-E 6.365 ± 0.352 5.851 6.864 0.148 768 (Mbps) FM 6.335 ± 0.244 5.642 7.025 0.197 225 reward-agnostic critic backbone, our algorithm effectively lever-ages self-supervised knowledge on network dynamics and improves learning efficiency. Compared with end-to-end training, the FM-aided approach achieves faster convergence, demonstrating its effec-tiveness in optimizing throughput and AoI across diverse objectives. Future work includes extending this framework to more complex and sophisticated wireless RA scenarios with larger action spaces (e.g., considering transmit power control). 
+
+## Acknowledgments 
+
+This work was supported in part by the National Science Foun-dation (NSF) under Grant CNS2110259, Grant CNS2112471, and Grant ECCS233104; in part by the Office of Naval Research (ONR) under Grant N000142412729; in part by the Defense Advanced Re-search Projects Agency (DARPA) under Grant D24AP00265, Grant HR00112520019, and Grant HR0011261E001; and in part by Meta Research Award INB3267726. MobiHoc ’26, November 23–26, 2026, Tokyo, Japan Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu 
+
+## References 
+
+[1] Norman Abramson. 1970. The ALOHA system: Another alternative for computer communications. In Proceedings of Fall Joint Computer Conference . 281–285. [2] Ijaz Ahmad, Shariar Shahabuddin, Hassan Malik, Erkki Harjula, Teemu Leppänen, Lauri Loven, Antti Anttonen, Ali Hassan Sodhro, Muhammad Mahtab Alam, Markku Juntti, et al. 2020. Machine learning meets communication networks: Current trends and future challenges. IEEE Access 8 (2020), 223418–223460. [3] Christopher Amato. 2024. An introduction to centralized training for decentral-ized execution in cooperative multi-agent reinforcement learning. arXiv preprint arXiv:2409.03052 (2024). [4] Ons Aouedi, Thai-Hoc Vu, Alessio Sacco, Dinh C Nguyen, Kandaraj Piamrat, Guido Marchetto, and Quoc-Viet Pham. 2025. A survey on intelligent Internet of Things: Applications, security, privacy, and future directions. IEEE Communica-tions Surveys & Tutorials 27, 2 (2025), 1238–1292. [5] François Baccelli, Bartlomiej Blaszczyszyn, and Paul Muhlethaler. 2006. An Aloha protocol for multihop mobile wireless networks. IEEE Transactions on Information Theory 52, 2 (2006), 421–436. [6] Stephen Boyd, Arpita Ghosh, Balaji Prabhakar, and Devavrat Shah. 2006. Ran-domized gossip algorithms. IEEE Transactions on Information Theory 52, 6 (2006), 2508–2530. [7] Xuelin Cao, Bo Yang, Chongwen Huang, Chau Yuen, Marco Di Renzo, Zhu Han, Dusit Niyato, H Vincent Poor, and Lajos Hanzo. 2021. AI-assisted MAC for reconfigurable intelligent-surface-aided wireless networks: Challenges and opportunities. IEEE Communications Magazine 59, 6 (2021), 21–27. [8] Bolin Chen, Jiming Chen, Yuan Gao, and Jie Zhang. 2016. Coexistence of LTE-LAA and Wi-Fi on 5 GHz with corresponding deployment scenarios: A survey. 
+
+IEEE Communications Surveys & Tutorials 19, 1 (2016), 7–32. [9] Zirui Chen, Zhaoyang Zhang, and Zhaohui Yang. 2024. Big AI models for 6G wireless networks: Opportunities, challenges, and research directions. IEEE Wireless Communications 31, 5 (2024), 164–172. [10] Ziyi Chen, Yi Zhou, Rong-Rong Chen, and Shaofeng Zou. 2022. Sample and communication-efficient decentralized actor-critic algorithms with finite-time analysis. In Proceedings of International Conference on Machine Learning (ICML) .PMLR, 3794–3834. [11] document ITU-R P.1238-12, ITU 2023. P Series: Radiowave Propagation; Propaga-tion Data and Prediction Methods for the Planning of Indoor Radiocommunication Systems and Radio Local Area Networks in the Frequency Range 300 MHz to 450 GHz . document ITU-R P.1238-12, ITU. [12] document TR 36.814, V9.2.0, 3GPP 2017. Evolved Universal Terrestrial Radio Access (E-UTRA); Further Advancements for E-UTRA Physical Layer Aspects . document TR 36.814, V9.2.0, 3GPP. [13] Jun Du, Tianyi Lin, Chunxiao Jiang, Qianqian Yang, C Faouzi Bader, and Zhu Han. 2024. Distributed foundation models for multi-modal learning in 6G wireless networks. IEEE Wireless Communications 31, 3 (2024), 20–30. [14] Jaron Fontaine, Adnan Shahid, and Eli De Poorter. 2024. Towards a wireless physical-layer foundation model: Challenges and strategies. In 2024 IEEE In-ternational Conference on Communications Workshops (ICC Workshops) . IEEE, 1–7. [15] Albert Gu and Tri Dao. 2023. Mamba: Linear-time sequence modeling with selective state spaces. arXiv preprint arXiv:2312.00752 (2023). [16] Ziyang Guo, Zhenyu Chen, Peng Liu, Jianjun Luo, Xun Yang, and Xinghua Sun. 2022. Multi-agent reinforcement learning-based distributed channel access for next generation wireless networks. IEEE Journal on Selected Areas in Communi-cations 40, 5 (2022), 1587–1599. [17] FNU Hairi, Jia Liu, and Songtao Lu. 2022. Finite-time convergence and sam-ple complexity of multi-Agent actor-critic reinforcement learning with average reward. In Proceedings of International Conference on Learning Representations (ICLR) .[18] Mengqi Han, Sami Khairy, Lin X Cai, Yu Cheng, and Ran Zhang. 2020. Reinforce-ment learning for efficient and fair coexistence between LTE-LAA and Wi-Fi. 
+
+IEEE Transactions on Vehicular Technology 69, 8 (2020), 8764–8776. [19] Yuxuan He, Xinyuan Gang, and Yayu Gao. 2024. Intelligent decentralized multi-ple access via multi-agent deep reinforcement learning. In Proceedings of IEEE Wireless Communications and Networking Conference (WCNC) . IEEE, 1–6. [20] Libin Jiang, Mathieu Leconte, Jian Ni, R. Srikant, and Jean Walrand. 2012. Fast Mixing of Parallel Glauber Dynamics and Low-Delay CSMA Scheduling. IEEE Transactions on Information Theory 58, 10 (2012), 6541–6555. [21] Libin Jiang, Devarat Shah, and Jean Walrand. 2010. Distributed Random Access Algorithm: Scheduling and Congestion Control. IEEE Transactions on Information Theory 56, 12 (2010), 6182–6207. [22] Libin Jiang and Jean Walrand. 2009. A distributed CSMA algorithm for through-put and utility maximization in wireless networks. IEEE/ACM Transactions on Networking 18, 3 (2009), 960–972. [23] Leonard Kleinrock and Fouad Tobagi. 1975. Packet switching in radio channels: Part I-carrier sense multiple-access modes and their throughput-delay character-istics. IEEE Transactions on Communications 23, 12 (1975), 1400–1416. [24] Merima Kulin, Tarik Kazaz, Eli De Poorter, and Ingrid Moerman. 2021. A survey on machine learning-based performance improvement of wireless networks: PHY, MAC and network layer. Electronics 10, 3 (2021), 318. [25] Chanho Lee, Seungkeun Park, and Taesu Cheong. 2024. Dynamic-persistent CSMA: A reinforcement learning approach for multi-user channel access. IEEE Access 12 (2024), 178705–178716. [26] Nurul Huda Mahmood, Stefan Böcker, Ingrid Moerman, Onel A López, Andrea Munari, Konstantin Mikhaylov, Federico Clazzer, Hannes Bartz, Ok-Sun Park, Eric Mercier, et al. 2021. Machine type communications: Key drivers and enablers towards the 6G era. EURASIP Journal on Wireless Communications and Networking 
+
+2021, 1 (2021), 134. [27] Jian Ni, Bo Tan, and R. Srikant. 2010. Q-CSMA: Queue-Length-Based CSMA/CA Algorithms for Achieving Maximum Throughput and Low Delay in Wireless Networks. IEEE/ACM Transactions on Networking 20, 3 (2010), 825–836. [28] Myeung Suk Oh, Zhiyao Zhang, FNU Hairi, Alvaro Velasquez, and Jia Liu. 2025. Consensus-based Decentralized Multi-agent Reinforcement Learning for Random Access Network Optimization. In Proceedings of the Twenty-sixth International Symposium on Theory, Algorithmic Foundations, and Protocol Design for Mobile Networks and Mobile Computing . 241–250. [29] Myeung Suk Oh, Zhiyao Zhang, Alvaro Velasquez, Nathaniel D. Bastian, and Jia Liu. 2026. Technical report on foundation model-aided multi-agent reinforcement learning for random access network optimization . Technical Report. The Ohio State University. https://kevinliu-osu.github.io/publications/FM-DecMARL_ RA_TR.pdf Online technical report. [30] Juan Carlos Rodriguez, Felipe Grijalva, Marcelo García, Diana Estefanía Chér-rez Barragán, Byron Alejandro Acuña Acurio, and Henry Carvajal. 2023. Wireless communication technologies for smart grid distribution networks. Engineering Proceedings 47, 1 (2023), 7. [31] Yucheng Sheng, Jiacheng Wang, Xingyu Zhou, Le Liang, Hao Ye, Shi Jin, and Geoffrey Ye Li. 2025. A wireless foundation model for multi-task prediction. 
+
+arXiv preprint arXiv:2507.05938 (2025). [32] Yanchao Sun, Shuang Ma, Ratnesh Madaan, Rogerio Bonatti, Furong Huang, and Ashish Kapoor. 2023. SMART: Self-supervised Multi-task pretrAining with contRol Transformers. In Proceedings of International Conference on Learning Representations (ICLR) .[33] Richard S Sutton, Andrew G Barto, et al. 1998. Reinforcement learning: An intro-duction . MIT Press Cambridge. [34] David Tse and Pramod Viswanath. 2005. Fundamentals of Wireless Communication .Cambridge University Press, New York, NY, USA. [35] Duncan J Watts and Steven H Strogatz. 1998. Collective dynamics of ‘small-world’ networks. Nature 393, 6684 (1998), 440–442. [36] Tengyu Xu, Zhe Wang, and Yingbin Liang. 2020. Improving sample complexity bounds for (natural) actor-critic algorithms. In Proceedings of Advances in Neural Information Processing Systems (NeurIPS) . 4358–4369. [37] Tingting Yang, Ping Zhang, Mengfan Zheng, Yuxuan Shi, Liwen Jing, Jianbo Huang, and Nan Li. 2025. WirelessGPT: A generative pre-trained multi-task learning framework for wireless communication. IEEE Network (2025). [38] Zhixiang Yang, Hongyang Du, Dusit Niyato, Xudong Wang, Yu Zhou, Lei Feng, Fanqin Zhou, Wenjing Li, and Xuesong Qiu. 2025. Revolutionizing wireless net-works with self-supervised learning: A pathway to intelligent communications. 
+
+IEEE Wireless Communications (2025). [39] Hanxiao Yu, Hanyu Zhao, Zesong Fei, Jing Wang, Zhiming Chen, and Yuping Gong. 2023. Deep-reinforcement-learning-based NOMA-aided slotted ALOHA for LEO satellite IoT networks. IEEE Internet of Things Journal 10, 20 (2023), 17772–17784. [40] Yiding Yu, Soung Chang Liew, and Taotao Wang. 2022. Multi-agent deep rein-forcement learning multiple access for heterogeneous wireless networks with imperfect channels. IEEE Transactions on Mobile Computing 21, 10 (2022), 3718– 3730. [41] Yiding Yu, Taotao Wang, and Soung Chang Liew. 2019. Deep-reinforcement learning multiple access for heterogeneous wireless networks. IEEE Journal on Selected Areas in Communications 37, 6 (2019), 1277–1290. [42] Kaiqing Zhang, Zhuoran Yang, Han Liu, Tong Zhang, and Tamer Basar. 2018. Fully decentralized multi-agent reinforcement learning with networked agents. In Proceedings of International Conference on Machine Learning (ICML) . PMLR, 5872–5881. [43] Lyutianyang Zhang, Hao Yin, Zhanke Zhou, Sumit Roy, and Yaping Sun. 2020. Enhancing WiFi multiple access performance with federated deep reinforcement learning. In Proceedings of IEEE Vehicular Technology Conference . IEEE, 1–6. [44] Xin Zhang, Zhuqing Liu, Jia Liu, Zhengyuan Zhu, and Songtao Lu. 2021. Taming communication and sample complexities in decentralized policy evaluation for cooperative multi-agent reinforcement learning. In Proceedings of Advances in Neural Information Processing Systems (NeurIPS) .[45] Zhiyao Zhang, Myeung Suk Oh, FNU Hairi, Ziyue Luo, Alvaro Velasquez, and Jia Liu. 2025. Finite-Time Global Optimality Convergence in Deep Neural Actor-Critic Methods for Decentralized Multi-Agent Reinforcement Learning. In Pro-ceedings of International Conference on Machine Learning (ICML) .
