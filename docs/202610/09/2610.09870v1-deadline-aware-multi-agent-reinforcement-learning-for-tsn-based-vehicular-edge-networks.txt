@@ -1,0 +1,355 @@
+Title: Deadline-Aware Multi-Agent Reinforcement Learning for TSN-Based Vehicular Edge Networks
+
+URL Source: https://arxiv.org/pdf/2610.09870v1
+
+Published Time: Thu, 08 Oct 2026 01:11:16 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# Deadline-Aware Multi-Agent Reinforcement Learning for TSN-Based Vehicular Edge Networks 
+
+Bernardo A. C. Pereira ∗, Marcos Carvalho ∗, Fatih Temiz †, Shavbo Salehi †, Melike Erol-Kantarci †, Fellow, IEEE, Andreas Gavrielides ‡, Johann M. Marquez-Barja ‡, Daniel F. Macedo ∗∗Universidade Federal de Minas Gerais, Brazil 
+
+†School of Electrical Engineering and Computer Science, University of Ottawa, Ottawa, Canada 
+
+‡University of Antwerp - imec, IDLab - Faculty of Applied Engineering, Belgium E-mails: bernardoalvescosta10@gmail.com, {marcoscarvalho, damacedo }@dcc.ufmg.br 
+
+{ftemi033, ssale038, melike.erolkantarci }@uottawa.ca 
+
+{andreas.gavrielides, johann.marquez-barja }@imec.be 
+
+Abstract —Vehicular edge computing (VEC) enables latency-sensitive applications by bringing computing and networking resources closer to vehicles. However, existing approaches often overlook network contention among co-located services with heterogeneous and dynamic latency requirements. While time-sensitive networking (TSN) provides bounded-latency communi-cation, conventional and reinforcement learning-based schedulers struggle to adapt to highly dynamic vehicular environments and inter-queue dependencies. To address these limitations, we propose a multi-agent reinforcement learning (MARL) approach for queue-level scheduling in TSN-enabled VEC. Each TSN queue is assigned an autonomous agent that jointly learns the queue service order and time-slot duration to minimize deadline misses under speed-dependent latency requirements. We employ multi-agent proximal policy optimization (MAPPO) to enable coordinated yet autonomous scheduling decisions. Evaluation against single-agent, multi-agent, and non-learning-based base-lines shows that MAPPO provides robust performance across different traffic profiles. Compared with centralized single-agent methods, it reduces service latency by up to 66.2% and improves reliability by up to 271.8%. Furthermore, unlike urgency-based heuristics, MAPPO ensures balanced scheduling while achieving lower inference times compared to other MARL methods. 
+
+Index Terms —Extended Reality, Multi-agent Reinforcement Learning, Time-Sensitive Networking, Vehicular Edge Comput-ing 
+
+I. I NTRODUCTION 
+
+Vehicular edge computing (VEC) has emerged as a key infrastructure for enabling a wide range of vehicular ap-plications, including autonomous driving support and im-mersive applications such as augmented and virtual reality (AR/VR) [1]. These emerging applications introduce stringent quality of service requirements, demanding ultra-low latency and high reliability to ensure responsive operation. To meet these requirements, VEC deploys computing and networking resources at roadside units (RSUs), bringing them closer to vehicles [2]. In this architecture, RSUs can cache and deliver application content locally, improving service responsiveness. While existing VEC research primarily focuses on managing computational resources at edge servers, it generally assumes that edge servers operate under a best-effort Ethernet commu-nication model. Time-sensitive networking (TSN) has become a key tech-nology for supporting latency-sensitive services over Ethernet networks. Developed by the IEEE 802.1 working group, TSN comprises a set of standards that provide bounded latency and high reliability for time-critical services [3]. Among these mechanisms, the IEEE 802.1Qbv Time-Aware Shaper (TAS) enables time-based traffic scheduling, allowing the manage-ment of co-located latency-sensitive flows [4]. Nevertheless, enabling the management of mixed deadline-critical traffic in highly dynamic edge environments remains an open chal-lenge [5]. This challenge becomes even more complex in vehicular networks due to the high mobility of vehicles. To mitigate this issue, we argue that the latency budget for critical services at the edge server must be tightened as vehicle speeds increase, ensuring that packets can be successfully delivered before connectivity degradation occurs. In this context, conventional TSN schedulers based on optimization techniques, such as satisfiability modulo theories and integer linear programming, face challenges in rapidly adapting schedules to highly dynamic environments [6]. Con-versely, reinforcement learning (RL) has been used for TSN scheduling by enabling adaptive decision-making through con-tinuous interaction with the environment. Nevertheless, exist-ing studies primarily optimize intermediate network devices while overlooking the traffic sources. Furthermore, existing RL-based approaches rely on a centralized scheduling policy that determines the transmission schedule for all queues, rather than allowing each queue to make autonomous scheduling decisions [7]. As a result, they are limited in capturing inter-queue dependencies in dynamic environments, particularly when latency deadlines vary over time. To address these limitations, inspired by the approach in [8], we propose a multi-agent reinforcement learning (MARL) approach in which each TSN queue is assigned an autonomous agent. The agents learn scheduling policies that jointly deter-mine the service order and time-slot duration of each queue to minimize deadline misses. We also leverage multi-agent proximal policy optimization (MAPPO) [9], which employs centralized training with decentralized execution (CTDE). arXiv:2610.09870v1 [cs.NI] 7 Oct 2026 RSU                   
+
+> 01M
+> XR Applications XR Vehicle TSN-Capable NIC Agent TSN queues
+> RSU RSU
+> MEC server Centralized Training
+> Decentralized Execution
+> Environment
+> Observation
+> Agent M
+> Actor M
+> Critic M
+> OMan
+> Agent 1
+> Actor 1
+> Critic 1
+> O1a1
+> Agent 0
+> Actor 0
+> Critic 0
+> O0a0
+> TSN queues
+> Action
+> MEC server MEC server
+
+Figure 1: Overall system model. During training, the centralized critic exploits global state information to produce more informative policy updates, en-couraging coordinated scheduling decisions while enabling decentralized execution. We evaluate the effectiveness of the proposed MARL approach against centralized single-agent and non-learning-based baselines. The results demonstrate that MAPPO outperforms the considered approaches, reducing service latency by up to 66.2% and improving reliability by up to 271.8%, while achieving lower inference times than the other MARL methods. II. R ELATED WORKS 
+
+The authors in [10] employ proximal policy optimiza-tion (PPO) to dynamically optimize scheduling parameters, thereby reducing end-to-end latency in industrial network environments. Despite its effectiveness in ensuring bounded latency, the proposed approach is evaluated in a limited scenario with only two queues. This limitation may hinder its scalability and effectiveness in more complex network environments, where scheduling decisions for one queue can directly influence the performance of others. Conversely, the authors in [11] introduce a deep deterministic policy gradient (DDPG)-based method for adapting time-slot durations across multiple queues, aiming to mitigate the impact of transmission failures caused by external factors (i.e., time-synchronization errors) on application latency. Although the approach ensures bounded latency for critical applications, it does not explicitly capture the interdependence among queues, which may limit its ability to coordinate resource allocation in highly dynamic network environments with mixed and heterogeneous latency requirements. Recent studies have explored MARL solutions with different agent designs to address the complexity of TSN scheduling. For instance, [12] divides the scheduling problem into dedicated routing and timing agents, enabling adaptive traffic management at the device level. Likewise, [13] intro-duces a multi-agent architecture within a centralized control framework, in which routing and scheduling agents collaborate to minimize latency in dynamic network environments. How-ever, these approaches focus on network-level coordination rather than cooperative optimization of individual host-level queues. Our work learns coordinated scheduling policies that account for queue states, heterogeneous latency requirements, and dynamic edge traffic. III. S YSTEM MODEL AND PROBLEM FORMULATION 
+
+As illustrated in Figure 1, we consider RSUs co-located with MEC servers and deployed along a highway segment. Let 
+
+U = {u1, u 2, . . . , u N } denote the set of N vehicles within the coverage range of the RSU, and let V = {v1, v 2, . . . , v N } de-note their respective speeds. The MEC server hosts two classes of applications: traditional AR and semantic AR (SeAR) appli-cations [14]. Unlike traditional AR, which transmits the entire video content, SeAR transmits compact data units containing masks that capture the semantic content of the video. This al-lows SeAR to convey the relevant semantic information while reducing the amount of data transmitted over the network. Furthermore, to ensure strict temporal isolation, the server is equipped with a TSN-capable network interface card (NIC) with a set of queues, denoted as Q = {q0, q 1, . . . , q M }, where each XR application is mapped to a dedicated queue. Since our focus is on queue-level scheduling at the MEC layer, we model only the downstream traffic generated by the considered applications at the edge server. 
+
+A. XR Traffic, Latency and Dynamic Deadline Model a) XR Traffic: We adopt the statistical traffic model for XR applications presented in [14] and incorporate the protocol data unit (PDU)-set concept as in [15]. The traffic stream for each vehicle un ∈ U is modeled as a sequence of PDU-sets, where each PDU-set is indexed by f ∈ F un and consists of a group of closely related PDUs that carry a single application-level payload. The individual PDUs within a given PDU-set are indexed by j ∈ J un,f . The temporal characteristics of the XR traffic are determined by the arrival times of PDU-sets and their constituent PDUs. Let tun,f,q m denote the arrival timestamp of PDU-set f at TSN queue qm of vehicle un. Each PDU-set consists of N f 
+
+> IP
+
+PDUs, where tun,f ,j,q m denotes the arrival timestamp of PDU j within PDU-set f at the queue qm.The PDUs are enqueued at the TSN queue according to their arrival times and served following a first-in, first-out (FIFO) policy during each transmission opportunity. 
+
+b) Latency Model: PDUs experience queueing latency while waiting for a transmission opportunity. Let tsun,f,j,q m
+
+denote the service start time of PDU j belonging to PDU-set f of vehicle un at queue qm. To capture the worst-case waiting time at each queue, we define the age of the oldest PDU (AOPDU), representing the waiting time of the oldest PDU currently in queue qm at observation time step t, denoted by gm(t). Let Bm(t) denote the set of PDUs currently waiting in queue qm. The AOPDU is given by 
+
+gm(t) = 
+
+
+
+max  
+
+> j∈B m(t)
+
+(t − tun,f,j,q m ) , if Bm(t)̸ = ∅,
+
+0, otherwise .
+
+(1) Due to the interdependencies among the PDUs within a PDU-set, the delayed delivery of a single PDU may prevent the timely reconstruction of an XR video frame or semantic mask. The total latency experienced by PDU-set f , denoted by 
+
+Γun,f,q m , is defined as the time elapsed between the arrival of its first PDU at the queue qm and the completion of its last PDU, expressed as Γun,f,q m = tcun,f,q m − tun,f, 1,q m , where 
+
+tcun,f,q m denotes the completion time of the last PDU in PDU-set f , and tun,f, 1,q m denotes the arrival time of its first PDU at queue qm.
+
+c) Dynamic PDU-Set Deadline Model: The sequence of PDU-sets Fun requested by vehicle un is mapped to a tuple 
+
+Φun,f = ⟨src un , dst un , N f
+
+> IP
+
+, q m, D un,f ⟩, where src un and 
+
+dst un = un denote the source RSU and destination vehicle, respectively, N f 
+
+> IP
+
+is the number of PDUs in PDU-set f , qm is the associated TSN queue, and Dun,f is its dynamic deadline. The deadline is defined as Dun,f = αD base , where Dbase is the fixed base deadline of the corresponding XR application. For traditional AR applications, Dbase is determined by the generation rate; for example, a 90 Hz application has a base deadline of 11 .11 ms. For SeAR applications, we consider a tighter base deadline of 2 ms due to the importance of timely semantic information. The speed-dependent scaling factor α
+
+is given by 
+
+α = αmax − vavg − vmin 
+
+> avg
+
+vmax  
+
+> avg
+
+− vmin 
+
+> avg
+
+(αmax − αmin ). (2) where αmax and αmin are the maximum and minimum dead-line adjustment factors, respectively, vavg denotes the average speed of U, and vmin  
+
+> avg
+
+and vmax  
+
+> avg
+
+denote the minimum and maximum average speeds considered. Thus, α dynamically adjusts the application deadline according to vehicle speed. As speed increases, the vehicle remains within the RSU coverage area for less time, reducing the time available for transmission. To satisfy the XR applications’ requirements, the total latency of each PDU-set must not exceed its corresponding dynamic deadline Dun,f . Accordingly, we define the indicator of a successful on-time transmission of PDU-set f from vehicle 
+
+un as 
+
+Iun,f =
+
+(
+
+1, if Γun,f,q m ≤ Dun,f ,
+
+0, otherwise . (3) 
+
+B. TSN Schedule Model 
+
+The network execution time is divided into fixed-duration scheduling cycles, indexed by c, with ∆tcycle = 1 ms. At the beginning of each cycle, a schedule Sc partitions the cycle into M time slots, where wc,m denotes the duration (in μs) allocated to queue qm. The allocated durations satisfy 
+
+PMm=0 wc,m = ∆ tcycle . The second step consists of determin-ing the service order of the queues within the cycle. To govern this, we introduce a continuous priority score pc,k ∈ [0 , 1] .Queues are scheduled in descending order of their assigned priority score pc,m . Furthermore, two or more queues may be assigned the same score, indicating equal urgency. In such cases, ties are resolved by granting higher precedence to queues with larger indices (i.e., qM > q M −1 > · · · > q 0), reflecting standard hardware driver-level queue prioritization. Consequently, the resulting service order is defined as apermutation πc : {1, . . . , M } → {0, . . . , M − 1}, where 
+
+πc(k) denotes the queue index placed in the k-th position of the schedule. This is obtained by sorting the queues in descending order of pc,m , and breaking ties by selecting the largest index m, as πc = argsort m∈{ 0,...,M }(−pc,m , −m).Given the formalization above, the final schedule Sc is de-fined as an ordered sequence of tuples, given by Sc =
+
+⟨(wc,π c(1) , π c(1)) , . . . , (wc,π c(M ), π c(M )) ⟩, where wc,π c(m) is the corresponding assigned time slice duration and πc(k)
+
+denotes the index of the queue scheduled in the k-th position of the cycle. 
+
+C. Problem Formulation 
+
+The primary objective of the scheduler is to maximize the aggregate number of on-time PDU-sets across all co-located, mixed-criticality XR applications. Let W denote the set of time slot duration decisions and P denote the set of priority scores. The scheduling problem is formulated as 
+
+max 
+
+> W,P
+
+X
+
+> u∈U
+
+X 
+
+> f∈F u
+
+Iu,f (4) s.t. 
+
+> M
+
+X
+
+> m=1
+
+wc,m = ∆ tcycle , ∀c, (5) 
+
+Du,f ≤ Dbase , ∀u, ∀f, (6) 
+
+DSeAR  
+
+> u,f
+
+< D AR  
+
+> u,f
+
+, ∀u. (7) Constraint (5) guarantees that the sum of all allocated time slots equals the predefined cycle duration ∆tcycle . Constraint (6) dictates that the dynamic deadline Dun,f of any application cannot exceed its base deadline. Finally, constraint (7) strictly enforces the tighter delay requirements for SeAR applications compared to traditional AR applications. 
+
+D. MDP Formulation 
+
+We formulate the TSN scheduling problem as a multi-agent partially observable Markov decision process. Since each agent controls exactly one queue, we index agents by their queue index m ∈ { 0, . . . , M }. Below, we describe the three essential components of each agent.  
+
+> •
+
+Observation Space: At the start of scheduling cycle 
+
+c, each queue agent m receives a local observation 
+
+oc,m that captures the traffic state and queue dynamics, given by oc,m = ⟨Bc,m , Mc,m , g c,m , d c,m ⟩, where Bc,m 
+
+represents the backlog, defined as the total number of PDUs currently waiting for transmission in queue qm.
+
+Mc,m denotes the number of missed PDU-sets waiting in queue qm. gc,m represents the AOPDU waiting time in queue qm, while dc,m denotes the urgency rate, defined as dc,m = gc,m  
+
+> Dun,f
+
+. 
+
+> •
+
+Action Space: At each scheduling cycle c, each agent m
+
+generates a two-dimensional action vector. Specifically, the action for agent m is defined as ac,m = ⟨adur c,m , a ord c,m ⟩,where adur c,m ∈ [0 , 1] represents the agent’s desired fraction of the time slice duration. The actual time slice duration 
+
+wc,m (in μs) allocated to queue qm is computed as 
+
+wc,m = adur c,m   
+
+> PM−1
+> m=0 adur c,m
+
+· ∆tcycle . In contrast, aord c,m ∈ [0 , 1] 
+
+determines the service order πc(m) of the queue within the scheduling cycle.  
+
+> •
+
+Reward Function: The reward is driven by the urgency rate dc,m , which measures the AOPDU relative to its dynamic deadline, and by PDU-set deadline satisfaction. While eq. 4 directly captures the objective of maximizing PDU-set deadline satisfaction through the binary indica-tor in eq. 3, this indicator provides limited intermediate feedback for RL-based scheduling. Therefore, Eq. (8) uses a dense, bottleneck-aware surrogate reward based on queue urgency and accumulated deadline violations, providing continuous feedback to guide the policy toward higher PDU-set deadline satisfaction: 
+
+Ψc,m =
+
+(
+
+dc,m , if dc,m ≤ 11 + λ · Mc,m · (dc,m − 1) , if dc,m > 1 (8) where λ is a scaling factor. When a queue operates safely by transmitting each PDU within its dynamic deadline ( dc,m ≤ 1), the penalty simply reflects its current urgency rate. However, once a deadline is violated (dc,m > 1), the penalty is amplified proportionally to both the violation magnitude and the number of missed PDU-sets Mc,m . The global team reward Rc
+
+is determined by the bottleneck queue, defined as the negative maximum penalty across all TSN queues, given by Rc = − max m∈{ 0,...,M } Ψc,m .IV. MAPPO FOR TSN-B ASED VEC 
+
+A. MAPPO Framework 
+
+To efficiently address the optimization problem, we employ the MAPPO algorithm [9]. As illustrated in fig. 1, M co-operative agents control an individual TSN queue. MAPPO extends the single-agent PPO framework to the multi-agent setting by adopting a CTDE paradigm. Specifically, each agent is equipped with an actor policy that determines its local scheduling action, while a centralized critic estimates the value of the global system state during training. The critic network has access to global information, including the observations and actions of all agents, allowing it to capture the inter-queue dependencies and coupling among the queues. In contrast, each actor receives only its corresponding local observation and learns a policy for selecting its action. The centralized critic network provides a more informative value estimate for computing the policy gradient and advantage function, thereby reducing the non-stationarity and variance that arise when multiple agents simultaneously adapt their policies. Consequently, the actor can learn scheduling decisions that implicitly account for the impact of its actions on the overall system performance. 
+
+B. Training and Inference Procedure 
+
+In our model, each TSN queue has a local actor policy πθm ,while a centralized critic Vϕ is used during training. During data collection, each agent observes its local queue state otc,m 
+
+and selects an action according to its policy πθi (ac,m |otc,m ).The environment then executes the joint actions of all agents, determining the corresponding TSN scheduling decisions, and returns a global team reward Rc and the next system state st+1 .These transitions are stored in the buffer D for subsequent policy updates. After trajectory collection, the centralized critic uses the global system information to estimate the value function, which is used to compute the advantages (i.e., how good each action was relative to expectations) and returns for policy optimization. The actor policies are then updated using the PPO objective, while the centralized critic is updated by minimizing the value-function loss. During inference, the centralized critic is no longer required, and each queue in-dependently selects its scheduling action using only its local observation and the corresponding trained actor policy. V. P ERFORMANCE EVALUATION 
+
+A. Experimental Setup 
+
+We use vehicular mobility data collected on the Smart Highway testbed [16], providing vehicle counts and average speeds for different highway segments. The TSN network has eight queues supporting five XR applications, categorized as AR or SeAR, with traffic modeled using Johnson’s SU
+
+distribution [14]. As shown in Table I, queues q0, q1, q3,
+
+q4, and q7 handle traditional AR traffic, while the others support different SeAR resolutions with a 2 ms base deadline. All deadlines are scaled by α ∈ [0 .50 , 0.90] , reducing the MEC delay budget from 90% at low speeds ( vmin  
+
+> avg
+
+= 10) 
+
+to 50% at high speeds ( vmax  
+
+> avg
+
+= 120 ) to account for speed-dependent latency deadlines. Table I also reports the MAPPO hyperparameters. Each episode contains 150 steps, with the number of connected vehicles and their average speed sampled from the dataset at its start. Average speed and vehicle count are clipped to 10–120 and 1–100, respectively. Clients are then distributed among queues using a uniform multinomial distribution, with at least one active user per queue. We set the reward penalty weight to λ = 1 .0. Results are reported as the mean and standard error across three random seeds. 
+
+Baselines: To evaluate the performance of our MAPPO approach, we compare it against a set of baselines, including alternative MARL architectures, single-agent algorithms, and a heuristic-based scheduling policy, as described below:  
+
+> •
+
+MARL: Multi-agent transformer (MAT) [17] and heterogeneous-agent proximal policy optimization (HAPPO) [18], where we also model each queue as an independent agent. Table I: VEC and MAPPO parameters                    
+
+> VEC Value MAPPO parameter Value
+> Network speed (Gbps) 10 Learning rate 10 −4
+> Max packet size (B) 1428 gamma 0.99 Number of vehicles 1–100 Episode length 150 Average speed (km/h) 10–120 PPO epochs 5
+> AR setting/Base deadline SeAR setting/Base deadline
+> q0, q3: 3840 ×1920@90 Hz / 11.11 ms q2: 1920 ×720@60 Hz / 2 ms q1, q4, q7: 3840 ×1920@72 Hz / 13.80 ms q5: 1280 ×480@60 Hz / 2 ms q6: 2560 ×960@60 Hz / 2 ms
+> •
+
+Single-agent RL: PPO and advantage actor-critic (A2C) for centralized control, where a single agent has control over all queues.  
+
+> •
+
+Urgency-based heuristic: A non-learning policy that prioritizes queues approaching their deadlines based on the urgency rate. The time slot allocation is given by 
+
+ti = dc,i   
+
+> PM−1
+> m=0 dc,m
+
+· ∆tcycle .
+
+B. Experimental Results Learning performance: As shown in fig. 2, MARL methods converge faster than single-agent methods, reaching stable reward levels in fewer training steps, whereas PPO and A2C require longer training to converge. By learning from multiple 0 3000 6000 9000 12000 15000 18000 Episodes 50   
+
+> 1550
+> 3050
+> 4550
+> 6050
+> 7550
+> 9050
+> 10550
+> 12050
+> 13550
+> 15050
+> 16550
+> 18050
+> 19550
+> Average Cumulative Reward MAPPO MAT HAPPO PPO A2C
+> 16000 18000 20000 750
+> 500
+> 250
+
+Figure 2: Average cumulative reward. agents, MARL methods can better capture the impact of queue-level decisions on overall network performance, po-tentially improving convergence over single-agent methods. Nevertheless, MAPPO converges slightly faster than MAT and HAPPO, likely because it jointly updates all agents using a shared objective, whereas MAT and HAPPO rely on sequential mechanisms that introduce additional dependencies during learning. Despite faster MARL convergence, PPO achieves the highest and most stable final reward. However, higher training rewards do not necessarily imply better network performance under heterogeneous queue deadlines, as shown next. 
+
+Service Latency Analysis: Fig. 3 presents the average and 
+
+p99 PDU-level service latency for each queue. As observed, MARL methods achieve lower latency across all queues, reducing the average PDU latency by at least 19.5% compared with A2C and 14.9% compared with PPO for the AR queues. Similarly, MARL methods reduce worst-case ( p99 ) latency, with reductions of up to 38.6% compared with the single-agent methods. This performance gap is even more pronounced for SeAR queues, where MARL methods reduce average and p99 
+
+latency by up to 66.2% and 68.3%, respectively, compared with single-agent methods. 52 56 60 64 68 72 76 80 84 88       
+
+> AR Queues
+> Q0 Q1 Q3 Q4 Q7
+> 04812 16 20 24 28 32 36 40
+> Latency (ms)
+> Q2 Q5 Q6
+> 0.0 0.8 1.6 2.4 3.2 4.0 4.8 5.6 6.4 7.2
+> SeAR Queues
+> MAPPO HAPPO MAT PPO A2C Urgency-Based
+
+Figure 3: Average (solid fill) and 99th-percentile (transparent fill) PDU-level service latency. The results suggest that single-agent policies do not fully capture the interactions and resource trade-offs among queues with heterogeneous requirements, which may explain why PPO achieves higher training rewards than the MARL meth-ods. In particular, PPO and A2C appear to prioritize AR queues, whose higher traffic intensity contributes more fre-quently to the reward, while postponing service for lower-demand SeAR queues. Although this behavior can increase the number of satisfied AR deadlines and thus the train-ing reward, it may degrade overall network performance by increasing SeAR delay. In contrast, MAPPO, HAPPO, and MAT explicitly model the scheduling problem in a multi-agent setting, enabling more coordinated resource allocation across queues. Consequently, they achieve better execution performance despite lower cumulative training rewards. Nev-ertheless, MAPPO and MAT slightly outperform HAPPO, exhibiting lower variance across the queues, as indicated by the standard deviation. This difference may be attributed to the distinct coordination mechanisms employed by each method. HAPPO updates the agents sequentially using a randomly shuffled update order, which can introduce variability in the learning process. In addition, urgency-based heuristics gener-ally outperform all learning-based methods for SeAR queues, reducing latency by at least 29.1%. However, this gain comes at the cost of higher latency in AR queues, with average latency increasing by up to 315% and worst-case latency reaching 80 ms, corresponding to an 373% increase compared with learning-based methods. 
+
+PDU-Set Reliability: Fig. 4 shows the PDU-sets deadline satisfaction rate (i.e., reliability). To achieve high reliability, scheduling policies must ensure that all PDUs belonging to a PDU-set are delivered within its dynamic deadline, as designed by eq. 3. Accordingly, the reliability results are consistent with the latency analysis, with MARL methods achieving higher reliability across the AR queues, exceeding 70% compared with approximately 60% for single-agent methods, corre-sponding to a 16.66% improvement. As observed previously, the urgency-based method tends to prioritize SeAR queues due to their stricter deadlines. This urgency-driven approach explains its higher reliability for SeAR traffic, exceeding 90% for SeAR queues, particularly for q2 and q5. Despite this improvement, they perform poorly across the AR queues, achieving reliability of only around 30%. Q0 Q1 Q3 Q4 Q7 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0    
+
+> PDU-Set Reliability  AR Queues
+> Q2 Q5 Q6 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 SeAR Queues
+> MAPPO HAPPO MAT PPO A2C Urgency-Based
+
+Figure 4: PDU-set reliability (deadline satisfaction). Finally, Table II presents the inference time of the learning-based methods on an RTX 4060 Ti. MAPPO and the single-agent methods exhibit lower inference times, whereas HAPPO and MAT exceed the scheduling cycle by more than 5 and 10 times, respectively. This gap results from differences in action generation: MAPPO and single-agent methods generate actions in a single forward pass, while MAT generates them sequentially through an autoregressive policy. HAPPO also incurs higher inference time due to its separate actor network for each agent. Table II: Inference Time (ms) 
+
+Method Inference Time Method Inference Time 
+
+MAPPO 0.69 ± 0.18 MAT 10.90 ± 1.29 HAPPO 5.48 ± 0.61 PPO 0.78 ± 0.22 A2C 0.79 ± 0.27 
+
+Therefore, although HAPPO and MAT achieve competitive performance, their higher inference latency may limit real-time deployment under a 1 ms control cycle. In contrast, MAPPO achieves comparable performance with significantly lower inference latency. VI. C ONCLUSION 
+
+This paper addresses co-located XR traffic scheduling in VEC-TSN integration by considering vehicle speed-dependent latency deadlines. We leverage MAPPO to model queue-level interdependencies under dynamic deadlines, using a central-ized critic to learn cooperative scheduling policies. Simulation results show that MAPPO outperforms the considered base-lines by reducing latency, improving PDU-set reliability, and maintaining low inference time, making it suitable for real-time scheduling. In future work, we intend to evaluate the impact of wireless networks on the proposed framework. ACKNOWLEDGMENT 
+
+This work was financed by the Coordenac ¸ ˜ ao de Aperfeic ¸oamento de Pessoal de N´ ıvel Superior - Brasil (CAPES) - Finance Code 001, CNPq (funding agency from the Brazilian federal government), FAPEMIG (Minas Gerais State Funding Agency), and S˜ ao Paulo Research Founda-tion (FAPESP) with Brazilian Internet Steering Committee (CGI.br), grants 2018/23097-3. REFERENCES [1] J. Feng and J. Zhao, “Resource allocation for augmented reality empow-ered vehicular edge metaverse,” IEEE Transactions on Communications ,vol. 73, no. 3, pp. 1987–2001, 2023. [2] A. A. Barakabitze, A. Ahmad, R. Mijumbi, and A. Hines, “5G Network Slicing Using SDN and NFV: A Survey of Taxonomy, Architectures and Future Challenges,” Computer Networks , vol. 167, p. 106984, 2020. [3] J. Farkas, B. Varga, G. Mikl´ os, and J. Sachs, “5G-TSN Integration Meets Networking Requirements for Industrial Automation,” Ericsson Technology Review , vol. 96, no. 7, pp. 1–8, 2019. [4] M. Carvalho and D. F. Macedo, “Performance analysis of the integra-tion of dynamic cloud computing environments and tsn networks,” in 
+
+2025 IEEE 11th International Conference on Network Softwarization (NetSoft) . IEEE, 2025, pp. 406–414. [5] V. Gavrilut ¸ and P. Pop, “Traffic-type assignment for tsn-based mixed-criticality cyber-physical systems,” ACM Transactions on Cyber-Physical Systems , vol. 4, no. 2, pp. 1–27, 2020. [6] T. St¨ uber, L. Osswald, S. Lindner, and M. Menth, “A survey of schedul-ing algorithms for the time-aware shaper in time-sensitive networking (tsn),” Ieee Access , vol. 11, pp. 61 192–61 233, 2023. [7] N. Zhou, Y. Yao, X. Liang, S. Yao, J. Wan, C. Yang, W. Gui, and W. Gao, “Convergence of reinforcement learning and time-sensitive networking for future industrial ai agent communication: Fundamentals, challenges, and opportunities,” IEEE Communications Surveys & Tutorials , 2026. [8] M. Carvalho, F. Temiz, S. Salehi, M. Erol-Kantarci, and D. F. Macedo, “Multi-agent reinforcement learning for online traffic scheduling in time-sensitive application,” arXiv preprint arXiv:2608.05346 , 2026. [9] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, and Y. Wu, “The surprising effectiveness of ppo in cooperative multi-agent games,” 
+
+Advances in neural information processing systems , vol. 35, pp. 24 611– 24 624, 2022. [10] A. Roberty, Q. Besnard, S. B. H. Said, F. Ridouard, H. Bauer, and A. Geniet, “Configuring the ieee 802.1 q time-aware shaper with deep reinforcement learning,” in NOMS 2024-2024 IEEE Network Operations and Management Symposium . IEEE, 2024, pp. 1–7. [11] B. Zhou and L. Cheng, “Mitigation of scheduling violations in time-sensitive networking using deep deterministic policy gradient,” in Pro-ceedings of the 4th FlexNets Workshop on Flexible Networks Artificial Intelligence Supported Network Flexibility and Agility , 2021, pp. 32–37. [12] M. Guo, S. He, C. Gu, X. Guo, J. Chen, T. Gao, and T. Wang, “Towards distributed flow scheduling in ieee 802.1 qbv time-sensitive networks,” 
+
+ACM Transactions on Sensor Networks , vol. 20, no. 5, pp. 1–30, 2024. [13] S. Garcia-Cant´ on, C. Ruiz de Mendoza, C. Cervell´ o-Pastor, and S. Sal-lent, “Multi-agent reinforcement learning-based routing and scheduling models in time-sensitive networking for internet of vehicles communi-cations between transportation field cabinets,” Applied Sciences , vol. 15, no. 3, p. 1122, 2025. [14] D. G. Mor´ ın, D. Medda, A. Iossifides, P. Chatzimisios, A. G. Armada, A. Villegas, and P. Per´ ez, “An extended reality offloading ip traffic dataset and models,” IEEE Transactions on Mobile Computing , vol. 23, no. 6, pp. 6820–6834, 2023. [15] P. Paymard, S. Paris, A. Amiri, T. E. Kolding, F. S. Moya, and K. I. Pedersen, “Pdu-set scheduling algorithm for xr traffic in multi-service 5g-advanced networks,” in ICC 2024 - IEEE International Conference on Communications , 2024, pp. 758–763. [16] R. C. Bello, M. Camelo, J. Marquez-Barja, and N. Slamnik-Krijeˇ storac, “Towards sustainable 6g compute continuum: Energy-aware zero-touch network and service management used for dynamic vehicular service deployments,” in 2026 IEEE 23rd Consumer Communications & Net-working Conference (CCNC) . IEEE, 2026, pp. 1–6. [17] M. Wen, J. Kuba, R. Lin, W. Zhang, Y. Wen, J. Wang, and Y. Yang, “Multi-agent reinforcement learning is a sequence modeling problem,” 
+
+Advances in Neural Information Processing Systems , vol. 35, pp. 16 509–16 521, 2022. [18] J. G. Kuba, R. Chen, M. Wen, Y. Wen, F. Sun, J. Wang, and Y. Yang, “Trust region policy optimisation in multi-agent reinforcement learning,” 
+
+arXiv preprint arXiv:2109.11251 , 2021.

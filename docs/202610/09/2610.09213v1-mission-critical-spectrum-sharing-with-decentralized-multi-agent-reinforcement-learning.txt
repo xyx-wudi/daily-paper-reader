@@ -1,0 +1,407 @@
+Title: Mission-critical spectrum sharing with decentralized Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2610.09213v1
+
+Published Time: Thu, 08 Oct 2026 00:25:51 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Mission-critical spectrum sharing with decentralized Multi-Agent Reinforcement Learning 
+
+Dimitrios Pylorof ∗, Imtiaz Nasim ∗, Humberto E. Garcia ∗, Vivek Agarwal ∗, J. A. Mannil †, and Mingyue Ji ‡∗Idaho National Laboratory , USA, {Dimitrios.ParsinasPylorof, Imtiaz.Nasim, Humberto.Garcia, Vivek.Agarwal }@inl.gov 
+
+> †
+
+Howard University , {jasni.mannil }@bison.howard.edu 
+
+> ‡
+
+University of Florida , {mingyueji }@ufl.edu 
+
+Abstract —Motivated by emerging mission-critical applications and an increasingly congested spectrum, we develop a de-centralized multi-agent reinforcement learning (MARL) model for dynamic spectrum access. The model enables secondary users to learn effective transmission strategies across shared frequency bands while minimizing collisions with high-priority primary users and among themselves. We design the agent-level learners following a Markov potential game approach, connecting independent local updates to system-level improve-ment. We instantiate this design using lightweight linear actor– critic learners suitable for resource-constrained edge devices, rather than computationally intensive centralized or deep multi-agent architectures. Across spectrum environments with different incumbent activities, the learned policies adapt their transmission policy and waiting behavior to preserve throughput while greatly reducing transmission collisions relative to random and forecast-aware heuristic baselines. The results establish the value of decentralized MARL and shows up to 96.8% reduction in overall collisions. 
+
+Index Terms —Spectrum sharing, MARL, Spectrum occupancy 
+
+I. I NTRODUCTION 
+
+Spectrum scarcity is increasingly a problem of coordination rather than a simple absence of nominal bandwidth. Primary users (PUs) involving federal, public-safety, energy, transporta-tion, and defense systems may have priority access, while secondary systems seek intermittent opportunities without disrupting incumbent missions. Cognitive radio and dynamic-spectrum-access (DSA) research has therefore emphasized sensing, prediction, band selection, and distributed access control [1]. However, DSA involves more than identifying an empty band only as incumbents pose bursty activities over time. Secondary users (SUs) may select the same band using forecasting, and it can still be inaccurate at the exact instant of transmission [2], [3]. Reinforcement learning (RL) offers a natural way for learning spectrum-access decisions and their long-term conse-quences. Prior works have explored deep multiband access and distributed multi-user policies, [4], [5] as well as DQN/DRQN spectrum sharing and actor–critic designs that jointly learn band access and transmission-power decisions [6], [7]. More recent studies have focused on practical decentralized ac-cess. Fair Share RL learns fairness-oriented band selection policies from local transmission outcomes without inter-agent coordination [8]. Similarly, a sparse recurrent multi-agent prunes deep networks within an independent actor/global-critic architecture to reduce deployment cost [9]. These re-sults reinforce the value of learned distributed access, but leave an important research gap for distinct mission-critical spectrum access: lightweight decentralized actor-critic learning must operate under imperfect long-horizon forecasts while providing operator-readable methods for incumbent protection. In particular, a key operational behavior is that an intelligent node must learn not only over which band to transmit, but also 
+
+when not to transmit . Deferring certain transmissions can not only protect a primary incumbent, but also reduce contention among peer SUs. This paper develops and evaluates that “value of waiting” in a concrete decentralized MARL implementation. While the broader framework provisions for active sensing and adaptive transmit-power control as natural extensions, this work deliberately restricts the learning agents to two actions:-remaining idle or fixed-power band selection . The scope of this paper investigates a foundational question first: can decentralized MARL produce meaningful coordination and collision reduction before the action space is enlarged? We provide reasonable details with validated results to answer this question in the following sections. Our main contributions are:  
+
+> •
+
+We formulate forecast-aware decentralized access with a finite action policy per agent: idle or transmit at a fixed power on one of the available bands. This implementation isolates the coordination learned through waiting and fixed-power band selection.  
+
+> •
+
+We evaluate our MARL method against several strong benchmarks and demonstrate its effectiveness under vary-ing incumbent activity.  
+
+> •
+
+Our results identify conservative operating points that maintain non-trivial service, while decision diagnostics quantify when the agents should wait and when to reject high-risk immediate transmissions. Results show that the proposed MARL model reduces PU-SU collisions up to 
+
+96 .8% compared to forecast-aware heuristic baseline. Spectrum awareness alone does not provide spectrum coor-dination. When several secondary users identify the same apparently favorable band, forecast-aware access can sim-ply synchronize their contention. The proposed decentralized arXiv:2610.09213v1 [eess.SY] 6 Oct 2026 MARL instead learns the temporal and spectral coordination needed to decide not only where to transmit, but whether each 
+
+current opportunity is worth taking. II. B ACKGROUND AND DESIGN POSITION 
+
+A. Distributed learning and potential-game structure 
+
+A finite Markov game contains agents i ∈ { 1, . . . , N },local observations oi, actions ai, joint action a, transition kernel, and individual rewards ri. Independent learners treat the policies of other agents as part of a changing environment [10], which is useful for decentralized deployment. Potential games provide a useful structure for aligning indi-vidual agent decisions with system-level objectives to satisfy 
+
+ri(s, a ′
+
+> i
+
+, a −i) − ri(s, a i, a −i) = Φ( s, a ′
+
+> i
+
+, a −i) − Φ( s, a i, a −i),
+
+(1) for a common potential Φ [11]. Markov potential game (MPG) extends this alignment to long-term rewards, showing that independent policy updates can improve a common sys-tem objective under suitable assumptions [12], [13]. Recent constrained-MPG results make the safety connection more explicit. Alatur et al. formulate coupled policy constraints and learn Nash policies in tabular finite-horizon games [14], while Jordan et al. develop independent policy-gradient learning for approximate constrained Nash equilibria [15]. PU protection can naturally be formulated as a cumulative interference or collision constraint. Our independent policy gradient MARL implementation in Section IV combines this perspective with lightweight independent policies and linear function approx-imation. We follow MPG design principles through finite actions, independent local actors and critics, common reward formulations, and queue transitions driven by local actions and exogenous arrivals. 
+
+B. Forecasting as a look-ahead sensor 
+
+Incumbent prediction can support proactive access deci-sions, but continuously forecasting recieved signal strength (RSS) is harder than a binary occupancy label. Previous studies such as [16] use an Autoformer to separate the trend and seasonal components for long-horizon forecasting, while [17] applies an Autoformer-CSA assisted cross-band modeling for spectrum sequences. However, recent work with GAD-Autoformer replaces fixed moving-average decomposi-tion with a gated, stateful trend mechanism that adapts for bursty incumbent activities while retaining longer memory during quiet periods [18]. Results in this study [18] also revealed that the GAD-Autoformer provides high accuracy to forecast incumbent RSS across different horizons, with the largest advantage observed at long horizons. Consequently, this paper uses the forecaster from [18] as a heuristic baseline, and utilizes this as an external sensor for the proposed model. Future RSS values are generated by perturb-ing an incumbent reference trace according to the empirical residual distribution at each forecast horizon. Residuals are drawn independently for each agent, resulting in different local forecasts while retaining the same underlying reference trace. This setup enables us to evaluate how effectively distributed agents learn temporal access strategies from realistic but imperfect spectrum forecasts. III. S PECTRUM SHARING ENVIRONMENT 
+
+The environment models SUs sharing incumbent-prioritized bands and sending queued packets to a common sink. SU-to-sink distance determines path loss and received signal power; when multiple SUs use the same band, the resulting signal-to-interference-plus-noise ratios (SINRs) determine successful transmissions or peer collision. At each decision step, every SU receives a noisy look-ahead spectrum forecast and chooses whether to wait or transmit. Incumbent activity governs PU conflicts, while concurrent SU choices govern peer contention. 
+
+A. Incumbent and RSS process 
+
+Each band follows a semi-Markov ON/OFF process with Weibull-distributed dwell times, producing persistent, irregu-lar bursts rather than memoryless switching. We consider a scalar activity knob κ as in [18] that shifts the process from relatively quiet to progressively busier regimes, while time-of-day, weekend, and band-specific variations keep the bands from evolving identically. The activity knob is a generator control, not a prescribed occupancy fraction. Realized occupancy emerges from the stochastic dwell times and temporal modulation, so κ is used throughout the evaluation as a qualitative stress indicator: quiet 
+
+(smaller κ) → busier (larger κ). The latent ON/OFF process is mapped to continuous RSS levels, yielding gradual and noisy changes rather than binary labels. 
+
+B. Forecast-error surrogation 
+
+Spectrum awareness enters through an imperfect look-ahead forecast. The simulator models GAD-Autoformer forecast error by perturbing the hidden future RSS with an empirical residual drawn at the corresponding lead. For agent i, band b,and lead h,
+
+bPi,b (t + h) = Pb(t + h) + εi,b,h , (2) where Pb(t + h) is the hidden environment RSS and εi,b,h 
+
+is the sampled forecast residual. The policy receives the perturbed forecasts and derived uncertainty features. Agent-specific residuals give different nodes different local views of the same evolving spectrum. Forecasted RSS is converted to a smooth busy-risk represen-tation and combined with forecast uncertainty before entering the policy features. Across the look-ahead interval, the lead-indexed residual profiles are empirically similar: persistent quiet/busy regimes and recurring burst-transition errors repeat-edly produce the same broad error structure. Fig. 1 shows one such representative profile. 
+
+C. Actions, queues, and wireless outcomes 
+
+Each SU selects either an idle action or a fixed-power transmission on one available band b,
+
+Ai = {idle } ∪ { TX( b) : b ∈ B} , (3) −20 −10 0 10 20 05 · 10 −2     
+
+> 0.1
+> Forecast error, estimate −reference (dB) Density Representative forecast residuals
+> Fig. 1. Representative GAD-Autoformer [18] forecast residual density used to calibrate the spectrum awareness surrogate used in our spectrum sharing environment for MARL training and evaluation.
+
+where B = {1, . . . , B } denotes the available bands. Traffic queues receive stochastic packet arrivals. Each transmission attempt removes one queued packet; the realized outcome enters separately through the reward. An attempt on an incumbent-active band is a PU conflict. Otherwise, same-band SUs are resolved through the path-loss/SINR model: the strongest link may lead to a successful transmission, while weaker same-band links incur peer collisions. The learning therefore balances incumbent protection against coordination with peers competing for the same favorable bands. IV. D ECENTRALIZED POLICY GRADIENT FORMULATION 
+
+The learning loop can be read in three stages: each node, which corresponds to a SU, first compresses its queue, time, and imperfect spectrum forecast into a fixed feature vector; it then assigns preferences to its local actions; finally, it adjusts those preferences from its own observed rewards. This setup keeps the relation between forecast information, mission priorities, and learned behavior visible while remaining close to the finite-action, linear-approximation MPG described in Sec. II. We retain N for the number of agents and B for the number of bands, with index sets N and B. Let ∆t denote the decision interval, PTX the fixed transmit power, q0 the initial queue length, qmax the queue capacity, and parr the per-step packet-arrival probability. 
+
+A. From forecasts to a value-of-waiting signal 
+
+Agent i observes its queue, per-band forecasted RSS and busy probability with uncertainty over a look-ahead horizon of H steps. These form its local observation oi. Next, agent 
+
+i forms its local feature vector ϕ(oi), by parsing oi as we illustrate next. Our aim is to assemble a feature vector that leads to numerically stable operations downstream in the independent policy gradient algorithm, and exposes each agent to the information we wish (or posit) to leverage for attaining intelligent decentralized reasoning. The forecasted RSS is converted to a smooth busy risk score using a center 
+
+τRSS and scale sRSS (both of which are selected to match typically observed conditions in the corresponding spectrum environment), via the logistic mapping: 
+
+bpi,b,h =
+
+"
+
+1 + exp − bPi,b (t + h) − τRSS 
+
+sRSS 
+
+!# −1
+
+. (4) The busy risk score from (4) is then conservatively adjusted for known or assumed forecast uncertainty, by adding a weighted uncertainty term. Let bσi,b,h denote the associated forecast-uncertainty feature and β its risk weight. The risk-adjusted forecast is 
+
+ρi,b,h = bpi,b,h + βbσi,b,h . (5) The policy feature map ϕ(oi) ∈ Rdϕ summarizes current per-band risk, the best and average opportunities later in the forecast, which bands look best now and later, and interactions with the current queue. A particularly interpretable feature is 
+
+∆wait  
+
+> i
+
+(t) = min  
+
+> b
+
+ρi,b, 0 − min   
+
+> b, 1≤h≤H
+
+ρi,b,h . (6) A positive ∆wait  
+
+> i
+
+means that the forecast contains a safer opportunity later than the best band available now. This is only forecast-derived information supplied to the learner: waiting is beneficial only if the expected reduction in interference is worth carrying the queue for longer; the learner still needs to evaluate this tradeoff using our independent policy gradient iterations. 
+
+B. Reward weights and mission postures 
+
+Operator preference enters through the relative weighting of reward terms. Successful delivery receives positive value, while PU conflicts receive the largest penalty; peer collisions, link failures, unnecessary attempts, idling, and backlog are weighted separately as shown in the conceptual architecture in Fig. 2. The implemented reward collects these terms as 
+
+ri(t) = ρsIsucc  
+
+> i
+
+− λPU IPU  
+
+> i
+
+− λSU Ipeer  
+
+> i
+
+− λℓIlink 
+
+> i
+
+− λaIatt  
+
+> i
+
+− λ0Iidle  
+
+> i
+
+− λq
+
+qi(t + 1) 
+
+qmax 
+
+. (7) Here, each I(·) 
+
+> i
+
+∈ {0, 1} is an event indicator for agent 
+
+i. Isucc  
+
+> i
+
+denotes a successful delivery, IPU  
+
+> i
+
+is an attempted transmission on an incumbent-active band, Ipeer  
+
+> i
+
+is a same-band SU collision, and Ilink  
+
+> i
+
+indicates a transmission that fails the link/SINR test without a PU conflict. The action indicators Iatt  
+
+> i
+
+and Iidle  
+
+> i
+
+mark any transmission attempt and an idle decision, respectively. Thus a transmission attempt incurs the attempt term in addition to exactly one realized transmission outcome. All agents use the same coefficient vector. Changing that vector does not change the learning algorithm; it changes the mission posture or local incentives. We evaluate several alternatives that deliberately emphasize different operating objectives, from strict incumbent protection to more service-seeking behavior. Table I summarizes the alternatives MARL postures which are chosen to illustrate how the same decentralized learners adapt their behavior when the mission emphasizes protection, queue relief, or service more strongly. 
+
+C. From action scores to independent policy updates 
+
+Once the features and reward are defined, the learner needs to answer two questions: which action should be preferred in the current state, and did the resulting outcome turn out better or worse than expected? We use a small linear actor and Markov Potential Game-aligned multi-agent reinforcement learning 
+
+RL agent j
+
+... 
+
+RL agent i
+
+action sampling: 
+
+ai ∼ πθi (ai | oi)
+
+policy iteration: 
+
+θi ← θi + ηg i
+
+> . . .
+
+. . . 
+
+spectrum environment spectrum awareness 
+
+evolving location-specific RSS estimation reward structure queue reduction (++) PU collisions ( −−− )peer contention ( −− )lingering queues ( −)up-to-date awareness (+)       
+
+> ai=
+> 
+> idle TX band 1 TX
+> :&power TX band B%sense
+> 
+
+ri
+
+oi
+
+node i’s queue node i’s spectrum awareness 
+
+Fig. 2. Conceptual MPG-based spectrum sharing architecture. Adaptive power and sensing actions are marked as additions in follow-on work; this study uses only idle and fixed-20-dBm band selection to first establish the value of decentralized MARL. TABLE I ALTERNATIVE REWARD WEIGHTINGS EXPLORED TO INDUCE DIFFERENT MISSION POSTURES . A LL λ VALUES ARE NONNEGATIVE PENALTY WEIGHTS IN (7); ρs WEIGHTS SUCCESSFUL DELIVERY .                                          
+
+> Metric Strict Base Queue-aware Balanced
+> ρs1.2 1.5 1.5 2.3
+> λPU 10 8.0 8.0 7.0
+> λSU 0.45 0.45 0.45 0.45
+> λℓ0.30 0.30 0.30 0.30
+> λa0.06 0.05 0.05 0.03
+> λ00000.005
+> λq0.055 0.055 0.080 0.085 PU/success weight ratio ( =λPU /ρ s)8.33 5.33 5.33 3.04 Plotted κ.10 .15, .20 .05 .25
+
+critic and, in adherence with our decentralized reasoning, we pursue both answers locally and directly tied to the particular agent’s feature vector. For the actor, each feasible action a
+
+receives a linear score zi,a = ϕ(oi)Tθi,a , where θi,a are the actor coefficients for action a. A softmax converts the action scores into probabilities, 
+
+πθi (a | oi) = exp( zi,a )
+
+P 
+
+> a′∈A i
+
+exp( zi,a ′ ) . (8) Actor coefficients θi,a are initialized independently from a zero-mean Gaussian distribution with standard deviation σθ .Learning proceeds from on-policy batches of M transitions. Let Φi and Φ′ 
+
+> i
+
+stack the current and successor feature vectors, 
+
+ri stack the rewards, γ denote the discount factor, and λ the critic regularization coefficient. With Xi = Φ i − γΦ′
+
+> i
+
+, our ridge-regularized least-squares Bellman-residual critic is 
+
+wi = ( XT 
+
+> i
+
+Xi + λI )−1XT 
+
+> i
+
+ri, (9) where I is the identity matrix of compatible dimensions. The critic supplies a local expectation of discounted return. Each observed transition is compared with that expectation through the TD residual, limited in magnitude by dmax ,
+
+δi,t = clip  ri,t + γϕ ′
+
+> i,t T
+
+wi − ϕT
+
+> i,t
+
+wi, [−dmax , d max ] . (10) Positive δi,t reinforces the sampled action and negative δi,t 
+
+suppresses it. Let η denote the actor step size and gmax the gradient-norm limit. The independent policy-gradient estimate and actor update are 
+
+gi = 1
+
+M
+
+> M
+
+X
+
+> t=1
+
+δi,t ∇θi log πθi (ai,t | oi,t ),θi ← θi + η clip gmax (gi). (11) Thus the critic is used only to judge recent local experience; there is no centralized value function or exchange of learned parameters. Let Ttrain denote the training horizon. Each agent updates after every M newly collected transitions and, after step 
+
+Ttrain , applies the same update once to any residual buffer content before its policy is frozen. Let Teval denote the frozen-policy deployment horizon and Ttail the reporting window. For deployment, ϵtie denotes the tolerance used to randomize near-tied greedy actions, while τeval denotes the softmax temperature for the stochastic alternative. Let S denote the evaluation seed set. Algorithm 1 summarizes this ordering and refers back to Eqs. (9)–(11) for the learning updates. The learned parameter count follows directly from dϕ and the action-space size: each node stores dϕ|A i| actor coeffi-cients and dϕ critic coefficients. This compact construction keeps the learned action logic inspectable, remains close to the MPG and linear function approximation analysis [13], Algorithm 1 Forecast-aware decentralized MARL training and frozen-policy evaluation                                         
+
+> Require: Settings in Sec. IV-E; lead-indexed residual libraries {E h}Hh=0
+> 1: Initialize queues, local critics wi, actors θi, and empty local buffers Di
+> 2: for t= 0 ,1, . . . , T train −1do
+> 3: Advance the hidden PU/RSS process; draw lead-specific forecast errors and form each agent’s local forecast and network-summary proxy 4: for all agents iin parallel do
+> 5: Construct ϕi,t , including risk and ∆wait
+> i; mask TX if qi= 0 and sample ai,t from (8) 6: Resolve the joint wireless outcome; compute rewards, update queues, form successor features, and append each transition to Di
+> 7: if |D i|=Mthen
+> 8: in parallel for all i:fit the critic by (9), form TD residuals by (10), update the actor by (11), and clear Di
+> 9: Update once on any residual buffer content using (9)–(11); freeze the actors 10: Restart the seeded trace, deploy for Teval steps, and report the final Ttail
+> steps
+
+and is compatible with CPU-class edge execution without a centralized critic. 
+
+D. ϵ-Nash convergence 
+
+Our independent policy gradient construction used in this paper follows the MPG direction of [13], which establishes approximate ϵ-Nash convergence with linear function approx-imation. Under the additional conditions establishing coinci-dence of Nash equilibria with potential maximizers, the result-ing ϵ-Nash convergence can be related directly to approximate maximization of the global spectrum sharing objective. Comparably with any practical implemented learner, the pursued MPG alignment and associated literature results define the proof envelope for our learning architecture. 
+
+E. Implementation settings 
+
+For the numerical instantiation used throughout this paper, 
+
+N = 6 , B = 4 , ∆t = 5 min, and PTX = 20 dBm, with N =
+
+{1, . . . , N } and B = {1, . . . , B }. Hence |A i| = B + 1 = 5 .Queues start at q0 = 8 packets, have capacity qmax = 20 , and receive a Bernoulli arrival with parr = 0 .20 per decision step. For the forecast and feature map, H = 24 , τRSS = −82 
+
+dBm, sRSS = 4 .5 dB, β = 0 .75 , and dϕ = 82 . The forecast spans two hours. Each node stores 410 actor coefficients and 
+
+82 critic coefficients. For learning, σθ = 0 .01 , M = 256 , γ = 0 .99 , λ = 10 −3,
+
+dmax = 50 , gmax = 20 , and η = 0.015 . Training runs for Ttrain = 3000 environment steps. This produces twelve updates in total: eleven after full 256 -transition batches and one final update using the 184 transitions left at the end. For frozen-policy evaluation, Teval = 1000 , Ttail = 250 ,
+
+ϵtie = 10 −3, and τeval = 0 .5. Reported metrics use the final 
+
+Ttail deployment steps, with event counts scaled to a per-1000 -step basis. V. N UMERICAL EVALUATION 
+
+A. Protocol and baselines 
+
+Each activity setting κ ∈ { 0.05 , 0.10 , 0.15 , 0.20 , 0.25 } uses a 14 -day trace of our spectrum sharing environment, sampled every five minutes (resulting in 4032 timestamps). Every command-line sweep trains on-policy for 3000 environment steps, or 250 h ( 10 days 10 h) of simulated operation, using the update staging described in Section IV-C. After the final training update, the actors are frozen and the environment is restarted for 1000 deployment steps ( 83 h 20 min). Methods are evaluated over five different seed values, and reported metrics average the final 250 steps ( 20 h 50 min), scaled per 
+
+1000 steps where appropriate. We compare the performance of a selected MARL operating point against a random baseline and a forecast-aware heuristic, within an environment defined by each activity setting value. The random baseline transmits with probability 0.65 whenever its queue is nonempty and selects a band uniformly. The 
+
+forecast-aware heuristic computes current risk ρi,b, 0, transmits on the minimum-risk band; if this probability is greater than 
+
+0.95 then stays idle. After training and evaluation, we use a single diagnostic score to select one representative MARL operating point from the reward-weighting and deployment-mode sweep at each activity setting, 
+
+Jscore = S−3.5CPU −0.45 Cpeer −0.30 Clink −0.08 Natt . (12) Here, S is the number of successful SU transmissions, CPU the number of PU conflicts, Cpeer the number of peer collisions, 
+
+Clink the number of link/SINR failures, and Natt the total number of SU transmission attempts. All quantities are com-puted over the same evaluation tail and scaled to a per-1000 -step basis. This score is used only for post-training selection; it does not enter the agent reward, policy-gradient update, or environment dynamics. Among configurations achieving at least 100 successful SU transmissions per 1000 steps, we select the one with the largest Jscore , breaking ties by throughput. The selected configuration is the MARL point shown in Fig. 3 and used in the subsequent comparison tables. In order of increasing activity knob values, the ultimately selected profiles correspond to queue-aware protection, strict protection, base protection, and balanced service from Table I. 
+
+B. How reward weightings move the learned operating point 
+
+In Fig. 3 we view the sequence of selected profiles as operationally coherent and only show the MARL posture (See Table I) that provides the best performance. At κ = .05 , the MARL postures queue-aware and base profiles are nearly tied; the selected queue-aware point provides a slight upper-hand with 432 .8 successes and 188 .0 total conflicts (right panel in Figure). At κ = .10 , strict protection posture remains service-feasible and reduces the selected point to 44 .0 total conflicts. At κ = .15 , the strict profile produces only 28 .0 successes and fails the service floor, so base protection becomes the best feasible posture. Hence, we plotted the result for base protection only for MARL for κ = 0.15 . At κ = .20 ,strict protection collapses to complete waiting, while base protection just clears the floor with 100 .8 successes and 12 .8
+
+conflicts. At κ = .25 , strict, base, and queue-aware protection all converge to zero-service deployment; the balanced profile reopens access and yields 196 .8 successes with 70 .4 total Fig. 3. Successful SU transmissions versus PU conflicts (left) and total PU+SU conflicts (right). Faint markers show individual trials, bold markers show five-seed means, and connecting lines identify the activity setting κ (indicated and color-coded as PU occupancy , for brevity). The value of the selected 
+
+MARL operating points , and even of the originating distribution of individual trial results –especially in the right plot– can be seen in laying consistently lower (i.e., indicating lower number of conflicts) than the heuristic points and the random baseline points . The illustrated legends apply to both left and right panels. TABLE II RELATIVE COLLISION REDUCTION OF PLOTTED MARL POINTS VERSUS THE HEURISTIC (FIVE -SEED MEANS PER 1000 STEPS )                                     
+
+> PU conflicts Total PU+SU conflicts
+> κheuristic MARL reduction heuristic MARL reduction .05 65.6 44.0 32.9% 412.0 188.0 54.4% .10 47.2 39.2 16.9% 413.6 44.0 89.4% .15 42.4 33.6 20.8% 415.2 33.6 91.9% .20 17.6 12.8 27.3% 399.2 12.8 96.8% .25 129.6 68.8 46.9% 458.4 70.4 84.6%
+
+conflicts. The final row in Table I identifies where each mission posture generated the plotted MARL point for Fig. 3. Overall, we notice how reward weight selection chooses between rec-ognizable mission postures and reveals a behavioral transition from selective access to stronger deferral when the incumbent-conflict penalty becomes too large. 
+
+C. Throughput–conflict operating regions 
+
+As seen in Fig. 3, random transmit strategy produces high throughput by attempting often, but incurs both PU and peer conflicts. The forecast-aware heuristic strongly reduces PU conflicts, yet all agents tend to identify and select the same attractive band; its peer-conflict burden remains between 328 .8
+
+and 381 .6 per 1000 steps. The proposed MARL points occupy a different region: throughput is lower, while total conflict burden falls sharply. Table II shows PU-conflict reductions of 16 .9–46 .9% and total-conflict reductions of 54 .4–96 .8% .At κ = 0 .20 , MARL meets the considered minimum service with 100 .8 successes, while lowering PU conflicts from 17 .6
+
+to 12 .8. Therefore, the learned MARL configurations populate low-conflict regions that are not reached by random access benchmark and are obscured when the heuristic is judged only by its low PU-conflict count. The total-conflict view is 
+
+TABLE III ACCESS BEHAVIOR FOR OBSERVATIONS WITH NONEMPTY QUEUES ACROSS THE FIVE ACTIVITY SETTINGS . MARL VALUES SHOW THE RANGE ACROSS THE SELECTED OPERATING POINTS .             
+
+> Access behavior Forecast-responsive behavior Policy Wait High-risk TX Wait for safer future opportunity Random 32.5% 57.8% n/a Heuristic 62.5% 33.0% n/a Selected MARL 84.3–98.1% 1.9–15.7% 35.6–40.4%
+
+essential because a low-PU heuristic may still coordinate SUs poorly. One key rationale for the outperformance of MARL in Table II is–unlike the heuristic solution, the proposed MARL leverages the delayed queue-versus-risk tradeoff induced by the full forecast horizon, and anticipates that several agents may select the same band safely. 
+
+D. What the policy learns about waiting 
+
+Effective conflict reduction requires not only appropriate band selection but also learning when to defer transmission. Table III illustrates when waiting reduces risk and can be more attractive than selecting any band for transmission. Selected MARL policies wait in 84 .3–98 .1% of these states, reduce high-risk transmissions to 1.9–15 .7% , and wait for a forecast improvement in 35 .6–40 .4% of queued states. The main cost of this conservative behavior is increased backlog: mean queue lengths are 10 .8–18 .7 packets for MARL, compared with 
+
+10 .7 for the heuristic and about 0.38 for random access. Waiting is not always preferable: the reward weights determine how strongly the learned policy trades incumbent protection and peer coordination against queue buildup and associated latency, while the minimum service requirement excludes operating points that achieve low conflict rates simply by remaining idle. VI. D ISCUSSION AND ROADMAP 
+
+Decentralized spectrum access requires more than accurate spectrum awareness. Even when individual nodes identify low-risk bands, independent access decisions can concentrate secondary users onto the same opportunities and create sub-stantial peer contention. The proposed MARL provides a complementary coordination layer: agents learn to reach low-conflict operating regions by deciding when to access, which band to use, and when to defer (i.e., wait). Communication network operators can deliberately shift the resulting operating point across successful transmissions, PU conflicts, and SU conflicts by tuning the MARL reward weights. Meanwhile, the lightweight decentralized learners can be deployed on CPU-class edge devices and learn policies adapted to the spectrum environment experienced locally. 
+
+Distributed awareness. Next, each node will update a local GAD-Autoformer from its own, locally-sampled RSS history, producing location-specific embeddings and uncer-tainties. Unlike the work in this paper, the future scope will consider nodes that can exchange compact summaries over a low-rate control band, leverage a distributed average consensus mechanism, and collaboratively build and maintain joint spectrum awareness. 
+
+Richer actions and theory boundary. An expanded action space can include the learnable action to perform sensing during a particular step and contribute to renewed spectrum awareness (in addition to either staying idle or transmitting), as well as transmitting more than one packet at selectable power levels. This will also introduce additional energy use and conservation considerations. In parallel, another interest-ing scope is to replace the soft PU reward weight with an explicit horizon-wise conflict or interference budget, mov-ing the formulation toward constrained MPGs [14], [15]. All such directions would still require new analysis beyond current guarantees, perhaps justifiably pushing beyond the MARL/MPG frontier. Our approach in this work, however, aimed to first establish that lightweight forecast-aware MARL is worth building upon, and then explore the following chal-lenges while tracking which MPG assumption is the best fit. VII. A PPLICATIONS OF PROPOSED DECENTRALIZED SPECTRUM COORDINATION FOR RESPONSE OPERATIONS 
+
+The proposed decentralized spectrum sharing, and, in a broader sense, coordination approach is directly relevant to diverse civilian and consumer infrastructures. In addition, it is of interest to homeland security and emergency response networks, in which heterogeneous mobile, maritime, airborne, and uncrewed assets must communicate under congested, contested, or satellite-denied conditions. Representative appli-cations include Coast Guard underway and over-the-horizon communications, as well as police and Border Patrol tactical networks, where communication resources are distributed, cen-tralized control may be unreliable or infeasible, and protection of higher priority spectrum users is important. These mission settings align well with three properties of our approach: each node makes access decisions locally without a centralized critic, the learned policy is sufficiently compact for CPU-class edge hardware, and forecast-aware waiting provides an explicit mechanism for trading service urgency against incumbent protection and peer contention. An appealing transition path is to embed the learned access policy as a contention-management layer within nodes of an existing tactical network or traffic manager. The present results establish mechanism viability and promise, rather than fielded performance: operational deployment would require represen-tative RF testing, and subsequent network-level demonstra-tions with relevant edge platforms. Such steps are critical to determine whether the safety–service operating regions observed in this paper persist under realistic node topologies and geometries, interference, and real-world communication and spectrum challenges. VIII. C ONCLUSION 
+
+We presented forecast-aware decentralized MARL for primary-protective spectrum sharing. Six agents used imper-fect long-horizon RSS forecasts to choose waiting or one of four fixed-power bands. Lightweight local actor/critic updates provided low-conflict operating points with a nonzero service floor and no centralized policy or critic. Our key result shows that spectrum availability should not lead to inefficient spectrum access decisions. Forecasting can identify an appar-ently safe transmission opportunity, but decentralized MARL can learn whether taking that opportunity is beneficial once incumbent risk, peer contention, and future opportunities are considered jointly. The resulting policies occupy low-conflict operating regions that forecast-aware access alone does not meet. ACKNOWLEDGMENT 
+
+This work was supported by the Idaho National Labora-tory Laboratory Directed Research and Development program under U.S. Department of Energy Idaho Operations Office Contract DE-AC07-05ID14517, and, in part, by the U.S. Department of Homeland Security Science and Technology Directorate and the ADAC-ARCTIC Center of Excellence managed by the University of Alaska Anchorage. The views and opinions of authors expressed herein do not necessarily state or reflect those of the U.S. Government or any agency or Contractor. REFERENCES [1] I. F. Akyildiz, W.-Y. Lee, M. C. Vuran, and S. Mohanty, “Next generation/dynamic spectrum access/cognitive radio wireless networks: A survey,” Computer Networks , vol. 50, no. 13, pp. 2127–2159, 2006. [2] M. Lopez-Benitez and F. Casadevall, “Time-dimension models of spec-trum usage for the analysis, design, and simulation of cognitive radio networks,” IEEE Transactions on Vehicular Technology , vol. 62, no. 5, pp. 2091–2104, 2013. [3] H. Mosavat-Jahromi, Y. Li, L. Cai, and J. Pan, “Prediction and modeling of spectrum occupancy for dynamic spectrum access systems,” IEEE Transactions on Cognitive Communications and Networking , vol. 7, no. 3, pp. 715–728, 2021. [4] S. Wang, H. Liu, P. H. Gomes, and B. Krishnamachari, “Deep reinforce-ment learning for dynamic multichannel access in wireless networks,” 
+
+IEEE Transactions on Cognitive Communications and Networking ,vol. 4, no. 2, pp. 257–265, 2018. [5] O. Naparstek and K. Cohen, “Deep multi-user reinforcement learning for distributed dynamic spectrum access,” IEEE Transactions on Wireless Communications , vol. 18, no. 1, pp. 310–323, 2019. [6] S. Liu, C. Pan, C. Zhang, F. Yang, and J. Song, “Dynamic spectrum sharing based on deep reinforcement learning in mobile communication systems,” Sensors , vol. 23, no. 5, p. 2622, 2023. [7] L. Dong, Y. Qian, and Y. Xing, “Dynamic spectrum access and sharing through actor-critic deep reinforcement learning,” EURASIP Journal on Wireless Communications and Networking , vol. 2022, no. 1, p. 48, 2022. [8] Y. Zhang, P. Botelho, T. Gordon, G. Zussman, and I. Kadota, “Fair dy-namic spectrum access via fully decentralized multi-agent reinforcement learning,” arXiv preprint arXiv:2503.24296 , 2025. [9] G. Stamatelis, A.-N. Kanatas, and G. C. Alexandropoulos, “Multi-agent actor-critic with harmonic annealing pruning for dynamic spectrum access systems,” arXiv preprint arXiv:2503.15172 , 2025. [10] K. Zhang, Z. Yang, and T. Basar, “Multi-agent reinforcement learning: A selective overview of theories and algorithms,” Handbook of Rein-forcement Learning and Control , pp. 321–384, 2021. [11] D. Monderer and L. S. Shapley, “Potential games,” Games and Economic Behavior , vol. 14, no. 1, pp. 124–143, 1996. [12] S. Leonardos, W. Overman, I. Panageas, and G. Piliouras, “Global convergence of multi-agent policy gradient in Markov potential games,” in International Conference on Learning Representations , 2022. [13] D. Ding, C.-Y. Wei, K. Zhang, and M. R. Jovanovic, “Independent policy gradient for large-scale Markov potential games: Sharper rates, function approximation, and game-agnostic convergence,” in Proceedings of the 39th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 162, 2022, pp. 5166–5220. [14] P. Alatur, G. Ramponi, N. He, and A. Krause, “Provably learning Nash policies in constrained Markov potential games,” in Proceedings of the 23rd International Conference on Autonomous Agents and Multiagent Systems . International Foundation for Autonomous Agents and Multi-agent Systems, 2024, pp. 31–39. [15] P. Jordan, A. Barakat, and N. He, “Independent learning in constrained Markov potential games,” in Proceedings of the 27th International Conference on Artificial Intelligence and Statistics , ser. Proceedings of Machine Learning Research, vol. 238, 2024, pp. 4024–4032. [16] H. Wu, J. Xu, J. Wang, and M. Long, “Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting,” in 
+
+Advances in Neural Information Processing Systems , vol. 34, 2021, pp. 22 419–22 430. [17] G. Pan, Q. Wu, G. Ding, W. Wang, J. Li, and B. Zhou, “An Autoformer-CSA approach for long-term spectrum prediction,” IEEE Wireless Com-munications Letters , vol. 12, no. 10, pp. 1647–1651, 2023. [18] Y. Hu, I. Nasim, V. Agarwal, A. Bhuyan, and M. Ji, “GAD-Autoformer: Gated adaptive decomposition for long-horizon federal incumbent spec-trum prediction,” in 2026 IEEE International Symposium on Spectrum Innovation (DySPAN) , 2026.
